@@ -31,7 +31,7 @@ class RDbplyr(RPackage):
     depends_on('r-blob@1.2.0:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-dbi@1.0.0:', type=('build', 'run'))
     depends_on('r-dplyr@0.8.0:', type=('build', 'run'))
-    depends_on('r-dplyr@1.0.3:', when='@2.1:', type=('build', 'run'))
+    depends_on('r-dplyr@1.0.3:', when='@2.1.0', type=('build', 'run'))
     depends_on('r-dplyr@1.0.4:', when='@2.1.1:', type=('build', 'run'))
     depends_on('r-ellipsis', when='@2.1:', type=('build', 'run'))
     depends_on('r-glue@1.2.0:', type=('build', 'run'))
