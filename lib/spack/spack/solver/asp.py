@@ -298,9 +298,6 @@ class Result(object):
         if self.satisfiable:
             return
 
-        tty.error("Unsatisfiable spec.",
-                  "Analyzing conflicts. This may take some time...")
-
         constraints = self.abstract_specs
         if len(constraints) == 1:
             constraints = constraints[0]
