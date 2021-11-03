@@ -26,7 +26,7 @@ spack:
         - hdf5+hl+mpi ^mpich
         - trilinos
         - trilinos +hdf5 ^hdf5+hl+mpi ^mpich
-        - gcc@8.3.0
+        - gcc@8.4.0
         - mpileaks
         - lmod
         - macsio@1.1+scr^scr@2.0.0~fortran^silo~fortran^hdf5~fortran
@@ -36,16 +36,16 @@ spack:
   - clang_packages:
     - matrix:
       - [zlib, tcl ^zlib@1.2.8]
-      - ['%clang@6.0.0']
+      - ['%clang@7.0.0']
   - gcc_spack_built_packages:
     - matrix:
       - [netlib-scalapack]
       - [^mpich, ^openmpi]
       - [^openblas, ^netlib-lapack]
-      - ['%gcc@8.3.0']
+      - ['%gcc@8.4.0']
     - matrix:
       - [py-scipy^openblas, armadillo^openblas, netlib-lapack, openmpi, mpich, elpa^mpich]
-      - ['%gcc@8.3.0']
+      - ['%gcc@8.4.0']
   specs:
   - $gcc_system_packages
   - $gcc_old_packages
