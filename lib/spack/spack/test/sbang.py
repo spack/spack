@@ -264,6 +264,16 @@ def check_sbang_installation():
     assert fs.is_exe(sbang_path)
 
 
+def check_sbang_bin_dir_permissions():
+    sbang_path = sbang.sbang_install_path()
+    sbang_bin_dir = os.path.dirname(sbang_path)
+    status = os.stat(sbang_bin_dir)
+    if spack.package_prefs.get_package_group(spack.spec.Spec("all")):
+        assert (status.st_mode & 0o777) == 0o775
+    else:
+        assert(status.st_mode & 0o777) == 0o755
+
+
 def test_install_sbang(install_mockery):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
@@ -281,10 +291,12 @@ def test_install_sbang(install_mockery):
 
     sbang.install_sbang()
     check_sbang_installation()
+    check_sbang_bin_dir_permissions()
 
     # install again and make sure sbang is still fine
     sbang.install_sbang()
     check_sbang_installation()
+    check_sbang_bin_dir_permissions()
 
 
 def test_install_sbang_too_long(tmpdir):
