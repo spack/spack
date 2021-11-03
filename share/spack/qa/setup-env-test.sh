@@ -106,6 +106,7 @@ contains "usage: spack module " spack -m module
 title 'Testing `spack load`'
 contains "export PATH=$(spack -m location -i b)/bin" spack -m load --only package --sh b
 succeeds spack -m load b
+contains "b@" spack load --list
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
 contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
