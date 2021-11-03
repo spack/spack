@@ -91,7 +91,7 @@ class LinkTree(object):
                     link_dest = os.path.realpath(src)
                     link_rel = os.path.relpath(link_dest, start=src_parent)
 
-                    # Only create the link if it's inside the root root. 
+                    # Only create the link if it's inside the root root.
                     real_root = os.path.realpath(self._root)
                     if not os.path.relpath(link_dest, real_root).startswith('..'):
                         # Create link from dest to that relative location.
@@ -121,7 +121,7 @@ class LinkTree(object):
         # We have to find them all first, as they could link to each other.
         for link in rem_link_list:
             os.unlink(link)
-        
+ 
         for src, dest in traverse_tree(
                 self._root, dest_root, ignore=ignore, order='post'):
             if os.path.isdir(src):

@@ -72,7 +72,7 @@ def test_merge_to_new_directory(stage, link_tree):
         assert os.path.isabs(os.readlink('dest/c/d/5'))
         assert os.path.isabs(os.readlink('dest/c/d/6'))
         assert os.path.isabs(os.readlink('dest/c/d/e/7'))
- 
+
         link_tree.unmerge('dest')
 
         assert not os.path.exists('dest')
