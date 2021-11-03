@@ -163,13 +163,16 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def instrumentation_args(self):
-        for value in self.variants['instrumentation'].values:
+        args = []
+        for value in self.variants['instrumentation'][0].values:
             if value == 'none':
                 continue
 
             condition = 'instrumentation={0}'.format(value)
-            yield self.define(
-                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec)
+            args.append(self.define(
+                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec
+            ))
+        return args
 
     def cmake_args(self):
         spec, args = self.spec, []
