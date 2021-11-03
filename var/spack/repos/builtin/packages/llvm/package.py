@@ -149,6 +149,18 @@ class Llvm(CMakePackage, CudaPackage):
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
 
+    provides('libllvm@13', when='@13:13')
+    provides('libllvm@12', when='@12:12')
+    provides('libllvm@11', when='@11:11')
+    provides('libllvm@10', when='@10:10')
+    provides('libllvm@9', when='@9:9')
+    provides('libllvm@8', when='@8:8')
+    provides('libllvm@7', when='@7:7')
+    provides('libllvm@6', when='@6:6')
+    provides('libllvm@5', when='@5:5')
+    provides('libllvm@4', when='@4:4')
+    provides('libllvm@3', when='@3:3')
+
     extends("python", when="+python")
 
     # Build dependency
