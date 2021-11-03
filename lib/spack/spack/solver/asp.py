@@ -1081,7 +1081,7 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def _spec_clauses(self, spec, body=False, transitive=True):
+    def _spec_clauses(self, spec, body=False, transitive=True, expand_hashes=False):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -1089,7 +1089,15 @@ class SpackSolverSetup(object):
             body (bool): if True, generate clauses to be used in rule bodies
                 (final values) instead of rule heads (setters).
             transitive (bool): if False, don't generate clauses from
-                 dependencies (default True)
+                dependencies (default True)
+            expand_hashes (bool): if True, descend into hashes of concrete specs
+                (default False)
+
+        Normally, if called with ``transitive=True``, ``spec_clauses()`` just generates
+        hashes for the dependency requirements of concrete specs. If ``expand_hashes``
+        is ``True``, we'll *also* output all the facts implied by transitive hashes,
+        which are redundant during a solve but useful outside of one (e.g.,
+        for spec ``diff``).
         """
         clauses = []
 
@@ -1200,7 +1208,7 @@ class SpackSolverSetup(object):
             for dep in spec.traverse(root=False):
                 if spec.concrete:
                     clauses.append(fn.hash(dep.name, dep.dag_hash()))
-                else:
+                if not spec.concrete or expand_hashes:
                     clauses.extend(
                         self._spec_clauses(dep, body, transitive=False)
                     )
