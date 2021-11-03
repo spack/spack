@@ -434,20 +434,12 @@ variant_not_default(Package, Variant, Actual, 1)
     not variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     Actual != Value,
+    % variants set explicitly on the CLI don't count as non-default
     not variant_set(Package, Variant, Actual),
-    not external_with_variant_set(Package, Variant, Value),
-    node(Package).
-
-% We are using the default value for a variant
-variant_not_default(Package, Variant, Value, 0)
- :- variant_value(Package, Variant, Value),
-    variant_default_value(Package, Variant, Value),
-    node(Package).
-
-% The variant is set in the spec
-variant_not_default(Package, Variant, Value, 0)
- :- variant_value(Package, Variant, Value),
-    variant_set(Package, Variant, Value),
+    % variants set on externals that we could use don't count as non-default
+    % this makes spack prefer to use an external over rebuilding with the
+    % default configuration
+    not external_with_variant_set(Package, Variant, Actual),
     node(Package).
 
 % The variant is set in an external spec
@@ -456,11 +448,6 @@ external_with_variant_set(Package, Variant, Value)
     condition_requirement(ID, "variant_value", Package, Variant, Value),
     possible_external(ID, Package, _),
     external(Package),
-    node(Package).
-
-variant_not_default(Package, Variant, Value, 0)
- :- variant_value(Package, Variant, Value),
-    external_with_variant_set(Package, Variant, Value),
     node(Package).
 
 % The default value for a variant in a package is what is prescribed:
@@ -862,20 +849,6 @@ opt_criterion(11, "preferred providers for roots").
     : provider_weight(Provider, Virtual, Weight),
       root(Provider),
       build_priority(Provider, Priority)
-}.
-
-% If the value is a multivalued variant there could be multiple
-% values set as default. Since a default value has a weight of 0 we
-% need to maximize their number below to ensure they're all set
-opt_criterion(10, "number of values in multi-valued variants (root)").
-#minimize{ 0@210 : #true }.
-#minimize{ 0@10 : #true }.
-#maximize {
-    1@10+Priority,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight),
-      not variant_single_value(Package, Variant),
-      root(Package),
-      build_priority(Package, Priority)
 }.
 
 % Try to use default variants or variants that have been set
