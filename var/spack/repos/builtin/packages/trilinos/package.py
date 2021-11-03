@@ -276,7 +276,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+wrapper', when='%clang')
 
     # Old trilinos fails with new CUDA (see #27180)
-    conflicts('@:13.0.0 +cuda ', when='^cuda@11:')
+    conflicts('@:13.0.1 +cuda', when='^cuda@11:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -359,10 +359,6 @@ class Trilinos(CMakePackage, CudaPackage):
     patch('https://github.com/trilinos/Trilinos/commit/b17f20a0b91e0b9fc5b1b0af3c8a34e2a4874f3f.patch',
           sha256='dee6c55fe38eb7f6367e1896d6bc7483f6f9ab8fa252503050cc0c68c6340610',
           when='@13.0.0:13.0.1 +teko gotype=long')
-    # Fix https://github.com/spack/spack/issues/27180 on older trilinos
-    patch('https://github.com/trilinos/Trilinos/commit/892a1a6a1bfda96f887d184e2d471787d3734bf2.patch',
-          sha256='69275604f8060e529a68e4c33763135eddccece49e06490b0185ebdf514664d0',
-          when='@13:13.2 +tpetra ^cuda@11:')
 
     def flag_handler(self, name, flags):
         is_cce = self.spec.satisfies('%cce')
