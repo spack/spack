@@ -121,7 +121,7 @@ class LinkTree(object):
         # We have to find them all first, as they could link to each other.
         for link in rem_link_list:
             os.unlink(link)
- 
+
         for src, dest in traverse_tree(
                 self._root, dest_root, ignore=ignore, order='post'):
             if os.path.isdir(src):
