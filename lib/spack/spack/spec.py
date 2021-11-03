@@ -2597,7 +2597,7 @@ class Spec(object):
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False):
+    def _new_concretize(self, tests=False, reuse=False):
         import spack.solver.asp
 
         if not self.name:
@@ -2607,7 +2607,7 @@ class Spec(object):
         if self._concrete:
             return
 
-        result = spack.solver.asp.solve([self], tests=tests)
+        result = spack.solver.asp.solve([self], tests=tests, reuse=reuse)
         result.raise_if_unsat()
 
         # take the best answer
@@ -2625,17 +2625,23 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    def concretize(self, tests=False):
+    def concretize(self, tests=False, reuse=False):
         """Concretize the current spec.
 
         Args:
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         if spack.config.get('config:concretizer') == "clingo":
-            self._new_concretize(tests)
+            self._new_concretize(tests, reuse=reuse)
         else:
+            if reuse:
+                msg = ('maximizing reuse of installed specs is not '
+                       'possible with the original concretizer')
+                raise spack.error.SpecError(msg)
             self._old_concretize(tests)
 
     def _mark_root_concrete(self, value=True):

@@ -44,7 +44,8 @@ def setup_parser(subparser):
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status'])
+        subparser, ['long', 'very_long', 'install_status', 'reuse']
+    )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as yaml')
@@ -67,9 +68,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
-    subparser.add_argument(
-        '--reuse', action='store_true', default=False,
-        help='reuse installed dependencies')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
