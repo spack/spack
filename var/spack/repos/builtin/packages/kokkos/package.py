@@ -233,7 +233,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                "without clang")
 
         options = [
-            from_variant("Spack_WORKAROUND", "diy"),
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             from_variant("Kokkos_CXX_STANDARD", "std"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
