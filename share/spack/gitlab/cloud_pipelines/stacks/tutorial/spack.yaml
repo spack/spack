@@ -59,6 +59,7 @@ spack:
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack compiler find
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
