@@ -67,14 +67,11 @@ class Scr(CMakePackage):
     depends_on('shuffile@0.1.0:', when='@3.0rc2:')
     depends_on('spath@0.1.0:',    when='@3.0rc2:')
 
-    # DTCMP is an optional dependency up until 3.x
-    variant('dtcmp', default=True,
+    # DTCMP is an optional dependency up until 3.x, required thereafter
+    variant('dtcmp', default=True, when='@:2',
             description='Build with DTCMP. '
             'Necessary to enable user directory naming at runtime')
-    depends_on('dtcmp', when='@:2 +dtcmp')
-
-    # DTCMP is a required dependency with 3.x and later
-    conflicts('~dtcmp', when='@3:', msg='<SCR> DTCMP required for versions >=3')
+    depends_on('dtcmp', when='+dtcmp')
     depends_on('dtcmp', when='@3:')
 
     variant('libyogrt', default=True,
@@ -83,15 +80,11 @@ class Scr(CMakePackage):
     depends_on('libyogrt scheduler=lsf', when='+libyogrt resource_manager=LSF')
     depends_on('libyogrt', when='+libyogrt')
 
-    # PDSH required up to 3.0rc1
+    # PDSH required up to 3.0rc1, optional thereafter
+    variant('pdsh', default=True, when='@3.0rc2:',
+            description='Enable use of PDSH')
+    depends_on('pdsh+static_modules', type=('build', 'run'), when='+pdsh')
     depends_on('pdsh+static_modules', type=('build', 'run'), when='@:3.0rc1')
-    conflicts('~pdsh', when='@:3.0rc1',
-              msg='<SCR> PDSH required for versions <=3.0rc1')
-
-    # PDSH is optional with 3.0rc2 and later
-    variant('pdsh', default=True, description='Enable use of PDSH')
-    depends_on('pdsh+static_modules', type=('build', 'run'),
-               when='@3.0rc2: +pdsh')
 
     variant('scr_config', default='scr.conf',
             description='Location for SCR to find its system config file. '
@@ -108,28 +101,33 @@ class Scr(CMakePackage):
             multi=False,
             description='Resource manager for which to configure SCR.')
 
-    # SCR_ASYNC_API use was removed in v3. Only applying this to :2.x.x
-    variant('async_api', default='NONE',
+    # SCR_ASYNC_API only used in :2.x.x
+    variant('async_api', default='NONE', when='@:2',
             values=('NONE', 'CRAY_DW', 'IBM_BBAPI', 'INTEL_CPPR'),
             multi=False,
             description='Asynchronous data transfer API to use with SCR.')
 
-    variant('bbapi', default=True, description='Enable IBM BBAPI support')
-    depends_on('axl+bbapi', when='@3.0rc2: +bbapi')
-    depends_on('axl~bbapi', when='@3.0rc2: ~bbapi')
+    variant('bbapi', default=True, when='@3.0rc2:',
+            description='Enable IBM BBAPI support')
+    depends_on('axl+bbapi', when='+bbapi')
+    depends_on('axl~bbapi', when='~bbapi')
 
-    variant('bbapi_fallback', default=False,
+    variant('bbapi_fallback', default=False, when='@3:',
             description='Using BBAPI, if source or destination don\'t support \
             file extents then fallback to pthreads')
-    depends_on('axl+bbapi_fallback',       when='@3: +bbapi_fallback')
+    depends_on('axl+bbapi_fallback', when='+bbapi_fallback')
+    variant('bbapi_fallback', default=False, when='@3.0rc2: +bbapi',
+            description='Using BBAPI, if source or destination don\'t support \
+            file extents then fallback to pthreads')
     depends_on('axl+bbapi+bbapi_fallback', when='@3.0rc2: +bbapi_fallback')
-    conflicts('~bbapi',                    when='@3.0rc2: +bbapi_fallback')
 
-    variant('dw', default=False, description='Enable Cray DataWarp support')
-    depends_on('axl+dw', when='@3.0rc2: +dw')
-    depends_on('axl~dw', when='@3.0rc2: ~dw')
+    variant('dw', default=False, when='@3.0rc2:',
+            description='Enable Cray DataWarp support')
+    depends_on('axl+dw', when='+dw')
+    depends_on('axl~dw', when='~dw')
 
-    variant('examples', default=True, description='Build SCR example programs')
+    variant('examples', default=True, when='@3.0rc2:',
+            description='Build SCR example programs')
 
     variant('file_lock', default='FLOCK',
             values=('FLOCK', 'FNCTL', 'NONE'),
@@ -145,17 +143,19 @@ class Scr(CMakePackage):
     #        capturing SCR and syslog messages in a database')
     # depends_on('mysql', when='+mysql')
 
-    variant('shared', default=True, description='Build with shared libraries')
-    depends_on('libyogrt+static', when='@3.0rc2: ~shared')
+    variant('shared', default=True, when='@3.0rc2:',
+            description='Build with shared libraries')
+    depends_on('libyogrt+static', when='~shared')
     for comp in cmpnts:
-        depends_on(comp + '+shared', when='@3.0rc2: +shared')
-        depends_on(comp + '~shared', when='@3.0rc2: ~shared')
-    conflicts('~shared', when='@3.0rc2: +bbapi')
-    conflicts('~shared', when='@3.0rc2: +examples')
+        depends_on(comp + '+shared', when='+shared')
+        depends_on(comp + '~shared', when='~shared')
+    conflicts('~shared', when='+bbapi',    msg='See SCR issue #453')
+    conflicts('~shared', when='+examples', msg='See SCR issue #455')
 
     # TODO: Expose `tests` and `resource_manager` variants in components and
     # then propogate their setting through components.
-    variant('tests', default=True, description='Build with CTest included')
+    variant('tests', default=True, when='@3.0rc2:',
+            description='Build with CTest included')
 
     # The default cache and control directories should be placed in tmpfs if available.
     # On Linux, /dev/shm is a common tmpfs location.  Other platforms, like macOS,
