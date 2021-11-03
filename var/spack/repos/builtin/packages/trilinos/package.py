@@ -275,6 +275,9 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
 
+    # Old trilinos fails with new CUDA (see #27180)
+    conflicts('@:13.0.0 +cuda ', when='^cuda@11:')
+
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
@@ -564,6 +567,7 @@ class Trilinos(CMakePackage, CudaPackage):
             ('BLAS', 'blas'),
             ('Boost', 'boost'),
             ('CGNS', 'cgns'),
+            ('CUDA', 'cuda'),
             ('HDF5', 'hdf5'),
             ('HYPRE', 'hypre'),
             ('LAPACK', 'lapack'),
@@ -690,7 +694,6 @@ class Trilinos(CMakePackage, CudaPackage):
             ])
             if '+cuda' in spec:
                 options.extend([
-                    define_tpl_enable('CUDA', True),
                     define_kok_enable('CUDA_UVM', True),
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
