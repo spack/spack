@@ -15,9 +15,9 @@ class Hohqmesh(CMakePackage):
 
     maintainers = ['fluidnumerics-joe']
 
-    version('1.1.0', sha256='977109d57dbb6b74c2d2c52b9bc3ac5ad4ecbfaa0dbe3ef2291f68eea05f1b78')
-    version('1.0.1', sha256='83c2c48aec9cd6b1ade0d9b04a0d68782ea7e0a5d9fb28ac7510d4ad401e64ee')
-    version('1.0.0', sha256='b5e983fa4a34311042e29792bf0e233fafc63b8f98873c041b8f7e4f1e26a19f')
+    version('1.1.0', sha256='5fdb75157d9dc29bba55e6ae9dc2be71294754204f4f0912795532ae66aada10')
+    version('1.0.1', sha256='8435f13c96d714a287f3c24392330047e2131d53fafe251a77eba365bd2b3141')
+    version('1.0.0', sha256='3800e63975d0a61945508f13fb76d5e2145c0260440484252b6b81aa0bfe076d')
 
     depends_on('ftobjectlibrary')
 
