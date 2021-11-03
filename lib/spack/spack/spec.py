@@ -2666,7 +2666,7 @@ class Spec(object):
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
 
-    def concretized(self, tests=False):
+    def concretized(self, tests=False, reuse=False):
         """This is a non-destructive version of concretize().
 
         First clones, then returns a concrete version of this package
@@ -2676,9 +2676,11 @@ class Spec(object):
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         clone = self.copy(caches=True)
-        clone.concretize(tests=tests)
+        clone.concretize(tests=tests, reuse=reuse)
         return clone
 
     def flat_dependencies(self, **kwargs):
