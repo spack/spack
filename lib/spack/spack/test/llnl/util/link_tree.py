@@ -27,8 +27,12 @@ def stage():
         touchp('source/c/d/5')
         touchp('source/c/d/6')
         touchp('source/c/d/e/7')
+        # Symlinked directores will get a relative link within dest.
         os.symlink('c/d', 'source/d')
+        # Removing symlinks to symlinks has pitfalls to avoid.
         os.symlink('d', 'source/e')
+        # This symlink points outside of source, and should be ignored.
+        os.symlink('../../', 'source/f')
 
     yield s
 
@@ -170,3 +174,4 @@ def test_ignore(stage, link_tree):
 
         assert os.path.isfile('source/.spec')
         assert os.path.isfile('dest/.spec')
+

@@ -91,7 +91,7 @@ class LinkTree(object):
                     link_dest = os.path.realpath(src)
                     link_rel = os.path.relpath(link_dest, start=src_parent)
 
-                    # Only create the link if it's inside the root root.
+                    # Only create the link if it's inside the root
                     real_root = os.path.realpath(self._root)
                     if not os.path.relpath(link_dest, real_root).startswith('..'):
                         # Create link from dest to that relative location.
@@ -191,8 +191,7 @@ class LinkTree(object):
             ignore = lambda x: False
 
         for src, dst in self.get_file_map(dest_root, ignore).items():
-            if not os.path.isdir(src):
-                remove_file(src, dst)
+            remove_file(src, dst)
         self.unmerge_directories(dest_root, ignore)
 
 
