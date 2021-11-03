@@ -51,13 +51,13 @@ class Scr(CMakePackage):
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
-    depends_on('axl@0.4.0:',      when="@3:")
-    depends_on('er@0.0.4:',       when="@3:")
-    depends_on('kvtree@1.1.1:',   when="@3:")
-    depends_on('rankstr@0.0.3:',  when="@3:")
-    depends_on('redset@0.0.5:',   when="@3:")
-    depends_on('shuffile@0.0.4:', when="@3:")
-    depends_on('spath@0.0.2:',    when="@3:")
+    depends_on('axl@0.4.0',      when="@3.0rc1")
+    depends_on('er@0.0.4',       when="@3.0rc1")
+    depends_on('kvtree@1.1.1',   when="@3.0rc1")
+    depends_on('rankstr@0.0.3',  when="@3.0rc1")
+    depends_on('redset@0.0.5',   when="@3.0rc1")
+    depends_on('shuffile@0.0.4', when="@3.0rc1")
+    depends_on('spath@0.0.2',    when="@3.0rc1")
 
     # DTCMP is an optional dependency up until 3.x
     variant('dtcmp', default=True,

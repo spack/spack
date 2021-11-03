@@ -113,7 +113,6 @@ class Gaudi(CMakePackage):
         # environment as in Gaudi.xenv
         env.prepend_path('PATH', self.prefix.scripts)
         env.prepend_path('PYTHONPATH', self.prefix.python)
-        env.prepend_path('ROOT_INCLUDE_PATH', self.prefix.include)
 
     def url_for_version(self, version):
         major = str(version[0])

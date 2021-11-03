@@ -13,6 +13,7 @@ class PyBottle(PythonPackage):
     homepage = "https://github.com/bottlepy/bottle"
     url      = "https://github.com/bottlepy/bottle/archive/0.12.18.tar.gz"
 
+    version('0.12.19', sha256='b97277f8e87d452a0aa5fbcd16cd604a189e2cc17fdb2d4eaf6baa732f8d111b')
     version('0.12.18', sha256='176721f1e26082c66fd4df76f31800933e4bb36de6814b0fda3851cb409a95e6')
     version('0.12.17', sha256='7df26ca1789aa0693277c4a86d564524bff03e5d3132d9405946c58739190928')
     version('0.12.16', sha256='76143230ff034c1f47ada4b33674984220d070c557c10e22729ebd9764bc7960')
@@ -24,5 +25,5 @@ class PyBottle(PythonPackage):
     version('0.12.10', sha256='f57fb6594feac80fd92a573ab8ca7ce98491471211d99f1c97855e34f5d13677')
     version('0.12.9',  sha256='45285ad084ca054d821ceef8bd95462efd38e13ecbef13a82c22b6472a6f4b2d')
 
-    depends_on('python@2.7:2.8,3.4:',  type=('build', 'run'))
+    depends_on('python@2.5:2,3.2:',  type=('build', 'run'))
     depends_on('py-setuptools', type='build')

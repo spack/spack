@@ -31,6 +31,7 @@ class RocmTensile(CMakePackage):
                             'gfx90a:xnack-', 'gfx1010', 'gfx1011',
                             'gfx1012', 'gfx1030')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('openmp', default=True, description='Enable OpenMP')
 
