@@ -3081,7 +3081,7 @@ class Spec(object):
         if not isinstance(values, tuple):
             values = (values,)
 
-        pkg_variant = self.package_class.variants[variant_name]
+        pkg_variant, _ = self.package_class.variants[variant_name]
 
         for value in values:
             if self.variants.get(variant_name):

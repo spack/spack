@@ -350,6 +350,20 @@ external_conditions_hold(Package, LocalIndex) :-
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
+% a variant is a variant of a package if it is a variant under some condition
+% and that condition holds
+variant(Package, Variant) :- variant_condition(ID, Package, Variant),
+                             condition_holds(ID).
+
+% a variant cannot be set if it is not a variant on the package
+:- variant_set(Package, Variant),
+   not variant(Package, Variant),
+   error("Unsatisfied conditional variants cannot be set").
+
+% a variant cannot take on a value if it is not a variant of the package
+:- variant_value(Package, Variant, _), not variant(Package, Variant),
+   error("Unsatisfied conditional variants cannot take on a variant value").
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)

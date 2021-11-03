@@ -721,8 +721,12 @@ class SpackSolverSetup(object):
         self.gen.newline()
 
         # variants
-        for name, variant in sorted(pkg.variants.items()):
-            self.gen.fact(fn.variant(pkg.name, name))
+        for name, entry in sorted(pkg.variants.items()):
+            variant, when = entry
+
+            for w in when:
+                cond_id = self.condition(w, name=pkg.name)
+                self.gen.fact(fn.variant_condition(cond_id, pkg.name, name))
 
             single_value = not variant.multi
             if single_value:
@@ -788,7 +792,7 @@ class SpackSolverSetup(object):
 
         Arguments:
             required_spec (spack.spec.Spec): the spec that triggers this condition
-            imposed_spec (spack.spec.Spec or None): the sepc with constraints that
+            imposed_spec (spack.spec.Spec or None): the spec with constraints that
                 are imposed when this condition is triggered
             name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
@@ -1087,7 +1091,7 @@ class SpackSolverSetup(object):
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
                         try:
-                            variant_def = spec.package.variants[vname]
+                            variant_def, _ = spec.package.variants[vname]
                         except KeyError:
                             msg = 'variant "{0}" not found in package "{1}"'
                             raise RuntimeError(msg.format(vname, spec.name))

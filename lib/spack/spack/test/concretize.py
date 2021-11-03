@@ -16,6 +16,7 @@ import spack.concretize
 import spack.error
 import spack.platforms
 import spack.repo
+import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
@@ -737,6 +738,41 @@ class TestConcretize(object):
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('conditional-variant-pkg@1.0',
+         ['two_whens'],
+         ['version_based', 'variant_based']),
+        ('conditional-variant-pkg@2.0',
+         ['version_based', 'variant_based'],
+         ['two_whens']),
+        ('conditional-variant-pkg@2.0~version_based',
+         ['version_based'],
+         ['variant_based', 'two_whens']),
+        ('conditional-variant-pkg@2.0+version_based+variant_based',
+         ['version_based', 'variant_based', 'two_whens'],
+         [])
+    ])
+    def test_conditional_variants(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for var in expected:
+            assert s.satisfies('%s=*' % var)
+        for var in unexpected:
+            assert not s.satisfies('%s=*' % var)
+
+    @pytest.mark.parametrize('bad_spec', [
+        '@1.0~version_based',
+        '@1.0+version_based',
+        '@2.0~version_based+variant_based',
+        '@2.0+version_based~variant_based+two_whens',
+    ])
+    def test_conditional_variants_fail(self, bad_spec):
+        with pytest.raises(
+                (spack.error.UnsatisfiableSpecError,
+                 vt.InvalidVariantForSpecError)
+        ):
+            _ = Spec('conditional-variant-pkg' + bad_spec).concretized()
 
     @pytest.mark.parametrize('spec_str,expected,unexpected', [
         ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
