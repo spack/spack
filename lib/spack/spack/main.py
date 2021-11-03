@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import operator
 import os
 import os.path
 import pstats
@@ -187,6 +188,10 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         if chars:
             usage = '[-%s] %s' % (chars, usage)
         return usage.strip()
+
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=operator.attrgetter('option_strings'))
+        super(SpackHelpFormatter, self).add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
