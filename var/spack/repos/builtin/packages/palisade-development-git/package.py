@@ -40,6 +40,7 @@ class PalisadeDevelopmentGit(CMakePackage):
     variant('with_ntl', default=False, description='Build NTL.')
 
     depends_on('autoconf')
+    depends_on('hwloc', when='%clang')
     depends_on('ntl', when='+with_ntl')
     depends_on('ntl+shared', when='+with_ntl +shared')
 
@@ -52,4 +53,18 @@ class PalisadeDevelopmentGit(CMakePackage):
             self.define_from_variant('WITH_INTEL_HEXL', 'with_intel_hexl'),
             self.define_from_variant('WITH_NTL', 'with_ntl')
         ]
+        if self.spec.satisfies('%clang'):
+            OpenMP_C_FLAGS="-fopenmp=libomp"
+            OpenMP_C_LIB_NAMES="libomp"
+            args += [
+                self.define('OpenMP_C', 'clang'),
+                self.define('OpenMP_C_FLAGS', OpenMP_C_FLAGS),
+                self.define('OpenMP_C_LIB_NAMES', OpenMP_C_LIB_NAMES),
+                self.define('OpenMP_CXX', 'clang++'),
+                self.define('OpenMP_CXX_FLAGS', OpenMP_C_FLAGS),
+                self.define('OpenMP_CXX_LIB_NAMES', OpenMP_C_LIB_NAMES),
+                self.define('OpenMP_libomp_LIBRARY','libomp'),
+                self.define('OpenMP_libgomp_LIBRARY','libgomp'),
+                self.define('OpenMP_libiomp5_LIBRARY','libiomp5')
+            ]
         return args
