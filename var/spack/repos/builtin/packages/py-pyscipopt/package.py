@@ -19,4 +19,4 @@ class PyPyscipopt(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython',     type=('build', 'run'))
     depends_on('py-wheel',      type=('build', 'run'))
-    depends_on('scipoptsuite',  type=('link', 'build', 'run'))
+    depends_on('scipoptsuite')
