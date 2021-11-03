@@ -201,9 +201,9 @@ def install_sbang():
     )
 
     if group_name:
-        os.chmod(sbang_bin_dir, 0o775)
+        os.chmod(sbang_bin_dir, config_mode)   # Use package directory permissions
     else:
-        os.chmod(sbang_bin_dir, 0o755)
+        fs.set_install_permissions(sbang_bin_dir)
 
     # set group on sbang_bin_dir if not already set (only if set in configuration)
     if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
