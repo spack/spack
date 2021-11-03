@@ -632,6 +632,9 @@ class Boost(Package, WindowsPackage):
         # Windows build just wants a b2 call with no args
         if spec.satisfies('platform=windows'):
             b2_options.clear()
+            # Then see if /MD flags are wanted instead of /MT
+            if spec.satisfies('+staticmt'):
+                b2_options.append('link=static')
 
         # Create headers if building from a git checkout
         if '@develop' in spec:

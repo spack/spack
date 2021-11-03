@@ -420,7 +420,8 @@ class Hdf5(CMakePackage, WindowsPackage):
         if self.spec.satisfies('@1.8.21:1.8.22,1.10.2:1.10.7,1.12.0+mpi'):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
-                symlink('h5cc', 'h5pcc')
+                if sys.platform != 'win32':
+                    symlink('h5cc', 'h5pcc')
 
         # The same as for 'h5pcc'. However, the CMake installation produces the
         # Fortran compiler wrapper called 'h5fc' only starting versions 1.8.22,
