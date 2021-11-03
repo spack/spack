@@ -90,7 +90,7 @@ def _patchelf():
 
     # Check if patchelf spec is installed
     spec = spack.spec.Spec('patchelf')
-    spec._old_concretize()
+    spec._old_concretize(deprecation_warning=False)
     exe_path = os.path.join(spec.prefix.bin, "patchelf")
     if spec.package.installed and os.path.exists(exe_path):
         return exe_path

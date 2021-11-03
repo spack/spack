@@ -30,6 +30,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack
+import spack.binary_distribution
 import spack.bootstrap
 import spack.cmd
 import spack.compilers
@@ -1563,21 +1564,41 @@ class SpackSolverSetup(object):
             possible (dict): result of Package.possible_dependencies() for
                 specs in this solve.
         """
+        seen = set()
+
+        def _facts_from_concrete_spec(spec):
+            # tell the solver about any installed packages that could
+            # be dependencies (don't tell it about the others)
+            h = spec.dag_hash()
+            if spec.name in possible and h not in seen:
+                # this indicates that there is a spec like this installed
+                self.gen.fact(fn.installed_hash(spec.name, h))
+
+                # this describes what constraints it imposes on the solve
+                self.impose(h, spec, body=True)
+                self.gen.newline()
+
+                # add OS to possible OS's
+                self.possible_oses.add(spec.os)
+
+                # add the hash to the one seen so far
+                seen.add(h)
+
+        # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                # tell the solver about any installed packages that could
-                # be dependencies (don't tell it about the others)
-                if spec.name in possible:
-                    # this indicates that there is a spec like this installed
-                    h = spec.dag_hash()
-                    self.gen.fact(fn.installed_hash(spec.name, h))
+                _facts_from_concrete_spec(spec)
 
-                    # this describes what constraints it imposes on the solve
-                    self.impose(h, spec, body=True)
-                    self.gen.newline()
-
-                    # add OS to possible OS's
-                    self.possible_oses.add(spec.os)
+        # Specs from configured buildcaches
+        try:
+            index = spack.binary_distribution.update_cache_and_get_specs()
+            for spec in index:
+                _facts_from_concrete_spec(spec)
+        except spack.binary_distribution.FetchCacheError:
+            # this is raised when no mirrors had indices.
+            # TODO: update mirror configuration so it can indicate that the source cache
+            # TODO: (or any mirror really) doesn't have binaries.
+            pass
 
     def setup(self, driver, specs, tests=False, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
@@ -1701,7 +1722,14 @@ class SpecBuilder(object):
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
-            self._specs[pkg] = spack.store.db.get_by_hash(h)[0]
+            try:
+                # try to get the candidate from the store
+                self._specs[pkg] = spack.store.db.get_by_hash(h)[0]
+            except TypeError:
+                # the dag hash was not in the DB, try buildcache
+                s = spack.binary_distribution.binary_index.find_by_hash(h)
+                # see specifications in spack.binary_distribution.BinaryCacheIndex
+                self._specs[pkg] = s[0]['spec']
         else:
             # ensure that if it's already there, it's correct
             spec = self._specs[pkg]
