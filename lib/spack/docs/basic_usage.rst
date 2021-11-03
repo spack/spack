@@ -868,8 +868,9 @@ your path:
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
 :ref:`prefix inspections <customize-env-modifications>` defined in your
-modules configuration.  When you no longer want to use a package, you
-can type unload or unuse similarly:
+modules configuration.
+When you no longer want to use a package, you can type unload or
+unuse similarly:
 
 .. code-block:: console
 
@@ -909,6 +910,19 @@ first ``libelf`` above, you would run:
 .. code-block:: console
 
    $ spack load /qmm4kso
+
+To see which packages that you have loaded to your enviornment you would
+use ``spack find --loaded``.
+
+.. code-block:: console
+
+    $ spack find --loaded
+    ==> 2 installed packages
+    -- linux-debian7 / gcc@4.4.7 ------------------------------------
+    libelf@0.8.13
+
+    -- linux-debian7 / intel@15.0.0 ---------------------------------
+    libelf@0.8.13
 
 We'll learn more about Spack's spec syntax in the next section.
 
@@ -1649,6 +1663,7 @@ and it will be added to the ``PYTHONPATH`` in your current shell:
 
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
+The loaded packages can be checked using ``spack find --loaded``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Loading Extensions via Modules
