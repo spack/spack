@@ -27,6 +27,8 @@ def stage():
         touchp('source/c/d/5')
         touchp('source/c/d/6')
         touchp('source/c/d/e/7')
+        os.symlink('c/d', 'source/d')
+        os.symlink('d', 'source/e')
 
     yield s
 
@@ -70,7 +72,7 @@ def test_merge_to_new_directory(stage, link_tree):
         assert os.path.isabs(os.readlink('dest/c/d/5'))
         assert os.path.isabs(os.readlink('dest/c/d/6'))
         assert os.path.isabs(os.readlink('dest/c/d/e/7'))
-
+ 
         link_tree.unmerge('dest')
 
         assert not os.path.exists('dest')

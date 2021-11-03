@@ -84,29 +84,44 @@ class LinkTree(object):
             if os.path.isdir(src):
                 if os.path.islink(src):
                     # Make a relative link in dest that mirrors the link in src.
-                    # Create a resolved src path except for the final component
-                    # This avoids unnecessary fs backtracking
+
                     src_parent = os.path.realpath(os.path.dirname(src))
-                    clean_src = os.path.join(src_parent, os.path.basename(src))
-                    link_dest = os.path.realpath(src)
+
                     # Find the relative path between src and it's target.
-                    link_rel = os.path.relpath(link_dest, clean_src)
-                    # Create link from dest to that relative location.
-                    os.symlink(link_rel, dest)
+                    link_dest = os.path.realpath(src)
+                    link_rel = os.path.relpath(link_dest, start=src_parent)
 
-                if not os.path.exists(dest):
-                    mkdirp(dest)
-                    continue
+                    # Only create the link if it's inside the root root. 
+                    real_root = os.path.realpath(self._root)
+                    if not os.path.relpath(link_dest, real_root).startswith('..'):
+                        # Create link from dest to that relative location.
+                        os.symlink(link_rel, dest)
 
-                if not os.path.isdir(dest):
-                    raise ValueError("File blocks directory: %s" % dest)
+                else:
+                    if not os.path.exists(dest):
+                        mkdirp(dest)
+                        continue
 
-                # mark empty directories so they aren't removed on unmerge.
-                if not os.listdir(dest):
-                    marker = os.path.join(dest, empty_file_name)
-                    touch(marker)
+                    if not os.path.isdir(dest):
+                        raise ValueError("File blocks directory: %s" % dest)
+
+                    # mark empty directories so they aren't removed on unmerge.
+                    if not os.listdir(dest):
+                        marker = os.path.join(dest, empty_file_name)
+                        touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
+        # Remove any symlinked directories first, while the directories still exist.
+        rem_link_list = []
+        for src, dest in traverse_tree(
+                self._root, dest_root, ignore=ignore, order='post'):
+            if os.path.isdir(src) and os.path.isdir(dest) and os.path.islink(dest):
+                rem_link_list.append(dest)
+
+        # We have to find them all first, as they could link to each other.
+        for link in rem_link_list:
+            os.unlink(link)
+        
         for src, dest in traverse_tree(
                 self._root, dest_root, ignore=ignore, order='post'):
             if os.path.isdir(src):
@@ -176,7 +191,8 @@ class LinkTree(object):
             ignore = lambda x: False
 
         for src, dst in self.get_file_map(dest_root, ignore).items():
-            remove_file(src, dst)
+            if not os.path.isdir(src):
+                remove_file(src, dst)
         self.unmerge_directories(dest_root, ignore)
 
 
