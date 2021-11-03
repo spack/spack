@@ -629,6 +629,8 @@ node_target_mismatch(Parent, Dependency)
   :- depends_on(Parent, Dependency),
      not node_target_match(Parent, Dependency).
 
+:- node(Package), node_target(Package, Target), not target(Target).
+
 #defined node_target_set/2.
 #defined package_target_weight/3.
 
