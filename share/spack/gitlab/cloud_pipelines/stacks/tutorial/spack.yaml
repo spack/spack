@@ -57,7 +57,7 @@ spack:
 
   gitlab-ci:
     script:
-      - . "./spack/share/spack/setup-env.sh"
+      - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
