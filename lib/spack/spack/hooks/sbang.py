@@ -200,6 +200,11 @@ def install_sbang():
         spack.spec.Spec("all")
     )
 
+    if group_name:
+        os.chmod(sbang_bin_dir, 0o775)
+    else:
+        os.chmod(sbang_bin_dir, 0o755)
+
     # set group on sbang_bin_dir if not already set (only if set in configuration)
     if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
         os.chown(
