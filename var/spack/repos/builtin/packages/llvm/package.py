@@ -160,6 +160,7 @@ class Llvm(CMakePackage, CudaPackage):
     provides('libllvm@5', when='@5:5')
     provides('libllvm@4', when='@4:4')
     provides('libllvm@3', when='@3:3')
+    provides('libllvm +llvm_dylib', when='+llvm_dylib')
 
     extends("python", when="+python")
 
