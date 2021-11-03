@@ -42,4 +42,4 @@ class Libspatialite(AutotoolsPackage):
     depends_on('iconv')
     depends_on('libxml2')
     depends_on('minizip', when='@5.0.0:')
-    depends_on('librttop', when='@5.0.1:')
+    depends_on('librttopo', when='@5.0.1:')
