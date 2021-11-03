@@ -11,6 +11,7 @@ class PyTweedledum(PythonPackage):
     classical ones. Also, it is meant to be used both independently
     and alongside established tools."""
 
+    homepage = "https://github.com/boschmitt/tweedledum"
     pypi = 'tweedledum/tweedledum-1.1.1.tar.gz'
 
     version('1.1.1', sha256='58d6f7a988b10c31be3faa1faf3e58288ef7e8159584bfa6ded45742f390309f')
