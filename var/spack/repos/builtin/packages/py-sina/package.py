@@ -33,7 +33,6 @@ class PySina(PythonPackage):
     version('1.10.0', tag="v1.10.0")
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest', type='test')
     depends_on('py-ujson', type=('build','run'))
     depends_on("py-sqlalchemy", type="run")
     depends_on("py-six", type="run")
