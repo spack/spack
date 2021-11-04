@@ -34,7 +34,7 @@ class RocmTensile(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('openmp', default=True, description='Enable OpenMP')
-
+    conflicts('tensile_architecture=gfx906', when='@4.0.1:')
     depends_on('cmake@3:', type='build')
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
