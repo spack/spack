@@ -22,7 +22,7 @@ class Restic(Package):
         # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path('GOPATH', self.stage.path)
 
-    def install(self, spec, prefix):  
+    def install(self, spec, prefix):
         go('run', 'build.go')
         mkdirp(prefix.bin)
         install('restic', prefix.bin)
