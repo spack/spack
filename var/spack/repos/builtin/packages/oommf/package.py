@@ -101,6 +101,10 @@ class Oommf(Package):
     depends_on("tcl", type=("build", "test", "run"))
     depends_on("xproto", type=("build"))
 
+    # Compilation with clang does not work yet (gcc works fine, nothing else tested)
+    # (https://github.com/spack/spack/pull/26933#pullrequestreview-789754233)
+    conflicts("%clang")
+
     phases = ["configure", "build", "install"]
 
     # sanity checks: (https://spack.readthedocs.io/en/latest/packaging_guide.html#checking-an-installation)
