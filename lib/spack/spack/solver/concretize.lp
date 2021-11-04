@@ -435,18 +435,23 @@ variant_value(Package, Variant, Value)
 % The rules below allow us to prefer default values for variants
 % whenever possible. If a variant is set in a spec, or if it is
 % specified in an external, we score it as if it was a default value.
-variant_not_default(Package, Variant, Actual, 1)
- :- variant_value(Package, Variant, Actual),
-    not variant_value(Package, Variant, Value),
-    variant_default_value(Package, Variant, Value),
-    Actual != Value,
+variant_not_default(Package, Variant, Value)
+ :- variant_value(Package, Variant, Value),
+    not variant_default_value(Package, Variant, Value),
     % variants set explicitly on the CLI don't count as non-default
-    not variant_set(Package, Variant, Actual),
+    not variant_set(Package, Variant, Value),
     % variants set on externals that we could use don't count as non-default
     % this makes spack prefer to use an external over rebuilding with the
     % default configuration
-    not external_with_variant_set(Package, Variant, Actual),
+    not external_with_variant_set(Package, Variant, Value),
     node(Package).
+
+
+% A default variant value that is not used
+variant_default_not_used(Package, Variant, Value)
+  :- variant_default_value(Package, Variant, Value),
+     not variant_value(Package, Variant, Value),
+     node(Package).
 
 % The variant is set in an external spec
 external_with_variant_set(Package, Variant, Value)
@@ -823,11 +828,11 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used
-opt_criterion(14, "deprecated versions used").
-#minimize{ 0@214: #true }.
-#minimize{ 0@14: #true }.
+opt_criterion(15, "deprecated versions used").
+#minimize{ 0@215: #true }.
+#minimize{ 0@15: #true }.
 #minimize{
-    1@14+Priority,Package
+    1@15+Priority,Package
     : deprecated(Package, _),
       build_priority(Package, Priority)
 }.
@@ -836,93 +841,114 @@ opt_criterion(14, "deprecated versions used").
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-opt_criterion(13, "version weight").
-#minimize{ 0@213: #true }.
-#minimize{ 0@13: #true }.
+opt_criterion(14, "version weight").
+#minimize{ 0@214: #true }.
+#minimize{ 0@14: #true }.
 #minimize {
-    Weight@13+Priority
+    Weight@14+Priority
     : root(Package),version_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(12, "number of non-default variants (roots)").
-#minimize{ 0@212: #true }.
-#minimize{ 0@12: #true }.
+opt_criterion(13, "number of non-default variants (roots)").
+#minimize{ 0@213: #true }.
+#minimize{ 0@13: #true }.
 #minimize {
-    Weight@12+Priority,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight),
+    1@13+Priority,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value),
       root(Package),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(11, "preferred providers for roots").
-#minimize{ 0@211 : #true }.
-#minimize{ 0@11: #true }.
+opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@212 : #true }.
+#minimize{ 0@12: #true }.
 #minimize{
-    Weight@11+Priority,Provider,Virtual
+    Weight@12+Priority,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight),
       root(Provider),
       build_priority(Provider, Priority)
 }.
 
+opt_criterion(11, "default values of variants not being used (roots)").
+#minimize{ 0@211: #true }.
+#minimize{ 0@11: #true }.
+#minimize{
+    1@11+Priority,Package,Variant,Value
+    : variant_default_not_used(Package, Variant, Value),
+      root(Package),
+      build_priority(Package, Priority)
+}.
+
 % Try to use default variants or variants that have been set
-opt_criterion(9, "number of non-default variants (non-roots)").
-#minimize{ 0@209: #true }.
-#minimize{ 0@9: #true }.
+opt_criterion(10, "number of non-default variants (non-roots)").
+#minimize{ 0@210: #true }.
+#minimize{ 0@10: #true }.
 #minimize {
-    Weight@9+Priority,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight),
+    1@10+Priority,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value),
       not root(Package),
       build_priority(Package, Priority)
 }.
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(8, "preferred providers (non-roots)").
-#minimize{ 0@208: #true }.
-#minimize{ 0@8: #true }.
+opt_criterion(9, "preferred providers (non-roots)").
+#minimize{ 0@209: #true }.
+#minimize{ 0@9: #true }.
 #minimize{
-    Weight@8+Priority,Provider,Virtual
+    Weight@9+Priority,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight), not root(Provider),
       build_priority(Provider, Priority)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(7, "compiler mismatches").
-#minimize{ 0@207: #true }.
-#minimize{ 0@7: #true }.
+opt_criterion(8, "compiler mismatches").
+#minimize{ 0@208: #true }.
+#minimize{ 0@8: #true }.
 #minimize{
-    1@7+Priority,Package,Dependency
+    1@8+Priority,Package,Dependency
     : compiler_mismatch(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(6, "OS mismatches").
-#minimize{ 0@206: #true }.
-#minimize{ 0@6: #true }.
+opt_criterion(7, "OS mismatches").
+#minimize{ 0@207: #true }.
+#minimize{ 0@7: #true }.
 #minimize{
-    1@6+Priority,Package,Dependency
+    1@7+Priority,Package,Dependency
     : node_os_mismatch(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(5, "non-preferred OS's").
-#minimize{ 0@205: #true }.
-#minimize{ 0@5: #true }.
+opt_criterion(6, "non-preferred OS's").
+#minimize{ 0@206: #true }.
+#minimize{ 0@6: #true }.
 #minimize{
-    Weight@5+Priority,Package
+    Weight@6+Priority,Package
     : node_os_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
 % Choose more recent versions for nodes
 opt_criterion(5, "version badness").
+#minimize{ 0@205: #true }.
+#minimize{ 0@5: #true }.
+#minimize{
+    Weight@5+Priority,Package
+    : version_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
+
+% Try to use all the default values of variants
+opt_criterion(4, "default values of variants not being used (non-roots)").
 #minimize{ 0@204: #true }.
 #minimize{ 0@4: #true }.
 #minimize{
-    Weight@4+Priority,Package
-    : version_weight(Package, Weight),
+    1@4+Priority,Package,Variant,Value
+    : variant_default_not_used(Package, Variant, Value),
+      not root(Package),
       build_priority(Package, Priority)
 }.
 
