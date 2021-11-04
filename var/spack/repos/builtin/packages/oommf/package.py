@@ -213,7 +213,7 @@ class Oommf(Package):
             env=test_env
         )
 
-        print("output received fromm oommf is %s" % output)
+        print("output received from oommf is %s" % output)
 
     @run_after("install")
     def check_install_version(self):
