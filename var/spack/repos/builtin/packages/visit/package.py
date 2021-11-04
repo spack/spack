@@ -193,13 +193,13 @@ class Visit(CMakePackage):
                patches=[patch('vtk_compiler_visibility.patch'),
                         patch('vtk_rendering_opengl2_x11.patch'),
                         patch('vtk_wrapping_python_x11.patch'),
-               ],
+                        ],
                when='~python @3.2:,develop')
     depends_on('vtk@8.1.0+opengl2+osmesa+python',
                patches=[patch('vtk_compiler_visibility.patch'),
                         patch('vtk_rendering_opengl2_x11.patch'),
                         patch('vtk_wrapping_python_x11.patch'),
-               ],
+                        ],
                when='+python @3.2:,develop')
     depends_on('glu', when='platform=linux')
     depends_on('vtk+python', when='+python @3.2:,develop')
