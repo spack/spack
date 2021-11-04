@@ -216,7 +216,7 @@ class Visit(CMakePackage):
     depends_on('mesa+glx', when='^mesa')
     depends_on('mesa-glu', when='^mesa')
     # VisIt doesn't build with hdf5@1.12 and hdf5@1.10 produces files that
-    # are incompatible with hdf5@1.8
+    # are incompatible with hdf5@1.8.
     depends_on('hdf5@1.8', when='+hdf5')
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
