@@ -17,6 +17,6 @@ class PyPyaml(PythonPackage):
 
     version('21.8.3', sha256='a1636d63c476328a07213d0b7111bb63570f1ab8a3eddf60522630250c23d975')
 
-    depends_on('python@2.7:,3.5:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pyyaml', type=('build', 'run'))
