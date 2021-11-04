@@ -311,7 +311,7 @@ class _BuildcacheBootstrapper(object):
     @property
     def mirror_scope(self):
         return spack.config.InternalConfigScope(
-            'bootstrap', {'mirrors:': {self.name: self.url}}
+            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
         )
 
     def try_import(self, module, abstract_spec_str):
