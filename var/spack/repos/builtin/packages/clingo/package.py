@@ -42,7 +42,6 @@ class Clingo(CMakePackage):
 
     depends_on('doxygen', type="build", when="+docs")
 
-
     depends_on('python', type=("build", "link", "run"), when="+python")
     extends('python', when='+python')
 
