@@ -25,7 +25,7 @@ class Bufr(CMakePackage):
     def _setup_bufr_environment(self, env, suffix):
         libname = 'libufr_{0}'.format(suffix)
         lib = find_libraries(libname, root=self.prefix,
-                              shared=False, recursive=True)
+                             shared=False, recursive=True)
         lib_envname = 'BUFR_LIB{0}'.format(suffix)
         inc_envname = 'BUFR_INC{0}'.format(suffix)
         include_dir = 'include_{0}'.format(suffix)
@@ -36,7 +36,7 @@ class Bufr(CMakePackage):
         # Bufr has _DA (dynamic allocation) libs in versions <= 11.5.0
         if self.spec.satisfies('@:11.5.0'):
             da_lib = find_libraries(libname + "_DA", root=self.prefix,
-                              shared=False, recursive=True)
+                                    shared=False, recursive=True)
             env.set(lib_envname + '_DA', da_lib[0])
             env.set(inc_envname + '_DA', include_dir)
 

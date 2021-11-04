@@ -23,7 +23,7 @@ class Landsfcutil(CMakePackage):
         for suffix in ('4', 'd'):
             lib = find_libraries('liblandsfcutil_' + suffix, root=self.prefix,
                                  shared=False, recursive=True)
-        
+
             env.set('LANDSFCUTIL_LIB' + suffix, lib[0])
             env.set('LANDSFCUTIL_INC' + suffix,
                     join_path(self.prefix, 'include_' + suffix))
