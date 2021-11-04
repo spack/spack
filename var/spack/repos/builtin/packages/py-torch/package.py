@@ -75,6 +75,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('gloo', default=not is_darwin, description='Use Gloo')
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
+    variant('breakpad', default=True, description='Enable breakpad crash dump library')
 
     conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
@@ -98,6 +99,9 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+fbgemm', when='@:0.4,1.4.0')
     conflicts('+qnnpack', when='@:0.4')
     conflicts('+mkldnn', when='@:0.4')
+    conflicts('+breakpad', when='@:1.9')  # Option appeared in 1.10.0
+    conflicts('+breakpad', when='target=ppc64:', msg='Unsupported')
+    conflicts('+breakpad', when='target=ppc64le:', msg='Unsupported')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -312,6 +316,8 @@ class PyTorch(PythonPackage, CudaPackage):
             enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
+        if self.spec.satisfies('@1.10:'):
+            enable_or_disable('breakpad')
 
         enable_or_disable('nccl')
         if '+nccl' in self.spec:

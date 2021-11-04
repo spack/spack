@@ -17,9 +17,9 @@ class RProcessx(RPackage):
     with a timeout. It can also poll several processes at once."""
 
     homepage = "https://github.com/r-lib/processx"
-    url      = "https://cloud.r-project.org/src/contrib/processx_3.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/processx"
+    cran = "processx"
 
+    version('3.5.2', sha256='ed6f2d1047461c6061e6ed58fb6de65a289b56009867892abad76c6bba46fc2b')
     version('3.4.5', sha256='e368103aa6a6894bfa8e78b12a25598464bcd2c19a8b6334f24ee397db13bb14')
     version('3.4.1', sha256='f1abddb48fa78f2b176552e2ec5d808d4d87d79ce72e9b3d25c9a7d715bbd1bc')
     version('3.3.1', sha256='6123dbdf9f3bb6e5e8678980fb4587dcefb56d2190adf2ef494d7cd199720bae')
@@ -31,6 +31,7 @@ class RProcessx(RPackage):
 
     depends_on('r-ps@1.2.0:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))
+
     depends_on('r-assertthat', when='@:3.2.9', type=('build', 'run'))
     depends_on('r-crayon', when='@:3.2.9', type=('build', 'run'))
     depends_on('r-debugme', when='@:3.0.9', type=('build', 'run'))

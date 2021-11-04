@@ -109,10 +109,7 @@ def solve(parser, args):
         return
 
     # die if no solution was found
-    # TODO: we need to be able to provide better error messages than this
-    if not result.satisfiable:
-        result.print_cores()
-        tty.die("Unsatisfiable spec.")
+    result.raise_if_unsat()
 
     # dump the solutions as concretized specs
     if 'solutions' in dump:

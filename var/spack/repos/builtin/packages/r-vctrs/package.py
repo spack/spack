@@ -17,9 +17,9 @@ class RVctrs(RPackage):
     homepage = "https://github.com/r-lib/vctrs"
     cran = "vctrs"
 
-    version('0.3.8', sha256='87d8e49edd56315f25b7165e9175255c8819fbd813e508ddbaff0f11adbec6df')
-    version('0.3.6', sha256='5869a2cc2cb62ccb6f7ff7e8f88c02790d5ea256cccaf51aee56fb28e7ee48ce')
-    version('0.3.5', sha256='798dd19809ab99267456ebf488e7aa4e3c03f7f307f5e0abde01dc7ba1cf53ce')
+    version('0.3.8', sha256='7f4e8b75eda115e69dddf714f0643eb889ad61017cdc13af24389aab2a2d1bb1')
+    version('0.3.6', sha256='df7d368c9f2d2ad14872ba2a09821ec4f5a8ad77c81a0b05e1f440e5ffebad25')
+    version('0.3.5', sha256='11605d98106e294dae1a9b205462dd3906a6159a647150752b85dd290f6635cc')
     version('0.2.0', sha256='5bce8f228182ecaa51230d00ad8a018de9cf2579703e82244e0931fe31f20016')
 
     depends_on('r@3.2:', type=('build', 'run'))
