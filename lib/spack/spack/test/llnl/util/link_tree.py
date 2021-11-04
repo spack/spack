@@ -174,4 +174,3 @@ def test_ignore(stage, link_tree):
 
         assert os.path.isfile('source/.spec')
         assert os.path.isfile('dest/.spec')
-
