@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Librttopo(Package):
+class Librttopo(AutotoolsPackage):
     """
     The RT Topology Library exposes an API to create and manage standard \
     (ISO 13249 aka SQL/MM) topologies using user-provided data stores.
