@@ -846,18 +846,17 @@ class Python(Package):
         # Some values set by sysconfig may not always exist on Windows, so
         # compute Windows alternatives
         def repair_win_sysconf(conf):
-            if not is_windows:
-                pass
-            else:
+            if is_windows:
                 conf["LIBDIR"] = os.path.join(conf["LIBDEST"], "..", "libs")
                 conf["LIBPL"] = conf["LIBDIR"]
                 conf["PYTHONFRAMEWORKPREFIX"] = ""
-                conf["LDLIBRARY"] = "python"+conf["VERSION"]+".dll"
-                conf["LIBRARY"] = "python"+conf["VERSION"]+".lib"
+                conf["LDLIBRARY"] = "python" + conf["VERSION"] + ".dll"
+                conf["LIBRARY"] = "python" + conf["VERSION"] + ".lib"
                 conf["CC"] = ""
                 conf["CXX"] = ""
                 conf["LDSHARED"] = ""
                 conf["LDCXXSHARED"] = ""
+
             return conf
 
         # TODO: distutils is deprecated in Python 3.10 and will be removed in
@@ -941,14 +940,15 @@ for plat_specific in [True, False]:
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        libdir = self.config_vars["LIBDIR"]
+        libdir = self.config_vars['LIBDIR']
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
         # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
-        # later failures. Return empty string rather than none so os.path doesn't complain
-        libpl = self.config_vars["LIBPL"]
+        # later failures.
+        # Return empty string rather than none so os.path doesn't complain
+        libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
@@ -964,7 +964,7 @@ for plat_specific in [True, False]:
 
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
-
+            win_bin_dir = self.config_vars['BINDIR']
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
             elif os.path.exists(os.path.join(libpl, ldlibrary)):
@@ -974,6 +974,9 @@ for plat_specific in [True, False]:
             elif macos_developerdir and \
                     os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
                 return LibraryList(os.path.join(macos_developerdir, ldlibrary))
+            elif is_windows and \
+                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
+                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
