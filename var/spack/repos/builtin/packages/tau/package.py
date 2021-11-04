@@ -268,10 +268,10 @@ class Tau(Package):
             options.append("-rocm=%s" % spec['hsa-rocr-dev'].prefix)
 
         if '+rocprofiler' in spec:
-            options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix)
+            options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix+"/rocprofiler")
 
         if '+roctracer' in spec:
-            options.append("-roctracer=%s" % spec['roctracer-dev'].prefix)
+            options.append("-roctracer=%s" % spec['roctracer-dev'].prefix+"/roctracer")
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)
