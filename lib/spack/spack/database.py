@@ -333,7 +333,7 @@ class Database(object):
         ``enable_transaction_locking=False``, and specify a list of needed
         fields in ``record_fields``.
         """
-        self.root = root
+        self.root = os.path.expanduser(root)
 
         # If the db_dir is not provided, default to within the db root.
         self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
