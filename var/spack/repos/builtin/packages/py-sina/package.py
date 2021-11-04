@@ -7,15 +7,18 @@
 from spack import *
 import os
 
+
 class PySina(PythonPackage):
-    """Sina allows codes to store, query, and visualize their data through an easy-to-use Python API.
-    Data that fits its recognized schema can be ingested into one or more supported backends.
-    Sina's API is independent of backend and gives users the benefits of a database without requiring knowledge of one,
-    allowing queries to be expressed in pure Python.
-    Visualizations are also provided through Python
+    """Sina allows codes to store, query, and visualize their data through an
+    easy-to-use Python API. Data that fits its recognized schema can be ingested
+    into one or more supported backends.
+    Sina's API is independent of backend and gives users the benefits of a database
+    without requiring knowledge of one, allowing queries to be expressed in pure
+    Python.  Visualizations are also provided through Python.
 
     Sina is intended especially for use with run metadata,
-    allowing users to easily and efficiently find simulation runs that match some criteria.
+    allowing users to easily and efficiently find simulation runs that match some
+    criteria.
     """
 
     homepage = "https://github.com/LLNL/Sina"
@@ -23,17 +26,17 @@ class PySina(PythonPackage):
 
     # notify when the package is updated.
     maintainers = [
-            'HaluskaR',
-            'estebanpauli',
-            'murray55',
-            'doutriaux1',
-            ]
+        'HaluskaR',
+        'estebanpauli',
+        'murray55',
+        'doutriaux1',
+    ]
 
     version('1.11.0', tag="v1.11.0")
     version('1.10.0', tag="v1.10.0")
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-ujson', type=('build','run'))
+    depends_on('py-ujson', type=('build', 'run'))
     depends_on("py-sqlalchemy", type="run")
     depends_on("py-six", type="run")
 
