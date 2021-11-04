@@ -1423,6 +1423,10 @@ class SpackSolverSetup(object):
         strict = spack.concretize.Concretizer().check_for_compiler_existence
         for spec in specs:
             for s in spec.traverse():
+                # we don't need to validate compilers for already-built specs
+                if s.concrete:
+                    continue
+
                 if not s.compiler or not s.compiler.concrete:
                     continue
 

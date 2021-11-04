@@ -372,10 +372,13 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
 % a variant cannot be set if it is not a variant on the package
 :- variant_set(Package, Variant),
    not variant(Package, Variant),
+   build(Package),
    error("Unsatisfied conditional variants cannot be set").
 
 % a variant cannot take on a value if it is not a variant of the package
-:- variant_value(Package, Variant, _), not variant(Package, Variant),
+:- variant_value(Package, Variant, _),
+   not variant(Package, Variant),
+   build(Package),
    error("Unsatisfied conditional variants cannot take on a variant value").
 
 % one variant value for single-valued variants.
@@ -386,6 +389,7 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
  :- node(Package),
     variant(Package, Variant),
     variant_single_value(Package, Variant),
+    build(Package),
     error("Single valued variants must have a single value").
 
 % at least one variant value for multi-valued variants.
@@ -396,6 +400,7 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
  :- node(Package),
     variant(Package, Variant),
     not variant_single_value(Package, Variant),
+    build(Package),
     error("Internal error: All variants must have a value").
 
 % if a variant is set to anything, it is considered 'set'.
@@ -417,6 +422,7 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
    variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
    variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
    Set1 != Set2,
+   build(Package),
    error("Variant values selected from multiple disjoint sets").
 
 % variant_set is an explicitly set variant value. If it's not 'set',
@@ -640,10 +646,12 @@ node_target_mismatch(Parent, Dependency)
 %-----------------------------------------------------------------------------
 compiler(Compiler) :- compiler_version(Compiler, _).
 
-% There must be only one compiler set per node. The compiler
+% There must be only one compiler set per built node. The compiler
 % is chosen among available versions.
-1 { node_compiler_version(Package, Compiler, Version)
-    : compiler_version(Compiler, Version) } 1 :- node(Package), error("Each node must have exactly one compiler").
+1 { node_compiler_version(Package, Compiler, Version) : compiler_version(Compiler, Version) } 1 :-
+    node(Package),
+    build(Package),
+    error("Each node must have exactly one compiler").
 
 % Sometimes we just need to know the compiler and not the version
 node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
@@ -658,11 +666,14 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { node_compiler_version(Package, Compiler, Version)
-    : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1
-  :- node_compiler_version_satisfies(Package, Compiler, Constraint), error("Internal error: node compiler version mismatch").
+    : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1 :-
+    node_compiler_version_satisfies(Package, Compiler, Constraint),
+    error("Internal error: node compiler version mismatch").
+
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
-     node_compiler_version_satisfies(Package, Compiler, Constraint, Version).
+     node_compiler_version_satisfies(Package, Compiler, Constraint, Version),
+     build(Package).
 
 #defined node_compiler_version_satisfies/4.
 
