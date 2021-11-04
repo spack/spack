@@ -10,7 +10,6 @@ class PyPyscipopt(PythonPackage):
     """Python interface for the SCIP Optimization Suite"""
 
     homepage = "https://github.com/scipopt/PySCIPOpt"
-    url      = "https://github.com/scipopt/PySCIPOpt/archive/refs/tags/v3.3.0.zip"
     pyip     = "pyscipopt/pysciopt-3.3.0.tar.gz"
 
     version('3.3.0', sha256='bae5e19014583f0049018bf6079905a86076da2b06093e989e16838cac88c071')
