@@ -5,7 +5,6 @@
 
 
 from spack import *
-import os
 
 
 class PySina(PythonPackage):
