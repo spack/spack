@@ -631,6 +631,9 @@ class SpackSolverSetup(object):
         self.compiler_version_constraints = set()
         self.post_facts = []
 
+        # hashes we've already added facts for
+        self.seen_hashes = set()
+
         # id for dummy variables
         self._condition_id_counter = itertools.count()
 
@@ -1569,43 +1572,48 @@ class SpackSolverSetup(object):
         for pkg, variant, value in sorted(self.variant_values_from_specs):
             self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
-    def define_installed_packages(self, possible):
+    def _facts_from_concrete_spec(self, spec, possible):
+        # tell the solver about any installed packages that could
+        # be dependencies (don't tell it about the others)
+        h = spec.dag_hash()
+        if spec.name in possible and h not in self.seen_hashes:
+            # this indicates that there is a spec like this installed
+            self.gen.fact(fn.installed_hash(spec.name, h))
+
+            # this describes what constraints it imposes on the solve
+            self.impose(h, spec, body=True)
+            self.gen.newline()
+
+            # add OS to possible OS's
+            self.possible_oses.add(spec.os)
+
+            # add the hash to the one seen so far
+            self.seen_hashes.add(h)
+
+    def define_concrete_input_specs(self, specs, possible):
+        # any concrete specs in the input spec list
+        for input_spec in specs:
+            for spec in input_spec.traverse():
+                if spec.concrete:
+                    self._facts_from_concrete_spec(spec, possible)
+
+    def define_installed_packages(self, specs, possible):
         """Add facts about all specs already in the database.
 
         Arguments:
             possible (dict): result of Package.possible_dependencies() for
                 specs in this solve.
         """
-        seen = set()
-
-        def _facts_from_concrete_spec(spec):
-            # tell the solver about any installed packages that could
-            # be dependencies (don't tell it about the others)
-            h = spec.dag_hash()
-            if spec.name in possible and h not in seen:
-                # this indicates that there is a spec like this installed
-                self.gen.fact(fn.installed_hash(spec.name, h))
-
-                # this describes what constraints it imposes on the solve
-                self.impose(h, spec, body=True)
-                self.gen.newline()
-
-                # add OS to possible OS's
-                self.possible_oses.add(spec.os)
-
-                # add the hash to the one seen so far
-                seen.add(h)
-
         # Specs from local store
         with spack.store.db.read_transaction():
             for spec in spack.store.db.query(installed=True):
-                _facts_from_concrete_spec(spec)
+                self._facts_from_concrete_spec(spec, possible)
 
         # Specs from configured buildcaches
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
-                _facts_from_concrete_spec(spec)
+                self._facts_from_concrete_spec(spec, possible)
         except spack.binary_distribution.FetchCacheError:
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
@@ -1656,11 +1664,14 @@ class SpackSolverSetup(object):
         # traverse all specs and packages to build dict of possible versions
         self.build_version_dict(possible, specs)
 
+        self.gen.h1("Concrete input spec definitions")
+        self.define_concrete_input_specs(specs, possible)
+
         if reuse:
             self.gen.h1("Installed packages")
             self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
-            self.define_installed_packages(possible)
+            self.define_installed_packages(specs, possible)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
@@ -1736,12 +1747,22 @@ class SpecBuilder(object):
         if pkg not in self._specs:
             try:
                 # try to get the candidate from the store
-                self._specs[pkg] = spack.store.db.get_by_hash(h)[0]
+                concrete_spec = spack.store.db.get_by_hash(h)[0]
             except TypeError:
                 # the dag hash was not in the DB, try buildcache
                 s = spack.binary_distribution.binary_index.find_by_hash(h)
-                # see specifications in spack.binary_distribution.BinaryCacheIndex
-                self._specs[pkg] = s[0]['spec']
+                if s:
+                    concrete_spec = s[0]['spec']
+                else:
+                    # last attempt: maybe the hash comes from a particular input spec
+                    # this only occurs in tests (so far)
+                    for clspec in self._command_line_specs:
+                        for spec in clspec.traverse():
+                            if spec.concrete and spec.dag_hash() == h:
+                                concrete_spec = spec
+
+            assert concrete_spec, "Unable to look up concrete spec with hash %s" % h
+            self._specs[pkg] = concrete_spec
         else:
             # ensure that if it's already there, it's correct
             spec = self._specs[pkg]
