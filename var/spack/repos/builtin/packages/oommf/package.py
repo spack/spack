@@ -124,8 +124,10 @@ class Oommf(Package):
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
-                "Found 'oommf.tcl' in " + os.getcwd() + "/oommf " +
-                "(looks like source from Github)"
+                "Found 'oommf.tcl' in "
+                + os.getcwd()
+                + "/oommf "
+                + "(looks like source from Github)"
             )
             return "oommf"
         else:
