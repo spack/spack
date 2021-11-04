@@ -18,7 +18,7 @@ class PyQiskitTerra(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.27.1:', type='build')
 
-    depends_on('py-contextvars@2.4:', when='^python@:3.6.999', type=('build', 'run'))
+    depends_on('py-contextvars@2.4:', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-jsonschema@2.6:', type=('build', 'run'))
     depends_on('py-retworkx@0.9.0:', type=('build', 'run'))
     depends_on('py-numpy@1.17:', type=('build', 'run'))
@@ -31,4 +31,4 @@ class PyQiskitTerra(PythonPackage):
     depends_on('py-python-constraint@1.4:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.8.0:', type=('build', 'run'))
     depends_on('py-symengine@0.7:', type=('build', 'run'))
-    depends_on('py-tweedledum@1.1:1.999', type=('build', 'run'))
+    depends_on('py-tweedledum@1.1:1', type=('build', 'run'))
