@@ -19,8 +19,8 @@ import llnl.util.filesystem as fs
 import spack.hooks.sbang as sbang
 import spack.paths
 import spack.store
-from spack.util.executable import which
 import spack.util.spack_yaml as syaml
+from spack.util.executable import which
 
 too_long = sbang.system_shebang_limit + 1
 
