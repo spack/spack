@@ -339,6 +339,7 @@ spt_contains "set -gx LD_LIBRARY_PATH $_b_ld" spack -m load --only package --fis
 spt_succeeds spack -m load b
 set LIST_CONTENT (spack -m load b; spack load --list)
 spt_contains "b@" echo $LIST_CONTENT
+spt_does_not_contain "a@" echo $LIST_CONTENT
 # test a variable MacOS clears and one it doesn't for recursive loads
 spt_contains "set -gx LD_LIBRARY_PATH $_a_ld:$_b_ld" spack -m load --fish a
 spt_succeeds spack -m load --only dependencies a
