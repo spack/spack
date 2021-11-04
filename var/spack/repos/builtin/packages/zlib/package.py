@@ -5,6 +5,7 @@
 
 from spack.build_systems.windows_variants import WindowsPackage
 
+
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
 class Zlib(CMakePackage, WindowsPackage):
