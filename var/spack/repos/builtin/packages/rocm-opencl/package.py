@@ -33,7 +33,7 @@ class RocmOpencl(CMakePackage):
     version('3.5.0', sha256='511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0')
 
     depends_on('cmake@3:', type='build')
-    depends_on('mesa18~llvm@18.3:', type='link')
+    depends_on('mesa', type='link')
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',

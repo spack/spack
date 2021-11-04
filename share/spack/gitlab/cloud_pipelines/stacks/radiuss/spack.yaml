@@ -32,7 +32,7 @@ spack:
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
-      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # same issue w/chai
+      #- glvis   # ^mesa-glu@9.0.0 # same issue w/chai
       - hypre
       - lbann
       - lvarray ~tests  # per Spack issue #23192  # ~examples

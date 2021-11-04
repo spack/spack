@@ -124,8 +124,6 @@ spack:
       - 1.4.19
     mesa:
       variants: ~llvm
-    mesa18:
-      variants: ~llvm
     mpich:
       variants: ~wrapperrpath
       version:

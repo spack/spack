@@ -75,7 +75,7 @@ class Mesa(MesonPackage):
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('llvm@6:12', when='+llvm')
+    depends_on('libllvm@6:12', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -168,10 +168,13 @@ class Mesa(MesonPackage):
 
         args.append(opt_enable(num_frontends > 1, 'shared-glapi'))
 
+        print('type(spec):', type(spec))
+        print('spec:', spec)
+
         if '+llvm' in spec:
             args.append('-Dllvm=enabled')
             args.append(opt_enable(
-                '+link_dylib' in spec['llvm'], 'shared-llvm'))
+                '+dylib' in spec['llvm'], 'shared-llvm'))
         else:
             args.append('-Dllvm=disabled')
 
