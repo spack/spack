@@ -238,7 +238,7 @@ class Oommf(Package):
         oommf_tcl_path = join_path(spec.prefix.bin, "oommf.tcl")
         options = [oommf_tcl_path, "+version"]
         purpose = "Check oommf.tcl can execute (+version)"
-        expected = ["oommf.tcl"]
+        expected = ["info:"]
 
         self.run_test(
             exe,
