@@ -74,6 +74,8 @@ class NetlibLapack(CMakePackage, WindowsPackage):
     depends_on('blas', when='+external-blas')
     depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
     depends_on('python@2.7:', type='test')
+    depends_on('ninja@1.10.0:', when='platform=windows')
+    depends_on('cmake@3.15:')
 
     # We need to run every phase twice in order to get static and shared
     # versions of the libraries. When ~shared, we run the default
