@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.display as display
 import spack.environment as ev
 import spack.fetch_strategy as fs
 import spack.repo
@@ -24,9 +25,6 @@ from spack.package import preferred_version
 description = 'get detailed information on a particular package'
 section = 'basic'
 level = 'short'
-
-header_color = '@*b'
-plain_format = '@.'
 
 
 def padder(str_list, extra=0):
@@ -49,19 +47,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--installed',
         action='store_true',
-        help='Show installation details for the provided spec')
-
-
-def section_title(s):
-    return header_color + s + plain_format
-
-
-def version(s):
-    return spack.spec.version_color + s + plain_format
-
-
-def variant(s):
-    return spack.spec.enabled_variant_color + s + plain_format
+        help='Show installation details: same as `spack find --info`')
 
 
 class VariantFormatter(object):
@@ -158,27 +144,27 @@ class VariantFormatter(object):
 def print_text_info(pkg):
     """Print out a plain text description of a package."""
 
-    header = section_title(
+    header = display.section_title(
         '{0}:   '
     ).format(pkg.build_system_class) + pkg.name
     color.cprint(header)
 
     color.cprint('')
-    color.cprint(section_title('Description:'))
+    color.cprint(display.section_title('Description:'))
     if pkg.__doc__:
         color.cprint(color.cescape(pkg.format_doc(indent=4)))
     else:
         color.cprint("    None")
 
-    color.cprint(section_title('Homepage: ') + pkg.homepage)
+    color.cprint(display.section_title('Homepage: ') + pkg.homepage)
 
     if len(pkg.maintainers) > 0:
         mnt = " ".join(['@@' + m for m in pkg.maintainers])
         color.cprint('')
-        color.cprint(section_title('Maintainers: ') + mnt)
+        color.cprint(display.section_title('Maintainers: ') + mnt)
 
     color.cprint('')
-    color.cprint(section_title('Externally Detectable: '))
+    color.cprint(display.section_title('Externally Detectable: '))
 
     # If the package has an 'executables' field, it can detect an installation
     if hasattr(pkg, 'executables'):
@@ -198,7 +184,7 @@ def print_text_info(pkg):
         color.cprint('    False')
 
     color.cprint('')
-    color.cprint(section_title("Tags: "))
+    color.cprint(display.section_title("Tags: "))
     if hasattr(pkg, 'tags'):
         tags = sorted(pkg.tags)
         colify(tags, indent=4)
@@ -206,16 +192,16 @@ def print_text_info(pkg):
         color.cprint("    None")
 
     color.cprint('')
-    color.cprint(section_title('Preferred version:  '))
+    color.cprint(display.section_title('Preferred version:  '))
 
     if not pkg.versions:
-        color.cprint(version('    None'))
+        color.cprint(display.version('    None'))
         color.cprint('')
-        color.cprint(section_title('Safe versions:  '))
-        color.cprint(version('    None'))
+        color.cprint(display.section_title('Safe versions:  '))
+        color.cprint(display.version('    None'))
         color.cprint('')
-        color.cprint(section_title('Deprecated versions:  '))
-        color.cprint(version('    None'))
+        color.cprint(display.section_title('Deprecated versions:  '))
+        color.cprint(display.version('    None'))
     else:
         pad = padder(pkg.versions, 4)
 
@@ -224,7 +210,9 @@ def print_text_info(pkg):
         if pkg.has_code:
             url = fs.for_package_version(pkg, preferred)
 
-        line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
+        line = display.version(
+            '    {0}'.format(pad(preferred))
+        ) + color.cescape(url)
         color.cprint(line)
 
         safe = []
@@ -239,17 +227,21 @@ def print_text_info(pkg):
 
         for title, vers in [('Safe', safe), ('Deprecated', deprecated)]:
             color.cprint('')
-            color.cprint(section_title('{0} versions:  '.format(title)))
+            color.cprint(
+                display.section_title('{0} versions:  '.format(title))
+            )
             if not vers:
-                color.cprint(version('    None'))
+                color.cprint(display.version('    None'))
                 continue
 
             for v, url in vers:
-                line = version('    {0}'.format(pad(v))) + color.cescape(url)
+                line = display.version(
+                    '    {0}'.format(pad(v))
+                ) + color.cescape(url)
                 color.cprint(line)
 
     color.cprint('')
-    color.cprint(section_title('Variants:'))
+    color.cprint(display.section_title('Variants:'))
 
     formatter = VariantFormatter(pkg.variants)
     for line in formatter.lines:
@@ -257,7 +249,7 @@ def print_text_info(pkg):
 
     if hasattr(pkg, 'phases') and pkg.phases:
         color.cprint('')
-        color.cprint(section_title('Installation Phases:'))
+        color.cprint(display.section_title('Installation Phases:'))
         phase_str = ''
         for phase in pkg.phases:
             phase_str += "    {0}".format(phase)
@@ -265,7 +257,9 @@ def print_text_info(pkg):
 
     for deptype in ('build', 'link', 'run'):
         color.cprint('')
-        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
+        color.cprint(
+            display.section_title('%s Dependencies:' % deptype.capitalize())
+        )
         deps = sorted(pkg.dependencies_of_type(deptype))
         if deps:
             colify(deps, indent=4)
@@ -273,7 +267,7 @@ def print_text_info(pkg):
             color.cprint('    None')
 
     color.cprint('')
-    color.cprint(section_title('Virtual Packages: '))
+    color.cprint(display.section_title('Virtual Packages: '))
     if pkg.provided:
         inverse_map = {}
         for spec, whens in pkg.provided.items():
@@ -293,84 +287,21 @@ def print_text_info(pkg):
     color.cprint('')
 
 
-def print_deps(title, name, dep_dict, filter_name=False):
-    deps = dep_dict.items()
-    if not deps:
-        return
-
-    color.cprint('')
-    color.cprint(section_title('Recorded {0}:'.format(title)))
-    for _, value in deps:
-        dep_str = str(value).replace(name, '') if filter_name else str(value)
-        dep_str = dep_str.replace('-->', ' dependencies on')
-        color.cprint("    {0}".format(dep_str.strip()))
-
-
-def print_installed_info(args):
-    # Provide installation details for the installed spec
-    env = ev.active_environment()
-    specs = [spack.cmd.disambiguate_spec(spec, env)
-             for spec in spack.cmd.parse_specs(args.pkg_spec)]
-    if len(specs) != 1:
-        # Make sure to terminate if disambiguate doesn't do so
-        tty.die("Can only support one spec")
-
-    spec = specs[0]
-    dag = spec.dag_hash()
-    _, record = spack.store.db.query_by_spec_hash(dag)
-
-    pkg_vers = version('{0}@@{1}'.format(spec.name, spec.versions[0]))
-    header = section_title(
-        '{0}:   '
-    ).format(spec.package.build_system_class) + pkg_vers
-    color.cprint(header)
-
-    color.cprint('')
-    color.cprint(section_title('Hashes:'))
-    color.cprint("    DAG  = {0}".format(dag))
-    color.cprint("    full = {0}".format(spec.full_hash()))
-
-    color.cprint('')
-    how = 'Explicitly' if record.explicit else 'as Dependency'
-    installation = 'Installed {0}:   '.format(how)
-    when = date.fromtimestamp(record.installation_time).strftime("%A %d %B %Y")
-    color.cprint(section_title(installation) + when)
-    color.cprint("    architecture = {0}".format(spec.architecture))
-    color.cprint("    prefix       = {0}".format(record.path))
-
-    if spec.external:
-        color.cprint('')
-        color.cprint(section_title('External:'))
-        color.cprint("    path             = {0}".format(spec.external_path))
-        color.cprint("    module           = {0}".format(spec.external_modules))
-        color.cprint("    extra_attributes = {0}".format(spec.extra_attributes))
-
-    color.cprint('')
-    compiler = '{0}@@{1}'.format(spec.compiler.name, spec.compiler.versions[0])
-    color.cprint(section_title('Compiler:   ') + version(compiler))
-    for flag, value in spec.compiler_flags.items():
-        color.cprint("    {0} = {1}".format(flag, value))
-
-    color.cprint('')
-    color.cprint(section_title('Variant Settings:'))
-    variants = spec.variants.items()
-    if len(variants) > 1:
-        for _, value in variants:
-            color.cprint("    {0}".format(value))
-    else:
-        color.cprint("    None")
-
-    print_deps('Dependencies', spec.name, spec.dependencies_dict(), True)
-    print_deps('Dependents', spec.name, spec.dependents_dict(), False)
-
-
 def info(parser, args):
     if len(args.pkg_spec) != 1:
         parser.subparsers.choices['info'].print_help()
         tty.die("Only one package or spec is allowed")
 
     if args.installed:
-        print_installed_info(args)
+        # Provide installation details for the installed spec
+        env = ev.active_environment()
+        specs = [spack.cmd.disambiguate_spec(spec, env)
+                 for spec in spack.cmd.parse_specs(args.pkg_spec)]
+        if len(specs) != 1:
+            # Make sure to terminate if disambiguate doesn't do so
+            tty.die("Can only support one spec")
+
+        display.print_installed_info(specs[0])
         return
 
     # Print the static package info

@@ -16,6 +16,7 @@ import llnl.util.tty.color as color
 import spack.bootstrap
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
+import spack.cmd.common.display as display
 import spack.environment as ev
 import spack.repo
 import spack.user_environment as uenv
@@ -35,6 +36,9 @@ def setup_parser(subparser):
     format_group.add_argument(
         "--json", action="store_true", default=False,
         help="output specs as machine-readable json records")
+    format_group.add_argument(
+        "--info", action="store_true", default=False,
+        help="output single spec in human-readable form")
 
     subparser.add_argument('-d', '--deps', action='store_true',
                            help='output dependencies along with found specs')
@@ -247,6 +251,11 @@ def _find(parser, args):
     # Display the result
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
+    elif args.info:
+        if len(results) != 1:
+            tty.die("Information is provided for a single package only")
+
+        display.print_installed_info(results[0])
     else:
         if not args.format:
             if env:
