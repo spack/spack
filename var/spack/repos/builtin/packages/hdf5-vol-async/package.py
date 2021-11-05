@@ -15,7 +15,7 @@ class Hdf5VolAsync(CMakePackage):
 
     version('v1.0')
     depends_on('argobots@main')
-    depends_on('hdf5@1.13.0-rc6+mpi+threadsafe')
+    depends_on('hdf5@develop-1.13+mpi+threadsafe')
 
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""
