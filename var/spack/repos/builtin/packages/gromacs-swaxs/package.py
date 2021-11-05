@@ -45,12 +45,9 @@ class GromacsSwaxs(Gromacs):
         They are not valid, so we are removing them.
         """
 
-        gromacs_package = Gromacs
-
         for version_key in Gromacs.versions.keys():
             if version_key in self.versions:
                 del self.versions[version_key]
-
 
     def __init__(self, spec):
         super(GromacsSwaxs, self).__init__(spec)
