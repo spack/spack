@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class PySina(PythonPackage):
     """
 
     homepage = "https://github.com/LLNL/Sina"
-    git = "https://github.com/LLNL/Sina"
+    git = "https://github.com/LLNL/Sina.git"
 
     # notify when the package is updated.
     maintainers = [
@@ -35,13 +35,9 @@ class PySina(PythonPackage):
     version('1.10.0', tag="v1.10.0")
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-ujson', type=('build', 'run'))
-    depends_on("py-sqlalchemy", type="run")
-    depends_on("py-six", type="run")
-
-    # Licensing
-    license_required = False
-    license_comment  = '#'
-    license_files    = ['LICENSE']
+    depends_on("py-sqlalchemy", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))
 
     build_directory = 'python'
