@@ -1324,3 +1324,23 @@ class TestConcretize(object):
                 if pkg.name == 'low-priority-provider':
                     continue
                 assert pkg not in s
+
+    @pytest.mark.regression('27237')
+    @pytest.mark.parametrize('spec_str,expect_installed', [
+        ('mpich', True),
+        ('mpich+debug', False),
+        ('mpich~debug', True)
+    ])
+    def test_concrete_specs_are_not_modified_on_reuse(
+            self, mutable_database, spec_str, expect_installed
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse specs')
+
+        # Test the internal consistency of solve + DAG reconstruction
+        # when reused specs are added to the mix. This prevents things
+        # like additional constraints being added to concrete specs in
+        # the answer set produced by clingo.
+        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        assert s.package.installed is expect_installed
+        assert s.satisfies(spec_str, strict=True)
