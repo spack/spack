@@ -176,7 +176,8 @@ class Llvm(CMakePackage, CudaPackage):
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4+python")
     depends_on("python", when="@5:+python")
-    depends_on("z3", when="@9:")
+    # While not required for @8:9, cmake can find a z3 on the system, causing failures:
+    depends_on('z3', when='@8:')
 
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
@@ -212,10 +213,13 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts('~mlir', when='+flang', msg='Flang requires MLIR')
 
     # Older LLVM do not build with newer compilers, and vice versa
-    conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
     conflicts("%gcc@:5.0", when="@8:")
-    conflicts("%apple-clang@13:", when="@:9")
+    # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
+    conflicts("%clang@8:", when="@:4")
+
+    # When these versions are concretized, but not explicitly with +libcxx, these
+    # conflicts will enable clingo to set ~libcxx, making the build successful:
 
     # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
     # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
@@ -224,7 +228,15 @@ class Llvm(CMakePackage, CudaPackage):
     # AppleClang 12 - latest stable release per Xcode release page
     conflicts("%gcc@:10",         when="@13:+libcxx")
     conflicts("%clang@:10",       when="@13:+libcxx")
-    conflicts("%apple_clang@:11", when="@13:+libcxx")
+    conflicts("%apple-clang@:11", when="@13:+libcxx")
+
+    # libcxx-4 and compiler-rt-4 fail to build with "newer" clang and gcc versions:
+    conflicts('%gcc@7:',         when='@:4+libcxx')
+    conflicts('%clang@6:',       when='@:4+libcxx')
+    conflicts('%apple-clang@6:', when='@:4+libcxx')
+    conflicts('%gcc@7:',         when='@:4+compiler-rt')
+    conflicts('%clang@6:',       when='@:4+compiler-rt')
+    conflicts('%apple-clang@6:', when='@:4+compiler-rt')
 
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5")
@@ -260,10 +272,21 @@ class Llvm(CMakePackage, CudaPackage):
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
 
-    # https://github.com/spack/spack/issues/24270
-    patch('https://src.fedoraproject.org/rpms/llvm10/raw/7ce7ebd066955ea95ba2b491c41fbc6e4ee0643a/f/llvm10-gcc11.patch',
-          sha256='958c64838c9d469be514eef195eca0f8c3ab069bc4b64a48fad59991c626bab8',
-          when='@8:11 %gcc@11:')
+    # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
+    patch('llvm5-sanitizer-ustat.patch', when="@4:5+compiler-rt")
+
+    # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
+    patch('llvm4-lld-ELF-Symbols.patch', when="@4+lld%clang@6:")
+    patch('llvm5-lld-ELF-Symbols.patch', when="@5+lld%clang@7:")
+
+    # Fix missing std:size_t in 'llvm@4:5' when built with '%clang@7:'
+    patch('xray_buffer_queue-cstddef.patch', when="@4:5+compiler-rt%clang@7:")
+
+    # https://github.com/llvm/llvm-project/commit/947f9692440836dcb8d88b74b69dd379d85974ce
+    patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
+
+    # github.com/spack/spack/issues/24270 and MicrosoftDemangle: %gcc@10: and %clang@13:
+    patch('missing-includes.patch', when='@8:11')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
@@ -456,6 +479,17 @@ class Llvm(CMakePackage, CudaPackage):
             flags.append('-shared-intel')
             return(None, flags, None)
         return(flags, None, None)
+
+    def setup_build_environment(self, env):
+        """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
+        if self.compiler.name in ['clang', 'apple-clang']:
+            for lld in 'ld.lld-{0}'.format(self.compiler.version.version[0]), 'ld.lld':
+                bin = os.path.join(os.path.dirname(self.compiler.cc), lld)
+                sym = os.path.join(self.stage.path, 'ld.lld')
+                if os.path.exists(bin) and not os.path.exists(sym):
+                    mkdirp(self.stage.path)
+                    os.symlink(bin, sym)
+            env.prepend_path('PATH', self.stage.path)
 
     def setup_run_environment(self, env):
         if "+clang" in self.spec:
