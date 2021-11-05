@@ -6,20 +6,6 @@
 from spack.pkg.builtin.gromacs import Gromacs
 
 
-def is_swaxs_version(version):
-    return "url" in version and "swaxs" in version["url"]
-
-
-def filter_versions(versions):
-    filtered = {}
-
-    for key, version in versions.items():
-        if is_swaxs_version(version):
-            filtered[key] = version
-
-    return filtered
-
-
 class GromacsSwaxs(Gromacs):
     """Modified Gromacs for small-angle scattering calculations (SAXS/WAXS/SANS)"""
 
@@ -53,7 +39,20 @@ class GromacsSwaxs(Gromacs):
     conflicts('+opencl')
     conflicts('+sycl')
 
-    def __init__(self, spec):
-        super(Gromacs, self).__init__(spec)
+    def remove_parent_versions(self):
+        """
+        By inheriting GROMACS package we also inherit versions.
+        They are not valid, so we are removing them.
+        """
 
-        self.versions = filter_versions(self.versions)
+        gromacs_package = Gromacs
+
+        for version_key in Gromacs.versions.keys():
+            if version_key in self.versions:
+                del self.versions[version_key]
+
+
+    def __init__(self, spec):
+        super(GromacsSwaxs, self).__init__(spec)
+
+        self.remove_parent_versions()
