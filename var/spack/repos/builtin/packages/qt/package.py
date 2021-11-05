@@ -143,8 +143,7 @@ class Qt(Package):
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
-    # Error: 'numeric_limits' is not a class template
-    conflicts('%gcc@11:', when='@5.8:5.14')
+    conflicts('%gcc@11:', when='@5.8')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -417,6 +416,11 @@ class Qt(Package):
         # Don't error out on undefined symbols
         filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
                     conf('g++-unix'))
+
+        # https://gcc.gnu.org/gcc-11/porting_to.html: add -include limits
+        if self.spec.satisfies('@5.9:5.14%gcc@11:'):
+            with open(conf('gcc-base'), 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -include limits\n")
 
         if self.spec.satisfies('@4'):
             # The gnu98 flag is necessary to build with GCC 6 and other modern
