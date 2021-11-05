@@ -75,8 +75,6 @@ class SIPPackage(PackageBase):
         for path in find(root, '__init__.py', recursive=True):
             mod = path.replace(root + os.sep, '', 1).replace(
                 os.sep + '__init__.py', '').replace('/', '.')
-            if not re.match('[a-zA-Z0-9._]+$', mod):
-                continue
             modules.append(mod)
 
         # Some Python libraries are modules: individual *.py files
@@ -84,9 +82,9 @@ class SIPPackage(PackageBase):
         for path in find(root, '*.py', recursive=False):
             mod = path.replace(root + os.sep, '', 1).replace(
                 '.py', '').replace('/', '.')
-            if not re.match('[a-zA-Z0-9._]+$', mod):
-                continue
             modules.append(mod)
+
+        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
         tty.debug('Detected the following modules: {0}'.format(modules))
 
