@@ -20,7 +20,7 @@ class Hdf5VolAsync(CMakePackage):
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL=ON',
-            '-DBUILD_TESTING:BOOL=ON'
+            self.define('BUILD_SHARED_LIBS:BOOL', True),
+            self.define('BUILD_TESTING:BOOL=ON', self.run_tests)
         ]
         return args
