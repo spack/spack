@@ -188,6 +188,34 @@ configuration a **spec**.  In the commands above, ``mpileaks`` and
 ``mpileaks@3.0.4`` are both valid *specs*.  We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reusing installed dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+
+   The ``--reuse`` option described here is experimental, and it will
+   likely be replaced with a different option and configuration settings
+   in the next Spack release.
+
+By default, when you run ``spack install``, Spack tries to build a new
+version of the package you asked for, along with updated versions of
+its dependencies.  This gets you the latest versions and configurations,
+but it can result in unwanted rebuilds if you update Spack frequently.
+
+If you want Spack to try hard to reuse existing installations as dependencies,
+you can add the ``--reuse`` option:
+
+.. code-block:: console
+
+   $ spack install --reuse mpich
+
+This will not do anything if ``mpich`` is already installed.  If ``mpich``
+is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
+the ``mpich`` will be build with the installed versions, if possible.
+You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
+will be reused and what will be built before you install.
+
 .. _cmd-spack-uninstall:
 
 ^^^^^^^^^^^^^^^^^^^
