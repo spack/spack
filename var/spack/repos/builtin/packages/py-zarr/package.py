@@ -21,6 +21,7 @@ class PyZarr(PythonPackage):
 
     depends_on('python@3.5:',               type=('build', 'run'), when='@2.4.0:')
     depends_on('python@3.6:',               type=('build', 'run'), when='@2.6.0:')
+    depends_on('python@3.7:3',              type=('build', 'run'), when='@2.10:')
     depends_on('py-asciitree',              type=('build', 'run'))
     depends_on('py-fasteners',              type=('build', 'run'))
     depends_on('py-msgpack',                type=('build', 'run'), when='@:2.3.2')
