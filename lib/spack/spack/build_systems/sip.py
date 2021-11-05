@@ -99,7 +99,9 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
+        python_include_dir = os.path.basename(
+            inspect.getmodule(self).python_include_dir
+        )
 
         args.extend([
             '--verbose',

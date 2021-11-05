@@ -13,9 +13,9 @@ class RHaven(RPackage):
     library, <https://github.com/WizardMac/ReadStat>."""
 
     homepage = "https://haven.tidyverse.org/"
-    url      = "https://cloud.r-project.org/src/contrib/haven_1.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/haven"
+    cran = "haven"
 
+    version('2.4.3', sha256='95b70f47e77792bed4312441787299d2e3e27d79a176f0638a37e5301b93295f')
     version('2.3.1', sha256='6eee9f3297aab4cae2e4a4181ea65af933eacee2a2fb40af5b2ecf06f1bb9e0d')
     version('2.1.1', sha256='90bcb4e7f24960e7aa3e15c06b95cd897f08de149cec43fd8ba110b14526068a')
     version('2.1.0', sha256='c0a1cf1b039549fb3ad833f9644ed3f142790236ad755d2ee7bd3d8109e3ae74')
@@ -25,10 +25,13 @@ class RHaven(RPackage):
     depends_on('r@3.2:', when='@2.1.1:', type=('build', 'run'))
     depends_on('r-forcats@0.2.0:', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))
-    depends_on('r-rcpp@0.11.4:', type=('build', 'run'))
     depends_on('r-readr@0.1.0:', type=('build', 'run'))
     depends_on('r-rlang@0.4.0:', when='@2.3.1:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-tidyselect', when='@2.3.1:', type=('build', 'run'))
     depends_on('r-vctrs@0.3.0:', when='@2.3.1:', type=('build', 'run'))
+    depends_on('r-cpp11', when='@2.4:', type=('build', 'run'))
     depends_on('gmake', type='build')
+    depends_on('zlib', when='@2.4:')
+
+    depends_on('r-rcpp@0.11.4:', when='@:2.3', type=('build', 'run'))

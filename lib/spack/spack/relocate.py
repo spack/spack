@@ -379,6 +379,8 @@ def macholib_get_paths(cur_path):
             # Reproduce original behavior of only returning the last mach-O
             # header section
             tty.warn("Encountered fat binary: {0}".format(cur_path))
+        if headers[-1].filetype == 'dylib_stub':
+            tty.warn("File is a stub, not a full library: {0}".format(cur_path))
         commands = headers[-1].commands
 
     LC_ID_DYLIB = macholib.mach_o.LC_ID_DYLIB
@@ -1071,18 +1073,6 @@ def fixup_macos_rpath(root, filename):
             ))
             del_rpaths.add(rpath)
 
-    # Check for relocatable ID
-    if id_dylib is None:
-        tty.debug("No dylib ID is set for {0}".format(abspath))
-    elif not id_dylib.startswith('@'):
-        tty.debug("Non-relocatable dylib ID for {0}: {1}"
-                  .format(abspath, id_dylib))
-        if root in rpaths or root in add_rpaths:
-            args += ['-id', '@rpath/' + filename]
-        else:
-            tty.debug("Allowing hardcoded dylib ID because its rpath "
-                      "is *not* in the library already")
-
     # Delete bad rpaths
     for rpath in del_rpaths:
         args += ['-delete_rpath', rpath]
@@ -1101,16 +1091,13 @@ def fixup_macos_rpath(root, filename):
 
 
 def fixup_macos_rpaths(spec):
-    """Remove duplicate rpaths and make shared library IDs relocatable.
+    """Remove duplicate and nonexistent rpaths.
 
     Some autotools packages write their own ``-rpath`` entries in addition to
     those implicitly added by the Spack compiler wrappers. On Linux these
     duplicate rpaths are eliminated, but on macOS they result in multiple
     entries which makes it harder to adjust with ``install_name_tool
     -delete_rpath``.
-
-    Furthermore, many autotools programs (on macOS) set a library's install
-    paths to use absolute paths rather than relative paths.
     """
     if spec.external or spec.virtual:
         tty.warn('external or virtual package cannot be fixed up: {0!s}'
