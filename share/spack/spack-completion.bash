@@ -382,7 +382,7 @@ _spack_analyze_run() {
 }
 
 _spack_arch() {
-    SPACK_COMPREPLY="-h --help --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
+    SPACK_COMPREPLY="-h --help -g --generic-target --known-targets -p --platform -o --operating-system -t --target -f --frontend -b --backend"
 }
 
 _spack_audit() {
@@ -511,7 +511,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256 --only-root"
     else
         _all_packages
     fi
@@ -1696,7 +1696,12 @@ _spack_test_run() {
 }
 
 _spack_test_list() {
-    SPACK_COMPREPLY="-h --help -a --all"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -a --all"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_test_find() {

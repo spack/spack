@@ -18,7 +18,6 @@ class Exaworks(BundlePackage):
 
     depends_on('adlbx',                   type=('build', 'run'))
     depends_on('turbine',                 type=('build', 'run'))
-    depends_on('mpix-launch-swift',       type=('build', 'run'))
 
     depends_on('flux-core',               type=('build', 'run'))
     depends_on('flux-sched',              type=('build', 'run'))

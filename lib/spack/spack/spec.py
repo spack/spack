@@ -2608,10 +2608,7 @@ class Spec(object):
             return
 
         result = spack.solver.asp.solve([self], tests=tests)
-        if not result.satisfiable:
-            result.print_cores()
-            raise spack.error.UnsatisfiableSpecError(
-                self, "unknown", "Unsatisfiable!")
+        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)
@@ -3084,7 +3081,7 @@ class Spec(object):
         if not isinstance(values, tuple):
             values = (values,)
 
-        pkg_variant = self.package_class.variants[variant_name]
+        pkg_variant, _ = self.package_class.variants[variant_name]
 
         for value in values:
             if self.variants.get(variant_name):
