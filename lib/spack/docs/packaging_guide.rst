@@ -2107,7 +2107,7 @@ specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.6.0:2.6')
+   depends_on('python@2.7.0:2.7')
 
 A spec can contain a version list of ranges and individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
