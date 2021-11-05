@@ -1617,7 +1617,7 @@ class SpackSolverSetup(object):
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
                 self._facts_from_concrete_spec(spec, possible)
-        except spack.binary_distribution.FetchCacheError:
+        except (spack.binary_distribution.FetchCacheError, IndexError):
             # this is raised when no mirrors had indices.
             # TODO: update mirror configuration so it can indicate that the source cache
             # TODO: (or any mirror really) doesn't have binaries.

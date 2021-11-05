@@ -8,6 +8,22 @@
 %=============================================================================
 
 %-----------------------------------------------------------------------------
+% Generic constraints on nodes
+%-----------------------------------------------------------------------------
+
+% each node must have a single version
+:- not 1 { version(Package, _) } 1, node(Package).
+
+% each node must have a single platform, os and target
+:- not 1 { node_platform(Package, _) } 1, node(Package).
+:- not 1 { node_os(Package, _) } 1, node(Package).
+:- not 1 { node_target(Package, _) } 1, node(Package).
+
+% each node has a single compiler associated with it
+:- not 1 { node_compiler(Package, _) } 1, node(Package).
+:- not 1 { node_compiler_version(Package, _, _) } 1, node(Package).
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
@@ -78,6 +94,11 @@ impose(ID) :- condition_holds(ID), not do_not_impose(ID).
 attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
 attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
 attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+
+% we cannot have additional variant values when we are working with concrete specs
+:- node(Package), hash(Package, Hash),
+   variant_value(Package, Variant, Value),
+   not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
 
 #defined condition/1.
 #defined condition_requirement/3.
