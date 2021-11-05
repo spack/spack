@@ -73,14 +73,20 @@ class SIPPackage(PackageBase):
         # Some Python libraries are packages: collections of modules
         # distributed in directories containing __init__.py files
         for path in find(root, '__init__.py', recursive=True):
-            modules.append(path.replace(root + os.sep, '', 1).replace(
-                os.sep + '__init__.py', '').replace('/', '.'))
+            mod = path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.')
+            if not re.match('[a-zA-Z0-9._]+$', mod):
+                continue
+            modules.append(mod)
 
         # Some Python libraries are modules: individual *.py files
         # found in the site-packages directory
         for path in find(root, '*.py', recursive=False):
-            modules.append(path.replace(root + os.sep, '', 1).replace(
-                '.py', '').replace('/', '.'))
+            mod = path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.')
+            if not re.match('[a-zA-Z0-9._]+$', mod):
+                continue
+            modules.append(mod)
 
         tty.debug('Detected the following modules: {0}'.format(modules))
 
