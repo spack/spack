@@ -102,6 +102,8 @@ class FontUtil(AutotoolsPackage, XorgPackage):
 
         for font in fonts:
             fontroot = find(font, '*', recursive=False)
+            if not fontroot:
+                continue
             with working_dir(fontroot[0]):
                 autoreconf(*autoconf_args)
                 configure = Executable("./configure")
