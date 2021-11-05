@@ -790,7 +790,8 @@ no_flags(Package, FlagType)
 % Installed packages
 %-----------------------------------------------------------------------------
 % the solver is free to choose at most one installed hash for each package
-{ hash(Package, Hash) : installed_hash(Package, Hash) } 1 :- node(Package).
+{ hash(Package, Hash) : installed_hash(Package, Hash) } 1
+ :- node(Package), error("Internal error: package must resolve to at most one hash").
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).
