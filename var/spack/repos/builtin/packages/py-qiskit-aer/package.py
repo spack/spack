@@ -21,7 +21,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
     depends_on('py-scipy@1.0:', type=('build', 'run'))
     depends_on('py-scikit-build@0.11.0:', type='build')
     depends_on('py-cmake@:3.16,3.18:', type='build')
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('nlohmann-json@3.1.1:')
     depends_on('spdlog@1.5.0:')
     depends_on('muparserx@4.0.8:')
@@ -41,8 +41,12 @@ class PyQiskitAer(PythonPackage, CudaPackage):
         args.append('-DDISABLE_CONAN=ON')
         if '~gdr' in self.spec:
             args.append('-DAER_DISABLE_GDR=True')
+        else:
+            args.append('-DAER_DISABLE_GDR=False')
         if '+mpi' in self.spec:
             args.append('-DAER_MPI=True')
+        else:
+            args.append('-DAER_MPI=False')
         if '+cuda' in self.spec:
             args.append('-DAER_THRUST_BACKEND=CUDA')
             cuda_archs = spec.variants['cuda_arch'].value
