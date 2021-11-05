@@ -65,9 +65,9 @@ def load(parser, args):
     env = ev.active_environment()
 
     if args.list:
-        results = spack.cmd.find.filter_loaded_specs(args.specs())
+        results = spack.cmd.filter_loaded_specs(args.specs())
         if sys.stdout.isatty():
-            spack.cmd.find.print_how_many_pkgs(results, "loaded")
+            spack.cmd.print_how_many_pkgs(results, "loaded")
         spack.cmd.display_specs(results)
         return
 
