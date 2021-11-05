@@ -27,9 +27,9 @@ class RocmTensile(CMakePackage):
     version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d')
     version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257')
 
-    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx000', 'gfx900', 'gfx906:xnack-',
-                            'gfx908:xnack-', 'gfx90a:xnack-', 'gfx1010', 'gfx1011',
-                            'gfx1012', 'gfx1030')
+    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx000', 'gfx900',
+                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack-',
+                            'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030')
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
