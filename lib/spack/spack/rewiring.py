@@ -25,8 +25,8 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     because it expects the new directory structure to be in place."""
     for link in links:
         link_target = os.readlink(os.path.join(orig_prefix, link))
+        link_target = re.sub('^' + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
-        link_target = re.sub(orig_prefix, new_prefix, link_target)
         os.unlink(new_link_path)
         os.symlink(link_target, new_link_path)
 
@@ -52,6 +52,7 @@ def rewire_node(spec, explicit):
     shutil.copytree(spec.build_spec.prefix,
                     os.path.join(tempdir, spec.dag_hash()))
 
+    spack.hooks.pre_install(spec)
     # compute prefix-to-prefix for every node from the build spec to the spliced
     # spec
     prefix_to_prefix = OrderedDict({spec.build_spec.prefix: spec.prefix})
@@ -97,7 +98,6 @@ def rewire_node(spec, explicit):
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
-    spack.store.db.add(spec, spack.store.layout, explicit=explicit)
     spack.store.db.add(spec, spack.store.layout, explicit=explicit)
 
     # run post install hooks
