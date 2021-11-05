@@ -21,7 +21,7 @@ class RParallelly(RPackage):
     the firewall to do port-forwarding to your local computer."""
 
     homepage = "https://github.com/HenrikBengtsson/parallelly"
-    url      = "https://cloud.r-project.org/src/contrib/parallelly_1.23.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/parallelly"
+    cran = "parallelly"
 
+    version('1.28.1', sha256='f4ae883b18409adb83c561ed69427e740e1b50bf85ef57f48c3f2edf837cc663')
     version('1.23.0', sha256='376ce2381587380a4da60f9563710d63084a605f93aa364e9349f2523e83bc08')

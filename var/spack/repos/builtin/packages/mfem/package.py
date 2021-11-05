@@ -343,7 +343,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             xcompiler = '-Xcompiler='
             xlinker = '-Xlinker='
-        cuda_arch = spec.variants['cuda_arch'].value
+        cuda_arch = None if '~cuda' in spec else spec.variants['cuda_arch'].value
 
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.

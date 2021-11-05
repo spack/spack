@@ -14,6 +14,8 @@ class Berkeleygw(MakefilePackage):
 
     homepage = "https://berkeleygw.org"
 
+    maintainers = ['migueldiascosta']
+
     version('3.0.1',
             '7d8c2cc1ee679afb48efbdd676689d4d537226b50e13a049dbcb052aaaf3654f',
             url='https://berkeley.box.com/shared/static/m1dgnhiemo47lhxczrn6si71bwxoxor8.gz',
@@ -67,13 +69,12 @@ class Berkeleygw(MakefilePackage):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # the concretizer is selecting non threaded versions of fftw and openblas
-    # even though +openmp is set... as a workaround, the conflicts below force
-    # the user to spec ^fftw+openmp ^openblas threads=openmp
-    # but this may also happen for other providers of fftw and blas...
-    conflicts('^fftw~openmp', when='+openmp')
-    conflicts('^openblas threads=none', when='+openmp')
-    conflicts('^openblas threads=pthreads', when='+openmp')
+    # Force openmp propagation on some providers of blas / fftw-api
+    with when('+openmp'):
+        depends_on('fftw+openmp', when='^fftw')
+        depends_on('amdfftw+openmp', when='^amdfftw')
+        depends_on('openblas threads=openmp', when='^openblas')
+        depends_on('amdblis threads=openmp', when='^amdblis')
 
     parallel = False
 

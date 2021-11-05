@@ -28,6 +28,8 @@ class RoctracerDev(CMakePackage):
     version('3.7.0', sha256='6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518')
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('python@:2', type='build', when='@:4.1.0')
     depends_on('python@3:', type='build', when='@4.2.0:')

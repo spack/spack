@@ -24,17 +24,6 @@ env = SpackCommand('env')
 
 
 @pytest.fixture
-def mock_test_env():
-    test_env_name = 'test'
-    env_dir = ev.root(test_env_name)
-    mkdirp(env_dir)
-    yield test_env_name, env_dir
-
-    # Remove the temporary test environment directory created above
-    shutil.rmtree(env_dir)
-
-
-@pytest.fixture
 def mock_spec():
     spec = spack.spec.Spec('externaltest').concretized()
     pkg = spack.repo.get(spec)
@@ -82,10 +71,19 @@ def test_location_cmd_error(options):
         location(*options)
 
 
-def test_location_env(mock_test_env):
-    """Tests spack location --env."""
-    test_env_name, env_dir = mock_test_env
-    assert location('--env', test_env_name).strip() == env_dir
+def test_location_env_exists(mutable_mock_env_path):
+    """Tests spack location --env <name> for an existing environment."""
+    e = ev.create("example")
+    e.write()
+    assert location('--env', "example").strip() == e.path
+
+
+def test_location_with_active_env(mutable_mock_env_path):
+    """Tests spack location --env with active env"""
+    e = ev.create("example")
+    e.write()
+    with e:
+        assert location('--env').strip() == e.path
 
 
 def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):

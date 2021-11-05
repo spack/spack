@@ -30,7 +30,7 @@ class RocmValidationSuite(CMakePackage):
     version('3.7.0', sha256='bb42d7fb7ee877b80ce53b0cd1f04b0c8301197b6777d2edddcb44732bf8c9e2')
     version('3.5.0', sha256='273e67ecce7e32939341679362b649f3361a36a22fab5f64cefe94b49e6f1e46')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch')
     patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:')

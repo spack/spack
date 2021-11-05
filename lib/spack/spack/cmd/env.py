@@ -23,6 +23,7 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.util.string as string
+from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
 section = "environments"
@@ -115,42 +116,45 @@ def env_activate(args):
     # Temporary environment
     if args.temp:
         env = create_temp_env_directory()
-        spack_env = os.path.abspath(env)
-        short_name = os.path.basename(spack_env)
+        env_path = os.path.abspath(env)
+        short_name = os.path.basename(env_path)
         ev.Environment(env).write(regenerate=False)
 
     # Named environment
     elif ev.exists(env_name_or_dir) and not args.dir:
-        spack_env = ev.root(env_name_or_dir)
+        env_path = ev.root(env_name_or_dir)
         short_name = env_name_or_dir
 
     # Environment directory
     elif ev.is_env_dir(env_name_or_dir):
-        spack_env = os.path.abspath(env_name_or_dir)
-        short_name = os.path.basename(spack_env)
+        env_path = os.path.abspath(env_name_or_dir)
+        short_name = os.path.basename(env_path)
 
     else:
         tty.die("No such environment: '%s'" % env_name_or_dir)
 
     env_prompt = '[%s]' % short_name
 
-    if spack_env == os.environ.get('SPACK_ENV'):
-        tty.debug("Environment is already active")
-        return
+    # We only support one active environment at a time, so deactivate the current one.
+    if ev.active_environment() is None:
+        cmds = ''
+        env_mods = EnvironmentModifications()
+    else:
+        cmds = spack.environment.shell.deactivate_header(shell=args.shell)
+        env_mods = spack.environment.shell.deactivate()
 
     # Activate new environment
-    active_env = ev.Environment(spack_env)
-    cmds = spack.environment.shell.activate_header(
+    active_env = ev.Environment(env_path)
+    cmds += spack.environment.shell.activate_header(
         env=active_env,
         shell=args.shell,
         prompt=env_prompt if args.prompt else None
     )
-    env_mods = spack.environment.shell.activate(
+    env_mods.extend(spack.environment.shell.activate(
         env=active_env,
         add_view=args.with_view
-    )
+    ))
     cmds += env_mods.shell_modifications(args.shell)
-
     sys.stdout.write(cmds)
 
 
@@ -184,7 +188,7 @@ def env_deactivate(args):
         tty.die('Calling spack env deactivate with --env, --env-dir and --no-env '
                 'is ambiguous')
 
-    if 'SPACK_ENV' not in os.environ:
+    if ev.active_environment() is None:
         tty.die('No environment is currently active.')
 
     cmds = spack.environment.shell.deactivate_header(args.shell)

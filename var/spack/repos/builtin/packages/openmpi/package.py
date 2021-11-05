@@ -314,6 +314,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
     depends_on('pmix', when='+pmix')
+    depends_on('libevent', when='+pmix')
 
     depends_on('openssh', type='run')
 
@@ -707,7 +708,7 @@ class Openmpi(AutotoolsPackage):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # external libevent
-        if spec.satisfies('@4.0.0:'):
+        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
         if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):

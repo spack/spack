@@ -19,6 +19,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.package
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -598,3 +599,31 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
     expected = pkg.download_instr if manual else 'All fetchers failed'
     with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
         pkg.do_fetch()
+
+
+@pytest.fixture()
+def fetching_not_allowed(monkeypatch):
+    class FetchingNotAllowed(spack.fetch_strategy.FetchStrategy):
+        def mirror_id(self):
+            return None
+
+        def fetch(self):
+            raise Exception("Sources are fetched but shouldn't have been")
+    fetcher = FetchStrategyComposite()
+    fetcher.append(FetchingNotAllowed())
+    monkeypatch.setattr(spack.package.PackageBase, 'fetcher', fetcher)
+
+
+def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    pkg = Spec('a').concretized().package
+    pkg.has_code = False
+    pkg.do_fetch()
+
+
+def test_fetch_external_package_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    spec = Spec('a').concretized()
+    spec.external_path = "/some/where"
+    assert spec.external
+    spec.package.do_fetch()
