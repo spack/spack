@@ -16,7 +16,7 @@ class PyRay(PythonPackage):
     build_directory = 'python'
 
     variant('debug', default=False,
-        description='Build Ray with debugging suppport ')
+            description='Build Ray with debugging suppport ')
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('bazel@3.2.0', type='build')
