@@ -31,7 +31,7 @@ def print_deps(spec, dependencies=True):
     Print dependency or dependent information for the spec.
 
     Arguments:
-        spec (Spec):  Spec whose information is being printed
+        spec (spack.spec.Spec): Spec whose information is being printed
         dependencies (bool): True if dependencies, False if dependents
     """
     deps = spec.dependencies_dict().items() if dependencies else \
@@ -54,7 +54,7 @@ def print_installed_info(spec):
     Print the installed spec's information
 
     Arguments:
-        spec (Spec): Installed spec whose information will be printed
+        spec (spack.spec.Spec): Installed spec whose information will be printed
     """
     dag = spec.dag_hash()
     _, record = spack.store.db.query_by_spec_hash(dag)

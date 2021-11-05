@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import argparse
 import textwrap
-from datetime import date
 
 from six.moves import zip_longest
 
