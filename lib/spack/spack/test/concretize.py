@@ -1334,6 +1334,9 @@ class TestConcretize(object):
     def test_concrete_specs_are_not_modified_on_reuse(
             self, mutable_database, spec_str, expect_installed
     ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse specs')
+
         # Test the internal consistency of solve + DAG reconstruction
         # when reused specs are added to the mix. This prevents things
         # like additional constraints being added to concrete specs in
