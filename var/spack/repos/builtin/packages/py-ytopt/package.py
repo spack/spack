@@ -27,5 +27,5 @@ class PyYtopt(PythonPackage):
     depends_on('py-joblib', type=('build', 'run'))
     depends_on('py-deap', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
-    depends_on('py-ray+debug', type=('build', 'run'))
+    depends_on('py-ray', type=('build', 'run'))
     depends_on('py-mpi4py@3.0.0:', type=('build', 'run'))
