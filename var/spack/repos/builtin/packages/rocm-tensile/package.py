@@ -27,7 +27,7 @@ class RocmTensile(CMakePackage):
     version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d')
     version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257')
 
-    tensile_architecture = ('all', 'gfx000', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+    tensile_architecture = ('all','gfx906', 'gfx908', 'gfx000', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
                             'gfx90a:xnack-', 'gfx1010', 'gfx1011',
                             'gfx1012', 'gfx1030')
 
@@ -35,6 +35,7 @@ class RocmTensile(CMakePackage):
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('openmp', default=True, description='Enable OpenMP')
     conflicts('tensile_architecture=gfx906', when='@4.0.1:')
+    conflicts('tensile_architecture=gfx908', when='@4.0.1:')
     depends_on('cmake@3:', type='build')
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
@@ -68,11 +69,11 @@ class RocmTensile(CMakePackage):
         arch = self.spec.variants['tensile_architecture'].value
         if arch[0] == 'all':
             if self.spec.satisfies('@:4.0.0'):
-                arch_value = self.tensile_architecture[1:2] + 'gfx906,gfx908'
-            elif self.spec.satisfies('@4.1.0:4.2.0'):
                 arch_value = self.tensile_architecture[1:4]
+            elif self.spec.satisfies('@4.1.0:4.2.0'):
+                arch_value = self.tensile_architecture[3:6]
             elif self.spec.satisfies('@4.3.0:'):
-                arch_value = self.tensile_architecture[1:]
+                arch_value = self.tensile_architecture[3:]
             return arch_value
         else:
             return arch
