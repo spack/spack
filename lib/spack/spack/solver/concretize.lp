@@ -541,17 +541,20 @@ node_platform_set(Package) :- node_platform_set(Package, _).
 os(OS) :- os(OS, _).
 
 % one os per node
-1 { node_os(Package, OS) : os(OS) } 1 :- node(Package), error("Each node must have exactly one OS").
+1 { node_os(Package, OS) : os(OS) } 1 :-
+   node(Package), error("Each node must have exactly one OS").
 
 % can't have a non-buildable OS on a node we need to build
-:- build(Package), node_os(Package, OS), not buildable_os(OS).
+:- build(Package), node_os(Package, OS), not buildable_os(OS),
+   error("No available OS can be built for").
 
 % can't have dependencies on incompatible OS's
 :- depends_on(Package, Dependency),
    node_os(Package, PackageOS),
    node_os(Dependency, DependencyOS),
    not os_compatible(PackageOS, DependencyOS),
-   build(Package).
+   build(Package),
+   error("Dependencies must have compatible OS's with their dependents").
 
 % give OS choice weights according to os declarations
 node_os_weight(Package, Weight)
@@ -641,7 +644,9 @@ node_target_mismatch(Parent, Dependency)
   :- depends_on(Parent, Dependency),
      not node_target_match(Parent, Dependency).
 
-:- node(Package), node_target(Package, Target), not target(Target).
+% disallow reusing concrete specs that don't have a compatible target
+:- node(Package), node_target(Package, Target), not target(Target),
+   error("No satisfying package's target is compatible with this machine").
 
 #defined node_target_set/2.
 #defined package_target_weight/3.

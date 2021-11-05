@@ -1302,11 +1302,13 @@ class SpackSolverSetup(object):
         platform = spack.platforms.host()
 
         # create set of OS's to consider
-        buildable = set([
-            platform.front_os, platform.back_os, platform.default_os])
+        buildable = set(platform.operating_sys.keys())
+
+        # Consider any OS's mentioned on the command line. We need this to
+        # cross-concretize in CI, and for some tests.
+        # TODO: OS should really be more than just a label -- rework this.
         for spec in specs:
             if spec.architecture and spec.architecture.os:
-                # TODO: does this make sense?
                 buildable.add(spec.architecture.os)
 
         # make directives for buildable OS's
@@ -1585,7 +1587,8 @@ class SpackSolverSetup(object):
             self.gen.newline()
 
             # add OS to possible OS's
-            self.possible_oses.add(spec.os)
+            for dep in spec.traverse():
+                self.possible_oses.add(dep.os)
 
             # add the hash to the one seen so far
             self.seen_hashes.add(h)
@@ -1764,6 +1767,8 @@ class SpecBuilder(object):
             assert concrete_spec, "Unable to look up concrete spec with hash %s" % h
             self._specs[pkg] = concrete_spec
         else:
+            # TODO: remove this code -- it's dead unless we decide that node() clauses
+            # should come before hashes.
             # ensure that if it's already there, it's correct
             spec = self._specs[pkg]
             assert spec.dag_hash() == h
