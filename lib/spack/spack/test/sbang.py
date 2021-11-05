@@ -7,6 +7,7 @@
 Test that Spack's shebang filtering works correctly.
 """
 import filecmp
+import grp
 import os
 import shutil
 import stat
@@ -258,19 +259,33 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
 
 
 @pytest.fixture(scope='function')
-def configure_world_perms():
+def configure_group_perms():
     conf = syaml.load_config("""\
 all:
   permissions:
     read: world
-    write: world
+    write: group
+    group: {}
+""".format(grp.getgrgid(os.getegid()).gr_name))
+    spack.config.set('packages', conf, scope='user')
+
+    yield
+
+
+@pytest.fixture(scope='function')
+def configure_user_perms():
+    conf = syaml.load_config("""\
+all:
+  permissions:
+    read: world
+    write: user
 """)
     spack.config.set('packages', conf, scope='user')
 
     yield
 
 
-def check_sbang_installation():
+def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
     assert sbang_path.startswith(spack.store.store.unpadded_root)
@@ -280,14 +295,43 @@ def check_sbang_installation():
 
     status = os.stat(sbang_bin_dir)
     mode = (status.st_mode & 0o777)
-    assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
+    if group:
+        assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
+    else:
+        assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
 
     status = os.stat(sbang_path)
     mode = (status.st_mode & 0o777)
-    assert mode == 0o777, 'Unexpected {0}'.format(oct(mode))
+    if group:
+        assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
+    else:
+        assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
 
 
-def test_install_sbang(install_mockery, configure_world_perms):
+def test_install_group_sbang(install_mockery, configure_group_perms):
+    sbang_path = sbang.sbang_install_path()
+    sbang_bin_dir = os.path.dirname(sbang_path)
+
+    assert sbang_path.startswith(spack.store.store.unpadded_root)
+    assert not os.path.exists(sbang_bin_dir)
+
+    sbang.install_sbang()
+    check_sbang_installation(group=True)
+
+    # put an invalid file in for sbang
+    fs.mkdirp(sbang_bin_dir)
+    with open(sbang_path, "w") as f:
+        f.write("foo")
+
+    sbang.install_sbang()
+    check_sbang_installation(group=True)
+
+    # install again and make sure sbang is still fine
+    sbang.install_sbang()
+    check_sbang_installation(group=True)
+
+
+def test_install_user_sbang(install_mockery, configure_user_perms):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
