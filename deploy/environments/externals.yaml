@@ -89,7 +89,7 @@ spack:
     - help2man
     - hpctoolkit@2020.03.01
     - hpcviewer
-    - hpe-mpi@2.22.hmpt
+    - hpe-mpi@2.25.hmpt
     - intel-mkl
     - intel-mpi
     - ispc@1.12.0
