@@ -16,8 +16,7 @@ class Exaworks(BundlePackage):
 
     version('0.1.0')
 
-    depends_on('adlbx',                   type=('build', 'run'))
-    depends_on('turbine',                 type=('build', 'run'))
+    depends_on('stc',                     type=('build', 'run'))
 
     depends_on('flux-core',               type=('build', 'run'))
     depends_on('flux-sched',              type=('build', 'run'))
