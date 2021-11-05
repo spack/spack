@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,8 @@ class Steps(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/HBP_STEPS.git"
 
     version("develop", branch="master", submodules=True)
-    version("3.6.0", submodules=True)
-    version("3.5.0b",  commit="b2be5fe", submodules=True)
-    version("3.4.1", submodules=True)
-    version("3.3.0", submodules=True)
-    version("3.2.0", submodules=True)
+    version("3.6.0", tag="3.6.0", submodules=True)
+    version("3.5.0b", commit="b2be5fe", submodules=True)
 
     variant("codechecks", default=False,
             description="Perform additional code checks like "
