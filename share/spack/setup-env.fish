@@ -320,6 +320,11 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
+        # looks for a single `--list`
+        if match_flag $_a "--list"
+            return 0
+        end
+
     end
 
     return 1

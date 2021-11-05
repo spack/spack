@@ -180,6 +180,7 @@ _spack_shell_wrapper() {
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.

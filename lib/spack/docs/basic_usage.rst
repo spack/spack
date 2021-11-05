@@ -952,6 +952,9 @@ use ``spack find --loaded``.
     -- linux-debian7 / intel@15.0.0 ---------------------------------
     libelf@0.8.13
 
+You can also use ``spack load --list`` to get the same output, but it
+does not have the full set of query options that ``spack find`` offers.
+
 We'll learn more about Spack's spec syntax in the next section.
 
 
