@@ -26,3 +26,6 @@ class UniversalCtags(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('libiconv', type='link')
     depends_on('pkgconfig', type='build')
+
+    def autoreconf(self, spec, prefix):
+        which('bash')('autogen.sh')
