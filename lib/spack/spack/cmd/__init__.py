@@ -460,7 +460,8 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % plural(len(specs), pkg_type + " package"))
+    tty.msg("%s" % spack.util.string.plural(
+            len(specs), pkg_type + " package"))
 
 
 def spack_is_git_repo():

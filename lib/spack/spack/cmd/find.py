@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import copy
-import os
 import sys
 
 import llnl.util.lang
@@ -18,9 +17,7 @@ import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
-import spack.user_environment as uenv
 from spack.database import InstallStatuses
-from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
