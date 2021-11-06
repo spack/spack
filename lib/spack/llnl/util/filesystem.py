@@ -84,8 +84,11 @@ __all__ = [
     "visit_directory_tree",
 ]
 
-if sys.version_info < (3, 7, 4):
-    def copystat(src, dst, *, follow_symlinks=True):
+if sys.version_info < (3, 7, 4):    
+    # monkeypatch shutil.copystat to fix PermissionError when copying read-only
+    # files on Lustre when using Python < 3.7.4
+
+    def copystat(src, dst, follow_symlinks=True):
         """Copy file metadata
         Copy the permission bits, last access time, last modification time, and
         flags from `src` to `dst`. On Linux, copystat() also copies the "extended
@@ -94,7 +97,7 @@ if sys.version_info < (3, 7, 4):
         If the optional flag `follow_symlinks` is not set, symlinks aren't
         followed if and only if both `src` and `dst` are symlinks.
         """
-        def _nop(*args, ns=None, follow_symlinks=None):
+        def _nop(args, ns=None, follow_symlinks=None):
             pass
 
         # follow symlinks (aka don't not follow symlinks)
@@ -108,8 +111,9 @@ if sys.version_info < (3, 7, 4):
             # *and* it supports follow_symlinks
             def lookup(name):
                 fn = getattr(os, name, _nop)
-                if fn in os.supports_follow_symlinks:
-                    return fn
+                if sys.version_info >= (3, 3):
+                    if fn in os.supports_follow_symlinks:
+                        return fn
                 return _nop
 
         st = lookup("stat")(src, follow_symlinks=follow)
@@ -144,9 +148,7 @@ if sys.version_info < (3, 7, 4):
                         break
                 else:
                     raise
-
-    ## monkeypatch shutil.copystat to fix error when
-    ## copying directory trees on Lustre for Python < 3.7.4
+    
     shutil.copystat = copystat
 
 
