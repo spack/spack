@@ -29,9 +29,9 @@ class Libdrm(Package):
 
     def url_for_version(self, version):
         if version <= Version('2.4.100'):
-            return self.list_url + 'libdrm-{}.tar.gz'.format(version)
+            return self.list_url + 'libdrm-%s.tar.gz' % version
         else:
-            return self.list_url + 'libdrm-{}.tar.xz'.format(version)
+            return self.list_url + 'libdrm-%s.tar.xz' % version
 
     def meson_args(self):
         args = []
