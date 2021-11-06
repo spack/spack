@@ -84,7 +84,7 @@ __all__ = [
     "visit_directory_tree",
 ]
 
-if sys.version_info < (3, 7, 4):    
+if sys.version_info < (3, 7, 4):
     # monkeypatch shutil.copystat to fix PermissionError when copying read-only
     # files on Lustre when using Python < 3.7.4
 
@@ -148,7 +148,7 @@ if sys.version_info < (3, 7, 4):
                         break
                 else:
                     raise
-    
+
     shutil.copystat = copystat
 
 
