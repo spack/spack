@@ -6,13 +6,14 @@
 from spack import *
 
 
-class Libdrm(AutotoolsPackage):
+class Libdrm(Package):
     """A userspace library for accessing the DRM, direct rendering manager,
     on Linux, BSD and other systems supporting the ioctl interface."""
 
     homepage = "https://dri.freedesktop.org/libdrm/"
-    url      = "https://dri.freedesktop.org/libdrm/libdrm-2.4.59.tar.gz"
+    list_url = "https://dri.freedesktop.org/libdrm/"
 
+    version('2.4.107', sha256='c554cef03b033636a975543eab363cc19081cb464595d3da1ec129f87370f888')
     version('2.4.100', sha256='6a5337c054c0c47bc16607a21efa2b622e08030be4101ef4a241c5eb05b6619b')
     version('2.4.81',  sha256='64036c5e0668fdc2b820dcc0ebab712f44fd2c2147d23dc5a6e003b19f0d3e9f')
     version('2.4.75',  sha256='a411bff814b4336c8908dcbd045cd89fdc7afedc75b795d897d462e467cbb01d')
@@ -26,6 +27,28 @@ class Libdrm(AutotoolsPackage):
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
 
+    def url_for_version(self, version):
+        if version <= Version('2.4.100'):
+            return self.list_url + 'libdrm-{}.tar.gz'.format(version)
+        else:
+            return self.list_url + 'libdrm-{}.tar.xz'.format(version)
+
+    def meson_args(self):
+        args = []
+        return args
+
+    def install(self, spec, prefix):
+        with working_dir('spack-build', create=True):
+            args = []
+            args.extend(std_meson_args)
+            args.extend(self.meson_args())
+            meson('..', *args)
+            ninja('-v')
+            if self.run_tests:
+                ninja('test')
+            ninja('install')
+
+    @when('@:2.4.100')
     def configure_args(self):
         args = []
         args.append('--enable-static')
@@ -36,3 +59,13 @@ class Libdrm(AutotoolsPackage):
         if self.spec.satisfies('%gcc@10.0.0:') or self.spec.satisfies('%clang@11.0.0:') or self.spec.satisfies('%aocc@2.3.0:'):
             args.append('CFLAGS=-fcommon')
         return args
+
+    @when('@:2.4.100')
+    def install(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix), *self.configure_args())
+        make()
+        if self.run_tests:
+            make('check')
+        make('install')
+        if self.run_tests:
+            make('installcheck')
