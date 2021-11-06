@@ -333,3 +333,25 @@ def test_find_loaded(database, working_env):
     output = find('--loaded')
     expected = find()
     assert output == expected
+
+
+def test_find_info_multiple(database):
+    out = find('--info', 'mpileaks', fail_on_error=False)
+    assert 'Error:' in out
+    assert 'single package' in out
+
+
+def test_find_info_fields(database):
+    expected_fields = (
+        'Hashes:',
+        'Installed',
+        'Compiler:',
+        'Variant Settings:',
+        'Dependents:',
+    )
+
+    out = find('--info', 'mpich', fail_on_error=False)
+
+    for text in expected_fields:
+        match = [x for x in out.splitlines() if text in x]
+        assert match

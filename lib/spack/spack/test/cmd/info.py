@@ -105,3 +105,34 @@ def test_info_fields(pkg_query, parser, info_lines):
     for text in expected_fields:
         match = [x for x in info_lines if text in x]
         assert match
+
+
+def test_info_multiple():
+    out = info('openmpi', 'xsdk', fail_on_error=False)
+    assert 'Only one' in out
+
+
+def test_info_installed_none():
+    out = info('--installed', 'mpileaks', fail_on_error=False)
+    assert 'no installed' in out
+
+
+def test_info_installed_multiple(database):
+    out = info('--installed', 'mpileaks', fail_on_error=False)
+    assert 'matches multiple' in out
+
+
+def test_info_installed_fields(database):
+    expected_fields = (
+        'Hashes:',
+        'Installed',
+        'Compiler:',
+        'Variant Settings:',
+        'Dependents:',
+    )
+
+    out = info('--installed', 'mpich', fail_on_error=False)
+
+    for text in expected_fields:
+        match = [x for x in out.splitlines() if text in x]
+        assert match
