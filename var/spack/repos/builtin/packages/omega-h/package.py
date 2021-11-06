@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
+import llnl.util.filesystem as fs
 
 
 class OmegaH(CMakePackage):
@@ -100,11 +103,45 @@ class OmegaH(CMakePackage):
 
         return (None, None, flags)
 
+    test_dir = 'src'
+
+    @run_after('install')
+    def copy_test_sources(self):
+        """Copy test sources for stand-alone testing."""
+        source_path = join_path(self.stage.source_path, self.test_dir)
+
+        test_files = fs.find(source_path, '*test*')
+        self.cache_extra_test_sources([
+            path.replace(self.stage.source_path + os.sep, '') for path in
+            test_files
+        ])
+
+    def build_and_run_test(self, exe):
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.test_dir)
+
+        mpi = self.spec['mpi']
+        options = [
+            '-o', exe,
+            join_path(test_dir, exe + '.cpp'),
+            '-I{0}'.format(self.prefix.include),
+            #'-I{0}'.format(mpi.prefix.include),
+            #'-L{0}'.format(mpi.prefix.lib), '-lmpi',
+            '-L{0}'.format(self.prefix.lib), '-lomega_h'
+        ]
+
+        self.run_test(mpi.mpicc, options,
+                      purpose='test: compiling {0}'.format(exe))
+
+        self.run_test(exe, [], [], installed=False,
+                      purpose='test: executing {0}'.format(exe))
+
     def test(self):
         if self.spec.version < Version('9.34.1'):
             print('Skipping tests since only relevant for versions > 9.34.1')
             return
 
+        # Run several executables
         exe = join_path(self.prefix.bin, 'osh_box')
         options = ['1', '1', '1', '2', '2', '2', 'box.osh']
         description = 'testing mesh construction'
@@ -120,3 +157,7 @@ class OmegaH(CMakePackage):
         options = ['box_100.osh', 'box_100_vtk']
         description = 'testing mesh to vtu conversion'
         self.run_test(exe, options, purpose=description)
+
+        # Build and run test(s)
+        if '+mpi' in self.spec:
+            self.build_and_run_test('1d_test')
