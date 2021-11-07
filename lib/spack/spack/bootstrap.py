@@ -12,14 +12,9 @@ import os
 import os.path
 import re
 import sys
+import sysconfig
 
 import six
-
-try:
-    import sysconfig  # novm
-except ImportError:
-    # Not supported on Python 2.6
-    pass
 
 import archspec.cpu
 
