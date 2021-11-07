@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
-import sys
 
 import pytest
 
@@ -69,14 +68,6 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
-skip_python_26 = pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where "
-           "networking is super slow"
-)
-
-
-@skip_python_26
 def test_url_list(mock_packages):
     out = url('list')
     total_urls = len(out.split('\n'))
@@ -106,7 +97,6 @@ def test_url_list(mock_packages):
     assert 0 < correct_version_urls < total_urls
 
 
-@skip_python_26
 def test_url_summary(mock_packages):
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
@@ -133,7 +123,6 @@ def test_url_summary(mock_packages):
     assert out_correct_versions == correct_versions
 
 
-@skip_python_26
 def test_url_stats(capfd, mock_packages):
     with capfd.disabled():
         output = url('stats')
