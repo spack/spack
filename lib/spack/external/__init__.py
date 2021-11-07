@@ -39,15 +39,6 @@ distro
 * Usage: Provides a more stable linux distribution detection.
 * Version: 1.0.4 (last version supporting Python 2.6)
 
-functools
----------
-
-* Homepage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
-* Usage: Used for implementation of total_ordering.
-* Version: Unversioned
-* Note: This is the functools.total_ordering implementation
-  from Python 2.7 backported so we can run on Python 2.6.
-
 jinja2
 ------
 
