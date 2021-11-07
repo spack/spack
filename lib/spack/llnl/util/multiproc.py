@@ -16,7 +16,7 @@ __all__ = ['Barrier']
 class Barrier:
     """Simple reusable semaphore barrier.
 
-    Python 2.6 doesn't have multiprocessing barriers so we implement this.
+    Python 2 doesn't have multiprocessing barriers so we implement this.
 
     See http://greenteapress.com/semaphores/downey08semaphores.pdf, p. 41.
     """

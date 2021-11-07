@@ -17,7 +17,7 @@ argparse
 --------
 
 * Homepage: https://pypi.python.org/pypi/argparse
-* Usage: We include our own version to be Python 2.6 compatible.
+* Usage: We include our own version to be Python 3.X compatible.
 * Version: 1.4.0
 * Note: This package has been slightly modified to improve
   error message formatting. See the following commit if the
