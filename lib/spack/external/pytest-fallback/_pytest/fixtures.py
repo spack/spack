@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import collections
 import inspect
 import sys
 import warnings
@@ -19,9 +20,6 @@ from _pytest.compat import (
     FuncargnamesCompatAttr,
 )
 from _pytest.outcomes import fail, TEST_OUTCOME
-
-
-from ordereddict_backport import OrderedDict
 
 
 def pytest_sessionstart(session):
@@ -165,7 +163,7 @@ def reorder_items(items):
     for scopenum in range(0, scopenum_function):
         argkeys_cache[scopenum] = d = {}
         for item in items:
-            keys = OrderedDict.fromkeys(get_parametrized_fixture_keys(item, scopenum))
+            keys = collections.OrderedDict.fromkeys(get_parametrized_fixture_keys(item, scopenum))
             if keys:
                 d[item] = keys
     return reorder_items_atscope(items, set(), argkeys_cache, 0)
@@ -200,7 +198,7 @@ def slice_items(items, ignore, scoped_argkeys_cache):
         for i, item in enumerate(it):
             argkeys = scoped_argkeys_cache.get(item)
             if argkeys is not None:
-                newargkeys = OrderedDict.fromkeys(k for k in argkeys if k not in ignore)
+                newargkeys = collections.OrderedDict.fromkeys(k for k in argkeys if k not in ignore)
                 if newargkeys:  # found a slicing key
                     slicing_argkey, _ = newargkeys.popitem()
                     items_before = items[:i]

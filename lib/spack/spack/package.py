@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -902,7 +901,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']

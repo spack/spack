@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import collections
 import hashlib
 import json
 import os
@@ -15,7 +16,6 @@ import traceback
 from contextlib import closing
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
@@ -1278,8 +1278,8 @@ def relocate_package(spec, allow_root):
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = OrderedDict({})
-    prefix_to_prefix_bin = OrderedDict({})
+    prefix_to_prefix_text = collections.OrderedDict()
+    prefix_to_prefix_bin = collections.OrderedDict()
 
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()

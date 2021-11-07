@@ -13,7 +13,6 @@ import time
 
 import ruamel.yaml as yaml
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -318,7 +317,11 @@ class ViewDescriptor(object):
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
             # so we have to check for both
-            types = (OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
+            types = (
+                collections.OrderedDict,
+                syaml.syaml_dict,
+                yaml.comments.CommentedMap
+            )
             assert isinstance(self.projections, types)
             ret['projections'] = self.projections
         if self.select:
@@ -638,7 +641,7 @@ class Environment(object):
         else:
             self.raw_yaml, self.yaml = _read_yaml(f)
 
-        self.spec_lists = OrderedDict()
+        self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get('definitions', []):
             entry = copy.deepcopy(item)

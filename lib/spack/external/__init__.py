@@ -73,14 +73,6 @@ markupsafe
 * Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
 * Version: 1.0
 
-orderddict
-----------
-
-* Homepage: https://pypi.org/project/ordereddict/
-* Usage: A drop-in substitute for Py2.7's new collections.OrderedDict
-  that works in Python 2.4-2.6.
-* Version: 1.1
-
 py
 --
 
