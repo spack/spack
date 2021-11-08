@@ -265,7 +265,7 @@ all:
   permissions:
     read: world
     write: group
-    group: {}
+    group: {0}
 """.format(grp.getgrgid(os.getegid()).gr_name))
     spack.config.set('packages', conf, scope='user')
 
