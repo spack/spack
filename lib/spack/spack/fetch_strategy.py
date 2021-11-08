@@ -22,6 +22,7 @@ in order to build it.  They need to define the following methods:
     * archive()
         Archive a source directory, e.g. for creating a mirror.
 """
+import shlex
 import copy
 import functools
 import os
@@ -121,6 +122,9 @@ class FetchStrategy(object):
         self.cache_enabled = not kwargs.pop('no_cache', False)
 
         self.package = None
+
+    def set_package(self, package):
+        self.package = package
 
     # Subclasses need to implement these methods
     def fetch(self):
@@ -245,6 +249,9 @@ class FetchStrategyComposite(pattern.Composite):
         if all(component_ids):
             return component_ids
 
+    def set_package(self, package):
+        for item in self:
+            item.package = package
 
 @fetcher
 class URLFetchStrategy(FetchStrategy):
@@ -979,8 +986,12 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         # Init submodules if the user asked for them.
         submodules = self.submodules
-        if self.package is not None:
-            submodules = self.package.get_submodules() or submodules
+        if callable(submodules):
+            submodules = submodules(self.package)
+            if isinstance(submodules, six.string_types):
+                submodules = shlex.split(submodules)
+            elif not isinstance(submodules, (list, tuple)):
+                raise ValueError("Expected submodules to be a string or list")
         if submodules:
             with working_dir(dest):
                 args = ['submodule', 'init']
