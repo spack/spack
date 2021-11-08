@@ -22,12 +22,12 @@ in order to build it.  They need to define the following methods:
     * archive()
         Archive a source directory, e.g. for creating a mirror.
 """
-import shlex
 import copy
 import functools
 import os
 import os.path
 import re
+import shlex
 import shutil
 import sys
 from typing import List, Optional  # novm
