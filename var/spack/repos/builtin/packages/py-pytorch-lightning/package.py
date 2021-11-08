@@ -22,6 +22,9 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.17.2:', when='@1.3:', type=('build', 'run'))
     depends_on('py-numpy@1.16.6:', when='@:1.2', type=('build', 'run'))
+    # TODO: add patch and remove +distributed once the following issue is resolved:
+    # https://github.com/PyTorchLightning/pytorch-lightning/issues/10348
+    depends_on('py-torch@1.6:+distributed', when='@1.5.0', type=('build', 'run'))
     depends_on('py-torch@1.6:', when='@1.4:', type=('build', 'run'))
     depends_on('py-torch@1.4:', when='@:1.3', type=('build', 'run'))
     depends_on('py-future@0.17.1:', type=('build', 'run'))
