@@ -990,8 +990,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             submodules = submodules(self.package)
             if isinstance(submodules, six.string_types):
                 submodules = shlex.split(submodules)
-            elif not isinstance(submodules, (list, tuple)):
-                raise ValueError("Expected submodules to be a string or list")
+            elif isinstance(submodules, (list, tuple)):
+                submodules = list(submodules)
         if submodules:
             with working_dir(dest):
                 args = ['submodule', 'init']
