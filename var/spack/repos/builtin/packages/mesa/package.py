@@ -157,7 +157,6 @@ class Mesa(MesonPackage):
         num_frontends = 0
 
         use_dri = ('+egl' in spec) or ('+glvnd' in spec)
-        args.append('-Ddri=true' if use_dri else '-Ddri=false')
 
         if '+glvnd' in spec:
             args.append('-Dglvnd=true')
