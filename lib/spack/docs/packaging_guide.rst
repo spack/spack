@@ -1078,18 +1078,23 @@ Submodules
      version('1.0.1', tag='v1.0.1', submodules=True)
 
   If a package has per-variant submodules, ``submodules=True`` may not be
-  appropriate.  Instead, define the ``submodules`` method that returns a list of
-  submodules that should be fetched.
+  appropriate.  Instead, define ``submodules`` to be a callable function that
+  takes the package instance as its argument.  The function should return a list
+  of submodules that should be fetched.
 
   .. code-block:: python
 
-     def submodules(self):
+     def submodules(package):
          submodules = []
-         if "+variant-1" in self.spec:
+         if "+variant-1" in package.spec:
              submodules.append("submodule_for_variant_1")
-         if "+variant-2" in self.spec:
+         if "+variant-2" in package.spec:
              submodules.append("submodule_for_variant_2")
          return submodules
+
+
+      class MyPackage(Package):
+          version("0.1.0", submodules=submodules)
 
 
 .. _github-fetch:
