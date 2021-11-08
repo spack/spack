@@ -1000,7 +1000,7 @@ class IntelPackage(PackageBase):
             if self.version_yearlike >= ver('2019'):
                 # Patch libmpi.so rpath so it can find libfabric
                 d = ancestor(self.component_lib_dir('mpi'))
-                libfabric_rpath = os.path.join(d, 'libfabric', 'lib')
+                libfabric_rpath = [os.path.join(d, 'libfabric', 'lib')]
                 if '+external-libfabric' in self.spec:
                     libfabric_rpath = self.spec['libfabric'].libs
                 result = libfabric_rpath + result
