@@ -10,6 +10,7 @@ The spack package class structure is based strongly on Homebrew
 packages.
 """
 
+import shlex
 import base64
 import collections
 import contextlib
@@ -965,6 +966,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
+    def get_submodules(self):
+        submodules = self.submodules()
+        if submodules is None:
+            return None
+        elif isinstance(submodules, six.string_types):
+            return shlex.split(submodules)
+        elif isinstance(submodules, (list, tuple)):
+            return list(submodules)
+        raise ValueError("Expected Package.submodules() to return a list or string")
+
     def submodules(self):
         """Source code submodules (git version control)"""
         return None
@@ -1160,7 +1171,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
-        if isinstance(f, StageComposite):
+        if isinstance(f, fs.FetchStrategyComposite):
             self._fetcher[0].package = self
         else:
             self._fetcher.package = self

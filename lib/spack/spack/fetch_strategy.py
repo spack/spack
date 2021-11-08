@@ -1010,12 +1010,12 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         # Init submodules if the user asked for them.
         submodules = self.submodules
-        if self.package is not None and hasattr(self.package, "submodules"):
-            submodules = self.package.submodules() or submodules
+        if self.package is not None:
+            submodules = self.package.get_submodules() or submodules
         if submodules:
             with working_dir(dest):
                 args = ['submodule', 'init']
-                if isinstance(submodules, (list, tuple)):
+                if isinstance(submodules, list):
                     args += ["--"] + list(submodules)
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
