@@ -253,6 +253,7 @@ class FetchStrategyComposite(pattern.Composite):
         for item in self:
             item.package = package
 
+
 @fetcher
 class URLFetchStrategy(FetchStrategy):
     """URLFetchStrategy pulls source code from a URL for an archive, check the
