@@ -1,6 +1,8 @@
 name: Bootstrapping
 
 on:
+  # This Workflow can be triggered manually
+  workflow_dispatch:
   pull_request:
     branches:
       - develop
