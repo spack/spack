@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -16,7 +18,11 @@ class Adios2(CMakePackage):
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
+    tags = ['e4s']
+
     version('master', branch='master')
+    version('2.7.1', sha256='c8e237fd51f49d8a62a0660db12b72ea5067512aa7970f3fcf80b70e3f87ca3e')
+    version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
     version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
@@ -51,7 +57,7 @@ class Adios2(CMakePackage):
     # transport engines
     variant('sst', default=True,
             description='Enable the SST staging engine')
-    variant('dataman', default=True,
+    variant('dataman', default=False,
             description='Enable the DataMan engine for WAN transports')
     variant('dataspaces', default=False,
             description='Enable support for DATASPACES')
@@ -96,14 +102,11 @@ class Adios2(CMakePackage):
     depends_on('bzip2', when='@2.4: +bzip2')
     depends_on('libpng@1.6:', when='@2.4: +png')
     depends_on('zfp@0.5.1:', when='+zfp')
-    depends_on('sz@:2.0.2.0', when='+sz')
+    depends_on('sz@2.0.2.0:', when='+sz')
 
     extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.5:',
-               when='@:2.4.0 +python',
-               type=('build', 'run'))
-    depends_on('python@3.5:', when='@2.5.0: +python',
-               type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:2.4.0 +python', type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.5.0: +python', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@:2.4.0', type='test')
     depends_on('python@3.5:', when='@2.5.0:', type='test')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
@@ -117,6 +120,19 @@ class Adios2(CMakePackage):
     # third-party dill library.
     # See https://github.com/ornladios/ADIOS2/pull/1899
     patch('2.5-fix-clear_cache.patch', when='@2.5.0')
+
+    # Fix an unnecessary python dependency when testing is disabled
+    # See https://github.com/ornladios/ADIOS2/pull/2596
+    patch('2.7-fix-python-test-deps.patch', when='@2.5.0:2.7.0')
+
+    # Fix unresolved symbols when built with gcc10.
+    # See https://github.com/ornladios/ADIOS2/pull/2714
+    patch('2.6-fix-gcc10-symbols.patch', when='@2.6.0')
+
+    # Add missing include <memory>
+    # https://github.com/ornladios/adios2/pull/2710
+    patch('https://github.com/ornladios/adios2/pull/2710.patch', when='@:2.7.1',
+          sha256='8d301e8232baf4049b547f22bd73774309662017a62dac36360d2965907062bf')
 
     @when('%fj')
     def patch(self):
@@ -135,48 +151,32 @@ class Adios2(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DADIOS2_BUILD_TESTING=OFF',
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DADIOS2_BUILD_EXAMPLES=OFF',
-            '-DADIOS2_USE_MPI={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
+            from_variant('ADIOS2_USE_MPI', 'mpi'),
             '-DADIOS2_USE_MGARD=OFF',
-            '-DADIOS2_USE_ZFP={0}'.format(
-                'ON' if '+zfp' in spec else 'OFF'),
-            '-DADIOS2_USE_SZ={0}'.format(
-                'ON' if '+sz' in spec else 'OFF'),
-            '-DADIOS2_USE_DataMan={0}'.format(
-                'ON' if '+dataman' in spec else 'OFF'),
-            '-DADIOS2_USE_SST={0}'.format(
-                'ON' if '+sst' in spec else 'OFF'),
-            '-DADIOS2_USE_HDF5={0}'.format(
-                'ON' if '+hdf5' in spec else 'OFF'),
-            '-DADIOS2_USE_Python={0}'.format(
-                'ON' if '+python' in spec else 'OFF'),
-            '-DADIOS2_USE_Fortran={0}'.format(
-                'ON' if '+fortran' in spec else 'OFF'),
-            '-DADIOS2_USE_Endian_Reverse={0}'.format(
-                'ON' if '+endian_reverse' in spec else 'OFF'),
-            '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
+            from_variant('ADIOS2_USE_ZFP', 'zfp'),
+            from_variant('ADIOS2_USE_SZ', 'sz'),
+            from_variant('ADIOS2_USE_DataMan', 'dataman'),
+            from_variant('ADIOS2_USE_SST', 'sst'),
+            from_variant('ADIOS2_USE_HDF5', 'hdf5'),
+            from_variant('ADIOS2_USE_Python', 'python'),
+            from_variant('ADIOS2_USE_Fortran', 'fortran'),
+            from_variant('ADIOS2_USE_Endian_Reverse', 'endian_reverse'),
+            self.define('BUILD_TESTING', self.run_tests),
         ]
 
         if spec.version >= Version('2.4.0'):
-            args.append('-DADIOS2_USE_Blosc={0}'.format(
-                'ON' if '+blosc' in spec else 'OFF'))
-            args.append('-DADIOS2_USE_BZip2={0}'.format(
-                'ON' if '+bzip2' in spec else 'OFF'))
-            args.append('-DADIOS2_USE_PNG={0}'.format(
-                'ON' if '+png' in spec else 'OFF'))
-            args.append('-DADIOS2_USE_SSC={0}'.format(
-                'ON' if '+ssc' in spec else 'OFF'))
+            args.append(from_variant('ADIOS2_USE_Blosc', 'blosc'))
+            args.append(from_variant('ADIOS2_USE_BZip2', 'bzip2'))
+            args.append(from_variant('ADIOS2_USE_PNG', 'png'))
+            args.append(from_variant('ADIOS2_USE_SSC', 'ssc'))
 
         if spec.version >= Version('2.5.0'):
-            args.append('-DADIOS2_USE_DataSpaces={0}'.format(
-                'ON' if '+dataspaces' in spec else 'OFF'))
+            args.append(from_variant('ADIOS2_USE_DataSpaces', 'dataspaces'))
 
         if spec.version >= Version('2.6.0'):
             args.append('-DADIOS2_USE_IME=OFF')
@@ -194,8 +194,7 @@ class Adios2(CMakePackage):
             ])
 
         if spec.satisfies('~shared'):
-            args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
-                'ON' if '+pic' in spec else 'OFF'))
+            args.append(from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
 
         if spec.satisfies('%fj'):
             args.extend([
@@ -208,3 +207,42 @@ class Adios2(CMakePackage):
                         % spec['python'].command.path)
 
         return args
+
+    @property
+    def libs(self):
+        spec = self.spec
+        libs_to_seek = set()
+
+        if spec.satisfies('@2.6:'):
+            libs_to_seek.add('libadios2_core')
+            libs_to_seek.add('libadios2_c')
+            libs_to_seek.add('libadios2_cxx11')
+            if '+fortran' in spec:
+                libs_to_seek.add('libadios2_fortran')
+
+            if '+mpi' in spec:
+                libs_to_seek.add('libadios2_core_mpi')
+                libs_to_seek.add('libadios2_c_mpi')
+                libs_to_seek.add('libadios2_cxx11_mpi')
+                if '+fortran' in spec:
+                    libs_to_seek.add('libadios2_fortran_mpi')
+
+            if (self.spec.satisfies('@2.7: +shared+hdf5') and
+                    self.spec['hdf5'].satisfies('@1.12:')):
+                libs_to_seek.add('libadios2_h5vol')
+
+        else:
+            libs_to_seek.add('libadios2')
+            if '+fortran' in spec:
+                libs_to_seek.add('libadios2_fortran')
+
+        return find_libraries(list(libs_to_seek), root=self.spec.prefix,
+                              shared=('+shared' in spec), recursive=True)
+
+    def setup_run_environment(self, env):
+        try:
+            all_libs = self.libs
+            idx = all_libs.basenames.index('libadios2_h5vol.so')
+            env.prepend_path('HDF5_PLUGIN_PATH', os.path.dirname(all_libs[idx]))
+        except ValueError:
+            pass

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,15 +11,18 @@ class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
 
     homepage = "http://mumps.enseeiht.fr"
-    url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
+    url      = "http://mumps.enseeiht.fr/MUMPS_5.3.5.tar.gz"
 
+    version('5.4.0', sha256='c613414683e462da7c152c131cebf34f937e79b30571424060dd673368bbf627')
+    version('5.3.5', sha256='e5d665fdb7043043f0799ae3dbe3b37e5b200d1ab7a6f7b2a4e463fd89507fa4')
     version('5.3.3', sha256='27e7749ac05006bf8e81a457c865402bb72a42bf3bc673da49de1020f0f32011')
     version('5.2.0', sha256='41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
     version('5.1.2', sha256='eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
     version('5.1.1', sha256='a2a1f89c470f2b66e9982953cbd047d429a002fab9975400cef7190d01084a06')
     version('5.0.2', sha256='77292b204942640256097a3da482c2abcd1e0d5a74ecd1d4bab0f5ef6e60fe45')
     # Alternate location if main server is down.
-    # version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
+    # version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0',
+    #         url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0')
 
     variant('mpi', default=True,
@@ -41,6 +44,11 @@ class Mumps(Package):
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
+    variant('openmp', default=True,
+            description='Compile MUMPS with OpenMP support')
+    variant('blr_mt', default=False,
+            description='Allow BLAS calls in OpenMP regions ' +
+                        '(warning: might not be supported by all multithread BLAS)')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
@@ -53,13 +61,21 @@ class Mumps(Package):
 
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
     patch('gfortran8.patch', when='@5.1.2')
+    # The following patches src/Makefile to fix some dependency
+    # issues in lib[cdsz]mumps.so
+    patch('mumps.src-makefile.5.2.patch', when='@5.2.0 +shared')
+    patch('mumps.src-makefile.5.3.patch', when='@5.3.0: +shared')
+
+    conflicts('+parmetis', when='~mpi',
+              msg="You cannot use the parmetis variant without mpi")
+    conflicts('+parmetis', when='~metis',
+              msg="You cannot use the parmetis variant without metis")
+    conflicts('+ptscotch', when='~mpi',
+              msg="You cannot use the ptscotch variant without mpi")
+    conflicts('+blr_mt', when='~openmp',
+              msg="You cannot use the blr_mt variant without openmp")
 
     def write_makefile_inc(self):
-        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
-                '+mpi' not in self.spec):
-            raise RuntimeError(
-                'You cannot use the variants parmetis or ptscotch without mpi')
-
         # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
         # used to link the examples, so if building '+shared' there is no need
         # to explicitly link with the respective libraries because we make sure
@@ -74,6 +90,10 @@ class Mumps(Package):
                          lapack_blas.ld_flags if not shared else '']
 
         orderings = ['-Dpord']
+        # All of the lib[cdsz]mumps.* libs depend on mumps_common
+        extra_libs4mumps = ['-L$(topdir)/lib', '-lmumps_common']
+        # and mumps_common depends on pord
+        extra_libs4mumps += ['-L$(topdir)/PORD/lib', '-lpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             makefile_conf.extend([
@@ -86,7 +106,7 @@ class Mumps(Package):
             if '+ptscotch' in self.spec:
                 orderings.append('-Dptscotch')
 
-        if '+parmetis' in self.spec and '+metis' in self.spec:
+        if '+parmetis' in self.spec:
             makefile_conf.extend([
                 "IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
                 ("LMETIS = -L%s -l%s -L%s -l%s" % (
@@ -126,42 +146,63 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        cpic = self.compiler.cc_pic_flag if '+shared' in self.spec else ''
-        fpic = self.compiler.fc_pic_flag if '+shared' in self.spec else ''
+        cpic = self.compiler.cc_pic_flag if shared else ''
+        fpic = self.compiler.fc_pic_flag if shared else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
+        # The mumps.src-makefile.patch wants us to set these PIC variables
+        makefile_conf.append('FC_PIC_FLAG={0}'.format(fpic))
+        makefile_conf.append('CC_PIC_FLAG={0}'.format(cpic))
+
         opt_level = '3' if using_xl else ''
 
+        optc = ['-O{0}'.format(opt_level)]
+        optf = ['-O{0}'.format(opt_level)]
+        optl = ['-O{0}'.format(opt_level)]
+
+        if shared:
+            optc.append(cpic)
+            optf.append(fpic)
+            optl.append(cpic)
+
+        if not using_xlf:
+            optf.append('-DALLOW_NON_INIT')
+
         if '+int64' in self.spec:
-            if using_xlf:
-                makefile_conf.append('OPTF = -O%s' % opt_level)
-            else:
+            if not using_xlf:
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                makefile_conf.extend([
-                    'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
-                        fpic,
-                        '-fdefault-integer-8' if using_gcc
-                                              else '-i8'),  # noqa
-                ])
+                optf.append('-fdefault-integer-8' if using_gcc else '-i8')
 
-            makefile_conf.extend([
-                'OPTL = %s -O%s' % (cpic, opt_level),
-                'OPTC = %s -O%s -DINTSIZE64' % (cpic, opt_level)
-            ])
+            optc.append('-DINTSIZE64')
         else:
             if using_xlf:
-                makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
-            else:
-                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
-                    fpic, opt_level))
+                optf.append('-qfixed')
 
-            makefile_conf.extend([
-                'OPTL = %s -O%s' % (cpic, opt_level),
-                'OPTC = %s -O%s' % (cpic, opt_level)
-            ])
+        # As of version 5.2.0, MUMPS is able to take advantage
+        # of the GEMMT BLAS extension. MKL is currently the only
+        # known BLAS implementation supported.
+        if '@5.2.0: ^mkl' in self.spec:
+            optf.append('-DGEMMT_AVAILABLE')
+
+        if '+openmp' in self.spec:
+            optc.append(self.compiler.openmp_flag)
+            optf.append(self.compiler.openmp_flag)
+            optl.append(self.compiler.openmp_flag)
+
+        # Using BLR_MT might not be supported by all multithreaded BLAS
+        # (MKL is known to work) but it is not something we can easily
+        # check so we trust that the user knows what he/she is doing.
+        if '+blr_mt' in self.spec:
+            optf.append('-DBLR_MT')
+
+        makefile_conf.extend([
+            'OPTC = {0}'.format(' '.join(optc)),
+            'OPTF = {0}'.format(' '.join(optf)),
+            'OPTL = {0}'.format(' '.join(optl))
+        ])
 
         if '+mpi' in self.spec:
             scalapack = self.spec['scalapack'].libs if not shared \
@@ -178,6 +219,8 @@ class Mumps(Package):
                  "FC = {0}".format(spack_fc),
                  "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
+            # For sequential MUMPS, we need to link to a fake MPI lib
+            extra_libs4mumps += ['-L$(topdir)/libseq', '-lmpiseq']
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
@@ -228,8 +271,8 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'LIBEXT=.so',
                     'AR=link_cmd() { $(FL) -%s -Wl,-soname '
-                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                    (build_shared_flag, prefix.lib, inject_libs),
+                    '-Wl,$(notdir $@) -o "$$@" %s; }; link_cmd ' %
+                    (build_shared_flag, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of
@@ -247,6 +290,10 @@ class Mumps(Package):
                 'RANLIB = ranlib'
             ])
 
+        # The mumps.src-makefile.patch wants EXTRA_LIBS4MUMPS defined
+        makefile_conf.extend([
+            'EXTRA_LIBS4MUMPS = {0}'.format(' '.join(extra_libs4mumps))
+        ])
         makefile_inc_template = join_path(
             os.path.dirname(self.module.__file__), 'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
@@ -256,6 +303,15 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         self.write_makefile_inc()
@@ -268,7 +324,10 @@ class Mumps(Package):
             ['d', '+double'], ['z', '+complex+double']]
         for ltr, v in letters_variants:
             if v in spec:
-                make(ltr + 'examples')
+                if self.spec.satisfies('@5.4:'):
+                    make(ltr)
+                else:
+                    make(ltr + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)

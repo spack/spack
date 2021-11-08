@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyVirtualenv(PythonPackage):
     """virtualenv is a tool to create isolated Python environments."""
 
     homepage = "https://virtualenv.pypa.io/"
-    url      = "https://pypi.io/packages/source/v/virtualenv/virtualenv-16.7.6.tar.gz"
+    pypi = "virtualenv/virtualenv-16.7.6.tar.gz"
 
     version('16.7.6', sha256='5d370508bf32e522d79096e8cbea3499d47e624ac7e11e9089f9397a0b3318df')
     version('16.4.1', sha256='5a3ecdfbde67a4a3b3111301c4d64a5b71cf862c8c42958d30cf3253df1f29dd')

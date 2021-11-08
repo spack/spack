@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,6 @@ class PySpefile(PythonPackage):
 
     homepage = "https://github.com/conda-forge/spefile-feedstock"
     git      = "https://github.com/conda-forge/spefile-feedstock.git"
-
-    import_modules = ['spefile']
 
     version('1.6', commit='24394e066da8dee5e7608f556ca0203c9db217f9')
 

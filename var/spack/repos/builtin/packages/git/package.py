@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-import re
 import os
+import re
+import sys
+
 from spack import *
 
 
@@ -27,6 +28,16 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
     releases = [
+        {
+            'version': '2.29.2',
+            'sha256': '869a121e1d75e4c28213df03d204156a17f02fce2dc77be9795b327830f54195',
+            'sha256_manpages': '68b258e6d590cb78e02c0df741bbaeab94cbbac6d25de9da4fb3882ee098307b'
+        },
+        {
+            'version': '2.31.1',
+            'sha256': '46d37c229e9d786510e0c53b60065704ce92d5aedc16f2c5111e3ed35093bfa7',
+            'sha256_manpages': 'd330498aaaea6928b0abbbbb896f6f605efd8d35f23cbbb2de38c87a737d4543'
+        },
         {
             'version': '2.31.0',
             'sha256': 'bc6168777883562569144d536e8a855b12d25d46870d95188a3064260d7784ee',
@@ -66,6 +77,16 @@ class Git(AutotoolsPackage):
             'version': '2.25.0',
             'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
             'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
+        },
+        {
+            'version': '2.23.0',
+            'sha256': 'e3396c90888111a01bf607346db09b0fbf49a95bc83faf9506b61195936f0cfe',
+            'sha256_manpages': 'a5b0998f95c2290386d191d34780d145ea67e527fac98541e0350749bf76be75'
+        },
+        {
+            'version': '2.22.0',
+            'sha256': 'a4b7e4365bee43caa12a38d646d2c93743d755d1cea5eab448ffb40906c9da0b',
+            'sha256_manpages': 'f6a5750dfc4a0aa5ec0c0cc495d4995d1f36ed47591c3941be9756c1c3a1aa0a'
         },
         {
             'version': '2.21.0',
@@ -207,22 +228,28 @@ class Git(AutotoolsPackage):
                 release['version']),
             sha256=release['sha256_manpages'],
             placement='git-manpages',
-            when='@{0}'.format(release['version']))
+            when='@{0} +man'.format(release['version']))
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
     variant('svn', default=False,
             description='Provide SVN Perl dependency in run environment')
+    variant('perl', default=True,
+            description='Do not use Perl scripts or libraries at all')
+    variant('nls', default=True,
+            description='Enable native language support')
+    variant('man', default=True,
+            description='Install manual pages')
 
     depends_on('curl')
     depends_on('expat')
-    depends_on('gettext')
+    depends_on('gettext', when='+nls')
     depends_on('iconv')
     depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
-    depends_on('perl')
+    depends_on('perl', when='+perl')
     depends_on('zlib')
     depends_on('openssh', type='run')
 
@@ -233,10 +260,13 @@ class Git(AutotoolsPackage):
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
     depends_on('perl-alien-svn', type='run', when='+svn')
 
+    conflicts('+svn', when='~perl')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'git version (\S+)', output)
+        match = re.search(
+            spack.fetch_strategy.GitFetchStrategy.git_version_re, output)
         return match.group(1) if match else None
 
     @classmethod
@@ -267,12 +297,15 @@ class Git(AutotoolsPackage):
         # The test avoids failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
-        if 'gettext' in self.spec:
+        if '+nls' in self.spec:
             if 'intl' in self.spec['gettext'].libs.names:
                 env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                     self.spec['gettext'].prefix.lib))
             env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
+
+        if '~perl' in self.spec:
+            env.append_flags('NO_PERL', '1')
 
     def configure_args(self):
         spec = self.spec
@@ -282,9 +315,11 @@ class Git(AutotoolsPackage):
             '--with-expat={0}'.format(spec['expat'].prefix),
             '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
-            '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
+
+        if '+perl' in self.spec:
+            configure_args.append('--with-perl={0}'.format(spec['perl'].command.path))
 
         if '^pcre' in self.spec:
             configure_args.append('--with-libpcre={0}'.format(
@@ -309,12 +344,27 @@ class Git(AutotoolsPackage):
     def check(self):
         make('test')
 
+    def build(self, spec, prefix):
+        args = []
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
+    def install(self, spec, prefix):
+        args = ["install"]
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
     @run_after('install')
     def install_completions(self):
         install_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):
+        if '~man' in self.spec:
+            return
+
         prefix = self.prefix
 
         with working_dir('git-manpages'):

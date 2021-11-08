@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyOpencensusContext(Package):
 
     extends('python')
     depends_on('py-pip', type='build')
-    depends_on('py-contextvars', when='^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-contextvars', when='^python@3.6.0:3.6', type=('build', 'run'))
 
     def install(self, spec, prefix):
         pip = which('pip')

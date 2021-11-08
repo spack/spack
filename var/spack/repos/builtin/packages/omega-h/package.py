@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class OmegaH(CMakePackage):
     url      = "https://github.com/BlueBrain/omega_h/archive/v9.22.1.tar.gz"
     git      = "https://github.com/BlueBrain/omega_h.git"
 
+    maintainers = ['cwsmith']
+    tags = ['e4s']
     version('develop', branch='master')
     version('9.34.6', sha256='0fcdfedab6afb855ca982c429698eaa2c25e78909152b8bee508c80a54234aac')
     version('9.34.5', sha256='1fa67122d2b6d2b3d0d05fa0c5ed1fa24234d072292b29cb334879ffb5adcc92')
@@ -45,11 +47,11 @@ class OmegaH(CMakePackage):
     depends_on('gmsh', when='+examples', type='build')
     depends_on('gmsh', when='+gmsh@4.4.1:', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos +kokkos +teuchos', when='+trilinos')
+    depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
-    conflicts('%gcc@8:8.2.99', when='@:9.22.1')
+    conflicts('%gcc@8:8.2', when='@:9.22.1')
 
     def _bob_options(self):
         cmake_var_prefix = 'Omega_h_CXX_'
@@ -99,4 +101,29 @@ class OmegaH(CMakePackage):
         flags = list(flags)
         if name == 'cxxflags':
             flags.append(self.compiler.cxx11_flag)
+
+            if self.spec.satisfies('%cce'):
+                flags.append("-Wno-final-dtor-non-final-class")
+
         return (None, None, flags)
+
+    def test(self):
+        if self.spec.version < Version('9.34.1'):
+            print('Skipping tests since only relevant for versions > 9.34.1')
+            return
+
+        exe = join_path(self.prefix.bin, 'osh_box')
+        options = ['1', '1', '1', '2', '2', '2', 'box.osh']
+        description = 'testing mesh construction'
+        self.run_test(exe, options, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh_scale')
+        options = ['box.osh', '100', 'box_100.osh']
+        expected = 'adapting took'
+        description = 'testing mesh adaptation'
+        self.run_test(exe, options, expected, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh2vtk')
+        options = ['box_100.osh', 'box_100_vtk']
+        description = 'testing mesh to vtu conversion'
+        self.run_test(exe, options, purpose=description)

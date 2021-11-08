@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Astyle(MakefilePackage):
@@ -15,7 +14,7 @@ class Astyle(MakefilePackage):
     homepage = "http://astyle.sourceforge.net/"
     url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz"
     # Gentoo alternative
-    # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
+    # url = "https://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
     version('3.1',    sha256='cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7')
     version('3.0.1',  sha256='6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd')
@@ -32,9 +31,9 @@ class Astyle(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = join_path(self.build_directory, 'Makefile')
         filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
-        # strangely enough install -o $(USER) -g $(USER) stoped working on OSX
-        if sys.platform == 'darwin':
-            filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
+        # If the group is not a user account, the installation will fail,
+        # so remove the -o $ (USER) -g $ (USER) parameter.
+        filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
 
     @property
     def install_targets(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 
 import os
 import sys
+
 from spack import *
 
 
@@ -20,6 +21,8 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('9.0.3', sha256='bc3eb9625b2b8dbfecb6052a2ab091fc91405de4333b0ec68f3323815154ed8a')
+    version('9.0.1', sha256='1b39a5e191c282861e7af4101eaa8585969a2de05f5646c9199a161213a622c7')
     version('9.0.0', sha256='15def4e6f84d72f82386617fe595ec124dda3cbd13ea19a0dcd91583197d8715')
     version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
@@ -41,10 +44,14 @@ class Vtk(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
 
     patch('gcc.patch', when='@6.1.0')
+    # patch to fix some missing stl includes
+    # which lead to build errors on newer compilers
+    # version range to be updated once the linked patch is released
+    patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
+          when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
-    # At the moment, we cannot build with both osmesa and qt, but as of
-    # VTK 8.1, that should change
-    conflicts('+osmesa', when='+qt')
+    # We cannot build with both osmesa and qt prior to VTK 8.1
+    conflicts('+osmesa', when='@:8.0 +qt')
 
     extends('python', when='+python')
 
@@ -52,7 +59,7 @@ class Vtk(CMakePackage):
     # We need vtk at least 8.0.1 for python@3,
     # and at least 9.0 for python@3.8
     depends_on('python@2.7:2.9', when='@:8.0 +python', type=('build', 'run'))
-    depends_on('python@2.7:3.7.9', when='@8.0.1:8.9 +python',
+    depends_on('python@2.7:3.7', when='@8.0.1:8.9 +python',
                type=('build', 'run'))
     depends_on('python@2.7:', when='@9.0: +python', type=('build', 'run'))
 
@@ -62,6 +69,9 @@ class Vtk(CMakePackage):
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
     patch('python3.7-const-char.patch', when='@7.0.0:8.1.1 ^python@3.7:')
+
+    # Broken downstream FindMPI
+    patch('vtkm-findmpi-downstream.patch', when='@9.0.0')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -85,6 +95,9 @@ class Vtk(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('expat')
+    # See <https://gitlab.kitware.com/vtk/vtk/-/issues/18033> for why vtk doesn't
+    # work yet with freetype 2.10.3 (including possible patches)
+    depends_on('freetype @:2.10.2', when='@:9.0.1')
     depends_on('freetype')
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
@@ -105,6 +118,12 @@ class Vtk(CMakePackage):
 
     # For finding Fujitsu-MPI wrapper commands
     patch('find_fujitsu_mpi.patch', when='@:8.2.0%fj')
+    # Freetype@2.10.3 no longer exports FT_CALLBACK_DEF, this
+    # patch replaces FT_CALLBACK_DEF with simple extern "C"
+    # See https://gitlab.kitware.com/vtk/vtk/-/issues/18033
+    patch('https://gitlab.kitware.com/vtk/vtk/uploads/c6fa799a1a028b8f8a728a40d26d3fec/vtk-freetype-2.10.3-replace-FT_CALLBACK_DEF.patch',
+          sha256='eefda851f844e8a1dfb4ebd8a9ff92d2b78efc57f205774052c5f4c049cc886a',
+          when='@:9.0.1 ^freetype@2.10.3:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -123,6 +142,10 @@ class Vtk(CMakePackage):
         cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+
+            # prevents installation into lib64 which might not be in the path
+            # (solves #26314)
+            '-DCMAKE_INSTALL_LIBDIR:PATH=lib',
 
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
@@ -201,6 +224,12 @@ class Vtk(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE:PATH={0}'.format(qmake_exe),
                 '-DVTK_Group_Qt:BOOL=ON',
             ])
+            # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
+            if spec.satisfies('@9.0.0:'):
+                cmake_args.extend([
+                    '-DVTK_GROUP_ENABLE_Qt:STRING=YES',
+                    '-DVTK_MODULE_ENABLE_VTK_GUISupportQt:STRING=YES',
+                ])
 
             # NOTE: The following definitions are required in order to allow
             # VTK to build with qt~webkit versions (see the documentation for
@@ -240,7 +269,7 @@ class Vtk(CMakePackage):
 
         cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-        if spec.satisfies('@:8.1.0'):
+        if spec.satisfies('@:8.1.0') and '+osmesa' not in spec:
             cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
 
         if '+osmesa' in spec:
@@ -265,11 +294,10 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
+        compile_flags = []
+
         if spec.satisfies('@:6.1.0'):
-            cmake_args.extend([
-                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
-                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
-            ])
+            compile_flags.append('-DGLX_GLXEXT_LEGACY')
 
             # VTK 6.1.0 (and possibly earlier) does not use
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
@@ -297,5 +325,17 @@ class Vtk(CMakePackage):
             if '%intel' in spec and spec.version >= Version('8.2'):
                 cmake_args.append(
                     '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
+
+        # -no-ipo prevents an internal compiler error from multi-file
+        # optimization (https://github.com/spack/spack/issues/20471)
+        if '%intel' in spec:
+            compile_flags.append('-no-ipo')
+
+        if compile_flags:
+            compile_flags = ' '.join(compile_flags)
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS={0}'.format(compile_flags),
+                '-DCMAKE_CXX_FLAGS={0}'.format(compile_flags)
+            ])
 
         return cmake_args

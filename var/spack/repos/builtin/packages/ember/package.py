@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Ember(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "http://sst-simulator.org/SSTPages/SSTElementEmber/"
+    homepage = "https://sst-simulator.org/SSTPages/SSTElementEmber/"
     git      = "https://github.com/sstsimulator/ember.git"
     url      = "https://github.com/sstsimulator/ember/archive/v1.0.0.tar.gz"
 
@@ -61,7 +61,7 @@ class Ember(MakefilePackage):
         targets = []
         cc = self.spec['mpi'].mpicc
         cflags = '-O3'
-        if not self.spec.satisfies('%nvhpc'):
+        if not self.spec.satisfies('%nvhpc@:20.11'):
             cflags = '-O3 -std=c99'
         oshmem_cc = 'cc'
         oshmem_c_flags = '-O3 -g'

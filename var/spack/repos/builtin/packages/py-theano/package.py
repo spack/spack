@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class PyTheano(PythonPackage, CudaPackage):
     """Optimizing compiler for evaluating mathematical expressions on CPUs
     and GPUs."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url      = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://theano-pymc.readthedocs.io/en/latest/"
+    pypi = "Theano/Theano-0.8.2.tar.gz"
     git      = "https://github.com/Theano/Theano.git"
 
     version('master', branch='master')
@@ -33,7 +33,3 @@ class PyTheano(PythonPackage, CudaPackage):
     depends_on('cudnn', when='+cuda')
     depends_on('py-pygpu', when='+cuda', type=('build', 'run'))
     depends_on('libgpuarray', when='+cuda')
-
-    depends_on('py-nose@1.3.0:', type='test')
-    depends_on('py-parameterized', type='test')
-    depends_on('py-flake8', type='test')

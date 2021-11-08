@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,16 @@ from spack import *
 
 
 class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
+    """A Grammar of Data Manipulation
+
+    A fast, consistent tool for working with data frame like objects, both
     in memory and out of memory."""
 
     homepage = "https://cloud.r-project.org/package=dplyr"
-    url      = "https://cloud.r-project.org/src/contrib/dplyr_0.7.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/dplyr"
+    cran = "dplyr"
 
+    version('1.0.7', sha256='d2fe3aedbce02fdddce09a8a80f85f5918a9d1f15f792ad4a98f254959d7123d')
+    version('1.0.3', sha256='28a1a9d87e99154d4d1542ef9da9fd70f869a173dc9709f4583a5770bae58441')
     version('0.8.3', sha256='68b4aac65a69ea6390e90991d9c7ce7a011a07e5db439d60cce911a078424c0c')
     version('0.8.2', sha256='e2b6d5b30d04d86f270374623da426541cee8e33ce446fcab6cd7862abf8e18b')
     version('0.7.7', sha256='0553db5a55f0e6f5d2d111e88422c6d26e9d54cb36b860ad2ca28e3826e3d4a4')
@@ -26,17 +29,30 @@ class RDplyr(RPackage):
     version('0.7.0', sha256='27b3593c09da5e99c0c4fb19ea826edd2cab619f8aaefd0cfd2a4140a0bd9410')
     version('0.5.0', sha256='93d3b829f1c2d38e14a4f2fa7d6398fc6c1a9e4189b3e78bc38a0eb0e864454f')
 
-    depends_on('r@3.1.2:', when='@:0.8.0.1', type=('build', 'run'))
+    depends_on('r@3.1.2:', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@0.8.1:', type=('build', 'run'))
-    depends_on('r-assertthat@0.2.0:', type=('build', 'run'))
-    depends_on('r-bindrcpp@0.2.0:', when='@:0.7.9', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-ellipsis', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-generics', when='@1.0.3:', type=('build', 'run'))
     depends_on('r-glue@1.3.0:', type=('build', 'run'))
+    depends_on('r-glue@1.3.2:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-lifecycle@0.2.0:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-lifecycle@1.0.0:', when='@1.0.5:', type=('build', 'run'))
     depends_on('r-magrittr@1.5:', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp@1.0.1:', type=('build', 'run'))
     depends_on('r-rlang@0.4.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.9:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.10:', when='@1.0.5:', type=('build', 'run'))
     depends_on('r-tibble@2.0.0:', type=('build', 'run'))
+    depends_on('r-tibble@2.1.3:', when='@1.0.3:', type=('build', 'run'))
     depends_on('r-tidyselect@0.2.5:', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
-    depends_on('r-plogr@0.2.0:', when='@0.7.0:', type=('build', 'run'))
+    depends_on('r-tidyselect@1.1.0:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-vctrs@0.3.5:', when='@1.0.3:', type=('build', 'run'))
+    depends_on('r-pillar@1.5.1:', when='@1.0.6:', type=('build', 'run'))
+
+    depends_on('r-assertthat@0.2.0:', when='@:0.8.3', type=('build', 'run'))
+    depends_on('r-bindrcpp@0.2.0:', when='@:0.7.9', type=('build', 'run'))
+    depends_on('r-pkgconfig', when='@:0.8.3', type=('build', 'run'))
+    depends_on('r-rcpp@1.0.1:', when='@:0.8.3', type=('build', 'run'))
+    depends_on('r-bh', when='@:0.8.3', type=('build', 'run'))
+    depends_on('r-plogr@0.2.0:', when='@0.7.0:0.8.3', type=('build', 'run'))

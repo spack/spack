@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Umap(CMakePackage):
     url      = "https://github.com/LLNL/umap/archive/v2.1.0.tar.gz"
     git      = "https://github.com/LLNL/umap.git"
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('2.1.0', sha256='dfdc5b717aecdbfbb0da22e8567b9f2ffbc3607000a31122bf7c5ab3b85cecd9')
     version('2.0.0', sha256='85c4bc68e8790393847a84eb54eaf6fc321acade382a399a2679d541b0e34150')
@@ -28,9 +30,8 @@ class Umap(CMakePackage):
     variant('tests', default=False, description='Build test programs.')
 
     def cmake_args(self):
-        spec = self.spec
         args = [
-            "-DENABLE_LOGGING=%s" % ('On' if '+logging' in spec else 'Off'),
-            "-DENABLE_TESTS=%s"   % ('On' if '+tests' in spec else 'Off'),
+            self.define_from_variant('ENABLE_LOGGING', 'logging'),
+            self.define_from_variant('ENABLE_TESTS', 'tests'),
         ]
         return args

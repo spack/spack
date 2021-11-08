@@ -10,12 +10,12 @@ class PyIpyparallel(PythonPackage):
     """IPython's architecture for parallel and distributed computing."""
 
     homepage = "https://github.com/ipython/ipyparallel"
-    url      = "https://pypi.io/packages/source/i/ipyparallel/ipyparallel-7.1.0.tar.gz"
+    pypi     = "ipyparallel/ipyparallel-7.1.0.tar.gz"
 
     version('7.1.0', sha256='ea756df0d2485bac19cccb0dbf4cafbc855c922b9b5905b4906e6cfac8b3c648')
-    version('6.3.0', sha256='b18f6e10ffbcf6f97cac9ce6edc32365302e8496a5252407b91c61b654882147')
-    version('6.2.5', sha256='f6de54a29f7beb97872aa49dfa606dea5f3ed20d2433e3a7200ac2ea9b2a4388')
-    version('6.2.4', sha256='84aa117647b358133643aad1082ea8a56ab8a17693cc3bc2b150746a37e7332e')
+    version('6.3.0', sha256='0a97b276c62db633e9e97a816282bdd166f9df74e28204f0c8fa54b71944cfdc')
+    version('6.2.5', sha256='33416179665f9c2f567011ab1a618232bc32c0845c0a3a5c388f6c71048bc053')
+    version('6.2.4', sha256='76c7b028962b0ba762e4e45b450ee3a4353e7221526a8af812e817d7ef6ac065')
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@7.1.0:')

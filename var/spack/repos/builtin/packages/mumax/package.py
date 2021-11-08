@@ -1,17 +1,18 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import shutil
+
+from spack import *
 
 
 class Mumax(MakefilePackage, CudaPackage):
     """GPU accelerated micromagnetic simulator."""
 
-    homepage = "http://mumax.github.io"
+    homepage = "https://mumax.github.io"
     url      = "https://github.com/mumax/3/archive/v3.10.tar.gz"
 
     maintainers = ['glennpj']
@@ -29,7 +30,7 @@ class Mumax(MakefilePackage, CudaPackage):
             description='Use gnuplot for graphs')
 
     depends_on('cuda')
-    depends_on('go', type='build')
+    depends_on('go@:1.15', type='build')
     depends_on('gnuplot', type='run', when='+gnuplot')
 
     conflicts('~cuda', msg='mumax requires cuda')

@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Nalu(CMakePackage):
@@ -34,8 +35,8 @@ class Nalu(CMakePackage):
     # Cannot build Trilinos as a shared library with STK on Darwin
     # which is why we have a 'shared' variant for Nalu
     # https://github.com/trilinos/Trilinos/issues/2994
-    depends_on('trilinos+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards~hypre@master,develop', when='+shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards~hypre@master,develop', when='~shared')
+    depends_on('trilinos+mpi+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+shards~hypre@master')
+    depends_on('trilinos~shared', when='~shared')
     # Optional dependencies
     depends_on('tioga', when='+tioga+shared')
     depends_on('tioga~shared', when='+tioga~shared')
@@ -53,8 +54,7 @@ class Nalu(CMakePackage):
             '-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
         ])
 
         if '+tioga' in spec:

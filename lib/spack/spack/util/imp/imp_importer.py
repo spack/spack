@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,11 +28,11 @@ def load_source(full_name, path, prepend=None):
     Args:
         full_name (str): full name of the module to be loaded
         path (str): path to the file that should be loaded
-        prepend (str, optional): some optional code to prepend to the
+        prepend (str or None): some optional code to prepend to the
             loaded module; e.g., can be used to inject import statements
 
     Returns:
-        (ModuleType): the loaded module
+        the loaded module
     """
     with import_lock():
         if prepend is None:

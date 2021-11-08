@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import os.path
+import re
 import sys
 
 
@@ -13,11 +13,11 @@ class Mvapich2(AutotoolsPackage):
     networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
-    list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
+    homepage = "https://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.6.tar.gz"
+    list_url = "https://mvapich.cse.ohio-state.edu/downloads/"
 
-    maintainers = ['natshineman', 'harisubramoni']
+    maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
     executables = ['^mpiname$']
 
@@ -107,9 +107,7 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'file_systems',
         description='List of the ROMIO file systems to activate',
-        values=auto_or_any_combination_of(
-            'ime', 'lustre', 'gpfs', 'nfs', 'ufs'
-        ),
+        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
     )
 
     depends_on('findutils', type='build')
@@ -305,18 +303,13 @@ class Mvapich2(AutotoolsPackage):
     @property
     def file_system_options(self):
         spec = self.spec
-        opts = []
 
         fs = []
-        for x in ('ime', 'lustre', 'gpfs', 'nfs', 'ufs'):
+        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
             if 'file_systems={0}'.format(x) in spec:
                 fs.append(x)
-                # TODO : when IME package will be added, replace these paths
-                if x == 'ime':
-                    opts = ["CFLAGS=-I/opt/ddn/ime/include",
-                            "LDFLAGS=-L/opt/ddn/ime/lib",
-                            "LIBS=-lim_client"]
 
+        opts = []
         if len(fs) > 0:
             opts.append('--with-file-system=%s' % '+'.join(fs))
 

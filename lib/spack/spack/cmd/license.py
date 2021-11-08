@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import os
 import re
 from collections import defaultdict
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.paths
@@ -36,12 +37,14 @@ licensed_files = [
     # all of spack core
     r'^lib/spack/spack/.*\.py$',
     r'^lib/spack/spack/.*\.sh$',
+    r'^lib/spack/spack/.*\.lp$',
     r'^lib/spack/llnl/.*\.py$',
     r'^lib/spack/env/cc$',
 
     # rst files in documentation
     r'^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$',
     r'^lib/spack/docs/.*\.py$',
+    r'^lib/spack/docs/spack.yaml$',
 
     # 2 files in external
     r'^lib/spack/external/__init__.py$',
@@ -51,7 +54,13 @@ licensed_files = [
     r'^share/spack/.*\.sh$',
     r'^share/spack/.*\.bash$',
     r'^share/spack/.*\.csh$',
+    r'^share/spack/.*\.fish$',
     r'^share/spack/qa/run-[^/]*$',
+    r'^share/spack/bash/spack-completion.in$',
+    r'^share/spack/templates/misc/coconcretization.pyt$',
+
+    # action workflows
+    r'^.github/actions/.*\.py$',
 
     # all packages
     r'^var/spack/repos/.*/package.py$'
@@ -77,21 +86,23 @@ def _all_spack_files(root=spack.paths.prefix):
                 visited.add(path)
 
 
-def _licensed_files(root=spack.paths.prefix):
-    for relpath in _all_spack_files(root):
+def _licensed_files(args):
+    for relpath in _all_spack_files(args.root):
         if any(regex.match(relpath) for regex in licensed_files):
             yield relpath
 
 
 def list_files(args):
     """list files in spack that should have license headers"""
-    for relpath in sorted(_licensed_files()):
+    for relpath in sorted(_licensed_files(args)):
         print(os.path.join(spack.paths.spack_root, relpath))
 
 
 # Error codes for license verification. All values are chosen such that
 # bool(value) evaluates to True
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
+
+strict_date = r'Copyright 2013-2021'
 
 
 class LicenseError(object):
@@ -118,17 +129,15 @@ class LicenseError(object):
 
 def _check_license(lines, path):
     license_lines = [
-        r'Copyright 2013-(?:201[789]|202\d) Lawrence Livermore National Security, LLC and other',  # noqa: E501
+        r'Copyright 2013-(?:202[01]) Lawrence Livermore National Security, LLC and other',  # noqa: E501
         r'Spack Project Developers\. See the top-level COPYRIGHT file for details.',  # noqa: E501
         r'SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)'
     ]
 
-    strict_date = r'Copyright 2013-2020'
-
     found = []
 
     for line in lines:
-        line = re.sub(r'^[\s#\.]*', '', line)
+        line = re.sub(r'^[\s#\%\.]*', '', line)
         line = line.rstrip()
         for i, license_line in enumerate(license_lines):
             if re.match(license_line, line):
@@ -166,7 +175,8 @@ def _check_license(lines, path):
             if error:
                 return error
 
-    print('{0}: the license does not match the expected format'.format(path))
+    print('{0}: the license header at the top of the file does not match the \
+          expected format'.format(path))
     return GENERAL_MISMATCH
 
 
@@ -175,7 +185,7 @@ def verify(args):
 
     license_errors = LicenseError()
 
-    for relpath in _licensed_files(args.root):
+    for relpath in _licensed_files(args):
         path = os.path.join(args.root, relpath)
         with open(path) as f:
             lines = [line for line in f][:license_lines]
@@ -190,14 +200,27 @@ def verify(args):
         tty.msg('No license issues found.')
 
 
-def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='license_command')
-    sp.add_parser('list-files', help=list_files.__doc__)
+def update_copyright_year(args):
+    """update copyright for the current year in all licensed files"""
 
-    verify_parser = sp.add_parser('verify', help=verify.__doc__)
-    verify_parser.add_argument(
+    llns_and_other = ' Lawrence Livermore National Security, LLC and other'
+    for filename in _licensed_files(args):
+        fs.filter_file(
+            r'Copyright \d{4}-\d{4}' + llns_and_other,
+            strict_date + llns_and_other,
+            os.path.join(args.root, filename)
+        )
+
+
+def setup_parser(subparser):
+    subparser.add_argument(
         '--root', action='store', default=spack.paths.prefix,
         help='scan a different prefix for license issues')
+
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='license_command')
+    sp.add_parser('list-files', help=list_files.__doc__)
+    sp.add_parser('verify', help=verify.__doc__)
+    sp.add_parser('update-copyright-year', help=update_copyright_year.__doc__)
 
 
 def license(parser, args):
@@ -209,5 +232,6 @@ def license(parser, args):
     commands = {
         'list-files': list_files,
         'verify': verify,
+        'update-copyright-year': update_copyright_year,
     }
     return commands[args.license_command](args)

@@ -1,19 +1,19 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import sys
+
+from spack import *
 
 
 class Mesa18(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
-    homepage = "http://www.mesa3d.org"
-    maintainers = ['v-dobrev', 'chuckatkins']
+    homepage = "https://www.mesa3d.org"
+    maintainers = ['v-dobrev', 'chuckatkins', 'ChristianTackeGSI']
 
     # Note that we always want to build from the git repo instead of a
     # tarball since the tarball has pre-generated files for certain versions
@@ -21,14 +21,14 @@ class Mesa18(AutotoolsPackage):
     # whatever version of LLVM you're using.
     git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version('18.3.6', tag='mesa-18.3.6', preferred=True)
+    version('18.3.6', tag='mesa-18.3.6')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
+    depends_on('binutils+plugins', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
@@ -52,22 +52,12 @@ class Mesa18(AutotoolsPackage):
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
-    # TODO: effectively deal with EGL.  The implications of this have not been
-    # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
-
-    # TODO: Effectively deal with hardware drivers
-    # The implication of this is enabling DRI, among other things, and
-    # needing to check which llvm targets were built (ptx or amdgpu, etc.)
-
-    # Back ends
-    variant('opengl', default=True, description="Enable full OpenGL support.")
+    # Additional backends
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
+    provides('gl@4.5')
     provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
@@ -75,7 +65,10 @@ class Mesa18(AutotoolsPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
+
+    # Require at least 1 front-end
+    conflicts('~osmesa ~glx')
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
@@ -103,7 +96,12 @@ class Mesa18(AutotoolsPackage):
             '--disable-xa',
             '--disable-xvmc',
             '--disable-osmesa',
-            '--with-vulkan-drivers=']
+            '--with-vulkan-drivers=',
+            '--disable-egl',
+            '--disable-gbm',
+            '--disable-dri',
+            '--enable-opengl']
+
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
@@ -120,25 +118,10 @@ class Mesa18(AutotoolsPackage):
 
         if '+glx' in spec:
             num_frontends += 1
-            if '+egl' in spec:
-                args.append('--enable-glx=dri')
-            else:
-                args.append('--enable-glx=gallium-xlib')
+            args.append('--enable-glx=gallium-xlib')
             args_platforms.append('x11')
         else:
             args.append('--disable-glx')
-
-        if '+egl' in spec:
-            num_frontends += 1
-            args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
-            args_platforms.append('surfaceless')
-        else:
-            args.extend(['--disable-egl', '--disable-gbm', '--disable-dri'])
-
-        if '+opengl' in spec:
-            args.append('--enable-opengl')
-        else:
-            args.append('--disable-opengl')
 
         if '+opengles' in spec:
             args.extend(['--enable-gles1', '--enable-gles2'])
@@ -193,8 +176,7 @@ class Mesa18(AutotoolsPackage):
         if '+glx' in spec:
             libs_to_seek.add('libGL')
 
-        if '+opengl' in spec:
-            libs_to_seek.add('libGL')
+        libs_to_seek.add('libGL')
 
         if '+opengles' in spec:
             libs_to_seek.add('libGLES')
@@ -203,7 +185,7 @@ class Mesa18(AutotoolsPackage):
         if libs_to_seek:
             return find_libraries(list(libs_to_seek),
                                   root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
+                                  shared=True,
                                   recursive=True)
         return LibraryList()
 
@@ -211,19 +193,19 @@ class Mesa18(AutotoolsPackage):
     def osmesa_libs(self):
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def glx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def gl_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)

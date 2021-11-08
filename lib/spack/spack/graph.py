@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,6 @@ from llnl.util.tty.color import ColorStream
 
 from spack.dependency import all_deptypes, canonical_deptype
 
-
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
@@ -62,16 +61,15 @@ def topological_sort(spec, reverse=False, deptype='all'):
     """
     deptype = canonical_deptype(deptype)
 
-    if not reverse:
-        parents = lambda s: s.dependents()
-        children = lambda s: s.dependencies()
-    else:
-        parents = lambda s: s.dependencies()
-        children = lambda s: s.dependents()
-
     # Work on a copy so this is nondestructive.
     spec = spec.copy(deps=deptype)
     nodes = spec.index(deptype=deptype)
+
+    parents = lambda s: [p for p in s.dependents() if p.name in nodes]
+    children = lambda s: s.dependencies()
+
+    if reverse:
+        parents, children = children, parents
 
     topo_order = []
     par = dict((name, parents(nodes[name])) for name in nodes.keys())
@@ -552,11 +550,21 @@ def graph_dot(specs, deptype='all', static=False, out=None):
     out.write('     style="rounded,filled"')
     out.write('  ]\n')
 
+    # write nodes
     out.write('\n')
     for key, label in nodes:
         out.write('  "%s" [label="%s"]\n' % (key, label))
 
+    # write edges
     out.write('\n')
     for src, dest in edges:
         out.write('  "%s" -> "%s"\n' % (src, dest))
+
+    # ensure that roots are all at the top of the plot
+    dests = set([d for _, d in edges])
+    roots = ['"%s"' % k for k, _ in nodes if k not in dests]
+    out.write('\n')
+    out.write('  { rank=min; %s; }' % "; ".join(roots))
+
+    out.write('\n')
     out.write('}\n')

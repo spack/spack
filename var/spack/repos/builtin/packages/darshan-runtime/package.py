@@ -3,25 +3,30 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 
+from spack import *
 
-class DarshanRuntime(Package):
+
+class DarshanRuntime(AutotoolsPackage):
     """Darshan (runtime) is a scalable HPC I/O characterization tool
     designed to capture an accurate picture of application I/O behavior,
     including properties such as patterns of access within files, with
     minimum overhead. DarshanRuntime package should be installed on
     systems where you intend to instrument MPI applications."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
-    git      = "https://xgitlab.cels.anl.gov/darshan/darshan.git"
+    homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
-    version('master', branch='master', submodules=True)
-    version('3.3.0',      sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a', preferred=True)
+    tags = ['e4s']
+    test_requires_compiler = True
+
+    version('main', branch='main', submodules=True)
+    version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
+    version('3.3.0', sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a')
     version('3.3.0-pre2', sha256='0fc09f86f935132b7b05df981b05cdb3796a1ea02c7acd1905323691df65e761')
     version('3.3.0-pre1', sha256='1c655359455b5122921091bab9961491be58a5f0158f073d09fe8cc772bd0812')
     version('3.2.1', sha256='d63048b7a3d1c4de939875943e3e7a2468a9034fcb68585edbc87f57f622e7f7')
@@ -36,15 +41,23 @@ class DarshanRuntime(Package):
     depends_on('zlib')
     depends_on('hdf5', when='+hdf5')
     depends_on('papi', when='+apxc')
+    depends_on('autoconf', type='build', when='@main')
+    depends_on('automake', type='build', when='@main')
+    depends_on('libtool',  type='build', when='@main')
+    depends_on('m4',       type='build', when='@main')
 
-    variant('slurm', default=False, description='Use Slurm Job ID')
-    variant('cobalt', default=False, description='Use Coblat Job Id')
-    variant('pbs', default=False, description='Use PBS Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
     variant('hdf5', default=False, description='Compile with HDF5 module')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
     variant('apmpi_sync', default=False, description='Compile with AutoPerf MPI module (with collective synchronization timing)')
     variant('apxc', default=False, description='Compile with AutoPerf XC module')
+    variant(
+        'scheduler',
+        default='NONE',
+        description='queue system scheduler JOB ID',
+        values=('NONE', 'cobalt', 'pbs', 'sge', 'slurm'),
+        multi=False
+    )
 
     conflicts('+hdf5', when='@:3.1.8',
               msg='+hdf5 variant only available starting from version 3.2.0')
@@ -55,7 +68,13 @@ class DarshanRuntime(Package):
     conflicts('+apxc', when='@:3.2.1',
               msg='+apxc variant only available starting from version 3.3.0')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        return 'darshan-runtime'
+
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
 
         job_id = 'NONE'
         if '+slurm' in spec:
@@ -64,37 +83,110 @@ class DarshanRuntime(Package):
             job_id = 'COBALT_JOBID'
         if '+pbs' in spec:
             job_id = 'PBS_JOBID'
-
-        # TODO: BG-Q and other platform configure options
-        options = []
-        if '+mpi' in spec:
-            options = ['CC=%s' % spec['mpi'].mpicc]
-        else:
-            options = ['--without-mpi']
+        if '+sge' in spec:
+            job_id = 'JOB_ID'
 
         if '+hdf5' in spec:
-            options.extend(['--enable-hdf5-mod=%s' % spec['hdf5'].prefix])
-
+            if self.version < Version('3.3.2'):
+                extra_args.append('--enable-hdf5-mod=%s' % spec['hdf5'].prefix)
+            else:
+                extra_args.append('--enable-hdf5-mod')
         if '+apmpi' in spec:
-            options.extend(['--enable-apmpi-mod'])
+            extra_args.append('--enable-apmpi-mod')
         if '+apmpi_sync' in spec:
-            options.extend(['--enable-apmpi-mod',
-                            '--enable-apmpi-coll-sync'])
+            extra_args.append(['--enable-apmpi-mod',
+                               '--enable-apmpi-coll-sync'])
         if '+apxc' in spec:
-            options.extend(['--enable-apxc-mod'])
+            extra_args.append(['--enable-apxc-mod'])
 
-        options.extend(['--with-mem-align=8',
-                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
-                        '--with-jobid-env=%s' % job_id,
-                        '--with-zlib=%s' % spec['zlib'].prefix])
+        extra_args.append('--with-mem-align=8')
+        extra_args.append('--with-log-path-by-env=DARSHAN_LOG_DIR_PATH')
+        extra_args.append('--with-jobid-env=%s' % job_id)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-runtime/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        if '+mpi' in spec:
+            extra_args.append('CC=%s' % self.spec['mpi'].mpicc)
+        else:
+            extra_args.append('CC=%s' % self.compiler.cc)
+            extra_args.append('--without-mpi')
+
+        return extra_args
 
     def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting
         darshan_log_dir = os.environ['HOME']
         env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
+
+    @property
+    def basepath(self):
+        return join_path('darshan-test',
+                         join_path('regression',
+                                   join_path('test-cases', 'src')))
+
+    @run_after('install')
+    def _copy_test_inputs(self):
+        test_inputs = [
+            join_path(self.basepath, 'mpi-io-test.c')]
+        self.cache_extra_test_sources(test_inputs)
+
+    def _test_intercept(self):
+        testdir = "intercept-test"
+        with working_dir(testdir, create=True):
+            if '+mpi' in self.spec:
+                # compile a test program
+                logname = join_path(os.getcwd(), "test.darshan")
+                fname = join_path(self.test_suite.current_test_cache_dir,
+                                  join_path(self.basepath, 'mpi-io-test.c'))
+                cc = Executable(self.spec['mpi'].mpicc)
+                compile_opt = ['-c', fname]
+                link_opt = ['-o', "mpi-io-test", 'mpi-io-test.o']
+                cc(*(compile_opt))
+                cc(*(link_opt))
+
+                # run test program and intercept
+                purpose = "Test running code built against darshan"
+                exe = "./mpi-io-test"
+                options = ['-f', 'tmp.dat']
+                status = [0]
+                installed = False
+                expected_output = [r"Write bandwidth = \d+.\d+ Mbytes/sec",
+                                   r"Read bandwidth = \d+.\d+ Mbytes/sec"]
+                env['LD_PRELOAD'] = 'libdarshan.so'
+                env['DARSHAN_LOGFILE'] = logname
+                self.run_test(exe,
+                              options,
+                              expected_output,
+                              status,
+                              installed,
+                              purpose,
+                              skip_missing=False,
+                              work_dir=None)
+                env.pop('LD_PRELOAD')
+
+                import llnl.util.tty as tty
+
+                # verify existence of log and size is > 0
+                tty.msg("Test for existince of log:")
+                if os.path.exists(logname):
+                    sr = os.stat(logname)
+                    print("PASSED")
+                    tty.msg("Test for size of log:")
+                    if not sr.st_size > 0:
+                        exc = BaseException('log size is 0')
+                        m = None
+                        if spack.config.get('config:fail_fast', False):
+                            raise TestFailure([(exc, m)])
+                        else:
+                            self.test_failures.append((exc, m))
+                    else:
+                        print("PASSED")
+                else:
+                    exc = BaseException('log does not exist')
+                    m = None
+                    if spack.config.get('config:fail_fast', False):
+                        raise TestFailure([(exc, m)])
+                    else:
+                        self.test_failures.append((exc, m))
+
+    def test(self):
+        self._test_intercept()

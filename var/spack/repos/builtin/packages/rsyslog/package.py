@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Rsyslog(AutotoolsPackage):
     depends_on('libestr')
     depends_on('libfastjson')
     depends_on('zlib')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libgcrypt')
     depends_on('curl')
     depends_on('byacc', type='build')
@@ -31,3 +31,8 @@ class Rsyslog(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
+
+    def configure_args(self):
+        args = ["--with-systemdsystemunitdir=" +
+                self.spec['rsyslog'].prefix.lib.systemd.system]
+        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RRocr(RPackage):
-    """ROC graphs, sensitivity/specificity curves, lift charts,
+    """Visualizing the Performance of Scoring Classifiers
+
+    ROC graphs, sensitivity/specificity curves, lift charts,
     and precision/recall plots are popular examples of trade-off
     visualizations for specific pairs of performance measures. ROCR
     is a flexible tool for creating cutoff-parameterized 2D performance
@@ -23,9 +25,13 @@ class RRocr(RPackage):
     mechanism. Despite its flexibility, ROCR is easy to use, with only
     three commands and reasonable default values for all optional
     parameters."""
+
     homepage = "https://cloud.r-project.org/package=ROCR"
     url      = "https://cloud.r-project.org/src/contrib/ROCR_1.0-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ROCR"
 
+    version('1.0-11', sha256='57385a773220a3aaef5b221a68b2d9c2a94794d4f9e9fc3c1eb9521767debb2a')
     version('1.0-7', sha256='e7ef710f847e441a48b20fdc781dbc1377f5a060a5ee635234053f7a2a435ec9')
+
+    depends_on('r@3.6:', when='@1.0-11:', type=('build', 'run'))
     depends_on('r-gplots', type=('build', 'run'))

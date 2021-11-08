@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,7 @@ from spack import *
 class PySix(PythonPackage):
     """Python 2 and 3 compatibility utilities."""
 
-    homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.io/packages/source/s/six/six-1.11.0.tar.gz"
-
-    import_modules = ['six']
+    pypi = "six/six-1.11.0.tar.gz"
 
     version('1.16.0', sha256='1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926')
     version('1.15.0', sha256='30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259')
@@ -24,10 +21,5 @@ class PySix(PythonPackage):
     version('1.8.0',  sha256='047bbbba41bac37c444c75ddfdf0573dd6e2f1fbd824e6247bb26fa7d8fa3830')
 
     extends('python', ignore=r'bin/pytest')
-
-    # Newer versions of setuptools require six. Although setuptools is an
-    # optional dependency of six, if it is not found, setup.py will fallback
-    # on distutils.core instead. Don't add a setuptools dependency or we
-    # won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

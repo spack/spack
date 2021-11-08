@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RDeseq(RPackage):
     """Differential gene expression analysis based on the negative binomial
-       distribution.
+       distribution
 
        Estimate variance-mean dependence in count data from high-throughput
        sequencing assays and test for differential expression based on a model
@@ -17,6 +17,7 @@ class RDeseq(RPackage):
     homepage = "https://bioconductor.org/packages/DESeq"
     git      = "https://git.bioconductor.org/packages/DESeq.git"
 
+    version('1.42.0', commit='da76bc64e8c4073b58eaf1c93aa4e89bec5c4e50')
     version('1.36.0', commit='db4af67b49d3bd8c321d19efbe9415cd2e4ddb7e')
     version('1.34.1', commit='e86f1b03a30bc02de4bfd4a0759af2f65cb48c62')
     version('1.32.0', commit='e3d623b815b53d79eae7cdd09d097cc6098d28c9')

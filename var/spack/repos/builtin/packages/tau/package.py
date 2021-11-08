@@ -1,15 +1,17 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import fnmatch
 import glob
+import os
 import platform
 import sys
+
 from llnl.util.filesystem import join_path
+
+from spack import *
 
 
 class Tau(Package):
@@ -19,11 +21,15 @@ class Tau(Package):
     """
 
     maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
-    homepage = "http://www.cs.uoregon.edu/research/tau"
+    homepage = "https://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.30.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
 
+    tags = ['e4s']
+
     version('master', branch='master')
+    version('2.30.2', sha256='43f84a15b71a226f8a64d966f0cb46022bcfbaefb341295ecc6fa80bb82bbfb4')
+    version('2.30.1', sha256='9c20ca1b4f4e80d885f24491cee598068871f0e9dd67906a5e47e4b4147d08fc')
     version('2.30', sha256='e581c33e21488d69839a00d97fd4451ea579f47249b2750d5c36bea773041eaf')
     version('2.29.1', sha256='4195a0a236bba510ab50a93e13c7f00d9472e8bc46c91de3f0696112a34e34e2')
     version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
@@ -56,7 +62,7 @@ class Tau(Package):
     variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
     variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
-    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('elf', default=darwin_default, description='Activates support of elf')
     variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
@@ -71,6 +77,7 @@ class Tau(Package):
     variant('rocm', default=False, description='Activates ROCm support')
     variant('level_zero', default=False, description='Activates Intel OneAPI Level Zero support')
     variant('rocprofiler', default=False, description='Activates ROCm rocprofiler support')
+    variant('roctracer', default=False, description='Activates ROCm roctracer support')
     variant('opencl', default=False, description='Activates OpenCL support')
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
@@ -92,9 +99,9 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')
-    depends_on('libelf', when='+libdwarf')
+    depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers', when='+binutils')
+    depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
     depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
@@ -103,25 +110,23 @@ class Tau(Package):
     depends_on('adios2', when='+adios2')
     depends_on('sqlite', when='+sqlite')
     depends_on('hwloc')
+    depends_on('rocprofiler-dev', when='+rocprofiler')
+    depends_on('roctracer-dev', when='+roctracer')
+    depends_on('hsa-rocr-dev', when='+rocm')
 
     # Elf only required from 2.28.1 on
-    conflicts('+libelf', when='@:2.28.0')
+    conflicts('+elf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
-
-    # def patch(self):
-    #     # TODO : neuron autotools add -MD option which turns off tau profile
-    #     filter_file(r' -M', r' -Q', 'tools/src/tau_cc.sh')
-    #     filter_file(r' -M', r' -Q', 'tools/src/tau_cxx.sh')
-
-    # filter_compiler_wrappers('tau_cc.sh',
-    #                          'Makefile.tau',
-    #                          relative_root='bin')
 
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
 
     patch('unwind.patch', when="@2.29.0")
+
+    filter_compiler_wrappers('Makefile', relative_root='include')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib')
+    filter_compiler_wrappers('Makefile.tau*', relative_root='lib64')
 
     def set_compiler_options(self, spec):
 
@@ -142,28 +147,14 @@ class Tau(Package):
         # PATH
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
+
         compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
                             '-cc=%s' % self.compiler.cc_names[0]]
 
-        # TODO : Handle other compilers (tau except vendor name for fortran)
-        if self.compiler.fc:
-            if spec.satisfies('%intel'):
-                compiler_options.append('-fortran=intel')
-            elif spec.satisfies('%pgi'):
-                # @bbp we don't have pgfortran but fc is set to gfortran
-                # in packages.yaml to compiler mpi libraries
-                pass
-            else:
-                compiler_options.append(
-                    '-fortran=%s' % self.compiler.fc_names[0]
-                )
-        ##########
+        if '+fortran' in spec and self.compiler.fc:
+            compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
 
-        # on bg-q we dont need compiler names. We also have to set fortran
-        # because spack set EXTRADIRCXX spack wrapper directory and then
-        # tau use relative path to find fortran link libraries.
-        if 'bgq' in spec.architecture and spec.satisfies('%xl'):
-            compiler_options = ['-pdt_c++=xlC']
+        ##########
 
         # Construct the string of custom compiler flags and append it to
         # compiler related options
@@ -201,6 +192,8 @@ class Tau(Package):
 
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
+            if spec['pdt'].satisfies("%intel"):
+                options.append("-pdt_c++=icpc")
 
         if '+scorep' in spec:
             options.append("-scorep=%s" % spec['scorep'].prefix)
@@ -232,8 +225,8 @@ class Tau(Package):
         if '+libdwarf' in spec:
             options.append("-dwarf=%s" % spec['libdwarf'].prefix)
 
-        if '+libelf' in spec:
-            options.append("-elf=%s" % spec['libelf'].prefix)
+        if '+elf' in spec:
+            options.append("-elf=%s" % spec['elf'].prefix)
 
         if '+libunwind' in spec:
             options.append("-unwind=%s" % spec['libunwind'].prefix)
@@ -246,6 +239,8 @@ class Tau(Package):
             env['CXX'] = spec['mpi'].mpicxx
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
+            options.append("-mpiinc=%s" % spec['mpi'].prefix.include)
+            options.append("-mpilib=%s" % spec['mpi'].prefix.lib)
 
             options.append('-mpi')
             if '+comm' in spec:
@@ -270,10 +265,13 @@ class Tau(Package):
             options.append("-opencl")
 
         if '+rocm' in spec:
-            options.append("-rocm")
+            options.append("-rocm=%s" % spec['hsa-rocr-dev'].prefix)
 
         if '+rocprofiler' in spec:
-            options.append("-rocprofiler=%s" % spec['rocprofiler'].prefix)
+            options.append("-rocprofiler=%s" % spec['rocprofiler-dev'].prefix)
+
+        if '+roctracer' in spec:
+            options.append("-roctracer=%s" % spec['roctracer-dev'].prefix)
 
         if '+adios2' in spec:
             options.append("-adios=%s" % spec['adios2'].prefix)
@@ -323,10 +321,6 @@ class Tau(Package):
         self.link_tau_arch_dirs()
         # TAU may capture Spack's internal compiler wrapper. Replace
         # it with the correct compiler.
-        self.fix_tau_compilers()
-
-        # create tau compiler wrappers
-        self.create_tau_compiler_wrapper()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -336,28 +330,9 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def fix_tau_compilers(self):
-        filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
-                    self.prefix + '/include/Makefile', backup=False,
-                    string=True)
-        filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                    self.compiler.cxx, self.prefix + '/include/Makefile',
-                    backup=False, string=True)
-        for makefile in os.listdir(self.prefix.lib):
-            if makefile.startswith('Makefile.tau'):
-                filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
-                            self.compiler.cc, self.prefix.lib + "/" +
-                            makefile, backup=False, string=True)
-                filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
-                            self.compiler.cxx, self.prefix.lib +
-                            "/" + makefile, backup=False, string=True)
-
-    def get_makefiles(self):
-        pattern = join_path(self.prefix.lib, 'Makefile.*')
-        return glob.glob(pattern)
-
     def setup_run_environment(self, env):
-        files = self.get_makefiles()
+        pattern = join_path(self.prefix.lib, 'Makefile.*')
+        files = glob.glob(pattern)
 
         # This function is called both at install time to set up
         # the build environment and after install to generate the associated
@@ -366,3 +341,36 @@ class Tau(Package):
         # in the latter case.
         if files:
             env.set('TAU_MAKEFILE', files[0])
+
+    matmult_test = join_path('examples', 'mm')
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.matmult_test)
+
+    def _run_matmult_test(self):
+        mm_dir = join_path(self.test_suite.current_test_cache_dir, self.matmult_test)
+        self.run_test('make', ['all'], [], 0, False,
+                      'Instrument and build matrix multiplication test code',
+                      False, mm_dir)
+        test_exe = 'matmult'
+        if '+mpi' in self.spec:
+            test_args = ['-n', '4', test_exe]
+            mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+            for mpiexe in mpiexe_list:
+                if which(mpiexe) is not None:
+                    self.run_test(mpiexe, test_args, [], 0, False,
+                                  'Run matmult test with mpi', False, mm_dir)
+                    break
+        else:
+            self.run_test(test_exe, [], [], 0, False,
+                          'Run sequential matmult test', False, mm_dir)
+        self.run_test('pprof', [], [], 0, False,
+                      'Run pprof profile analysis tool on profile output',
+                      False, mm_dir)
+
+    def test(self):
+        # Run mm test program pulled from the build
+        self._run_matmult_test()

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,16 +11,23 @@ import re
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.util.web
 import spack.repo
 import spack.stage
+import spack.util.web
 from spack.spec import Spec
+from spack.url import (
+    UndetectableNameError,
+    UndetectableVersionError,
+    parse_name,
+    parse_version,
+)
 from spack.util.editor import editor
-from spack.util.executable import which, ProcessError
-from spack.util.naming import mod_to_class
-from spack.util.naming import simplify_name, valid_fully_qualified_module_name
-from spack.url import UndetectableNameError, UndetectableVersionError
-from spack.url import parse_name, parse_version
+from spack.util.executable import ProcessError, which
+from spack.util.naming import (
+    mod_to_class,
+    simplify_name,
+    valid_fully_qualified_module_name,
+)
 
 description = "create a new package file"
 section = "packaging"
@@ -28,7 +35,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +124,7 @@ class PackageTemplate(BundlePackageTemplate):
         make()
         make('install')"""
 
-    url_line = """    url      = \"{url}\""""
+    url_line = '    url      = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -270,14 +277,47 @@ class PythonPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
+        # Simple PyPI URLs:
+        # https://<hostname>/packages/<type>/<first character of project>/<project>/<download file>
+        # e.g. https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://www.pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
+
+        # PyPI URLs containing hash:
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
+
+        # PyPI URLs for wheels are too complicated, ignore them for now
+
+        match = re.search(
+            r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
+            url
+        )
+        if match:
+            if len(match.group(2)) == 1:
+                # Simple PyPI URL
+                url = '/'.join(match.group(3, 4))
+            else:
+                # PyPI URL containing hash
+                # Project name doesn't necessarily match download name, but it
+                # usually does, so this is the best we can do
+                project = parse_name(url)
+                url = '/'.join([project, match.group(4)])
+
+            self.url_line = '    pypi     = "{url}"'
+
+        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -289,20 +329,40 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body_def = """\
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
         args = []
         return args"""
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
         if not name.startswith('r-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to r-{0}".format(name))
             name = 'r-{0}'.format(name)
 
-        super(RPackageTemplate, self).__init__(name, *args, **kwargs)
+        r_name = parse_name(url)
+
+        cran = re.search(
+            r'(?:r-project|rstudio)[^/]+/src' + '/([^/]+)' * 2,
+            url
+        )
+
+        if cran:
+            url = r_name
+            self.url_line = '    cran     = "{url}"'
+
+        bioc = re.search(
+            r'(?:bioconductor)[^/]+/packages' + '/([^/]+)' * 5,
+            url
+        )
+
+        if bioc:
+            self.url_line = '    url      = "{0}"\n'\
+                '    bioc     = "{1}"'.format(url, r_name)
+
+        super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class PerlmakePackageTemplate(PackageTemplate):
@@ -545,7 +605,8 @@ class BuildSystemGuesser:
         ]
 
         # Peek inside the compressed file.
-        if stage.archive_file.endswith('.zip'):
+        if (stage.archive_file.endswith('.zip') or
+                '.zip#' in stage.archive_file):
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)
@@ -575,7 +636,7 @@ def get_name(args):
     provided, extract the name from that. Otherwise, use a default.
 
     Args:
-        args (param argparse.Namespace): The arguments given to
+        args (argparse.Namespace): The arguments given to
             ``spack create``
 
     Returns:
@@ -648,8 +709,7 @@ def get_versions(args, name):
         name (str): The name of the package
 
     Returns:
-        str and BuildSystemGuesser: Versions and hashes, and a
-            BuildSystemGuesser object
+        tuple: versions and hashes, and a BuildSystemGuesser object
     """
 
     # Default version with hash
@@ -733,7 +793,8 @@ def get_repository(args, name):
         name (str): The name of the package to create
 
     Returns:
-        Repo: A Repo object capable of determining the path to the package file
+        spack.repo.Repo: A Repo object capable of determining the path to the
+            package file
     """
     spec = Spec(name)
     # Figure out namespace for spec

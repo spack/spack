@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,13 @@ class MariadbCClient(CMakePackage):
     Connector', which enables connections to MariaDB and MySQL servers.
     """
 
-    homepage = "http://mariadb.org/about/"
+    homepage = "https://mariadb.org/about/"
 
     url      = "https://downloads.mariadb.com/Connectors/c/connector-c-3.0.3/mariadb-connector-c-3.0.3-src.tar.gz"
     list_url = "https://downloads.mariadb.com/Connectors/c/"
     list_depth = 1
 
+    version('3.1.13', sha256='0271a5edfd64b13bca5937267474e4747d832ec62e169fc2589d2ead63746875')
     version('3.1.9', sha256='108d99bf2add434dcb3bd9526ba1d89a2b9a943b62dcd9d0a41fcbef8ffbf2c7')
     version('3.1.6', sha256='d266bb67df83c088c4fb05392713d2504c67be620894cedaf758a9561c116720')
     version('3.1.5', sha256='a9de5fedd1a7805c86e23be49b9ceb79a86b090ad560d51495d7ba5952a9d9d5')
@@ -57,6 +58,10 @@ class MariadbCClient(CMakePackage):
     depends_on('openssl')
     depends_on('zlib')
 
+    # patch needed for cmake-3.20
+    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',
+          sha256='bcfa0a73a34654495f5dea3cecdcb7de911c7c2446240aeaa674a4b2ab46f58c', when='@:3.1.12')
+
     def url_for_version(self, version):
         url = "https://downloads.mariadb.com/Connectors/c/connector-c-{0}/mariadb-connector-c-{1}-src.tar.gz"
         return url.format(version.up_to(3), version)
@@ -64,3 +69,9 @@ class MariadbCClient(CMakePackage):
     def cmake_args(self):
         args = ['-DWITH_EXTERNAL_ZLIB=ON', '-DWITH_MYSQLCOMPAT=ON']
         return args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libmariadb'], root=self.prefix, recursive=True, shared=True
+        )

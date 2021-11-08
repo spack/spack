@@ -1,8 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack import *
 
@@ -19,77 +20,368 @@ class Legion(CMakePackage):
        interface provides explicit programmer controlled placement of data in
        the memory hierarchy and assignment of tasks to processors in a way
        that is orthogonal to correctness, thereby enabling easy porting and
-       tuning of Legion applications to new architectures.
-    """
-    homepage = "http://legion.stanford.edu/"
-    url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
-    git      = "https://github.com/StanfordLegion/legion.git"
+       tuning of Legion applications to new architectures."""
 
+    homepage = "https://legion.stanford.edu/"
+    git = "https://github.com/StanfordLegion/legion.git"
+
+    maintainers = ['pmccormick', 'streichler']
+    tags = ['e4s']
+    version('21.03.0', tag='legion-21.03.0')
+    version('stable', branch='stable')
     version('master', branch='master')
-    version('ctrl-rep', branch='control_replication')
-    version('20.03.0', sha256='ae5feedb5ed9f357b56424b9d73cea4f224a61e291e022556f796d1ff24d1244')
-    version('19.12.0', sha256='ea517638de7256723bb9c119796d4d9d4ef662c52d0151ad24af5288e5a72e7d')
-    version('19.09.1', sha256='c507133fb9dce16b7fcccd7eb2933d13cce96ecf835da60a27c0f66840cabf51')
-    version('19.09.0', sha256='a01c3e3c6698cafb64b77a66341cc06d039faed4fa31b764159f021b94ce13e8')
-    version('19.06.0', sha256='31cd97e9264c510ab83b1f9e8e1e6bf72021a0c6ee4a028966fce08736e39fbf')
-    version('19.04.0', sha256='279bbc8dcdab4c75be570318989a9fc9821178143e9db9c3f62e58bf9070b5ac')
-    version('18.12.0', sha256='71f2c409722975c0ad92f2caffcc9eaa9260f7035e2b55b731d819eb6a94016c')
-    version('18.09.0', sha256='58c5a3072d2b5086225982563c23524692ca5758cbfda8d0f0a4f00ef17b3b8d')
-    version('18.05.0', sha256='4c3cef548b3a459827e4c36b5963c06b6fcf0a4ca1800fbb0f73e6ba3b1cced4')
-    version('18.02.0', sha256='e08aeef98003593391a56f11a99d9d65af49647fe87a2a5e8837c8682a337a60')
-    version('17.10.0', sha256='af4f1e9215e57c4aac4805ae2bf53defe13eeaf192576bf5a702978f43171b1e')
-    version('17.08.0', sha256='20aabdb0fabb1e32aa713cd5fa406525093f8dad33fca5d23046408d42d3c7b3')
-    version('17.02.0', sha256='423d8699729b0e7fef663740e239aa722cca544f6bda8c9f782eaba4274bf60a')
+    version('cr', branch='control_replication')
 
-    variant('mpi', default=True,
-            description='Build on top of mpi conduit for mpi inoperability')
-    variant('ibv', default=False,
-            description='Build on top of ibv conduit for InfiniBand support')
-    variant('shared', default=True, description='Build shared libraries')
-    variant('hdf5', default=True, description='Enable HDF5 support')
+    depends_on("cmake@3.16:", type='build')
+    # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
+    # layer. At present the MPI layer is still experimental and we discourge its
+    # use for general (not legion development) use cases.
+    depends_on('mpi', when='network=mpi')
+    depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
+    depends_on('ucx', when='conduit=ucx')
+    depends_on('mpi', when='conduit=mpi')
+    depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
+    depends_on('cuda@10.0:11.9', when='+cuda')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('hwloc', when='+hwloc')
+
+    # cuda-centric
+    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
+    # TODO: we could use a map here to clean up and use naming vs. numbers.
+    cuda_arch_list = ('60', '70', '75', '80')
+    for nvarch in cuda_arch_list:
+        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
+                   when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
+        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
+                   when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
+
+    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
+
+    depends_on('python@3', when='+python')
+    depends_on('papi', when='+papi')
+    depends_on('zlib', when='+zlib')
+
+    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
+
+    # Network transport layer: the underlying data transport API should be used for
+    # distributed data movement.  For Legion, gasnet is the currently the most
+    # mature.  We have many users that default to using no network layer for
+    # day-to-day development thus we default to 'none'.  MPI support is new and
+    # should be considered as a beta release.
+    variant('network', default='none',
+            values=('gasnet', 'mpi', 'none'),
+            description="The network communications/transport layer to use.",
+            multi=False)
+
+    # Add Gasnet tarball dependency in spack managed manner
+    # TODO: Provide less mutable tag instead of branch
+    resource(name='stanfordgasnet',
+             git='https://github.com/StanfordLegion/gasnet.git',
+             destination='stanfordgasnet',
+             branch='master',
+             when='network=gasnet')
+
+    # We default to automatically embedding a gasnet build. To override this
+    # point the package a pre-installed version of GASNet-Ex via the gasnet_root
+    # variant.
+    #
+    # make sure we have a valid directory provided for gasnet_root...
+    def validate_gasnet_root(value):
+        if value == 'none':
+            return True
+
+        if not os.path.isdir(value):
+            print("gasnet_root:", value, "-- no such directory.")
+            return False
+        else:
+            return True
+
+    variant('gasnet_root',
+            default='none',
+            values=validate_gasnet_root,
+            description="Path to a pre-installed version of GASNet (prefix directory).",
+            multi=False)
+    conflicts('gasnet_root', when="network=mpi")
+
+    variant('conduit', default='none',
+            values=('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none'),
+            description="The gasnet conduit(s) to enable.",
+            multi=False)
+
+    conflicts('conduit=none', when='network=gasnet',
+              msg="a conduit must be selected when 'network=gasnet'")
+
+    gasnet_conduits = ('aries', 'ibv', 'udp', 'mpi', 'ucx')
+    for c in gasnet_conduits:
+        conflict_str = 'conduit=%s' % c
+        conflicts(conflict_str, when='network=mpi',
+                  msg="conduit attribute requires 'network=gasnet'.")
+        conflicts(conflict_str, when='network=none',
+                  msg="conduit attribute requires 'network=gasnet'.")
+
+    variant('gasnet_debug', default=False,
+            description="Build gasnet with debugging enabled.")
+    conflicts('+gasnet_debug', when='network=mpi')
+    conflicts('+gasnet_debug', when='network=none')
+
+    variant('shared', default=False,
+            description="Build shared libraries.")
+
+    variant('bounds_checks', default=False,
+            description="Enable bounds checking in Legion accessors.")
+
+    variant('privilege_checks', default=False,
+            description="Enable runtime privildge checks in Legion accessors.")
+
+    variant('enable_tls', default=False,
+            description="Enable thread-local-storage of the Legion context.")
+
+    variant('output_level', default='warning',
+            # Note: these values are dependent upon those used in the cmake config.
+            values=("spew", "debug", "info", "print", "warning", "error", "fatal",
+                    "none"),
+            description="Set the compile-time logging level.",
+            multi=False)
+
     variant('spy', default=False,
-            description='Enable detailed logging for Legion Spy')
-    variant('build_type', default='Release',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
-            description='The build type to build', multi=False)
+            description="Enable detailed logging for Legion Spy debugging.")
 
-    depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
-    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
-    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +ibv", when='+ibv')
-    depends_on("hdf5", when='+hdf5')
+    # note: we will be dependent upon spack's latest-and-greatest cuda version...
+    variant('cuda', default=False,
+            description="Enable CUDA support.")
+    variant('cuda_hijack', default=False,
+            description="Hijack application calls into the CUDA runtime (+cuda).")
+    variant('cuda_arch', default='70',
+            values=cuda_arch_list,
+            description="GPU/CUDA architecture to build for.",
+            multi=False)
+    variant('cuda_unsupported_compiler', default=False,
+            description="Disable nvcc version check (--allow-unsupported-compiler).")
+    conflicts('+cuda_hijack', when='~cuda')
+
+    variant('fortran', default=False,
+            description="Enable Fortran bindings.")
+
+    variant('hdf5', default=False,
+            description="Enable support for HDF5.")
+
+    variant('hwloc', default=False,
+            description="Use hwloc for topology awareness.")
+
+    variant('kokkos', default=False,
+            description="Enable support for interoperability with Kokkos.")
+
+    variant('bindings', default=False,
+            description="Build runtime language bindings (excl. Fortran).")
+
+    variant('libdl', default=True,
+            description="Enable support for dynamic object/library loading.")
+
+    variant('openmp', default=False,
+            description="Enable support for OpenMP within Legion tasks.")
+
+    variant('papi', default=False,
+            description="Enable PAPI performance measurements.")
+
+    variant('python', default=False,
+            description="Enable Python support.")
+
+    variant('zlib', default=True,
+            description="Enable zlib support.")
+
+    variant('redop_complex', default=False,
+            description="Use reduction operators for complex types.")
+
+    variant('max_dims', values=int, default=3,
+            description="Set max number of dimensions for logical regions.")
+    variant('max_fields', values=int, default=512,
+            description="Maximum number of fields allowed in a logical region.")
+
+    variant('native', default=False,
+            description="Enable native/host processor optimizaton target.")
 
     def cmake_args(self):
-        cmake_cxx_flags = [
-            '-DPRIVILEGE_CHECKS',
-            '-DBOUNDS_CHECKS',
-            '-DENABLE_LEGION_TLS']
+        spec = self.spec
+        cmake_cxx_flags = []
+        options = []
 
-        options = [
-            '-DLegion_USE_GASNet=ON',
-            '-DLEGION_USE_CUDA=OFF',
-            '-DLEGION_USE_OPENMP=OFF',
-            '-DLegion_BUILD_EXAMPLES=ON',
-            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
+        if 'network=gasnet' in spec:
+            options.append('-DLegion_NETWORKS=gasnetex')
+            if spec.variants['gasnet_root'].value != 'none':
+                gasnet_dir = spec.variants['gasnet_root'].value
+                options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
+            else:
+                gasnet_dir = join_path(self.stage.source_path,
+                                       "stanfordgasnet",
+                                       "gasnet")
+                options.append('-DLegion_EMBED_GASNet=ON')
+                options.append('-DLegion_EMBED_GASNet_LOCALSRC=%s' % gasnet_dir)
 
-        if self.spec.variants['build_type'].value == 'Debug':
+            gasnet_conduit = spec.variants['conduit'].value
+            options.append('-DGASNet_CONDUIT=%s' % gasnet_conduit)
+
+            if '+gasnet_debug' in spec:
+                options.append('-DLegion_EMBED_GASNet_CONFIGURE_ARGS=--enable-debug')
+        elif 'network=mpi' in spec:
+            options.append('-DLegion_NETWORKS=mpi')
+            if spec.variants['gasnet_root'].value != 'none':
+                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
+        else:
+            if spec.variants['gasnet_root'].value != 'none':
+                raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
+            options.append('-DLegion_EMBED_GASNet=OFF')
+
+        if '+shared' in spec:
+            options.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            options.append('-DBUILD_SHARED_LIBS=OFF')
+
+        if '+bounds_checks' in spec:
+            # default is off.
+            options.append('-DLegion_BOUNDS_CHECKS=ON')
+        if '+privilege_checks' in spec:
+            # default is off.
+            options.append('-DLegion_PRIVILEGE_CHECKS=ON')
+        if '+enable_tls' in spec:
+            # default is off.
+            options.append('-DLegion_ENABLE_TLS=ON')
+        if 'output_level' in spec:
+            level = str.upper(spec.variants['output_level'].value)
+            options.append('-DLegion_OUTPUT_LEVEL=%s' % level)
+        if '+spy' in spec:
+            # default is off.
+            options.append('-DLegion_SPY=ON')
+
+        if '+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            options.append('-DLegion_USE_CUDA=ON')
+            options.append('-DLegion_GPU_REDUCTIONS=ON')
+            options.append('-DLegion_CUDA_ARCH=%s' % cuda_arch)
+            if '+cuda_hijack' in spec:
+                options.append('-DLegion_HIJACK_CUDART=ON')
+            else:
+                options.append('-DLegion_HIJACK_CUDART=OFF')
+
+            if '+cuda_unsupported_compiler' in spec:
+                options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
+
+        if '+fortran' in spec:
+            # default is off.
+            options.append('-DLegion_USE_Fortran=ON')
+
+        if '+hdf5' in spec:
+            # default is off.
+            options.append('-DLegion_USE_HDF5=ON')
+
+        if '+hwloc' in spec:
+            # default is off.
+            options.append('-DLegion_USE_HWLOC=ON')
+
+        if '+kokkos' in spec:
+            # default is off.
+            options.append('-DLegion_USE_Kokkos=ON')
+            os.environ['KOKKOS_CXX_COMPILER'] = spec['kokkos'].kokkos_cxx
+
+        if '+libdl' in spec:
+            # default is on.
+            options.append('-DLegion_USE_LIBDL=ON')
+        else:
+            options.append('-DLegion_USE_LIBDL=OFF')
+
+        if '+openmp' in spec:
+            # default is off.
+            options.append('-DLegion_USE_OpenMP=ON')
+
+        if '+papi' in spec:
+            # default is off.
+            options.append('-DLegion_USE_PAPI=ON')
+
+        if '+python' in spec:
+            # default is off.
+            options.append('-DLegion_USE_Python=ON')
+
+        if '+zlib' in spec:
+            # default is on.
+            options.append('-DLegion_USE_ZLIB=ON')
+        else:
+            options.append('-DLegion_USE_ZLIB=OFF')
+
+        if '+redop_complex' in spec:
+            # default is off.
+            options.append('-DLegion_REDOP_COMPLEX=ON')
+
+        if '+bindings' in spec:
+            # default is off.
+            options.append('-DLegion_BUILD_BINDINGS=ON')
+            options.append('-DLegion_REDOP_COMPLEX=ON')  # required for bindings
+            options.append('-DLegion_USE_Fortran=ON')
+
+        if spec.variants['build_type'].value == 'Debug':
             cmake_cxx_flags.extend([
                 '-DDEBUG_REALM',
                 '-DDEBUG_LEGION',
                 '-ggdb',
             ])
 
-        options.append('-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)))
+        maxdims = int(spec.variants['max_dims'].value)
+        # TODO: sanity check if maxdims < 0 || > 9???
+        options.append('-DLegion_MAX_DIM=%d' % maxdims)
 
-        if '+mpi' in self.spec:
-            options.append('-DGASNet_CONDUIT=mpi')
+        maxfields = int(spec.variants['max_fields'].value)
+        if (maxfields <= 0):
+            maxfields = 512
+        # make sure maxfields is a power of two.  if not,
+        # find the next largest power of two and use that...
+        if (maxfields & (maxfields - 1) != 0):
+            while maxfields & maxfields - 1:
+                maxfields = maxfields & maxfields - 1
+            maxfields = maxfields << 1
+        options.append('-DLegion_MAX_FIELDS=%d' % maxfields)
 
-        if '+hdf5' in self.spec:
-            options.append('-DLegion_USE_HDF5=ON')
-        else:
-            options.append('-DLegion_USE_HDF5=OFF')
-
-        if '+spy' in self.spec:
-            options.append('-DLegion_SPY=ON')
+        if '+native' in spec:
+            # default is off.
+            options.append('-DBUILD_MARCH:STRING=native')
 
         return options
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('examples', 'local_function_tasks')])
+
+    def run_local_function_tasks_test(self):
+        """Run stand alone test: local_function_tasks"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'local_function_tasks')
+
+        if not os.path.exists(test_dir):
+            print('Skipping local_function_tasks test')
+            return
+
+        exe = 'local_function_tasks'
+
+        cmake_args = ['-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
+                      '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
+                      '-DLegion_DIR={0}'.format(join_path(self.prefix,
+                                                          'share',
+                                                          'Legion',
+                                                          'cmake'))]
+
+        self.run_test('cmake',
+                      options=cmake_args,
+                      purpose='test: generate makefile for {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test('make',
+                      purpose='test: build {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_local_function_tasks_test()

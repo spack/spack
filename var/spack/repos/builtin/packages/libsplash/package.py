@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,10 +45,8 @@ class Libsplash(CMakePackage):
 
         if spec.satisfies('@1.7.0:'):
             args += [
-                '-DSplash_USE_MPI:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF'),
-                '-DSplash_USE_PARALLEL:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF')
+                self.define_from_variant('Splash_USE_MPI', 'mpi'),
+                self.define_from_variant('Splash_USE_PARALLEL', 'mpi')
             ]
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import glob
 import inspect
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 
 
@@ -18,6 +18,9 @@ class RubyPackage(PackageBase):
     #. :py:meth:`~.RubyPackage.build`
     #. :py:meth:`~.RubyPackage.install`
     """
+
+    maintainers = ['Kerilk']
+
     #: Phases of a Ruby package
     phases = ['build', 'install']
 
@@ -26,8 +29,6 @@ class RubyPackage(PackageBase):
     build_system_class = 'RubyPackage'
 
     extends('ruby')
-
-    depends_on('ruby', type=('build', 'run'))
 
     def build(self, spec, prefix):
         """Build a Ruby gem."""
@@ -52,8 +53,12 @@ class RubyPackage(PackageBase):
 
         gems = glob.glob('*.gem')
         if gems:
+            # if --install-dir is not used, GEM_PATH is deleted from the
+            # environement, and Gems required to build native extensions will
+            # not be found. Those extensions are built during `gem install`.
             inspect.getmodule(self).gem(
-                'install', '--norc', '--ignore-dependencies', gems[0])
+                'install', '--norc', '--ignore-dependencies',
+                '--install-dir', prefix, gems[0])
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

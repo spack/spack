@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,15 @@ class Libfabric(AutotoolsPackage):
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git      = "https://github.com/ofiwg/libfabric.git"
 
+    maintainers = ['rajachan']
+
     version('master', branch='master')
+    version('1.13.2', sha256='25d783b0722a8df8fe61c1de75fafca684c5fe520303180f26f0ad6409cfc0b9')
+    version('1.13.1', sha256='8e6eed38c4a39aa4cbf7d5d3734f0eecbfc030182f1f9b3be470702f2586d30e')
+    version('1.12.1', sha256='db3c8e0a495e6e9da6a7436adab905468aedfbd4579ee3da5232a5c111ba642c')
+    version('1.12.0', sha256='ca98785fe25e68a26c61e272be64a1efeea37e61b0dcebd34ccfd381bda7d9cc')
+    version('1.11.2', sha256='ff2ba821b55a54855d327e6f6fb8a14312c9c9ca7c873525b6a246d8f974d7da')
+    version('1.11.1', sha256='a72a7dac6322bed09ef1af33bcade3024ca5847a1e9c8fa369da6ab879111fe7')
     version('1.11.0', sha256='9938abf628e7ea8dcf60a94a4b62d499fbc0dbc6733478b6db2e6a373c80d58f')
     version('1.10.1', sha256='889fa8c99eed1ff2a5fd6faf6d5222f2cf38476b24f3b764f2cbb5900fee8284')
     version('1.10.0', sha256='c1ef6e9cd6dafec3f003d2f78f0f3a25f055a7a791e98b5a0db1e4c5036e40f6')
@@ -31,21 +39,22 @@ class Libfabric(AutotoolsPackage):
     version('1.5.0', sha256='88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23')
     version('1.4.2', sha256='5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5')
 
-    fabrics = ('psm',
-               'psm2',
-               'sockets',
-               'verbs',
-               'usnic',
+    fabrics = ('efa',
                'gni',
-               'xpmem',
-               'udp',
+               'mlx',
+               'mrail',
+               'psm',
+               'psm2',
+               'psm3',
                'rxm',
                'rxd',
-               'mlx',
+               'shm',
+               'sockets',
                'tcp',
-               'efa',
-               'mrail',
-               'shm')
+               'udp',
+               'usnic',
+               'verbs',
+               'xpmem')
 
     variant('fabrics',
             default='sockets,tcp,udp',
@@ -59,6 +68,9 @@ class Libfabric(AutotoolsPackage):
     #   frequently conflicts with MPI.
     variant('kdreg', default=False,
             description='Enable kdreg on supported Cray platforms')
+
+    variant('debug', default=False,
+            description='Enable debugging')
 
     # For version 1.9.0:
     # headers: fix forward-declaration of enum fi_collective_op with C++
@@ -90,6 +102,8 @@ class Libfabric(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+
+        args.extend(self.enable_or_disable('debug'))
 
         if '+kdreg' in self.spec:
             args.append('--with-kdreg=yes')

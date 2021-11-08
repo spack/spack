@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,13 +41,13 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
+
+import llnl.util.tty as tty
 
 from spack import *
 from spack.util.environment import EnvironmentModifications
-import llnl.util.tty as tty
-
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -257,7 +257,7 @@ class Openfoam(Package):
     """
 
     maintainers = ['olesenm']
-    homepage = "http://www.openfoam.com/"
+    homepage = "https://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
@@ -265,6 +265,9 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
+    version('2012_210414', sha256='5260aaa79f91aad58a3a305c1a12d0d48b10f12e37cd99a6fa561969b15ea09d')
+    version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
     version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
@@ -313,9 +316,10 @@ class Openfoam(Package):
     # conflicts('^openmpi~thread_multiple', when='@1712:')
 
     depends_on('zlib')
-    depends_on('fftw')
+    depends_on('fftw-api')
     depends_on('boost')
-    depends_on('cgal')
+    # OpenFOAM does not play nice with CGAL 5.X
+    depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
@@ -404,10 +408,7 @@ class Openfoam(Package):
     def setup_build_environment(self, env):
         """Sets the build environment (prior to unpacking the sources).
         """
-        # Avoid the exception that occurs at runtime
-        # when building with the Fujitsu compiler.
-        if self.spec.satisfies('%fj'):
-            env.set('FOAM_SIGFPE', 'false')
+        pass
 
     def setup_run_environment(self, env):
         """Sets the run environment (post-installation).
@@ -548,17 +549,28 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
-    @when('@1906: %fj')
+    def configure_trapFpe_off(self):
+        """Disable trapFpe handling.
+        Seems to be needed for several clang-derivatives.
+        """
+        # Set 'trapFpe 0' in etc/controlDict
+        controlDict = 'etc/controlDict'
+        if os.path.exists(controlDict):
+            filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
+                        controlDict, backup=False)
+
+    @when('@1812: %fj')
     @run_before('configure')
     def make_fujitsu_rules(self):
         """Create Fujitsu rules (clang variant) unless supplied upstream.
-        Implemented for 1906 and later (older rules are too messy to edit).
+        Implemented for 1812 and later (older rules are too messy to edit).
         Already included after 1912.
         """
         general_rules = 'wmake/rules/General'
         arch_rules = 'wmake/rules/linuxARM64'  # self.arch
         src = arch_rules + 'Clang'
         dst = arch_rules + 'Fujitsu'  # self.compiler
+        self.configure_trapFpe_off()  # LLVM may falsely trigger FPE
 
         if os.path.exists(dst):
             return
@@ -573,15 +585,22 @@ class Openfoam(Package):
         tty.info('Add Fujitsu wmake rules')
         copy_tree(src, dst)
 
-        for cfg in ['c', 'c++', 'general']:
-            rule = join_path(dst, cfg)
-            filter_file('Clang', 'Fujitsu', rule, backup=False)
+        if self.spec.version >= Version('1906'):
+            for cfg in ['c', 'c++', 'general']:
+                rule = join_path(dst, cfg)
+                filter_file('Clang', 'Fujitsu', rule, backup=False)
+        else:
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
+            filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
+                        backup=False, string=True)
 
         src = join_path(general_rules, 'Clang')
         dst = join_path(general_rules, 'Fujitsu')  # self.compiler
         copy_tree(src, dst)
-        filter_file('clang', spack_cc, join_path(dst, 'c'),
-                    backup=False, string=True)
+        if self.spec.version >= Version('1906'):
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
         filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
                     backup=False, string=True)
 
@@ -621,10 +640,10 @@ class Openfoam(Package):
                      pkglib(spec['cgal'], '${CGAL_ARCH_PATH}'))),
             ],
             'FFTW': [
-                ('FFTW_ARCH_PATH', spec['fftw'].prefix),  # Absolute
+                ('FFTW_ARCH_PATH', spec['fftw-api'].prefix),  # Absolute
                 ('LD_LIBRARY_PATH',
                  foam_add_lib(
-                     pkglib(spec['fftw'], '${BOOST_ARCH_PATH}'))),
+                     pkglib(spec['fftw-api'], '${BOOST_ARCH_PATH}'))),
             ],
             # User-defined MPI
             'mpi-user': [
@@ -847,7 +866,8 @@ class OpenfoamArch(object):
 
     #: Map spack compiler names to OpenFOAM compiler names
     #  By default, simply capitalize the first letter
-    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu'}
+    compiler_mapping = {'aocc': 'Amd', 'fj': 'Fujitsu',
+                        'intel': 'Icc', 'oneapi': 'Icx'}
 
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants

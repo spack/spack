@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,12 @@ class Sessreg(AutotoolsPackage, XorgPackage):
     sessions. It was originally written for use with xdm, but may also be
     used with other display managers such as gdm or kdm."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/sessreg"
+    homepage = "https://cgit.freedesktop.org/xorg/app/sessreg"
     xorg_mirror_path = "app/sessreg-1.1.0.tar.gz"
 
     version('1.1.0', sha256='e561edb48dfc3b0624554169c15f9dd2c3139e83084cb323b0c712724f2b6043')
 
-    depends_on('xproto@7.0.25:', type='build')
+    depends_on('xproto@7.0.25:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 

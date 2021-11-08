@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,7 @@ class Matio(AutotoolsPackage):
         return args
 
     def patch(self):
-        if self.spec.satisfies('%nvhpc'):
+        if self.spec.satisfies('%nvhpc@:20.11'):
             # workaround anonymous version tag linker error for the NVIDIA
             # compilers
             filter_file('${wl}-version-script '

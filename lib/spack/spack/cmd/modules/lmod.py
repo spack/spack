@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import functools
 import os
 
 import llnl.util.filesystem
+
 import spack.cmd.common.arguments
 import spack.cmd.modules
 
@@ -40,7 +41,8 @@ def setdefault(module_type, specs, args):
     # https://lmod.readthedocs.io/en/latest/060_locating.html#marking-a-version-as-default
     #
     spack.cmd.modules.one_spec_or_raise(specs)
-    writer = spack.modules.module_types['lmod'](specs[0])
+    writer = spack.modules.module_types['lmod'](
+        specs[0], args.module_set_name)
 
     module_folder = os.path.dirname(writer.layout.filename)
     module_basename = os.path.basename(writer.layout.filename)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,15 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
-import subprocess
-import os
-import sys
 import json
+import os
 import re
+import subprocess
+import sys
+
+import llnl.util.tty as tty
 
 import spack
-import llnl.util.tty as tty
 
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
@@ -46,7 +47,7 @@ def module(*args):
         module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
 
         # Execute the python command
-        module_cmd += '%s -c "%s";' % (sys.executable, py_cmd)
+        module_cmd += '%s -E -c "%s";' % (sys.executable, py_cmd)
 
         # If LD_LIBRARY_PATH was set after `module`, dump the old value because
         # we have since corrupted it to ensure python would run.
@@ -113,6 +114,7 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("module_cmd.load_module: {0}".format(mod))
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
@@ -173,7 +175,7 @@ def path_from_modules(modules):
 
         if candidate_path and not os.path.exists(candidate_path):
             msg = ("Extracted path from module does not exist "
-                   "[module={0}, path={0}]")
+                   "[module={0}, path={1}]")
             tty.warn(msg.format(module_name, candidate_path))
 
         # If anything is found, then it's the best choice. This means

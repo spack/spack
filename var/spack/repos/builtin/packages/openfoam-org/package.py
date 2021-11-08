@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,17 +36,19 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
 
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam import add_extra_files
-from spack.pkg.builtin.openfoam import write_environ
-from spack.pkg.builtin.openfoam import rewrite_environ_files
-from spack.pkg.builtin.openfoam import mplib_content
-from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.pkg.builtin.openfoam import (
+    OpenfoamArch,
+    add_extra_files,
+    mplib_content,
+    rewrite_environ_files,
+    write_environ,
+)
 from spack.util.environment import EnvironmentModifications
 
 
@@ -59,7 +61,7 @@ class OpenfoamOrg(Package):
     and owner of the OPENFOAM trademark.
     """
 
-    homepage = "http://www.openfoam.org/"
+    homepage = "https://www.openfoam.org/"
     baseurl  = "https://github.com/OpenFOAM"
     url      = "https://github.com/OpenFOAM/OpenFOAM-4.x/archive/version-4.1.tar.gz"
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
@@ -77,6 +79,8 @@ class OpenfoamOrg(Package):
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
     version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
+    version('2.3.1', sha256='2bbcf4d5932397c2087a9b6d7eeee6d2b1350c8ea4f455415f05e7cd94d9e5ba',
+            url='http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -109,7 +113,11 @@ class OpenfoamOrg(Package):
     patch('50-etc.patch', when='@5.0:5.9')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
-    patch('240-etc.patch', when='@2.4.0')
+    patch('240-etc.patch', when='@:2.4.0')
+    patch('isnan.patch', when='@:2.4.0')
+    # Add support for SYSTEMMPI
+    patch('https://github.com/OpenFOAM/OpenFOAM-2.3.x/commit/ae9a670c99472787f3a5446ac2b522bf3519b796.patch',
+          sha256='6c4c535baca3ce64035d512265c4ce8effd39de7602c923c5e19985db68b632a', when='@:2.3.1')
 
     # The openfoam architecture, compiler information etc
     _foam_arch = None

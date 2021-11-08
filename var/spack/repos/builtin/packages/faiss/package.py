@@ -1,9 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -36,6 +37,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
     depends_on('blas')
+    depends_on('python',                        type='build')
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('swig',          when='+python', type='build')
 

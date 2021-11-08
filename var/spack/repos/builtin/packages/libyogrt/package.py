@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -33,11 +35,14 @@ class Libyogrt(AutotoolsPackage):
 
     variant('scheduler', default='system',
             description="Select scheduler integration",
-            values=['system', 'slurm'], multi=False)
+            values=['system', 'slurm', 'lsf'], multi=False)
+    depends_on('slurm', when='scheduler=slurm')
+    depends_on('lsf', when='scheduler=lsf')
+
+    conflicts('scheduler=lsf', when='@:1.22')
+
     variant('static', default='False',
             description="build static library")
-
-    depends_on('slurm', when='scheduler=slurm')
 
     def url_for_version(self, version):
         if version < Version(1.21):
@@ -49,10 +54,37 @@ class Libyogrt(AutotoolsPackage):
         args = []
 
         sched = self.spec.variants['scheduler'].value
-        if sched != "system":
+        if sched == "lsf":
+            # The LSF library depends on a couple of other libraries,
+            # and running the build inside of spack does not find
+            # them, and the user has to add them when they want
+            # to use -lyogrt. If we explicitly tell it what libraries
+            # to use, the user does not need to specify them
+            args.append('--with-lsf')
+            args.append('LIBS=-llsf -lrt -lnsl')
+        elif sched != "system":
             args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 
         if '+static' in self.spec:
             args.append('--enable-static=yes')
 
         return args
+
+    @run_after('install')
+    def create_yogrt_conf(self):
+        etcpath = os.path.join(prefix, "etc")
+
+        # create subdirectory to hold yogrt.conf file
+        if not os.path.isdir(etcpath):
+            mode = 0o755
+            os.mkdir(etcpath, mode)
+
+        # if no scheduler is specified, create yogrt conf file
+        # with backend=none
+        sched = self.spec.variants['scheduler'].value
+        if sched == "system":
+            sched = "none"
+
+        # create conf file to inform libyogrt about job scheduler
+        with open(os.path.join(etcpath, "yogrt.conf"), "w+") as f:
+            f.write("backend=%s\n" % sched)

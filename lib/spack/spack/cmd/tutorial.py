@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,13 @@ import spack.util.gpg
 from spack.util.executable import which
 from spack.util.spack_yaml import syaml_dict
 
-
 description = "set up spack for our tutorial (WARNING: modifies config!)"
 section = "config"
 level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v0.16"
+tutorial_branch = "releases/v%d.%d" % spack.spack_version_info[:2]
 tutorial_mirror = "file:///mirror"
 tutorial_key    = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
@@ -73,7 +72,7 @@ def tutorial(parser, args):
 
     tty.msg("Ensuring that we trust tutorial binaries",
             "spack gpg trust %s" % tutorial_key)
-    spack.util.gpg.Gpg().trust(tutorial_key)
+    spack.util.gpg.trust(tutorial_key)
 
     # Note that checkout MUST be last. It changes Spack under our feet.
     # If you don't put this last, you'll get import errors for the code

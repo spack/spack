@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,13 @@ class Gmt(Package):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('6.2.0', sha256='b70786ca5ba7d1293acc4e901a0f82e1300d368b61009ef87f771f4bc99d058a')
+    version('6.1.1', sha256='4cb17f42ff10b8f5fe372956c23f1fa3ca21a8e94933a6c614894f0be33427c1')
     version('6.1.0', sha256='f76ad7f444d407dfd7e5762644eec3a719c6aeb06d877bf746fe51abd79b1a9e')
     version('6.0.0', sha256='7a733e670f01d99f8fc0da51a4337320d764c06a68746621f83ccf2e3453bcb7')
     version('5.4.4', sha256='b593dfb101e6507c467619f3d2190a9f78b09d49fe2c27799750b8c4c0cd2da0')
     version('4.5.9', sha256='9b13be96ccf4bbd38c14359c05dfa7eeeb4b5f06d6f4be9c33d6c3ea276afc86',
-            url='ftp://ftp.soest.hawaii.edu/gmt/legacy/gmt-4.5.9.tar.bz2')
+            url='ftp://ftp.soest.hawaii.edu/gmt/legacy/gmt-4.5.9.tar.bz2', deprecated=True)
 
     variant('ghostscript', default=False, description='Ability to convert PostScript plots to PDF and rasters')
     variant('gdal', default=False, description='Ability to read and write numerous grid and image formats')
@@ -59,6 +61,10 @@ class Gmt(Package):
     depends_on('py-sphinx@1.4:', when='+docs', type='build')
 
     depends_on('graphicsmagick', type='test')
+
+    # https://github.com/spack/spack/issues/26661
+    conflicts('%gcc@11:', when='@:5',
+              msg='GMT 5 cannot be built with GCC 11+, try a newer GMT or older GCC')
 
     # https://github.com/GenericMappingTools/gmt/pull/3603
     patch('regexp.patch', when='@6.1.0')

@@ -1,0 +1,13 @@
+diff --git a/cmake/modules/FindBLIS.cmake b/cmake/modules/FindBLIS.cmake
+index 3d6fb5d..2577598 100644
+--- a/cmake/modules/FindBLIS.cmake
++++ b/cmake/modules/FindBLIS.cmake
+@@ -52,7 +52,7 @@ endif()
+ 
+ find_library(
+     BLIS_LIBRARIES
+-    NAMES "blis"
++    NAMES "blis-mt" "blis"
+     HINTS ${_BLIS_PATHS}
+     PATH_SUFFIXES "blis/lib" "blis/lib64" "blis"
+ )

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,10 @@ class Opari2(AutotoolsPackage):
     tied tasks.
     """
 
-    homepage = "http://www.vi-hps.org/projects/score-p"
+    homepage = "https://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/opari2/opari2-2.0.4.tar.gz"
 
+    version('2.0.6', sha256='55972289ce66080bb48622110c3189a36e88a12917635f049b37685b9d3bbcb0', url='https://perftools.pages.jsc.fz-juelich.de/cicd/opari2/tags/opari2-2.0.6/opari2-2.0.6.tar.gz')
     version('2.0.5', sha256='9034dd7596ac2176401090fd5ced45d0ab9a9404444ff767f093ccce68114ef5')
     version('2.0.4', sha256='f69e324792f66780b473daf2b3c81f58ee8188adc72b6fe0dacf43d4c1a0a131')
     version('2.0.3', sha256='7e2efcfbc99152ee6e31454ef4fb747f77165691539d5d2c1df2abc4612de86c')

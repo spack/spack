@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,9 @@ class PyFilemagic(PythonPackage):
     """A Python API for libmagic, the library behind the Unix file command"""
 
     homepage = "https://filemagic.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/f/filemagic/filemagic-1.6.tar.gz"
+    pypi = "filemagic/filemagic-1.6.tar.gz"
 
     version('1.6', sha256='e684359ef40820fe406f0ebc5bf8a78f89717bdb7fed688af68082d991d6dbf3')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-mock', type='test', when='^python@3:')
-    depends_on('py-unittest2', type='test')
+    depends_on('file', type='run')

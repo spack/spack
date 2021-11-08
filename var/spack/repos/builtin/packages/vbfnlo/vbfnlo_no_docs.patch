@@ -1,0 +1,13 @@
+diff --git a/Makefile.am b/Makefile.am
+index e3cfec3..ebf48f4 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -5,7 +5,7 @@ SUBDIRS = include \
+           loops \
+           amplitudes \
+           phasespace \
+-          lib src doc \
++          lib src \
+           regress
+ 
+ ACLOCAL_AMFLAGS = -I m4

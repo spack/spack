@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,11 @@
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"
-check_dependencies $coverage kcov git hg svn
+if [ "$COVERAGE" = true ]; then
+  check_dependencies $coverage kcov git hg svn
+else
+  echo "COVERAGE not set to 'true' [skipping coverage]"
+fi
 
 # Clean the environment by removing Spack from the path and getting rid of
 # the spack shell function
@@ -34,8 +38,8 @@ cd "$SPACK_ROOT"
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov seems to undo the script's redirection
 if [ "$COVERAGE" = true ]; then
-    "$QA_DIR/bashcov" "$QA_DIR/setup-env-test.sh" &> /dev/null
-    "$QA_DIR/bashcov" "$QA_DIR/completion-test.sh" &> /dev/null
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
 else
     bash "$QA_DIR/setup-env-test.sh"
     bash "$QA_DIR/completion-test.sh"
@@ -43,6 +47,7 @@ fi
 
 # Run the test scripts for their output (these will print nicely)
 zsh  "$QA_DIR/setup-env-test.sh"
+zsh "$QA_DIR/completion-test.sh"
 dash "$QA_DIR/setup-env-test.sh"
 
 # Run fish tests
@@ -51,3 +56,9 @@ fish "$QA_DIR/setup-env-test.fish"
 # run csh and tcsh tests
 csh  "$QA_DIR/setup-env-test.csh"
 tcsh "$QA_DIR/setup-env-test.csh"
+
+# Delete the symlink going from ./lib/spack/docs/_spack_root back to
+# the initial directory, since it causes ELOOP errors with codecov/actions@2
+if [[ "$COVERAGE" == "true" ]]; then
+  rm lib/spack/docs/_spack_root
+fi

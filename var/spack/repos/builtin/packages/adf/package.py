@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Adf(Package):
@@ -13,6 +14,8 @@ class Adf(Package):
     theory."""
 
     homepage = "https://www.scm.com/product/adf/"
+    manual_download = True
+
     version('2017.113', '666ef15d253b74c707dd14da35e7cf283ca20e21e24ed43cb953fb9d1f2f1e15')
 
     def url_for_version(self, version):

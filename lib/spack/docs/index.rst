@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ package:
 
 .. code-block:: console
 
-   $ git clone https://github.com/spack/spack.git
+   $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
@@ -67,6 +67,7 @@ or refer to the full manual below.
    build_settings
    environments
    containers
+   monitoring
    mirrors
    module_file_support
    repositories
@@ -76,6 +77,12 @@ or refer to the full manual below.
    chain
    extensions
    pipelines
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Research
+
+   analyze
 
 .. toctree::
    :maxdepth: 2

@@ -8,11 +8,11 @@ variables:
   # Needed for Intel compilers, which may re-use some libraries from a
   # GCC
   BASE_GCC_VERSION: "9.3.0"
-  DEPLOYMENT_BRANCH: "transition-g2g"
+  DEPLOYMENT_BRANCH: "merge-upstream"
   # Proprietary sources
   DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
   # This date should increment for new deployments — about once a year
-  DEPLOYMENT_DATE: "2021-10"
+  DEPLOYMENT_DATE: "2021-11"
   # Global base directory
   DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
   # Global module archive

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,19 +11,19 @@ class PySanic(PythonPackage):
     It is based on the work done by the amazing folks at magicstack"""
 
     homepage = "https://github.com/huge-success/sanic"
-    url      = "https://pypi.io/packages/source/s/sanic/sanic-20.6.3.tar.gz"
+    pypi = "sanic/sanic-20.6.3.tar.gz"
 
     version('20.6.3', sha256='30e83d9f677b609d6b8ccab7c9551ca7e9a5f19ac0579f5aa10199ab6d4138ed')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
     depends_on('py-ujson')
-    depends_on('py-multidict@4.0:4.99')
+    depends_on('py-multidict@4.0:4')
     depends_on('py-aiofiles@0.3.0:')
     depends_on('py-httptools@0.0.10:')
-    depends_on('py-websockets@8.1:8.999')
+    depends_on('py-websockets@8.1:8')
     depends_on('py-httpx@0.11.1')
-    depends_on('py-websockets@8.1:8.999')
+    depends_on('py-websockets@8.1:8')
     depends_on('py-uvloop')
     depends_on('py-chardet')
     depends_on('py-hstspreload')

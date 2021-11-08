@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import platform
 import os
+import platform
+
+from spack import *
 
 
 class IbmJava(Package):
@@ -22,6 +23,8 @@ class IbmJava(Package):
     # not be available for download.
 
     version_list = [
+        ('8.0.6.20', 'ppc64',   '88748d1502a35845b18d514dd76835f0f47270c6ffbd81f67f611e32d042b288'),
+        ('8.0.6.20', 'ppc64le', '4a7ac4712548d7630f2471a067406c94c3846fff75a0afc660682129dcf80e5b'),
         ('8.0.6.11', 'ppc64',   '6fd17a6b9a34bb66e0db37f6402dc1b7612d54084c94b859f4a42f445fd174d4'),
         ('8.0.6.11', 'ppc64le', 'd69ff7519e32e89db88a9a4d4d88d1881524073ac940f35d3860db2c6647be2e'),
         ('8.0.6.10', 'ppc64',   'ff5151ead88f891624eefe33d80d56c325ca0aa4b93bd96c135cad326993eda2'),

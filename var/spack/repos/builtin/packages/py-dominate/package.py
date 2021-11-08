@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,10 @@ class PyDominate(PythonPackage):
     powerful features of Python."""
 
     homepage = "https://github.com/Knio/dominate"
-    url      = "https://pypi.io/packages/source/d/dominate/dominate-2.6.0.tar.gz"
+    pypi = "dominate/dominate-2.6.0.tar.gz"
     # license = "LGPL-3.0"
 
     version('2.6.0', sha256='76ec2cde23700a6fc4fee098168b9dee43b99c2f1dd0ca6a711f683e8eb7e1e4')
 
-    depends_on('python@2.7:2.9999,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

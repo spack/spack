@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,11 +43,11 @@ class Openldap(AutotoolsPackage):
     # depends_on('Pth', when='~client_only') # not avail. in spack yet
     depends_on('perl', when='~client_only+perl')  # for slapd
 
-    # Ref: http://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
+    # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when('+client_only')
     def configure_args(self):
         return ['CPPFLAGS=-D_GNU_SOURCE',
-                '--disable-static',
+                '--enable-static',
                 '--enable-dynamic',
                 '--disable-debug',
                 '--disable-slapd',
@@ -57,7 +57,7 @@ class Openldap(AutotoolsPackage):
     def configure_args(self):
         # Ref: https://www.openldap.org/lists/openldap-technical/201009/msg00304.html
         args = ['CPPFLAGS=-D_GNU_SOURCE',  # fixes a build error, see Ref above
-                '--disable-static',
+                '--enable-static',
                 '--disable-debug',
                 '--with-cyrus-sasl',
                 '--enable-dynamic',

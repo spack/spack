@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,12 @@ class Bazel(Package):
     url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
     maintainers = ['adamjstewart']
-
+    version('4.0.0',  sha256='d350f80e70654932db252db380d2ec0144a00e86f8d9f2b4c799ffdb48e9cdd1')
+    version('3.7.2',  sha256='de255bb42163a915312df9f4b86e5b874b46d9e8d4b72604b5123c3a845ed9b1')
+    version('3.7.1',  sha256='c9244e5905df6b0190113e26082c72d58b56b1b0dec66d076f083ce4089b0307')
+    version('3.7.0',  sha256='63873623917c756d1be49ff4d5fc23049736180e6b9a7d5236c6f204eddae3cc')
+    version('3.6.0',  sha256='3a18f24febb5203f11b0985b27e120ac623058d1d5ca79cd6df992e67d57240a')
+    version('3.5.1',  sha256='67eae714578b22d24192b0eb3a2d35b07578bbd57a33c50f1e74f8acd6378b3c')
     version('3.5.0',  sha256='334429059cf82e222ca8a9d9dbbd26f8e1eb308613463c2b8655dd4201b127ec')
     version('3.4.1',  sha256='27af1f11c8f23436915925b25cf6e1fb07fccf2d2a193a307c93437c60f63ba8')
     version('3.4.0',  sha256='7583abf8905ba9dd5394294e815e8873635ac4e5067e63392e8a33b397e450d8')
@@ -105,6 +110,11 @@ class Bazel(Package):
     depends_on('python', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
 
+    # make work on power9 (2x commits)
+    # https://github.com/bazelbuild/bazel/commit/5cff4f1edf8b95bf0612791632255852332f72b5
+    # https://github.com/bazelbuild/bazel/commit/ab62a6e097590dac5ec946ad7a796ea0e8593ae0
+    patch('linux_ppc-0.29.1.patch', when='@0.29.1')
+
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
     patch('bazelruleclassprovider-0.14.patch', when='@0.14:0.24')
@@ -160,6 +170,11 @@ class Bazel(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
+        # fix the broken linking (on power9)
+        # https://github.com/bazelbuild/bazel/issues/10327
+        env.set('BAZEL_LINKOPTS', '')
+        env.set('BAZEL_LINKLIBS', '-lstdc++')
+
         env.set('EXTRA_BAZEL_ARGS',
                 # Spack's logs don't handle colored output well
                 '--color=no --host_javabase=@local_jdk//:jdk'

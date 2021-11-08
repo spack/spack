@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Squashfs(MakefilePackage):
     variant('lzo', default=False, description='Enable LZO compression support')
     variant('xz', default=False, description='Enable xz compression support')
     variant('zstd', default=False, description='Enable Zstandard/zstd support')
-    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'), 
+    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'),
             multi=False, description='Default compression algorithm')
 
     conflicts('squashfs~gzip default_compression=gzip', msg='Cannot set default compression to missing algorithm')
@@ -33,30 +33,34 @@ class Squashfs(MakefilePackage):
     conflicts('squashfs~xz default_compression=xz', msg='Cannot set default compression to missing algorithm')
     conflicts('squashfs~zstd default_compression=zstd', msg='Cannot set default compression to missing algorithm')
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-
     depends_on('zlib', when='+gzip')
     depends_on('lz4', when='+lz4')
     depends_on('lzo', when='+lzo')
     depends_on('xz', when='+xz')
     depends_on('zstd', when='+zstd')
 
+    # patch from
+    # https://github.com/plougher/squashfs-tools/commit/fe2f5da4b0f8994169c53e84b7cb8a0feefc97b5.patch
+    patch('gcc-10.patch', when="%gcc@10:")
+    patch('gcc-10.patch', when="%clang@11:")
+
+    def make_options(self, spec):
+        default = spec.variants['default_compression'].value
+        return [
+            'GZIP_SUPPORT={0}'.format(1 if '+gzip' in spec else 0),
+            'LZ4_SUPPORT={0}' .format(1 if '+lz4'  in spec else 0),
+            'LZO_SUPPORT={0}' .format(1 if '+lzo'  in spec else 0),
+            'XZ_SUPPORT={0}'  .format(1 if '+xz'   in spec else 0),
+            'ZSTD_SUPPORT={0}'.format(1 if '+zstd' in spec else 0),
+            'COMP_DEFAULT={0}'.format(default),
+        ]
+
     def build(self, spec, prefix):
+        options = self.make_options(spec)
         with working_dir('squashfs-tools'):
-            default = spec.variants['default_compression'].value
-            make(
-                'GZIP_SUPPORT={0}'.format(1 if '+gzip' in spec else 0),
-                'LZ4_SUPPORT={0}' .format(1 if '+lz4'  in spec else 0),
-                'LZO_SUPPORT={0}' .format(1 if '+lzo'  in spec else 0),
-                'XZ_SUPPORT={0}'  .format(1 if '+xz'   in spec else 0),
-                'ZSTD_SUPPORT={0}'.format(1 if '+zstd' in spec else 0),
-                'COMP_DEFAULT={0}'.format(default),
-                parallel=False
-            )
+            make(*options, parallel=False)
 
     def install(self, spec, prefix):
+        options = self.make_options(spec)
         with working_dir('squashfs-tools'):
-            make('install', 'INSTALL_DIR=%s' % prefix.bin, parallel=False)
+            make('install', 'INSTALL_DIR=%s' % prefix.bin, *options, parallel=False)

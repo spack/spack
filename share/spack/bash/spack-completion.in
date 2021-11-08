@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,21 @@
 #
 # See `man bash` for more details.
 
+if test -n "${ZSH_VERSION:-}" ; then
+  if [[ "$(emulate)" = zsh ]] ; then
+    if ! typeset -f compdef >& /dev/null ; then
+        # ensure base completion support is enabled, ignore insecure directories
+        autoload -U +X compinit && compinit -i
+    fi
+    if ! typeset -f complete >& /dev/null ; then
+        # ensure bash compatible completion support is enabled
+        autoload -U +X bashcompinit && bashcompinit
+    fi
+    emulate sh -c "source '$0:A'"
+    return # stop interpreting file
+  fi
+fi
+
 # Bash programmable completion for Spack
 _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
@@ -44,7 +59,7 @@ _bash_completion_spack() {
     # For our purposes, flags should not affect tab completion. For instance,
     # `spack install []` and `spack -d install --jobs 8 []` should both give the same
     # possible completions. Therefore, we need to ignore any flags in COMP_WORDS.
-    local COMP_WORDS_NO_FLAGS=()
+    local -a COMP_WORDS_NO_FLAGS
     local index=0
     while [[ "$index" -lt "$COMP_CWORD" ]]
     do
@@ -117,7 +132,9 @@ _bash_completion_spack() {
     #_test_vars >> temp
 
     # Make sure function exists before calling it
-    if [[ "$(type -t $subfunction)" == "function" ]]
+    local rgx #this dance is necessary to cover bash and zsh regex
+    rgx="$subfunction.*function.* "
+    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))

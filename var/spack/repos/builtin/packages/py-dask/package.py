@@ -10,15 +10,13 @@ class PyDask(PythonPackage):
     """Dask is a flexible parallel computing library for analytics."""
 
     homepage = "https://github.com/dask/dask/"
-    url      = "https://pypi.io/packages/source/d/dask/dask-1.1.0.tar.gz"
+    pypi = "dask/dask-1.1.0.tar.gz"
 
     maintainers = ['skosukhin']
 
     version('2021.6.2', sha256='8588fcd1a42224b7cfcd2ebc8ad616734abb6b1a4517efd52d89c7dd66eb91f8')
     version('2021.4.1', sha256='195e4eeb154222ea7a1c368119b5f321ee4ec9d78531471fe0145a527f744aa8')
     version('2020.12.0', sha256='43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0')
-    version('2.30.0', sha256='a1669022e25de99b227c3d83da4801f032415962dac431099bf0534648e41a54')
-    version('2.19.0', sha256='e18035cebc2a32e9d483f76d7718f846e95a0f75e6b0fe192a21328c236a465b')
     version('2.16.0', sha256='2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350')
     version('1.2.2', sha256='5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c')
     version('1.1.2', sha256='93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256')
@@ -73,7 +71,7 @@ class PyDask(PythonPackage):
     depends_on('py-dill',               type=('build', 'run'), when='@:0.7.5 +bag')
     depends_on('py-cloudpickle',        type=('build', 'run'), when='@0.7.6: +bag')
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='@0.8.2: +bag')
-    # The dependency on py-cloudpickle is non-optional starting ver 2021.3.1
+    # The dependency on py-cloudpickle is non-optional starting version 2021.3.1
     depends_on('py-cloudpickle@0.2.2:', type=('build', 'run'), when='@2.13.0:2021.3.0 +bag')
 
     depends_on('py-fsspec@0.3.3:',      type=('build', 'run'), when='@2.2.0: +bag')
@@ -151,11 +149,11 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.diagnostics
     depends_on('py-bokeh@1.0.0:',       type=('build', 'run'), when='@2.0.0: +diagnostics')
-    depends_on('py-bokeh@1.0.0:1.9999,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
+    depends_on('py-bokeh@1.0.0:1,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
 
     # Requirements for dask.delayed
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='@2.7.0: +delayed')
-    # The dependency on py-cloudpickle is non-optional starting ver 2021.3.1
+    # The dependency on py-cloudpickle is non-optional starting version 2021.3.1
     depends_on('py-cloudpickle@0.2.2:', type=('build', 'run'), when='@2.13.0:2021.3.0 +delayed')
 
     depends_on('py-toolz@0.7.2:',       type=('build', 'run'), when='@0.8.1: +delayed')

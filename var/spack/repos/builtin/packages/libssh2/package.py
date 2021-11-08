@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,12 +25,15 @@ class Libssh2(CMakePackage):
     depends_on('xz')
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+        return [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
         if self.spec.satisfies('platform=darwin'):
             fix_darwin_install_name(self.prefix.lib)
+
+    def check(self):
+        # Docker is required to run tests
+        if which('docker'):
+            make('test')

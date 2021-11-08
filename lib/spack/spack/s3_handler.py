@@ -1,13 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from io import BufferedReader
 
-import six.moves.urllib.response as urllib_response
-import six.moves.urllib.request as urllib_request
 import six.moves.urllib.error as urllib_error
+import six.moves.urllib.request as urllib_request
+import six.moves.urllib.response as urllib_response
 
 import spack.util.s3 as s3_util
 import spack.util.url as url_util

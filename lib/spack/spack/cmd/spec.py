@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.hash_types as ht
 import spack.spec
 import spack.store
-import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -28,7 +28,8 @@ for further documentation regarding the spec syntax, see:
     spack help --spec
 """
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status'])
+        subparser, ['long', 'very_long', 'install_status', 'reuse']
+    )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as YAML')
@@ -42,6 +43,10 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
+    subparser.add_argument(
+        '--hash-type', default="build_hash",
+        choices=['build_hash', 'full_hash', 'dag_hash'],
+        help='generate spec with a particular hash type.')
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
@@ -60,7 +65,7 @@ def spec(parser, args):
     name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
     fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
     install_status_fn = spack.spec.Spec.install_status
-    kwargs = {
+    tree_kwargs = {
         'cover': args.cover,
         'format': name_fmt + fmt,
         'hashlen': None if args.very_long else 7,
@@ -77,27 +82,34 @@ def spec(parser, args):
     if not args.specs:
         tty.die("spack spec requires at least one spec")
 
+    concretize_kwargs = {
+        'reuse': args.reuse
+    }
+
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.format:
             if spec.name in spack.repo.path or spec.virtual:
-                spec.concretize()
+                spec.concretize(**concretize_kwargs)
+
+            # The user can specify the hash type to use
+            hash_type = getattr(ht, args.hash_type)
 
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+                sys.stdout.write(spec.to_yaml(hash=hash_type))
             else:
-                print(spec.to_json(hash=ht.build_hash))
+                print(spec.to_json(hash=hash_type))
             continue
 
         with tree_context():
-            kwargs['hashes'] = False  # Always False for input spec
+            tree_kwargs['hashes'] = False  # Always False for input spec
             print("Input spec")
             print("--------------------------------")
-            print(spec.tree(**kwargs))
+            print(spec.tree(**tree_kwargs))
 
-            kwargs['hashes'] = args.long or args.very_long
+            tree_kwargs['hashes'] = args.long or args.very_long
             print("Concretized")
             print("--------------------------------")
-            spec.concretize()
-            print(spec.tree(**kwargs))
+            spec.concretize(**concretize_kwargs)
+            print(spec.tree(**tree_kwargs))

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,10 @@ class Libxpresent(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes', type='link')
     depends_on('libxrandr', type='link')
 
-    depends_on('xproto', type='link')
-    depends_on('presentproto@1.0:', type='link')
-    depends_on('xextproto', type='link')
-    depends_on('fixesproto', type='link')
-    depends_on('randrproto', type='link')
+    depends_on('xproto')
+    depends_on('presentproto@1.0:')
+    depends_on('xextproto')
+    depends_on('fixesproto')
+    depends_on('randrproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

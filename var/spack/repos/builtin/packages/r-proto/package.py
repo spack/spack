@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class RProto(RPackage):
     """An object oriented system using object-based, also called
     prototype-based, rather than class-based object oriented ideas."""
 
-    homepage = "http://r-proto.googlecode.com/"
+    homepage = "https://cran.r-project.org/web/packages/proto/index.html"
     url      = "https://cloud.r-project.org/src/contrib/proto_0.3-10.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/proto"
 

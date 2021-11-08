@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Icet(CMakePackage):
     """The Image Composition Engine for Tiles (IceT) is a high-performance
        sort-last parallel rendering library."""
 
-    homepage = "http://icet.sandia.gov"
+    homepage = "https://icet.sandia.gov"
     url      = "https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1"
     git      = "https://gitlab.kitware.com/icet/icet.git"
 

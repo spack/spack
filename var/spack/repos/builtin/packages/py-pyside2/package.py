@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,13 +8,13 @@ from spack import *
 
 class PyPyside2(PythonPackage):
     """Python bindings for Qt."""
-    homepage = "https://pypi.org/project/PySide2/"
-    url      = "https://code.qt.io/pyside/pyside-setup.git"
+
+    homepage = "https://www.pyside.org/"
     git      = "https://code.qt.io/pyside/pyside-setup.git"
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
-    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+    # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version('develop', tag='dev')
     version('5.14.2.1', tag='v5.14.2.1', submodules=True)
@@ -25,7 +25,7 @@ class PyPyside2(PythonPackage):
 
     variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
-    depends_on('python@2.7:2.7.99,3.5.0:3.5.99,3.6.1:', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7,3.5.0:3.5,3.6.1:', type=('build', 'run'))
 
     depends_on('cmake@3.1:', type='build')
     depends_on('llvm@6:', type='build')

@@ -1,18 +1,17 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
-
-import sys
 import os
 import socket
-
+import sys
+from os import environ as env
 
 import llnl.util.tty as tty
-from os import environ as env
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -40,6 +39,12 @@ class VtkH(Package, CudaPackage):
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.7.1', sha256="f28f7e6fb0f854a2293265b67cbdfb350b42c13ac08ffffe9cd246f3fe9fb77a")
+    version('0.7.0', sha256="1b3c15c1340c5f66edcc2962ffe2f0d86e155f45a4932cf9c407261c203fbc19")
+    version('0.6.9', sha256="8111f59c3528f02cb3c5083c17a1737dff9472266b156732794612471f3393c7")
+    version('0.6.8', sha256="0a37468ca65fdc12509b9fd53c74d5afb090630280e1161415d7377cad7d45f1")
+    version('0.6.7', sha256="aff3ab94cf137fbc3019149363d5d8a39d052b02ecef42c6bf6d076e538af3f2")
+    version('0.6.6', sha256="5fe8bae5f55dbeb3047a37499cc41f3b548e4d86f0058993069f1df57f7915a1")
     version('0.6.5', sha256="3e566ee06150edece8a61711d9347de216c1ae45f3b4585784b2252ee9ff2a9b")
     version('0.6.4', sha256="c1345679fa4110cba449a9e27d40774d53c1f0bbddd41e52f5eb395cec1ee2d0")
     version('0.6.3', sha256="388ad05110efac45df6ae0d565a7d16bd05ff83c95b8b2b8daa206360ab73eec")
@@ -62,24 +67,23 @@ class VtkH(Package, CudaPackage):
     variant("logging", default=False, description="Build vtk-h with logging enabled")
     variant("contourtree", default=False, description="Enable contour tree support")
 
-    # use cmake 3.14, newest that provides proper cuda support
-    # and we have seen errors with cuda in 3.15
-    depends_on("cmake@3.14.1:3.14.99", type='build')
+    # Certain CMake versions have been found to break for our use cases
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@ascent_ver~tbb+openmp", when="+openmp")
-    depends_on("vtk-m@ascent_ver~tbb~openmp", when="~openmp")
+    depends_on("vtk-m~tbb+openmp", when="+openmp")
+    depends_on("vtk-m~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp", when="+cuda~openmp")
+    depends_on("vtk-m+cuda~tbb+openmp", when="+cuda+openmp")
+    depends_on("vtk-m+cuda~tbb~openmp", when="+cuda~openmp")
 
-    depends_on("vtk-m@ascent_ver~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@ascent_ver~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

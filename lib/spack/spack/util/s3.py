@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,13 @@ import six.moves.urllib.parse as urllib_parse
 
 import spack
 import spack.util.url as url_util
+
+
+def _parse_s3_endpoint_url(endpoint_url):
+    if not urllib_parse.urlparse(endpoint_url, scheme='').scheme:
+        endpoint_url = '://'.join(('https', endpoint_url))
+
+    return endpoint_url
 
 
 def create_s3_session(url):
@@ -22,6 +29,7 @@ def create_s3_session(url):
     # want to require boto as a dependency unless the user actually wants to
     # access S3 mirrors.
     from boto3 import Session
+    from botocore.exceptions import ClientError
 
     session = Session()
 
@@ -29,10 +37,7 @@ def create_s3_session(url):
 
     endpoint_url = os.environ.get('S3_ENDPOINT_URL')
     if endpoint_url:
-        if urllib_parse.urlparse(endpoint_url, scheme=None).scheme is None:
-            endpoint_url = '://'.join(('https', endpoint_url))
-
-        s3_client_args['endpoint_url'] = endpoint_url
+        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
 
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
@@ -41,4 +46,6 @@ def create_s3_session(url):
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    return session.client('s3', **s3_client_args)
+    client = session.client('s3', **s3_client_args)
+    client.ClientError = ClientError
+    return client

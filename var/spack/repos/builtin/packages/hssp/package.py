@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,16 +18,16 @@ class Hssp(AutotoolsPackage):
     homepage = "https://github.com/cmbi/hssp"
     url      = "https://github.com/cmbi/hssp/archive/3.0.10.tar.gz"
 
-    version('3.0.10', sha256='b475d6fa62098df0e54c8dbdaa0b32de93bf5a393335f73f9b5a7e95f3090d2a')
-    version('3.0.9',  sha256='42a9a93c48d22478212dcaf6ceb3feb64443e4cb2e8cccdd402b47a595d16658')
-    version('3.0.8',  sha256='45e316ff2c700f09971027f9e813cf3139d36ab5951d337948fafab53e00d821')
-    version('3.0.7',  sha256='eb6c3276eeb1261c55568ebfae301033904fe619d84b380313dbf137a2b06cd1')
-    version('3.0.6',  sha256='b868e0077270361276c1c256e2f137ad95f7e84deeb61ae267f7559ebaab7d59')
-    version('3.0.5',  sha256='fded09f08cfb12e578e4823295dc0d0aaeff6559d5e099df23c5bcc911597ccd')
-    version('3.0.4',  sha256='fe786c3a75dafe93bb6a97c2840c3edb0d0e81446874082dc053e136dd3b7f68')
-    version('3.0.3',  sha256='c4826ed74a74e3238f45104cb21ca4ad9e5b49498891e991a3a3a7a3b9bdbe1d')
-    version('3.0.2',  sha256='edb43dc7407a5e91d68d27b732887c6e70a1988e8ddbba03d430713c40c40139')
-    version('3.0.1',  sha256='8f56bc51d7b5f035442c189dd7096f0dd25528303722507365f5e746d5ad9a73')
+    version('3.0.10', sha256='9b2cba9c498e65fd48730f0fc86ca2b480bf12903a2c131521023f3a161fe870')
+    version('3.0.9',  sha256='2f67743ffd233ed9c4cd298e8fc65a332b863052945fb62bd61d7f1776274da9')
+    version('3.0.8',  sha256='56c926d2e43a3dd6324de558dde868751355f385d1b60fd85586a0a2c2bc82e0')
+    version('3.0.7',  sha256='3f1c09eb2cdc679119375a9ee552f853bcd1e959f030cb67ca6bd33809e6cdf2')
+    version('3.0.6',  sha256='8d3bc75bd9513dd0800a630049969639758692e42a28028651543320cce70d5f')
+    version('3.0.5',  sha256='8ca1de53e8add9e7af18a9f565bbcfa388f4d6ddcd2b7a1eae668c836ec0d09c')
+    version('3.0.4',  sha256='67a39d325ce9c17a416a26172fd5ae28878be3557cd611d7cbb9bcaf09507e76')
+    version('3.0.3',  sha256='42fc2b293fc60407ae097cc8021fd7cf0044092aa366c11ee99015beec83beea')
+    version('3.0.2',  sha256='76b4275c8cde120509d7920609fca983f2b04249a649d0aa802c69fd09e5f8cf')
+    version('3.0.1',  sha256='62a703d15bdfec82fdbd2a4275e1973b6a1ac6ccd4dbec75036f16faacaa9dce')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

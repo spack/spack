@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,16 @@ class Pciutils(MakefilePackage):
     version('3.6.4', sha256='551d0ac33f030868b7e95c29e58dc2b1882455dbc9c15c15adf7086e664131f1')
     version('3.6.3', sha256='7ab0fbb35cffa326eb852539260562bac14f3d27cda8c70bc2cf3211ed97c014')
 
+    variant('lib', default=False, description='Install libraries with headers')
+
+    def build(self, spec, prefix):
+        make('PREFIX={0}'.format(prefix))
+
     def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+        if '+lib' in spec:
+            make('install-lib', 'install', 'PREFIX={0}'.format(prefix))
+        else:
+            make('install', 'PREFIX={0}'.format(prefix))
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)

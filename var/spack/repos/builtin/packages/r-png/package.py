@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RPng(RPackage):
     bitmap images stored in the PNG format. It can read and write both files
     and in-memory raw vectors."""
 
-    homepage = "http://www.rforge.net/png/"
+    homepage = "https://www.rforge.net/png/"
     url      = "https://cloud.r-project.org/src/contrib/png_0.1-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/png"
 

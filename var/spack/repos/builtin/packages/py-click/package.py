@@ -11,7 +11,6 @@ class PyClick(PythonPackage):
 
     homepage = "https://click.palletsprojects.com"
     pypi = "click/click-7.1.2.tar.gz"
-    url = "https://pypi.io/packages/source/c/click/click-7.1.2.tar.gz"
 
     version('8.0.1', sha256='8c04c11192119b1ef78ea049e0a6f0463e4c48ef00a30160c704337586f3ad7a')
     version('7.1.2', sha256='d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a')

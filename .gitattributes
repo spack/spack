@@ -1,1 +1,3 @@
 *.py diff=python
+*.lp linguist-language=Prolog
+lib/spack/external/* linguist-vendored

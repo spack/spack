@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -179,24 +179,26 @@ how to write tests!
    run the unit tests yourself, we suggest you use ``spack unit-test``.
 
 ^^^^^^^^^^^^
-Flake8 Tests
+Style Tests
 ^^^^^^^^^^^^
 
 Spack uses `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to test for
-`PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance. PEP 8 is
+`PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance and
+`mypy <https://mypy.readthedocs.io/en/stable/>` for type checking. PEP 8 is
 a series of style guides for Python that provide suggestions for everything
 from variable naming to indentation. In order to limit the number of PRs that
 were mostly style changes, we decided to enforce PEP 8 conformance. Your PR
-needs to comply with PEP 8 in order to be accepted.
+needs to comply with PEP 8 in order to be accepted, and if it modifies the
+spack library it needs to successfully type-check with mypy as well.
 
-Testing for PEP 8 compliance is easy. Simply run the ``spack flake8``
+Testing for compliance with spack's style is easy. Simply run the ``spack style``
 command:
 
 .. code-block:: console
 
-   $ spack flake8
+   $ spack style
 
-``spack flake8`` has a couple advantages over running ``flake8`` by hand:
+``spack style`` has a couple advantages over running the tools by hand:
 
 #. It only tests files that you have modified since branching off of
    ``develop``.
@@ -207,7 +209,9 @@ command:
    checks. For example, URLs are often longer than 80 characters, so we
    exempt them from line length checks. We also exempt lines that start
    with "homepage", "url", "version", "variant", "depends_on", and
-   "extends" in ``package.py`` files.
+   "extends" in ``package.py`` files.  This is now also possible when directly
+   running flake8 if you can use the ``spack`` formatter plugin included with
+   spack.
 
 More approved flake8 exemptions can be found
 `here <https://github.com/spack/spack/blob/develop/.flake8>`_.
@@ -240,13 +244,13 @@ However, if you aren't compliant with PEP 8, flake8 will complain:
 
 Most of the error messages are straightforward, but if you don't understand what
 they mean, just ask questions about them when you submit your PR. The line numbers
-will change if you add or delete lines, so simply run ``spack flake8`` again
+will change if you add or delete lines, so simply run ``spack style`` again
 to update them.
 
 .. tip::
 
    Try fixing flake8 errors in reverse order. This eliminates the need for
-   multiple runs of ``spack flake8`` just to re-compute line numbers and
+   multiple runs of ``spack style`` just to re-compute line numbers and
    makes it much easier to fix errors directly off of the CI output.
 
 .. warning::
@@ -333,15 +337,6 @@ Once all of the dependencies are installed, you can try building the documentati
 
 If you see any warning or error messages, you will have to correct those before
 your PR is accepted.
-
-.. note::
-
-   There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
-   difference between running this script and running ``make`` by hand is that
-   the script will exit immediately if it encounters an error or warning. This
-   is necessary for CI. If you made a lot of documentation changes, it is
-   much quicker to run ``make`` by hand so that you can see all of the warnings
-   at once.
 
 If you are editing the documentation, you should obviously be running the
 documentation tests. But even if you are simply adding a new package, your

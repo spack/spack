@@ -10,9 +10,10 @@ class PyJoblib(PythonPackage):
     """Lightweight pipelining with Python functions."""
 
     homepage = "https://joblib.readthedocs.io/"
-    url = "https://pypi.io/packages/source/j/joblib/joblib-1.0.1.tar.gz"
+    pypi = "joblib/joblib-0.14.0.tar.gz"
 
-    # 'joblib.test' requires 'pytest'
+    # 'joblib.test' requires 'pytest'. Leave out of 'import_modules' to avoid
+    # unnecessary dependencies.
     import_modules = [
         'joblib', 'joblib.externals', 'joblib.externals.cloudpickle',
         'joblib.externals.loky', 'joblib.externals.loky.backend'

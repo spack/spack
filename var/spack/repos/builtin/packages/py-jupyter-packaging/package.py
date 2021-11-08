@@ -10,7 +10,7 @@ class PyJupyterPackaging(PythonPackage):
     """Jupyter Packaging Utilities."""
 
     homepage = "https://github.com/jupyter/jupyter-packaging"
-    url      = "https://pypi.io/packages/source/j/jupyter_packaging/jupyter_packaging-0.10.6.tar.gz"
+    pypi     = "jupyter_packaging/jupyter_packaging-0.10.4.tar.gz"
 
     version('0.10.6', sha256='a8a2c90bf2e0cae83be63ccb0b7035032a1589f268cc08b1d479e37ce50fc940')
     version('0.10.4', sha256='589db027cb85a92612f9bcfaeecaa8a9072ac8a4bddaf827f648664258e587c4')

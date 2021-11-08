@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
+
 import spack.paths
 
 
@@ -588,3 +589,31 @@ def test_content_of_files_with_same_name(tmpdir):
     # and have not been mixed
     assert file1.read().strip() == 'file1'
     assert file2.read().strip() == 'file2'
+
+
+def test_keep_modification_time(tmpdir):
+    file1 = tmpdir.ensure('file1')
+    file2 = tmpdir.ensure('file2')
+
+    # Shift the modification time of the file 10 seconds back:
+    mtime1 = file1.mtime() - 10
+    file1.setmtime(mtime1)
+
+    with fs.keep_modification_time(file1.strpath,
+                                   file2.strpath,
+                                   'non-existing-file'):
+        file1.write('file1')
+        file2.remove()
+
+    # Assert that the modifications took place the modification time has not
+    # changed;
+    assert file1.read().strip() == 'file1'
+    assert not file2.exists()
+    assert int(mtime1) == int(file1.mtime())
+
+
+def test_temporary_dir_context_manager():
+    previous_dir = os.path.realpath(os.getcwd())
+    with fs.temporary_dir() as tmp_dir:
+        assert previous_dir != os.path.realpath(os.getcwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())

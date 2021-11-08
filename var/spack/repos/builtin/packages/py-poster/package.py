@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyPoster(PythonPackage):
     """Streaming HTTP uploads and multipart/form-data encoding."""
 
-    homepage = "https://pypi.org/project/poster/"
+    homepage = "https://atlee.ca/software/poster"
     url      = "https://atlee.ca/software/poster/dist/0.8.1/poster-0.8.1.tar.gz"
 
     version('0.8.1', sha256='af5bf45da4a916db2b638cffd9e9d6668b33020e2b8ca9f864db79b49331c6ff')

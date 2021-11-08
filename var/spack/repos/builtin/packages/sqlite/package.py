@@ -1,9 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import re
+from tempfile import NamedTemporaryFile
 
-from spack import architecture
+import spack.platforms
 
 
 class Sqlite(AutotoolsPackage):
@@ -13,7 +16,13 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
+    version('3.35.5', sha256='f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0')
+    version('3.35.4', sha256='7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d')
+    version('3.35.3', sha256='ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b')
+    version('3.34.0', sha256='bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee')
     version('3.33.0', sha256='106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15')
+    version('3.32.03', sha256='a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66')
     version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
     version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
     version('3.30.0', sha256='e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58')
@@ -42,7 +51,7 @@ class Sqlite(AutotoolsPackage):
     variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
-    conflicts('+fts', when='@:3.25.99.99')
+    conflicts('+fts', when='@:3.25')
 
     resource(name='extension-functions',
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
@@ -65,6 +74,65 @@ class Sqlite(AutotoolsPackage):
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
+    executables = ['^sqlite3$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # `sqlite3 --version` prints only the version number, timestamp, commit
+        # hash(?) but not the program name. As a basic sanity check, the code
+        # calls re.match() and attempts to match the ISO 8601 date following the
+        # version number as well.
+        match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        all_variants = []
+
+        def call(exe, query):
+            with NamedTemporaryFile(mode='w', buffering=1) as sqlite_stdin:
+                sqlite_stdin.write(query + '\n')
+                e = Executable(exe)
+                e(fail_on_error=False,
+                  input=sqlite_stdin.name,
+                  output=os.devnull,
+                  error=os.devnull)
+            return e.returncode
+
+        def get_variant(name, has_variant):
+            fmt = "+{:s}" if has_variant else "~{:s}"
+            return fmt.format(name)
+
+        for exe in exes:
+            variants = []
+
+            # check for fts
+            def query_fts(version):
+                return 'CREATE VIRTUAL TABLE name ' \
+                       'USING fts{:d}(sender, title, body);'.format(version)
+
+            rc_fts4 = call(exe, query_fts(4))
+            rc_fts5 = call(exe, query_fts(5))
+            variants.append(get_variant('fts', rc_fts4 == 0 and rc_fts5 == 0))
+
+            # check for functions
+            # SQL query taken from extension-functions.c usage instructions
+            query_functions = "SELECT load_extension('libsqlitefunctions');"
+            rc_functions = call(exe, query_functions)
+            variants.append(get_variant('functions', rc_functions == 0))
+
+            # check for rtree
+            query_rtree = 'CREATE VIRTUAL TABLE name USING rtree(id, x, y);'
+            rc_rtree = call(exe, query_rtree)
+            variants.append(get_variant('rtree', rc_rtree == 0))
+
+            # TODO: column_metadata
+
+            all_variants.append(''.join(variants))
+
+        return all_variants
+
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
         version_string\
@@ -72,7 +140,9 @@ class Sqlite(AutotoolsPackage):
             ''.join(['%02d' % v for v in full_version[1:]])
         # See https://sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version('3.31.0'):
+        if version >= Version('3.34.1'):
+            year = '2021'
+        elif version >= Version('3.31.0'):
             year = '2020'
         elif version >= Version('3.27.0'):
             year = '2019'
@@ -97,9 +167,8 @@ class Sqlite(AutotoolsPackage):
         return find_libraries('libsqlite3', root=self.prefix.lib)
 
     def get_arch(self):
-        arch = architecture.Arch()
-        arch.platform = architecture.platform()
-        return str(arch.platform.target('default_target'))
+        host_platform = spack.platforms.host()
+        return str(host_platform.target('default_target'))
 
     def configure_args(self):
         args = []
@@ -111,8 +180,7 @@ class Sqlite(AutotoolsPackage):
             args.extend(['--disable-fts4', '--disable-fts5'])
 
         # Ref: https://sqlite.org/rtree.html
-        if '+rtree' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+        args.extend(self.enable_or_disable('rtree'))
 
         # Ref: https://sqlite.org/compile.html
         if '+column_metadata' in self.spec:

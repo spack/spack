@@ -1,28 +1,27 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
+import itertools
 import os
 import platform
 import re
-import itertools
 import shutil
 import tempfile
+from typing import List, Sequence  # novm
 
 import llnl.util.lang
-from llnl.util.filesystem import (
-    path_contains_subdirectory, paths_containing_libs)
 import llnl.util.tty as tty
+from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 
+import spack.compilers
 import spack.error
 import spack.spec
-import spack.version
-import spack.architecture
 import spack.util.executable
 import spack.util.module_cmd
-import spack.compilers
+import spack.version
 from spack.util.environment import filter_system_paths
 
 __all__ = ['Compiler']
@@ -190,20 +189,20 @@ class Compiler(object):
        and how to identify the particular type of compiler."""
 
     # Subclasses use possible names of C compiler
-    cc_names = []
+    cc_names = []  # type: List[str]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []
+    cxx_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
+    f77_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
+    fc_names = []  # type: List[str]
 
     # Optional prefix regexes for searching for this type of compiler.
     # Prefixes are sometimes used for toolchains
-    prefixes = []
+    prefixes = []  # type: List[str]
 
     # Optional suffix regexes for searching for this type of compiler.
     # Suffixes are used by some frameworks, e.g. macports uses an '-mp-X.Y'
@@ -214,7 +213,7 @@ class Compiler(object):
     version_argument = '-dumpversion'
 
     #: Return values to ignore when invoking the compiler to get its version
-    ignore_version_errors = ()
+    ignore_version_errors = ()  # type: Sequence[int]
 
     #: Regex used to extract version from compiler's output
     version_regex = '(.*)'
@@ -266,9 +265,9 @@ class Compiler(object):
         return ['-O', '-O0', '-O1', '-O2', '-O3']
 
     # Cray PrgEnv name that can be used to load this compiler
-    PrgEnv = None
+    PrgEnv = None  # type: str
     # Name of module used to switch versions of this compiler
-    PrgEnv_compiler = None
+    PrgEnv_compiler = None  # type: str
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=None, alias=None, environment=None,
@@ -344,8 +343,11 @@ class Compiler(object):
         """
         if not self._real_version:
             try:
-                self._real_version = spack.version.Version(
+                real_version = spack.version.Version(
                     self.get_real_version())
+                if real_version == spack.version.Version('unknown'):
+                    return self.version
+                self._real_version = real_version
             except spack.util.executable.ProcessError:
                 self._real_version = self.version
         return self._real_version

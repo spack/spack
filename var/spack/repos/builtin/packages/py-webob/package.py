@@ -10,7 +10,7 @@ class PyWebob(PythonPackage):
     """WebOb provides objects for HTTP requests and responses."""
 
     homepage = "https://webob.org/"
-    url      = "https://pypi.io/packages/source/w/WebOb/WebOb-1.8.7.tar.gz"
+    pypi     = "WebOb/WebOb-1.8.7.tar.gz"
 
     version('1.8.7', sha256='b64ef5141be559cfade448f044fa45c2260351edcb6a8ef6b7e00c7dcef0c323')
 

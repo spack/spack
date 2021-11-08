@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ def deactivate(parser, args):
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
 
-    env = ev.get_env(args, 'deactivate')
+    env = ev.active_environment()
     spec = spack.cmd.disambiguate_spec(specs[0], env)
     pkg = spec.package
 

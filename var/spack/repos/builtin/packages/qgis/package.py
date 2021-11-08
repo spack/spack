@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,18 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
+    version('3.22.0',   sha256='cf0c169863f332aab67d8c4943e14b73a564f0254bf54015f5826c6427e6785b')
+    version('3.18.2',   sha256='1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d')
+    # Prefer latest long term release
+    version('3.16.12',  sha256='65e9634b5c885c98f3555cf77bc2e3fae5e19279aa17e3f6626ff5d7455fd2b9', preferred=True)
+    version('3.16.5',   sha256='525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c')
     version('3.14.16',  sha256='c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04')
     version('3.14.0',   sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
     version('3.12.3',   sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
     version('3.12.2',   sha256='501f81715672205afd2c1a289ffc765aff96eaa8ecb49d079a58ef4d907467b8')
     version('3.12.1',   sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0',   sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
-    # Prefer latest long term release
-    version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839', preferred=True)
+    version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839')
     version('3.10.7',   sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564')
     version('3.10.6',   sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
     version('3.10.5',   sha256='f3e1cc362941ec69cc21062eeaea160354ef71382b21dc4b3191c315447b4ce1')
@@ -71,8 +75,7 @@ class Qgis(CMakePackage):
     variant('txt2tags',         default=False,  description='Generate PDF for txt2tags documentation')
 
     # Ref. for dependencies:
-    # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
-    # https://github.com/qgis/QGIS/blob/master/INSTALL
+    # https://github.com/qgis/QGIS/blob/master/INSTALL.md
     depends_on('exiv2')
     depends_on('expat@1.95:')
     depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
@@ -82,20 +85,25 @@ class Qgis(CMakePackage):
     depends_on('libzip')
     depends_on('libtasn1')
     depends_on('proj@4.4.0:')
+    depends_on('proj@4.9.3:', when='@3.8.2:')
     depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-pyqt4', when='@2')
     depends_on('py-pyqt5@5.3:', when='@3')
     depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
     depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
+    depends_on('python@3.6:', type=('build', 'run'), when='@3.18:')
+    depends_on('python@3.7:', type=('build', 'run'), when='@3.20:')
     depends_on('qca@2.2.1')
     depends_on('qjson')
     depends_on('qscintilla +python')
     depends_on('qt+dbus')
+    depends_on('qt+dbus@5.12.0:', when='@3.20:')
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('qwt@5:')
     depends_on('qwtpolar')
     depends_on('sqlite@3.0.0: +column_metadata')
+    depends_on('protobuf', when='@3.16.4:')
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
@@ -117,17 +125,23 @@ class Qgis(CMakePackage):
 
     # build
     depends_on('cmake@3.0.0:', type='build')
+    depends_on('cmake@3.10.0:', type='build', when='@3.16:')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
     depends_on('pkgconfig', type='build')
 
     # Take care of conflicts using depends_on
-    depends_on('qt@5.9.0:5.12.99', when='@3.8')
+    depends_on('qt@5.9.0:5.12', when='@3.8')
     depends_on('qt@5.9.0:', when='@3.10.0:')
-    depends_on('qtkeychain@:1.5.99', when='^qt@4')
+    depends_on('qtkeychain@:1.5', when='^qt@4')
     depends_on('qt@:4', when='@2')
+    # Help concretizer
+    # +qsci_api is implied by qscintilla+python dependency
+    depends_on('py-pyqt4 +qsci_api', when='@2')
+    depends_on('py-pyqt5@5.3: +qsci_api', when='@3')
 
-    patch('pyqt5.patch', when='^qt@5')
+    patch('pyqt5.patch', when='@:3.14 ^qt@5')
+    patch('pyqt5_3165x.patch', when='@3.16.5: ^qt@5')
 
     def cmake_args(self):
         spec = self.spec
@@ -144,6 +158,8 @@ class Qgis(CMakePackage):
                     self.spec['qscintilla'].prefix.include,
                     '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
                     '/lib/libqscintilla2_qt5.so',
+                    '-DQSCI_SIP_DIR=' +
+                    self.spec['qscintilla'].prefix.share.sip.PyQt5,
                     '-DLIBZIP_INCLUDE_DIR=' +
                     self.spec['libzip'].prefix.include,
                     '-DLIBZIP_CONF_INCLUDE_DIR=' +
@@ -154,7 +170,10 @@ class Qgis(CMakePackage):
                     self.spec['geos'].prefix.bin,
                     '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
                     '-DPOSTGRES_CONFIG_PREFER_PATH=' +
-                    self.spec['postgresql'].prefix.bin
+                    self.spec['postgresql'].prefix.bin,
+                    '-DPROJ_INCLUDE_DIR=' + self.spec['proj'].headers.directories[0],
+                    '-DSQLITE3_LIBRARY='
+                    + self.spec['sqlite'].libs[0]
                     ])
 
         args.extend([
@@ -184,8 +203,7 @@ class Qgis(CMakePackage):
                 'TRUE' if '+gui' in spec else 'FALSE'),
             '-DWITH_INTERNAL_MDAL={0}'.format(
                 'TRUE' if '+internal_mdal' in spec else 'FALSE'),
-            '-DWITH_INTERNAL_O2={0}'.format(
-                'ON' if '+internal_o2' in spec else 'OFF'),
+            self.define_from_variant('WITH_INTERNAL_O2', 'internal_o2'),
             '-DWITH_OAUTH2_PLUGIN={0}'.format(
                 'TRUE' if '+oauth2_plugin' in spec else 'FALSE'),
             '-DWITH_ORACLE={0}'.format(
@@ -196,14 +214,12 @@ class Qgis(CMakePackage):
                 'TRUE' if '+py_compile' in spec else 'FALSE'),
             '-DWITH_QSCIAPI={0}'.format(
                 'TRUE' if '+qsciapi' in spec else 'FALSE'),
-            '-DWITH_QSPATIALITE={0}'.format(
-                'ON' if '+qspatialite' in spec else 'OFF'),
+            self.define_from_variant('WITH_QSPATIALITE', 'qspatialite'),
             '-DWITH_QT5SERIALPORT={0}'.format(
                 'TRUE' if '+qt5serialport' in spec else 'FALSE'),
             '-DWITH_QTMOBILITY={0}'.format(
                 'TRUE' if '+qtmobility' in spec else 'FALSE'),
-            '-DWITH_QTWEBKIT={0}'.format(
-                'ON' if '+qtwebkit' in spec else 'OFF'),
+            self.define_from_variant('WITH_QTWEBKIT', 'qtwebkit'),
             '-DWITH_QUICK={0}'.format(
                 'TRUE' if '+quick' in spec else 'FALSE'),
             '-DWITH_QWTPOLAR={0}'.format(
@@ -228,3 +244,7 @@ class Qgis(CMakePackage):
         else:
             args.append('-DWITH_GRASS7=OFF')
         return args
+
+    def check(self):
+        """The tests of fail without access to an X server, cant run on build servers"""
+        pass

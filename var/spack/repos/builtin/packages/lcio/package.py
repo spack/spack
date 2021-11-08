@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,14 @@ class Lcio(CMakePackage):
     git      = "https://github.com/iLCSoft/LCIO.git"
     url      = "https://github.com/iLCSoft/LCIO/archive/v02-13-03.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['gaede', 'vvolkl']
 
     version('master', branch='master')
+    version('2.16.1', sha256='992a649f864785e62fe12d7a638b2696c91f9535881de33f22b3cceabcdcdbaf')
+    version('2.16',   sha256='aff7707750d821f31cbae3d7529fd8e22457f48d759e834ec01aa9389b5dbf1a')
+    version('2.15.4', sha256='720c8130762d445df44d2c245da01c0a1ca807d7ed62362cebf7b3a99f9a37d7')
     version('2.15.3', sha256='a00f9e1e8fc98151e88e603bbfca8088ded21ae3daca5c91869628a19af0cefb')
     version('2.15.2', sha256='9886c6f5c275c1c51bde978e4f5514bb4ea9588239f1d3ee95a76ef4b686e69d')
     version('2.15.1', sha256='32921feb162408357d00a81cdd489c374b3ed8ab6f442d798b22835de7243d32')
@@ -39,6 +44,9 @@ class Lcio(CMakePackage):
             description="Turn on to build/install ROOT dictionary.")
     variant("examples", default=False,
             description="Turn on to build LCIO examples")
+
+    depends_on('sio@0.0.2:', when='@2.14:')
+    depends_on('sio@0.1:', when='@2.16:')
 
     depends_on('root@6.04:', when="+rootdict")
     depends_on('openjdk', when="+jar")

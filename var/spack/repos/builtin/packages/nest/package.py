@@ -1,9 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack import *
 
 
@@ -13,22 +12,19 @@ class Nest(CMakePackage):
     It focuses on the dynamics, size and structure of neural systems rather
     than on the exact morphology of individual neurons."""
 
-    homepage = "http://www.nest-simulator.org"
-    url      = "https://github.com/nest/nest-simulator/archive/v2.18.0/v-2.18.0.tar.gz"
+    homepage = "https://www.nest-simulator.org"
+    url      = "https://github.com/nest/nest-simulator/archive/refs/tags/v3.0.tar.gz"
+    git      = "https://github.com/nest/nest-simulator.git"
 
-    version('2.20.0', sha256='40e33187c22d6e843d80095b221fa7fd5ebe4dbc0116765a91fc5c425dd0eca4')
-    version('2.18.0', sha256='7295c936fbdd5486395b06f54f0d4d35d9a1b6ee50b7b844186ec2c92de641d1')
-    version('2.16.0', sha256='abfeb61719dec54da9477be035bef1d9d764f4e7663f63f6a6d9211f967e0490')
-    version('2.14.0', sha256='d6316d6c9153100a3220488abfa738958c4b65bf2622bd15540e4aa81e79f17f')
-    version('2.12.0', sha256='bac578f38bb0621618ee9d5f2f1febfee60cddc000ff32e51a5f5470bb3df40d')
-    version('2.10.0', sha256='2b6fc562cd6362e812d94bb742562a5a685fb1c7e08403765dbe123d59b0996c')
-    version('2.8.0',  sha256='d47325b27a5599b6ea58a3c4ef06656e7c5a4941c4e94dec6a5c2fa956209915')
-    version('2.6.0',  sha256='5fe4924bc57d0c7dd820aa371de935eedf7e813832c0eee2c976b33c9a8db4cf')
-    version('2.4.2',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b')
+    version('master', branch='master')
+    version('3.0', sha256='d481ea67f3251fe3aadf5252ab0a999172f0cd5536c5985366d271d772e686e6')
+    version('2.20.1', sha256='df3d32b5899d5d444f708037b290f889ac6ff8eae6b7be9e9faee2c0d660d8e5')
 
-    variant('python', default=True,
+    maintainers = ['ikitayama']
+
+    variant('python', default=False,
             description='Build the PyNest interface')
-    variant('mpi', default=True,
+    variant('mpi', default=False,
             description='Build with MPI bindings')
     variant('openmp', default=True,
             description='"Enable OpenMP support"')
@@ -42,15 +38,16 @@ class Nest(CMakePackage):
             description="Build shared libraries")
     # TODO add variants for neurosim and music when these are in spack
 
-    conflicts('~gsl', when='@:2.10.99',
+    conflicts('~gsl', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
-    conflicts('~shared', when='@:2.10.99',
+    conflicts('~shared', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
-    conflicts('~openmp', when='@:2.10.99',
+    conflicts('~openmp', when='@:2.10',
               msg='Option only introduced for non-ancient versions.')
 
     depends_on('python@2.6:',       when='+python', type=('build', 'run'))
     depends_on('py-numpy',          when='+python', type=('build', 'run'))
+    depends_on('py-scipy',          when='+python', type=('run'))
     depends_on('py-cython@0.19.2:', when='+python', type='build')
     depends_on('py-nose',           when='+python', type='test')
     depends_on('py-setuptools',     when='+python', type='build')
@@ -67,15 +64,15 @@ class Nest(CMakePackage):
     extends('python', when='+python')
 
     # Before 2.12.0 it was an autotools package
-    @when('@:2.10.99')
+    @when('@:2.10')
     def cmake(self, spec, prefix):
         pass
 
-    @when('@:2.10.99')
+    @when('@:2.10')
     def build(self, spec, prefix):
         pass
 
-    @when('@:2.10.99')
+    @when('@:2.10')
     def install(self, spec, prefix):
         configure_args = ["CXXFLAGS=-std=c++03",
                           "--prefix=" + prefix,
@@ -106,9 +103,8 @@ class Nest(CMakePackage):
         else:
             args.append('-Dwith-mpi=OFF')
 
-        if '+python':
-            version = self.spec['python'].version[0]
-            args.append('-Dwith-python={0}'.format(version))
+        if '+python' in self.spec:
+            args.append('-Dwith-python=ON')
             args.append('-Dcythonize-pynest=' + self.spec['py-cython'].prefix)
         else:
             args.append('-Dwith-python=OFF')
@@ -148,15 +144,8 @@ class Nest(CMakePackage):
 
         for suffix in ["h", "hpp"]:
             for f in find_headers('*.{0}'.format(suffix),
-                                  self.stage.source_path,
-                                  recursive=True):
+                                  self.stage.source_path, recursive=True):
                 install(f, path_headers)
 
     def setup_run_environment(self, env):
         env.set("NEST_INSTALL_DIR", self.spec.prefix)
-        if self.spec.satisfies('+python'):
-            eggs = find(self.prefix, 'PyNEST*egg*')
-            if eggs:
-                site_packages = os.path.dirname(find(self.prefix,
-                                                     'PyNEST*egg*')[0])
-                env.prepend_path('PYTHONPATH', site_packages)

@@ -10,7 +10,7 @@ class PyEcdsa(PythonPackage):
     """ECDSA cryptographic signature library (pure python)"""
 
     homepage = "https://github.com/warner/python-ecdsa"
-    url      = "https://pypi.io/packages/source/e/ecdsa/ecdsa-0.15.tar.gz"
+    pypi = "ecdsa/ecdsa-0.15.tar.gz"
 
     version('0.15',   sha256='8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277')
     version('0.14.1', sha256='64c613005f13efec6541bb0a33290d0d03c27abab5f15fbab20fb0ee162bdd8e')

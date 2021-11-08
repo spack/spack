@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class PyMdanalysis(PythonPackage):
     Gromacs. (See the lists of supported trajectory formats and
     topology formats.)"""
 
-    homepage = "http://www.mdanalysis.org"
-    url      = "https://pypi.io/packages/source/M/MDAnalysis/MDAnalysis-0.19.2.tar.gz"
+    homepage = "https://www.mdanalysis.org"
+    pypi = "MDAnalysis/MDAnalysis-0.19.2.tar.gz"
 
     version('1.0.0',  sha256='f45a024aca45e390ff1c45ca90beb2180b78881be377e2a1aa9cd6c109bcfa81')
     version('0.20.1', sha256='d04b71b193b9716d2597ffb9938b93f43487fa535da1bb5c1f2baccf356d7df9')
@@ -41,7 +41,7 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-six@1.4.0:',    type=('build', 'run'))
     depends_on('py-networkx@1.0:', type=('build', 'run'))
 
-    depends_on('py-gsd@1.4.0:',         when='@1.17.0:', type=('build', 'run'))
+    depends_on('py-gsd@1.4.0:',         when='@0.17.0:', type=('build', 'run'))
     depends_on('py-mmtf-python@1.0.0:', when='@0.16.0:', type=('build', 'run'))
     depends_on('py-mock',               when='@0.18.0:', type=('build', 'run'))
     depends_on('py-tqdm@4.43.0:',       when='@1.0.0:',  type=('build', 'run'))

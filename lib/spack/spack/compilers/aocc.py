@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import sys
 import llnl.util.lang
 
 from spack.compiler import Compiler
+from spack.version import ver
 
 
 class Aocc(Compiler):
@@ -23,6 +24,9 @@ class Aocc(Compiler):
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['flang']
+
+    PrgEnv = 'PrgEnv-aocc'
+    PrgEnv_compiler = 'aocc'
 
     version_argument = '--version'
 
@@ -94,15 +98,12 @@ class Aocc(Compiler):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        loc_ver = 'unknown'
-
         match = re.search(
-            r'AMD clang version ([^ )]+)',
+            r'AOCC_(\d+)[._](\d+)[._](\d+)',
             output
         )
         if match:
-            loc_ver = output.split('AOCC_')[1].split('-')[0]
-        return loc_ver
+            return '.'.join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):
@@ -114,3 +115,26 @@ class Aocc(Compiler):
     @classmethod
     def f77_version(cls, f77):
         return cls.fc_version(f77)
+
+    @property
+    def stdcxx_libs(self):
+        return ('-lstdc++', )
+
+    @property
+    def cflags(self):
+        return self._handle_default_flag_addtions()
+
+    @property
+    def cxxflags(self):
+        return self._handle_default_flag_addtions()
+
+    @property
+    def fflags(self):
+        return self._handle_default_flag_addtions()
+
+    def _handle_default_flag_addtions(self):
+        # This is a known issue for AOCC 3.0 see:
+        # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
+        if self.real_version == ver('3.0.0'):
+            return ("-Wno-unused-command-line-argument "
+                    "-mllvm -eliminate-similar-expr=false")

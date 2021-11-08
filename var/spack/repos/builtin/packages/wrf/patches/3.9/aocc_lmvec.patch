@@ -1,0 +1,130 @@
+diff --git a/configure.wrf b/configure_libm.wrf
+index b0e306c..41a6cba 100644
+--- a/configure.wrf
++++ b/configure_libm.wrf
+@@ -263,56 +263,56 @@ wrfio_nf :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \
+           make $(J) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+           CC="$(SCC)" CFLAGS="$(CFLAGS)" \
+-          FC="$(SFC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
++          FC="$(SFC) $(PROMOTION) $(OMP) $(LIBMVEC) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_pnf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_pnetcdf ; \
+           make $(J) NETCDFPATH="$(PNETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
+-          FC="$(FC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
++          FC="$(FC) $(PROMOTION) $(OMP) $(LIBMVEC) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_grib_share :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_grib_share ; \
+           make $(J) CC="$(SCC)" CFLAGS="$(CFLAGS)" RM="$(RM)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+-          FC="$(SFC) $(PROMOTION) -I. $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" archive) 
++          FC="$(SFC) $(PROMOTION) -I. $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" archive) 
+ 
+ wrfio_grib1 :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_grib1 ; \
+           make $(J) CC="$(SCC)" CFLAGS="$(CFLAGS)" RM="$(RM)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+-          FC="$(SFC) $(PROMOTION) -I. $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" archive)
++          FC="$(SFC) $(PROMOTION) -I. $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" archive)
+ 
+ wrfio_grib2 :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_grib2 ; \
+           make $(J) CC="$(SCC)" CFLAGS="$(CFLAGS) " RM="$(RM)" RANLIB="$(RANLIB)" \
+           CPP="$(CPP)" \
+-          FC="$(SFC) $(PROMOTION) -I. $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="-traditional" AR="$(AR)" ARFLAGS="$(ARFLAGS)" \
++          FC="$(SFC) $(PROMOTION) -I. $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="-traditional" AR="$(AR)" ARFLAGS="$(ARFLAGS)" \
+           FIXED="$(FORMAT_FIXED)" archive)
+ 
+ wrfio_int : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_int ; \
+           make $(J) CC="$(CC)" CFLAGS_LOCAL="$(CFLAGS_LOCAL)" RM="$(RM)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+-          FC="$(FC) $(PROMOTION) $(FCDEBUG) $(FCBASEOPTS) $(OMP)" FGREP="$(FGREP)" \
++          FC="$(FC) $(PROMOTION) $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(OMP)" FGREP="$(FGREP)" \
+           TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" ARCHFLAGS="$(ARCHFLAGS)" all )
+ 
+ esmf_time : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/esmf_time_f90 ; \
+-          make $(J) FC="$(SFC) $(PROMOTION) $(FCDEBUG) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
++          make $(J) FC="$(SFC) $(PROMOTION) $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS)" RANLIB="$(RANLIB)" \
+           CPP="$(CPP) -I$(WRF_SRC_ROOT_DIR)/inc -I. $(ARCHFLAGS) $(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ fftpack :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/fftpack/fftpack5 ; \
+-          make $(J) FC="$(SFC)" FFLAGS="$(PROMOTION) $(FCDEBUG) $(FCBASEOPTS)" RANLIB="$(RANLIB)" AR="$(AR)" \
++          make $(J) FC="$(SFC)" FFLAGS="$(PROMOTION) $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS)" RANLIB="$(RANLIB)" AR="$(AR)" \
+           ARFLAGS="$(ARFLAGS)" CPP="$(CPP)" CPPFLAGS="$(CPPFLAGS)" RM="$(RM)" )
+ 
+ atm_ocn :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/atm_ocn ; \
+           make $(J) CC="$(SCC)" CFLAGS="$(CFLAGS) " RM="$(RM)" RANLIB="$(RANLIB)" \
+           CPP="$(CPP)" CPPFLAGS="$(CPPFLAGS)" \
+-          FC="$(DM_FC) $(PROMOTION) -I. $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="-traditional" AR="$(AR)" ARFLAGS="$(ARFLAGS)" \
++          FC="$(DM_FC) $(PROMOTION) -I. $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(FCSUFFIX)" TRADFLAG="-traditional" AR="$(AR)" ARFLAGS="$(ARFLAGS)" \
+           FIXED="$(FORMAT_FIXED)" )
+ 
+ $(WRF_SRC_ROOT_DIR)/external/RSL_LITE/librsl_lite.a :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/RSL_LITE ; make $(J) CC="$(CC) $(CFLAGS)" \
+-          FC="$(FC) $(FCFLAGS) $(OMP) $(PROMOTION) $(BYTESWAPIO)" \
++          FC="$(FC) $(FCFLAGS) $(LIBMVEC) $(OMP) $(PROMOTION) $(BYTESWAPIO)" \
+           CPP="$(CPP) -I. $(ARCHFLAGS) $(OMPCPP) $(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" ;\
+           $(RANLIB) $(WRF_SRC_ROOT_DIR)/external/RSL_LITE/librsl_lite.a )
+ 
+@@ -332,7 +332,7 @@ wrf_ioapi_includes :
+ 
+ wrfio_esmf :
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_esmf ; \
+-          make FC="$(FC) $(PROMOTION) $(FCDEBUG) $(FCBASEOPTS) $(ESMF_MOD_INC)" \
++          make FC="$(FC) $(PROMOTION) $(LIBMVEC) $(FCDEBUG) $(FCBASEOPTS) $(ESMF_MOD_INC)" \
+           RANLIB="$(RANLIB)" CPP="$(CPP) $(POUND_DEF) " AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ #	There is probably no reason to modify these rules
+@@ -357,7 +357,7 @@ wrfio_esmf :
+           $(WRF_SRC_ROOT_DIR)/var/build/da_name_space.pl $*.f90 > $*.f90.tmp ; \
+           mv $*.f90.tmp $*.f90 ; \
+         fi
+-	$(FC) -o $@ -c $(FCFLAGS) $(OMP) $(MODULE_DIRS) $(PROMOTION) $(FCSUFFIX) $*.f90
++	$(FC) -o $@ -c $(FCFLAGS) $(LIBMVEC) $(OMP) $(MODULE_DIRS) $(PROMOTION) $(FCSUFFIX) $*.f90
+         
+ 
+ .F.f90:
+@@ -370,7 +370,7 @@ wrfio_esmf :
+ 
+ .f90.o:
+ 	$(RM) $@
+-	$(FC) -o $@ -c $(FCFLAGS) $(PROMOTION) $(FCSUFFIX) $*.f90
++	$(FC) -o $@ -c $(FCFLAGS) $(LIBMVEC) $(PROMOTION) $(FCSUFFIX) $*.f90
+ 
+ setfeenv.o : setfeenv.c
+ 	$(RM) $@
+@@ -474,10 +474,10 @@ wrf_tsin.o :
+         fi
+ 	if $(FGREP) '!$$OMP' $*.f90 ; then \
+           if [ -n "$(OMP)" ] ; then echo COMPILING $*.F WITH OMP ; fi ; \
+-	  $(FC) -c $(PROMOTION) $(FCNOOPT) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $(OMP) $*.f90 ; \
++	  $(FC) -c $(PROMOTION) $(FCNOOPT) $(LIBMVEC) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $(OMP) $*.f90 ; \
+         else \
+           if [ -n "$(OMP)" ] ; then echo COMPILING $*.F WITHOUT OMP ; fi ; \
+-	  $(FC) -c $(PROMOTION) $(FCNOOPT) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $*.f90 ; \
++	  $(FC) -c $(PROMOTION) $(FCNOOPT) $(LIBMVEC) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $*.f90 ; \
+         fi
+ 
+ #solve_em.o :
+@@ -497,10 +497,10 @@ module_sf_ruclsm.o :
+ 	if $(FGREP) '!$$OMP' $*.f90 ; then \
+           echo COMPILING $*.F WITH OMP ; \
+           if [ -n "$(OMP)" ] ; then echo COMPILING $*.F WITH OMP ; fi ; \
+-	  $(FC) -c $(PROMOTION) $(FCREDUCEDOPT) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $(OMP) $*.f90 ; \
++	  $(FC) -c $(PROMOTION) $(FCREDUCEDOPT) $(LIBMVEC) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $(OMP) $*.f90 ; \
+         else \
+           if [ -n "$(OMP)" ] ; then echo COMPILING $*.F WITHOUT OMP ; fi ; \
+-	  $(FC) -c $(PROMOTION) $(FCREDUCEDOPT) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $*.f90 ; \
++	  $(FC) -c $(PROMOTION) $(FCREDUCEDOPT) $(LIBMVEC) $(FCBASEOPTS) $(MODULE_DIRS) $(FCSUFFIX) $*.f90 ; \
+         fi
+ 
+ # compile without OMP
+@@ -547,4 +547,4 @@ module_configure.o :
+           mv $*.f90.tmp $*.f90 ; \
+         fi
+ 	$(RM) $*.b $*.bb
+-	$(FC) -c $(PROMOTION) $(FCSUFFIX) $(FCNOOPT) $(FCBASEOPTS) $(MODULE_DIRS) $*.f90
++	$(FC) -c $(PROMOTION) $(FCSUFFIX) $(LIBMVEC) $(FCNOOPT) $(FCBASEOPTS) $(MODULE_DIRS) $*.f90

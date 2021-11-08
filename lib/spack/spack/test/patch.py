@@ -1,22 +1,24 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import filecmp
-import pytest
 import collections
+import filecmp
+import os
 
-from llnl.util.filesystem import working_dir, mkdirp
+import pytest
+
+from llnl.util.filesystem import mkdirp, working_dir
 
 import spack.patch
 import spack.paths
 import spack.repo
 import spack.util.compression
-from spack.util.executable import Executable
-from spack.stage import Stage
+import spack.util.crypto
 from spack.spec import Spec
+from spack.stage import DIYStage, Stage
+from spack.util.executable import Executable
 
 # various sha256 sums (using variables for legibility)
 
@@ -30,6 +32,43 @@ biz_sha256 = 'a69b288d7393261e613c276c6d38a01461028291f6e381623acc58139d01f54d'
 url1_sha256 = 'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
 url2_sha256 = '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd'
 url2_archive_sha256 = 'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd'
+
+
+# some simple files for patch tests
+file_to_patch = """\
+first line
+second line
+"""
+
+patch_file = """\
+diff a/foo.txt b/foo-expected.txt
+--- a/foo.txt
++++ b/foo-expected.txt
+@@ -1,2 +1,3 @@
++zeroth line
+ first line
+-second line
++third line
+"""
+
+expected_patch_result = """\
+zeroth line
+first line
+third line
+"""
+
+file_patch_cant_apply_to = """\
+this file
+is completely different
+from anything in the files
+or patch above
+"""
+
+
+def write_file(filename, contents):
+    """Helper function for setting up tests."""
+    with open(filename, 'w') as f:
+        f.write(contents)
 
 
 @pytest.fixture()
@@ -66,19 +105,9 @@ def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256):
 
         mkdirp(stage.source_path)
         with working_dir(stage.source_path):
-            # write a file to be patched
-            with open('foo.txt', 'w') as f:
-                f.write("""\
-first line
-second line
-""")
-            # write the expected result of patching.
-            with open('foo-expected.txt', 'w') as f:
-                f.write("""\
-zeroth line
-first line
-third line
-""")
+            write_file("foo.txt", file_to_patch)
+            write_file("foo-expected.txt", expected_patch_result)
+
         # apply the patch and compare files
         patch.fetch()
         patch.apply(stage)
@@ -86,6 +115,47 @@ third line
 
         with working_dir(stage.source_path):
             assert filecmp.cmp('foo.txt', 'foo-expected.txt')
+
+
+def test_apply_patch_twice(mock_patch_stage, tmpdir):
+    """Ensure that patch doesn't fail if applied twice."""
+
+    stage = DIYStage(str(tmpdir))
+    with tmpdir.as_cwd():
+        write_file("foo.txt", file_to_patch)
+        write_file("foo-expected.txt", expected_patch_result)
+        write_file("foo.patch", patch_file)
+
+    FakePackage = collections.namedtuple(
+        'FakePackage', ['name', 'namespace', 'fullname'])
+    fake_pkg = FakePackage('fake-package', 'test', 'fake-package')
+
+    def make_patch(filename):
+        path = os.path.realpath(str(tmpdir.join(filename)))
+        url = 'file://' + path
+        sha256 = spack.util.crypto.checksum("sha256", path)
+        return spack.patch.UrlPatch(fake_pkg, url, sha256=sha256)
+
+    # apply the first time
+    patch = make_patch('foo.patch')
+    patch.fetch()
+
+    patch.apply(stage)
+    with working_dir(stage.source_path):
+        assert filecmp.cmp('foo.txt', 'foo-expected.txt')
+
+    # ensure apply() is idempotent
+    patch.apply(stage)
+    with working_dir(stage.source_path):
+        assert filecmp.cmp('foo.txt', 'foo-expected.txt')
+
+    # now write a file that can't be patched
+    with working_dir(stage.source_path):
+        write_file("foo.txt", file_patch_cant_apply_to)
+
+    # this application should fail with a real error
+    with pytest.raises(spack.util.executable.ProcessError):
+        patch.apply(stage)
 
 
 def test_patch_in_spec(mock_packages, config):
@@ -124,9 +194,9 @@ def test_patch_order(mock_packages, config):
     spec = Spec('dep-diamond-patch-top')
     spec.concretize()
 
-    mid2_sha256 = 'mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'  # noqa: E501
-    mid1_sha256 = '0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094'  # noqa: E501
-    top_sha256 = 'f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db'  # noqa: E501
+    mid2_sha256 = 'mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'
+    mid1_sha256 = '0b62284961dab49887e31319843431ee5b037382ac02c4fe436955abef11f094'
+    top_sha256 = 'f7de2947c64cb6435e15fb2bef359d1ed5f6356b2aebb7b20535e3772904e6db'
 
     dep = spec['patch']
     patch_order = dep.variants['patches']._patches_in_order_of_appearance
@@ -328,9 +398,25 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
         spec.package.package_dir)
 
 
-def test_file_patch_no_file():
+def test_patch_no_file():
+    # Give it the attributes we need to construct the error message
+    FakePackage = collections.namedtuple(
+        'FakePackage', ['name', 'namespace', 'fullname'])
+    fp = FakePackage('fake-package', 'test', 'fake-package')
+    with pytest.raises(ValueError, match='FilePatch:'):
+        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')
+
+    patch = spack.patch.Patch(fp, 'nonexistent_file', 0, '')
+    patch.path = 'test'
+    with pytest.raises(spack.patch.NoSuchPatchError, match='No such patch:'):
+        patch.apply('')
+
+
+@pytest.mark.parametrize('level', [-1, 0.0, '1'])
+def test_invalid_level(level):
     # Give it the attributes we need to construct the error message
     FakePackage = collections.namedtuple('FakePackage', ['name', 'namespace'])
     fp = FakePackage('fake-package', 'test')
-    with pytest.raises(ValueError, match=r'FilePatch:.*'):
-        spack.patch.FilePatch(fp, 'nonexistent_file', 0, '')
+    with pytest.raises(ValueError,
+                       match='Patch level needs to be a non-negative integer.'):
+        spack.patch.Patch(fp, 'nonexistent_file', level, '')

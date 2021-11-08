@@ -1,12 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import sys
+
 from spack import *
 from spack.util.environment import is_system_path
-import sys
 
 
 class Root(CMakePackage):
@@ -14,21 +15,30 @@ class Root(CMakePackage):
 
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
+    git      = "https://github.com/root-project/root.git"
+
+    executables = ['^root$', '^root-config$']
+
+    tags = ['hep']
 
     maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
 
     # ###################### Versions ##########################
 
     # Master branch
-    version('master', git="https://github.com/root-project/root.git",
-            branch='master')
+    version('master', branch='master')
 
     # Development version (when more recent than production).
 
     # Production version
+    version('6.24.06', sha256='907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522')
+    version('6.24.02', sha256='0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c')
+    version('6.24.00', sha256='9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989')
+    version('6.22.08', sha256='6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f')
+    version('6.22.06', sha256='c4688784a7e946cd10b311040b6cf0b2f75125a7520e04d1af0b746505911b57')
+    version('6.22.02', sha256='89784afa9c9047e9da25afa72a724f32fa8aa646df267b7731e4527cc8a0c340')
     version('6.22.00', sha256='efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed')
-    version('6.20.08', sha256='d02f224b4908c814a99648782b927c353d44db79dea2cadea86138c1afc23ae9',
-            preferred=True)
+    version('6.20.08', sha256='d02f224b4908c814a99648782b927c353d44db79dea2cadea86138c1afc23ae9')
     version('6.20.06', sha256='9a734758a91598d8a58a3d64d7d606aeb17bdf6fd8214e33f5c4d9947d391951')
     version('6.20.04', sha256='1f8c76ccdb550e64e6ddb092b4a7e9d0a10655ef80044828cba12d5e7c874472')
     version('6.20.02', sha256='0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6')
@@ -64,7 +74,7 @@ class Root(CMakePackage):
     # Some ROOT versions did not honor the option to avoid building an
     # internal version of unuran, _cf_
     # https://github.com/root-project/ROOT/commit/3e60764f133218b6938e5aa4986de760e8f058d9.
-    patch('honor-unuran-switch.patch', level=1, when='@6.08.06:6.13.99')
+    patch('honor-unuran-switch.patch', level=1, when='@6.08.06:6.13')
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch('root7-webgui.patch', level=1, when='@6.16.00')
@@ -85,6 +95,8 @@ class Root(CMakePackage):
             description='Enable Aqua interface')
     variant('davix', default=True,
             description='Compile with external Davix')
+    variant('dcache', default=False,
+            description='Enable support for dCache')
     variant('emacs', default=False,
             description='Enable Emacs support')
     variant('examples', default=True,
@@ -122,6 +134,8 @@ class Root(CMakePackage):
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
+    variant('oracle', default=False,
+            description='Enable support for Oracle databases')
     variant('postgres', default=False,
             description='Enable postgres support')
     variant('pythia6', default=False,
@@ -136,12 +150,14 @@ class Root(CMakePackage):
             description='Enable R ROOT bindings')
     variant('rpath', default=True,
             description='Enable RPATH')
-    variant('rootfit', default=True,
+    variant('roofit', default=True,
             description='Build the libRooFit advanced fitting package')
     variant('root7', default=False,
             description='Enable ROOT 7 support')
     variant('shadow', default=False,
             description='Enable shadow password support')
+    variant('spectrum', default=False,
+            description='Enable support for TSpectrum')
     variant('sqlite', default=False,
             description='Enable SQLite support')
     variant('ssl', default=False,
@@ -160,6 +176,8 @@ class Root(CMakePackage):
             description='Enable Vc for adding new types for SIMD programming')
     variant('vdt', default=True,
             description='Enable set of fast and vectorisable math functions')
+    variant('veccore', default=False,
+            description='Enable support for VecCore SIMD abstraction library')
     variant('vmc', default=False,
             description='Enable the Virtual Monte Carlo interface')
     variant('x', default=True,
@@ -179,7 +197,7 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ######################
 
-    depends_on('cmake@3.4.3:', type='build', when='@:6.16.99')
+    depends_on('cmake@3.4.3:', type='build', when='@:6.16')
     depends_on('cmake@3.9:', type='build', when='@6.18.00:')
     depends_on('pkgconfig', type='build')
 
@@ -190,6 +208,7 @@ class Root(CMakePackage):
     depends_on('libpng')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
     depends_on('ncurses')
+    depends_on('nlohmann-json', when='@6.24:')
     depends_on('pcre')
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
@@ -211,7 +230,7 @@ class Root(CMakePackage):
     depends_on('gl2ps', when="+x+opengl")
 
     # Qt4
-    depends_on('qt@:4.999', when='+qt4')
+    depends_on('qt@:4', when='+qt4')
 
     # Python
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
@@ -224,6 +243,7 @@ class Root(CMakePackage):
 
     # Optional dependencies
     depends_on('davix @0.7.1:', when='+davix')
+    depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
@@ -232,6 +252,7 @@ class Root(CMakePackage):
     depends_on('mysql-client',   when='+mysql')
     depends_on('openssl',   when='+ssl')
     depends_on('openssl',   when='+davix')  # Also with davix
+    depends_on('oracle-instant-client@19.10.0.0.0', when='+oracle @:6.24.01')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
@@ -242,11 +263,19 @@ class Root(CMakePackage):
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
+    # See: https://github.com/root-project/root/issues/6933
+    conflicts('^intel-tbb@2021.1:', when='@:6.22',
+              msg='Please use an older intel-tbb version')
+    conflicts('^intel-oneapi-tbb@2021.1:', when='@:6.22',
+              msg='Please use an older intel-tbb/intel-oneapi-tbb version')
+    # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on('unuran',    when='+unuran')
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')
+    depends_on('veccore',   when='+veccore')
     depends_on('libxml2',   when='+xml')
-    depends_on('xrootd@:4.99.99',    when='+xrootd')
+    depends_on('xrootd',          when='+xrootd')
+    depends_on('xrootd@:4', when='@:6.22.03 +xrootd')
 
     # ###################### Conflicts ######################
 
@@ -255,14 +284,14 @@ class Root(CMakePackage):
     conflicts('%intel')
 
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
-    conflicts('%gcc@5.0.0:', when='@:6.07.99')
+    conflicts('%gcc@5.0.0:', when='@:6.07')
 
     # The version of Clang featured in ROOT <6.12 fails to build with
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
-    conflicts('%gcc@9.0.0:', when='@:6.11.99')
+    conflicts('%gcc@9.0.0:', when='@:6.11')
 
     # ROOT <6.14 was incompatible with Python 3.7+
-    conflicts('^python@3.7:', when='@:6.13.99 +python')
+    conflicts('^python@3.7:', when='@:6.13 +python')
 
     # See README.md
     conflicts('+http',
@@ -278,6 +307,98 @@ class Root(CMakePackage):
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # no need to check the root executable itself
+            # we can get all information from root-config
+            if exe.endswith('root'):
+                continue
+            result.append(exe)
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # turn the output of root-config --version
+        # (something like 6.22/06)
+        # into the format used in this recipe (6.22.06)
+        return output.strip().replace('/', '.')
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        v = []  # list of determined variants
+        # there is a fairly direct mapping between build options ( which
+        # root-config helpfully outputs) and variants
+        output = Executable(exes[0])('--features', output=str, error=str)
+        f = set(output.strip().split())  # features as reported by root-config
+        # only multivalued variant: cxxstd
+        if "cxx11" in f:
+            v.append("cxxstd=11")
+        elif "cxx14" in f:
+            v.append("cxxstd=14")
+        elif "cxx17" in f:
+            v.append("cxxstd=17")
+
+        # helper function: check if featurename is in features, and if it is,
+        # append variantname to variants. featurename may be a list/tuple, in
+        # which case the variant is only added if all of them are present
+        def _add_variant(variants, features, featurename, variantname):
+            if isinstance(featurename, str):
+                if featurename in features:
+                    variants.append('%s' % variantname)
+                else:
+                    variants.append('~%s' % variantname[1:])
+            else:
+                if set(featurename).issubset(features):
+                    variants.append('%s' % variantname)
+                else:
+                    variants.append('~%s' % variantname[1:])
+
+        _add_variant(v, f, 'cocoa', '+aqua')
+        _add_variant(v, f, 'davix', '+davix')
+        _add_variant(v, f, 'dcache', '+dcache')
+        _add_variant(v, f, 'fftw3', '+fftw')
+        _add_variant(v, f, 'fitsio', '+fits')
+        _add_variant(v, f, ('ftgl', 'opengl'), '+opengl')
+        _add_variant(v, f, 'gdml', '+gdml')
+        _add_variant(v, f, 'mathmore', '+math')
+        _add_variant(v, f, 'gviz', '+graphviz')
+        _add_variant(v, f, 'http', '+http')
+        _add_variant(v, f, ('imt', 'tbb'), '+tbb')
+        _add_variant(v, f, 'jemalloc', '+jemalloc')
+        _add_variant(v, f, 'memstat', '+memstat')
+        _add_variant(v, f, ('minuit', 'minuit2'), '+minuit')
+        _add_variant(v, f, 'mlp', '+mlp')
+        _add_variant(v, f, 'mysql', '+mysql')
+        _add_variant(v, f, 'oracle', '+oracle')
+        _add_variant(v, f, 'pgsql', '+postgres')
+        _add_variant(v, f, 'pythia6', '+pythia6')
+        _add_variant(v, f, 'pythia8', '+pythia8')
+        _add_variant(v, f, 'pyroot', '+python')
+        _add_variant(v, f, ('qt', 'qtgsi'), '+qt4')
+        _add_variant(v, f, 'r', '+r')
+        _add_variant(v, f, 'roofit', '+roofit')
+        _add_variant(v, f, ('root7', 'webui'), '+root7')
+        _add_variant(v, f, 'rpath', '+rpath')
+        _add_variant(v, f, 'shadowpw', '+shadow')
+        _add_variant(v, f, 'spectrum', '+spectrum')
+        _add_variant(v, f, 'sqlite', '+sqlite')
+        _add_variant(v, f, 'ssl', '+ssl')
+        _add_variant(v, f, 'table', '+table')
+        _add_variant(v, f, 'thread', '+threads')
+        _add_variant(v, f, 'tmva', '+tmva')
+        _add_variant(v, f, 'unuran', '+unuran')
+        _add_variant(v, f, 'vc', '+vc')
+        _add_variant(v, f, 'vdt', '+vdt')
+        _add_variant(v, f, 'veccore', '+veccore')
+        _add_variant(v, f, 'vmc', '+vmc')
+        _add_variant(v, f, ('x11', 'xft'), '+x')
+        _add_variant(v, f, 'xml', '+xml')
+        _add_variant(v, f, 'xrootd', '+xrootd')
+        return " ".join(v)
 
     def cmake_args(self):
         spec = self.spec
@@ -305,13 +426,16 @@ class Root(CMakePackage):
             define('shared', True),
             define('soversion', True),
             define('testing', self.run_tests),
-            define_from_variant('thread', 'threads')
+            define_from_variant('thread', 'threads'),
+            # The following option makes sure that Cling will call the compiler
+            # it was compiled with at run time; see #17488, #18078 and #23886
+            define('CLING_CXX_PATH', self.compiler.cxx),
         ]
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
         options += [
-            define('builtin_afterimage', True),
+            define_from_variant('builtin_afterimage', 'x'),
             define('builtin_cfitsio', False),
             define('builtin_davix', False),
             define('builtin_fftw3', False),
@@ -321,8 +445,9 @@ class Root(CMakePackage):
             define('builtin_glew', False),
             define('builtin_gsl', False),
             define('builtin_llvm', True),
-            define('builtin_lz4', self.spec.satisfies('@6.12.02:6.12.99')),
+            define('builtin_lz4', self.spec.satisfies('@6.12.02:6.12')),
             define('builtin_lzma', False),
+            define('builtin_nlohmannjson', False),
             define('builtin_openssl', False),
             define('builtin_pcre', False),
             define('builtin_tbb', False),
@@ -331,7 +456,7 @@ class Root(CMakePackage):
             define('builtin_vdt', False),
             define('builtin_veccore', False),
             define('builtin_xrootd', False),
-            define('builtin_xxhash', self.spec.satisfies('@6.12.02:6.12.99')),
+            define('builtin_xxhash', self.spec.satisfies('@6.12.02:6.12')),
             define('builtin_zlib', False)
         ]
 
@@ -351,7 +476,7 @@ class Root(CMakePackage):
             define_from_variant('cocoa', 'aqua'),
             define('dataframe', True),
             define_from_variant('davix'),
-            define('dcache', False),
+            define_from_variant('dcache'),
             define_from_variant('fftw3', 'fftw'),
             define_from_variant('fitsio', 'fits'),
             define_from_variant('ftgl', 'opengl'),
@@ -380,7 +505,7 @@ class Root(CMakePackage):
             define_from_variant('mysql'),
             define('odbc', False),
             define_from_variant('opengl'),
-            define('oracle', False),
+            define_from_variant('oracle'),
             define_from_variant('pgsql', 'postgres'),
             define_from_variant('pythia6'),
             define_from_variant('pythia8'),
@@ -388,11 +513,12 @@ class Root(CMakePackage):
             define_from_variant('qtgsi', 'qt4'),  # See conflicts
             define_from_variant('r'),
             define('rfio', False),
-            define('roofit', False),
+            define_from_variant('roofit'),
             define_from_variant('root7'),  # See conflicts
             define('ruby', False),
             define('sapdb', False),
             define_from_variant('shadowpw', 'shadow'),
+            define_from_variant('spectrum'),
             define_from_variant('sqlite'),
             define('srp', False),
             define_from_variant('ssl'),
@@ -403,7 +529,7 @@ class Root(CMakePackage):
             define_from_variant('unuran'),
             define_from_variant('vc'),
             define_from_variant('vdt'),
-            define('veccore', False),
+            define_from_variant('veccore'),
             define_from_variant('vmc'),
             define_from_variant('webui', 'root7'),  # requires root7
             define_from_variant('x11', 'x'),
@@ -413,7 +539,7 @@ class Root(CMakePackage):
         ]
 
         # Some special features
-        if self.spec.satisfies('@6.20:'):
+        if self.spec.satisfies('@6.20.02:'):
             options.append(define_from_variant('pyroot', 'python'))
         else:
             options.append(define_from_variant('python'))
@@ -468,10 +594,10 @@ class Root(CMakePackage):
                 env.append_path('SPACK_INCLUDE_DIRS', include_path)
 
         # With that done, let's go fixing those deps
-        if spec.satisfies('@:6.12.99'):
+        if spec.satisfies('@:6.12'):
             add_include_path('zlib')
         if '+x' in spec:
-            if spec.satisfies('@:6.08.99') or spec.satisfies('@6.22:'):
+            if spec.satisfies('@:6.08') or spec.satisfies('@6.22:'):
                 add_include_path('xextproto')
             add_include_path('fontconfig')
             add_include_path('libx11')
@@ -491,6 +617,7 @@ class Root(CMakePackage):
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', self.prefix.cmake)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
 
@@ -499,5 +626,6 @@ class Root(CMakePackage):
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
         env.prepend_path('PYTHONPATH', self.prefix.lib)
         env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)

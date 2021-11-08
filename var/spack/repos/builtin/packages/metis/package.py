@@ -1,12 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
-import sys
 import os
+import sys
+
+from spack import *
 
 
 class Metis(Package):
@@ -16,19 +17,12 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    #
-    # The original metis website: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
-    # is down sometimes. This is a github mirror that provides metis 5.1.0
-    #
-
-    homepage = "https://github.com/scivision/METIS/"
-    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
+    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
-    # For v4.0.3, use the original metis website since this version is not
-    # mirrored at the above github location.
-    version('4.0.3', url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-4.0.3.tar.gz',
-            sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
+    version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -44,11 +38,11 @@ class Metis(Package):
 
     # Prior to version 5, the (non-cmake) build system only knows about
     # 'build_type=Debug|Release'.
-    conflicts('@:4.999', when='build_type=RelWithDebInfo')
-    conflicts('@:4.999', when='build_type=MinSizeRel')
-    conflicts('@:4.999', when='+gdb')
-    conflicts('@:4.999', when='+int64')
-    conflicts('@:4.999', when='+real64')
+    conflicts('@:4', when='build_type=RelWithDebInfo')
+    conflicts('@:4', when='build_type=MinSizeRel')
+    conflicts('@:4', when='+gdb')
+    conflicts('@:4', when='+int64')
+    conflicts('@:4', when='+real64')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
@@ -59,6 +53,17 @@ class Metis(Package):
         # Ignore warnings/errors re unrecognized omp pragmas on %intel
         if '%intel@14:' in self.spec:
             env.append_flags('CFLAGS', '-diag-disable 3180')
+        # Ignore some warnings to get it to compile with %nvhpc
+        #   111: statement is unreachable
+        #   177: variable "foo" was declared but never referenced
+        #   188: enumerated type mixed with another type
+        #   550: variable "foo" was set but never used
+        if '%nvhpc' in self.spec:
+            env.append_flags('CFLAGS', '--display_error_number')
+            env.append_flags('CFLAGS', '--diag_suppress 111')
+            env.append_flags('CFLAGS', '--diag_suppress 177')
+            env.append_flags('CFLAGS', '--diag_suppress 188')
+            env.append_flags('CFLAGS', '--diag_suppress 550')
 
     @when('@5:')
     def patch(self):

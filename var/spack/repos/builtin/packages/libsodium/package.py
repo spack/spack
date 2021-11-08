@@ -1,7 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
+import llnl.util.tty as tty
 
 from spack import *
 
@@ -26,8 +30,19 @@ class Libsodium(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'https://download.libsodium.org/libsodium/releases/'
-        if version < Version('1.0.4'):
+        if version < Version('1.0.16'):
             url += 'old/unsupported/'
-        elif version < Version('1.0.16'):
+        elif version < Version('1.0.17'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
+
+    def patch(self):
+        # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
+        # to check if they work (see lib/spack/spack/build_systems/autotools.py).
+        try:
+            os.chmod("build-aux/config.guess", 0o755)
+            os.chmod("build-aux/config.sub", 0o755)
+        except OSError:
+            # Old versions of libsodium don't have these files.
+            tty.debug("Couldn't chmod config.guess or config.sub: file not found")
+            pass

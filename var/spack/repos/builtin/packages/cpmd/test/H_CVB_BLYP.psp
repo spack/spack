@@ -1,0 +1,28 @@
+&ATOM
+ Z  =    1 
+ ZV =    1 
+ XC = 1312        .666667
+ TYPE = NORMCONSERVING CAR
+&END
+&INFO
+    ============================================================
+    |  hydrogen pseudopotential with                           |
+    |  Exchange-Correlation Functional :                       |
+    |     Slater exchange :   .6667                            |
+    |     LDA correlation : Lee-Yang-Parr                      |
+    |     Exchange GC     : Becke (1988)                       |
+    |     Correlation GC  : Lee-Yang-Parr                      |
+    |  Von Barth-Car normconserving PP after P. Giannozzi      |
+    |  ALPHA(CORE):     .25                                    | 
+    |     .2829559     -1.961599       .4051810                | 
+    |  Note this is the PP used by Michiel Sprik               |
+    ============================================================
+&END
+&POTENTIAL
+    CAR
+              0.25000
+    0.2829559  -1.9615990  0.405181
+    0.2829559  -1.9615990  0.405181
+    0.2829559  -1.9615990  0.405181
+&END
+

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,8 +91,5 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+        return find_libraries(
+            'libGL', self.prefix, shared=True, recursive=True)

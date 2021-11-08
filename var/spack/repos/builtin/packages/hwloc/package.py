@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Hwloc(AutotoolsPackage):
     efficiently.
     """
 
-    homepage = "http://www.open-mpi.org/projects/hwloc/"
+    homepage = "https://www.open-mpi.org/projects/hwloc/"
     url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
@@ -30,11 +30,18 @@ class Hwloc(AutotoolsPackage):
     maintainers = ['bgoglin']
 
     version('master', branch='master')
+    version('2.6.0', sha256='9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f')
+    version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
+    version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
+    version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
+    version('2.3.0', sha256='155480620c98b43ddf9ca66a6c318b363ca24acb5ff0683af9d25d9324f59836')
     version('2.2.0', sha256='2defba03ddd91761b858cbbdc2e3a6e27b44e94696dbfa21380191328485a433')
     version('2.1.0',  sha256='1fb8cc1438de548e16ec3bb9e4b2abb9f7ce5656f71c0906583819fcfa8c2031')
     version('2.0.2',  sha256='27dcfe42e3fb3422b72ce48b48bf601c0a3e46e850ee72d9bdd17b5863b6e42c')
     version('2.0.1',  sha256='f1156df22fc2365a31a3dc5f752c53aad49e34a5e22d75ed231cd97eaa437f9d')
     version('2.0.0',  sha256='a0d425a0fc7c7e3f2c92a272ffaffbd913005556b4443e1887d2e1718d902887')
+    version('1.11.13', sha256='a8f781ae4d347708a07d95e7549039887f151ed7f92263238527dfb0a3709b9d')
+    version('1.11.12', sha256='f1d49433e605dd653a77e1478a78cee095787d554a94afe40d1376bca6708ca5')
     version('1.11.11', sha256='74329da3be1b25de8e98a712adb28b14e561889244bf3a8138afe91ab18e0b3a')
     version('1.11.10', sha256='0a2530b739d9ebf60c4c1e86adb5451a20d9e78f7798cf78d0147cc6df328aac')
     version('1.11.9', sha256='85b978995b67db0b1a12dd1a73b09ef3d39f8e3cb09f8b9c60cf04633acce46c')
@@ -66,9 +73,13 @@ class Hwloc(AutotoolsPackage):
         default=False,
         description="Enable netloc [requires MPI]"
     )
+    variant('opencl', default=False,
+            description="Support an OpenCL library at run time")
+    variant('rocm', default=False,
+            description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
-    conflicts('+netloc', when="@:1.99.99")
+    conflicts('+netloc', when="@:1")
 
     # libudev isn't available until version 1.11.0
     conflicts('+libudev', when="@:1.10")
@@ -85,21 +96,45 @@ class Hwloc(AutotoolsPackage):
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
     depends_on('numactl', when='@:1.11.11 platform=linux')
+    depends_on('ncurses')
+
+    # Before 2.2 hwloc does not consider linking to libtinfo
+    # to detect ncurses, which is considered a bug.
+    # For older versions this can be fixed by depending on
+    # ncurses~termlib, but this could lead to insatisfiable
+    # constraints (e.g. llvm explicitly depends on ncurses+termlib)
+    # Therefore we patch the latest 1.x configure script to make
+    # it consider libtinfo too.
+    # see https://github.com/open-mpi/hwloc/pull/417
+    patch('0001-Try-linking-to-libtinfo.patch', when='@1.11.13')
+    depends_on('ncurses ~termlib', when='@2.0:2.2')
+    depends_on('ncurses ~termlib', when='@1.0:1.11.12')
 
     # When mpi=openmpi, this introduces an unresolvable dependency.
     # See https://github.com/spack/spack/issues/15836 for details
     depends_on('mpi', when='+netloc')
 
+    with when('+rocm'):
+        depends_on('rocm-smi-lib')
+        depends_on('rocm-opencl', when='+opencl')
+        # Avoid a circular dependency since the openmp
+        # variant of llvm-amdgpu depends on hwloc.
+        depends_on('llvm-amdgpu~openmp', when='+opencl')
+
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
     def configure_args(self):
-        args = [
-            # Disable OpenCL, since hwloc might pick up an OpenCL
-            # library at build time that is then not found at run time
-            # (Alternatively, we could require OpenCL as dependency.)
-            "--disable-opencl",
-        ]
+        args = []
+
+        # If OpenCL is not enabled, disable it since hwloc might
+        # pick up an OpenCL library at build time that is then
+        # not found at run time.
+        # The OpenCl variant allows OpenCl providers such as
+        # 'cuda' and 'rocm-opencl' to be used.
+        if '+opencl' not in self.spec:
+            args.append('--disable-opencl')
+
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
 

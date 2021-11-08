@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,33 @@ from spack import *
 
 
 class RBayesm(RPackage):
-    """Bayesian Inference for Marketing/Micro-Econometrics"""
+    """Bayesian Inference for Marketing/Micro-Econometrics
+
+    Covers many important models used in marketing and micro-econometrics
+    applications.  The package includes: Bayes Regression (univariate or
+    multivariate dep var), Bayes Seemingly Unrelated Regression (SUR), Binary
+    and Ordinal Probit, Multinomial Logit (MNL) and Multinomial Probit (MNP),
+    Multivariate Probit, Negative Binomial (Poisson) Regression, Multivariate
+    Mixtures of Normals (including clustering), Dirichlet Process Prior Density
+    Estimation with normal base, Hierarchical Linear Models with normal prior
+    and covariates, Hierarchical Linear Models with a mixture of normals prior
+    and covariates, Hierarchical Multinomial Logits with a mixture of normals
+    prior and covariates, Hierarchical Multinomial Logits with a Dirichlet
+    Process prior and covariates, Hierarchical Negative Binomial Regression
+    Models, Bayesian analysis of choice-based conjoint data, Bayesian treatment
+    of linear instrumental variables models, Analysis of Multivariate Ordinal
+    survey data with scale usage heterogeneity (as in Rossi et al, JASA (01)),
+    Bayesian Analysis of Aggregate Random Coefficient Logit Models as in BLP
+    (see Jiang, Manchanda, Rossi 2009) For further reference, consult our book,
+    Bayesian Statistics and Marketing by Rossi, Allenby and McCulloch (Wiley
+    2005) and Bayesian Non- and Semi-Parametric Methods and Applications
+    (Princeton U Press 2014)."""
 
     homepage = "https://cloud.r-project.org/package=bayesm"
     url      = "https://cloud.r-project.org/src/contrib/bayesm_3.1-0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bayesm"
 
+    version('3.1-4', sha256='061b216c62bc72eab8d646ad4075f2f78823f9913344a781fa53ea7cf4a48f94')
     version('3.1-3', sha256='51e4827eca8cd4cf3626f3c2282543df7c392b3ffb843f4bfb386fe104642a10')
     version('3.1-2', sha256='a332f16e998ab10b17a2b1b9838d61660c36e914fe4d2e388a59f031d52ad736')
     version('3.1-1', sha256='4854517dec30ab7c994de862aae1998c2d0c5e71265fd9eb7ed36891d4676078')

@@ -1,15 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
-
 import os.path
+import sys
 from datetime import datetime, timedelta
 
+import pytest
+
 import llnl.util.lang
-from llnl.util.lang import pretty_date, match_predicate
+from llnl.util.lang import match_predicate, pretty_date
 
 
 @pytest.fixture()
@@ -27,7 +28,12 @@ value = 1
 path = os.path.join('/usr', 'bin')
 """
     m.write(content)
-    return str(m)
+
+    yield str(m)
+
+    # Don't leave garbage in the module system
+    if 'foo' in sys.modules:
+        del sys.modules['foo']
 
 
 def test_pretty_date():
@@ -127,8 +133,20 @@ def test_match_predicate():
 
 
 def test_load_modules_from_file(module_path):
+    # Check prerequisites
+    assert 'foo' not in sys.modules
+
+    # Check that the module is loaded correctly from file
     foo = llnl.util.lang.load_module_from_file('foo', module_path)
+    assert 'foo' in sys.modules
     assert foo.value == 1
+    assert foo.path == os.path.join('/usr', 'bin')
+
+    # Check that the module is not reloaded a second time on subsequent calls
+    foo.value = 2
+    foo = llnl.util.lang.load_module_from_file('foo', module_path)
+    assert 'foo' in sys.modules
+    assert foo.value == 2
     assert foo.path == os.path.join('/usr', 'bin')
 
 
@@ -137,3 +155,53 @@ def test_uniq():
     assert [1, 2, 3] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 3, 3])
     assert [1, 2, 1] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 1, 1])
     assert [] == llnl.util.lang.uniq([])
+
+
+def test_key_ordering():
+    """Ensure that key ordering works correctly."""
+
+    with pytest.raises(TypeError):
+        @llnl.util.lang.key_ordering
+        class ClassThatHasNoCmpKeyMethod(object):
+            # this will raise b/c it does not define _cmp_key
+            pass
+
+    @llnl.util.lang.key_ordering
+    class KeyComparable(object):
+        def __init__(self, t):
+            self.t = t
+
+        def _cmp_key(self):
+            return self.t
+
+    a = KeyComparable((1, 2, 3))
+    a2 = KeyComparable((1, 2, 3))
+    b = KeyComparable((2, 3, 4))
+    b2 = KeyComparable((2, 3, 4))
+
+    assert a == a
+    assert a == a2
+    assert a2 == a
+
+    assert b == b
+    assert b == b2
+    assert b2 == b
+
+    assert a != b
+
+    assert a < b
+    assert b > a
+
+    assert a <= b
+    assert b >= a
+
+    assert a <= a
+    assert a <= a2
+    assert b >= b
+    assert b >= b2
+
+    assert hash(a) != hash(b)
+    assert hash(a) == hash(a)
+    assert hash(a) == hash(a2)
+    assert hash(b) == hash(b)
+    assert hash(b) == hash(b2)

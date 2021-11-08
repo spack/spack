@@ -1,18 +1,18 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-import hashlib
 import base64
+import hashlib
+import os
 import sys
 
 import llnl.util.tty as tty
 
-import spack.util.spack_json as sjson
-import spack.util.file_permissions as fp
-import spack.store
 import spack.filesystem_view
+import spack.store
+import spack.util.file_permissions as fp
+import spack.util.spack_json as sjson
 
 
 def compute_hash(path):

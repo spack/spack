@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -33,8 +35,11 @@ class Extrae(AutotoolsPackage):
        instrument the MPI programin model, and the following parallel
        programming models either alone or in conjunction with MPI :
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
+
     homepage = "https://tools.bsc.es/extrae"
     url      = "https://ftp.tools.bsc.es/extrae/extrae-3.4.1-src.tar.bz2"
+
+    version('3.8.3', sha256='c3bf27fb6f18e66200e40a0b4c35bc257766e5c1a525dc5725f561879e88bf32')
     version('3.7.1', sha256='c83ddd18a380c9414d64ee5de263efc6f7bac5fe362d5b8374170c7f18360378')
     version('3.4.1', sha256='77bfec16d6b5eee061fbaa879949dcef4cad28395d6a546b1ae1b9246f142725')
 
@@ -64,6 +69,13 @@ class Extrae(AutotoolsPackage):
     variant('papi', default=True, description="Use PAPI to collect performance counters")
     depends_on('papi', when='+papi')
 
+    variant('cuda', default=False, description="Enable support for tracing CUDA")
+    depends_on('cuda', when='+cuda')
+
+    variant('cupti', default=False, description='Enable CUPTI support')
+    depends_on('cuda', when='+cupti')
+    conflicts('+cupti', when='~cuda', msg='CUPTI requires CUDA')
+
     def configure_args(self):
         spec = self.spec
         args = ["--with-mpi=%s" % spec['mpi'].prefix,
@@ -82,13 +94,29 @@ class Extrae(AutotoolsPackage):
                  if '+dyninst' in self.spec else
                  ["--without-dyninst"])
 
+        args += (["--with-cuda=%s" % spec['cuda'].prefix]
+                 if '+cuda' in self.spec else
+                 ["--without-cuda"])
+
+        if '+cupti' in self.spec:
+            cupti_h = find_headers('cupti', spec['cuda'].prefix,
+                                   recursive=True)
+            cupti_dir = os.path.dirname(os.path.dirname(cupti_h[0]))
+
+        args += (["--with-cupti=%s" % cupti_dir]
+                 if '+cupti' in self.spec else
+                 ["--without-cupti"])
+
         if spec.satisfies("^dyninst@9.3.0:"):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
-        # This was added due to configure failure
+        # This was added due to:
+        # - configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
-        args.append('LDFLAGS=-lintl')
+        # - linking error
+        # https://github.com/bsc-performance-tools/extrae/issues/57
+        args.append('LDFLAGS=-lintl -pthread')
 
         return(args)
 

@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import tempfile
 
 
 class PyTensorboardPluginWit(Package):
@@ -13,16 +15,19 @@ class PyTensorboardPluginWit(Package):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
-    homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
+    homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
     url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 
     maintainers = ['aweits']
 
     version('master', branch='master')
+    version('1.8.0', sha256='1e4de1bbf6ae61c4d27b114ec2e1093bc4765b8c2bbb2cc5d43e2075b08a5fea')
     version('1.7.0', sha256='30dcab9065b02c3f1476f4fb92b27f6feb6c00cdb281699c44d8e69c86745247')
 
-    depends_on('bazel@0.26.1:', type='build')
+    # Bazel 3.7+ does not work
+    # https://github.com/PAIR-code/what-if-tool/issues/140
+    depends_on('bazel@0.26.1:3.6', type='build')
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
@@ -31,12 +36,16 @@ class PyTensorboardPluginWit(Package):
 
     patch('tboard_shellenv.patch')
 
+    # On Ubuntu, sh -> dash, and the script contains tools like pushd that require bash
+    patch('https://patch-diff.githubusercontent.com/raw/PAIR-code/what-if-tool/pull/154.patch',
+          sha256='b40fbc73fb07ed933f9d845b65fdbf7a94644f7ec7ca8637eda002171e71bbb6',
+          when='@:1.8.0')
+
     phases = ['setup', 'build', 'install']
 
     def setup_build_environment(self, env):
-        tmp_path = '/tmp/spack/tb-plugin'
-        mkdirp(tmp_path)
-        env.set('TEST_TMPDIR', tmp_path)
+        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        env.set('TEST_TMPDIR', self.tmp_path)
 
     def setup(self, spec, prefix):
         builddir = join_path(self.stage.source_path, 'spack-build')
@@ -53,18 +62,27 @@ class PyTensorboardPluginWit(Package):
         filter_file(r'virtualenv venv',
                     '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('unset PYTHON_HOME',
+                    'export PYTHONPATH="{0}"'.format(env['PYTHONPATH']),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('python setup.py',
+                    '{0} setup.py'.format(spec['python'].command.path),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
 
     def build(self, spec, prefix):
-        tmp_path = env['TEST_TMPDIR']
         bazel('--nohome_rc',
               '--nosystem_rc',
-              '--output_user_root=' + tmp_path,
+              '--output_user_root=' + self.tmp_path,
               'run',
+              # watch https://github.com/bazelbuild/bazel/issues/7254
+              '--define=EXECUTOR=remote',
               '--verbose_failures',
               '--subcommands=pretty_print',
+              '--spawn_strategy=local',
               'tensorboard_plugin_wit/pip_package:build_pip_package')
 
     def install(self, spec, prefix):
         with working_dir('spack-build/release'):
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+        remove_linked_tree(self.tmp_path)

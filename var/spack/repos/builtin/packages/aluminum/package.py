@@ -1,13 +1,14 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
-class Aluminum(CMakePackage, CudaPackage):
+class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     """Aluminum provides a generic interface to high-performance
     communication libraries, with a focus on allreduce
     algorithms. Blocking and non-blocking algorithms and GPU-aware
@@ -22,6 +23,8 @@ class Aluminum(CMakePackage, CudaPackage):
     maintainers = ['bvanessen']
 
     version('master', branch='master')
+    version('1.0.0', sha256='028d12e271817214db5c07c77b0528f88862139c3e442e1b12f58717290f414a')
+    version('0.7.0', sha256='bbb73d2847c56efbe6f99e46b41d837763938483f2e2d1982ccf8350d1148caa')
     version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
     version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
     version('0.4.0', sha256='4d6fab5481cc7c994b32fb23a37e9ee44041a9f91acf78f981a97cb8ef57bb7d')
@@ -37,12 +40,19 @@ class Aluminum(CMakePackage, CudaPackage):
             ' communication of accelerator data')
     variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
             ' Put/Get and IPC RMA functionality')
+    variant('rccl', default=False, description='Builds with support for NCCL communication lib')
 
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
-    depends_on('nccl', when='+nccl')
+    depends_on('nccl@2.7.0-0:', when='+nccl')
     depends_on('hwloc@1.11:')
-    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
+    depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('hwloc@2.3.0:', when='+rocm')
+    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10')
+    depends_on('hipcub', when='@:0.1,0.6.0: +rocm')
+
+    conflicts('~cuda', when='+cuda_rma', msg='CUDA RMA support requires CUDA')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -50,10 +60,23 @@ class Aluminum(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
+            '-DCMAKE_CXX_STANDARD:STRING=17',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
-            '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec)]
+            '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
+            '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
 
-        if '@0.5:':
+        if '+cuda' in spec:
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
+            archs = spec.variants['cuda_arch'].value
+            if archs != 'none':
+                arch_str = ";".join(archs)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+        if spec.satisfies('@0.5:'):
             args.extend([
                 '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' %
@@ -64,7 +87,7 @@ class Aluminum(CMakePackage, CudaPackage):
             args.append(
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
 
-        if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10.99'):
+        if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10'):
             args.append(
                 '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix)
 
@@ -75,5 +98,18 @@ class Aluminum(CMakePackage, CudaPackage):
             clang_root = os.path.dirname(clang_bin)
             args.extend([
                 '-DOpenMP_DIR={0}'.format(clang_root)])
+
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc),
+                '-DCMAKE_CXX_FLAGS=-std=c++17'])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
+                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
+                )
 
         return args

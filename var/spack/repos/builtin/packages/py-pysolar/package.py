@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class PyPysolar(PythonPackage):
        irradiation of any point on earth by the sun. It includes code
        for extremely precise ephemeris calculations, and more."""
 
-    homepage = "http://pysolar.readthedocs.io"
-    url      = "https://pypi.io/packages/source/p/pysolar/pysolar-0.8.tar.gz"
+    homepage = "https://pysolar.readthedocs.io"
+    pypi = "pysolar/pysolar-0.8.tar.gz"
 
     version('0.8', sha256='548c05177acd2845143d9624e670635cd3e5c3a63782449ca35e090ca755c617')
 

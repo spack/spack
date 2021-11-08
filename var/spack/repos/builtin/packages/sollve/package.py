@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,7 +72,7 @@ class Sollve(CMakePackage):
     depends_on('binutils+gold', when='+gold')
 
     # develop version.
-    version("develop")
+    version("develop", deprecated=True)
     resource(name='compiler-rt',
              svn='http://llvm.org/svn/llvm-project/compiler-rt/trunk',
              destination='projects', when='@develop+compiler-rt',
@@ -99,7 +99,8 @@ class Sollve(CMakePackage):
              placement='libunwind')
 
     # 1.0a2 based on LLVM 9.0+
-    version("1.0a2", commit="cb4343bda9e57076a74dee23236ac9737e07594f")
+    version("1.0a2", commit="cb4343bda9e57076a74dee23236ac9737e07594f",
+            deprecated=True)
     resource(name='compiler-rt',
              svn='https://llvm.org/svn/llvm-project/compiler-rt/trunk',
              revision=373130, destination='projects',
@@ -135,7 +136,7 @@ class Sollve(CMakePackage):
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
-    conflicts('%gcc@:5.0.999')
+    conflicts('%gcc@:5.0')
     conflicts('+omp_tsan')
 
     patch('disable_unused_lock.patch', when='@1.0a2', working_dir='projects/openmp')

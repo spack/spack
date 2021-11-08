@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,10 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url      = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
 
+    version('5.1.5', sha256='02e4615a22dc3ec87a23efbd3d9be5bfad2445337140bad1720699571c45c3f9')
+    version('5.1.3', sha256='0350defdd6c1b165e4cf19995f590eee6e0b9db95a6b221d28cecec40f4e85cd')
+    version('5.1.2', sha256='180d52b5552921d1fac8a10869dd30708c0fb41dc202a3bbee0e36f43872718a')
+    version('5.1.0', sha256='f67b6e518372871d9eed6e5dba77c3ab5ea030c229ba7a7d44bcf51f3258373f')
     version('5.0.0', sha256='1cdc57930f7b57da4eb9b2c55a50ba1c2c385936ddaf5582fee830994461a892')
     version('4.3.4', sha256='a8ee37ddc5079339854bd313272856c9d41a27802472ee9ae44b58ee9a298337')
     version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
@@ -25,6 +29,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     conflicts('+shared +cuda', msg='Only ~shared supported with +cuda')
     conflicts('+cuda', when='@:4', msg='CUDA support only in libxc 5.0.0 and above')
+
+    depends_on('perl', type='build')
 
     patch('0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch', when='@5.0.0')
     patch('0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch', when='@5.0.0')
@@ -73,8 +79,13 @@ class Libxc(AutotoolsPackage, CudaPackage):
         env.append_flags('CFLAGS',  optflags)
         env.append_flags('FCFLAGS', optflags)
 
-        if '%intel' in self.spec and which('xiar'):
-            env.set('AR', 'xiar')
+        if '%intel' in self.spec:
+            env.append_flags('CFLAGS', '-std=c99')
+            if which('xiar'):
+                env.set('AR', 'xiar')
+
+        if '%aocc' in self.spec:
+            env.append_flags('FCFLAGS', '-fPIC')
 
         if '+cuda' in self.spec:
             nvcc = self.spec['cuda'].prefix.bin.nvcc
@@ -95,6 +106,15 @@ class Libxc(AutotoolsPackage, CudaPackage):
         ]
 
         return args
+
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for LIBXC"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
 
     def check(self):
         # libxc provides a testsuite, but many tests fail

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Knem(AutotoolsPackage):
     """KNEM is a Linux kernel module enabling high-performance intra-node MPI
     communication for large messages."""
 
-    homepage = "http://knem.gforge.inria.fr"
+    homepage = "https://knem.gforge.inria.fr"
     url = "https://gitlab.inria.fr/knem/knem/uploads/4a43e3eb860cda2bbd5bf5c7c04a24b6/knem-1.1.4.tar.gz"
     list_url = "https://knem.gitlabpages.inria.fr/download"
     git = "https://gitlab.inria.fr/knem/knem.git"
@@ -25,6 +25,10 @@ class Knem(AutotoolsPackage):
 
     variant('hwloc', default=True,
             description='Enable hwloc in the user-space tools')
+
+    patch('https://gitlab.inria.fr/knem/knem/-/commit/5c8cb902d6040df58cdc4e4e4c10d1f1426c3525.patch',
+          sha256='78885a02d6f031a793db6a7190549f8d64c8606b353051d65f8e3f802b801902',
+          when='@1.1.4')
 
     depends_on('hwloc',                   when='+hwloc')
     depends_on('pkgconfig', type='build', when='+hwloc')

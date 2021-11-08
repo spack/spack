@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,13 @@
 class PyIpykernel(PythonPackage):
     """IPython Kernel for Jupyter"""
 
-    homepage = "https://pypi.python.org/pypi/ipykernel"
-    url      = "https://pypi.io/packages/source/i/ipykernel/ipykernel-5.3.4.tar.gz"
+    homepage = "https://github.com/ipython/ipykernel"
+    pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
+    version('6.4.1', sha256='df3355e5eec23126bc89767a676c5f0abfc7f4c3497d118c592b83b316e8c0cd')
+    version('6.2.0',  sha256='4439459f171d77f35b7f7e72dace5d7c2dd10a5c9e2c22b173ad9048fbfe7656')
+    version('6.0.2',  sha256='7fb3e370dbb481b012b74bed4e794d2d16eb2a83930b31e6d8d030b9fdb4d5b4')
+    version('5.5.5',  sha256='e976751336b51082a89fc2099fb7f96ef20f535837c398df6eab1283c2070884')
     version('5.3.4',  sha256='9b2652af1607986a1b231c62302d070bc0534f564c393a5d9d130db9abbbe89d')
     version('5.1.1',  sha256='f0e962052718068ad3b1d8bcc703794660858f58803c3798628817f492a8769c')
     version('5.1.0',  sha256='0fc0bf97920d454102168ec2008620066878848fcfca06c22b669696212e292f')
@@ -28,18 +32,27 @@ class PyIpykernel(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@3.4:', when='@5.0:', type=('build', 'run'))
     depends_on('python@3.5:', when='@5.2:', type=('build', 'run'))
+    depends_on('python@3.7:', when='@6.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build', when='@5:')
-    depends_on('py-ipython@4.0:', when='@:4.999', type=('build', 'run'))
-    depends_on('py-ipython@5.0:', when='@5.0.0:', type=('build', 'run'))
+    depends_on('py-ipython-genutils', when='@5.5.6', type=('build', 'run'))
+    depends_on('py-ipython-genutils', when='@6.3.1:', type=('build', 'run'))
+    depends_on('py-importlib-metadata@:3', when='@6:^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-metadata@:4', when='@6.1:^python@:3.7', type=('build', 'run'))
+    depends_on('py-argcomplete@1.12.3:', when='@6.1:^python@:3.7', type=('build', 'run'))
+    depends_on('py-debugpy@1.0:1', when='@6:', type=('build', 'run'))
+    depends_on('py-ipython@4.0:', when='@:4', type=('build', 'run'))
+    depends_on('py-ipython@5.0:', when='@5', type=('build', 'run'))
+    depends_on('py-ipython@7.23.1:7', when='@6:', type=('build', 'run'))
     depends_on('py-traitlets@4.1.0:', type=('build', 'run'))
+    depends_on('py-traitlets@4.1.0:5', when='@6:', type=('build', 'run'))
     depends_on('py-jupyter-client', type=('build', 'run'))
-    depends_on('py-tornado@4.0:', when='@:4.999', type=('build', 'run'))
-    depends_on('py-tornado@4.2:', when='@5.0.0:', type=('build', 'run'))
+    depends_on('py-jupyter-client@:6', when='@6.0.2:', type=('build', 'run'))
+    depends_on('py-jupyter-client@:7', when='@6.2:', type=('build', 'run'))
+    depends_on('py-tornado@4.0:', when='@:4', type=('build', 'run'))
+    depends_on('py-tornado@4.2:', when='@5', type=('build', 'run'))
+    depends_on('py-tornado@4.2:6', when='@6:', type=('build', 'run'))
+    depends_on('py-matplotlib-inline@0.1.0:0.1', when='@6:', type=('build', 'run'))
     depends_on('py-appnope', when='platform=darwin', type=('build', 'run'))
-    depends_on('py-pytest@:5.3.3,5.3.5:', type='test')
-    depends_on('py-pytest-cov', type='test')
-    # depends_on('py-flaky', type='test')
-    depends_on('py-nose', type='test')
 
     phases = ['build', 'install', 'install_data']
 

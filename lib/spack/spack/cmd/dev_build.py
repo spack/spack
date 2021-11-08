@@ -1,16 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 import llnl.util.tty as tty
 
-import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.repo
 
 description = "developer build: build from code in current working directory"
@@ -28,7 +28,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -92,6 +92,9 @@ def dev_build(self, args):
     # disable checksumming if requested
     if args.no_checksum or args.yes_to_all:
         spack.config.set('config:checksum', False, scope='command_line')
+
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
 
     tests = False
     if args.test == 'all':

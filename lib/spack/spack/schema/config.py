@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,9 @@
    :lines: 13-
 """
 import six
+
 from llnl.util.lang import union_dicts
+
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
@@ -78,6 +80,7 @@ properties = {
             'install_missing_compilers': {'type': 'boolean'},
             'debug': {'type': 'boolean'},
             'checksum': {'type': 'boolean'},
+            'deprecated': {'type': 'boolean'},
             'locks': {'type': 'boolean'},
             'dirty': {'type': 'boolean'},
             'build_language': {'type': 'string'},
@@ -96,6 +99,10 @@ properties = {
             },
             'allow_sgid': {'type': 'boolean'},
             'binary_index_root': {'type': 'string'},
+            'url_fetch_method': {
+                'type': 'string',
+                'enum': ['urllib', 'curl']
+            },
         },
     },
 }
@@ -150,4 +157,10 @@ def update(data):
         update_data = spack.config.merge_yaml(update_data, projections_data)
         data['install_tree'] = update_data
         changed = True
+
+    use_curl = data.pop('use_curl', None)
+    if use_curl is not None:
+        data['url_fetch_method'] = 'curl' if use_curl else 'urllib'
+        changed = True
+
     return changed

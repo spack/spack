@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureDatalakeStore(PythonPackage):
     """Azure Data Lake Store Filesystem Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-data-lake-store-python"
-    url      = "https://pypi.io/packages/source/a/azure-datalake-store/azure-datalake-store-0.0.48.tar.gz"
+    pypi = "azure-datalake-store/azure-datalake-store-0.0.48.tar.gz"
 
     version('0.0.48', sha256='d27c335783d4add00b3a5f709341e4a8009857440209e15a739a9a96b52386f7')
 

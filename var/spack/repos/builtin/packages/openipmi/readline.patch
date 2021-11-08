@@ -1,0 +1,11 @@
+--- spack-src/sample/ipmi_serial_bmc_emu.c.org	2020-12-07 17:08:39.907878381 +0900
++++ spack-src/sample/ipmi_serial_bmc_emu.c	2020-12-07 17:08:56.713276894 +0900
+@@ -42,7 +42,7 @@
+ #include <unistd.h>
+ #include <stdlib.h>
+ #include <sys/select.h>
+-#include <editline/readline.h>
++#include <readline/readline.h>
+ 
+ #define _GNU_SOURCE
+ #include <getopt.h>

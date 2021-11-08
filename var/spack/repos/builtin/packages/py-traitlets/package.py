@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ from spack import *
 class PyTraitlets(PythonPackage):
     """Traitlets Python config system"""
 
-    homepage = "https://pypi.python.org/pypi/traitlets"
-    url      = "https://pypi.io/packages/source/t/traitlets/traitlets-5.0.4.tar.gz"
+    pypi = "traitlets/traitlets-5.0.4.tar.gz"
 
     version('5.0.4', sha256='86c9351f94f95de9db8a04ad8e892da299a088a64fd283f9f6f18770ae5eae1b')
     version('4.3.3', sha256='d023ee369ddd2763310e4c3eae1ff649689440d4ae59d7485eb4cfbbe3e359f7')
@@ -29,4 +28,3 @@ class PyTraitlets(PythonPackage):
     depends_on('py-six', when='@:4', type=('build', 'run'))
     depends_on('py-decorator', when='@:4', type=('build', 'run'))
     depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

@@ -1,11 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os.path
+
+from spack import *
 
 
 class Glib(Package):
@@ -21,6 +21,15 @@ class Glib(Package):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    maintainers = ['michaelkuhn']
+
+    version('2.70.0', sha256='200d7df811c5ba634afbf109f14bb40ba7fde670e89389885da14e27c0840742')
+    version('2.68.4', sha256='62fd061d08a75492617e625a73e2c05e259f831acbb8e1f8b9c81f23f7993a3b')
+    version('2.68.3', sha256='e7e1a3c20c026109c45c9ec4a31d8dcebc22e86c69486993e565817d64be3138')
+    version('2.68.2', sha256='ecc7798a9cc034eabdfd7f246e6dd461cdbf1175fcc2e9867cc7da7b7309e0fb')
+    version('2.66.8', sha256='97bc87dd91365589af5cbbfea2574833aea7a1b71840fd365ecd2852c76b9c8b')
+    version('2.66.7', sha256='09f158769f6f26b31074e15b1ac80ec39b13b53102dfae66cfe826fb2cc65502')
+    version('2.66.6', sha256='80fff9c63d2725834328071c42003c311f77f91caf2285195c587c62f5638329')
     version('2.66.2', sha256='ec390bed4e8dd0f89e918f385e8d4cfd7470b1ef7c1ce93ec5c4fc6e3c6a17c4')
     version('2.64.6', sha256='c36ee07a70164c71f046016fe6aaacd6368333c42590bc0cba47c344ffb853f1')
     version('2.64.5', sha256='9cbd5bd2715ead1c28d53c46f7b7b6ff6166f5887b772c1a9e3bf2910cfecc11')
@@ -31,17 +40,17 @@ class Glib(Package):
     version('2.62.6', sha256='104fa26fbefae8024ff898330c671ec23ad075c1c0bce45c325c6d5657d58b9c')
     version('2.60.7', sha256='8b12c0af569afd3b71200556ad751bad4cf4bf7bc4b5f880638459a42ca86310')
     version('2.58.3', sha256='8f43c31767e88a25da72b52a40f3301fefc49a665b56dc10ee7cc9565cbe7481')
-    version('2.56.4', sha256='27f703d125efb07f8a743666b580df0b4095c59fc8750e8890132c91d437504c')
-    version('2.56.3', sha256='a9a4c5b4c81b6c75bc140bdf5e32120ef3ce841b7413214ecf5f987acec74cb2')
-    version('2.56.2', sha256='d64abd16813501c956c4e123ae79f47f1b58de573df9fdd3b0795f1e2c1aa789')
-    version('2.56.1', sha256='40ef3f44f2c651c7a31aedee44259809b6f03d3d20be44545cd7d177221c0b8d')
-    version('2.56.0', sha256='ecef6e17e97b8d9150d0e8a4b3edee1ac37331213b8a2a87a083deea408a0fc7')
-    version('2.55.1', sha256='0cbb3d31c9d181bbcc97cba3d9dbe3250f75e2da25e5f7c8bf5a993fe54baf6a')
-    version('2.53.1', sha256='c8740f1d1a138086eede889b596a511fddda180646ab2f1d98aed4fdb6be7f72')
-    version('2.49.7', sha256='0fd13406ca31d6f654c3be620e0adaaa4f9fb788e164e265e33edf4b21e64ef6')
-    version('2.49.4', sha256='9e914f9d7ebb88f99f234a7633368a7c1133ea21b5cac9db2a33bc25f7a0e0d1')
-    version('2.48.1', sha256='74411bff489cb2a3527bac743a51018841a56a4d896cc1e0d0d54f8166a14612')
-    version('2.42.1', sha256='8f3f0865280e45b8ce840e176ef83bcfd511148918cc8d39df2ee89b67dcf89a')
+    version('2.56.4', sha256='27f703d125efb07f8a743666b580df0b4095c59fc8750e8890132c91d437504c', deprecated=True)
+    version('2.56.3', sha256='a9a4c5b4c81b6c75bc140bdf5e32120ef3ce841b7413214ecf5f987acec74cb2', deprecated=True)
+    version('2.56.2', sha256='d64abd16813501c956c4e123ae79f47f1b58de573df9fdd3b0795f1e2c1aa789', deprecated=True)
+    version('2.56.1', sha256='40ef3f44f2c651c7a31aedee44259809b6f03d3d20be44545cd7d177221c0b8d', deprecated=True)
+    version('2.56.0', sha256='ecef6e17e97b8d9150d0e8a4b3edee1ac37331213b8a2a87a083deea408a0fc7', deprecated=True)
+    version('2.55.1', sha256='0cbb3d31c9d181bbcc97cba3d9dbe3250f75e2da25e5f7c8bf5a993fe54baf6a', deprecated=True)
+    version('2.53.1', sha256='c8740f1d1a138086eede889b596a511fddda180646ab2f1d98aed4fdb6be7f72', deprecated=True)
+    version('2.49.7', sha256='0fd13406ca31d6f654c3be620e0adaaa4f9fb788e164e265e33edf4b21e64ef6', deprecated=True)
+    version('2.49.4', sha256='9e914f9d7ebb88f99f234a7633368a7c1133ea21b5cac9db2a33bc25f7a0e0d1', deprecated=True)
+    version('2.48.1', sha256='74411bff489cb2a3527bac743a51018841a56a4d896cc1e0d0d54f8166a14612', deprecated=True)
+    version('2.42.1', sha256='8f3f0865280e45b8ce840e176ef83bcfd511148918cc8d39df2ee89b67dcf89a', deprecated=True)
 
     variant('libmount', default=False, description='Build with libmount support')
     variant(
@@ -60,6 +69,7 @@ class Glib(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('uuid', when='+libmount')
     depends_on('util-linux', when='+libmount')
     depends_on('iconv')
 
@@ -67,7 +77,7 @@ class Glib(Package):
     patch('g_date_strftime.patch', when='@2.42.1')
     # Clang doesn't seem to acknowledge the pragma lines to disable the -Werror
     # around a legitimate usage.
-    patch('no-Werror=format-security.patch', when='@:2.57.99')
+    patch('no-Werror=format-security.patch', when='@:2.57')
     # Patch to prevent compiler errors in kernels older than 2.6.35
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=rhel6')
     patch('old-kernels.patch', when='@2.56.0:2.56.1 os=centos6')
@@ -76,12 +86,25 @@ class Glib(Package):
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
     patch('meson-gettext.patch', when='@2.58:2.64')
-    patch('meson-gettext-2.66.patch', when='@2.66:')
+    patch('meson-gettext-2.66.patch', when='@2.66:2.68')
+    patch('meson-gettext-2.70.patch', when='@2.70:')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    def patch(self):
+        """A few glib tests have external dependencies / try to access the X server"""
+        # Surgically disable tests which we cannot make pass in a spack build
+        gio_tests = FileFilter('gio/tests/meson.build')
+        gio_tests.filter('if not glib_have_cocoa', 'if false')
+        gio_tests.filter("'contenttype' : {},", '')
+        gio_tests.filter("'file' : {},", '')
+        gio_tests.filter("'gdbus-peer'", "'file'")
+        gio_tests.filter("'gdbus-address-get-session' : {},", '')
+        filter_file("'mkenums.py',*", '', 'gobject/tests/meson.build')
+        filter_file("'fileutils' : {},", '', 'glib/tests/meson.build')
 
     @property
     def libs(self):
@@ -178,7 +201,7 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
-    @when('@:2.57.99')
+    @when('@:2.57')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
@@ -257,7 +280,7 @@ class Glib(Package):
         # the gettext library directory. The patch below explitly adds the
         # appropriate -L path.
         spec = self.spec
-        if spec.satisfies('@2:2.99'):
+        if spec.satisfies('@2.0:2'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
                    spec['gettext'].libs.directories[0])

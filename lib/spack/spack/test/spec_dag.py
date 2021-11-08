@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
-import spack.architecture
+
 import spack.error
 import spack.package
-
+import spack.util.hash as hashutil
+from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
-from spack.dependency import all_deptypes, Dependency, canonical_deptype
 from spack.util.mock_package import MockPackageMultiRepo
 
 
@@ -705,17 +705,17 @@ class TestSpecDag(object):
                                 for c in test_hash])
 
             for bits in (1, 2, 3, 4, 7, 8, 9, 16, 64, 117, 128, 160):
-                actual_int = spack.spec.base32_prefix_bits(test_hash, bits)
+                actual_int = hashutil.base32_prefix_bits(test_hash, bits)
                 fmt = "#0%sb" % (bits + 2)
                 actual = format(actual_int, fmt).replace('0b', '')
 
                 assert expected[:bits] == actual
 
             with pytest.raises(ValueError):
-                spack.spec.base32_prefix_bits(test_hash, 161)
+                hashutil.base32_prefix_bits(test_hash, 161)
 
             with pytest.raises(ValueError):
-                spack.spec.base32_prefix_bits(test_hash, 256)
+                hashutil.base32_prefix_bits(test_hash, 256)
 
     def test_traversal_directions(self):
         """Make sure child and parent traversals of specs work."""

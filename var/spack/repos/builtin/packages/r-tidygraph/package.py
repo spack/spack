@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTidygraph(RPackage):
-    """tidygraph: A Tidy API for Graph Manipulation.
+    """A Tidy API for Graph Manipulation.
 
     A graph, while not "tidy" in itself, can be thought of as two tidy data
     frames describing node and edge data respectively. 'tidygraph' provides an
@@ -19,10 +19,12 @@ class RTidygraph(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/tidygraph_1.1.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidygraph"
 
+    version('1.2.0', sha256='057d6c42fc0144109f3ace7f5058cca7b2fe493c761daa991448b23f86b6129f')
     version('1.1.2', sha256='5642001d4cccb122d66481b7c61a06c724c02007cbd356ee61cb29726a56fafe')
 
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-dplyr@0.8:', type=('build', 'run'))
+    depends_on('r-dplyr@0.8.5:', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
