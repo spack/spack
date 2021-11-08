@@ -1076,7 +1076,9 @@ Submodules
 
      version('1.0.1', tag='v1.0.1', submodules=True)
 
-  If a package has per-variant submodules, ``submodules=True`` may not be appropriate.  Instead, define the ``submodules`` method that returns a list of submodules that should be fetched.
+  If a package has per-variant submodules, ``submodules=True`` may not be
+  appropriate.  Instead, define the ``submodules`` method that returns a list of
+  submodules that should be fetched.
 
   .. code-block:: python
 
