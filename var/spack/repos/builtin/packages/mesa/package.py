@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
-import sys
 import os
+import sys
 
 from spack import *
 
@@ -120,7 +120,7 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
-    # EGL and OpenGL are in separate libraries. libglvnd is needed to combine the two 
+    # EGL and OpenGL are in separate libraries. libglvnd is needed to combine the two
     conflicts('+egl +opengl ~glvnd')
 
     # requires native to be added to llvm_modules when using gallium swrast

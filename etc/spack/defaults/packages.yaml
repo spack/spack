@@ -25,6 +25,7 @@ packages:
       fftw-api: [fftw, amdfftw]
       flame: [libflame, amdlibflame]
       fuse: [libfuse]
+      glu: [mesa-glu, openglu]
       gl: [libglvnd-fe, mesa+opengl~glvnd, opengl~glvnd]
       glx: [libglvnd-fe+glx, mesa+opengl+glx~glvnd, opengl+glx~glvnd]
       egl: [libglvnd-fe+egl, opengl+egl~glvnd]
