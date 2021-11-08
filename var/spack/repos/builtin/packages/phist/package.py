@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.tty as tty
-
+import os
 import spack.hooks.sbang as sbang
 from spack import *
 
@@ -132,6 +132,7 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+    patch('tpetra_cuda_compile_flags.patch', when='@:1.9.6')
     # Only applies to 1.9.4: While SSE instructions are handled correctly,
     # build fails on ppc64le unless -DNO_WARN_X86_INTRINSICS is defined.
     patch('ppc64_sse.patch', when='@1.9.4')
@@ -243,12 +244,22 @@ class Phist(CMakePackage):
                 ]
         # Force phist to use the MPI wrappers instead of raw compilers
         # (see issue #26002 and the comment in the trilinos package.py)
+        # If we are using tpetra+cuda, use nvcc_wrapper instead.
+        if spec.satisfies('kernel_lib=tpetra') and spec['trilinos'].satisfies('+cuda'):
+            cxx_wrapper=os.path.join(spec['trilinos'].prefix.bin,'nvcc_wrapper')
+        elif spec.satisfies('+mpi'):
+            cxx_wrapper=spec['mpi'].mpicxx
+
         if '+mpi' in spec:
             args.extend(
                 [define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
-                 define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
+                 define('CMAKE_CXX_COMPILER', cxx_wrapper),
                  define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
                  define('MPI_HOME', spec['mpi'].prefix),
+                 ])
+        elif cxx_wrapper:
+            args.extend(
+                [define('CMAKE_CXX_COMPILER', cxx_wrapper)
                  ])
 
         # Workaround for non-compliant and possibly broken code needed for gcc@10:
