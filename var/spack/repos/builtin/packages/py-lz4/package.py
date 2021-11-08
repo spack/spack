@@ -20,4 +20,4 @@ class PyLz4(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build', when='@3.1.3:')
     depends_on('py-pkgconfig', type='build', when='@3.1.3:')
-    depends_on('lz4', type=('build', 'link'), when='@3.1.3:')
+    depends_on('lz4@1.7.5:')
