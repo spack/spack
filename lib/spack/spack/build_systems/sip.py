@@ -5,6 +5,7 @@
 
 import inspect
 import os
+import re
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
@@ -80,6 +81,8 @@ class SIPPackage(PackageBase):
         for path in find(root, '*.py', recursive=False):
             modules.append(path.replace(root + os.sep, '', 1).replace(
                 '.py', '').replace('/', '.'))
+
+        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
         tty.debug('Detected the following modules: {0}'.format(modules))
 
