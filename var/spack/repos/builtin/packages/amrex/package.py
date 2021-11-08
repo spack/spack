@@ -276,14 +276,15 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         """Perform smoke tests on installed package."""
-        #join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
-        join_path(self.test_suite.current_test_cache_dir, './Tests/SpackSmokeTest')
+        join_path(self.test_suite.current_test_cache_dir, './Tests/CMakeTestInstall')
+        #join_path(self.test_suite.current_test_cache_dir, './Tests/SpackSmokeTest')
 
         # TODO: Remove/replace once self.spec['cmake'] is available here
         cmake_bin = self.cmake_bin(set=False)
 
         args = []
-        args.append('-S ./cache/amrex/Tests/SpackSmokeTest')
+        args.append('-S ./cache/amrex/Tests/CMakeTestInstall')
+        #args.append('-S ./cache/amrex/Tests/SpackSmokeTest')
         args.append('-DAMReX_ROOT='+self.prefix)
         args.extend(self.cmake_args())
         self.run_test(cmake_bin, args,
@@ -292,7 +293,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         make()
 
         #self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs','max_step=1'],
-        self.run_test('SingleVortex', ['./cache/amrex/Tests/Amr/Advection_AmrLevel/Exec/SingleVortex/inputs-ci'],
+        self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],
+        #self.run_test('SingleVortex', ['./cache/amrex/Tests/Amr/Advection_AmrLevel/Exec/SingleVortex/inputs-ci'],
                       ['finalized'],
-                      installed=False, purpose='AMReX Stand-Alone Smoke Test',
+                      installed=False, purpose='AMReX Stand-Alone Smoke Test -- AmrCore',
                       skip_missing=False)
