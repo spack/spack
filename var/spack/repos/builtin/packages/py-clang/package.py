@@ -10,7 +10,7 @@ class PyClang(PythonPackage):
     """Python bindings for clang from clang release branches"""
 
     homepage = "https://clang.llvm.org/"
-    pypi     = "clang/clang-5-5.0.tar.gz"
+    pypi     = "clang/clang-5.0.tar.gz"
 
     version('11.0',    sha256='f838e6475b1fe5c91efb97e80ae19420c39483fd5aa7ef10f03ffb51edc6f8c5')
     version('10.0.1',  sha256='c90eca387fede58e2398c4e211e2b38a310f5caa9adb367a8f84aa1ba2fe98b5')
