@@ -11,13 +11,13 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     for building massively parallel block- structured adaptive
     mesh refinement (AMR) applications."""
 
-    #homepage = "https://amrex-codes.github.io/amrex/"
-    #url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
-    #git      = "https://github.com/AMReX-Codes/amrex.git"
-
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/etpalmer63/amrex"
-    git      = "https://github.com/etpalmer63/amrex.git"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
+    git      = "https://github.com/AMReX-Codes/amrex.git"
+
+    # homepage = "https://amrex-codes.github.io/amrex/"
+    # url      = "https://github.com/etpalmer63/amrex"
+    # git      = "https://github.com/etpalmer63/amrex.git"
     
     test_requires_compiler = True
 
