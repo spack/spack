@@ -136,16 +136,14 @@ class PythonPackage(PackageBase):
         # Some Python libraries are packages: collections of modules
         # distributed in directories containing __init__.py files
         for path in find(root, '__init__.py', recursive=True):
-            mod = path.replace(root + os.sep, '', 1).replace(
-                os.sep + '__init__.py', '').replace('/', '.')
-            modules.append(mod)
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.'))
 
         # Some Python libraries are modules: individual *.py files
         # found in the site-packages directory
         for path in find(root, '*.py', recursive=False):
-            mod = path.replace(root + os.sep, '', 1).replace(
-                '.py', '').replace('/', '.')
-            modules.append(mod)
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.'))
 
         modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
