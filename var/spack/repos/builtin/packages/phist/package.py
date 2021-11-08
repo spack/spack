@@ -246,9 +246,9 @@ class Phist(CMakePackage):
         # (see issue #26002 and the comment in the trilinos package.py)
         # If we are using tpetra+cuda, use nvcc_wrapper instead.
         if spec.satisfies('kernel_lib=tpetra') and spec['trilinos'].satisfies('+cuda'):
-            cxx_wrapper=os.path.join(spec['trilinos'].prefix.bin,'nvcc_wrapper')
+            cxx_wrapper = os.path.join(spec['trilinos'].prefix.bin, 'nvcc_wrapper')
         elif spec.satisfies('+mpi'):
-            cxx_wrapper=spec['mpi'].mpicxx
+            cxx_wrapper = spec['mpi'].mpicxx
 
         if '+mpi' in spec:
             args.extend(
