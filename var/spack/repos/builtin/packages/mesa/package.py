@@ -184,8 +184,7 @@ class Mesa(MesonPackage):
             args_platforms.append('x11')
         else:
             args.append('-Dglx=disabled')
-        
-        print(spec)
+
         if '+egl' in spec:
             num_frontends += 1
             args.extend(['-Degl=enabled', '-Dgbm=enabled'])
