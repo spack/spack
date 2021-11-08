@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 import os
+
+import llnl.util.tty as tty
+
 import spack.hooks.sbang as sbang
 from spack import *
 
