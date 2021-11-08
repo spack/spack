@@ -86,7 +86,6 @@ from spack.variant import (
 from spack.version import Version, ver
 =======
 
-import shlex
 import base64
 import collections
 import contextlib
