@@ -308,7 +308,7 @@ def check_sbang_installation(group=False):
         assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
 
 
-def test_install_group_sbang(install_mockery, configure_group_perms):
+def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
@@ -316,7 +316,7 @@ def test_install_group_sbang(install_mockery, configure_group_perms):
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()
-    check_sbang_installation(group=True)
+    check_sbang_installation(group)
 
     # put an invalid file in for sbang
     fs.mkdirp(sbang_bin_dir)
@@ -324,35 +324,23 @@ def test_install_group_sbang(install_mockery, configure_group_perms):
         f.write("foo")
 
     sbang.install_sbang()
-    check_sbang_installation(group=True)
+    check_sbang_installation(group)
 
     # install again and make sure sbang is still fine
     sbang.install_sbang()
-    check_sbang_installation(group=True)
+    check_sbang_installation(group)
+
+    # install again and make sure sbang is still fine
+    sbang.install_sbang()
+    check_sbang_installation()
+
+
+def test_install_group_sbang(install_mockery, configure_group_perms):
+    run_test_install_sbang(True)
 
 
 def test_install_user_sbang(install_mockery, configure_user_perms):
-    sbang_path = sbang.sbang_install_path()
-    sbang_bin_dir = os.path.dirname(sbang_path)
-
-    assert sbang_path.startswith(spack.store.store.unpadded_root)
-    assert not os.path.exists(sbang_bin_dir)
-
-    sbang.install_sbang()
-    check_sbang_installation()
-
-    # put an invalid file in for sbang
-    fs.mkdirp(sbang_bin_dir)
-    with open(sbang_path, "w") as f:
-        f.write("foo")
-
-    sbang.install_sbang()
-    check_sbang_installation()
-
-    # install again and make sure sbang is still fine
-    sbang.install_sbang()
-    check_sbang_installation()
-    check_sbang_bin_dir_permissions()
+    run_test_install_sbang(False)
 
 
 def test_install_sbang_too_long(tmpdir):
