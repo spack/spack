@@ -12,9 +12,9 @@ class RNlme(RPackage):
     Fit and compare Gaussian linear and nonlinear mixed-effects models."""
 
     homepage = "https://cloud.r-project.org/package=nlme"
-    url      = "https://cloud.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/nlme"
+    cran = "nlme"
 
+    version('3.1-153', sha256='3d27a98edf1b16ee868949e823ac0babbf10c937a7220d648b7ef9480cd680e3')
     version('3.1-152', sha256='5b65d1b1f121caf29e60341acf6d85e267fd94ed517748cf42d36359f74e515e')
     version('3.1-151', sha256='a2c626bad68bf582663005170d1b9d844a10dca8efb13597f15ffb4b1fe886ca')
     version('3.1-141', sha256='910046260a03d8f776ac7b0766b5adee91556829d0d8a70165b2c695ce038056')

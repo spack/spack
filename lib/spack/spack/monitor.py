@@ -28,6 +28,7 @@ import spack
 import spack.config
 import spack.hash_types as ht
 import spack.main
+import spack.paths
 import spack.store
 import spack.util.path
 import spack.util.spack_json as sjson
@@ -143,7 +144,8 @@ class SpackMonitorClient:
             return
 
         save_dir = spack.util.path.canonicalize_path(
-            spack.config.get('config:monitor_dir', '~/.spack/reports/monitor'))
+            spack.config.get('config:monitor_dir', spack.paths.default_monitor_path)
+        )
 
         # Name based on timestamp
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')

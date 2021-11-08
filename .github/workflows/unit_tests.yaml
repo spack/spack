@@ -15,8 +15,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: Install Python Packages
@@ -31,10 +31,10 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -48,26 +48,6 @@ jobs:
     - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
-  # Build the documentation
-  documentation:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install System packages
-      run: |
-        sudo apt-get -y update
-        sudo apt-get install -y coreutils ninja-build graphviz
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools
-        pip install --upgrade -r lib/spack/docs/requirements.txt
-    - name: Build documentation
-      run: |
-          share/spack/qa/run-doc-tests
-
   # Check which files have been updated by the PR
   changes:
     runs-on: ubuntu-latest
@@ -77,12 +57,12 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       if: ${{ github.event_name == 'push' }}
       with:
         fetch-depth: 0
     # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721
       id: filter
       with:
         # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
@@ -112,17 +92,17 @@ jobs:
 
   # Run unit tests with different configurations on linux
   unittests:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
         concretizer: ['original', 'clingo']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -171,19 +151,19 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@v2.1.0
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -209,13 +189,13 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@v2.1.0
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
   # Test for Python2.6 run on Centos 6
   centos6:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
@@ -228,8 +208,8 @@ jobs:
           SPACK_TEST_SOLVER: original
       run: |
           whoami && echo $HOME && cd $HOME
-          git clone https://github.com/spack/spack.git && cd spack
-          git fetch origin ${{ github.ref }}:test-branch
+          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
           bin/spack unit-test -x
     - name: Run unit tests (only package tests)
@@ -240,15 +220,15 @@ jobs:
           SPACK_TEST_SOLVER: original
       run: |
           whoami && echo $HOME && cd $HOME
-          git clone https://github.com/spack/spack.git && cd spack
-          git fetch origin ${{ github.ref }}:test-branch
+          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
           bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
   rhel8-platform-python:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
@@ -258,7 +238,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -274,13 +254,13 @@ jobs:
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -314,22 +294,22 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@v2.1.0
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   build:
-    needs: [ validate, style, documentation, changes ]
+    needs: [ validate, style, changes ]
     runs-on: macos-latest
     strategy:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -360,7 +340,7 @@ jobs:
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@v2.1.0
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml

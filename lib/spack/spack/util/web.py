@@ -28,6 +28,7 @@ import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto
+import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
@@ -73,6 +74,10 @@ def uses_ssl(parsed_url):
 
         if url_util.parse(endpoint_url, scheme='https').scheme == 'https':
             return True
+
+    elif parsed_url.scheme == 'gs':
+        tty.debug("(uses_ssl) GCS Blob is https")
+        return True
 
     return False
 
@@ -195,6 +200,12 @@ def push_to_url(
         if not keep_original:
             os.remove(local_file_path)
 
+    elif remote_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(remote_url)
+        gcs.upload_to_blob(local_file_path)
+        if not keep_original:
+            os.remove(local_file_path)
+
     else:
         raise NotImplementedError(
             'Unrecognized URL scheme: {SCHEME}'.format(
@@ -216,6 +227,10 @@ def url_exists(url):
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.exists()
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL
@@ -277,6 +292,15 @@ def remove_url(url, recursive=False):
                 _debug_print_delete_results(r)
         else:
             s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
+        return
+
+    elif url.scheme == 'gs':
+        if recursive:
+            bucket = gcs_util.GCSBucket(url)
+            bucket.destroy(recursive=recursive)
+        else:
+            blob = gcs_util.GCSBlob(url)
+            blob.delete_blob()
         return
 
     # Don't even try for other URL schemes.
@@ -357,6 +381,10 @@ def list_url(url, recursive=False):
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBucket(url)
+        return gcs.get_all_blobs(recursive=recursive)
 
 
 def spider(root_urls, depth=0, concurrency=32):
@@ -516,6 +544,9 @@ def _urlopen(req, *args, **kwargs):
     if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
+    elif url_util.parse(url).scheme == 'gs':
+        import spack.gcs_handler
+        opener = spack.gcs_handler.gcs_open
 
     try:
         return opener(req, *args, **kwargs)

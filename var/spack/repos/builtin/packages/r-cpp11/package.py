@@ -15,7 +15,7 @@ class RCpp11(RPackage):
     supports interaction with 'ALTREP' vectors."""
 
     homepage = "https://github.com/r-lib/cpp11"
-    url      = "https://cloud.r-project.org/src/contrib/cpp11_0.2.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/cpp11"
+    cran = "cpp11"
 
+    version('0.4.0', sha256='1768fd07dc30dfbbf8f3fb1a1183947cb7e1dfd909165c4d612a63c163a41e87')
     version('0.2.5', sha256='6fef9306c0c3043252c987e77c99ef679b2ea46dffafae318dbeb38ad21a2e20')

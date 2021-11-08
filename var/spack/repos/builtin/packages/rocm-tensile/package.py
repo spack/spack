@@ -29,6 +29,7 @@ class RocmTensile(CMakePackage):
 
     tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
     variant('openmp', default=True, description='Enable OpenMP')
 

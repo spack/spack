@@ -174,6 +174,13 @@ class Hdf5(CMakePackage):
             'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
             'fortran/src/H5Fff_F03.f90',
             string=True, ignore_absent=True)
+        if self.run_tests:
+            # hdf5 has ~2200 CPU-intensive tests, some of them have races:
+            # Often, these loop endless(at least on one Xeon and one EPYC).
+            # testphdf5 fails indeterministic. This fixes finishing the tests
+            filter_file('REMOVE_ITEM H5P_TESTS',
+                        'REMOVE_ITEM H5P_TESTS t_bigio t_shapesame testphdf5',
+                        'testpar/CMakeTests.cmake')
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.

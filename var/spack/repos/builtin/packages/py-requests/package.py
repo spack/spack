@@ -22,6 +22,8 @@ class PyRequests(PythonPackage):
     version('2.11.1', sha256='5acf980358283faba0b897c73959cecf8b841205bb4b2ad3ef545f46eae1a133')
     version('2.3.0',  sha256='1c1473875d846fe563d70868acf05b1953a4472f4695b7b3566d1d978957b8fc')
 
+    variant('socks', default=False, description='SOCKS and HTTP proxy support')
+
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
@@ -33,3 +35,4 @@ class PyRequests(PythonPackage):
     depends_on('py-urllib3@1.21.1:1.26', type=('build', 'run'), when='@2.25.0:')
     depends_on('py-urllib3@1.21.1:1.24,1.25.2:1.25', type=('build', 'run'), when='@2.16.0:2.24')
     depends_on('py-certifi@2017.4.17:', type=('build', 'run'), when='@2.16.0:')
+    depends_on('py-pysocks@1.5.6,1.5.8:', type=('build', 'run'), when='+socks')

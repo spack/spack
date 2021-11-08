@@ -515,7 +515,7 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
             # new or the old concretizer
             expected_messages = (
                 'Conflicts in concretized spec',
-                'does not satisfy'
+                'A conflict was triggered',
             )
             assert any(x in content for x in expected_messages)
 

@@ -460,9 +460,14 @@ class Dealii(CMakePackage, CudaPackage):
         ))
 
         # Threading
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_THREADS', 'threads'
-        ))
+        if spec.satisfies('@9.3.0:'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_TBB', 'threads'
+            ))
+        else:
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_THREADS', 'threads'
+            ))
         if '+threads' in spec:
             if (spec.satisfies('^intel-parallel-studio+tbb')):
                 # deal.II/cmake will have hard time picking up TBB from Intel.

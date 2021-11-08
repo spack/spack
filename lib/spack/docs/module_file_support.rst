@@ -213,6 +213,18 @@ location). The set ``my_custom_lmod_modules`` will install its lmod
 modules to ``/path/to/install/custom/lmod/modules`` (and still install
 its tcl modules, if any, to the default location).
 
+By default, an architecture-specific directory is added to the root
+directory. A module set may override that behavior by setting the
+``arch_folder`` config value to ``False``.
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       roots:
+         tcl: /path/to/install/tcl/modules
+       arch_folder: false
+
 Obviously, having multiple module sets install modules to the default
 location could be confusing to users of your modules. In the next
 section, we will discuss enabling and disabling module types (module
@@ -448,6 +460,36 @@ that are already in the LMod hierarchy.
   Deep hierarchies and ``lmod spider``
    For hierarchies that are deeper than three layers ``lmod spider`` may have some issues.
    See `this discussion on the LMod project <https://github.com/TACC/Lmod/issues/114>`_.
+
+""""""""""""""""""""""
+Select default modules
+""""""""""""""""""""""
+
+By default, when multiple modules of the same name share a directory,
+the highest version number will be the default module. This behavior
+of the ``module`` command can be overridden with a symlink named
+``default`` to the desired default module. If you wish to configure
+default modules with Spack, add a ``defaults`` key to your modules
+configuration:
+
+.. code-block:: yaml
+
+  modules:
+    my-module-set:
+      tcl:
+        defaults:
+        - gcc@10.2.1
+        - hdf5@1.2.10+mpi+hl%gcc
+
+These defaults may be arbitrarily specific. For any package that
+satisfies a default, Spack will generate the module file in the
+appropriate path, and will generate a default symlink to the module
+file as well.
+
+.. warning:: 
+  If Spack is configured to generate multiple default packages in the
+  same directory, the last modulefile to be generated will be the
+  default module.
 
 .. _customize-env-modifications:
 

@@ -31,6 +31,7 @@ class Rocblas(CMakePackage):
                             'gfx1012', 'gfx1030')
 
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
 

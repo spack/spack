@@ -15,9 +15,9 @@ class RGgplot2(RPackage):
     details."""
 
     homepage = "https://ggplot2.tidyverse.org/"
-    url      = "https://cloud.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggplot2"
+    cran = "ggplot2"
 
+    version('3.3.5', sha256='b075294faf3af31b18e415f260c62d6000b218770e430484fe38819bdc3224ea')
     version('3.3.3', sha256='45c29e2348dbd195bbde1197a52db7764113e57f463fd3770fb899acc33423cc')
     version('3.2.0', sha256='31b6897fb65acb37913ff6e2bdc1b57f652360098ae3aa660abdcf54f84d73b3')
     version('3.1.1', sha256='bfde297f3b4732e7f560078f4ce131812a70877e6b5b1d41a772c394939e0c79')
@@ -26,6 +26,7 @@ class RGgplot2(RPackage):
 
     depends_on('r@3.1:', when='@:3.1.1', type=('build', 'run'))
     depends_on('r@3.2:', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.3:', when='@3.3.4:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-glue', when='@3.3.3:', type=('build', 'run'))
     depends_on('r-gtable@0.1.1:', type=('build', 'run'))
@@ -33,6 +34,7 @@ class RGgplot2(RPackage):
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mgcv', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-rlang@0.3.0:', when='@3.0.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.10:', when='@3.3.4:', type=('build', 'run'))
     depends_on('r-scales@0.5.0:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-withr@2.0.0:', when='@3.0.0:', type=('build', 'run'))
