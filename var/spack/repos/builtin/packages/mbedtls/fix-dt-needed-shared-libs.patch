@@ -1,0 +1,82 @@
+From 01ef723bbab53fa3004e7d7c1f7fb011e9c482cc Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Wed, 3 Nov 2021 00:53:05 +0100
+Subject: [PATCH] DT_NEEDED for shared builds in makefile
+
+The makefile build specifies -L. -lmbedx509 -lmbedcrypto flags first,
+and only then object files referencing symbols from those libraries.
+
+In this order the linker will not add the linked libraries to the
+DT_NEEDED section because they are not referenced yet (at least that
+happens for me on ubuntu 20.04 with the default gnu compiler tools).
+
+By first specifying the object files and then the linked libraries, we
+do end up with libmbedx509 and libmbedcrypto in the DT_NEEDED sections.
+
+This way running dlopen(...) on libmedtls.so just works.
+
+Note that the CMake build does this by default.
+
+Signed-off-by: Harmen Stoppels <harmenstoppels@gmail.com>
+--- 
+diff --git a/library/Makefile b/library/Makefile
+index 13cd7db0c..cbe6031ff 100644
+--- a/library/Makefile
++++ b/library/Makefile
+@@ -199,7 +199,7 @@ endif
+ 
+ libmbedtls.$(SOEXT_TLS): $(OBJS_TLS) libmbedx509.so
+ 	echo "  LD    $@"
+-	$(CC) -shared -Wl,-soname,$@ -L. -lmbedcrypto -lmbedx509 $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_TLS)
++	$(CC) -shared -Wl,-soname,$@ -o $@ $(OBJS_TLS) -L. -lmbedcrypto -lmbedx509$(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedtls.so: libmbedtls.$(SOEXT_TLS)
+ 	echo "  LN    $@ -> $<"
+@@ -207,7 +207,7 @@ libmbedtls.so: libmbedtls.$(SOEXT_TLS)
+ 
+ libmbedtls.dylib: $(OBJS_TLS) libmbedx509.dylib
+ 	echo "  LD    $@"
+-	$(CC) -dynamiclib -L. -lmbedcrypto -lmbedx509 $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_TLS)
++	$(CC) -dynamiclib -o $@ $(OBJS_TLS) -L. -lmbedcrypto -lmbedx509 $(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedtls.dll: $(OBJS_TLS) libmbedx509.dll
+ 	echo "  LD    $@"
+@@ -226,7 +226,7 @@ endif
+ 
+ libmbedx509.$(SOEXT_X509): $(OBJS_X509) libmbedcrypto.so
+ 	echo "  LD    $@"
+-	$(CC) -shared -Wl,-soname,$@ -L. -lmbedcrypto $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_X509)
++	$(CC) -shared -Wl,-soname,$@ -o $@ $(OBJS_X509) -L. -lmbedcrypto $(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedx509.so: libmbedx509.$(SOEXT_X509)
+ 	echo "  LN    $@ -> $<"
+@@ -234,7 +234,7 @@ libmbedx509.so: libmbedx509.$(SOEXT_X509)
+ 
+ libmbedx509.dylib: $(OBJS_X509) libmbedcrypto.dylib
+ 	echo "  LD    $@"
+-	$(CC) -dynamiclib -L. -lmbedcrypto  $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_X509)
++	$(CC) -dynamiclib -o $@ $(OBJS_X509) -L. -lmbedcrypto  $(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedx509.dll: $(OBJS_X509) libmbedcrypto.dll
+ 	echo "  LD    $@"
+@@ -253,7 +253,7 @@ endif
+ 
+ libmbedcrypto.$(SOEXT_CRYPTO): $(OBJS_CRYPTO)
+ 	echo "  LD    $@"
+-	$(CC) -shared -Wl,-soname,$@ $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_CRYPTO)
++	$(CC) -shared -Wl,-soname,$@ -o $@ $(OBJS_CRYPTO) $(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedcrypto.so: libmbedcrypto.$(SOEXT_CRYPTO)
+ 	echo "  LN    $@ -> $<"
+@@ -261,7 +261,7 @@ libmbedcrypto.so: libmbedcrypto.$(SOEXT_CRYPTO)
+ 
+ libmbedcrypto.dylib: $(OBJS_CRYPTO)
+ 	echo "  LD    $@"
+-	$(CC) -dynamiclib $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@ $(OBJS_CRYPTO)
++	$(CC) -dynamiclib -o $@ $(OBJS_CRYPTO) $(LOCAL_LDFLAGS) $(LDFLAGS)
+ 
+ libmbedcrypto.dll: $(OBJS_CRYPTO)
+ 	echo "  LD    $@"
+-- 
+2.25.1
+
