@@ -149,9 +149,6 @@ class SIPPackage(PackageBase):
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
         for module in self.import_modules:
-            if not re.match('[a-zA-Z0-9._]+$', module):
-                continue
-
             self.run_test(inspect.getmodule(self).python.path,
                           ['-c', 'import {0}'.format(module)],
                           purpose='checking import of {0}'.format(module),
