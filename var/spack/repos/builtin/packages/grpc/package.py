@@ -55,9 +55,9 @@ class Grpc(CMakePackage):
 
     def cmake_args(self):
         args = [
-            define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            define_from_variant('gRPC_BUILD_CODEGEN', 'codegen'),
-            define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('gRPC_BUILD_CODEGEN', 'codegen'),
+            self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             '-DgRPC_BUILD_CSHARP_EXT:Bool=OFF',
             '-DgRPC_INSTALL:Bool=ON',
             # Tell grpc to skip vendoring and look for deps via find_package:
