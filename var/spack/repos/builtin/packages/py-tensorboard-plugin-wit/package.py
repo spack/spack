@@ -23,16 +23,24 @@ class PyTensorboardPluginWit(Package):
 
     version('master', branch='master')
     version('1.8.0', sha256='1e4de1bbf6ae61c4d27b114ec2e1093bc4765b8c2bbb2cc5d43e2075b08a5fea')
+    version('1.8.0-py3',
+            expand=False,
+            url='https://pypi.io/packages/py3/t/tensorboard_plugin_wit/tensorboard_plugin_wit-1.8.0-py3-none-any.whl',
+            sha256='2a80d1c551d741e99b2f197bb915d8a133e24adb8da1732b840041860f91183a')
     version('1.7.0', sha256='30dcab9065b02c3f1476f4fb92b27f6feb6c00cdb281699c44d8e69c86745247')
 
     # Bazel 3.7+ does not work
     # https://github.com/PAIR-code/what-if-tool/issues/140
-    depends_on('bazel@0.26.1:3.6', type='build')
-    depends_on('py-pip', type='build')
-    depends_on('py-wheel', type='build')
+    # The constraints below are the only way to have the wheel package not
+    # depend on bazel.
+    depends_on('bazel@0.26.1:3.6', type='build', when='@1.7.0')
+    depends_on('bazel@0.26.1:3.6', type='build', when='@1.8.0')
+
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
+    depends_on('python@3.2:', type=('build', 'run'), when='@1.8.0-py3')
     depends_on('py-wheel', type='build')
+    depends_on('py-pip', type='build')
 
     extends('python')
 
@@ -48,6 +56,10 @@ class PyTensorboardPluginWit(Package):
     def setup_build_environment(self, env):
         self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
         env.set('TEST_TMPDIR', self.tmp_path)
+
+    @when('@1.8.0-py3')
+    def setup_build_environment(self, env):
+        pass
 
     def setup(self, spec, prefix):
         builddir = join_path(self.stage.source_path, 'spack-build')
@@ -71,6 +83,10 @@ class PyTensorboardPluginWit(Package):
                     '{0} setup.py'.format(spec['python'].command.path),
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
 
+    @when('@1.8.0-py3')
+    def setup(self, spec, prefix):
+        pass
+
     def build(self, spec, prefix):
         bazel('--nohome_rc',
               '--nosystem_rc',
@@ -81,10 +97,20 @@ class PyTensorboardPluginWit(Package):
               '--verbose_failures',
               '--subcommands=pretty_print',
               '--spawn_strategy=local',
+              '--jobs={0}'.format(make_jobs),
               'tensorboard_plugin_wit/pip_package:build_pip_package')
+
+    @when('@1.8.0-py3')
+    def build(self, spec, prefix):
+        pass
 
     def install(self, spec, prefix):
         with working_dir('spack-build/release'):
             args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
         remove_linked_tree(self.tmp_path)
+
+    @when('@1.8.0-py3')
+    def install(self, spec, prefix):
+        pip = which('pip')
+        pip('install', '--prefix={0}'.format(prefix), self.stage.archive_file)

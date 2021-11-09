@@ -17,6 +17,8 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ['adamjstewart', 'aweits']
     import_modules = ['tensorflow']
 
+    version('2.6.2',  sha256='e68c1d346fc3d529653530ca346b2c62f5b31bd4fcca7ffc9c65bb39ab2f6ed3')
+    version('2.6.1',  sha256='8e457f617bc2eb43de2a51900e7922b60a8107e2524b2576438f1acccee1d043')
     version('2.6.0',  sha256='41b32eeaddcbc02b0583660bcf508469550e4cd0f86b22d2abe72dfebeacde0f')
     version('2.5.0',  sha256='233875ea27fc357f6b714b2a0de5f6ff124b50c1ee9b3b41f9e726e9e677b86c')
     version('2.4.1',  sha256='f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0')
@@ -204,8 +206,11 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
     depends_on('protobuf@:3.17')
     depends_on('flatbuffers+python@1.12.0:1.12', type=('build', 'run'), when='@2.4.0:')
+
     # tensorboard
-    # tensorflow-estimator
+    depends_on('py-tensorboard@2.5.0:2.5', type=('build', 'run'), when='@2.5')
+    depends_on('py-tensorboard@2.6.0:2.6', type=('build', 'run'), when='@2.6')
+
     depends_on('py-termcolor@1.1.0:1.1', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:2.3')
     depends_on('py-wrapt@1.12.1:1.12', type=('build', 'run'), when='@2.4.0:')

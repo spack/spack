@@ -16,6 +16,8 @@ class PyTensorboard(Package):
 
     maintainers = ['aweits']
 
+    version('2.6.0', sha256='3d1e0a05828b25c1c28bd90c73d981a0a65c6a5550510bc7983d03ab915e6503')
+    version('2.5.0', sha256='58c9e0c31062821ab1c02845c3b7902da92574ef7192d701b1828dacbe4ee610')
     version('2.4.1', sha256='736dc204aa292d221f5871077e60994a9a9ea8e33b841f0d754d510fe6cc7635')
     version('2.4.0', sha256='28a30794c1c797357b2086477394b59afa0b18ca48592ca3c0627f7f10536373')
     version('2.3.0', sha256='947a58702c2841eb4559637dbf8639633f79de9a0f422be9737f3563a1725440')
@@ -23,6 +25,7 @@ class PyTensorboard(Package):
 
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
+    depends_on('bazel@3.7.0:', type='build', when='@2.5.0:')
     depends_on('py-pip', type='build')
     depends_on('py-wheel', type='build')
     depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
@@ -35,18 +38,29 @@ class PyTensorboard(Package):
     depends_on('py-google-auth@1.6.3:1', type=('build', 'run'))
     depends_on('py-numpy@1.12.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
-    depends_on('py-six@1.10.0:', type=('build', 'run'))
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.4')
     depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
-    depends_on('py-wheel', type=('build', 'run'))
-    depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
     depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
+
+    # py-tensorboard-plugin-wit only builds with versions of bazel older than
+    # what is needed for py-tensorboard-2.5 and greater. Work around that for
+    # now by using a wheel.
     depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:')
+    depends_on('py-tensorboard-plugin-wit@1.8.0-py3', type=('build', 'run'),
+               when='@2.5.0:')
+
+    depends_on('py-tensorboard-data-server@0.6.0:0.6', type=('build', 'run'), when='@2.5:')
 
     extends('python')
 
-    patch('tboard_shellenv.patch')
+    patch('tboard_shellenv.patch', when='@:2.4')
 
     phases = ['configure', 'build', 'install']
+
+    # Version 2.6.0 does not build in parallel
+    @property
+    def parallel(self):
+        return self.spec.version != Version('2.6.0')
 
     def patch(self):
         filter_file('build --define=angular_ivy_enabled=True',
@@ -100,6 +114,7 @@ class PyTensorboard(Package):
               '--verbose_failures',
               '--spawn_strategy=local',
               '--subcommands=pretty_print',
+              '--jobs={0}'.format(make_jobs),
               '//tensorboard/pip_package')
 
     def install(self, spec, prefix):
