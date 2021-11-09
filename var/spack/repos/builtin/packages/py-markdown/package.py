@@ -39,4 +39,4 @@ class PyMarkdown(PythonPackage):
 
     depends_on('py-setuptools', type='build', when='@2.6.11:')
     depends_on('py-setuptools@36.6:', type='build', when='@3.1:')
-    depends_on('importlib-metadata', type=('build', 'run'), when='@3.3.4: ^python@:3.7')
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@3.3.4: ^python@:3.7')
