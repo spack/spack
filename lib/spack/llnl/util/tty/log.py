@@ -607,7 +607,7 @@ class log_output(object):
         self._active = True
 
         # return this log_output object so that the user can do things
-        # like temporarily echo some ouptut.
+        # like temporarily echo some output.
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

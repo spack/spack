@@ -3921,7 +3921,7 @@ class Spec(object):
             elif 'version' in parts:
                 col = '@'
 
-            # Finally, write the ouptut
+            # Finally, write the output
             write(sig + morph(spec, str(current)), col)
 
         attribute = ''
