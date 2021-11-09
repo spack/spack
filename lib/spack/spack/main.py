@@ -491,8 +491,9 @@ def setup_main_options(args):
 
     # override lock configuration if passed on command line
     if args.locks is not None:
-        spack.util.lock.check_lock_safety(spack.paths.prefix)
-        spack.config.set('config:locks', False, scope='command_line')
+        if args.locks is False:
+            spack.util.lock.check_lock_safety(spack.paths.prefix)
+        spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
         rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
