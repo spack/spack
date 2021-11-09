@@ -110,7 +110,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('mpich@3.4.1:', when='@2.0: ^mpich')
     depends_on('openmpi@4.1.0:', when='@2.0: ^openmpi')
 
-    conflicts('%gcc@:8.9999', when='@2.1:')
+    conflicts('%gcc@:8', when='@2.1:')
 
     conflicts('+tutorial', when='backend=hpx')
     # FleCSI@2: no longer supports serial or charmpp backends
