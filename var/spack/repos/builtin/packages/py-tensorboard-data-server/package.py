@@ -46,4 +46,3 @@ class PyTensorboardDataServer(PythonPackage):
         wheel_files_pattern = '*.whl'
         wheel_files = glob.glob(wheel_files_pattern)
         pip('install', '--prefix={0}'.format(prefix), *wheel_files)
-
