@@ -24,8 +24,8 @@ class Icet(CMakePackage):
     depends_on('gl', when="+opengl")
 
     def cmake_args(self):
-        return [ self.define_from_variant("ICET_USE_OPENGL", "opengl"),
-                 self.define_from_variant("BUILD_SHARED_LIBS", "shared") ]
+        return [self.define_from_variant("ICET_USE_OPENGL", "opengl"),
+                self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Work-around for ill-placed CMake modules"""
