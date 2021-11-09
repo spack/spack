@@ -1058,7 +1058,7 @@ def is_enabled(text):
 # This code gets all the fabric names from the variants list
 # Idea taken from the AutotoolsPackage source.
 def get_options_from_variant(self, name):
-    values = self.variants[name].values
+    values = self.variants[name][0].values
     if getattr(values, 'feature_values', None):
         values = values.feature_values
     return values
