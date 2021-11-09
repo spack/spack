@@ -110,6 +110,9 @@ class Mesa(MesonPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
     conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
 
+    # Requre glx or egl when glvnd is enabled
+    conflicts('~egl ~glx +glvnd')
+
     # Require at least 1 front-end
     conflicts('~egl ~glx ~osmesa')
 
