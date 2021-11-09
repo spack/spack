@@ -10,7 +10,7 @@ class PySphinxMultiversion(PythonPackage):
     """A Sphinx extension for building self-hosted versioned documentation."""
 
     homepage = "https://github.com/Holzhaus/sphinx-multiversion"
-    pypi = "sphinx-multiversion/sphinx_rtd_theme-0.4.2.tar.gz"
+    pypi = "sphinx-multiversion/sphinx-multiversion-0.2.4.tar.gz"
 
     version('0.2.4', sha256='5cd1ca9ecb5eed63cb8d6ce5e9c438ca13af4fa98e7eb6f376be541dd4990bcb')
     version('0.2.3', sha256='e46565ac2f703f3b55652f33c159c8059865f5d13dae7f0e8403e5afc2996f5f')
