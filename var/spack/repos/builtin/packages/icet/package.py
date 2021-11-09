@@ -18,7 +18,7 @@ class Icet(CMakePackage):
     version('2.1.1', sha256='04cc5b7aa5b3ec95b255febdcfc2312e553ce3db5ca305526803d5737561ec32')
 
     variant('opengl', default=False, description="Use opengl")
-    variant('shared', default=False, description='Enable shared library')
+    variant('shared', default=True, description='Enable shared library')
 
     depends_on('mpi')
     depends_on('gl', when="+opengl")
