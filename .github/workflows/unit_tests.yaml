@@ -199,6 +199,11 @@ jobs:
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/setup_git.sh
     - name: Run unit tests (full test-suite)
       # The CentOS 6 container doesn't run with coverage, but
       # under the same conditions it runs the full test suite
