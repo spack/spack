@@ -133,7 +133,8 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     with tmpdir.as_cwd():
         spack_test('run',
                    '--log-format=junit', '--log-file=test.xml',
-                   pkg_name)
+                   pkg_name,
+                   fail_on_error=False)
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -160,7 +161,8 @@ def test_cdash_output_test_error(
         spack_test('run',
                    '--log-format=cdash',
                    '--log-file=cdash_reports',
-                   'test-error')
+                   'test-error',
+                   fail_on_error=False)
         report_dir = tmpdir.join('cdash_reports')
         print(tmpdir.listdir())
         assert report_dir in tmpdir.listdir()
