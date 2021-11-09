@@ -8,8 +8,13 @@ import os
 from spack import *
 
 
+def is_CrayXC():
+    return (spack.platforms.host().name == 'cray') and \
+           (os.environ.get('CRAYPE_NETWORK_TARGET') == "aries")
+
+
 def cross_detect():
-    if spack.platforms.host().name == 'cray':
+    if is_CrayXC():
         if which('srun'):
             return 'cray-aries-slurm'
         if which('aprun'):
@@ -53,8 +58,8 @@ class Upcxx(Package):
     variant('cross', default=cross_detect(),
             description="UPC++ cross-compile target (autodetect by default)")
 
-    conflicts('cross=none', when='platform=cray',
-              msg='cross=none is unacceptable on Cray.' +
+    conflicts('cross=none', when=is_CrayXC(),
+              msg='cross=none is unacceptable on Cray XC.' +
                   'Please specify an appropriate "cross" value')
 
     # UPC++ always relies on GASNet-EX.
@@ -74,7 +79,7 @@ class Upcxx(Package):
     def setup_run_environment(self, env):
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
-        if 'platform=cray' in self.spec:
+        if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
 
     def setup_dependent_package(self, module, dep_spec):
@@ -83,7 +88,7 @@ class Upcxx(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
-        if 'platform=cray' in self.spec:
+        if is_CrayXC():
             env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
@@ -94,10 +99,12 @@ class Upcxx(Package):
 
         options = ["--prefix=%s" % prefix]
 
-        if 'cross=none' not in spec:
-            options.append('--enable-cross=' + spec.variants['cross'].value)
+        if 'cross=none' in spec:
+            options.append('--without-cross')
+        else:
+            options.append('--with-cross=' + spec.variants['cross'].value)
 
-        if 'platform=cray' in spec:
+        if is_CrayXC():
             # Spack loads the cray-libsci module incorrectly on ALCF theta,
             # breaking the Cray compiler wrappers
             # cray-libsci is irrelevant to our build, so disable it
