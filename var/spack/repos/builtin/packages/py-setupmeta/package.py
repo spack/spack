@@ -15,4 +15,4 @@ class PySetupmeta(PythonPackage):
     version('3.3.0', sha256='32914af4eeffb8bf1bd45057254d9dff4d16cb7ae857141e07698f7ac19dc960')
 
     depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
