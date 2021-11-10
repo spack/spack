@@ -521,7 +521,8 @@ To resolve this problem, please try the following:
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        if set(self.variants[variant].values) == set((True, False)):
+        variant_desc, _ = self.variants[variant]
+        if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
@@ -534,8 +535,8 @@ To resolve this problem, please try the following:
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
             feature_values = getattr(
-                self.variants[variant].values, 'feature_values', None
-            ) or self.variants[variant].values
+                variant_desc.values, 'feature_values', None
+            ) or variant_desc.values
 
             options = [
                 (value,

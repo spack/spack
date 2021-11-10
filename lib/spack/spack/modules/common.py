@@ -40,7 +40,7 @@ import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-import spack.build_environment as build_environment
+import spack.build_environment
 import spack.config
 import spack.environment
 import spack.error
@@ -732,12 +732,12 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.modifications_from_dependencies(
+            spack.build_environment.modifications_from_dependencies(
                 spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(spec.package)
+        spack.build_environment.set_module_variables_for_package(spec.package)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml

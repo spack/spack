@@ -78,7 +78,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -338,7 +338,7 @@ environment variables:
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests)
+                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -392,7 +392,8 @@ environment variables:
 
     try:
         specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests, reuse=args.reuse
+        )
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
