@@ -248,13 +248,15 @@ def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     outfile = os.path.join(testdir, 'test_suite.lock')
     with open(outfile, 'r') as f:
         output = f.read()
-    changed_hash = output.replace(
-        spack.store.db.query('printing-package')[0].full_hash(),
-        'fakehash492ucwhwvzhxfbmcc45x49ha')
+        changed_hash = output.replace(
+            spack.store.db.query('printing-package')[0].full_hash(),
+            'fakehash492ucwhwvzhxfbmcc45x49ha')
     with open(outfile, 'w') as f:
         f.write(changed_hash)
 
+    # The find command should show the contents
     find_output = spack_test('find')
     assert 'printpkg' in find_output
+    # The results should be obtainable
     results_output = spack_test('results')
     assert 'PASSED' in results_output
