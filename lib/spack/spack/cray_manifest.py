@@ -127,6 +127,8 @@ def entries_to_specs(entries):
             dep_hash = properties['hash']
             deptypes = properties['type']
             if dep_hash in spec_dict:
+                if entry['hash'] not in spec_dict:
+                    continue
                 parent_spec = spec_dict[entry['hash']]
                 dep_spec = spec_dict[dep_hash]
                 parent_spec._add_dependency(dep_spec, deptypes)
