@@ -21,11 +21,16 @@ class Morphio(CMakePackage):
     variant('mpi', default=True, description="Build with MPI support")
 
     depends_on('cmake@3.2:', type='build')
-    depends_on('hdf5')
     depends_on('mpi', when='+mpi')
 
+    depends_on('highfive~mpi', when='~mpi')
+    depends_on('highfive+mpi', when='+mpi')
+
     def cmake_args(self):
-        args = ['-DBUILD_BINDINGS:BOOL=OFF']
+        args = [
+            '-DBUILD_BINDINGS:BOOL=OFF',
+            '-DEXTERNAL_HIGHFIVE:BOOL=ON',
+        ]
         if self.spec.satisfies("+mpi"):
             args += [
                 '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),

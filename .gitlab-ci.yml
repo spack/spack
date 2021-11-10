@@ -7,7 +7,7 @@ variables:
   #
   # Needed for Intel compilers, which may re-use some libraries from a
   # GCC
-  BASE_GCC_VERSION: "9.3.0"
+  BASE_GCC_VERSION: "9.4.0"
   DEPLOYMENT_BRANCH: "merge-upstream"
   # Proprietary sources
   DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
@@ -59,6 +59,8 @@ setup_environment:
     - echo "DEPLOYMENT_UPSTREAM=$DEPLOYMENT_UPSTREAM" >> deployment.env
     - echo "MODULE_ROOT=$MODULE_ROOT" >> deployment.env
     - echo "OLD_DEPLOYMENT_MODULES=$OLD_DEPLOYMENT_MODULES" >> deployment.env
+    # Needed to nest `srun` commands within SLURM
+    - echo "SLURM_OVERLAP=1" >> deployment.env
   artifacts:
     when: always
     paths: [deployment.env]
@@ -77,7 +79,7 @@ atomic_build:
     strategy: depend
   variables:
     PARENT_PIPELINE_ID: $CI_PIPELINE_ID
-  resource_group: BlueBrain/GPFS/$CI_EXTERNAL_PULL_REQUEST_IID
+  resource_group: BlueBrain.GPFS.$CI_EXTERNAL_PULL_REQUEST_IID
 
 clean_merged_prs:
   needs: [setup_environment]
@@ -89,7 +91,7 @@ clean_merged_prs:
       when: never
     - when: always
   # No race conditions, please!
-  resource_group: BlueBrain/GPFS/Cleanup
+  resource_group: BlueBrain.GPFS.Cleanup
   script:
     - |
       pulls=$(curl -sG "https://api.github.com/repos/BlueBrain/spack/pulls"|python -c '

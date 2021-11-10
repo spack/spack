@@ -27,8 +27,11 @@ class Asciitoh5(Package):
         shutil.copytree('mod', prefix.lib.mod)
         shutil.copytree('bin', prefix.bin)
         with working_dir(prefix):
-            link_flag = spec['hdf5'].libs.rpath_flags + ' ' +\
-                spec['hdf5'].libs.ld_flags
+            libs = spec['hdf5'].libs
+            link_flag = ''.join([
+                ' '.join(['-Wl,-rpath,' + x for x in libs.directories]),
+                libs.ld_flags
+            ])
             include_flag = ' -I%s' % (spec['hdf5'].prefix.include)
             which('nrnivmodl')('-incflags', include_flag, '-loadflags',
                                link_flag, 'lib/mod')

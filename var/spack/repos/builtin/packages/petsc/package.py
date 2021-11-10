@@ -453,6 +453,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 uselib = True
 
             library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
+            # The above fails if intel-mkl provides both blas and scalapack,
+            # but ~scalapack is requested!
+            if petsclibname == 'scalapack':
+                library_requested = spec.satisfies('+scalapack')
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,

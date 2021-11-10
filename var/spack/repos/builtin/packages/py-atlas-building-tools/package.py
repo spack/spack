@@ -24,11 +24,11 @@ class PyAtlasBuildingTools(PythonPackage):
     depends_on('py-click@7.0:', type=('build', 'run'))
     depends_on('py-networkx@2.4:', type=('build', 'run'))
     depends_on('py-nptyping@1.0.1:', type=('build', 'run'))
-    depends_on('py-numba@0.48.0', type=('build', 'run'))
+    depends_on('py-numba', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:', type=('build', 'run'))
     # numpy-quaternion version is capped because of an issue similar to
     # https://stackoverflow.com/questions/20518632/importerror-numpy-core-multiarray-failed-to-import
-    depends_on('py-numpy-quaternion@2017.10.14.11.11.56:2019.12.11.22.25.52', type=('build', 'run'))
+    depends_on('py-numpy-quaternion', type=('build', 'run'))
     depends_on('py-openpyxl@3.0.3:', type=('build', 'run'))
     depends_on('py-pandas@1.0.3:', type=('build', 'run'))
     depends_on('py-pillow@7.1.2:', type=('build', 'run'))

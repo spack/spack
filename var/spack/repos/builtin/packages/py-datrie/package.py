@@ -18,3 +18,4 @@ class PyDatrie(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type=('build'), when='@0.8.2:')
+    depends_on('py-pytest-runner', type=('build'))

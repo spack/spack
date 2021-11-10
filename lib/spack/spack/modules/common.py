@@ -423,6 +423,7 @@ class BaseConfiguration(object):
     def __init__(self, spec, module_set_name):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
+        self.module_set_name = module_set_name
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
@@ -792,6 +793,7 @@ class BaseContext(tengine.Context):
 
     def _create_module_list_of(self, what):
         mod = self.conf.module
+        name = self.conf.module_set_name
         kind = mod.__name__.rsplit('.', 1)[-1]
         validate = self.conf.load_only_generated
         index = dict()
@@ -799,7 +801,7 @@ class BaseContext(tengine.Context):
         def _load_indices(s):
             if len(index):
                 return
-            root = mod.make_layout(s).dirname()
+            root = mod.make_layout(s, name).dirname()
             index.update(read_module_index(root))
             for ups in read_module_indices():
                 index.update(ups.get(kind, {}))
@@ -818,7 +820,7 @@ class BaseContext(tengine.Context):
                 return False
             return True
 
-        return [mod.make_layout(x).use_name
+        return [mod.make_layout(x, name).use_name
                 for x in getattr(self.conf, what)
                 if _valid(x)]
 
@@ -835,6 +837,7 @@ class BaseModuleFileWriter(object):
         # This class is meant to be derived. Get the module of the
         # actual writer.
         self.module = inspect.getmodule(self)
+        self.module_set_name = module_set_name
         m = self.module
 
         # Create the triplet of configuration/layout/context

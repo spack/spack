@@ -22,14 +22,14 @@ packages:
     variants: +slurm
   eigen:
     variants: ~fftw~gmp~metis~mpfr~scotch
+  gmsh:
+    variants: ~mmg~fltk
   hadoop:
     version: [2.10.1]
   hdf5:
     variants: +cxx+hl
   icu4c:
     version: [64.1]
-  intel-mkl:
-    version: [2018.3.222]
     # Drags in heavy PEARL dependencies
   intltool:
     version: [0.50.2]
@@ -39,6 +39,7 @@ packages:
   julia:
     variants: +external_llvm
   libtool:
+    buildable: false  # different versions interact badly with autohell
     version: [2.4.2]
     externals:
     - spec: libtool@2.4.2
@@ -77,15 +78,23 @@ packages:
   python:
     variants: +tk
     version: [3.8.3]
+  py-numpy:
+    version: [1.19.5]  # thanks, tensorflow!
+  py-setuptools:
+    version: [57.4.0]  # last one to provide use_2to3, required by some software
+  py-six:
+    version: [1.15.0]  # thanks, tensorflow!
+  py-tables:
+    variants: +lzo     # leads to compile errors otherwise
   qt:
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc
   slurm:
     buildable: false
-    version: [17.02]
+    version: [21.08.3]
     externals:
-    - spec: slurm@17.02
+    - spec: slurm@21.08.3
       prefix: /usr
   steps:
     variants: +lapack+petsc+mpi
@@ -100,12 +109,12 @@ packages:
     variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
   trilinos:
     variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
-    version: [xsdk-0.4.0-rc1]
   all:
-    compiler: [gcc@9.3.0, intel@19.1.2.254, gcc@4.8.5]
+    compiler: [gcc@11.2.0]
     target: [skylake]
     providers:
-      mpi: [hpe-mpi]
+      # Needs all possible MPIs, otherwise ranking seems to get odd
+      mpi: [hpe-mpi@2.25.hmpt, hpe-mpi, intel-mpi, mvapich2]
       scalapack: [intel-mkl, netlib-scalapack]
       lapack: [intel-mkl, openblas]
       blas: [intel-mkl, openblas]

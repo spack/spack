@@ -57,6 +57,8 @@ __all__ = [
     'is_exe',
     'join_path',
     'last_modification_time_recursive',
+    'copy_all',
+    'make_link',
     'mkdirp',
     'partition_path',
     'prefixes',
@@ -641,6 +643,42 @@ def force_remove(*paths):
             os.remove(path)
         except OSError:
             pass
+
+
+def copy_all(src, dst, copyfunc=shutil.copy):
+    """Copy/process all files in a src dir into a destination dir.
+    """
+    isdir = os.path.isdir
+    for name in os.listdir(src):
+        pth = join_path(src, name)
+        isdir(pth) or copyfunc(pth, dst)
+
+
+def make_link(src, dst):
+    """Create a symlink in a given destination.
+    make_link is copy compatible i.e. will take the same args and behave
+    similarly to shutil.copy except that it will create a soft link instead.
+    If destination is a directory then a new symlink is created inside with
+    the same name as the original file.
+    Relative src paths create a relative symlink (properly relocated) while
+    absolute paths crete an abolute-path symlink.
+    If another link already exists in the destination with the same it is
+    deleted before link creation.
+    Args:
+        src (str): The path of the file to create a link to
+        dst (str): The link destination path (may be a directory)
+    """
+    if os.path.isdir(dst):
+        dst_dir = dst
+        dst = join_path(dst, os.path.basename(src))
+    else:
+        dst_dir = os.path.dirname(dst)
+    if not os.path.isabs(src):
+        src = os.path.relpath(src, dst_dir)  # update path relation
+    # Silently replace links, just like copy replaces files
+    if os.path.islink(dst):
+        os.remove(dst)
+    os.symlink(src, dst)
 
 
 @contextmanager

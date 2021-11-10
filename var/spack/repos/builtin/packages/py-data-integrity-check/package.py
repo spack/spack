@@ -16,6 +16,7 @@ class PyDataIntegrityCheck(PythonPackage):
     version('0.1.0', tag='v0.1.0')
 
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-click@7.0:', type=('build', 'run'))
     depends_on('py-pyyaml@5.3.1:', type=('build', 'run'))
     depends_on('py-h5py@3.1.0:', type=('build', 'run'))

@@ -15,6 +15,7 @@ class PyNexusSdk(PythonPackage):
     version('0.3.2', sha256='cd5668a062283410c5ff57a68c218440df607da84e0a813a8c9390611f7212b3')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-puremagic', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))

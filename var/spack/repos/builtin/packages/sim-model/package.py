@@ -68,8 +68,11 @@ class SimModel(Package):
         if dependencies is None:
             dependencies = self.spec.dependencies_dict('link').keys()
         for dep in set(dependencies):
-            link_flag += " {0.ld_flags} {0.rpath_flags}".format(
-                self.spec[dep].libs)
+            libs = self.spec[dep].libs
+            link_flag += " {0} {1}".format(
+                self.spec[dep].libs.ld_flags,
+                ' '.join(['-Wl,-rpath,' + x for x in libs.directories]),
+            )
             include_flag += " -I " + str(self.spec[dep].prefix.include)
 
         if '+profile' in self.spec:

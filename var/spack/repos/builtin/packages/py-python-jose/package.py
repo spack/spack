@@ -16,7 +16,8 @@ class PyPythonJose(PythonPackage):
     version('3.2.0', sha256='4e4192402e100b5fb09de5a8ea6bcc39c36ad4526341c123d401e2561720335b')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest-runner', type='build')
 
-    depends_on('py-six', type='run')
-    depends_on('py-rsa', type='run')
-    depends_on('py-ecdsa@:0.14.999', type='run')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-rsa', type=('build', 'run'))
+    depends_on('py-ecdsa@:0.14.999', type=('build', 'run'))

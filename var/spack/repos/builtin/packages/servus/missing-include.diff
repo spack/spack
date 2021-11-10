@@ -1,0 +1,10 @@
+--- spack-src/servus/serializable.h.orig	2021-11-23 12:50:19.600419365 +0100
++++ spack-src/servus/serializable.h	2021-11-23 12:50:35.155625240 +0100
+@@ -25,6 +25,7 @@
+ 
+ #include <functional> // function
+ #include <memory>     // shared_ptr
++#include <stdexcept>  // runtime_error
+ 
+ namespace servus
+ {

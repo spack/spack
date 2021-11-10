@@ -35,7 +35,7 @@ class Touchdetector(CMakePackage):
     variant('openmp', default=False, description='Enables OpenMP support')
 
     depends_on('cmake', type='build')
-    depends_on('boost@1.50:')
+    depends_on('boost@1.50:', when='@:5.6.1')
     depends_on('catch2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
     depends_on('fmt@:5.999', when='@4.5:')
@@ -45,7 +45,7 @@ class Touchdetector(CMakePackage):
     depends_on('random123', when='@5.3.3:')
     depends_on('range-v3@:0.4', when='@5.0.2:5.3.2')
     depends_on('range-v3@:0.10', when='@5.3.3:')
-    depends_on('libsonata', when='@5.6.0:')
+    depends_on('libsonata@0.1.9:', when='@5.6.0:')
     depends_on('highfive+mpi', when='@5.3.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
 
@@ -60,6 +60,13 @@ class Touchdetector(CMakePackage):
     depends_on('mvdtool@1.5.1:2.0.0', when='@4.5:5.1')
 
     patch("no-wall.patch", when='@5:5.4.999')
+    patch("fix-cmake.patch", when='@5.6.1')
+
+    def patch(self):
+        if self.spec.satisfies('@5.6.1'):
+            filter_file(r'(int messageLength) = -1;$',
+                        r'\1 = 0;',
+                        'touchdetector/DistributedTouchDetector.cxx')
 
     def cmake_args(self):
         args = [

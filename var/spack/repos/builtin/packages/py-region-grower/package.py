@@ -34,6 +34,6 @@ class PyRegionGrower(PythonPackage):
     depends_on('py-morph-tool@2.9.0:2.999', type='run', when='@0.3.0:')
     depends_on('py-morph-tool@2.5:2.8.99', type='run', when='@:0.2.99')
     depends_on('py-attrs@19.3.0:', type='run')
-    depends_on('py-dask+dataframe+distributed@2.15.0:2.30.0', type='run')
-    depends_on('py-dask-mpi@2.0.0:2.21.0', type='run')
+    depends_on('py-dask+dataframe+distributed', type='run')
+    depends_on('py-dask-mpi', type='run')
     depends_on('py-mpi4py@3.0.3:3.99', type='run')

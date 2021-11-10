@@ -61,6 +61,11 @@ class Steps(CMakePackage):
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
+    def patch(self):
+        # easylogging is a terrible library that requires compilation by
+        # its dependents: splice in disabling all errors
+        filter_file(r'(-Wno-double-promotion)', r'-Wno-error \1', 'src/steps/util/CMakeLists.txt')
+
     def cmake_args(self):
         args = []
         spec = self.spec

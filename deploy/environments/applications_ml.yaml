@@ -26,7 +26,7 @@ spack:
     vtk:
       variants: ~mpi~ffmpeg~opengl2
   specs:
-    - py-atlalign ^py-six@1.15.0
+    - py-atlalign
     - py-atlannot
     - py-atldld
     - py-atlinter

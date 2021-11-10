@@ -14,25 +14,17 @@ class PyBasalt(PythonPackage):
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
     version('0.2.9', tag='v0.2.9', submodules=True, get_full_repo=True)
-    version('0.2.4', tag='v0.2.4', submodules=True, get_full_repo=True)
-    version('0.1.1', tag='v0.1.1', submodules=True, get_full_repo=True)
 
-    depends_on('benchmark', type='build')
     depends_on('cmake@3.7:')
-    depends_on('doxygen', type='build')
-    depends_on('py-breathe', type='build')
-    depends_on('py-cached-property', type=('build', 'run'))
-    depends_on('py-docopt', type=('build', 'run'))
-    depends_on('py-exhale', type='build')
-    depends_on('py-h5py', type=('build', 'run'))
-    depends_on('py-humanize', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-sphinx', type='build')
-    depends_on('py-sphinx-rtd-theme', type='build')
-    depends_on('python@3:')
     depends_on('rocksdb~static+snappy')
+
+    depends_on('python@3:')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-wheel', type='build')
+
+    depends_on('py-cached-property', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         return ['test', '--no-doc-test']

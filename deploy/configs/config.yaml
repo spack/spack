@@ -1,6 +1,6 @@
 config:
   install_tree:
     projections:
-      all: ${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:6}
+      all: install_${COMPILERNAME}-${COMPILERVER}-${TARGET}/${PACKAGE}-${VERSION}-${HASH:6}
   # This seems to be the optimum for GPFS, according to @olupton
   build_jobs: 8

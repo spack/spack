@@ -4,7 +4,6 @@ spack:
   modules:
     tcl:
       whitelist:
-        - py-atlalign
         - py-bglibpy
         - py-bluepyefe
         - py-bluepymm
@@ -31,8 +30,7 @@ spack:
     vtk:
       variants: ~mpi~ffmpeg~opengl2
   specs:
-    - py-atlalign ^py-six@1.15.0
-    - py-bglibpy%gcc ^neuron%intel
+    - py-bglibpy%gcc ^py-bluepy%gcc ^neuron%intel
     - py-bluepyefe
     - py-bluepymm%gcc ^neuron%intel
     - py-bluepyopt%gcc ^neuron%intel

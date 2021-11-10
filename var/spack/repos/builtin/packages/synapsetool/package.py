@@ -50,6 +50,11 @@ class Synapsetool(CMakePackage):
     patch("tests-unit-cmake-057.patch", when='@0.5.7:0.5.8')
     patch("fix_highfive_v_2_2_1.patch", when='@:0.5.8^highfive@2.2:')
 
+    def patch(self):
+        if self.spec.satisfies('%intel'):
+            # Boost just breaks things. Don't use boost for tests.
+            filter_file(r'add_subdirectory\(tests\)', '', 'CMakeLists.txt')
+
     @property
     def libs(self):
         """Export the synapse library
@@ -81,15 +86,14 @@ class Synapsetool(CMakePackage):
 
     def cmake_args(self):
         args = []
-        spec = self.spec
-        if spec.satisfies('+mpi'):
+        if self.spec.satisfies('+mpi'):
             args.extend([
-                '-DCMAKE_C_COMPILER:STRING={0}'.format(spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER:STRING={0}'.format(spec['mpi'].mpicxx),
+                '-DCMAKE_C_COMPILER:STRING={0}'.format(self.spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER:STRING={0}'.format(self.spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
             ])
 
-        if spec.satisfies('~shared'):
+        if self.spec.satisfies('~shared'):
             args.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         return args

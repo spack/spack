@@ -24,3 +24,4 @@ class PyPythonDaemon(PythonPackage):
 
     depends_on("py-setuptools", type='build')
     depends_on("py-lockfile", type=('build', 'run'))
+    depends_on("py-docutils", type=('build', 'run'))

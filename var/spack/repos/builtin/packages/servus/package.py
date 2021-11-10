@@ -22,3 +22,4 @@ class Servus(CMakePackage):
     depends_on('boost', type='build')
 
     patch('fix_uint128_t_class.patch', when='@1.5.2:')
+    patch('missing-include.diff')

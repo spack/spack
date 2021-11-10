@@ -32,8 +32,7 @@ spack:
   specs:
     - asciitoh5@1.0
     - model-neocortex%intel
-    - nest@2.18.0
-    - nest@2.20.0
+    - nest@2.20.1
     - neurodamus-core~common%intel
     - neurodamus-core+common
     - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper

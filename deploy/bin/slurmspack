@@ -23,4 +23,4 @@ echo ">>> Spacking away on $(hostname)"
 # In case of locking issues: fan out deployment of builder tasks a little
 sleep $(( ${TASK} * 2 ))
 
-spack -d ${ENV_FLAGS} install -j ${CPUS} --log-format junit --log-file "${JUNIT_PREFIX}-${TASK}.xml" | tee "${JUNIT_PREFIX}-${TASK}.log" || true
+spack ${ENV_FLAGS} install -j ${CPUS} --log-format junit --log-file "${JUNIT_PREFIX}-${TASK}.xml" | tee "${JUNIT_PREFIX}-${TASK}.log" || true

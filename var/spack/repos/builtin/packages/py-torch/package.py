@@ -200,6 +200,12 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch('rocm.patch', when='@1.5.0:1.5+rocm')
 
+    # GCC 11 removed thread_id equality, fix other compilation errors
+    patch('gcc_thread_id.patch', when='@1.10.0%gcc@11')
+    patch('https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/66089.patch',
+          sha256='1965445f124b15fbbfc1b9a8e70a798296123a1db0d5186d09a74bb060aa8794',
+          when='@1.10.0%gcc@11')
+
     # Fixes fatal error: sleef.h: No such file or directory
     # https://github.com/pytorch/pytorch/pull/35359
     # https://github.com/pytorch/pytorch/issues/26555

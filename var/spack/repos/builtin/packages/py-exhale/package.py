@@ -19,10 +19,13 @@ class PyExhale(PythonPackage):
     version('0.2.2', sha256='16f8ca9c63fd35eb1c7d4b52e182b04f3275ec6cc3176d89e5b5d0a37bb0fe63')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-beautifulsoup4')
-    depends_on('py-breathe')
-    depends_on('py-lxml')
-    depends_on('py-six')
-    depends_on('py-sphinx')
+    depends_on('py-beautifulsoup4', type=('build', 'run'))
+    depends_on('py-breathe', type=('build', 'run'))
+    depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-sphinx', type=('build', 'run'))
 
     patch('py3-read-utf-8.diff', when='^python@3:')
+
+    def patch(self):
+        filter_file(r'^bs4', 'beautifulsoup4', 'requirements.txt')

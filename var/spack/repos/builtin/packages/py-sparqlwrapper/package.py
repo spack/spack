@@ -11,10 +11,9 @@ class PySparqlwrapper(PythonPackage):
     remotelly execute your queries."""
 
     homepage = "https://rdflib.github.io/sparqlwrapper/"
-    url      = "https://pypi.io/packages/source/s/sparqlwrapper/SPARQLWrapper-1.8.4.tar.gz"
+    pypi = "sparqlwrapper/SPARQLWrapper-1.8.4.tar.gz"
 
     version('1.8.4', sha256='21928e7a97f565e772cdeeb0abad428960f4307e3a13dbdd8f6d3da8a6a506c9')
 
-    depends_on('py-setuptools', type='build')
-
-    depends_on('py-rdflib', type='run')
+    depends_on('py-setuptools@:57', type='build')
+    depends_on('py-rdflib', type=('build', 'run'))

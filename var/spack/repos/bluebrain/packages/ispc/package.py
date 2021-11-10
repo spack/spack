@@ -17,6 +17,9 @@ class Ispc(Package):
     homepage = "https://github.com/ispc/ispc/"
     url      = "https://github.com/ispc/ispc/releases/download/v1.10.0/ispc-v1.10.0b-linux.tar.gz"
 
+    version('1.16.1', sha256='88db3d0461147c10ed81053a561ec87d3e14265227c03318f4fcaaadc831037f')
+    version('1.16.0', sha256='71a20e75ee1b952d8096a842368244111a0a727454d4a42043de10eadf02e740')
+    version('1.15.0', sha256='b67f50ab16b38d29e28b0a2dbb9733fd6fc1276cb5a5be0cac78e356941f881f')
     version('1.14.1', sha256='8cc0dae16b3ac244aa05e8b1db1dadf35aeb8d67916aaee6b66efb813b8e9174')
     version('1.13.0', sha256='8ab1189bd5db596b3eee9d9465d3528b6626a7250675d67102761bb0d284cd21')
     version('1.12.0', sha256='7a2bdd5fff5c1882639cfbd66bca31dbb68c7177f3013e80b0813a37fe0fdc23')

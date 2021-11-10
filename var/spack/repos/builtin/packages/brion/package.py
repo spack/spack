@@ -51,9 +51,15 @@ class Brion(CMakePackage):
     depends_on('highfive@2.2.1 +boost', when='@3.2.0:3.3.1')
     depends_on('highfive@2.1.1 +boost', when='@3.1.0')
     depends_on('mvdtool')
-    depends_on('glm')
+    depends_on('glm@:0.9.9.5')
 
     def patch(self):
+        filter_file(
+            r'-Werror',
+            '-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct '
+            '-Wno-error=unused-function',
+            'CMake/CompileOptions.cmake'
+        )
         if self.spec.version == Version('3.1.0'):
             filter_file(r'-py36', r'36 -py36',
                         'CMake/common/ChoosePython.cmake')

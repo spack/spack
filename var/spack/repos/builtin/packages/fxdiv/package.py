@@ -44,4 +44,7 @@ class Fxdiv(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            # BlueBrain: fixes gcc@11 implicit <limits> in the above
+            self.define('FXDIV_BUILD_TESTS', 'OFF'),
+            self.define('FXDIV_BUILD_BENCHMARKS', 'OFF'),
         ]

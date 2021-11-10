@@ -39,7 +39,6 @@ class PyNexusforge(PythonPackage):
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-nexus-sdk', type=('build', 'run'))
     depends_on('py-aiohttp', type=('build', 'run'))
-    depends_on('py-nest-asyncio@1.5.1:', type=('build', 'run'))
     depends_on('py-pyld', type=('build', 'run'))
     depends_on('py-pyshacl@0.11.6.post1', type=('build', 'run'))
     depends_on('py-rdflib-jsonld@:0.6.099', type=('build', 'run'))

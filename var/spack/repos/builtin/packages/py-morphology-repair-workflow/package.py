@@ -21,7 +21,7 @@ class PyMorphologyRepairWorkflow(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-click@7.0:', type='run')
-    depends_on('py-dask+bag@2.19.0:2.30', type='run')
+    depends_on('py-dask+bag', type='run')
     depends_on('py-more-itertools@8.4.0:', type='run')
     depends_on('py-numpy@1.19.1:', type='run')
     depends_on('py-pandas@1.1.0:', type='run')

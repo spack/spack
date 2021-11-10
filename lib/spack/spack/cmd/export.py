@@ -61,6 +61,8 @@ def setup_parser(sp):
                     default='all',
                     help="which variant flags to store: only changed ones or all (default)")
     arguments.add_common_arguments(sp, ['tags', 'constraint'])
+    sp.add_argument('--unbuildable', default=[], nargs='+',
+                    help='mark packages as unbuildable')
     sp.add_argument('--exclude', action='append', default=[],
                     help="exclude packages with names matching the given regex pattern")
     sp.add_argument('--explicit',
@@ -81,7 +83,7 @@ def _to_key(spec, fmt, variants):
     for k, v in spec.variants.items():
         default = None
         if k in spec.package.variants:
-            default = spec.package.variants[k].default
+            default = spec.package.variants[k][0].default
         if v.value != default or variants == 'all':
             if v.value in (True, False):
                 bflags.append(v)
@@ -133,7 +135,7 @@ def export(parser, args):
             tty.warn("spec already present, skipping: {0}".format(key))
             continue
 
-        mod = cls(spec) if cls else None
+        mod = cls(spec, 'default') if cls else None
         if mod and not mod.conf.blacklisted:
             if os.path.exists(mod.layout.filename):
                 externality["modules"] = [str(mod.layout.use_name)]
@@ -151,6 +153,8 @@ def export(parser, args):
 
     # Restore ordering
     packages = syaml_dict(sorted((k, v) for (k, v) in packages.items() if len(v) > 0))
+    for pkg in args.unbuildable:
+        packages[pkg]['buildable'] = False
     if 'all' in packages:
         packages['all'] = packages.pop('all')
     yaml.dump({'packages': packages},

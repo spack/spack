@@ -37,7 +37,6 @@ default:
     # We will need these resources for parallel building
     bb5_constraint: cpu
     bb5_cpus_per_task: 8
-    bb5_memory: 0
     bb5_ntasks: 1
     # We will do this ourselves, will be on GPFS
     GIT_STRATEGY: none
@@ -107,6 +106,9 @@ setup_spack:
 .spack_stage:
   extends: .spack_basic_job
   needs: [setup_spack]
+  resource_group: BlueBrain.GPFS.build.$CI_EXTERNAL_PULL_REQUEST_IID
+  variables:
+    bb5_ntasks: 1
   before_script:
     - !reference [.spack_setup_gerrit_ssh]
     - !reference [.spack_basic_job, before_script]
@@ -131,8 +133,6 @@ setup_spack:
       config:
         install_tree:
           root: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}
-          projections:
-            all: install_\${COMPILERNAME}-\${COMPILERVER}-\${TARGET}/\${PACKAGE}-\${VERSION}-\${HASH:6}
         module_roots:
           tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
       EOF
@@ -186,11 +186,16 @@ setup_spack:
     - fi
     - spack env create "${DEPLOY_ENV}" "${SPACK_ROOT}/deploy/environments/${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}.yaml"
     - spack env activate "${DEPLOY_ENV}"
+    # Allow to cross-check what the CI sees
+    - spack config blame config
+    - spack config blame packages
+    # Activate if checksums fail
+    # - spack clean -a
     # Concretize and pre-fetch, afterwards build the environment
     - spack concretize -f
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
-    -     spack -d fetch -m
+    -     spack fetch -m
     -     srun -J"spack!${CI_EXTERNAL_PULL_REQUEST_IID:+ №}${CI_EXTERNAL_PULL_REQUEST_IID:-}" slurmspack
     - fi
     # We always want to regenerate the modules and compiler configurations,
@@ -210,7 +215,7 @@ setup_spack:
     -     configure-compilers < specs.txt
     # Make all explicitly installed software available to following stages
     # without considering the full dependency DAG
-    -     spack export --scope=user --module tcl --explicit --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
+    -     spack export --scope=user --module tcl --explicit --unbuildable llvm openscenegraph optix ospray --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
     - fi
   artifacts:
     when: always
@@ -227,11 +232,17 @@ setup_spack:
 compilers:
   extends: .spack_stage
   stage: compilers
+  script:
+    - !reference [.spack_stage, script]
+    - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
 
 externals:
   extends: .spack_stage
   needs: [compilers]
   stage: externals
+  script:
+    - !reference [.spack_stage, script]
+    - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
 
 .spack_stage_applications:
   extends: .spack_stage

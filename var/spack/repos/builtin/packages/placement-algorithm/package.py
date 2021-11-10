@@ -34,8 +34,7 @@ class PlacementAlgorithm(PythonPackage):
     depends_on('py-neuroc@0.2.8:0.999', type='run', when='@2.2.0:')
     depends_on('py-mpi4py@3.0.3:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
-    depends_on('py-voxcell@2.5:2.6.99', when='@:2.0.99', type='run')
-    depends_on('py-voxcell@2.7:3.99', when='@2.1.0:', type='run')
-    depends_on('py-dask+distributed+bag@2.15:2.30', when='@2.0.12:', type='run')
+    depends_on('py-voxcell@2.7:3.99', type='run')
+    depends_on('py-dask+distributed+bag', type='run')
 
     depends_on('py-region-grower@0.1.5:0.1.99', type='run', when='@:2.1.99')

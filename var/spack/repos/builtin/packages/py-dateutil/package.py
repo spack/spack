@@ -18,4 +18,5 @@ class PyDateutil(PythonPackage):
     version('2.8.0', sha256='c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-six', type=('build', 'run'))
