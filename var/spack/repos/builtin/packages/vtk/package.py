@@ -37,6 +37,7 @@ class Vtk(CMakePackage):
     # VTK7 defaults to OpenGL2 rendering backend
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('osmesa', default=False, description='Enable OSMesa support')
+    variant('egl', default=False, description='Enable EGL support')
     variant('python', default=False, description='Enable Python support')
     variant('qt', default=False, description='Build with support for Qt')
     variant('xdmf', default=False, description='Build XDMF file support')
@@ -50,6 +51,9 @@ class Vtk(CMakePackage):
     patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
           when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
+    # Patch to include device searching for EGL
+    patch('https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8601.patch',
+          when="@9:", sha256='b85c5e8939089de9435e88c708ad1b4f10c8df5bf8e5b786140aa48c43673028')
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
@@ -80,12 +84,13 @@ class Vtk(CMakePackage):
     depends_on('gl@1.2:', when='~opengl2')
 
     if sys.platform != 'darwin':
-        depends_on('glx', when='~osmesa')
-        depends_on('libxt', when='~osmesa')
+        depends_on('glx', when='~osmesa ~egl')
+        depends_on('libxt', when='~osmesa ~egl')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
     depends_on('osmesa', when='+osmesa')
+    depends_on('egl', when='+egl')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
@@ -284,6 +289,15 @@ class Vtk(CMakePackage):
                 cmake_args.extend([
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
+
+        if '+egl' in spec:
+            cmake_args.extend([
+                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
+                ])
+        else:
+            cmake_args.extend([
+                '-DVTK_OPENGL_HAS_EGL:BOOL=OFF'
+                ])
 
         compile_flags = []
 
