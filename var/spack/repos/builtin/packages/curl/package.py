@@ -87,7 +87,8 @@ class Curl(AutotoolsPackage):
     conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls', when='tls=mbedtls')
+    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')
@@ -111,10 +112,16 @@ class Curl(AutotoolsPackage):
             '--without-libgsasl',
             '--without-libpsl',
             '--without-zstd',
-            '--without-ca-bundle',
-            '--without-ca-path',
-            '--with-ca-fallback',
         ]
+
+        # Make gnutls / openssl decide what certs are trusted.
+        # TODO: certs for other tls options.
+        if spec.satisfies('tls=gnutls') or spec.satisfies('tls=openssl'):
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback',
+            ])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
@@ -134,6 +141,7 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
+
         return args
 
     def with_or_without_gnutls(self, activated):

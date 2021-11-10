@@ -469,9 +469,8 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
-    # Bad but relocatable library id
+    # Hardcoded but relocatable library id (but we do NOT relocate)
     (root, filename) = make_dylib("abs_with_rpath", no_rpath)
-    assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Library id uses rpath but there are extra duplicate rpaths

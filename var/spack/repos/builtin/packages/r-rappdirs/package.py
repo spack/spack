@@ -12,9 +12,10 @@ class RRappdirs(RPackage):
     'Appdirs' to R."""
 
     homepage = "https://cloud.r-project.org/package=rappdirs"
-    url      = "https://cloud.r-project.org/src/contrib/rappdirs_0.3.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rappdirs"
+    cran = "rappdirs"
 
+    version('0.3.3', sha256='49959f65b45b0b189a2792d6c1339bef59674ecae92f8c2ed9f26ff9e488c184')
     version('0.3.1', sha256='2fd891ec16d28862f65bb57e4a78f77a597930abb59380e757afd8b6c6d3264a')
 
     depends_on('r@2.14:', type=('build', 'run'))
+    depends_on('r@3.2:', when='@0.3.2:', type=('build', 'run'))
