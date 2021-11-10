@@ -21,4 +21,3 @@ class PyMpld3(PythonPackage):
     depends_on('py-matplotlib@1.3:', type=('build', 'run'))
     depends_on('py-matplotlib@2.2.2:', type=('build', 'run'), when='@0.5.5:')
     depends_on('py-jinja2@2.7:', type=('build', 'run'))
-    
