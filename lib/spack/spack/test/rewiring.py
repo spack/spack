@@ -8,6 +8,7 @@ import os
 import pytest
 
 import spack.rewiring
+import spack.store
 from spack.spec import Spec
 from spack.test.relocate import text_in_bin
 

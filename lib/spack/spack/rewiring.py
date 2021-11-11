@@ -38,7 +38,7 @@ def rewire(spliced_spec):
     for spec in spliced_spec.traverse(order='post', root=True):
         if not spec.build_spec.package.installed:
             raise RuntimeError('Pure spec package was not installed')
-        if spec.build_spec is not spec:
+        if spec.build_spec is not spec and not spec.package.installed:
             explicit = spec is spliced_spec
             rewire_node(spec, explicit)
 
@@ -94,7 +94,7 @@ def rewire_node(spec, explicit):
         _relocate_spliced_links(manifest.get('link_to_relocate'),
                                 spec.build_spec.prefix,
                                 spec.prefix)
-
+    shutil.rmtree(os.path.join(tempdir, spec.dag_hash()))
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
