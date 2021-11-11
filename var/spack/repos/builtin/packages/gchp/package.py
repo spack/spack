@@ -14,7 +14,7 @@ class Gchp(CMakePackage):
     homepage = "https://gchp.readthedocs.io/"
     url      = "https://github.com/geoschem/GCHP/archive/13.2.1.tar.gz"
     git      = "https://github.com/geoschem/GCHP.git"
-    maintainers = ['lizziel']
+    maintainers = ['lizziel', 'laestrada']
 
     version('13.2.1', commit='9dc2340cac684971fa961559a4dc3d8818326ab8',  submodules=True)
     version('13.1.2', commit='106b8f783cafabd699e53beec3a4dd8aee45234b',  submodules=True)
