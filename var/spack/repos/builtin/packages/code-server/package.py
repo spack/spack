@@ -34,4 +34,5 @@ class CodeServer(Package):
 
         if spec.version <= Version('3.1.1'):
             mkdir(prefix.bin)
-            symlink('{0}/code-server'.format(prefix), '{0}/code-server'.format(prefix.bin))
+            symlink('{0}/code-server'.format(prefix),
+                    '{0}/code-server'.format(prefix.bin))
