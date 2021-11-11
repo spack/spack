@@ -17,6 +17,7 @@ class PyFormulaic(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setupmeta', type='build')
     depends_on('py-astor', type=('build', 'run'))
     depends_on('py-interface-meta@1.2:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
