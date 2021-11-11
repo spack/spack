@@ -13,6 +13,7 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ['bvanessen', 'adamjstewart']
 
     version('master', branch='master')
+    version('4.5.4',    sha256='c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d')
     version('4.5.2',    sha256='ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8')
     version('4.5.1',    sha256='e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513')
     version('4.5.0',    sha256='dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907')
@@ -69,7 +70,8 @@ class Opencv(CMakePackage, CudaPackage):
         'msmf', 'msmf_dxva', 'ngraph', 'nvcuvid', 'onnx', 'opencl', 'openclamdblas',
         'openclamdfft', 'opencl_d3d11_nv', 'opencl_svm', 'openexr', 'opengl',
         'openjpeg', 'openmp', 'openni', 'openni2', 'openvx', 'plaidml', 'png',
-        'protobuf', 'pthreads_pf', 'pvapi', 'qt', 'quirc', 'tbb', 'tengine', 'tiff',
+        'protobuf', 'pthreads_pf', 'pvapi', 'qt', 'quirc', 'tbb', 'tengine',
+        'tesseract', 'tiff',
         'ueye', 'v4l', 'va', 'va_intel', 'vtk', 'vulcan', 'webp', 'win32ui', 'ximea',
         'xine'
     ]
@@ -90,7 +92,7 @@ class Opencv(CMakePackage, CudaPackage):
     contrib_vers = [
         '3.1.0', '3.2.0', '3.3.0', '3.3.1', '3.4.0', '3.4.1', '3.4.3', '3.4.4',
         '3.4.5', '3.4.6', '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1',
-        '4.1.2', '4.2.0', '4.5.0', '4.5.1', '4.5.2'
+        '4.1.2', '4.2.0', '4.5.0', '4.5.1', '4.5.2', '4.5.4'
     ]
     for cv in contrib_vers:
         resource(name="contrib",
@@ -151,6 +153,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('libtiff', when='+tiff')
     depends_on('vtk', when='+vtk')
     depends_on('libwebp', when='+webp')
+    depends_on('tesseract', when='+tesseract')
 
     # Other (dependencies)
     depends_on('hdf5', when='+contrib')
@@ -288,6 +291,9 @@ class Opencv(CMakePackage, CudaPackage):
     patch('opencv3.2_python3.7.patch', when='@3.2+python3')
     patch('opencv3.2_fj.patch', when='@3.2 %fj')
 
+    # do not prepend system paths
+    patch('cmake_no-system-paths.patch')
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -363,6 +369,15 @@ class Opencv(CMakePackage, CudaPackage):
                 self.define('BUILD_JASPER', False),
                 self.define('JASPER_LIBRARY', jasper.libs[0]),
                 self.define('JASPER_INCLUDE_DIR', jasper.headers.directories[0])
+            ])
+
+        if '+tesseract' in spec:
+            tesseract = spec['tesseract']
+            leptonica = spec['leptonica']
+            args.extend([
+                self.define('Lept_LIBRARY', leptonica.libs[0]),
+                self.define('Tesseract_LIBRARY', tesseract.libs[0]),
+                self.define('Tesseract_INCLUDE_DIR', tesseract.headers.directories[0])
             ])
 
         # Python
