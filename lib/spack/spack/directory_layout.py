@@ -88,6 +88,7 @@ class DirectoryLayout(object):
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
         self.manifest_file_name  = 'install_manifest.json'
+        self.compiler_info = "compilers"
 
     @property
     def hidden_file_regexes(self):
@@ -215,6 +216,9 @@ class DirectoryLayout(object):
 
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
+
+    def compiler_info_path(self, spec):
+        return os.path.join(self.metadata_path(spec), self.compiler_info)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)

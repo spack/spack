@@ -52,6 +52,7 @@ import spack.hooks
 import spack.monitor
 import spack.package
 import spack.package_prefs as prefs
+import spack.paths
 import spack.repo
 import spack.store
 import spack.util.executable
@@ -151,6 +152,20 @@ def _handle_external_and_upstream(pkg, explicit):
         return True
 
     return False
+
+
+def _instantiate_compiler_wrapper(pkg):
+    """
+    Generate per spec compiler wrapper
+
+    Affix wrapper to spec stage
+    """
+    wrapper_root = spack.paths.build_env_path
+    wrapper_file = pkg.compiler.link_paths['cc']
+    wrapper_ext = spack.platforms.wrapper_ext
+    wrapper = os.path.join(wrapper_root, wrapper_file)
+    wrapper_dest = os.path.join(pkg.stage.source_path, "..", "cc")
+    fs.copy(wrapper, wrapper_dest + wrapper_ext)
 
 
 def _do_fake_install(pkg):
@@ -1851,6 +1866,9 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
+
+            # Copy compiler wrapper to stage and (establish requisite env variables)
+            _instantiate_compiler_wrapper(pkg)
 
             # Save just the changes to the environment.  This file can be
             # safely installed, since it does not contain secret variables.

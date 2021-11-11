@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
 
-from ._functions import _host, by_name, platforms
+from ._functions import _host, _wrapper_extension, by_name, platforms
 from ._platform import Platform
 from .cray import Cray
 from .darwin import Darwin
@@ -31,6 +31,8 @@ real_host = _host
 #: The current platform used by Spack. May be swapped by the use_platform
 #: context manager.
 host = _host
+
+wrapper_ext = _wrapper_extension()
 
 
 class _PickleableCallable(object):

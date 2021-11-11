@@ -51,10 +51,10 @@ class Msvc(Compiler):
     fc_names = ['ifx.exe']  # type: List[str]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': '',
-                  'cxx': '',
-                  'f77': '',
-                  'fc': ''}
+    link_paths = {'cc': 'cc',
+                  'cxx': 'cc',
+                  'f77': 'cc',
+                  'fc': 'cc'}
 
     #: Compiler argument that produces version information
     version_argument = ''
