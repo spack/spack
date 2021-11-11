@@ -62,18 +62,18 @@ class Opencv(CMakePackage, CudaPackage):
     # using `OCV_OPTION(WITH_* ...)`
     components = [
         '1394', 'ade', 'android_mediandk', 'android_native_camera', 'aravis',
-        'avfoundation', 'cap_ios', 'carotene', 'clp', 'cpufeatures', 'cublas', 'cuda',
-        'cudnn', 'cufft', 'directx', 'dshow', 'eigen', 'ffmpeg', 'freetype', 'gdal',
-        'gdcm', 'gphoto2', 'gstreamer', 'gtk', 'gtk_2_x', 'halide', 'hpx',
-        'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm', 'imgcodec_sunraster',
-        'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg', 'lapack', 'librealsense', 'mfx',
-        'msmf', 'msmf_dxva', 'ngraph', 'nvcuvid', 'onnx', 'opencl', 'openclamdblas',
-        'openclamdfft', 'opencl_d3d11_nv', 'opencl_svm', 'openexr', 'opengl',
-        'openjpeg', 'openmp', 'openni', 'openni2', 'openvx', 'plaidml', 'png',
-        'protobuf', 'pthreads_pf', 'pvapi', 'qt', 'quirc', 'tbb', 'tengine',
-        'tesseract', 'tiff',
-        'ueye', 'v4l', 'va', 'va_intel', 'vtk', 'vulcan', 'webp', 'win32ui', 'ximea',
-        'xine'
+        'avfoundation', 'cap_ios', 'carotene', 'clp', 'cpufeatures', 'cublas',
+        'cuda', 'cudnn', 'cufft', 'directx', 'dshow', 'eigen', 'ffmpeg',
+        'freetype', 'gdal', 'gdcm', 'gphoto2', 'gstreamer', 'gtk', 'gtk_2_x',
+        'halide', 'hpx', 'imgcodec_hdr', 'imgcode_pfm', 'imgcodec_pxm',
+        'imgcodec_sunraster', 'inf_engine', 'ipp', 'itt', 'jasper', 'jpeg',
+        'lapack', 'librealsense', 'mfx', 'msmf', 'msmf_dxva', 'ngraph',
+        'nvcuvid', 'onnx', 'opencl', 'openclamdblas', 'openclamdfft',
+        'opencl_d3d11_nv', 'opencl_svm', 'openexr', 'opengl', 'openjpeg',
+        'openmp', 'openni', 'openni2', 'openvx', 'plaidml', 'png', 'protobuf',
+        'pthreads_pf', 'pvapi', 'qt', 'quirc', 'tbb', 'tengine', 'tesseract',
+        'tiff', 'ueye', 'v4l', 'va', 'va_intel', 'vtk', 'vulcan', 'webp',
+        'win32ui', 'ximea', 'xine'
     ]
 
     for component in components:
@@ -154,6 +154,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('vtk', when='+vtk')
     depends_on('libwebp', when='+webp')
     depends_on('tesseract', when='+tesseract')
+    depends_on('leptonica', when='+tesseract')
 
     # Other (dependencies)
     depends_on('hdf5', when='+contrib')
@@ -277,6 +278,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     # Other (conflicts)
     conflicts('+cuda', when='~contrib', msg='cuda support requires +contrib')
+    conflicts('+tesseract', when='~contrib', msg='teseract support requires +contrib')
 
     # Patch to fix conflict between CUDA and OpenCV (reproduced with 3.3.0
     # and 3.4.1) header file that have the same name. Problem is fixed in
