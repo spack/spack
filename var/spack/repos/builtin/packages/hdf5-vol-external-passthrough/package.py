@@ -13,7 +13,7 @@ class Hdf5VolExternalPassthrough(CMakePackage):
     git      = "https://github.com/hpc-io/vol-external-passthrough.git"
     maintainers = ['hyoklee']
 
-    version('default', branch='develop')
+    version('v1.0')
     depends_on('hdf5@develop-1.13')
 
     def cmake_args(self):
