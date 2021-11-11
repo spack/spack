@@ -13,6 +13,7 @@ class MorphoKit(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/morpho-kit.git"
 
     version('develop', branch='main', submodules=True, get_full_repo=True)
+    version('0.3.2', tag='v0.3.2', submodules=True, get_full_repo=True)
     version('0.2.0', tag='v0.2.0', submodules=True, get_full_repo=True)
 
     depends_on('cmake@3.2:', type='build')
