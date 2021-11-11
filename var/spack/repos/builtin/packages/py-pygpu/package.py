@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyPygpu(PythonPackage):
     """Python packge for the libgpuarray C library."""
 
-    homepage = "http://deeplearning.net/software/libgpuarray/"
+    homepage = "https://github.com/Theano/libgpuarray"
     url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
     version('0.7.6', sha256='ad1c00dd47c3d36ee1708e5167377edbfcdb7226e837ef9c68b841afbb4a4f6a')
@@ -26,28 +27,14 @@ class PyPygpu(PythonPackage):
     depends_on('libgpuarray@0.7.6', when='@0.7.6')
     depends_on('libgpuarray@0.7.5', when='@0.7.5')
     depends_on('libgpuarray')                        # default
-
     # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython@0.25:', type=('build', 'run'))
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mako', type=('build', 'run'))
-    # depends_on('libcheck')
     depends_on('check')
 
-    '''
-    <<<<<<< mummi1
-    # linking fails because cannot find -lgpuarray
-    # somehow, the link path does not point to the dependency
-    # adding the following empty functions magically fix the issue
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
-    '''
-    
     phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
@@ -57,16 +44,3 @@ class PyPygpu(PythonPackage):
         library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
 
         return [include_flags, library_flags]
-
-    '''
-    depends_on('libcheck')
-
-    # linking fails because cannot find -lgpuarray
-    # somehow, the link path does not point to the dependency
-    # adding the following empty functions magically fix the issue
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
-    '''

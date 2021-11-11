@@ -10,12 +10,12 @@ import llnl.util.tty as tty
 
 class Ddcmd(CMakePackage, CudaPackage):
 
-    homepage = "https://lc.llnl.gov/bitbucket/projects/DDCMDY"
-    git      = "ssh://git@cz-bitbucket.llnl.gov:7999/ddcmdy/ddcmd.git"
+    homepage = "https://github.com/LLNL/ddcMD"
+    git      = "git@github.com:LLNL/ddcMD.git:
+
+    maintainers = ['XiaohuaZhangLLNL', 'bhatiaharsh']
 
     version('develop', branch='develop', submodules=True)
-    version('20210510', tag='Campaign4', submodules=True)
-    version('20210520', tag='Campaign4-1', submodules=True)
 
     depends_on('cmake', type='build')
     depends_on('mpi')
