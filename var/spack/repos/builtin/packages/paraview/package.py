@@ -288,7 +288,11 @@ class Paraview(CMakePackage, CudaPackage):
         cmake_args = [
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_EGL:BOOL=%s' % variant_bool('+egl'),
+<<<<<<< HEAD
             '-DVTK_USE_X:BOOL=%s' % variant_bool('~osmesa ~egl'),
+=======
+            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa') or nvariant_bool('+egl'),
+>>>>>>> Added patch to paraview. Does not build
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
