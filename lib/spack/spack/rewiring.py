@@ -89,7 +89,7 @@ def rewire_node(spec, explicit):
                                    prefixes=prefix_to_prefix)
     # copy package into place (shutil.copytree)
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
-                    ignore=shutil.ignore_patterns('.spack/spec.json'))
+                    ignore=shutil.ignore_patterns('spec.json'))
     if manifest.get('link_to_relocate'):
         _relocate_spliced_links(manifest.get('link_to_relocate'),
                                 spec.build_spec.prefix,
