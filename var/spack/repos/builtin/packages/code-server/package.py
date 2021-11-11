@@ -23,9 +23,9 @@ class CodeServer(Package):
     def url_for_version(self, version):
 
         if version <= Version('3.2.0'):
-            url = "https://github.com/cdr/code-server/releases/download/{}/code-server-{}-linux-x86_64.tar.gz"
+            url = "https://github.com/cdr/code-server/releases/download/v{}/code-server-{}-linux-x86_64.tar.gz"
         else:
-            url = "https://github.com/cdr/code-server/releases/download/{}/code-server-{}-linux-amd64.tar.gz"
+            url = "https://github.com/cdr/code-server/releases/download/v{}/code-server-{}-linux-amd64.tar.gz"
 
         return url.format(version, version)
 
@@ -34,4 +34,4 @@ class CodeServer(Package):
 
         if spec.version <= Version('3.1.1'):
             mkdir(prefix.bin)
-            symlink('{0}/code-server'.format(prefix), prefix.bin)
+            symlink('{0}/code-server'.format(prefix), '{0}/code-server'.format(prefix.bin))
