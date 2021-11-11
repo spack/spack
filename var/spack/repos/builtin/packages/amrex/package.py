@@ -56,7 +56,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Dimensionality', values=('2', '3'))
     variant('shared',  default=False,
             description='Build shared library')
-    variant('mpi',          default=False,
+    variant('mpi',          default=True,
             description='Build with MPI support')
     variant('openmp',       default=False,
             description='Build with OpenMP support')
@@ -67,7 +67,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build Embedded Boundary classes')
     variant('fortran',  default=False,
             description='Build Fortran API')
-    variant('linear_solvers', default=False,
+    variant('linear_solvers', default=True,
             description='Build linear solvers')
     variant('amrdata',    default=False,
             description='Build data services')
@@ -210,7 +210,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         return args
 
     #
-    #  For versions <= 20.11
+    # For versions <= 20.11
     #
     @when('@:20.11')
     def cmake_args(self):
