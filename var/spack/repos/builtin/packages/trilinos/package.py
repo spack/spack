@@ -631,9 +631,8 @@ class Trilinos(CMakePackage, CudaPackage):
                 ]),
                 define('ParMETIS_LIBRARY_NAMES', ['parmetis', 'metis']),
                 define('TPL_ParMETIS_INCLUDE_DIRS',
-                    spec['parmetis'].headers.directories +
-                    spec['metis'].headers.directories
-                ),
+                       spec['parmetis'].headers.directories +
+                       spec['metis'].headers.directories),
             ])
 
         if spec.satisfies('^superlu-dist@4.0:'):
