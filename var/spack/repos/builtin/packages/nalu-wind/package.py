@@ -52,16 +52,16 @@ class NaluWind(CMakePackage, CudaPackage):
 
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:')
-    depends_on('trilinos@master,develop ~cuda~wrapper+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+shards~hypre cxxstd=14', when='~cuda')
+    depends_on('trilinos@master,develop ~cuda~wrapper+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre cxxstd=14', when='~cuda')
     # Cannot build Trilinos as a shared library with STK on Darwin
     # https://github.com/trilinos/Trilinos/issues/2994
-    depends_on('trilinos@master,develop ~cuda~wrapper+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+shards~hypre~shared cxxstd=14', when=(sys.platform == 'darwin'))
+    depends_on('trilinos@master,develop ~cuda~wrapper+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre~shared cxxstd=14', when=(sys.platform == 'darwin'))
     depends_on('openfast@2.6.0 +cxx', when='+openfast')
     depends_on('tioga@master,develop', when='+tioga')
     depends_on('hypre@develop,2.18.2: ~int64+mpi~superlu-dist', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', type='build', when='+cuda')
     for _arch in CudaPackage.cuda_arch_values:
-        depends_on('trilinos@master,develop ~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+zlib+shards~hypre+cuda+cuda_rdc+wrapper cxxstd=14 cuda_arch={0}'.format(_arch),
+        depends_on('trilinos@master,develop ~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre+cuda+cuda_rdc+wrapper cxxstd=14 cuda_arch={0}'.format(_arch),
                    when='+cuda cuda_arch={0}'.format(_arch))
         depends_on('hypre@develop +mpi+cuda~int64~superlu-dist cuda_arch={0}'.format(_arch),
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))

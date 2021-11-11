@@ -240,6 +240,10 @@ class Boost(Package):
     patch('darwin_clang_version.patch', level=0,
           when='@1.56.0:1.72.0 platform=darwin')
 
+    # Fix missing declaration of uintptr_t with glibc>=2.17 - https://bugs.gentoo.org/482372
+    patch('https://482372.bugs.gentoo.org/attachment.cgi?id=356970', when='@1.53.0:1.54',
+          sha256='b6f6ce68282159d46c716a1e6c819c815914bdb096cddc516fa48134209659f2')
+
     # Fix: "Unable to compile code using boost/process.hpp"
     # See: https://github.com/boostorg/process/issues/116
     # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch

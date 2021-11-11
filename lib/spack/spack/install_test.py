@@ -13,6 +13,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.error
+import spack.paths
 import spack.util.prefix
 import spack.util.spack_json as sjson
 from spack.spec import Spec
@@ -41,7 +42,8 @@ def get_escaped_text_output(filename):
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', '~/.spack/test'))
+        spack.config.get('config:test_stage', spack.paths.default_test_path)
+    )
 
 
 def get_all_test_suites():
@@ -64,16 +66,31 @@ def get_all_test_suites():
     return test_suites
 
 
-def get_test_suite(name):
-    assert name, "Cannot search for empty test name or 'None'"
+def get_named_test_suites(name):
+    """Return a list of the names of any test suites with that name."""
+    if not name:
+        raise TestSuiteNameError('Test suite name is required.')
+
     test_suites = get_all_test_suites()
-    names = [ts for ts in test_suites
-             if ts.name == name]
-    assert len(names) < 2, "alias shadows test suite hash"
+    return [ts for ts in test_suites if ts.name == name]
+
+
+def get_test_suite(name):
+    names = get_named_test_suites(name)
+    if len(names) > 1:
+        raise TestSuiteNameError(
+            'Too many suites named "{0}".  May shadow hash.'.format(name)
+        )
 
     if not names:
         return None
     return names[0]
+
+
+def write_test_suite_file(suite):
+    """Write the test suite to its lock file."""
+    with open(suite.stage.join(test_suite_filename), 'w') as f:
+        sjson.dump(suite.to_dict(), stream=f)
 
 
 class TestSuite(object):
@@ -250,8 +267,7 @@ class TestSuite(object):
                     except spack.repo.UnknownPackageError:
                         pass  # not all virtuals have package files
 
-        with open(self.stage.join(test_suite_filename), 'w') as f:
-            sjson.dump(self.to_dict(), stream=f)
+        write_test_suite_file(self)
 
     def to_dict(self):
         specs = [s.to_dict() for s in self.specs]
@@ -310,3 +326,7 @@ class TestSuiteFailure(spack.error.SpackError):
 
 class TestSuiteSpecError(spack.error.SpackError):
     """Raised when there is an issue associated with the spec being tested."""
+
+
+class TestSuiteNameError(spack.error.SpackError):
+    """Raised when there is an issue with the naming of the test suite."""

@@ -16,9 +16,11 @@ class Julia(Package):
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
-    maintainers = ['glennpj']
+    maintainers = ['glennpj', 'vchuravy']
 
     version('master', branch='master')
+    version('1.7.0-rc2', sha256='178f5531bdbd379bd376f3cccf9a6a1e1215a678b70c93bdc41edb7239c76dc2')
+    version('1.6.3', sha256='29aad934582fb4c6dd9f9dd558ad649921f43bc7320eab54407fdf6dd3270a33', preferred=True)
     version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
     version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
     version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')

@@ -314,6 +314,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
     depends_on('pmix', when='+pmix')
+    depends_on('libevent', when='+pmix')
 
     depends_on('openssh', type='run')
 
@@ -651,7 +652,8 @@ class Openmpi(AutotoolsPackage):
                     spec['slurm'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmi'))
-            config_args += self.with_or_without('pmix', activation_value='prefix')
+            if spec.satisfies('+pmix'):
+                config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
@@ -707,7 +709,7 @@ class Openmpi(AutotoolsPackage):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # external libevent
-        if spec.satisfies('@4.0.0:'):
+        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
         if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
@@ -1057,7 +1059,7 @@ def is_enabled(text):
 # This code gets all the fabric names from the variants list
 # Idea taken from the AutotoolsPackage source.
 def get_options_from_variant(self, name):
-    values = self.variants[name].values
+    values = self.variants[name][0].values
     if getattr(values, 'feature_values', None):
         values = values.feature_values
     return values

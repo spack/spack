@@ -119,3 +119,35 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
     with pytest.raises(spack.install_test.TestSuiteFailure):
         test_suite()
+
+
+def test_get_test_suite():
+    assert not spack.install_test.get_test_suite('nothing')
+
+
+def test_get_test_suite_no_name(mock_packages, mock_test_stage):
+    with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
+        spack.install_test.get_test_suite('')
+
+    assert 'name is required' in str(exc_info)
+
+
+def test_get_test_suite_too_many(mock_packages, mock_test_stage):
+    test_suites = []
+    name = 'duplicate-alias'
+
+    def add_suite(package):
+        spec = spack.spec.Spec(package).concretized()
+        suite = spack.install_test.TestSuite([spec], name)
+        suite.ensure_stage()
+        spack.install_test.write_test_suite_file(suite)
+        test_suites.append(suite)
+
+    add_suite('libdwarf')
+    suite = spack.install_test.get_test_suite(name)
+    assert suite.alias == name
+
+    add_suite('libelf')
+    with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
+        spack.install_test.get_test_suite(name)
+    assert 'many suites named' in str(exc_info)

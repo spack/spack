@@ -17,6 +17,7 @@ spack:
   # Sphinx
   - "py-sphinx@3.4:4.1.1,4.1.3:"
   - py-sphinxcontrib-programoutput
+  - py-docutils@:0.16
   - py-sphinx-rtd-theme
   # VCS
   - git

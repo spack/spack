@@ -29,10 +29,18 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     # Calculate the comparison (c)
     c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
-    assert len(c['a_not_b']) == 1
-    assert len(c['b_not_a']) == 1
-    assert c['a_not_b'][0] == ['variant_value', 'mpileaks debug False']
-    assert c['b_not_a'][0] == ['variant_value', 'mpileaks debug True']
+
+    # these particular diffs should have the same length b/c thre aren't
+    # any node differences -- just value differences.
+    assert len(c['a_not_b']) == len(c['b_not_a'])
+
+    # ensure that variant diffs are in here the result
+    assert ['variant_value', 'mpileaks debug False'] in c['a_not_b']
+    assert ['variant_value', 'mpileaks debug True'] in c['b_not_a']
+
+    # ensure that hash diffs are in here the result
+    assert ['hash', 'mpileaks %s' % specA.dag_hash()] in c['a_not_b']
+    assert ['hash', 'mpileaks %s' % specB.dag_hash()] in c['b_not_a']
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -53,12 +61,30 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     output = diff_cmd('--json', 'mpileaks', 'mpileaks')
     result = sjson.load(output)
 
-    assert len(result['a_not_b']) == 0
-    assert len(result['b_not_a']) == 0
+    assert not result['a_not_b']
+    assert not result['b_not_a']
 
     assert 'mpileaks' in result['a_name']
     assert 'mpileaks' in result['b_name']
-    assert "intersect" in result and len(result['intersect']) > 50
+
+    # spot check attributes in the intersection to ensure they describe the spec
+    assert "intersect" in result
+    assert all(["node", dep] in result["intersect"] for dep in (
+        "mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich"
+    ))
+    assert all(
+        len([diff for diff in result["intersect"] if diff[0] == attr]) == 6
+        for attr in (
+            "version",
+            "node_target",
+            "node_platform",
+            "node_os",
+            "node_compiler",
+            "node_compiler_version",
+            "node",
+            "hash",
+        )
+    )
 
     # After we install another version, it should ask us to disambiguate
     install_cmd('mpileaks+debug')
@@ -79,7 +105,8 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
                       "mpileaks/{0}".format(no_debug_hash))
     result = sjson.load(output)
 
-    assert len(result['a_not_b']) == 1
-    assert len(result['b_not_a']) == 1
-    assert result['a_not_b'][0] == ['variant_value', 'mpileaks debug True']
-    assert result['b_not_a'][0] == ['variant_value', 'mpileaks debug False']
+    assert ['hash', 'mpileaks %s' % debug_hash] in result['a_not_b']
+    assert ['variant_value', 'mpileaks debug True'] in result['a_not_b']
+
+    assert ['hash', 'mpileaks %s' % no_debug_hash] in result['b_not_a']
+    assert ['variant_value', 'mpileaks debug False'] in result['b_not_a']

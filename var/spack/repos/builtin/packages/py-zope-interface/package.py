@@ -21,4 +21,5 @@ class PyZopeInterface(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@4.5.0')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@5.1.0:')
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools',       type=('build', 'run'))
+    depends_on('py-setuptools@:45',   type=('build', 'run'), when='@4.5.0')

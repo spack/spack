@@ -338,15 +338,6 @@ Once all of the dependencies are installed, you can try building the documentati
 If you see any warning or error messages, you will have to correct those before
 your PR is accepted.
 
-.. note::
-
-   There is also a ``run-doc-tests`` script in ``share/spack/qa``. The only
-   difference between running this script and running ``make`` by hand is that
-   the script will exit immediately if it encounters an error or warning. This
-   is necessary for CI. If you made a lot of documentation changes, it is
-   much quicker to run ``make`` by hand so that you can see all of the warnings
-   at once.
-
 If you are editing the documentation, you should obviously be running the
 documentation tests. But even if you are simply adding a new package, your
 changes could cause the documentation tests to fail:

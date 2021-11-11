@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
-import collections
 import contextlib
 import errno
 import functools
@@ -38,10 +37,10 @@ import spack.error
 import spack.patch
 import spack.provider_index
 import spack.spec
+import spack.tag
 import spack.util.imp as simp
 import spack.util.naming as nm
 import spack.util.path
-import spack.util.spack_json as sjson
 
 #: Super-namespace for all packages.
 #: Package modules are imported as spack.pkg.<namespace>.<pkg-name>.
@@ -78,7 +77,7 @@ NOT_PROVIDED = object()
 #:
 #: TODO: At some point in the future, consider removing ``from spack import *``
 #: TODO: from packages and shifting to from ``spack.pkgkit import *``
-_package_prepend = 'from spack.pkgkit import *'
+_package_prepend = 'from __future__ import absolute_import; from spack.pkgkit import *'
 
 
 def autospec(function):
@@ -219,55 +218,6 @@ class FastPackageChecker(Mapping):
         return len(self._packages_to_stats)
 
 
-class TagIndex(Mapping):
-    """Maps tags to list of packages."""
-
-    def __init__(self):
-        self._tag_dict = collections.defaultdict(list)
-
-    def to_json(self, stream):
-        sjson.dump({'tags': self._tag_dict}, stream)
-
-    @staticmethod
-    def from_json(stream):
-        d = sjson.load(stream)
-
-        r = TagIndex()
-
-        for tag, list in d['tags'].items():
-            r[tag].extend(list)
-
-        return r
-
-    def __getitem__(self, item):
-        return self._tag_dict[item]
-
-    def __iter__(self):
-        return iter(self._tag_dict)
-
-    def __len__(self):
-        return len(self._tag_dict)
-
-    def update_package(self, pkg_name):
-        """Updates a package in the tag index.
-
-        Args:
-            pkg_name (str): name of the package to be removed from the index
-
-        """
-        package = path.get(pkg_name)
-
-        # Remove the package from the list of packages, if present
-        for pkg_list in self._tag_dict.values():
-            if pkg_name in pkg_list:
-                pkg_list.remove(pkg_name)
-
-        # Add it again under the appropriate tags
-        for tag in getattr(package, 'tags', []):
-            tag = tag.lower()
-            self._tag_dict[tag].append(package.name)
-
-
 @six.add_metaclass(abc.ABCMeta)
 class Indexer(object):
     """Adaptor for indexes that need to be generated when repos are updated."""
@@ -311,10 +261,10 @@ class Indexer(object):
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
     def _create(self):
-        return TagIndex()
+        return spack.tag.TagIndex()
 
     def read(self, stream):
-        self.index = TagIndex.from_json(stream)
+        self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
         self.index.update_package(pkg_fullname)
@@ -473,9 +423,9 @@ class RepoPath(object):
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
-        self._all_package_names = None
         self._provider_index = None
         self._patch_index = None
+        self._tag_index = None
 
         # Add each repo to this path.
         for repo in repos:
@@ -544,15 +494,17 @@ class RepoPath(object):
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    def all_package_names(self, include_virtuals=False):
+    @llnl.util.lang.memoized
+    def _all_package_names(self, include_virtuals):
         """Return all unique package names in all repositories."""
-        if self._all_package_names is None:
-            all_pkgs = set()
-            for repo in self.repos:
-                for name in repo.all_package_names(include_virtuals):
-                    all_pkgs.add(name)
-            self._all_package_names = sorted(all_pkgs, key=lambda n: n.lower())
-        return self._all_package_names
+        all_pkgs = set()
+        for repo in self.repos:
+            for name in repo.all_package_names(include_virtuals):
+                all_pkgs.add(name)
+        return sorted(all_pkgs, key=lambda n: n.lower())
+
+    def all_package_names(self, include_virtuals=False):
+        return self._all_package_names(include_virtuals)
 
     def packages_with_tags(self, *tags):
         r = set()
@@ -577,6 +529,16 @@ class RepoPath(object):
                 self._provider_index.merge(repo.provider_index)
 
         return self._provider_index
+
+    @property
+    def tag_index(self):
+        """Merged TagIndex from all Repos in the RepoPath."""
+        if self._tag_index is None:
+            self._tag_index = spack.tag.TagIndex()
+            for repo in reversed(self.repos):
+                self._tag_index.merge(repo.tag_index)
+
+        return self._tag_index
 
     @property
     def patch_index(self):

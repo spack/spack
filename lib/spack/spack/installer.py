@@ -55,7 +55,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.util.environment import dump_environment
+from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
 
@@ -556,8 +556,8 @@ def log(pkg):
         log_file = os.path.join(os.path.dirname(packages_dir), log_file)
         fs.install(phase_log, log_file)
 
-    # Archive the environment used for the build
-    fs.install(pkg.env_path, pkg.install_env_path)
+    # Archive the environment modifications for the build.
+    fs.install(pkg.env_mods_path, pkg.install_env_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -625,6 +625,27 @@ def package_id(pkg):
                          "the spec is not concretized.")
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
+
+
+class TermTitle(object):
+    def __init__(self, pkg_count):
+        # Counters used for showing status information in the terminal title
+        self.pkg_num = 0
+        self.pkg_count = pkg_count
+
+    def next_pkg(self):
+        self.pkg_num += 1
+
+    def set(self, text):
+        if not spack.config.get('config:terminal_title', False):
+            return
+
+        if not sys.stdout.isatty():
+            return
+
+        status = '{0} [{1}/{2}]'.format(text, self.pkg_num, self.pkg_count)
+        sys.stdout.write('\033]0;Spack: {0}\007'.format(status))
+        sys.stdout.flush()
 
 
 class PackageInstaller(object):
@@ -1474,9 +1495,12 @@ class PackageInstaller(object):
         fail_fast_err = 'Terminating after first install failure'
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
-        exists_errors = []
+
+        term_title = TermTitle(len(self.build_pq))
 
         while self.build_pq:
+            term_title.next_pkg()
+
             task = self._pop_task()
             if task is None:
                 continue
@@ -1486,6 +1510,7 @@ class PackageInstaller(object):
             keep_prefix = install_args.get('keep_prefix')
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
+            term_title.set('Processing {0}'.format(pkg.name))
             tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -1541,6 +1566,7 @@ class PackageInstaller(object):
             # another process is likely (un)installing the spec or has
             # determined the spec has already been installed (though the
             # other process may be hung).
+            term_title.set('Acquiring lock for {0}'.format(pkg.name))
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1561,6 +1587,7 @@ class PackageInstaller(object):
                 task.request.overwrite_time = time.time()
 
             # Determine state of installation artifacts and adjust accordingly.
+            term_title.set('Preparing {0}'.format(pkg.name))
             self._prepare_for_install(task)
 
             # Flag an already installed package
@@ -1605,6 +1632,7 @@ class PackageInstaller(object):
 
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
+            term_title.set('Installing {0}'.format(pkg.name))
             try:
                 action = self._install_action(task)
 
@@ -1682,10 +1710,7 @@ class PackageInstaller(object):
         missing = [request.pkg_id for request in self.build_requests if
                    request.install_args.get('install_package') and
                    request.pkg_id not in self.installed]
-        if exists_errors or failed_explicits or missing:
-            for pkg_id, err in exists_errors:
-                tty.error('{0}: {1}'.format(pkg_id, err))
-
+        if failed_explicits or missing:
             for pkg_id, err in failed_explicits:
                 tty.error('{0}: {1}'.format(pkg_id, err))
 
@@ -1729,6 +1754,10 @@ class BuildProcessInstaller(object):
 
         # env before starting installation
         self.unmodified_env = install_args.get('unmodified_env', {})
+
+        # env modifications by Spack
+        self.env_mods = install_args.get(
+            'env_modifications', EnvironmentModifications())
 
         # timer for build phases
         self.timer = Timer()
@@ -1818,6 +1847,15 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
+
+            # Save just the changes to the environment.  This file can be
+            # safely installed, since it does not contain secret variables.
+            with open(pkg.env_mods_path, 'w') as env_mods_file:
+                mods = self.env_mods.shell_modifications(
+                    explicit=True,
+                    env=self.unmodified_env
+                )
+                env_mods_file.write(mods)
 
             for attr in ('configure_args', 'cmake_args'):
                 try:

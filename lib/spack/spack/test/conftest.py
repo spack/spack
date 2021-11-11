@@ -22,6 +22,7 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
+import llnl.util.lang
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
@@ -970,7 +971,10 @@ def mock_gnupghome(monkeypatch):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually
-    shutil.rmtree(short_name_tmpdir)
+    # Ignore errors cause we seem to be hitting a bug similar to
+    # https://bugs.python.org/issue29699 in CI (FileNotFoundError: [Errno 2] No such
+    # file or directory: 'S.gpg-agent.extra').
+    shutil.rmtree(short_name_tmpdir, ignore_errors=True)
 
 ##########
 # Fake archives and repositories
@@ -1524,3 +1528,10 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set('config:test_stage', tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def brand_new_binary_cache():
+    yield
+    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
+        spack.binary_distribution._binary_index)

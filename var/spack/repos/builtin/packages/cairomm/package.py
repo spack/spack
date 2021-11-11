@@ -17,3 +17,4 @@ class Cairomm(AutotoolsPackage):
 
     depends_on('cairo')
     depends_on('libsigcpp')
+    depends_on('pkgconfig', type='build')

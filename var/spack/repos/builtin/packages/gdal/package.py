@@ -24,6 +24,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.3.3',  sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
     version('3.3.2',  sha256='630e34141cf398c3078d7d8f08bb44e804c65bbf09807b3610dcbfbc37115cc3')
     version('3.3.1',  sha256='48ab00b77d49f08cf66c60ccce55abb6455c3079f545e60c90ee7ce857bccb70')
     version('3.3.0',  sha256='190c8f4b56afc767f43836b2a5cd53cc52ee7fdc25eb78c6079c5a244e28efa7')
@@ -58,7 +59,6 @@ class Gdal(AutotoolsPackage):
     variant('libz',      default=True,  description='Include libz support')
     variant('libiconv',  default=False, description='Include libiconv support')
     variant('liblzma',   default=True,  description='Include liblzma support')
-    variant('zstd',      default=False, description='Include zstd support')
     variant('pg',        default=False, description='Include PostgreSQL support')
     variant('cfitsio',   default=False, description='Include FITS support')
     variant('png',       default=False, description='Include PNG support')
@@ -117,7 +117,6 @@ class Gdal(AutotoolsPackage):
     depends_on('zlib', when='+libz')
     depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
-    depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
     depends_on('cfitsio', when='+cfitsio')
     depends_on('libpng', when='+png')
@@ -265,11 +264,6 @@ class Gdal(AutotoolsPackage):
                 args.append('--with-mrf=no')
 
         if spec.satisfies('@2.3:'):
-            if '+zstd' in spec:
-                args.append('--with-zstd={0}'.format(spec['zstd'].prefix))
-            else:
-                args.append('--with-zstd=no')
-
             if '+proj' in spec:
                 args.append('--with-proj={0}'.format(spec['proj'].prefix))
             else:

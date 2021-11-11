@@ -58,7 +58,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def parallel(self):
-        return self.spec.satisfies('@1.22.4')
+        return False
 
     @classmethod
     def determine_version(cls, exe):

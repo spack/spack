@@ -12,6 +12,7 @@ class PySetuptoolsScm(PythonPackage):
     homepage = "https://github.com/pypa/setuptools_scm"
     pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
 
+    version('6.3.2',  sha256='a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2')
     version('6.0.1',  sha256='d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92')
     version('4.1.2',  sha256='a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8')
     version('3.5.0',  sha256='5bdf21a05792903cafe7ae0c9501182ab52497614fa6b1750d9dbae7b60c1a87')
@@ -28,4 +29,7 @@ class PySetuptoolsScm(PythonPackage):
     depends_on('py-setuptools@34.4:', type=('build', 'run'))
     depends_on('py-setuptools@45:', type=('build', 'run'), when='@6:')
 
-    depends_on('py-toml', when='+toml', type=('build', 'run'))
+    depends_on('py-toml', when='+toml @:6.1.0', type=('build', 'run'))
+    depends_on('py-tomli@1.0.0:', when='+toml @6.1.0:', type=('build', 'run'))
+
+    depends_on('py-packaging@20.0:', when='@6.3.0:', type=('build', 'run'))
