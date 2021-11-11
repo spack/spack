@@ -11,7 +11,6 @@ class CodeServer(Package):
     accessible through the browser."""
 
     homepage = "https://github.com/cdr/code-server"
-    url      = "https://github.com/cdr/code-server/releases/download/v3.12.0/code-server-3.12.0-linux-amd64.tar.gz"
 
     version('3.12.0', sha256='d3ca41a55e36d73d80300702af2687e25d440cff6b613bb58a2c88d9b8a0a38f')
     version('3.9.3', sha256='eba42eaf868c2144795b1ac54929e3b252ae35403bf8553b3412a5ac4f365a41')
