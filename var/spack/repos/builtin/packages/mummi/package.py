@@ -14,6 +14,8 @@ class Mummi(PythonPackage):
     git      = "git@github.com:mummi-framework/mummi-ras.git"
     version('main', branch='main')
 
+    maintainers = ['bhatiaharsh']
+
 
     # -------------------------------------------------------------------
     extends('python@3.7:')
