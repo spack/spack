@@ -175,3 +175,9 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     spack.config.set('packages', pkgs_cfg, scope=scope)
 
     return all_new_specs
+
+
+def find_win32_install_paths():
+    program_files = '"C:\\Program Files {}\\*\\"'
+
+    return [program_files.format(arch) for arch in ("","(x86)")]

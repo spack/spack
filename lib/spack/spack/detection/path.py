@@ -20,6 +20,7 @@ import spack.util.environment
 
 from .common import (
     DetectedPackage,
+    find_win32_install_paths,
     _convert_to_iterable,
     executable_prefix,
     is_executable,
@@ -56,6 +57,7 @@ def executables_in_path(path_hints=None):
                          "CMake", "Ninja")
             for path in msvc_paths]
         path_hints = msvc_ninja_paths + path_hints
+        path_hints.extend(find_win32_install_paths())
 
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
