@@ -26,7 +26,7 @@ class PyOauthlib(PythonPackage):
     depends_on('py-pyjwt@1.0.0:',         type=('build', 'run'), when='+extras')
     depends_on('py-pyjwt@2.0.0:2',        type=('build', 'run'), when='+extras @3.1.1:')
     depends_on('py-blinker',              type=('build', 'run'), when='+extras')
-    depends_on('py-blinker@1.4',          type=('build', 'run'), when='+extras @3.1.1:')
+    depends_on('py-blinker@1.4:',          type=('build', 'run'), when='+extras @3.1.1:')
     depends_on('py-cryptography',         type=('build', 'run'), when='+extras')
     depends_on('py-cryptography@3.0.0:3', type=('build', 'run'), when='+extras @3.1.1:')
     depends_on('python@2.7:2.8,3.4:',     type=('build', 'run'))
