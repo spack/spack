@@ -52,8 +52,9 @@ class Vtk(CMakePackage):
           when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
     # Patch to include device searching for EGL
-    patch('https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8601.patch',
-          when="@9:", sha256='b85c5e8939089de9435e88c708ad1b4f10c8df5bf8e5b786140aa48c43673028')
+    patch('egl-device.patch', when='@9:')
+    # patch('https://gitlab.kitware.com/vtk/vtk/-/commit/932dce1212a70a63943b3c979263f356215dac58.diff',
+    #       when="@9:", sha256='ef9130f4396cbf0d1f655c3d7d28a02fa6760bbdc96de22a6609cd3da63bb044')
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
