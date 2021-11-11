@@ -10,10 +10,10 @@ class PyWurlitzer(PythonPackage):
     """Capture C-level stdout/stderr pipes in Python via os.dup2."""
 
     homepage = "https://github.com/minrk/wurlitzer"
-    url      = "https://github.com/minrk/wurlitzer/archive/refs/tags/3.0.2.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/e8/2c/3e57755689fcf75aa25f6afba064d3891e9864ef43a24745575c86b12ad4/wurlitzer-3.0.2.tar.gz"
     maintainers = ['sethrj']
 
-    version('3.0.2', sha256='c09508dbf8e1e53f8fcc703790887f446d8c08c705a8f14957ccfdb0dc17e8a0')
+    version('3.0.2', sha256='36051ac530ddb461a86b6227c4b09d95f30a1d1043de2b4a592e97ae8a84fcdf')
 
     depends_on('python+ctypes@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
