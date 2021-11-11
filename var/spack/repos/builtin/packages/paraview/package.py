@@ -46,6 +46,7 @@ class Paraview(CMakePackage, CudaPackage):
     variant('python3', default=False, description='Enable Python3 support')
     variant('mpi', default=True, description='Enable MPI support')
     variant('osmesa', default=False, description='Enable OSMesa support')
+    variant('egl', default=False, description='Enable EGL support')
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
@@ -113,6 +114,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('osmesa', when='+osmesa')
+    depends_on('egl', when='+egl')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='~osmesa platform=linux')
@@ -171,6 +173,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Broken downstream FindMPI
     patch('vtkm-findmpi-downstream.patch', when='@5.9.0')
+
+    # Patch to include device searching for EGL
+    patch('egl-device.patch', when='@5.9.0:')
 
     # Include limits header wherever needed to fix compilation with GCC 11
     patch('paraview-gcc11-limits.patch', when='@5.9.1 %gcc@11.1.0:')
@@ -280,7 +285,8 @@ class Paraview(CMakePackage, CudaPackage):
 
         cmake_args = [
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
-            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
+            '-DVTK_OPENGL_HAS_EGL:BOOL=%s' % variant_bool('+egl'),
+            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa') or nvariant_bool('+egl'),
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
