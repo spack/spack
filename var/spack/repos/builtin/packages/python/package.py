@@ -361,6 +361,13 @@ class Python(AutotoolsPackage):
                 r'\1 None and \3'
             )
 
+        if '^ncurses' in self.spec:
+            with open('Modules/Setup', 'a') as sf:
+                # make sure the curses module uses ncursesw (#27369)
+                sf.write("*shared*\n"
+                         "_curses _cursesmodule.c -lncursesw\n"
+                         "_curses_panel _curses_panel.c -lpanel -lncursesw\n")
+
     def setup_build_environment(self, env):
         spec = self.spec
 
@@ -413,6 +420,11 @@ class Python(AutotoolsPackage):
             # finds them using pkg-config.
             cppflags = ' '.join('-I' + spec[dep.name].prefix.include
                                 for dep in link_deps)
+
+            if '^ncurses' in spec:
+                # make sure we get ncursesw (first)
+                cppflags = '-I{0}/ncursesw '.format(spec['ncurses'].prefix.include) \
+                    + cppflags
 
             # Currently, the only way to get SpecBuildInterface wrappers of the
             # dependencies (which we need to get their 'libs') is to get them
