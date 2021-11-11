@@ -23,5 +23,4 @@ class PyParso(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@0.8.1:')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@0.6.1:')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'), when='@0.4.0:')
-    depends_on('python@3.6:', type=('build', 'run'), when='@0.8.2:')
     depends_on('py-setuptools',    type='build')
