@@ -7,35 +7,13 @@ from spack import *
 
 
 class Mummi(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """The MuMMI framework facilitates the coordination of massively parallel 
+    multiscale simulations using a machine learning driven sampling approach."
 
+    homepage = "https://github.com/mummi-framework"
+    git      = "git@github.com:mummi-framework/mummi-ras.git"
+    version('main', branch='main')
 
-    # -------------------------------------------------------------------
-    REPO_GENERATION = 1
-
-    if 2 == REPO_GENERATION:
-        pass
-
-    elif 1 == REPO_GENERATION:
-        homepage = "https://code.ornl.gov/bhatiah/mummi"
-        git      = "git@code.ornl.gov:bhatiah/mummi.git"
-        version('develop', branch='develop')
-
-    else:
-        homepage = "https://code.ornl.gov/v33/pilot2-splash-app"
-        git      = "git@code.ornl.gov:v33/pilot2-splash-app.git"
-
-        version('0.3b.0', tag='v0.3b.0') #commit='527f44e4a543f0e44daeab5d1375ce8c610eb9a0')
-        version('0.2.0', tag='v0.2.0') #commit='372e85318181530731f191b5a48b747f60bfadd2')
-        version('develop', branch='develop')
-        version('python3', branch='python3')
-        version('python3_merged', commit='33ca89df')
-
-        #version('port', branch='port/splash', git='igit@code.ornl.gov:bhatiah/mummi.git')
-        #build_directory = 'mummi'
-        #version('1.0.1', tag='v1.0.1')
-        #version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
-        #version('1.0', 'f43fb8126c138db96b489655914ed2bd5a469412')
 
     # -------------------------------------------------------------------
     extends('python@3.7:')
@@ -58,9 +36,6 @@ class Mummi(PythonPackage):
     depends_on('py-scikit-learn')
     depends_on('py-matplotlib@3:')
 
-    # macro
-    #depends_on('gridsim2d@v2020-10-09.2')
-
     # cg and aa
     depends_on('ddcmdconverter@1.0.5')
     depends_on('py-mdanalysis-mummi@mda_1.0.4_ddcmd')
@@ -74,11 +49,11 @@ class Mummi(PythonPackage):
     # databroker
     depends_on('redis')
     depends_on('py-redis')
-    #depends_on('databroker@0.7.1 +python')
 
     # flux
-    #depends_on('flux-sched@0.11.0 +cuda')
-    #depends_on('py-maestrowf')
+    depends_on('flux-sched@0.11.0 +cuda')
+    depends_on('py-maestrowf')
 
     # shared daemon
     depends_on('py-cryptography')
+
