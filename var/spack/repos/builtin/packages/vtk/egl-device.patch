@@ -1,0 +1,230 @@
+--- a/Rendering/OpenGL2/vtkEGLRenderWindow.cxx
++++ b/Rendering/OpenGL2/vtkEGLRenderWindow.cxx
+@@ -41,7 +41,6 @@ typedef void* EGLDeviceEXT;
+ typedef EGLBoolean (*EGLQueryDevicesType)(EGLint, EGLDeviceEXT*, EGLint*);
+ typedef EGLDisplay (*EGLGetPlatformDisplayType)(EGLenum, void*, const EGLint*);
+ const EGLenum EGL_PLATFORM_DEVICE_EXT = 0x313F;
+-
+ /**
+  * EGLDisplay provided by eglGetDisplay() call can be same handle for multiple
+  * instances of vtkEGLRenderWindow. In which case, while it's safe to call
+@@ -69,9 +68,12 @@ public:
+     }
+     return EGL_TRUE;
+   }
++
++  static int DefaultDeviceIndex;
+ };
+ 
+ std::map<EGLDisplay, std::atomic<int64_t> > vtkEGLDisplayInitializationHelper::DisplayUsageCounts;
++int vtkEGLDisplayInitializationHelper::DefaultDeviceIndex = VTK_DEFAULT_EGL_DEVICE_INDEX;
+ 
+ struct vtkEGLDeviceExtensions
+ {
+@@ -145,8 +147,8 @@ vtkEGLRenderWindow::vtkEGLRenderWindow()
+ 
+   // this is initialized in vtkRenderWindow
+   // so we don't need to initialize on else
++  this->DeviceIndex = -1;
+ #ifdef VTK_USE_OFFSCREEN_EGL
+-  this->DeviceIndex = VTK_DEFAULT_EGL_DEVICE_INDEX;
+   this->ShowWindow = false;
+ #endif
+ 
+@@ -154,11 +156,33 @@ vtkEGLRenderWindow::vtkEGLRenderWindow()
+   char* EGLDefaultDeviceIndexEnv = std::getenv("VTK_DEFAULT_EGL_DEVICE_INDEX");
+   if (EGLDefaultDeviceIndexEnv)
+   {
+-    // If parsing the environment variable fails and throws an exception we
+-    // can safely ignore it since a default is already set above.
+     try
+     {
+-      this->DeviceIndex = atoi(EGLDefaultDeviceIndexEnv);
++      int index = atoi(EGLDefaultDeviceIndexEnv);
++      if (index >= 0)
++      {
++        vtkEGLDisplayInitializationHelper::DefaultDeviceIndex = index;
++      }
++    }
++    catch (const std::out_of_range&)
++    {
++    }
++    catch (const std::invalid_argument&)
++    {
++    }
++  }
++
++  // If the device index is explicitly set then we need to use it.
++  char* EGLDeviceIndexEnv = std::getenv("VTK_EGL_DEVICE_INDEX");
++  if (EGLDeviceIndexEnv)
++  {
++    try
++    {
++      int index = atoi(EGLDeviceIndexEnv);
++      if (index >= 0)
++      {
++        this->DeviceIndex = index;
++      }
+     }
+     catch (const std::out_of_range&)
+     {
+@@ -282,10 +306,13 @@ int vtkEGLRenderWindow::GetNumberOfDevices()
+   return 0;
+ }
+ 
+-void vtkEGLRenderWindow::SetDeviceAsDisplay(int deviceIndex)
++bool vtkEGLRenderWindow::SetDeviceAsDisplay(int deviceIndex)
+ {
+   vtkInternals* impl = this->Internals;
+   vtkEGLDeviceExtensions* ext = vtkEGLDeviceExtensions::GetInstance();
++  bool foundWorkingDisplay = false;
++  EGLint major = 0, minor = 0;
++
+   if (ext->Available())
+   {
+     EGLint num_devices = 0;
+@@ -295,20 +322,89 @@ void vtkEGLRenderWindow::SetDeviceAsDisplay(int deviceIndex)
+       vtkWarningMacro("EGL device index: " << deviceIndex
+                                            << " is greater than "
+                                               "the number of supported deviced in the system: "
+-                                           << num_devices << ". Using device 0 ...");
+-      return;
++                                           << num_devices);
++    }
++
++    std::vector<EGLDeviceEXT> devices(num_devices);
++    ext->eglQueryDevices(num_devices, devices.data(), &num_devices);
++
++    if (deviceIndex >= 0)
++    {
++      impl->Display =
++        ext->eglGetPlatformDisplay(EGL_PLATFORM_DEVICE_EXT, devices[deviceIndex], nullptr);
++
++      if (vtkEGLDisplayInitializationHelper::Initialize(impl->Display, &major, &minor) == EGL_FALSE)
++      {
++        vtkWarningMacro(
++          "EGL device index: " << deviceIndex << " could not be initialized. Exiting...");
++      }
++
++      foundWorkingDisplay = true;
++    }
++    else
++    {
++      impl->Display = ext->eglGetPlatformDisplay(EGL_PLATFORM_DEVICE_EXT,
++        devices[vtkEGLDisplayInitializationHelper::DefaultDeviceIndex], nullptr);
++
++      if (vtkEGLDisplayInitializationHelper::Initialize(impl->Display, &major, &minor) == EGL_FALSE)
++      {
++        vtkWarningMacro(
++          "EGL device index: " << vtkEGLDisplayInitializationHelper::DefaultDeviceIndex
++                               << " could not be initialized. Trying other devices...");
++
++        for (int i = 0; i < num_devices; i++)
++        {
++          // Don't check DefaultDeviceIndex again
++          if (i == vtkEGLDisplayInitializationHelper::DefaultDeviceIndex)
++          {
++            continue;
++          }
++
++          impl->Display = ext->eglGetPlatformDisplay(EGL_PLATFORM_DEVICE_EXT, devices[i], nullptr);
++          if (vtkEGLDisplayInitializationHelper::Initialize(impl->Display, &major, &minor) ==
++            EGL_TRUE)
++          {
++            foundWorkingDisplay = true;
++            break;
++          }
++        }
++      }
++      else
++      {
++        foundWorkingDisplay = true;
++      }
++    }
++  }
++
++  if (!foundWorkingDisplay)
++  {
++    // eglGetDisplay(EGL_DEFAULT_DISPLAY) does not seem to work
++    // if there are several cards on a system.
++    vtkWarningMacro("Setting an EGL display to device index: "
++      << deviceIndex
++      << " require "
++         "EGL_EXT_device_base EGL_EXT_platform_device EGL_EXT_platform_base extensions");
++
++    vtkWarningMacro("Attempting to use EGL_DEFAULT_DISPLAY...");
++    impl->Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
++
++    if (vtkEGLDisplayInitializationHelper::Initialize(impl->Display, &major, &minor) == EGL_FALSE)
++    {
++      vtkErrorMacro("Could not initialize a device. Exiting...");
++      return false;
+     }
+-    EGLDeviceEXT* devices = new EGLDeviceEXT[num_devices];
+-    ext->eglQueryDevices(num_devices, devices, &num_devices);
+-    impl->Display =
+-      ext->eglGetPlatformDisplay(EGL_PLATFORM_DEVICE_EXT, devices[deviceIndex], nullptr);
+-    delete[] devices;
+-    return;
+   }
+-  vtkWarningMacro("Setting an EGL display to device index: "
+-    << deviceIndex
+-    << " require "
+-       "EGL_EXT_device_base EGL_EXT_platform_device EGL_EXT_platform_base extensions");
++#if !defined(__ANDROID__) && !defined(ANDROID)
++  if (major <= 1 && minor < 4)
++  {
++    vtkErrorMacro("Only EGL 1.4 and greater allows OpenGL as client API. "
++                  "See eglBindAPI for more information.");
++    return false;
++  }
++  eglBindAPI(EGL_OPENGL_API);
++#endif
++
++  return true;
+ }
+ 
+ void vtkEGLRenderWindow::SetShowWindow(bool val)
+@@ -363,27 +459,10 @@ void vtkEGLRenderWindow::ResizeWindow(int width, int height)
+ 
+   if (impl->Display == EGL_NO_DISPLAY)
+   {
+-    // eglGetDisplay(EGL_DEFAULT_DISPLAY) does not seem to work
+-    // if there are several cards on a system.
+-    this->SetDeviceAsDisplay(this->DeviceIndex);
+-
+-    // try to use the default display
+-    if (impl->Display == EGL_NO_DISPLAY)
+-    {
+-      impl->Display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+-    }
+-
+-    EGLint major = 0, minor = 0;
+-    vtkEGLDisplayInitializationHelper::Initialize(impl->Display, &major, &minor);
+-#if !defined(ANDROID)
+-    if (major <= 1 && minor < 4)
+-    {
+-      vtkErrorMacro("Only EGL 1.4 and greater allows OpenGL as client API. "
+-                    "See eglBindAPI for more information.");
+-      return;
+-    }
+-    eglBindAPI(EGL_OPENGL_API);
+-#endif
++    if (!this->SetDeviceAsDisplay(this->DeviceIndex))
++    {
++      return;
++    }  
+   }
+ 
+   /* Here, the application chooses the configuration it desires. In this
+--- a/Rendering/OpenGL2/vtkEGLRenderWindow.h
++++ b/Rendering/OpenGL2/vtkEGLRenderWindow.h
+@@ -229,7 +229,7 @@ protected:
+    * extensions to set the display (output graphics card) to something different than
+    * EGL_DEFAULT_DISPLAY. Just use the default display if deviceIndex == 0.
+    */
+-  void SetDeviceAsDisplay(int deviceIndex);
++  bool SetDeviceAsDisplay(int deviceIndex);
+ 
+ private:
+   vtkEGLRenderWindow(const vtkEGLRenderWindow&) = delete;
