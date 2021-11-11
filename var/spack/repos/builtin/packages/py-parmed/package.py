@@ -8,7 +8,10 @@ from spack import *
 
 
 class PyParmed(PythonPackage):
-    """FIXME: Put a prddoper description of your package here."""
+    """ParmEd is a package designed to facilitate creating and easily manipulating molecular 
+    systems that are fully described by a common classical force field. Supported force fields 
+    include Amber, CHARMM, AMOEBA, and several others that share a similar functional form 
+    (e.g., GROMOS)."""
 
     homepage = "https://github.com/ParmEd/ParmEd"
     git      = "git@github.com:ParmEd/ParmEd.git"

@@ -23,7 +23,6 @@ class PyMaestrowf(PythonPackage):
     version('flux-c3', branch='merge/flux2')
     version('flux-c3.beta_1123', tag='flux_beta_1123')
     
-    # New tags for C4 -- supporting new Flux install
     version('1.1.9', tag='1.1.9dev1')
 
     # Pre-release candidates
