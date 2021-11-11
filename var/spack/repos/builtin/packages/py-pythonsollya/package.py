@@ -27,6 +27,6 @@ class PyPythonsollya(PythonPackage):
     @run_before('build')
     def patch(self):
         filter_file('PYTHON ?= python2',
-                    'PYTHON ?= python',
+                    'PYTHON ?= ' + self.spec['python'].command.path,
                     'GNUmakefile',
                     string=True)
