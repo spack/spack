@@ -9,7 +9,7 @@ from spack import *
 class PyTwisted(PythonPackage):
     """An asynchronous networking framework written in Python"""
     homepage = "https://twistedmatrix.com/"
-    pypi = "Twisted/Twisted-21.2.0.tar.gz"
+    pypi = "Twisted/Twisted-21.7.0.tar.gz"
 
     version('21.7.0', sha256='2cd652542463277378b0d349f47c62f20d9306e57d1247baabd6d1d38a109006')
     version('15.4.0', sha256='78862662fa9ae29654bc2b9d349c3f1d887e6b2ed978512c4442d53ea861f05c')
