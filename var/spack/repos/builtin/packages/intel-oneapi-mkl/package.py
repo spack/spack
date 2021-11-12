@@ -66,3 +66,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                               join_path(self.component_path, 'lib', 'intel64'))
         libs += find_system_libraries(['libpthread', 'libm', 'libdl'])
         return libs
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MKLROOT', self.component_path)
