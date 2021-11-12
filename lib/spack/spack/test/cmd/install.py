@@ -891,6 +891,9 @@ def test_install_help_cdash(capsys):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
+    """This test is failing for PRs and doesn't seem related to
+    them.
+    """
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
         with capfd.disabled():
