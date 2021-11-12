@@ -332,7 +332,7 @@ def run_test_install_sbang(group):
 
     # install again and make sure sbang is still fine
     sbang.install_sbang()
-    check_sbang_installation()
+    check_sbang_installation(group)
 
 
 def test_install_group_sbang(install_mockery, configure_group_perms):
