@@ -1,0 +1,15 @@
+diff --git a/FORTRAN/CMakeLists.txt b/FORTRAN/CMakeLists.txt
+index bf402a9..6a039e1 100644
+--- a/FORTRAN/CMakeLists.txt
++++ b/FORTRAN/CMakeLists.txt
+@@ -3,8 +3,8 @@ include_directories(${SuperLU_DIST_SOURCE_DIR}/SRC)
+ include_directories(${SuperLU_DIST_BINARY_DIR}/FORTRAN)
+ 
+ set(headers
+-    ${CMAKE_BINARY_DIR}/FORTRAN/superlu_mod.mod
+-    ${CMAKE_BINARY_DIR}/FORTRAN/superlupara_mod.mod
++  ${CMAKE_BINARY_DIR}/FORTRAN/SUPERLU_MOD.mod
++    ${CMAKE_BINARY_DIR}/FORTRAN/SUPERLUPARA_MOD.mod
+     ${CMAKE_BINARY_DIR}/FORTRAN/superlu_dist_config.fh
+     )
+ 
