@@ -83,7 +83,7 @@ spack package at this time.''',
 
     variant(
         'two_level_namespace',
-        default=False,
+        default=(sys.platform == 'darwin'),
         description='''Build shared libraries and programs
 built with the mpicc/mpifort/etc. compiler wrappers
 with '-Wl,-commons,use_dylibs' and without
