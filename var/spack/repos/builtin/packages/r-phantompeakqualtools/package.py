@@ -14,9 +14,9 @@ class RPhantompeakqualtools(RPackage):
 
     homepage = "https://github.com/kundajelab/phantompeakqualtools"
     url      = "https://github.com/hms-dbmi/spp/archive/refs/tags/1.15.2.tar.gz"
-    
+
     version('1.15', sha256='172516b0f1f2a8132f22ab6fbfe41fb5943d675c2be02c733fcd5aa9651c6d22')
-    
+ 
     depends_on('boost@1.41.0:')
     depends_on('r-catools', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))
