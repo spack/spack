@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyMxfold2(PythonPackage):
-    """MXfold2: RNA secondary structure prediction using deep learning with thermodynamic integration"""
+    """MXfold2: RNA secondary structure prediction using deep
+    learning with thermodynamic integration"""
 
     homepage = "https://github.com/keio-bioinformatics/mxfold2"
     url      = "https://github.com/keio-bioinformatics/mxfold2/releases/download/v0.1.1/mxfold2-0.1.1.tar.gz"
