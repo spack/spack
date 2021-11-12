@@ -18,5 +18,5 @@ class PyPkgconfig(PythonPackage):
 
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', when='@1.5:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@:1.4', type=('build', 'run'))
+    depends_on('py-setuptools', when='@:1.4,1.5.1:', type=('build', 'run'))
     depends_on('pkgconfig', type=('build', 'run'))
