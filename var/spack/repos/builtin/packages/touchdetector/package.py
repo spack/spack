@@ -35,7 +35,6 @@ class Touchdetector(CMakePackage):
     variant('openmp', default=False, description='Enables OpenMP support')
 
     depends_on('cmake', type='build')
-    depends_on('boost@1.50:')
     depends_on('catch2', when='@5.0.2:')
     depends_on('eigen', when='@4.5:')
     depends_on('fmt@:5.999', when='@4.5:')
@@ -59,6 +58,7 @@ class Touchdetector(CMakePackage):
     depends_on('mvdtool@1.5.1:2.0.0', when='@4.5:5.1')
 
     depends_on('highfive+mpi', when='@5.3.0:5.6.1')
+    depends_on('boost@1.50:', when='@:5.6.1')
 
     patch("no-wall.patch", when='@5:5.4.999')
 
