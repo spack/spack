@@ -34,7 +34,7 @@ class Edm4hep(CMakePackage):
 
     depends_on('root@6.08:')
     depends_on('podio@0.14:', when='@0.4:')
-    depends_on('podio@0.13.0:0.13', when= '@:0.3')
+    depends_on('podio@0.13.0:0.13', when='@:0.3')
 
     depends_on('hepmc@:2', type='test')
     depends_on('heppdt', type='test')
