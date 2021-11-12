@@ -495,7 +495,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy sync update-index"
+        SPACK_COMPREPLY="create install find list keys preview check download get-buildcache-name save-specfile copy sync update-index"
     fi
 }
 
@@ -517,10 +517,19 @@ _spack_buildcache_install() {
     fi
 }
 
+_spack_buildcache_find() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -a --allarch --json"
+    else
+        _all_packages
+    fi
+}
+
 _spack_buildcache_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -a --allarch"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -a --allarch --json"
     else
         _all_packages
     fi
