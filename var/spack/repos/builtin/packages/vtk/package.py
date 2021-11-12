@@ -277,7 +277,6 @@ class Vtk(CMakePackage):
                 '-DVTK_USE_COCOA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_EGL:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
-
         elif '+egl' in spec:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
@@ -301,14 +300,8 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
-        if '+egl' in spec:
-            cmake_args.extend([
-                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
-                ])
-        else:
-            cmake_args.extend([
-                '-DVTK_OPENGL_HAS_EGL:BOOL=OFF'
-                ])
+   
+
 
         compile_flags = []
 
