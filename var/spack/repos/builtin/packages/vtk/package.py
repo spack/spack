@@ -273,9 +273,20 @@ class Vtk(CMakePackage):
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DVTK_USE_COCOA:BOOL=OFF',
+                '-DVTK_OPENGL_HAS_EGL:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
 
+        else if '+egl' in spec:
+            cmake_args.extend([
+                '-DVTK_USE_X:BOOL=OFF',
+                '-DVTK_USE_COCOA:BOOL=OFF',
+                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
+                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
+                ])
         else:
+            
+        else:
+            cmake_args.extend('-DVTK_OPENGL_HAS_EGL:BOOL=OFF')
             cmake_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF')
             if spec.satisfies('@:7.9.9'):
                 # This option is gone in VTK 8.1.2
@@ -291,14 +302,8 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
-        if '+egl' in spec:
-            cmake_args.extend([
-                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
-                ])
-        else:
-            cmake_args.extend([
-                '-DVTK_OPENGL_HAS_EGL:BOOL=OFF'
-                ])
+   
+
 
         compile_flags = []
 
