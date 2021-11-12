@@ -14,5 +14,4 @@ class PyIncremental(PythonPackage):
 
     version('21.3.0', sha256='02f5de5aff48f6b9f665d99d48bfc7ec03b6e3943210de7cfc88856d755d6f57')
 
-    depends_on('py-setuptools@44.1.1:', type='build')
-    depends_on('py-typing@3.7.4.3:', type=('build', 'run'), when='@:3.4')
+    depends_on('py-setuptools', type='build')
