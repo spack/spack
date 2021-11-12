@@ -38,7 +38,7 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'verbose': args.verbose,
+        'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
@@ -130,7 +130,7 @@ remote spec matches that of the local spec""")
         help="install source files in prefix")
     arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_true', dest='install_verbose',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
@@ -285,6 +285,8 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
         parser = argparse.ArgumentParser(
