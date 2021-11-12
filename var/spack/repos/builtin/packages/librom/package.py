@@ -3,51 +3,53 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
 
-class Librom(AutotoolsPackage):
-    """libROM: library for computing large-scale reduced order models"""
+
+class Librom(CMakePackage):
+    """libROM is a free, lightweight, scalable C++ library for data-driven
+       physical simulation methods from the intrusive projection-based reduced
+       order models to non-intrusive black-box approaches."""
 
     homepage = "https://github.com/LLNL/libROM"
     git      = "https://github.com/LLNL/libROM.git"
 
+    maintainers = ['chldkdtn']
+
     version('develop', branch='master')
+    variant('mfem', default=False, description="Enable MFEM support.")
+    variant('shared', default=True,
+            description="Enables the build of shared libraries.")
 
     depends_on('lapack')
+    depends_on('scalapack')
     depends_on('mpi')
+    depends_on('hypre@develop', when='+mfem')
+    depends_on('metis', when='+mfem')
+    depends_on('parmetis', when='+mfem')
+    depends_on('mfem@develop', when='+mfem')
+    depends_on('hdf5@1.8.12')
     depends_on('zlib')
-    depends_on('libszip')
-    depends_on('hdf5')
-    depends_on('perl')
-    depends_on('graphviz')
-    depends_on('doxygen')
-    depends_on('boost')
 
-    def configure_args(self):
-        spec = self.spec
-        args = ['--with-lapack={0}'.format(spec['lapack'].prefix),
-                '--with-lapack-libs={0}'.format(spec['lapack'].libs.ld_flags),
-                '--with-zlib={0}'.format(spec['zlib'].prefix),
-                '--with-szlib={0}'.format(spec['libszip'].prefix),
-                '--with-hdf5={0}'.format(spec['hdf5'].prefix),
-                '--with-MPICC={0}'.format(spec['mpi'].mpicc),
-                '--with-mpi-include={0}'.format(spec['mpi'].prefix.include),
-                '--with-mpi-libs={0}'.format(spec['mpi'].libs.ld_flags),
-                '--with-perl={0}'.format(spec['perl'].prefix),
-                '--with-doxygen={0}'.format(spec['doxygen'].prefix)]
+    def cmake_args(self):
+        args = []
+        if self.spec.variants['mfem'].value:  # True if +mfem
+            args = ['-DUSE_MFEM=On']
+        if not self.spec.variants['shared'].value:
+            args = ['-DBUILD_STATIC=On']
         return args
 
-    # TODO(oxberry1@llnl.gov): Submit PR upstream that implements
-    # install phase in autotools
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
-        install('libROM.a', join_path(prefix.lib, 'libROM.a'))
+        install(join_path(self.build_directory, 'lib', 'libROM.so'),
+                prefix.lib)
 
         mkdirp(prefix.include)
-        install('*.h', prefix.include)
+        install_tree('lib', prefix.include)
 
-        mkdirp(prefix.share)
-        install('libROM_Design_and_Theory.pdf',
-                join_path(prefix.share,
-                          'libROM_Design_and_Theory.pdf'))
-
-        install_tree('docs', prefix.share.docs)
+        mkdirp(prefix.bin)
+        install_tree(join_path(self.build_directory, 'tests'),
+                     join_path(prefix.bin, 'tests'))
+        if self.spec.variants['mfem'].value:  # True if +mfem
+            install_tree(join_path(self.build_directory, 'examples'),
+                         join_path(prefix.bin, 'examples'))
