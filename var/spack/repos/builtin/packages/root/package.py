@@ -221,6 +221,9 @@ class Root(CMakePackage):
     depends_on('libxft',  when="+x")
     depends_on('libxpm',  when="+x")
     depends_on('libsm',   when="+x")
+    depends_on('xextproto', when="@:6.08,6.22:+x")
+    depends_on('fontconfig', when="+x")
+    depends_on('xproto', when="+x")
 
     # OpenGL
     depends_on('ftgl@2.4.0:',  when="+x+opengl")
