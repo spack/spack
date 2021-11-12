@@ -245,7 +245,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-
     # TODO: Replace this method and its 'get' use for cmake path with
     #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
     #   tests can access build dependencies through self.spec['cmake'].
@@ -259,7 +258,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         else:
             with open(filepath, 'r') as in_file:
                 return in_file.read().strip()
-
 
     @run_after('build')
     def setup_smoke_test(self):
@@ -284,14 +282,17 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
 
         args = []
         args.append('-S ./cache/amrex/Tests/SpackSmokeTest')
-        args.append('-DAMReX_ROOT='+self.prefix)
+        args.append('-DAMReX_ROOT=' + self.prefix)
         args.extend(self.cmake_args())
-        self.run_test(cmake_bin, args,
-                     purpose='Build with same CMake version as install')
+        self.run_test(cmake_bin,
+                      args,
+                      purpose='Build with same CMake version as install')
 
         make()
 
-        self.run_test('install_test', ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],
+        self.run_test('install_test',
+                      ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],
                       ['finalized'],
-                      installed=False, purpose='AMReX Stand-Alone Smoke Test -- AmrCore',
+                      installed=False,
+                      purpose='AMReX Stand-Alone Smoke Test -- AmrCore',
                       skip_missing=False)
