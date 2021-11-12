@@ -59,9 +59,6 @@ class Vtk(CMakePackage):
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
 
-    # Do not build osmesa and egl together
-    conflicts('+osmesa', when='+egl')
-
     extends('python', when='+python')
 
     # Acceptable python versions depend on vtk version
@@ -283,11 +280,9 @@ class Vtk(CMakePackage):
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DVTK_USE_COCOA:BOOL=OFF',
-                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
+                '-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
                 ])
-        else:
-            
         else:
             cmake_args.extend('-DVTK_OPENGL_HAS_EGL:BOOL=OFF')
             cmake_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF')
