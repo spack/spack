@@ -33,11 +33,9 @@ class Meep(AutotoolsPackage):
     variant('hdf5',    default=True, description='Enable HDF5 support')
     variant('gsl',     default=True, description='Enable GSL support')
 
-
     depends_on('autoconf', type='build', when='@1.21.0')
     depends_on('automake', type='build', when='@1.21.0')
     depends_on('libtool', type='build', when='@1.21.0')
-
 
     depends_on('blas',        when='+blas')
     depends_on('lapack',      when='+lapack')
