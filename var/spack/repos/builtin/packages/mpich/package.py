@@ -98,9 +98,9 @@ spack package at this time.""",
     variant("fortran", default=True, description="Enable Fortran support")
 
     variant(
-        "two_level_namespace",
-        default=False,
-        description="""Build shared libraries and programs
+        'two_level_namespace',
+        default=(sys.platform == 'darwin'),
+        description='''Build shared libraries and programs
 built with the mpicc/mpifort/etc. compiler wrappers
 with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.""",
