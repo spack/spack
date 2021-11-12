@@ -97,39 +97,4 @@ class PyTwisted(PythonPackage):
                    'twisted.internet',
                    'twisted.internet.test']
 
-        if self.spec.satisfies('@:15.4.0'):
-            modules.remove('twisted.protocols.haproxy')
-            modules.remove('twisted.protocols.haproxy.test')
-            modules.remove('twisted.scripts.test')
-            modules.remove('twisted.runner')
-            modules.remove('twisted.runner.test')
-            modules.remove('twisted.enterprise')
-            modules.remove('twisted.pair')
-            modules.remove('twisted.pair.test')
-            modules.remove('twisted.tap')
-            modules.remove('twisted.trial._dist')
-            modules.remove('twisted.trial._dist.test')
-            modules.remove('twisted.words')
-            modules.remove('twisted.words.im')
-            modules.remove('twisted.words.test')
-            modules.remove('twisted.words.xish')
-            modules.remove('twisted.words.protocols')
-            modules.remove('twisted.words.protocols.jabber')
-            modules.remove('twisted.spread')
-            modules.remove('twisted.spread.test')
-            modules.remove('twisted.conch')
-            modules.remove('twisted.conch.scripts')
-            modules.remove('twisted.conch.ui')
-            modules.remove('twisted.conch.client')
-            modules.remove('twisted.conch.openssh_compat')
-            modules.remove('twisted.conch.test')
-            modules.remove('twisted.conch.insults')
-            modules.remove('twisted.conch.ssh')
-
-        if self.spec.satisfies('@:15.3.0'):
-            modules.remove('twisted.positioning')
-            modules.remove('twisted.positioning.test')
-            modules.remove('twisted.web._auth')
-            modules.remove('twisted.plugins')
-
         return modules
