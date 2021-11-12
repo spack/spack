@@ -203,6 +203,9 @@ with '-Wl,-commons,use_dylibs' and without
     # see https://github.com/pmodels/mpich/pull/5031
     conflicts('%clang@:7', when='@3.4:3.4.1')
 
+    # see https://github.com/pmodels/mpich/issues/5530
+    conflicts('~two_level_namespace', when='platform=darwin')
+
     @run_after('configure')
     def patch_cce(self):
         # Configure misinterprets output from the cce compiler
