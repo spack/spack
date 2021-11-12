@@ -21,6 +21,8 @@ class Libdrm(AutotoolsPackage):
     version('2.4.33',  sha256='bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4')
 
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
 
