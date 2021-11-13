@@ -14,7 +14,6 @@ class PyScikitLearnExtra(PythonPackage):
     scikit-learn inclusion criteria, for instance due to their novelty or lower
     citation number."""
 
-
     homepage = "https://github.com/scikit-learn-contrib/scikit-learn-extra"
     pypi     = "scikit-learn-extra/scikit-learn-extra-0.2.0.tar.gz"
 
