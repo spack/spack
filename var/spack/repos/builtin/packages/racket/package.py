@@ -33,4 +33,3 @@ class Racket(Package):
     def install(self, spec, prefix):
         with working_dir('src'):
             make('install')
-
