@@ -59,8 +59,9 @@ class Rocblas(CMakePackage):
     depends_on('netlib-lapack@3.7.1:', type='test')
 
     def check(self):
-        exe = join_path(self.build_directory, 'clients', 'staging', 'rocblas-test')
-        self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
+        if '@4.2.0:' in self.spec:
+            exe = join_path(self.build_directory, 'clients', 'staging', 'rocblas-test')
+            self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
@@ -128,7 +129,8 @@ class Rocblas(CMakePackage):
     def cmake_args(self):
         tensile = join_path(self.stage.source_path, 'Tensile')
         args = [
-            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
+            self.define('BUILD_CLIENTS_TESTS',
+                        self.run_tests and '@4.2.0:' in self.spec),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('RUN_HEADER_TESTING', 'OFF'),
