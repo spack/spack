@@ -540,9 +540,12 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("polly")
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
 
-        cmake_args.append(from_variant("BUILD_SHARED_LIBS", "shared_libs"))
-        cmake_args.append(from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"))
-        cmake_args.append(from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"))
+        cmake_args.extend([
+            from_variant("BUILD_SHARED_LIBS", "shared_libs"),
+            from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
+            from_variant("LLVM_LINK_LLVM_DYLIB", 'llvm_dylib'),
+            from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf")
+        ])
 
         if "+all_targets" not in spec:  # all is default on cmake
 
