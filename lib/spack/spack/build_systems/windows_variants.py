@@ -25,3 +25,6 @@ class WindowsPackage(PackageBase):
     variant('shared', default=False, description="Build shared library version")
     variant('staticmt', default=False,
             description="Build static version with static runtime libraries")
+    
+    conflicts('+staticmt', when='+shared', 
+              msg='Cannot build staticmt and shared libraries simultaneously')
