@@ -75,6 +75,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('gloo', default=not is_darwin, description='Use Gloo')
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
+    variant('breakpad', default=True, description='Enable breakpad crash dump library')
 
     conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
@@ -98,6 +99,9 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+fbgemm', when='@:0.4,1.4.0')
     conflicts('+qnnpack', when='@:0.4')
     conflicts('+mkldnn', when='@:0.4')
+    conflicts('+breakpad', when='@:1.9')  # Option appeared in 1.10.0
+    conflicts('+breakpad', when='target=ppc64:', msg='Unsupported')
+    conflicts('+breakpad', when='target=ppc64le:', msg='Unsupported')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -215,6 +219,11 @@ class PyTorch(PythonPackage, CudaPackage):
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
+    # Fix compilation of +distributed~tensorpipe
+    # https://github.com/pytorch/pytorch/issues/68002
+    patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
+          sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
+
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
     phases = ['install']
@@ -312,6 +321,8 @@ class PyTorch(PythonPackage, CudaPackage):
             enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
+        if self.spec.satisfies('@1.10:'):
+            enable_or_disable('breakpad')
 
         enable_or_disable('nccl')
         if '+nccl' in self.spec:

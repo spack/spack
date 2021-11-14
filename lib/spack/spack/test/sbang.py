@@ -374,3 +374,14 @@ def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, t
 
     with open(file, 'rb') as f:
         assert b'sbang' not in f.read()
+
+
+def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
+    path = str(tmpdir.join('file.sh'))
+    with open(path, 'w') as f:
+        f.write(long_line)
+    os.chmod(path, 0o555)
+    sbang.filter_shebang(path)
+    with open(path, 'r') as f:
+        assert 'sbang' in f.readline()
+    assert os.stat(path).st_mode & 0o777 == 0o555
