@@ -276,6 +276,10 @@ class Llvm(CMakePackage, CudaPackage):
     # Workaround for issue https://github.com/spack/spack/issues/18197
     patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
 
+    # Remove cyclades support to build against newer kernel headers
+    # https://reviews.llvm.org/D102059
+    patch('no_cyclades.patch', when='@10:11')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
