@@ -194,6 +194,7 @@ class Lammps(CMakePackage, CudaPackage):
                 mpi_prefix,
                 'ON' if '+mpi' in spec else 'OFF'),
             self.define_from_variant('BUILD_OMP', 'openmp'),
+            '-DENABLE_TESTING=ON'
         ]
         if spec.satisfies('+cuda'):
             args.append('-DPKG_GPU=ON')
