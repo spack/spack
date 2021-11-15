@@ -86,7 +86,7 @@ class Seacas(CMakePackage):
     # Everything should be compiled position independent (-fpic)
 
     depends_on('netcdf-c@4.8.0:+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf-c@4.8.0:~mpi', when='~mpi')
+    depends_on('netcdf-c@4.8.0:~mpi~parallel-netcdf', when='~mpi')
     depends_on('hdf5+hl~mpi', when='~mpi')
     depends_on('cgns@4.2.0:+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@4.2.0:~mpi+scoping', when='+cgns ~mpi')
@@ -126,6 +126,8 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_MPI:BOOL=ON',
                 '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix,
             ])
+        else:
+            '-DTPL_ENABLE_MPI:BOOL=OFF',
 
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',
