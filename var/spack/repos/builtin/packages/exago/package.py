@@ -15,6 +15,8 @@ class Exago(CMakePackage, CudaPackage):
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
+    version('1.1.1', tag='v1.1.1')
+    version('1.1.0', tag='v1.1.0')
     version('1.0.0', tag='v1.0.0')
     version('0.99.2', tag='v0.99.2')
     version('0.99.1', tag='v0.99.1')
