@@ -9,6 +9,8 @@ from spack import *
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
+    maintainers = ['rscohn2']
+
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
     version('2019.10.317', sha256='28e1b615e63d2170a99feedc75e3b0c5a7e1a07dcdaf0a4181831b07817a5346',

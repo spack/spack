@@ -9,6 +9,8 @@ from spack import *
 class IntelDaal(IntelPackage):
     """Intel Data Analytics Acceleration Library."""
 
+    maintainers = ['rscohn2']
+
     homepage = "https://software.intel.com/en-us/daal"
 
     version('2020.2.254', sha256='08528bc150dad312ff2ae88ce12d6078ed8ba2f378f4bf3daf0fbbb9657dce1e',
