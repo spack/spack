@@ -198,12 +198,6 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
-    steps:
-    - name: Setup git configuration
-      run: |
-        # Need this for the git tests to succeed.
-        git --version
-        . .github/workflows/setup_git.sh
     - name: Run unit tests (full test-suite)
       # The CentOS 6 container doesn't run with coverage, but
       # under the same conditions it runs the full test suite
@@ -214,6 +208,7 @@ jobs:
       run: |
           whoami && echo $HOME && cd $HOME
           git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          . .github/workflows/setup_git.sh
           git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
           bin/spack unit-test -x
@@ -226,6 +221,7 @@ jobs:
       run: |
           whoami && echo $HOME && cd $HOME
           git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          . .github/workflows/setup_git.sh
           git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
           bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
