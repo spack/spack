@@ -78,19 +78,22 @@ class Llvm(CMakePackage, CudaPackage):
         default=False,
         description="Build the LLVM Fortran compiler frontend "
         "(experimental - parser only, needs GCC)",
+        when='@11: +clang'
     )
     variant(
         "omp_debug",
         default=False,
         description="Include debugging code in OpenMP runtime libraries",
+        when='@12: +clang'
     )
-    variant("lldb", default=True, description="Build the LLVM debugger")
+    variant("lldb", default=True, description="Build the LLVM debugger", when='+clang')
     variant("lld", default=True, description="Build the LLVM linker")
-    variant("mlir", default=False, description="Build with MLIR support")
+    variant("mlir", default=False, description="Build with MLIR support", when='@10:')
     variant(
         "internal_unwind",
         default=True,
         description="Build the libcxxabi libunwind",
+        when='+clang'
     )
     variant(
         "polly",
@@ -102,11 +105,13 @@ class Llvm(CMakePackage, CudaPackage):
         "libcxx",
         default=True,
         description="Build the LLVM C++ standard library",
+        when='+clang'
     )
     variant(
         "compiler-rt",
         default=True,
         description="Build LLVM compiler runtime, including sanitizers",
+        when='+clang'
     )
     variant(
         "gold",
@@ -151,14 +156,14 @@ class Llvm(CMakePackage, CudaPackage):
         "omp_tsan",
         default=False,
         description="Build with OpenMP capable thread sanitizer",
+        when="@6:"
     )
     variant(
         "omp_as_runtime",
         default=True,
         description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
     )
-    variant('code_signing', default=False,
-            description="Enable code-signing on macOS")
+    variant('code_signing', default=False, description="Enable code-signing", when='platform=darwin')
     variant("python", default=False, description="Install python bindings")
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
@@ -199,14 +204,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("isl", when="@:3.6 +polly")
 
     conflicts("+build_llvm_dylib", when="+shared_libs")
-    conflicts("+link_llvm_dylib", when="~build_llvm_dylib")
-    conflicts("+lldb", when="~clang")
-    conflicts("+libcxx", when="~clang")
-    conflicts("+internal_unwind", when="~clang")
-    conflicts("+compiler-rt", when="~clang")
-    conflicts("+flang", when="~clang")
-    # Introduced in version 11 as a part of LLVM and not a separate package.
-    conflicts("+flang", when="@:10")
 
     conflicts('~mlir', when='+flang', msg='Flang requires MLIR')
 
@@ -225,26 +222,12 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%clang@:10",       when="@13:+libcxx")
     conflicts("%apple_clang@:11", when="@13:+libcxx")
 
-    # OMP TSAN exists in > 5.x
-    conflicts("+omp_tsan", when="@:5")
-
-    # OpenMP via ENABLE_RUNTIME restrictions
-    conflicts("+omp_as_runtime", when="~clang", msg="omp_as_runtime requires clang being built.")
-    conflicts("+omp_as_runtime", when="@:11.1", msg="omp_as_runtime works since LLVM 12.")
-
     # cuda_arch value must be specified
     conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
 
-    # MLIR exists in > 10.x
-    conflicts("+mlir", when="@:9")
-
-    # code signing is only necessary on macOS",
-    conflicts('+code_signing', when='platform=linux')
-    conflicts('+code_signing', when='platform=cray')
-
     conflicts(
         '+code_signing',
-        when='~lldb platform=darwin',
+        when='~lldb',
         msg="code signing is only necessary for building the "
             "in-tree debug server on macOS. Turning this variant "
             "off enables a build of llvm with lldb that uses the "
