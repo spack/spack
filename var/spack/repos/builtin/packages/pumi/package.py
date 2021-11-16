@@ -41,7 +41,7 @@ class Pumi(CMakePackage):
     variant('shared', default=False, description='Build shared libraries')
     variant('zoltan', default=False, description='Enable Zoltan Features')
     variant('fortran', default=False, description='Enable FORTRAN interface')
-    variant('testing', default=False, description='Enable tests')
+    variant('testing', default=False, description='Enable all tests')
     variant('simmodsuite', default='none',
             values=('none', 'base', 'kernels', 'full'),
             description="Enable Simmetrix SimModSuite Support: 'base' enables "
@@ -97,10 +97,21 @@ class Pumi(CMakePackage):
             args.append('-DSIM_MPI=' + mpi_id)
         return args
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check(self):
-        """Run ctest after building project."""
+    def test(self):
+        if self.spec.version <= Version('2.2.6'):
+            return
+        exe = 'uniform'
+        options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_unif.smb']
+        expected = 'mesh pipe_unif.smb written'
+        description = 'testing pumi uniform mesh refinement'
+        self.run_test(exe, options, expected, purpose=description,
+                      work_dir=self.prefix.bin)
 
-        with working_dir(self.build_directory):
-            ctest(parallel=False)
+        mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin, 'mpiexec')).command
+        mpiopt = ['-n', '2']
+        exe = ['split']
+        options = ['../testdata/pipe.dmg', '../testdata/pipe.smb', 'pipe_2_.smb', '2']
+        expected = 'mesh pipe_2_.smb written'
+        description = 'testing pumi mesh partitioning'
+        self.run_test(mpiexec, mpiopt + exe + options, expected,
+                      purpose=description, work_dir=self.prefix.bin)

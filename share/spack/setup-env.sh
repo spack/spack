@@ -136,7 +136,8 @@ _spack_shell_wrapper() {
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
-                            eval $(command spack $_sp_flags env activate --sh "$@")
+                            stdout="$(command spack $_sp_flags env activate --sh "$@")" || return
+                            eval "$stdout"
                         fi
                         ;;
                     deactivate)
@@ -157,7 +158,8 @@ _spack_shell_wrapper() {
                             command spack env deactivate -h
                         else
                             # No args: source the output of the command.
-                            eval $(command spack $_sp_flags env deactivate --sh)
+                            stdout="$(command spack $_sp_flags env deactivate --sh)" || return
+                            eval "$stdout"
                         fi
                         ;;
                     *)
@@ -178,13 +180,14 @@ _spack_shell_wrapper() {
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
-                    echo "return 1")  # return 1 if spack command fails
+                stdout="$(command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                eval "$stdout"
             fi
             ;;
         *)
@@ -276,8 +279,13 @@ fi
 #
 # We send cd output to /dev/null to avoid because a lot of users set up
 # their shell so that cd prints things out to the tty.
-_sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
-_sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+if [ "$_sp_shell" = zsh ]; then
+    _sp_share_dir="${_sp_source_file:A:h}"
+    _sp_prefix="${_sp_share_dir:h:h}"
+else
+    _sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+    _sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+fi
 if [ -x "$_sp_prefix/bin/spack" ]; then
     export SPACK_ROOT="${_sp_prefix}"
 else
@@ -358,7 +366,8 @@ if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
             _spack_pathadd PATH "${_sp_module_bin}"
         fi;
     else
-        eval `spack --print-shell-vars sh`
+        stdout="$(command spack --print-shell-vars sh)" || return
+        eval "$stdout"
     fi;
 
 

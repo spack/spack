@@ -156,7 +156,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     def test(self):
         # using the tests installed in <prefix>/share/Tasmanian/testing
         cmake_dir = join_path(self.prefix, 'share', 'Tasmanian', 'testing')
-        with working_dir(self.install_test_root, create=True):
+        with working_dir(self.test_suite.current_test_cache_dir, create=True):
             cmake(cmake_dir)
             make()
             make('test')

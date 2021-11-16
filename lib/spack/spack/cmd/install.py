@@ -38,7 +38,7 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'verbose': args.verbose,
+        'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
@@ -78,7 +78,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -130,7 +130,7 @@ remote spec matches that of the local spec""")
         help="install source files in prefix")
     arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_true', dest='install_verbose',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
@@ -285,6 +285,8 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -338,7 +340,7 @@ environment variables:
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests)
+                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -392,7 +394,8 @@ environment variables:
 
     try:
         specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests, reuse=args.reuse
+        )
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

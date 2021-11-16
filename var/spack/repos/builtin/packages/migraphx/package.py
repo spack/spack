@@ -35,7 +35,7 @@ class Migraphx(CMakePackage):
 
         return url
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     patch('0001-Adding-nlohmann-json-include-directory.patch', when='@3.9.0:')
 

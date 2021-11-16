@@ -32,6 +32,8 @@ class RocmOpencl(CMakePackage):
     version('3.7.0', sha256='283e1dfe4c3d2e8af4d677ed3c20e975393cdb0856e3ccd77b9c7ed2a151650b')
     version('3.5.0', sha256='511b617d5192f2d4893603c1a02402b2ac9556e9806ff09dd2a91d398abf39a0')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('mesa18~llvm@18.3:', type='link')
     depends_on('numactl', type='link', when='@3.7.0:')

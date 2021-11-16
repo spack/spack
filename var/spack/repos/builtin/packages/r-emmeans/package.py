@@ -21,11 +21,13 @@ class REmmeans(RPackage):
     homepage = "https://github.com/rvlenth/emmeans"
     cran     = "emmeans"
 
+    version('1.7.0', sha256='d4b654896197dfda8354b33257380a66ee06117d6177b1ed7f1e42176525e9c5')
     version('1.6.0', sha256='201bb7b008dde94231ed60bcc6a32749442faaab4baeea99ad28b97c951b3c1e')
 
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-estimability@1.3:', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-xtable@1.8-2:', type=('build', 'run'))
+
+    depends_on('r-plyr', when='@:1.6', type=('build', 'run'))

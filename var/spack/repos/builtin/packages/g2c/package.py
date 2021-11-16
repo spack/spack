@@ -26,3 +26,8 @@ class G2c(CMakePackage):
     depends_on('libpng', when='+png')
     depends_on('jasper', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
+
+    def setup_run_environment(self, env):
+        lib = find_libraries('libg2c', root=self.prefix, shared=False, recursive=True)
+        env.set('G2C_LIB', lib[0])
+        env.set('G2C_INC', join_path(self.prefix, 'include'))
