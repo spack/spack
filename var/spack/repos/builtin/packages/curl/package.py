@@ -16,6 +16,8 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
+    version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
+    version('7.79.1', sha256='de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851')
     version('7.79.0', sha256='d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42')
     version('7.78.0', sha256='98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a')
     version('7.77.0', sha256='6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea')
