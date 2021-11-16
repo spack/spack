@@ -16,4 +16,5 @@ class PyPlatformdirs(PythonPackage):
     version('2.4.0', sha256='367a5e80b3d04d2428ffa76d33f124cf11e8fff2acdaa9b43d545f5c7d661ef2')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@44:', type='build')
+    depends_on('py-setuptools-scm@5:+toml', type='build')
