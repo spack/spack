@@ -1,0 +1,14 @@
+diff --git a/nouveau/Makefile.am b/nouveau/Makefile.am
+index 5574fd8..75ab27c 100644
+--- a/nouveau/Makefile.am
++++ b/nouveau/Makefile.am
+@@ -5,8 +5,7 @@ AM_CFLAGS = \
+ 	-fvisibility=hidden \
+ 	-I$(top_srcdir) \
+ 	$(PTHREADSTUBS_CFLAGS) \
+-	-I$(top_srcdir)/include/drm \
+-	-DDEBUG
++	-I$(top_srcdir)/include/drm
+ 
+ libdrm_nouveau_la_LTLIBRARIES = libdrm_nouveau.la
+ libdrm_nouveau_ladir = $(libdir)

@@ -25,6 +25,11 @@ class Libdrm(AutotoolsPackage):
     depends_on('docbook-xsl', type='build')
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
+    depends_on('automake@1.15.1', type='build', when='%clang')
+    depends_on('autoconf', type='build', when='%clang')
+
+    #clang linker has multiple defines
+    patch('nouveau-clang.patch', when='%clang')
 
     def configure_args(self):
         args = []
