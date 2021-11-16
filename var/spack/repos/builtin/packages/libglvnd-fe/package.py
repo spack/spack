@@ -48,10 +48,6 @@ class LibglvndFe(BundlePackage):
                                 root=self.spec['libglvnd'].prefix,
                                 shared=True,
                                 recursive=True)
-        print('\nexporting GL LIBS:\n')
-        print('\n')
-        print(result)
-        print('\n')
         return result
 
     @property
@@ -60,10 +56,6 @@ class LibglvndFe(BundlePackage):
                                 root=self.spec['libglvnd'].prefix,
                                 shared=True,
                                 recursive=True)
-        print('\nexporting GLX LIBS:\n')
-        print('\n')
-        print(result)
-        print('\n')
         return result
 
     @property
@@ -72,8 +64,4 @@ class LibglvndFe(BundlePackage):
                                 root=self.spec['libglvnd'].prefix,
                                 shared=True,
                                 recursive=True)
-        print('\nexporting EGL LIBS:\n')
-        print('\n')
-        print(result)
-        print('\n')
         return result

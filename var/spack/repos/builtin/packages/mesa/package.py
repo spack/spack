@@ -70,8 +70,7 @@ class Mesa(MesonPackage):
     # Provides
     provides('gl@4.5',  when='+opengl ~glvnd')
     provides('glx@1.4', when='+glx ~glvnd')
-    # This isn't possible b/c of conflict. Should remove?
-    # provides('egl@1.5', when='+egl ~glvnd')
+    provides('egl@1.5', when='+egl ~glvnd')
 
     provides('libglvnd-be-gl', when='+opengl +glvnd')
     provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
@@ -278,9 +277,6 @@ class Mesa(MesonPackage):
 
     @property
     def osmesa_libs(self):
-        if '+glvnd' in self.spec:
-            return LibraryList(())
-
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
                               recursive=True)
