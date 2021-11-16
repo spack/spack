@@ -104,6 +104,12 @@ class Legion(CMakePackage):
             multi=False)
     conflicts('gasnet_root', when="network=mpi")
 
+    variant('gasnet_legacy', default=False, description="Use Spack for Legacy Gasnet Support")
+    conflicts('gasnet_root', when='+gasnet_legacy')
+    conflicts('gasnet_legacy', when='network=mpi')
+    conflicts('gasnet_legacy', when='network=none')
+    depends_on('gasnet-legacy', when='+gasnet_legacy')
+
     variant('conduit', default='none',
             values=('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none'),
             description="The gasnet conduit(s) to enable.",
@@ -119,11 +125,17 @@ class Legion(CMakePackage):
                   msg="conduit attribute requires 'network=gasnet'.")
         conflicts(conflict_str, when='network=none',
                   msg="conduit attribute requires 'network=gasnet'.")
+    depends_on('gasnet-legacy+mpi', when='+gasnet_legacy conduit=mpi')
+    depends_on('gasnet-legacy+ibv', when='+gasnet_legacy conduit=ibv')
+    depends_on('gasnet-legacy+udp', when='+gasnet_legacy conduit=udp')
+    conflicts('gasnet-legacy', when='conduit=aries')
+    conflicts('gasnet-legacy', when='conduit=ucx')
 
     variant('gasnet_debug', default=False,
             description="Build gasnet with debugging enabled.")
     conflicts('+gasnet_debug', when='network=mpi')
     conflicts('+gasnet_debug', when='network=none')
+    conflicts('+gasnet_debug', when='+gasnet_legacy')
 
     variant('shared', default=False,
             description="Build shared libraries.")
@@ -210,6 +222,9 @@ class Legion(CMakePackage):
             options.append('-DLegion_NETWORKS=gasnetex')
             if spec.variants['gasnet_root'].value != 'none':
                 gasnet_dir = spec.variants['gasnet_root'].value
+                options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
+            elif spec.variants['gasnet_legacy'].value:
+                gasnet_dir = self.spec['gasnet-legacy'].prefix
                 options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
             else:
                 gasnet_dir = join_path(self.stage.source_path,
