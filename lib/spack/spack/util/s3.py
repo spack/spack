@@ -48,8 +48,8 @@ def create_s3_session(url, connection={}):
         if connection["access_pair"][0]:
             s3_connection["aws_access_key_id"] = connection["access_pair"][0]
             s3_connection["aws_secret_access_key"] = connection["access_pair"][1]
-        if connection["access_profile"]:
-            s3_connection["profile_name"] = connection["access_profile"]
+        if connection["profile"]:
+            s3_connection["profile_name"] = connection["profile"]
 
     session = Session(**s3_connection)
     s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}

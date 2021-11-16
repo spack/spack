@@ -148,14 +148,14 @@ def mirror_set_url(args):
         tty.die("No mirror found with name %s." % args.name)
 
     entry = mirrors[args.name]
-    key_values = ["s3_access_key_id", "s3_access_token", "s3_access_profile"]
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
 
     if any(value for value in key_values if value in args):
         incoming_data = {"url": url,
                          "access_pair": (args.s3_access_key_id,
                                          args.s3_access_key_secret),
                          "access_token": args.s3_access_token,
-                         "access_profile": args.s3_access_profile,
+                         "profile": args.s3_profile,
                          "endpoint_url": args.s3_endpoint_url}
     try:
         fetch_url = entry['fetch']

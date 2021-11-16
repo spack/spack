@@ -341,7 +341,7 @@ def add_s3_connection_args(subparser, add_help):
         '--s3-access-token',
         help="Access Token to use to connect to this S3 mirror")
     subparser.add_argument(
-        '--s3-access-profile',
+        '--s3-profile',
         help="S3 profile name to use to connect to this S3 mirror",
         default=None)
     subparser.add_argument(

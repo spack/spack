@@ -145,16 +145,16 @@ class Mirror(object):
     def get_profile(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['access_profile']
-            return self._fetch_url['access_profile']
+                return self._push_url['profile']
+            return self._fetch_url['profile']
         else:
             return None
 
     def set_profile(self, url_type, profile):
         if url_type == "push":
-            self._push_url["access_profile"] = profile
+            self._push_url["profile"] = profile
         else:
-            self._fetch_url["access_profile"] = profile
+            self._fetch_url["profile"] = profile
 
     def get_access_pair(self, url_type):
         if isinstance(self._fetch_url, dict):
@@ -528,13 +528,13 @@ def add(name, url, scope, args={}):
 
     items = [(n, u) for n, u in mirrors.items()]
     mirror_data = url
-    key_values = ["s3_access_key_id", "s3_access_token", "s3_access_profile"]
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
     # On creation, assume connection data is set for both
     if any(value for value in key_values if value in args):
         url_dict = {"url": url,
                     "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
                     "access_token": args.s3_access_token,
-                    "access_profile": args.s3_access_profile,
+                    "profile": args.s3_profile,
                     "endpoint_url": args.s3_endpoint_url}
         mirror_data = {"fetch": url_dict, "push": url_dict}
 
