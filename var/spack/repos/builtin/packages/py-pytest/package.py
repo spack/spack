@@ -51,7 +51,7 @@ class PyPytest(PythonPackage):
     depends_on('py-iniconfig', when='@6.0:', type=('build', 'run'))
     depends_on('py-packaging', when='@4.6:', type=('build', 'run'))
     depends_on('py-pluggy@0.12:1', when='@6.2:', type=('build', 'run'))
-    depends_on('py-pluggy@0.12:0', when='@4.6:', type=('build', 'run'))
+    depends_on('py-pluggy@0.12:0', when='@4.6:6.1', type=('build', 'run'))
     depends_on('py-pluggy@0.9.0:0.9,0.11:0', when='@4.5.0:4.5', type=('build', 'run'))
     depends_on('py-pluggy@0.11:', when='@4.4.2:4.4', type=('build', 'run'))
     depends_on('py-pluggy@0.9:', when='@4.4.0:4.4.1', type=('build', 'run'))
