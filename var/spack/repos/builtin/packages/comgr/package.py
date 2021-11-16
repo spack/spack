@@ -18,6 +18,7 @@ class Comgr(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('4.5.0', sha256='03c5880e0922fcff31306f7da2eb9d3a3709d9b5b75b3524dcfae85f4b181678')
     version('4.3.1', sha256='f1d99550383ed7b3a01d304eedc3d86a8e45b271aa5a80b1dd099c22fda3f745')
     version('4.3.0', sha256='f77b505abb474078374701dfc49e651ad3eeec5349ce6edda54549943a3775ee')
     version('4.2.0', sha256='40a1ea50d2aea0cf75c4d17cdd6a7fe44ae999bf0147d24a756ca4675ce24e36')
@@ -43,7 +44,7 @@ class Comgr(CMakePackage):
     depends_on('ncurses', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         # llvm libs are linked statically, so this *could* be a build dep
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
 

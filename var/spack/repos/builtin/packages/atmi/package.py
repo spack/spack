@@ -15,9 +15,10 @@ class Atmi(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git      = "https://github.com/RadeonOpenCompute/atmi.git"
-    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    version('4.5.0', sha256='64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf')
     version('4.3.1', sha256='4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650')
     version('4.3.0', sha256='1cbe0e9258ce7cce7b7ccc288335dffbac821ceb745c4f3fd48e2a258abada89')
     version('4.2.0', sha256='c1c89c00d2dc3e764c63b2e51ff7fd5c06d5881ed56aed0adf639582d3389585')
@@ -35,7 +36,7 @@ class Atmi(CMakePackage):
     depends_on('rsync')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('comgr@' + ver, type='link', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('libelf@0.8:', type='link', when='@' + ver)

@@ -14,11 +14,12 @@ class HsakmtRoct(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
     git      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.5.0', sha256='620b39959e0ee5d709b8cf6eb3cc06c8356d72838343756230c638899b10bb9a')
     version('4.3.1', sha256='9d0727e746d4ae6e2709e3534d91046640be511a71c027f47db25e529fe3b4d4')
     version('4.3.0', sha256='1ef5fe687bc23ffda17841fe354c1fb94e9aaf276ca9e5757488852f9066f231')
     version('4.2.0', sha256='cc325d4b9a96062f2ad0515fce724a8c64ba56a7d7f1ac4a0753941b8599c52e')
@@ -35,6 +36,7 @@ class HsakmtRoct(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('numactl')
+    depends_on('libdrm', when='@4.5.0:')
 
     @property
     def install_targets(self):

@@ -13,11 +13,12 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.5.0', sha256='c77b71454010adbeea5357773aa98dd0725f655f51a411815807cabf29258395')
     version('4.3.1', sha256='acf2a58e2cd486f473194bf01247c52dbf20bd5f6465810fb221470298f2557f')
     version('4.3.0', sha256='bb752d8d2727b7ef2754838e389075dd4212cf5439d099392141f93d05391415')
     version('4.2.0', sha256='299e190ec3d38c2279d9aec762469628f0b2b1867adc082edc5708d1ac785c3b')

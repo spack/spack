@@ -12,11 +12,12 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIPIFY"
     git      = "https://github.com/ROCm-Developer-Tools/HIPIFY.git"
-    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.5.0', sha256='1f6e1bd4b9d64eed67f519c453fa65b362a20583df1f35fd09d08de831f3c8de')
     version('4.3.1', sha256='c5754f7c2c68ea4f65cc0ffc1e8ccc30634181525b25c10817e07eaa75ca8157')
     version('4.3.0', sha256='182b336a994e3de0dfbce935dc35091388d18a29e3cfdadb2ab7da8a2dc121a2')
     version('4.2.0', sha256='afdc82ae00e14e8e742be6cd47d8fb120d18fc52fe96cba8d8ac4c56176a432e')
@@ -32,5 +33,5 @@ class HipifyClang(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
