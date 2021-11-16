@@ -10,7 +10,6 @@ class Racket(Package):
     """The Racket programming language."""
 
     homepage = "https://www.racket-lang.org"
-    url      = "https://download.racket-lang.org/releases/8.3/installers/racket-src.tgz"
 
     maintainers = ['arjunguha']
 
@@ -20,6 +19,10 @@ class Racket(Package):
     depends_on('patchutils')
 
     phases = ['configure', 'build', 'install']
+
+    def url_for_version(self, version):
+        url = "http://mirror.racket-lang.org/installers/{0}/racket-src.tgz"
+        return url.format(version.up_to(2))
 
     def configure(self, spec, prefix):
         with working_dir('src'):
