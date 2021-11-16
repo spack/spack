@@ -14,26 +14,26 @@ class Cdo(AutotoolsPackage):
        Climate and NWP model Data.
     """
 
-    homepage    = 'https://code.mpimet.mpg.de/projects/cdo'
-    url         = 'https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz'
-    list_url    = 'https://code.mpimet.mpg.de/projects/cdo/files'
+    homepage = 'https://code.mpimet.mpg.de/projects/cdo'
+    url = 'https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz'
+    list_url = 'https://code.mpimet.mpg.de/projects/cdo/files'
 
     maintainers = ['skosukhin', 'Try2Code']
 
-    version('2.0.0'  , sha256='6bca54e9d69d8c1f072f1996547b7347a65743d15ba751967e9bb16e0ff7a843', url='https://code.mpimet.mpg.de/attachments/download/26370/cdo-2.0.0.tar.gz')
-    version('1.9.10' , sha256='cc39c89bbb481d7b3945a06c56a8492047235f46ac363c4f0d980fccdde6677e', url='https://code.mpimet.mpg.de/attachments/download/24638/cdo-1.9.10.tar.gz')
-    version('1.9.9'  , sha256='959b5b58f495d521a7fd1daa84644888ec87d6a0df43f22ad950d17aee5ba98d', url='https://code.mpimet.mpg.de/attachments/download/23323/cdo-1.9.9.tar.gz')
-    version('1.9.8'  , sha256='f2660ac6f8bf3fa071cf2a3a196b3ec75ad007deb3a782455e80f28680c5252a', url='https://code.mpimet.mpg.de/attachments/download/20826/cdo-1.9.8.tar.gz')
+    version('2.0.0', sha256='6bca54e9d69d8c1f072f1996547b7347a65743d15ba751967e9bb16e0ff7a843', url='https://code.mpimet.mpg.de/attachments/download/26370/cdo-2.0.0.tar.gz')
+    version('1.9.10', sha256='cc39c89bbb481d7b3945a06c56a8492047235f46ac363c4f0d980fccdde6677e', url='https://code.mpimet.mpg.de/attachments/download/24638/cdo-1.9.10.tar.gz')
+    version('1.9.9', sha256='959b5b58f495d521a7fd1daa84644888ec87d6a0df43f22ad950d17aee5ba98d', url='https://code.mpimet.mpg.de/attachments/download/23323/cdo-1.9.9.tar.gz')
+    version('1.9.8', sha256='f2660ac6f8bf3fa071cf2a3a196b3ec75ad007deb3a782455e80f28680c5252a', url='https://code.mpimet.mpg.de/attachments/download/20826/cdo-1.9.8.tar.gz')
     version('1.9.7.1', sha256='3771952e065bcf935d43e492707370ed2a0ecb59a06bea24f9ab69d77943962c', url='https://code.mpimet.mpg.de/attachments/download/20124/cdo-1.9.7.1.tar.gz')
-    version('1.9.6'  , sha256='b31474c94548d21393758caa33f35cf7f423d5dfc84562ad80a2bdcb725b5585', url='https://code.mpimet.mpg.de/attachments/download/19299/cdo-1.9.6.tar.gz')
-    version('1.9.5'  , sha256='48ed65cc5b436753c8e7f9eadd8aa97376698ce230ceafed2a4350a5b1a27148', url='https://code.mpimet.mpg.de/attachments/download/18264/cdo-1.9.5.tar.gz')
-    version('1.9.4'  , sha256='3d1c0fd3f7d38c5d3d88139ca1546c9d24e1b1ff752a794a4194dfe624695def', url='https://code.mpimet.mpg.de/attachments/download/17374/cdo-1.9.4.tar.gz')
-    version('1.9.3'  , sha256='e83a3de7b402600c0d9a5df18073d36d133ff9719d3c561a0efa90f9c1599f3f', url='https://code.mpimet.mpg.de/attachments/download/16435/cdo-1.9.3.tar.gz')
-    version('1.9.2'  , sha256='d1c5092167034a48e4b8ada24cf78a1d4b84e364ffbb08b9ca70d13f428f300c', url='https://code.mpimet.mpg.de/attachments/download/16035/cdo-1.9.2.tar.gz')
-    version('1.9.1'  , sha256='33cba3cfcc27e5896769143c5f8e2f300ca14c7a40d1f19ffd1ed24b49ea3d55', url='https://code.mpimet.mpg.de/attachments/download/15653/cdo-1.9.1.tar.gz')
-    version('1.9.0'  , sha256='df367f8c3abf4ab085bcfc61e0205b28a5ecc69b7b83ba398b4d3c874dd69008', url='https://code.mpimet.mpg.de/attachments/download/15187/cdo-1.9.0.tar.gz')
-    version('1.8.2'  , sha256='6ca6c1263af2237737728ac937a275f8aa27680507636a6b6320f347c69a369a', url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
-    version('1.7.2'  , sha256='4c43eba7a95f77457bfe0d30fb82382b3b5f2b0cf90aca6f0f0a008f6cc7e697', url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
+    version('1.9.6', sha256='b31474c94548d21393758caa33f35cf7f423d5dfc84562ad80a2bdcb725b5585', url='https://code.mpimet.mpg.de/attachments/download/19299/cdo-1.9.6.tar.gz')
+    version('1.9.5', sha256='48ed65cc5b436753c8e7f9eadd8aa97376698ce230ceafed2a4350a5b1a27148', url='https://code.mpimet.mpg.de/attachments/download/18264/cdo-1.9.5.tar.gz')
+    version('1.9.4', sha256='3d1c0fd3f7d38c5d3d88139ca1546c9d24e1b1ff752a794a4194dfe624695def', url='https://code.mpimet.mpg.de/attachments/download/17374/cdo-1.9.4.tar.gz')
+    version('1.9.3', sha256='e83a3de7b402600c0d9a5df18073d36d133ff9719d3c561a0efa90f9c1599f3f', url='https://code.mpimet.mpg.de/attachments/download/16435/cdo-1.9.3.tar.gz')
+    version('1.9.2', sha256='d1c5092167034a48e4b8ada24cf78a1d4b84e364ffbb08b9ca70d13f428f300c', url='https://code.mpimet.mpg.de/attachments/download/16035/cdo-1.9.2.tar.gz')
+    version('1.9.1', sha256='33cba3cfcc27e5896769143c5f8e2f300ca14c7a40d1f19ffd1ed24b49ea3d55', url='https://code.mpimet.mpg.de/attachments/download/15653/cdo-1.9.1.tar.gz')
+    version('1.9.0', sha256='df367f8c3abf4ab085bcfc61e0205b28a5ecc69b7b83ba398b4d3c874dd69008', url='https://code.mpimet.mpg.de/attachments/download/15187/cdo-1.9.0.tar.gz')
+    version('1.8.2', sha256='6ca6c1263af2237737728ac937a275f8aa27680507636a6b6320f347c69a369a', url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
+    version('1.7.2', sha256='4c43eba7a95f77457bfe0d30fb82382b3b5f2b0cf90aca6f0f0a008f6cc7e697', url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
 
     variant('netcdf', default=True, description='Enable NetCDF support')
     variant('grib2', default='eccodes', values=('eccodes', 'grib-api', 'none'),
