@@ -199,6 +199,8 @@ class Llvm(CMakePackage, CudaPackage):
     # Introduced in version 11 as a part of LLVM and not a separate package.
     conflicts("+flang", when="@:10")
 
+    conflicts('~mlir', when='+flang', msg='Flang requires MLIR')
+
     # Older LLVM do not build with newer compilers, and vice versa
     conflicts("%gcc@11:", when="@:7")
     conflicts("%gcc@8:", when="@:5")
