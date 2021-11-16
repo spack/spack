@@ -36,7 +36,7 @@ class PyPylint(PythonPackage):
     depends_on('py-astroid@1.6:1.9', type=('build', 'run'), when='@1.9.4')
     depends_on('py-astroid@2.0:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-astroid@2.2.0:2', type=('build', 'run'), when='@2.3.0:2.7')
-    depends_on('py-astroid@2.5.6:2.6', type=('build', 'run'), when='@2.8.0:')
+    depends_on('py-astroid@2.5.6:2.6', type=('build', 'run'), when='@2.8.0:2.10')
     depends_on('py-astroid@2.8.0:2.8', type=('build', 'run'), when='@2.11.1:')
 
     depends_on('py-backports-functools-lru-cache', when='^python@:2.8', type=('build', 'run'))
