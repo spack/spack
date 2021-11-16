@@ -300,9 +300,6 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
-   
-
-
         compile_flags = []
 
         if spec.satisfies('@:6.1.0'):
