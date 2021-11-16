@@ -154,6 +154,8 @@ class Llvm(CMakePackage, CudaPackage):
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
 
+    variant('version_suffix', default='none', description="Add a symbol suffix")
+
     extends("python", when="+python")
 
     # Build dependency
@@ -468,6 +470,10 @@ class Llvm(CMakePackage, CudaPackage):
             define("LIBOMP_USE_HWLOC", True),
             define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
         ]
+
+        version_suffix = spec.variants['version_suffix'].value
+        if version_suffix != 'none':
+            cmake_args.append(define('LLVM_VERSION_SUFFIX', version_suffix))
 
         if python.version >= Version("3"):
             cmake_args.append(define("Python3_EXECUTABLE", python.command.path))
