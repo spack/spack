@@ -281,8 +281,7 @@ class Vtk(CMakePackage):
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DVTK_USE_COCOA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF',
-                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'
-                ])
+                '-DVTK_OPENGL_HAS_EGL:BOOL=ON'])
         else:
             cmake_args.extend('-DVTK_OPENGL_HAS_EGL:BOOL=OFF')
             cmake_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF')
@@ -299,9 +298,6 @@ class Vtk(CMakePackage):
                 cmake_args.extend([
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
-
-   
-
 
         compile_flags = []
 
