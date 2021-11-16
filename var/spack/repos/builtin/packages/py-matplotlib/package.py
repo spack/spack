@@ -24,6 +24,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.5.0', sha256='38892a254420d95594285077276162a5e9e9c30b6da08bdc2a4d53331ad9a6fa')
     version('3.4.3', sha256='fc4f526dfdb31c9bd6b8ca06bf9fab663ca12f3ec9cdf4496fb44bc680140318')
     version('3.4.2', sha256='d8d994cefdff9aaba45166eb3de4f5211adb4accac85cbf97137e98f26ea0219')
     version('3.4.1', sha256='84d4c4f650f356678a5d658a43ca21a41fca13f9b8b00169c0b76e6a6a948908')
@@ -84,7 +85,7 @@ class PyMatplotlib(PythonPackage):
     variant('fonts', default=False,
             description='Enable support for system font detection')
 
-    # https://matplotlib.org/users/installing.html#dependencies
+    # https://matplotlib.org/stable/devel/dependencies.html
     # Required dependencies
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
     depends_on('python@2.7:2.8,3.4:', when='@:2', type=('build', 'link', 'run'))
@@ -149,7 +150,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('pkgconfig', type='build')
 
     # Testing dependencies
-    # https://matplotlib.org/devel/testing.html#requirements
+    # https://matplotlib.org/stable/devel/development_setup.html#additional-dependencies-for-testing
     depends_on('py-pytest@3.6:', type='test')
     depends_on('ghostscript@9.0:', type='test')
     # depends_on('inkscape@:0', type='test')
