@@ -67,6 +67,9 @@ class Paraview(CMakePackage, CudaPackage):
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
 
+    conflicts('+qt', when='+osmesa')
+    conflicts('+egl', when='+osmesa')
+
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
         conflicts(
@@ -118,7 +121,6 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='~osmesa platform=linux')
-    conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
     depends_on('double-conversion')
@@ -286,7 +288,7 @@ class Paraview(CMakePackage, CudaPackage):
         cmake_args = [
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_EGL:BOOL=%s' % variant_bool('+egl'),
-            '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa') or nvariant_bool('+egl'),
+            '-DVTK_USE_X:BOOL=%s' % variant_bool('~osmesa ~egl'),
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
             '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
