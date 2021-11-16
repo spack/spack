@@ -16,6 +16,7 @@ class PyH5py(PythonPackage):
     maintainers = ['bryanherman', 'takluyver']
 
     version('master', branch='master')
+    version('3.6.0', sha256='8752d2814a92aba4e2b2a5922d2782d0029102d99caaf3c201a566bc0b40db29')
     version('3.5.0', sha256='77c7be4001ac7d3ed80477de5b6942501d782de1bbe4886597bdfec2a7ab821f')
     version('3.4.0', sha256='ee1c683d91ab010d5e85cb61e8f9e7ee0d8eab545bf3dd50a9618f1d0e8f615e')
     version('3.3.0', sha256='e0dac887d779929778b3cfd13309a939359cc9e74756fc09af7c527a82797186')
