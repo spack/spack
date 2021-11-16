@@ -25,7 +25,7 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     because it expects the new directory structure to be in place."""
     for link in links:
         link_target = os.readlink(os.path.join(orig_prefix, link))
-        link_target = re.sub('^' + orig_prefix, '^' + new_prefix, link_target)
+        link_target = re.sub('^' + orig_prefix, new_prefix, link_target)
         new_link_path = os.path.join(new_prefix, link)
         os.unlink(new_link_path)
         os.symlink(link_target, new_link_path)
