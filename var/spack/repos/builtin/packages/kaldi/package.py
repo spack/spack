@@ -19,6 +19,7 @@ class Kaldi(Package):    # Does not use Autotools
     git      = "https://github.com/kaldi-asr/kaldi.git"
 
     version('master')
+    version('2021-11-16', commit='6e03a3f5f99d6d8c22494d90b7e7f9ceb0117ac8')
     version('2019-09-29', commit='6ffde4b41c58de778245149690927d592cd5956a')
     version('2019-07-29', commit='7637de77e0a77bf280bef9bf484e4f37c4eb9475')
     version('2018-07-11', commit='6f2140b032b0108bc313eefdca65151289642773')
