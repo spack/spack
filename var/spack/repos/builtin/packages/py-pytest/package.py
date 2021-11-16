@@ -64,9 +64,9 @@ class PyPytest(PythonPackage):
     depends_on('py-py@1.4.33:1.4', when='@3.2.4', type=('build', 'run'))
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
     depends_on('py-toml', when='@6.0:', type=('build', 'run'))
-    depends_on('py-atomicwrites@1.0:', when='@5.3: platform=win32', type=('build', 'run'))
+    depends_on('py-atomicwrites@1.0:', when='@5.3: platform=windows', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@3.6:5.2', type=('build', 'run'))
-    depends_on('py-colorama', when='platform=win32', type=('build', 'run'))
+    depends_on('py-colorama', when='platform=windows', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.12:', when='@4.6:5.0', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.12:', when='@5.1: ^python@:3.7', type=('build', 'run'))
 
