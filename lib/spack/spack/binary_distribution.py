@@ -11,7 +11,6 @@ import shutil
 import sys
 import tarfile
 import tempfile
-import traceback
 from contextlib import closing
 
 import ruamel.yaml as yaml
@@ -99,15 +98,18 @@ class BinaryCacheIndex(object):
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
-        # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
+        # _mirrors_for_spec is a dictionary mapping full hashes to lists of
         # entries indicating mirrors where that concrete spec can be found.
         # Each entry is a dictionary consisting of:
         #
         #     - the mirror where the spec is, keyed by ``mirror_url``
-        #     - the concrete spec itself, keyed by ``spec`` (including the
-        #           full hash, since the dag hash may match but we want to
-        #           use the updated source if available)
+        #     - the concrete spec itself, keyed by ``spec``
         self._mirrors_for_spec = {}
+
+        # Until we use full hash everywhere, we have to support a hybrid
+        # approach, where commands and api may use dag hash or full hash.
+        # This variable maps dag hashes to lists of associated full hashes.
+        self._spec_mirrors_by_dag_hash = {}
 
     def _init_local_index_cache(self):
         if not self._index_file_cache:
@@ -134,12 +136,15 @@ class BinaryCacheIndex(object):
         self._local_index_cache = None
         self._specs_already_associated = set()
         self._mirrors_for_spec = {}
+        self._spec_mirrors_by_dag_hash = {}
 
     def _write_local_index_cache(self):
         self._init_local_index_cache()
         cache_key = self._index_contents_key
+        tty.msg("Trying to write local index cache to {0}".format(cache_key))
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             json.dump(self._local_index_cache, new)
+        print('Done it')
 
     def regenerate_spec_cache(self, clear_existing=False):
         """ Populate the local cache of concrete specs (``_mirrors_for_spec``)
@@ -151,6 +156,7 @@ class BinaryCacheIndex(object):
         if clear_existing:
             self._specs_already_associated = set()
             self._mirrors_for_spec = {}
+            self._spec_mirrors_by_dag_hash = {}
 
         for mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[mirror_url]
@@ -167,7 +173,8 @@ class BinaryCacheIndex(object):
         try:
             db_root_dir = os.path.join(tmpdir, 'db_root')
             db = spack_db.Database(None, db_dir=db_root_dir,
-                                   enable_transaction_locking=False)
+                                   enable_transaction_locking=False,
+                                   db_key_hash_type=ht.full_hash)
 
             self._index_file_cache.init_entry(cache_key)
             cache_path = self._index_file_cache.cache_path(cache_key)
@@ -180,34 +187,36 @@ class BinaryCacheIndex(object):
                 dag_hash = indexed_spec.dag_hash()
                 full_hash = indexed_spec._full_hash
 
-                if dag_hash not in self._mirrors_for_spec:
-                    self._mirrors_for_spec[dag_hash] = []
+                if full_hash not in self._mirrors_for_spec:
+                    self._mirrors_for_spec[full_hash] = []
 
-                for entry in self._mirrors_for_spec[dag_hash]:
-                    # A binary mirror can only have one spec per DAG hash, so
-                    # if we already have an entry under this DAG hash for this
-                    # mirror url, we may need to replace the spec associated
-                    # with it (but only if it has a different full_hash).
+                for entry in self._mirrors_for_spec[full_hash]:
+                    # A binary mirror can only have one spec per full hash, so
+                    # look to see if we already have an entry under this full
+                    # hash for this mirror url, and if not, add it.
                     if entry['mirror_url'] == mirror_url:
-                        if full_hash and full_hash != entry['spec']._full_hash:
-                            entry['spec'] = indexed_spec
                         break
                 else:
-                    self._mirrors_for_spec[dag_hash].append({
+                    self._mirrors_for_spec[full_hash].append({
                         "mirror_url": mirror_url,
                         "spec": indexed_spec,
                     })
+
+                # Update the dag_hash index to include this full_hash
+                if dag_hash not in self._spec_mirrors_by_dag_hash:
+                    self._spec_mirrors_by_dag_hash[dag_hash] = []
+                self._spec_mirrors_by_dag_hash[dag_hash].append(full_hash)
         finally:
             shutil.rmtree(tmpdir)
 
     def get_all_built_specs(self):
         spec_list = []
-        for dag_hash in self._mirrors_for_spec:
-            # in the absence of further information, all concrete specs
-            # with the same DAG hash are equivalent, so we can just
-            # return the first one in the list.
-            if len(self._mirrors_for_spec[dag_hash]) > 0:
-                spec_list.append(self._mirrors_for_spec[dag_hash][0]['spec'])
+        for full_hash in self._mirrors_for_spec:
+            # In the absence of information about preferred mirrors, all
+            # concrete specs with the same full hash are equivalent, we can
+            # just return the first one in the list.
+            if len(self._mirrors_for_spec[full_hash]) > 0:
+                spec_list.append(self._mirrors_for_spec[full_hash][0]['spec'])
 
         return spec_list
 
@@ -241,7 +250,7 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
-        return self.find_by_hash(spec.dag_hash())
+        return self.find_by_hash(spec._full_hash)
 
     def find_by_hash(self, find_hash):
         """Same as find_built_spec but uses the hash of a spec.
@@ -249,21 +258,40 @@ class BinaryCacheIndex(object):
         Args:
             find_hash (str): hash of the spec to search
         """
-        if find_hash not in self._mirrors_for_spec:
-            return None
-        return self._mirrors_for_spec[find_hash]
+        # First try full hash as it's the most specific.
+        if find_hash in self._mirrors_for_spec:
+            return self._mirrors_for_spec[find_hash]
+
+        # If it we didn't know about it as a full hash, see if we know it as a
+        # dag hash.
+        if find_hash in self._spec_mirrors_by_dag_hash:
+            results = []
+            # If there's an ambiguity (we know about more than one full hash
+            # with this same dag hash) just return them all and let the caller
+            # sort them out.
+            # TODO: We need a better policy for how to handle these ambiguities
+            for fullhash in self._spec_mirrors_by_dag_hash[find_hash]:
+                results.extend(self._mirrors_for_spec[fullhash])
+            return results
+
+        return None
+
 
     def update_spec(self, spec, found_list):
         """
         Take list of {'mirror_url': m, 'spec': s} objects and update the local
         built_spec_cache
         """
+        spec_full_hash = spec._full_hash
         spec_dag_hash = spec.dag_hash()
 
-        if spec_dag_hash not in self._mirrors_for_spec:
-            self._mirrors_for_spec[spec_dag_hash] = found_list
+        if spec_full_hash not in self._mirrors_for_spec:
+            self._mirrors_for_spec[spec_full_hash] = found_list
+            if spec_dag_hash not in self._spec_mirrors_by_dag_hash:
+                self._spec_mirrors_by_dag_hash[spec_dag_hash] = []
+            self._spec_mirrors_by_dag_hash[spec_dag_hash].append(spec_full_hash)
         else:
-            current_list = self._mirrors_for_spec[spec_dag_hash]
+            current_list = self._mirrors_for_spec[spec_full_hash]
             for new_entry in found_list:
                 for cur_entry in current_list:
                     if new_entry['mirror_url'] == cur_entry['mirror_url']:
@@ -319,12 +347,14 @@ class BinaryCacheIndex(object):
         all_methods_failed = True
 
         for cached_mirror_url in self._local_index_cache:
+            tty.msg('examining {0} from _local_index_cache'.format(cached_mirror_url))
             cache_entry = self._local_index_cache[cached_mirror_url]
             cached_index_hash = cache_entry['index_hash']
             cached_index_path = cache_entry['index_path']
             if cached_mirror_url in configured_mirror_urls:
                 # May need to fetch the index and update the local caches
                 try:
+                    tty.msg('  _fetch_and_cache_index({0}, expect_hash={1})'.format(cached_mirror_url, cached_index_hash))
                     needs_regen = self._fetch_and_cache_index(
                         cached_mirror_url, expect_hash=cached_index_hash)
                     all_methods_failed = False
@@ -355,9 +385,11 @@ class BinaryCacheIndex(object):
         # already have in our cache must be fetched, stored, and represented
         # locally.
         for mirror_url in configured_mirror_urls:
+            tty.msg('examining {0} from configured_mirror_urls'.format(mirror_url))
             if mirror_url not in self._local_index_cache:
                 # Need to fetch the index and update the local caches
                 try:
+                    tty.msg('  _fetch_and_cache_index({0})'.format(mirror_url))
                     needs_regen = self._fetch_and_cache_index(mirror_url)
                     all_methods_failed = False
                 except FetchCacheError as fetch_error:
@@ -371,6 +403,7 @@ class BinaryCacheIndex(object):
         self._write_local_index_cache()
 
         if all_methods_failed:
+            tty.msg('oh bummer all methods failed')
             raise FetchCacheError(fetch_errors)
         elif spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
@@ -699,13 +732,13 @@ def tarball_directory_name(spec):
 def tarball_name(spec, ext):
     """
     Return the name of the tarfile according to the convention
-    <os>-<architecture>-<package>-<dag_hash><ext>
+    <os>-<architecture>-<package>-<full_hash><ext>
     """
     return "%s-%s-%s-%s-%s%s" % (spec.architecture,
                                  str(spec.compiler).replace("@", "-"),
                                  spec.name,
                                  spec.version,
-                                 spec.dag_hash(),
+                                 spec.full_hash(),
                                  ext)
 
 
@@ -786,7 +819,12 @@ def generate_package_index(cache_prefix):
     tty.debug('Retrieving spec descriptor files from {0} to build index'.format(
         cache_prefix))
 
-    all_mirror_specs = {}
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'],
+                           db_key_hash_type=ht.full_hash)
 
     for file_path in file_list:
         try:
@@ -794,86 +832,23 @@ def generate_package_index(cache_prefix):
             tty.debug('fetching {0}'.format(spec_url))
             _, _, spec_file = web_util.read_from_url(spec_url)
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
+
+            s = None
             # Need full spec.json name or this gets confused with index.json.
             if spec_url.endswith('.json'):
-                spec_dict = sjson.load(spec_file_contents)
                 s = Spec.from_json(spec_file_contents)
             elif spec_url.endswith('.yaml'):
-                spec_dict = syaml.load(spec_file_contents)
                 s = Spec.from_yaml(spec_file_contents)
-            all_mirror_specs[s.dag_hash()] = {
-                'spec_url': spec_url,
-                'spec': s,
-                'num_deps': len(list(s.traverse(root=False))),
-                'binary_cache_checksum': spec_dict['binary_cache_checksum'],
-                'buildinfo': spec_dict['buildinfo'],
-            }
+
+            if s:
+                db.add(s, None)
+                db.mark(s, 'in_buildcache', True)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading specfile: {0}'.format(file_path))
             tty.error(url_err)
 
-    sorted_specs = sorted(all_mirror_specs.keys(),
-                          key=lambda k: all_mirror_specs[k]['num_deps'])
-
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count', 'in_buildcache'])
-
-    try:
-        tty.debug('Specs sorted by number of dependencies:')
-        for dag_hash in sorted_specs:
-            spec_record = all_mirror_specs[dag_hash]
-            s = spec_record['spec']
-            num_deps = spec_record['num_deps']
-            tty.debug('  {0}/{1} -> {2}'.format(
-                s.name, dag_hash[:7], num_deps))
-            if num_deps > 0:
-                # Check each of this spec's dependencies (which we have already
-                # processed), as they are the source of truth for their own
-                # full hash.  If the full hash we have for any deps does not
-                # match what those deps have themselves, then we need to splice
-                # this spec with those deps, and push this spliced spec
-                # (spec.json file) back to the mirror, as well as update the
-                # all_mirror_specs dictionary with this spliced spec.
-                to_splice = []
-                for dep in s.dependencies():
-                    dep_dag_hash = dep.dag_hash()
-                    if dep_dag_hash in all_mirror_specs:
-                        true_dep = all_mirror_specs[dep_dag_hash]['spec']
-                        if true_dep.full_hash() != dep.full_hash():
-                            to_splice.append(true_dep)
-
-                if to_splice:
-                    tty.debug('    needs the following deps spliced:')
-                    for true_dep in to_splice:
-                        tty.debug('      {0}/{1}'.format(
-                            true_dep.name, true_dep.dag_hash()[:7]))
-                        s = s.splice(true_dep, True)
-
-                    # Push this spliced spec back to the mirror
-                    spliced_spec_dict = s.to_dict(hash=ht.full_hash)
-                    for key in ['binary_cache_checksum', 'buildinfo']:
-                        spliced_spec_dict[key] = spec_record[key]
-
-                    temp_json_path = os.path.join(tmpdir, 'spliced.spec.json')
-                    with open(temp_json_path, 'w') as fd:
-                        fd.write(sjson.dump(spliced_spec_dict))
-
-                    spliced_spec_url = spec_record['spec_url']
-                    web_util.push_to_url(
-                        temp_json_path, spliced_spec_url, keep_original=False)
-                    tty.debug('    spliced and wrote {0}'.format(
-                        spliced_spec_url))
-                    spec_record['spec'] = s
-
-            db.add(s, None)
-            db.mark(s, 'in_buildcache', True)
-
-        # Now that we have fixed any old specfiles that might have had the wrong
-        # full hash for their dependencies, we can generate the index, compute
-        # the hash, and push those files to the mirror.
+        # Now generate the index, compute the hash, and push those files to the
+        # mirror.
         index_json_path = os.path.join(db_root_dir, 'index.json')
         with open(index_json_path, 'w') as f:
             db._write_to_file(f)
@@ -901,13 +876,6 @@ def generate_package_index(cache_prefix):
             url_util.join(cache_prefix, 'index.json.hash'),
             keep_original=False,
             extra_args={'ContentType': 'text/plain'})
-    except Exception as err:
-        msg = 'Encountered problem pushing package index to {0}: {1}'.format(
-            cache_prefix, err)
-        tty.warn(msg)
-        tty.debug('\n' + traceback.format_exc())
-    finally:
-        shutil.rmtree(tmpdir)
 
 
 def generate_key_index(key_prefix, tmpdir=None):
@@ -1183,6 +1151,7 @@ def download_tarball(spec, preferred_mirrors=None):
 
     for try_url in urls_to_try:
         # stage the tarball into standard place
+        tty.msg('download_tarball attempting to fetch {0}'.format(try_url))
         stage = Stage(try_url, name="build_cache", keep=True)
         stage.create()
         try:
@@ -1299,6 +1268,8 @@ def relocate_package(spec, allow_root):
     orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
     new_sbang = spack.hooks.sbang.sbang_shebang_line()
     prefix_to_prefix_text[orig_sbang] = new_sbang
+
+    # tty.msg('prefix_to_prefix_text[{0}] = {1}'.format(orig_sbang, new_sbang))
 
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
@@ -1486,16 +1457,14 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
-def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
+def try_direct_fetch(spec, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
     deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_name = tarball_name(spec, '.spec.json')
     specfile_is_json = True
-    lenient = not full_hash_match
     found_specs = []
-    spec_full_hash = spec.full_hash()
 
     for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
         buildcache_fetch_url_yaml = url_util.join(
@@ -1525,18 +1494,15 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
             fetched_spec = Spec.from_yaml(specfile_contents)
         fetched_spec._mark_concrete()
 
-        # Do not recompute the full hash for the fetched spec, instead just
-        # read the property.
-        if lenient or fetched_spec._full_hash == spec_full_hash:
-            found_specs.append({
-                'mirror_url': mirror.fetch_url,
-                'spec': fetched_spec,
-            })
+        found_specs.append({
+            'mirror_url': mirror.fetch_url,
+            'spec': fetched_spec,
+        })
 
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, full_hash_match=False,
+def get_mirrors_for_spec(spec=None, full_hash_match=True,
                          mirrors_to_check=None, index_only=False):
     """
     Check if concrete spec exists on mirrors and return a list
@@ -1566,26 +1532,27 @@ def get_mirrors_for_spec(spec=None, full_hash_match=False,
 
     results = []
     lenient = not full_hash_match
+    spec_dag_hash = spec.dag_hash()
     spec_full_hash = spec.full_hash()
 
-    def filter_candidates(candidate_list):
-        filtered_candidates = []
-        for candidate in candidate_list:
-            candidate_full_hash = candidate['spec']._full_hash
-            if lenient or spec_full_hash == candidate_full_hash:
-                filtered_candidates.append(candidate)
-        return filtered_candidates
+    binary_index.regenerate_spec_cache()
 
-    candidates = binary_index.find_built_spec(spec)
-    if candidates:
-        results = filter_candidates(candidates)
+    if not full_hash_match:
+        results = binary_index.find_by_hash(spec_dag_hash)
+    else:
+        results = binary_index.find_by_hash(spec_full_hash)
 
     # Maybe we just didn't have the latest information from the mirror, so
     # try to fetch directly, unless we are only considering the indices.
     if not results and not index_only:
-        results = try_direct_fetch(spec,
-                                   full_hash_match=full_hash_match,
-                                   mirrors=mirrors_to_check)
+        if not full_hash_match:
+            msg = ("Buildcaches keyed by full hash cannot support direct "
+                "fetching of specs by DAG hash.  If the currently configured "
+                "mirrors contain a full hash match for the requested spec, "
+                "that will be returned")
+            tty.warn(msg)
+
+        results = try_direct_fetch(spec, mirrors=mirrors_to_check)
 
         if results:
             binary_index.update_spec(spec, results)
@@ -1791,61 +1758,8 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
         tty.warn(result_of_error)
         return rebuild_on_errors
 
-    spec_dict = (sjson.load(spec_file_contents)
-                 if specfile_is_json else syaml.load(spec_file_contents))
-
-    try:
-        nodes = spec_dict['spec']['nodes']
-    except KeyError:
-        # Prior node dict format omitted 'nodes' key
-        nodes = spec_dict['spec']
-    name = spec.name
-
-    # In the old format:
-    # The "spec" key represents a list of objects, each with a single
-    # key that is the package name.  While the list usually just contains
-    # a single object, we iterate over the list looking for the object
-    # with the name of this concrete spec as a key, out of an abundance
-    # of caution.
-    # In format version 2:
-    # ['spec']['nodes'] is still a list of objects, but with a
-    # multitude of keys. The list will commonly contain many objects, and in the
-    # case of build specs, it is highly likely that the same name will occur
-    # once as the actual package, and then again as the build provenance of that
-    # same package. Hence format version 2 matches on the dag hash, not name.
-    if nodes and 'name' not in nodes[0]:
-        # old style
-        cached_pkg_specs = [item[name] for item in nodes if name in item]
-    elif nodes and spec_dict['spec']['_meta']['version'] == 2:
-        cached_pkg_specs = [item for item in nodes
-                            if item[ht.dag_hash.name] == spec.dag_hash()]
-    cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
-
-    # If either the full_hash didn't exist in the specfile, or it
-    # did, but didn't match the one we computed locally, then we should
-    # just rebuild.  This can be simplified once the dag_hash and the
-    # full_hash become the same thing.
-    rebuild = False
-
-    if not cached_target:
-        reason = 'did not find spec in specfile contents'
-        rebuild = True
-    elif ht.full_hash.name not in cached_target:
-        reason = 'full_hash was missing from remote specfile'
-        rebuild = True
-    else:
-        full_hash = cached_target[ht.full_hash.name]
-        if full_hash != pkg_full_hash:
-            reason = 'hash mismatch, remote = {0}, local = {1}'.format(
-                full_hash, pkg_full_hash)
-            rebuild = True
-
-    if rebuild:
-        tty.msg('Rebuilding {0}, reason: {1}'.format(
-            spec.short_spec, reason))
-        tty.msg(spec.tree())
-
-    return rebuild
+    # Set the bar at existence and readability of the expected spec file
+    return False
 
 
 def check_specs_against_mirrors(mirrors, specs, output_file=None,
@@ -1877,7 +1791,8 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None,
             if needs_rebuild(spec, mirror.fetch_url, rebuild_on_errors):
                 rebuild_list.append({
                     'short_spec': spec.short_spec,
-                    'hash': spec.dag_hash()
+                    'hash': spec.dag_hash(),
+                    'full_hash': spec.full_hash()
                 })
 
         if rebuild_list:

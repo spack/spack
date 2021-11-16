@@ -350,9 +350,12 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
         for spec in sorted(specs):
+            tty.msg('  checking {0}'.format(spec.name))
             if pkg.startswith('/'):
                 pkghash = pkg.replace('/', '')
-                if spec.dag_hash().startswith(pkghash):
+                if spec._full_hash.startswith(pkghash):
+                    matches.append(spec)
+                elif spec.dag_hash().startswith(pkghash):
                     matches.append(spec)
             else:
                 if spec.satisfies(pkg):
@@ -919,7 +922,7 @@ def buildcache_sync(args):
     tty.debug('Syncing the following specs:')
     for s in env.all_specs():
         tty.debug('  {0}{1}: {2}'.format(
-            '* ' if s in env.roots() else '  ', s.name, s.dag_hash()))
+            '* ' if s in env.roots() else '  ', s.name, s.full_hash()))
 
         buildcache_rel_paths.extend([
             os.path.join(

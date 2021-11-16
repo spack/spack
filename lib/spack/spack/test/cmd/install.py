@@ -1061,6 +1061,8 @@ def test_cache_install_full_hash_match(
     # Check that even if the full hash changes, we install from binary when
     # we don't explicitly require the full hash to match
     install_output = install('--no-check-signature', s.name, output=str)
+    print("spack install --no-check-signature {0}".format(s.name))
+    print(install_output)
     assert expect_extract_msg in install_output
 
     uninstall('-y', s.name)

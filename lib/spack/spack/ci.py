@@ -158,7 +158,7 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
     item_idx += 1
 
     format_str += '/{{{0}}}'.format(item_idx)
-    format_args.append(spec.dag_hash(7))
+    format_args.append(spec.full_hash(7))
     item_idx += 1
 
     format_str += ' {{{0}}}'.format(item_idx)
@@ -208,7 +208,7 @@ def format_root_spec(spec, main_phase, strip_compiler):
 
 
 def spec_deps_key(s):
-    return '{0}/{1}'.format(s.name, s.dag_hash(7))
+    return '{0}/{1}'.format(s.name, s.full_hash(7))
 
 
 def _add_dependency(spec_label, dep_label, deps):

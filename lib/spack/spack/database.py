@@ -754,6 +754,8 @@ class Database(object):
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
+        tty.msg('Database reading from {0}'.format(filename))
+
         if fdata is None:
             return
 

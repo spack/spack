@@ -254,7 +254,9 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
+    op = buildcache_cmd('install', '-au', cspec.name, sy_spec.name, fail_on_error=False, output=str)
+    print('spack buildcache install -au {0} {1}'.format(cspec.name, sy_spec.name))
+    print(op)
 
     # Test force install in non-default install path scheme
     buildcache_cmd('install', '-auf', cspec.name)
@@ -583,7 +585,9 @@ def test_update_sbang(tmpdir, test_mirror):
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache
-        buildcache_cmd('install', '-a', '-u', '-f', new_spec.name)
+        outie = buildcache_cmd('install', '-a', '-u', '-f', new_spec.name, fail_on_error=False, output=str)
+        print('spack buildcache install -a -u -f {0}'.format(new_spec.name))
+        print(outie)
 
         # Continue blowing away caches
         bindist.clear_spec_cache()
@@ -615,9 +619,10 @@ def test_update_sbang(tmpdir, test_mirror):
 # Need one where the platform has been changed to the test platform.
 def test_install_legacy_yaml(test_legacy_mirror, install_mockery_mutable_config,
                              mock_packages):
-    install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
+    oup = install_cmd('--no-check-signature', '--cache-only', '-f', legacy_mirror_dir
                 + '/build_cache/test-debian6-core2-gcc-4.5.0-zlib-' +
-                '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml')
+                '1.2.11-t5mczux3tfqpxwmg7egp7axy2jvyulqk.spec.yaml', fail_on_error=False, output=str)
+    print(oup)
     uninstall_cmd('-y', '/t5mczux3tfqpxwmg7egp7axy2jvyulqk')
 
 
