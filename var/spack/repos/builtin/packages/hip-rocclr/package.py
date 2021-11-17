@@ -95,15 +95,11 @@ class HipRocclr(CMakePackage):
         when='@master'
     )
 
-    def install(self, spec, prefix):
-        if self.version == Version('4.5.0'):
-            mkdirp(self.prefix.include)
-            mkdirp(self.prefix.lib)
-            file = join_path(self.build_directory,
-                                  'librocclr.a')
-            install(file, self.prefix.lib)
-            install_tree(join_path(self.stage.source_path,'include'),
-                        prefix.include)
+    @property
+    def install_targets(self):
+        if self.spec.satisfies('@4.5.0'):
+            return [ ]
+        return ['install']
 
     @run_after('install')
     def deploy_missing_files(self):
