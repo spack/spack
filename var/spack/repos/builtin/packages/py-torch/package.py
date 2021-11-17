@@ -219,6 +219,11 @@ class PyTorch(PythonPackage, CudaPackage):
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
 
+    # Fix compilation of +distributed~tensorpipe
+    # https://github.com/pytorch/pytorch/issues/68002
+    patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
+          sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
+
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
     phases = ['install']

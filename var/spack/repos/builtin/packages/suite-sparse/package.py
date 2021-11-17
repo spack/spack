@@ -37,13 +37,14 @@ class SuiteSparse(Package):
     variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
     variant('cuda', default=False, description='Build with CUDA')
     variant('openmp', default=False, description='Build with OpenMP')
+    variant('graphblas', default=False, description='Build with GraphBLAS (takes a long time to compile)')
 
     depends_on('mpfr@4.0.0:', type=('build', 'link'), when='@5.8.0:')
     depends_on('gmp', type=('build', 'link'), when='@5.8.0:')
     depends_on('blas')
     depends_on('lapack')
     depends_on('m4', type='build', when='@5.0.0:')
-    depends_on('cmake', when='@5.2.0:', type='build')
+    depends_on('cmake', when='+graphblas @5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
@@ -60,12 +61,12 @@ class SuiteSparse(Package):
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
-    patch('graphblas_libm_dep.patch', when='@5.2.0:5.2%clang')
+    patch('graphblas_libm_dep.patch', when='+graphblas @5.2.0:5.2%clang')
 
     # CUDA-11 dropped sm_30 code generation, remove hardcoded sm_30 from makefile
     # open issue: https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/56
     # Tested only with 5.9.0, previous versions probably work too
-    patch('fix_cuda11.patch', when='@5.9.0:+cuda ^cuda@11:')
+    patch('fix_cuda11.patch', when='@5.9.0:5.10.0+cuda ^cuda@11:')
 
     conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
 
@@ -151,14 +152,40 @@ class SuiteSparse(Package):
                 'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
                 ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
-        # In those SuiteSparse versions calling "make install" in one go is
-        # not possible, mainly because of GraphBLAS.  Thus compile first and
-        # install in a second run.
-        if '@5.4.0:' in self.spec:
-            make('library', *make_args)
-
         make_args.append('INSTALL=%s' % prefix)
-        make('install', *make_args)
+
+        # Filter the targets we're interested in
+        targets = [
+            'SuiteSparse_config',
+            'AMD',
+            'BTF',
+            'CAMD',
+            'CCOLAMD',
+            'COLAMD',
+            'CHOLMOD',
+            'LDL',
+            'KLU',
+            'UMFPACK',
+            'RBio'
+        ]
+        if spec.satisfies('+cuda'):
+            targets.extend([
+                'SuiteSparse_GPURuntime',
+                'GPUQREngine'
+            ])
+        targets.extend([
+            'SPQR'
+        ])
+        if spec.satisfies('+graphblas'):
+            targets.append('GraphBLAS')
+        if spec.satisfies('@5.8.0:'):
+            targets.append('SLIP_LU')
+
+        # Finally make and install
+        make('-C', 'SuiteSparse_config', 'library', 'config')
+        for target in targets:
+            make('-C', target, 'library', *make_args)
+            make('-C', target, 'install', *make_args)
 
     @run_after('install')
     def fix_darwin_install(self):
@@ -179,9 +206,5 @@ class SuiteSparse(Package):
                      'suitesparseconfig']
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
-        libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
+        return find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
                               shared=True, recursive=False)
-        if not libs:
-            return None
-        libs += find_system_libraries('librt')
-        return libs

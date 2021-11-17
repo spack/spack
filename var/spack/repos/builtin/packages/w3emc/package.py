@@ -28,3 +28,10 @@ class W3emc(CMakePackage):
     depends_on('nemsio', when='@2.7.3')
     depends_on('sigio', when='@2.7.3')
     depends_on('netcdf-fortran', when='@2.7.3')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', '8', 'd'):
+            lib = find_libraries('libw3emc_' + suffix, root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('W3EMC_LIB' + suffix, lib[0])
+            env.set('W3EMC_INC' + suffix, join_path(self.prefix, 'include_' + suffix))
