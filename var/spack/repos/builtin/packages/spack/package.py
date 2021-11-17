@@ -31,6 +31,7 @@ class Spack(Package):
 
     # Python (with spack python -i ipython support)
     depends_on('python', type='run')
+    depends_on('python@2.7:', type='run', when='@0.18.0:')
     depends_on('py-ipython', type='run')
 
     # Concretizer
