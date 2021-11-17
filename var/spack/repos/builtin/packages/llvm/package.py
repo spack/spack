@@ -560,7 +560,7 @@ class Llvm(CMakePackage, CudaPackage):
         # CMAKE_INSTALL_RPATH to it, which fails, causing installation to fail. The
         # easiest workaround is to just statically link libc++abi.a into libc++.so,
         # so that linking with -lc++ or -stdlib=libc++ is enough.
-        cmake_args.append(define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', 'ON'))
+        cmake_args.append(define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True))
 
         if "+all_targets" not in spec:  # all is default on cmake
 
