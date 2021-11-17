@@ -77,6 +77,10 @@ class Vtk(CMakePackage):
     # use internal FindHDF5
     patch('internal_findHDF5.patch', when='@:8')
 
+    # Fix IOADIOS2 module to work with kits
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch('vtk-adios2-module-no-kit.patch', when='@:9.0.3')
+
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
     depends_on('gl@3.2:', when='+opengl2')
