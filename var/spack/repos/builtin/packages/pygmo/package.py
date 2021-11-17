@@ -27,7 +27,6 @@ class Pygmo(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
 
     def cmake_args(self):
-        spec = self.spec
 
         args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),

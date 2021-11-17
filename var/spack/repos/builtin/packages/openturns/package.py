@@ -7,10 +7,10 @@ from spack import *
 
 
 class Openturns(CMakePackage):
-    """OpenTURNS is a scientific C++ and Python library featuring an 
-    internal data model and algorithms dedicated to the treatment of 
-    uncertainties. The main goal of this library is to provide all 
-    functionalities needed to treat uncertainties in studies with 
+    """OpenTURNS is a scientific C++ and Python library featuring an
+    internal data model and algorithms dedicated to the treatment of
+    uncertainties. The main goal of this library is to provide all
+    functionalities needed to treat uncertainties in studies with
     industrial applications. Targeted users are all engineers who want
     to introduce the probabilistic dimension in their so far
     deterministic studies."""
@@ -50,7 +50,7 @@ class Openturns(CMakePackage):
             args.extend([
                 # By default picks up the system python not the Spack build
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-                # By default installs to the python prefix 
+                # By default installs to the python prefix
                 '-DPYTHON_SITE_PACKAGES={0}'.format(site_packages_dir),
             ])
 
