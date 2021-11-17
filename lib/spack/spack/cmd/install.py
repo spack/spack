@@ -399,6 +399,10 @@ environment variables:
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
+
+        # Tell spack monitor about it
+        if args.use_monitor and abstract_specs:
+            monitor.failed_concretization(abstract_specs)
         raise
 
     # 2. Concrete specs from yaml files
