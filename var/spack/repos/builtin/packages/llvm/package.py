@@ -556,6 +556,12 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args.append(from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"))
         cmake_args.append(from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"))
 
+        # By default on Linux, libc++.so is a linker script, and CMake tries to add the
+        # CMAKE_INSTALL_RPATH to it, which fails, causing installation to fail. The
+        # easiest workaround is to just statically link libc++abi.a into libc++.so,
+        # so that linking with -lc++ or -stdlib=libc++ is enough.
+        cmake_args.append(define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True))
+
         if "+all_targets" not in spec:  # all is default on cmake
 
             targets = ["NVPTX", "AMDGPU"]
@@ -593,12 +599,6 @@ class Llvm(CMakePackage, CudaPackage):
                     break
             cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
 
-        if spec.satisfies("@4.0.0:"):
-            if spec.satisfies("platform=cray") or spec.satisfies(
-                "platform=linux"
-            ):
-                cmake_args.append(define("CMAKE_BUILD_WITH_INSTALL_RPATH", "1"))
-
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define('LLDB_USE_SYSTEM_DEBUGSERVER', True))
 
@@ -610,16 +610,6 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append(define("LLVM_ENABLE_RUNTIMES", runtimes))
 
         return cmake_args
-
-    @run_before("build")
-    def pre_install(self):
-        with working_dir(self.build_directory):
-            # When building shared libraries these need to be installed first
-            make("install-LLVMTableGen")
-            if self.spec.version >= Version("4.0.0"):
-                # LLVMDemangle target was added in 4.0.0
-                make("install-LLVMDemangle")
-            make("install-LLVMSupport")
 
     @run_after("install")
     def post_install(self):
