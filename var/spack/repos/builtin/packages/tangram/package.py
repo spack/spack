@@ -49,10 +49,10 @@ class Tangram(CMakePackage):
 #   Wonton depends array
     wonton_depends = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
-#   Wonton depends on loop
-    for i in wonton_depends:
-        depends_on('wonton+' + i, when='+' + i)
-        depends_on('wonton~' + i, when='~' + i)
+
+    for _variant in wonton_depends:
+        depends_on('wonton+' + _variant, when='+' + _variant)
+        depends_on('wonton~' + _variant, when='~' + _variant)
 
     def cmake_args(self):
         options = []
