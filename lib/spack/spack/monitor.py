@@ -122,13 +122,16 @@ class SpackMonitorClient:
 
     def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None,
                  save_local=False):
+        # We can control setting an arbitrary version if needed
+        sv = spack.main.get_version()
+        self.spack_version = os.environ.get("SPACKMON_SPACK_VERSION") or sv
+
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
         self.username = os.environ.get("SPACKMON_USER")
         self.headers = {}
         self.allow_fail = allow_fail
-        self.spack_version = spack.main.get_version()
         self.capture_build_environment()
         self.tags = tags
         self.save_local = save_local
@@ -204,6 +207,14 @@ class SpackMonitorClient:
         """
         from spack.util.environment import get_host_environment_metadata
         self.build_environment = get_host_environment_metadata()
+        keys = list(self.build_environment.keys())
+
+        # Allow to customize any of these values via the environment
+        for key in keys:
+            envar_name = "SPACKMON_%s" % key.upper()
+            envar = os.environ.get(envar_name)
+            if envar:
+                self.build_environment[key] = envar
 
     def require_auth(self):
         """
@@ -417,6 +428,37 @@ class SpackMonitorClient:
 
         return configs
 
+    def failed_concretization(self, specs):
+        """
+        Given a list of abstract specs, tell spack monitor concretization failed.
+        """
+        configs = {}
+
+        # There should only be one spec generally (what cases would have >1?)
+        for spec in specs:
+
+            # update the spec to have build hash indicating that cannot be built
+            meta = spec.to_dict()['spec']
+            nodes = []
+            for node in meta.get("nodes", []):
+                for hashtype in ["build_hash", "full_hash"]:
+                    node[hashtype] = "FAILED_CONCRETIZATION"
+                nodes.append(node)
+            meta['nodes'] = nodes
+
+            # We can't concretize / hash
+            as_dict = {"spec": meta,
+                       "spack_version": self.spack_version}
+
+            if self.save_local:
+                filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
+                self.save(as_dict, filename)
+            else:
+                response = self.do_request("specs/new/", data=sjson.dump(as_dict))
+                configs[spec.package.name] = response.get('data', {})
+
+        return configs
+
     def new_build(self, spec):
         """
         Create a new build.
@@ -506,6 +548,11 @@ class SpackMonitorClient:
         marks all dependencies as cancelled, unless they are already successful
         """
         return self.update_build(spec, status="FAILED")
+
+    def cancel_task(self, spec):
+        """Given a spec, mark it as cancelled.
+        """
+        return self.update_build(spec, status="CANCELLED")
 
     def send_analyze_metadata(self, pkg, metadata):
         """

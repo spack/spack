@@ -671,6 +671,13 @@ If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
 
 
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
+
+
 """""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_success(pkg, phase_name, log_file)``
 """""""""""""""""""""""""""""""""""""""""""""""
