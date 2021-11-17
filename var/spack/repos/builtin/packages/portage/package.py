@@ -47,10 +47,9 @@ class Portage(CMakePackage):
     # Wonton depends array
     wonton_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
-    # Wonton depends on loop
-    for i in wonton_variant:
-        depends_on('wonton+' + i, when='+' + i)
-        depends_on('wonton~' + i, when='~' + i)
+    for _variant in wonton_variant:
+        depends_on('wonton+' + _variant, when='+' + _variant)
+        depends_on('wonton~' + _variant, when='~' + _variant)
 
     # Jali needs MPI
     conflicts('+jali ~mpi')
