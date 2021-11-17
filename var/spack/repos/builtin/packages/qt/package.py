@@ -193,10 +193,25 @@ class Qt(Package):
         depends_on("flex", type='build')
         depends_on("bison", type='build')
         depends_on("gperf")
-        depends_on("python@2.7.5:2", type='build')
+
+        # qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2
+        with when('@5.7:5.15'):
+            depends_on('python@2.7.5:2', type='build')
+            # mesa inherits MesonPackage (since October 2020) which depends on Py@3.
+            # The conflicts('mesa') enables a regular build of `qt@5.7:5.15+webkit`
+            # without having to specify the exact version by causing the concretizer
+            # to select mesa18 which does not depend on python@3.
+            conflicts('mesa')
+
+        with when('@5.10:'):
+            depends_on('nss@3.62:')
 
         with when('@5.7:'):
-            depends_on("nss")
+            # https://www.linuxfromscratch.org/blfs/view/svn/x/qtwebengine.html
+            depends_on('ninja', type='build')
+
+        # https://doc.qt.io/qt-5.15/qtwebengine-platform-notes.html
+        with when('@5.7: platform=linux'):
             depends_on("libdrm")
             depends_on("libxcomposite")
             depends_on("libxcursor")
