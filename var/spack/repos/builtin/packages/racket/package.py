@@ -63,7 +63,3 @@ class Racket(Package):
                 make('install-bc')
             if spec.variants["cs"].value:
                 make('install-cs')
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            make('install')
