@@ -115,11 +115,7 @@ class Wonton(CMakePackage):
             options.append('-DWONTON_ENABLE_Jali=OFF')
 
         # BROKEN DEPENDENCY!!!!!!
-        # if '+flecsi' in self.spec:
-        #     options.append('-DWONTON_ENABLE_FleCSI=ON')
-        # else:
-        #     options.append('-DWONTON_ENABLE_FleCSI=OFF')
-        options.append('-DWONTON_ENABLE_FleCSI=OFF')
+        options.append(define_from_variant('WONTON_ENABLE_FleCSI', 'flecsi')
 
         # Unit test variant
         if self.run_tests:
