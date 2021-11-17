@@ -49,10 +49,6 @@ class PyMatplotlib(PythonPackage):
     version('2.2.2', sha256='4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8')
     version('2.0.2', sha256='0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1')
     version('2.0.0', sha256='36cf0985829c1ab2b8b1dae5e2272e53ae681bf33ab8bedceed4f0565af5f813')
-    version('1.5.3', sha256='a0a5dc39f785014f2088fed2c6d2d129f0444f71afbb9c44f7bdf1b14d86ebbc', deprecated=True)
-    version('1.5.1', sha256='3ab8d968eac602145642d0db63dd8d67c85e9a5444ce0e2ecb2a8fedc7224d40', deprecated=True)
-    version('1.4.3', sha256='61f201c6a82e89e4d9e324266203fad44f95fd8f36d8eec0d8690273e1182f75', deprecated=True)
-    version('1.4.2', sha256='17a3c7154f152d8dfed1f37517c0a8c5db6ade4f6334f684989c36dab84ddb54', deprecated=True)
 
     # https://matplotlib.org/tutorials/introductory/usage.html#backends
     # From `lib/matplotlib/rcsetup.py`:
@@ -184,7 +180,10 @@ class PyMatplotlib(PythonPackage):
 
         backend = self.spec.variants['backend'].value
 
-        with open('setup.cfg', 'w') as setup:
+        # https://github.com/matplotlib/matplotlib/pull/20871
+        setup_file = 'mplsetup.cfg' if self.spec.satisfies('@3.5:') else 'setup.cfg'
+
+        with open(setup_file, 'w') as setup:
             # Default backend
             setup.write('[rc_options]\n')
             setup.write('backend = ' + backend + '\n')
