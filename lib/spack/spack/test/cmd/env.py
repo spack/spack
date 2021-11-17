@@ -868,7 +868,7 @@ def test_env_loads(install_mockery, mock_fetch):
         install('--fake')
 
     with ev.read('test'):
-        env('loads', 'test')
+        env('loads')
 
     e = ev.read('test')
 

@@ -11,12 +11,18 @@ class Meep(AutotoolsPackage):
     software package developed at MIT to model electromagnetic systems."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Meep"
-    url      = "http://ab-initio.mit.edu/meep/meep-1.3.tar.gz"
-    list_url = "http://ab-initio.mit.edu/meep/old"
+    git      = "https://github.com/NanoComp/meep.git"
+    url      = "https://github.com/NanoComp/meep/archive/refs/tags/v1.21.0.tar.gz"
 
-    version('1.3',   sha256='564c1ff1b413a3487cf81048a45deabfdac4243a1a37ce743f4fcf0c055fd438')
-    version('1.2.1', sha256='f1f0683e5688d231f7dd1863939677148fc27a6744c03510e030c85d6c518ea5')
-    version('1.1.1', sha256='7a97b5555da1f9ea2ec6eed5c45bd97bcd6ddbd54bdfc181f46c696dffc169f2')
+    version('master', branch='master')
+
+    version('1.21.0', sha256='71911cd2f38b15bdafe9a27ad111f706f24717894d5f9b6f9f19c6c10a0d5896')
+    version('1.3',   sha256='564c1ff1b413a3487cf81048a45deabfdac4243a1a37ce743f4fcf0c055fd438',
+            url='http://ab-initio.mit.edu/meep/meep-1.3.tar.gz')
+    version('1.2.1', sha256='f1f0683e5688d231f7dd1863939677148fc27a6744c03510e030c85d6c518ea5',
+            url='http://ab-initio.mit.edu/meep/meep-1.2.1.tar.gz')
+    version('1.1.1', sha256='7a97b5555da1f9ea2ec6eed5c45bd97bcd6ddbd54bdfc181f46c696dffc169f2',
+            url='http://ab-initio.mit.edu/meep/old/meep-1.1.1.tar.gz')
 
     variant('blas',    default=True, description='Enable BLAS support')
     variant('lapack',  default=True, description='Enable LAPACK support')
@@ -27,11 +33,15 @@ class Meep(AutotoolsPackage):
     variant('hdf5',    default=True, description='Enable HDF5 support')
     variant('gsl',     default=True, description='Enable GSL support')
 
+    depends_on('autoconf', type='build', when='@1.21.0')
+    depends_on('automake', type='build', when='@1.21.0')
+    depends_on('libtool', type='build', when='@1.21.0')
+
     depends_on('blas',        when='+blas')
     depends_on('lapack',      when='+lapack')
     depends_on('harminv',     when='+harminv')
     depends_on('guile',       when='+guile')
-    depends_on('libctl@3.2:', when='+libctl')
+    depends_on('libctl',      when='+libctl')
     depends_on('mpi',         when='+mpi')
     depends_on('hdf5~mpi',    when='+hdf5~mpi')
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
@@ -71,6 +81,9 @@ class Meep(AutotoolsPackage):
             config_args.append('--with-hdf5')
         else:
             config_args.append('--without-hdf5')
+
+        if spec.satisfies('@1.21.0:'):
+            config_args.append('--enable-maintainer-mode')
 
         return config_args
 

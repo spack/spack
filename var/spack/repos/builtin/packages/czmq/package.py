@@ -19,6 +19,8 @@ class Czmq(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('uuid')
     depends_on('libzmq')
 
