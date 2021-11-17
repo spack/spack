@@ -558,7 +558,9 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                 env_mods = spack.util.environment.EnvironmentModifications()
                 cmd = spack.util.executable.which(*executables)
                 concrete_spec = spack.store.db.query(abstract_spec, installed=True)[0]
-                for dep in concrete_spec.traverse(root=True, order='post'):
+                for dep in concrete_spec.traverse(
+                        root=True, order='post', deptype=('link', 'run')
+                ):
                     env_mods.extend(
                         spack.user_environment.environment_modifications_for_spec(dep)
                     )
