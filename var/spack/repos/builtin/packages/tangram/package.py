@@ -49,7 +49,6 @@ class Tangram(CMakePackage):
 #   Wonton depends array
     wonton_depends = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
-
     for _variant in wonton_depends:
         depends_on('wonton+' + _variant, when='+' + _variant)
         depends_on('wonton~' + _variant, when='~' + _variant)
