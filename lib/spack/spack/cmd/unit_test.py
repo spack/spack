@@ -7,10 +7,15 @@ from __future__ import division, print_function
 
 import argparse
 import collections
+import os.path
 import re
 import sys
 
-import pytest
+try:
+    import pytest
+except ImportError:
+    pytest = None
+
 from six import StringIO
 
 import llnl.util.tty.color as color
@@ -144,6 +149,14 @@ def add_back_pytest_args(args, unknown_args):
 
 
 def unit_test(parser, args, unknown_args):
+    global pytest
+    if pytest is None:
+        vendored_pytest_dir = os.path.join(
+            spack.paths.external_path, 'pytest-fallback'
+        )
+        sys.path.append(vendored_pytest_dir)
+        import pytest
+
     if args.pytest_help:
         # make the pytest.main help output more accurate
         sys.argv[0] = 'spack unit-test'
