@@ -49,6 +49,7 @@ class Openblas(MakefilePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
     variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
+    variant('symbol_suffix', default='none', description='Set a symbol suffix')
 
     variant('locking', default=True, description='Build with thread safety')
     variant(
@@ -302,6 +303,10 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
+        suffix = self.spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            make_defs += ['SYMBOLSUFFIX={0}'.format(suffix)]
+
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
         if '+consistent_fpcsr' in self.spec:
@@ -337,6 +342,19 @@ class Openblas(MakefilePackage):
         # one of the source files implementing functions declared in these
         # headers.
         return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = 'libopenblas'
+        search_shared = bool(spec.variants['shared'].value)
+        suffix = spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
     @property
     def build_targets(self):
