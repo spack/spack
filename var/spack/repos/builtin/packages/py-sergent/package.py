@@ -14,9 +14,9 @@ class PySergent(PythonPackage):
     homepage = "https://github.com/chocobn69/sergent"
     pypi = 'Sergent/Sergent-1.2.12.tar.gz'
     maintainers = ['liuyangzhuan']
-    
+
     version('1.2.12', sha256='2a16c4efc4613a0395f6815fb58567e061b4cab0bf54696aa7f0fb725171ad42')
-    version('1.2.10', sha256='c8c788603dfd520b73d8153166a8cc55d3bdb3b97fa2374d14745a620eb206e1')    
+    version('1.2.10', sha256='c8c788603dfd520b73d8153166a8cc55d3bdb3b97fa2374d14745a620eb206e1')
     version('1.2.9', sha256='ed932cd0ed1a81b2d0642e8c51c5c077f01d06b3ed0653567158a9d3922339d0')
     version('1.2.8', sha256='9044704f90f8c389e66ec1e34ce6ef6074d67c784a724fe3981812028a66c207')
     version('1.2.7', sha256='e4ad274f10c9db90f858c5fbdcab0b0327ad1035441045fdf1080c1b5a4dfe22')

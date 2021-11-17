@@ -14,7 +14,7 @@ class PyPyro4(PythonPackage):
     homepage = "http://pyro4.readthedocs.io"
     pypi = 'Pyro4/Pyro4-4.81.tar.gz'
     maintainers = ['liuyangzhuan']
-    
+
     version('4.81', sha256='e130da06478b813173b959f7013d134865e07fbf58cc5f1a2598f99479cdac5f')
     version('4.80', sha256='46847ca703de3f483fbd0b2d22622f36eff03e6ef7ec7704d4ecaa3964cb2220')
     version('4.79', sha256='b1eb34c9a1e63f731ca480f3e2c48169341a25a7504397badbaaab07e0f3241e')
