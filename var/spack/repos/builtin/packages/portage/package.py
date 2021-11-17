@@ -39,12 +39,9 @@ class Portage(CMakePackage):
 
     depends_on('tangram', when='+tangram')
 
-    tangram_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
-
-    # tangram depends on loop
-    for i in tangram_variant:
-        depends_on('tangram+' + i, when='+tangram+' + i)
-        depends_on('tangram~' + i, when='+tangram~' + i)
+    for _variant in ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']:
+        depends_on('tangram+' + _variant, when='+tangram+' + _variant)
+        depends_on('tangram~' + _variant, when='+tangram~' + _variant)
 
     depends_on('wonton')
     # Wonton depends array
