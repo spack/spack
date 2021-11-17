@@ -23,7 +23,7 @@ class Jq(AutotoolsPackage):
     depends_on('bison@3.0:', type='build')
 
     if sys.platform == 'darwin' and macos_version() >= Version('10.15'):
-        patch('builtinc.patch')
+        patch('builtinc.patch', when='@:1.5')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

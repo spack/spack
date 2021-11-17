@@ -12,7 +12,8 @@ class PyHpbandster(PythonPackage):
     """
 
     homepage = "https://github.com/automl/HpBandSter"
-    url      = "https://pypi.io/packages/source/h/hpbandster/hpbandster-0.7.4.tar.gz"
+    pypi = 'hpbandster/hpbandster-0.7.4.tar.gz'
+    maintainers = ['liuyangzhuan']
 
     version('0.7.4', sha256='49ffc32688155b509e62f3617b52ae15a96c9bff2c996a23df83f279106c5921')
     version('0.7.3', sha256='dd6c255f5dfe773a7f0c5ecf580b46a406d9f691303e2f849a14f7ae08ff9f13')
@@ -24,5 +25,13 @@ class PyHpbandster(PythonPackage):
     version('0.5.6', sha256='bc8a93638adda5cc0838c836402f18b456631363aefbfdf52942e9f8c7251893')
 
     depends_on('python@3:', type=('build', 'run'))
-
+    depends_on('py-configspace', type=('build', 'run'))
+    depends_on('py-cloudpickle', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-statsmodels', type=('build', 'run'))
+    depends_on('py-urllib3', type=('build', 'run'))
+    depends_on('py-netifaces', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-sergent', type=('build', 'run'))
+    depends_on('py-pyro4', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

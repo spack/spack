@@ -20,37 +20,37 @@ class Gptune(CMakePackage):
 
     variant('app', default=False, description='Build all HPC application examples')
 
-    depends_on('mpi')
-    depends_on('cmake@3.3:')
-    depends_on('jq')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('scalapack')
-    depends_on('py-setuptools')
-    depends_on('py-ipyparallel')
-    depends_on('py-pip')
-    depends_on('py-numpy')
-    depends_on('py-pandas')
-    depends_on('py-joblib')
-    depends_on('py-scikit-learn')
-    depends_on('py-matplotlib')
-    depends_on('py-pyyaml')
-    depends_on('py-scikit-optimize@master+gptune')
-    depends_on('py-gpy')
-    depends_on('py-lhsmdu')
-    depends_on('py-hpbandster')
-    depends_on('py-opentuner')
-    depends_on('py-autotune')
-    depends_on('py-filelock')
-    depends_on('py-requests')
-    depends_on('py-cython')
-    depends_on('py-pyaml')
-    depends_on('py-mpi4py@3.0.3:')
-    depends_on('pygmo')
+    depends_on('mpi', type=('build', 'link', 'run'))
+    depends_on('cmake@3.3:', type='build')
+    depends_on('jq', type='run')
+    depends_on('blas', type=('build', 'run'))
+    depends_on('lapack', type=('build', 'run'))
+    depends_on('scalapack', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-ipyparallel', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-joblib', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-scikit-optimize@master+gptune', type=('build', 'run'))
+    depends_on('py-gpy', type=('build', 'run'))
+    depends_on('py-lhsmdu', type=('build', 'run'))
+    depends_on('py-hpbandster', type=('build', 'run'))
+    depends_on('py-opentuner', type=('build', 'run'))
+    depends_on('py-ytopt-autotune@1.1.0', type=('build', 'run'))
+    depends_on('py-filelock', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-pyaml', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.3:', type=('build', 'run'))
+    depends_on('pygmo', type=('build', 'run'))
+    depends_on('openturns', type=('build', 'run'))
 
-    depends_on('superlu-dist@develop', when='+app')
+    depends_on('superlu-dist@develop', when='+app', type=('build', 'run'))
 
-    conflicts('openmpi@:4.0.0')
+    conflicts('openmpi@:3')
 
     def cmake_args(self):
         spec = self.spec
@@ -59,21 +59,14 @@ class Gptune(CMakePackage):
             fc_flags.append('-fallow-argument-mismatch')
         if self.spec.satisfies('%apple-clang@11:'):
             fc_flags.append('-fallow-argument-mismatch')
-        if self.spec.satisfies('%clang@11:'):
-            fc_flags.append('-fallow-argument-mismatch')
 
         args = [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
             libs.joined(";"),
             '-DCMAKE_Fortran_FLAGS=' + ''.join(fc_flags),
             '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_BUILD_TYPE=Release',
         ]
 
         return args
@@ -108,7 +101,6 @@ class Gptune(CMakePackage):
                               work_dir='./superlu_dist/build')
                 self.run_test('cp', options=op, work_dir='./superlu_dist/build/EXAMPLE')
 
-        setupenv = '. $PWD/../../../../../../../share/spack/setup-env.sh\n'
         with working_dir(self.install_test_root, create=False):
             cdir = join_path(self.prefix, 'gptuneclcm')
             self.run_test('cp', options=['-r', cdir, '.'], work_dir='.')
@@ -116,19 +108,7 @@ class Gptune(CMakePackage):
             self.run_test('mv', options=['gptuneclcm', 'build'], work_dir='.')
 
             with open('{0}/run_env.sh'.format(self.install_test_root), 'w') as envfile:
-                envfile.write(setupenv)
-                envfile.write('spack load --only dependencies gptune\n')
-                envfile.write('spack load python\n')
-                envfile.write('spack load py-pip\n')
-                envfile.write('pip install urllib3\n')
-                envfile.write('pip install openturns\n')
-                envfile.write('pip install cloudpickle\n')
-                envfile.write('pip install configspace\n')
-                envfile.write('pip install Pyro4\n')
-                envfile.write('pip install statsmodels\n')
-                envfile.write('if [[ $(hostname -s) = "tr4-workstation" ]]; then\n')
-                envfile.write('    export machine=tr4-workstation\n')
-                envfile.write('elif [[ $NERSC_HOST = "cori" ]]; then\n')
+                envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
                 envfile.write('    export machine=cori\n')
                 envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
                 envfile.write('    export machine=mac\n')
@@ -138,7 +118,7 @@ class Gptune(CMakePackage):
                 envfile.write('elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") ==' +
                               ' *"Ubuntu"* || $(cat /etc/os-release | grep' +
                               ' "PRETTY_NAME") == *"Debian"* ]]; then\n')
-                envfile.write('    export machine=cleanlinux\n')
+                envfile.write('    export machine=unknownlinux\n')
                 envfile.write('fi\n')
                 envfile.write('export GPTUNEROOT=$PWD\n')
                 envfile.write('export MPIRUN={0}\n'.format

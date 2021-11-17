@@ -16,7 +16,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ['e4s']
 
-    maintainers = ['xiaoye', 'balay', 'pghysels', 'liuyangzhuan']
+    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels', 'liuyangzhuan']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -108,7 +108,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
             rocm_archs = spec.variants['amdgpu_target'].value
             if 'none' not in rocm_archs:
-                args.append('-DHIP_HIPCC_FLAGS=-fPIC --amdgpu-target={0}'.
+                args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
                             format(",".join(rocm_archs)))
 
         if '+shared' in spec:

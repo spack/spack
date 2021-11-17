@@ -19,12 +19,10 @@ class Pygmo(CMakePackage):
     version('master', branch='master')
     version('2.18.0', sha256='9f081cc973297894af09f713f889870ac452bfb32b471f9f7ba08a5e0bb9a125')
 
-    depends_on('pagmo2')
-    depends_on('mpi')
-    depends_on('py-pybind11@2.6.0:2.6.2')
+    depends_on('pagmo2', type=('build', 'link'))
+    depends_on('mpi', type='build')
+    depends_on('py-pybind11@2.6.0:2.6.2', type='build')
     depends_on('cmake@3.1:', type='build')
-
-    patch('installdir.patch')
 
     variant('shared', default=True, description='Build shared libraries')
 
@@ -32,9 +30,6 @@ class Pygmo(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
