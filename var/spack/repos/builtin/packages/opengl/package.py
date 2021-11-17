@@ -116,7 +116,9 @@ class Opengl(Package):
 
     def setup_run_environment(self, env):
         if '+glx +glvnd' in self.spec:
-            env.set('__GLX_VENDOR_LIBRARY_NAME', self.spec.extra_attributes['glvnd']['glx'])
+            env.set('__GLX_VENDOR_LIBRARY_NAME',
+                    self.spec.extra_attributes['glvnd']['glx'])
 
         if '+egl +glvnd' in self.spec:
-            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', self.spec.extra_attributes['glvnd']['egl'])
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES',
+                    self.spec.extra_attributes['glvnd']['egl'])
