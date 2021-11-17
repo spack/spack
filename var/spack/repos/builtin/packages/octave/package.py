@@ -46,6 +46,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     # Variants
     variant('readline',   default=True)
+    variant('bz2',        default=True)
     variant('arpack',     default=False)
     variant('curl',       default=False)
     variant('fftw',       default=False)
@@ -74,9 +75,11 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
     depends_on('pkgconfig', type='build')
+    depends_on('texinfo',   type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')
+    depends_on('bzip2',        when='+bz2')
 
     # Optional dependencies
     depends_on('arpack-ng',    when='+arpack')
@@ -181,6 +184,14 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append('--disable-readline')
 
+        if '+bz2' in spec:
+            config_args.extend([
+                "--with-bz2-includedir=%s" % spec['bzip2'].prefix.include,
+                "--with-bz2-libdir=%s"     % spec['bzip2'].prefix.lib
+            ])
+        else:
+            config_args.append("--without-bz2")
+
         # Optional dependencies
         if '+arpack' in spec:
             sa = spec['arpack-ng']
@@ -275,6 +286,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-qrupdate")
 
+        config_args += self.with_or_without("qscintilla")
+
         if '+zlib' in spec:
             config_args.extend([
                 "--with-z-includedir=%s" % spec['zlib'].prefix.include,
@@ -292,6 +305,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         # Use gfortran calling-convention %fj
         if spec.satisfies('%fj'):
             config_args.append('--enable-fortran-calling-convention=gfortran')
+
+        # Make sure we do not use qtchooser
+        config_args.append('ac_cv_prog_ac_ct_QTCHOOSER=')
 
         return config_args
 

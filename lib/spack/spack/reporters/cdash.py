@@ -62,7 +62,6 @@ class CDash(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        tty.set_verbose(args.verbose)
         self.success = True
         self.template_dir = os.path.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url

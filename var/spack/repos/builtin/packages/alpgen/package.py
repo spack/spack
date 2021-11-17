@@ -15,6 +15,9 @@ class Alpgen(MakefilePackage):
     homepage = "http://mlm.home.cern.ch/mlm/alpgen/"
     url      = "http://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
 
+    maintainers = ['iarspider']
+    tags = ['hep']
+
     patch('alpgen-214.patch', when='recipe=cms')
     patch('alpgen-214-Darwin-x86_84-gfortran.patch', when='platform=darwin recipe=cms')
     patch('alpgen-2.1.4-sft.patch', when='recipe=sft', level=0)
@@ -95,6 +98,9 @@ class Alpgen(MakefilePackage):
 
         if self.spec.satisfies('recipe=cms'):
             filter_file('-fno-automatic', '-fno-automatic -std=legacy', 'compile.mk')
+            copy(join_path(os.path.dirname(__file__), 'cms_build.sh'), 'cms_build.sh')
+            copy(join_path(os.path.dirname(__file__), 'cms_install.sh'),
+                 'cms_install.sh')
 
     @when('recipe=cms')
     def cmake(self, spec, prefix):
@@ -113,7 +119,7 @@ class Alpgen(MakefilePackage):
         for root, dirs, files in os.walk(prefix):
             set_install_permissions(root)
             for file in files:
-                set_install_permissions(file)
+                set_install_permissions(join_path(root, file))
 
     @when('recipe=sft')
     def cmake(self, spec, prefix):

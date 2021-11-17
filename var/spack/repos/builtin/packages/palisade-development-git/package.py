@@ -26,10 +26,10 @@ class PalisadeDevelopmentGit(CMakePackage):
 
     homepage = "https://gitlab.com/palisade/palisade-development"
     git      = "https://gitlab.com/palisade/palisade-development.git"
-
     maintainers = ['wohlbier']
 
-    version('bgv-encoding', branch='bgv-encoding')
+    version('feature-fixed-point-encoding',
+            branch='feature-fixed-point-encoding')
     version('master', branch='master', preferred=True)
 
     variant('shared', default=True, description='Build shared library.')

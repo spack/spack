@@ -147,6 +147,7 @@ class Sirius(CMakePackage, CudaPackage):
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
     patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
+    patch("mpi_datatypes.patch", when="@:7.2.6")
 
     @property
     def libs(self):

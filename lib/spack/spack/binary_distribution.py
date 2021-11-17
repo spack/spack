@@ -241,11 +241,16 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
+        return self.find_by_hash(spec.dag_hash())
 
-        find_hash = spec.dag_hash()
+    def find_by_hash(self, find_hash):
+        """Same as find_built_spec but uses the hash of a spec.
+
+        Args:
+            find_hash (str): hash of the spec to search
+        """
         if find_hash not in self._mirrors_for_spec:
             return None
-
         return self._mirrors_for_spec[find_hash]
 
     def update_spec(self, spec, found_list):

@@ -23,3 +23,10 @@ class G2(CMakePackage):
 
     depends_on('jasper')
     depends_on('libpng')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', 'd'):
+            lib = find_libraries('libg2_' + suffix, root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('G2_LIB' + suffix, lib[0])
+            env.set('G2_INC' + suffix, join_path(self.prefix, 'include_' + suffix))

@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import operator
 import os
 import os.path
 import pstats
@@ -187,6 +188,10 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         if chars:
             usage = '[-%s] %s' % (chars, usage)
         return usage.strip()
+
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=operator.attrgetter('option_strings'))
+        super(SpackHelpFormatter, self).add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -486,8 +491,9 @@ def setup_main_options(args):
 
     # override lock configuration if passed on command line
     if args.locks is not None:
-        spack.util.lock.check_lock_safety(spack.paths.prefix)
-        spack.config.set('config:locks', False, scope='command_line')
+        if args.locks is False:
+            spack.util.lock.check_lock_safety(spack.paths.prefix)
+        spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
         rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
@@ -873,7 +879,7 @@ def main(argv=None):
 
     """
     try:
-        _main(argv)
+        return _main(argv)
 
     except SpackError as e:
         tty.debug(e)

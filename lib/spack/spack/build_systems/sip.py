@@ -5,6 +5,7 @@
 
 import inspect
 import os
+import re
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
@@ -81,6 +82,8 @@ class SIPPackage(PackageBase):
             modules.append(path.replace(root + os.sep, '', 1).replace(
                 '.py', '').replace('/', '.'))
 
+        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
+
         tty.debug('Detected the following modules: {0}'.format(modules))
 
         return modules
@@ -99,7 +102,9 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
+        python_include_dir = os.path.basename(
+            inspect.getmodule(self).python_include_dir
+        )
 
         args.extend([
             '--verbose',

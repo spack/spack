@@ -18,3 +18,10 @@ class Sigio(CMakePackage):
     maintainers = ['t-brown', 'kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
     version('2.3.2', sha256='333f3cf3a97f97103cbafcafc2ad89b24faa55b1332a98adc1637855e8a5b613')
+
+    def setup_run_environment(self, env):
+        lib = find_libraries('libsigio', root=self.prefix, shared=False, recursive=True)
+        # Only one library version, but still need to set _4 to make NCO happy
+        for suffix in ('4', ''):
+            env.set('SIGIO_LIB' + suffix, lib[0])
+            env.set('SIGIO_INC' + suffix, join_path(self.prefix, 'include'))
