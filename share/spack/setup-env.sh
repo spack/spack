@@ -136,7 +136,8 @@ _spack_shell_wrapper() {
                             command spack env activate "$@"
                         else
                             # Actual call to activate: source the output.
-                            eval $(command spack $_sp_flags env activate --sh "$@")
+                            stdout="$(command spack $_sp_flags env activate --sh "$@")" || return
+                            eval "$stdout"
                         fi
                         ;;
                     deactivate)
@@ -157,7 +158,8 @@ _spack_shell_wrapper() {
                             command spack env deactivate -h
                         else
                             # No args: source the output of the command.
-                            eval $(command spack $_sp_flags env deactivate --sh)
+                            stdout="$(command spack $_sp_flags env deactivate --sh)" || return
+                            eval "$stdout"
                         fi
                         ;;
                     *)
@@ -178,13 +180,14 @@ _spack_shell_wrapper() {
             if [ "${_a#* --sh}" != "$_a" ] || \
                 [ "${_a#* --csh}" != "$_a" ] || \
                 [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --list}" != "$_a" ] || \
                 [ "${_a#* --help}" != "$_a" ];
             then
                 # Args contain --sh, --csh, or -h/--help: just execute.
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
-                    echo "return 1")  # return 1 if spack command fails
+                stdout="$(command spack $_sp_flags $_sp_subcommand --sh "$@")" || return
+                eval "$stdout"
             fi
             ;;
         *)
@@ -363,7 +366,8 @@ if [ -z "${SPACK_SKIP_MODULES+x}" ]; then
             _spack_pathadd PATH "${_sp_module_bin}"
         fi;
     else
-        eval `spack --print-shell-vars sh`
+        stdout="$(command spack --print-shell-vars sh)" || return
+        eval "$stdout"
     fi;
 
 

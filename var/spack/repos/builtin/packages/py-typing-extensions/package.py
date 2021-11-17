@@ -15,6 +15,7 @@ class PyTypingExtensions(PythonPackage):
     homepage = "https://github.com/python/typing/tree/master/typing_extensions"
     pypi = "typing_extensions/typing_extensions-3.7.4.tar.gz"
 
+    version('3.10.0.2', sha256='49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e')
     version('3.10.0.0', sha256='50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342')
     version('3.7.4.3', sha256='99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c')
     version('3.7.4', sha256='2ed632b30bb54fc3941c382decfd0ee4148f5c591651c9272473fea2c6397d95')

@@ -13,6 +13,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.error
+import spack.paths
 import spack.util.prefix
 import spack.util.spack_json as sjson
 from spack.spec import Spec
@@ -41,7 +42,8 @@ def get_escaped_text_output(filename):
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', '~/.spack/test'))
+        spack.config.get('config:test_stage', spack.paths.default_test_path)
+    )
 
 
 def get_all_test_suites():

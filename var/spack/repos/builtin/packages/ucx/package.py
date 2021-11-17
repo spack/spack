@@ -65,6 +65,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable XPMEM support')
     variant('cma', default=False,
             description="Enable Cross Memory Attach")
+    variant('rocm', default=False,
+            description="Enable ROCm support")
     variant('rc', default=False,
             description="Compile with IB Reliable Connection support")
     variant('dc', default=False,
@@ -89,6 +91,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('gdrcopy@1.3', when='@:1.6+gdrcopy')
     conflicts('+gdrcopy', when='~cuda',
               msg='gdrcopy currently requires cuda support')
+    conflicts('+rocm', when='+gdrcopy',
+              msg='gdrcopy > 2.0 does not support rocm')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
     depends_on('binutils+ld', when='%aocc', type='build')
@@ -136,6 +140,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         config_args.extend(self.with_or_without('ib-hw-tm'))
         config_args.extend(self.with_or_without('dm'))
         config_args.extend(self.with_or_without('cm'))
+        config_args.extend(self.with_or_without('rocm'))
         config_args.extend(self.with_or_without('java',
                                                 activation_value='prefix'))
         config_args.extend(self.with_or_without('cuda',
