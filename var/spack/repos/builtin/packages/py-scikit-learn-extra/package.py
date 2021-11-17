@@ -21,6 +21,7 @@ class PyScikitLearnExtra(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython@0.28.5:', type='build')
     depends_on('py-numpy@1.13.3:', type=('build', 'run'))
     depends_on('py-scipy@0.19.1:', type=('build', 'run'))
     depends_on('py-scikit-learn@0.23:', type=('build', 'run'))
