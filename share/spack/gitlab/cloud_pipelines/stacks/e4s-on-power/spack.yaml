@@ -119,7 +119,7 @@ spack:
     - libnrm
     - libquo
     - libunwind
-    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +build_llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
