@@ -112,7 +112,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Variants that affect the core Acts library
     variant('benchmarks', default=False, description='Build the performance benchmarks', when='@0.16:')
-    variant('examples', default=False, description='Build the examples', when='@:0.23: +digitization +fatras +identification +json +tgeo')
+    variant('examples', default=False, description='Build the examples', when='@0.23: +digitization +fatras +identification +json +tgeo')
     variant('integration_tests', default=False, description='Build the integration tests')
     variant('unit_tests', default=False, description='Build the unit tests')
     variant('log_failure_threshold', default='MAX', description='Log level above which examples should auto-crash')
