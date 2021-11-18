@@ -32,7 +32,8 @@ class Rccl(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:')
+    patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:4.3.2')
+    patch('0002-Fix-numactl-rocm-smi-path-issue.patch', when='@4.5.0:')
 
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
@@ -62,4 +63,6 @@ class Rccl(CMakePackage):
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
+        if self.spec.satisfies('@4.5.0:'):
+            args.append(self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix))
         return args
