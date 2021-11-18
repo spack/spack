@@ -1009,7 +1009,7 @@ add something like the following to your ``packages`` configuration:
     packages:
       opengl:
         externals:
-        - spec: opengl@4.5:
+        - spec: opengl@4.6:
           prefix: /
         buildable: false
 
@@ -1039,34 +1039,27 @@ applications.  For correct operation, the Spack package for the underlying
 implementation has to set the runtime environment to ensure that it is loaded
 when an application linked against libglvnd runs.  This last detail is
 important for users who want to set up an external OpenGL implementation that
-requires libglvnd to work.  This setup requires modifying the ``modules``
-configuration so that modules generated for the external OpenGL implementation
-set the necessary environment variables.
+requires libglvnd to work.  This setup requires modifying the ``packages``
+configuration so that the necessary environment variables are set.
 
 .. code-block:: yaml
 
     packages:
       opengl:
         externals:
-        - spec: opengl@4.5:
-          prefix: /
-        - spec: opengl+glx+glvnd@4.5:
+        - spec: opengl@4.6+glx+egl+glvnd
           prefix: /does/not/exist
+          extra_attributes: 
+            glvnd:
+              glx: 'glx_driver_name'
+              egl: '/path/to/egl/vendor'
         buildable: false
-        variants: +glx+glvnd
+        variants: +egl+glx+glvnd
       all:
         providers:
           libglvnd-be-gl: [opengl+glvnd]
           libglvnd-be-glx: [opengl+glx+glvnd]
-      
-.. code-block:: yaml
-
-    modules:
-      tcl:
-        opengl@4.5+glx+glvnd:
-          environment:
-            set:
-              __GLX_VENDOR_LIBRARY_NAME: nvidia
+          libglvnd-be-egl: [opengl+egl+glvnd]
 
 One final detail about the above example is that it avoids setting the true
 root of the external OpenGL implementation, instead opting to set it to a path
@@ -1078,7 +1071,7 @@ those packages from installing successfully, and this risk is especially great
 for paths that house many libraries and applications, like ``/usr``.  Second,
 providing the true root of the external implementation in the ``packages``
 configuration is not necessary because libglvnd need only the environment
-variables set above in the ``modules`` configuration to determine what OpenGL
+variables set above in the ``packages`` configuration to determine what OpenGL
 implementation to dispatch calls to at run time.
 
 ^^^

@@ -283,27 +283,18 @@ class Mesa(MesonPackage):
 
     @property
     def glx_libs(self):
-        if '+glvnd' in self.spec:
-            return LibraryList(())
-
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
 
     @property
     def egl_libs(self):
-        if '+glvnd' in self.spec:
-            return LibraryList(())
-
         return find_libraries('libEGL',
                               root=self.spec.prefix,
                               recursive=True)
 
     @property
     def gl_libs(self):
-        if '+glvnd' in self.spec:
-            return LibraryList(())
-
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
