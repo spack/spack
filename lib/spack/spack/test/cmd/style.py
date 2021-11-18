@@ -24,8 +24,19 @@ style_data = os.path.join(spack.paths.test_path, 'data', 'style')
 
 style = spack.main.SpackCommand("style")
 
+
+def has_develop_branch():
+    git = which('git')
+    if not git:
+        return False
+    git("show-ref", "--verify", "--quiet",
+        "refs/heads/develop", fail_on_error=False)
+    return git.returncode == 0
+
+
 # spack style requires git to run -- skip the tests if it's not there
-pytestmark = pytest.mark.skipif(not which('git'), reason='requires git')
+pytestmark = pytest.mark.skipif(not has_develop_branch(),
+                                reason='requires git with develop branch')
 
 # The style tools have requirements to use newer Python versions.  We simplify by
 # requiring Python 3.6 or higher to run spack style.
