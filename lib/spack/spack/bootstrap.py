@@ -13,6 +13,8 @@ import os.path
 import re
 import sys
 
+import six
+
 try:
     import sysconfig  # novm
 except ImportError:
@@ -38,7 +40,6 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.path
-from spack.util.environment import EnvironmentModifications
 
 #: "spack buildcache" command, initialized lazily
 _buildcache_cmd = None
@@ -60,29 +61,39 @@ def _bootstrapper(type):
     return _register
 
 
-def _try_import_from_store(module, abstract_spec_str):
+def _try_import_from_store(module, query_spec, query_info=None):
     """Return True if the module can be imported from an already
     installed spec, False otherwise.
 
     Args:
         module: Python module to be imported
-        abstract_spec_str: abstract spec that may provide the module
+        query_spec: spec that may provide the module
+        query_info (dict or None): if a dict is passed it is populated with the
+            command found and the concrete spec providing it
     """
-    bincache_platform = spack.platforms.real_host()
-    if str(bincache_platform) == 'cray':
-        bincache_platform = spack.platforms.linux.Linux()
-        with spack.platforms.use_platform(bincache_platform):
-            abstract_spec_str = str(spack.spec.Spec(abstract_spec_str))
+    # If it is a string assume it's one of the root specs by this module
+    if isinstance(query_spec, six.string_types):
+        bincache_platform = spack.platforms.real_host()
+        if str(bincache_platform) == 'cray':
+            bincache_platform = spack.platforms.linux.Linux()
+            with spack.platforms.use_platform(bincache_platform):
+                query_spec = str(spack.spec.Spec(query_spec))
 
-    # We have to run as part of this python interpreter
-    abstract_spec_str += ' ^' + spec_for_current_python()
+        # We have to run as part of this python interpreter
+        query_spec += ' ^' + spec_for_current_python()
 
-    installed_specs = spack.store.db.query(abstract_spec_str, installed=True)
+    installed_specs = spack.store.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        lib_spd = candidate_spec['python'].package.default_site_packages_dir
+        python_spec = candidate_spec['python']
+        lib_spd = python_spec.package.default_site_packages_dir
         lib64_spd = lib_spd.replace('lib/', 'lib64/')
+        lib_debian_derivative = os.path.join(
+            'lib', 'python{0}'.format(python_spec.version.up_to(1)), 'dist-packages'
+        )
+
         module_paths = [
+            os.path.join(candidate_spec.prefix, lib_debian_derivative),
             os.path.join(candidate_spec.prefix, lib_spd),
             os.path.join(candidate_spec.prefix, lib64_spd)
         ]
@@ -93,9 +104,11 @@ def _try_import_from_store(module, abstract_spec_str):
             if _python_import(module):
                 msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
                        'provides the "{0}" Python module').format(
-                    module, abstract_spec_str, candidate_spec.dag_hash()
+                    module, query_spec, candidate_spec.dag_hash()
                 )
                 tty.debug(msg)
+                if query_info is not None:
+                    query_info['spec'] = candidate_spec
                 return True
         except Exception as e:
             msg = ('unexpected error while trying to import module '
@@ -105,7 +118,7 @@ def _try_import_from_store(module, abstract_spec_str):
             msg = "Spec {0} did not provide module {1}"
             tty.warn(msg.format(candidate_spec, module))
 
-        sys.path = sys.path[:-2]
+        sys.path = sys.path[:-3]
 
     return False
 
@@ -175,7 +188,7 @@ def _fix_ext_suffix(candidate_spec):
         os.symlink(abs_path, link_name)
 
 
-def _executables_in_store(executables, abstract_spec_str):
+def _executables_in_store(executables, query_spec, query_info=None):
     """Return True if at least one of the executables can be retrieved from
     a spec in store, False otherwise.
 
@@ -185,12 +198,14 @@ def _executables_in_store(executables, abstract_spec_str):
 
     Args:
         executables: list of executables to be searched
-        abstract_spec_str: abstract spec that may provide the executable
+        query_spec: spec that may provide the executable
+        query_info (dict or None): if a dict is passed it is populated with the
+            command found and the concrete spec providing it
     """
     executables_str = ', '.join(executables)
     msg = "[BOOTSTRAP EXECUTABLES {0}] Try installed specs with query '{1}'"
-    tty.debug(msg.format(executables_str, abstract_spec_str))
-    installed_specs = spack.store.db.query(abstract_spec_str, installed=True)
+    tty.debug(msg.format(executables_str, query_spec))
+    installed_specs = spack.store.db.query(query_spec, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
             bin_dir = concrete_spec.prefix.bin
@@ -199,6 +214,11 @@ def _executables_in_store(executables, abstract_spec_str):
             if (os.path.exists(bin_dir) and os.path.isdir(bin_dir) and
                     spack.util.executable.which_string(*executables, path=bin_dir)):
                 spack.util.environment.path_put_first('PATH', [bin_dir])
+                if query_info is not None:
+                    query_info['command'] = spack.util.executable.which(
+                        *executables, path=bin_dir
+                    )
+                    query_info['spec'] = concrete_spec
                 return True
     return False
 
@@ -209,6 +229,7 @@ class _BuildcacheBootstrapper(object):
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+        self.last_search = None
 
     @staticmethod
     def _spec_and_platform(abstract_spec_str):
@@ -304,7 +325,9 @@ class _BuildcacheBootstrapper(object):
                         pkg_hash, pkg_sha256, index, bincache_platform
                     )
 
-                if test_fn():
+                info = {}
+                if test_fn(query_spec=abstract_spec, query_info=info):
+                    self.last_search = info
                     return True
         return False
 
@@ -315,8 +338,8 @@ class _BuildcacheBootstrapper(object):
         )
 
     def try_import(self, module, abstract_spec_str):
-        test_fn = functools.partial(_try_import_from_store, module, abstract_spec_str)
-        if test_fn():
+        test_fn, info = functools.partial(_try_import_from_store, module), {}
+        if test_fn(query_spec=abstract_spec_str, query_info=info):
             return True
 
         tty.info("Bootstrapping {0} from pre-built binaries".format(module))
@@ -329,15 +352,12 @@ class _BuildcacheBootstrapper(object):
         )
 
     def try_search_path(self, executables, abstract_spec_str):
-        test_fn = functools.partial(
-            _executables_in_store, executables, abstract_spec_str
-        )
-        if test_fn():
+        test_fn, info = functools.partial(_executables_in_store, executables), {}
+        if test_fn(query_spec=abstract_spec_str, query_info=info):
+            self.last_search = info
             return True
 
-        abstract_spec, bincache_platform = self._spec_and_platform(
-            abstract_spec_str
-        )
+        abstract_spec, bincache_platform = self._spec_and_platform(abstract_spec_str)
         tty.info("Bootstrapping {0} from pre-built binaries".format(abstract_spec.name))
         data = self._read_metadata(abstract_spec.name)
         return self._install_and_test(
@@ -350,10 +370,12 @@ class _SourceBootstrapper(object):
     """Install the software needed during bootstrapping from sources."""
     def __init__(self, conf):
         self.conf = conf
+        self.last_search = None
 
-    @staticmethod
-    def try_import(module, abstract_spec_str):
-        if _try_import_from_store(module, abstract_spec_str):
+    def try_import(self, module, abstract_spec_str):
+        info = {}
+        if _try_import_from_store(module, abstract_spec_str, query_info=info):
+            self.last_search = info
             return True
 
         tty.info("Bootstrapping {0} from sources".format(module))
@@ -384,10 +406,15 @@ class _SourceBootstrapper(object):
         # Install the spec that should make the module importable
         concrete_spec.package.do_install(fail_fast=True)
 
-        return _try_import_from_store(module, abstract_spec_str=abstract_spec_str)
+        if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
+            self.last_search = info
+            return True
+        return False
 
     def try_search_path(self, executables, abstract_spec_str):
-        if _executables_in_store(executables, abstract_spec_str):
+        info = {}
+        if _executables_in_store(executables, abstract_spec_str, query_info=info):
+            self.last_search = info
             return True
 
         # If we compile code from sources detecting a few build tools
@@ -404,7 +431,11 @@ class _SourceBootstrapper(object):
         msg = "[BOOTSTRAP GnuPG] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         concrete_spec.package.do_install()
-        return _executables_in_store(executables, abstract_spec_str)
+        print('Here')
+        if _executables_in_store(executables, concrete_spec, query_info=info):
+            self.last_search = info
+            return True
+        return False
 
 
 def _make_bootstrapper(conf):
@@ -527,9 +558,13 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
 
     Raises:
         RuntimeError: if the executables cannot be ensured to be in PATH
+
+    Return:
+        Executable object
     """
-    if spack.util.executable.which_string(*executables):
-        return
+    cmd = spack.util.executable.which(*executables)
+    if cmd:
+        return cmd
 
     executables_str = ', '.join(executables)
     source_configs = spack.config.get('bootstrap:sources', [])
@@ -543,7 +578,17 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
         b = _make_bootstrapper(current_config)
         try:
             if b.try_search_path(executables, abstract_spec):
-                return
+                # Additional environment variables needed
+                concrete_spec, cmd = b.last_search['spec'], b.last_search['command']
+                env_mods = spack.util.environment.EnvironmentModifications()
+                for dep in concrete_spec.traverse(
+                        root=True, order='post', deptype=('link', 'run')
+                ):
+                    env_mods.extend(
+                        spack.user_environment.environment_modifications_for_spec(dep)
+                    )
+                cmd.add_default_envmod(env_mods)
+                return cmd
         except Exception as e:
             msg = '[BOOTSTRAP EXECUTABLES {0}] Unexpected error "{1}"'
             tty.debug(msg.format(executables_str, str(e)))
@@ -561,75 +606,6 @@ def _python_import(module):
     except ImportError:
         return False
     return True
-
-
-def get_executable(exe, spec=None, install=False):
-    """Find an executable named exe, either in PATH or in Spack
-
-    Args:
-        exe (str): needed executable name
-        spec (spack.spec.Spec or str): spec to search for exe in (default exe)
-        install (bool): install spec if not available
-
-    When ``install`` is True, Spack will use the python used to run Spack as an
-    external. The ``install`` option should only be used with packages that
-    install quickly (when using external python) or are guaranteed by Spack
-    organization to be in a binary mirror (clingo).
-    """
-    # Search the system first
-    runner = spack.util.executable.which(exe)
-    if runner:
-        return runner
-
-    # Check whether it's already installed
-    spec = spack.spec.Spec(spec or exe)
-    installed_specs = spack.store.db.query(spec, installed=True)
-    for ispec in installed_specs:
-        # filter out directories of the same name as the executable
-        exe_path = [exe_p for exe_p in fs.find(ispec.prefix, exe)
-                    if fs.is_exe(exe_p)]
-        if exe_path:
-            ret = spack.util.executable.Executable(exe_path[0])
-            envmod = EnvironmentModifications()
-            for dep in ispec.traverse(root=True, order='post'):
-                envmod.extend(
-                    spack.user_environment.environment_modifications_for_spec(dep)
-                )
-            ret.add_default_envmod(envmod)
-            return ret
-        else:
-            tty.warn('Exe %s not found in prefix %s' % (exe, ispec.prefix))
-
-    def _raise_error(executable, exe_spec):
-        error_msg = 'cannot find the executable "{0}"'.format(executable)
-        if exe_spec:
-            error_msg += ' from spec "{0}'.format(exe_spec)
-        raise RuntimeError(error_msg)
-
-    # If we're not allowed to install this for ourselves, we can't find it
-    if not install:
-        _raise_error(exe, spec)
-
-    with spack_python_interpreter():
-        # We will install for ourselves, using this python if needed
-        # Concretize the spec
-        spec.concretize()
-
-    spec.package.do_install()
-    # filter out directories of the same name as the executable
-    exe_path = [exe_p for exe_p in fs.find(spec.prefix, exe)
-                if fs.is_exe(exe_p)]
-    if exe_path:
-        ret = spack.util.executable.Executable(exe_path[0])
-        envmod = EnvironmentModifications()
-        for dep in spec.traverse(root=True, order='post'):
-            envmod.extend(
-                spack.user_environment.environment_modifications_for_spec(dep)
-            )
-        ret.add_default_envmod(envmod)
-        return ret
-
-    _raise_error(exe, spec)
 
 
 def _bootstrap_config_scopes():
@@ -784,5 +760,49 @@ def gnupg_root_spec():
 def ensure_gpg_in_path_or_raise():
     """Ensure gpg or gpg2 are in the PATH or raise."""
     ensure_executables_in_path_or_raise(
-        executables=['gpg2', 'gpg'], abstract_spec=gnupg_root_spec(),
+        executables=['gpg2', 'gpg'], abstract_spec=gnupg_root_spec()
     )
+
+###
+# Development dependencies
+###
+
+
+def isort_root_spec():
+    return _root_spec('py-isort@4.3.5:')
+
+
+def ensure_isort_in_path_or_raise():
+    """Ensure that isort is in the PATH or raise."""
+    executable, root_spec = 'isort', isort_root_spec()
+    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+
+
+def mypy_root_spec():
+    return _root_spec('py-mypy@0.900:')
+
+
+def ensure_mypy_in_path_or_raise():
+    """Ensure that mypy is in the PATH or raise."""
+    executable, root_spec = 'mypy', mypy_root_spec()
+    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+
+
+def black_root_spec():
+    return _root_spec('py-black')
+
+
+def ensure_black_in_path_or_raise():
+    """Ensure that isort is in the PATH or raise."""
+    executable, root_spec = 'black', black_root_spec()
+    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+
+
+def flake8_root_spec():
+    return _root_spec('py-flake8')
+
+
+def ensure_flake8_in_path_or_raise():
+    """Ensure that flake8 is in the PATH or raise."""
+    executable, root_spec = 'flake8', flake8_root_spec()
+    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)

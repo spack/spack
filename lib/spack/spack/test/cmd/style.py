@@ -41,7 +41,8 @@ pytestmark = pytest.mark.skipif(not has_develop_branch(),
 # The style tools have requirements to use newer Python versions.  We simplify by
 # requiring Python 3.6 or higher to run spack style.
 skip_old_python = pytest.mark.skipif(
-    sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
+    sys.version_info < (3, 6), reason='requires Python 3.6 or higher'
+)
 
 
 @pytest.fixture(scope="function")
@@ -162,18 +163,6 @@ def test_style_is_package(tmpdir):
     )
     assert not spack.cmd.style.is_package("lib/spack/spack/spec.py")
     assert not spack.cmd.style.is_package("lib/spack/external/pytest.py")
-
-
-@skip_old_python
-def test_bad_bootstrap(monkeypatch):
-    """Ensure we fail gracefully when we can't bootstrap spack style."""
-    monkeypatch.setattr(spack.cmd.style, "tool_order", [
-        ("isort", "py-isort@4.3:4.0"),  # bad spec to force concretization failure
-    ])
-    # zero out path to ensure we don't find isort
-    with pytest.raises(spack.error.SpackError) as e:
-        style(env={"PATH": ""})
-        assert "Couldn't bootstrap isort" in str(e)
 
 
 @pytest.fixture
