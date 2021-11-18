@@ -26,12 +26,10 @@ class PyHpbandster(PythonPackage):
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-configspace', type=('build', 'run'))
-    depends_on('py-cloudpickle', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-statsmodels', type=('build', 'run'))
-    depends_on('py-urllib3', type=('build', 'run'))
     depends_on('py-netifaces', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-sergent', type=('build', 'run'))
+    depends_on('py-serpent', type=('build', 'run'))
     depends_on('py-pyro4', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
