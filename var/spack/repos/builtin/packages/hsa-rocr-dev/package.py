@@ -45,7 +45,7 @@ class HsaRocrDev(CMakePackage):
     depends_on('libelf@0.8:', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0' , 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)

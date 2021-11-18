@@ -98,7 +98,7 @@ class HipRocclr(CMakePackage):
     @property
     def install_targets(self):
         if self.spec.satisfies('@4.5.0'):
-            return [ ]
+            return []
         return ['install']
 
     @run_after('install')

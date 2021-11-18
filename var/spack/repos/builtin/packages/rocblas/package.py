@@ -27,8 +27,9 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
-    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
-                            'gfx90a:xnack+', 'gfx90a:xnack-', 'gfx1010', 'gfx1011',
+    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900',
+                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
+                            'gfx90a:xnack-', 'gfx1010', 'gfx1011',
                             'gfx1012', 'gfx1030')
 
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)

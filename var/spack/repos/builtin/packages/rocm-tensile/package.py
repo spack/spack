@@ -54,7 +54,6 @@ class RocmTensile(CMakePackage):
     for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
-
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.

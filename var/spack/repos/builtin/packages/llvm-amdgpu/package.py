@@ -97,18 +97,12 @@ class LlvmAmdgpu(CMakePackage):
             'clang-tools-extra',
             'compiler-rt'
         ]
-        #add libcxx,libcxxabi as part of runtimes for 4.5.0
-        runtimes = []
         args = []
         if self.spec.satisfies('@4.3.0:4.5.0'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
-        #if self.spec.satisfies('@4.5.0:'):
-        #    runtimes.append('libcxx')
-        #    runtimes.append('libcxxabi')
-
-        args = [
+            args = [
                 self.define('LIBCXX_ENABLE_SHARED', 'OFF'),
                 self.define('LIBCXX_ENABLE_STATIC', 'ON'),
                 self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
@@ -119,7 +113,7 @@ class LlvmAmdgpu(CMakePackage):
                 self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF'),
                 self.define('LLLVM_ENABLE_ZLIB', 'ON'),
                 self.define('CLANG_DEFAULT_LINKER', 'lld'),
-        ]
+            ]
 
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
@@ -127,7 +121,6 @@ class LlvmAmdgpu(CMakePackage):
         args.extend([self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))])
 
         if self.spec.satisfies('@4.5.0:'):
-            #args.extend([self.define('LLVM_ENABLE_RUNTIMES', ';'.join(runtimes))])
             args.extend([self.define('PACKAGE_VENDOR', 'AMD')])
 
         # Enable rocm-device-libs as a external project
@@ -157,18 +150,19 @@ class LlvmAmdgpu(CMakePackage):
 
     @run_after("install")
     def post_install(self):
-        #LLVM_ENABLE_RUNTIMES for libcxx,libcxxabi did not build.
+        # TODO:Enabling LLVM_ENABLE_RUNTIMES for libcxx,libcxxabi did not build.
+        # bootstraping the libcxx with the just built clang
         if self.spec.satisfies('@4.5.0:'):
             spec = self.spec
             define = CMakePackage.define
             libcxxdir = "build-bootstrapped-libcxx"
             with working_dir(libcxxdir, create=True):
-                 cmake_args = [
-                     self.stage.source_path + "/libcxx",
-                     define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
-                     define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
-                     define("CMAKE_INSTALL_PREFIX", spec.prefix),
-                 ]
-                 cmake_args.extend(self.cmake_args())
-                 cmake(*cmake_args)
-                 make()
+                cmake_args = [
+                    self.stage.source_path + "/libcxx",
+                    define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
+                    define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
+                    define("CMAKE_INSTALL_PREFIX", spec.prefix),
+                ]
+                cmake_args.extend(self.cmake_args())
+                cmake(*cmake_args)
+                make()

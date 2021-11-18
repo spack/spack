@@ -40,7 +40,7 @@ class Hip(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver )
+        depends_on('hip-rocclr@' + ver, when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
@@ -54,7 +54,7 @@ class Hip(CMakePackage):
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
     depends_on('numactl', when='@3.7.0:')
 
-    #Add hip-amd sources thru the below
+    # Add hip-amd sources thru the below
     for d_version, d_shasum in [
         ('4.5.0', '7b93ab64d6894ff9b5ba0be35e3ed8501d6b18a2a14223d6311d72ab8a9cdba6')
     ]:
@@ -310,9 +310,9 @@ class Hip(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define('PROF_API_HEADER_PATH',
-                join_path(self.spec['roctracer-dev-api'].prefix,
-                'roctracer', 'inc', 'ext')),
+            self.define('PROF_API_HEADER_PATH', join_path(
+                        self.spec['roctracer-dev-api'].prefix,
+                        'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
@@ -327,13 +327,11 @@ class Hip(CMakePackage):
         if '@3.5.0:4.3.2' in self.spec:
             args.append(self.define('LIBROCclr_STATIC_DIR',
                         self.spec['hip-rocclr'].prefix.lib))
-            args.append(self.define('PROF_API_HEADER_PATH',
-                join_path(self.spec['roctracer-dev-api'].prefix,
-                'roctracer', 'inc', 'ext')))
         if '@4.5.0' in self.spec:
             args.append(self.define('HIP_COMMON_DIR', self.stage.source_path))
             args.append(self.define('HIP_CATCH_TEST', 'OFF'))
-            args.append(self.define('ROCCLR_PATH', self.stage.source_path+'/rocclr'))
-            args.append(self.define('AMD_OPENCL_PATH', self.stage.source_path+'/opencl'))
+            args.append(self.define('ROCCLR_PATH', self.stage.source_path + '/rocclr'))
+            args.append(self.define('AMD_OPENCL_PATH',
+                                    self.stage.source_path + '/opencl'))
 
         return args

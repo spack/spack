@@ -61,13 +61,13 @@ class RoctracerDev(CMakePackage):
             python = self.spec['python'].command.path
             substitute = "#!{python}".format(python=python)
             if self.spec.satisfies('@:4.3.2'):
-                 files = [
-                     'check_trace.py', 'gen_ostream_ops.py', 'hsaap.py', 'kfdap.py'
-                 ]
+                files = [
+                    'check_trace.py', 'gen_ostream_ops.py', 'hsaap.py', 'kfdap.py'
+                ]
             else:
-                 files = [
-                     'check_trace.py', 'gen_ostream_ops.py', 'hsaap.py'
-                 ]
+                files = [
+                    'check_trace.py', 'gen_ostream_ops.py', 'hsaap.py'
+                ]
             filter_file(match, substitute, *files, **kwargs)
 
     def cmake_args(self):

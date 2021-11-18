@@ -41,7 +41,7 @@ class RocmDeviceLibs(CMakePackage):
     depends_on('llvm-amdgpu ~rocm-device-libs')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0' , 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,              when='@' + ver)
 
