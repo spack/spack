@@ -281,7 +281,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         cmake_bin = self.cmake_bin(set=False)
 
         args = []
-        args.append('-S ./cache/amrex/Tests/SpackSmokeTest')
+        args.append('-S./cache/amrex/Tests/SpackSmokeTest')
         args.append('-DAMReX_ROOT=' + self.prefix)
         args.extend(self.cmake_args())
         self.run_test(cmake_bin,
