@@ -318,7 +318,7 @@ class Paraview(CMakePackage, CudaPackage):
             if spec.satisfies('@5.8:'):
                 cmake_args.extend([
                     '-DPARAVIEW_BUILD_EDITION:STRING=%s' %
-                    spec.variants['build_edition'].value,
+                    spec.variants['build_edition'].value.upper(),
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
                 if spec.satisfies('%cce'):
