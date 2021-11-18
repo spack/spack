@@ -45,8 +45,13 @@ class Xgboost(CMakePackage, CudaPackage):
         args = [
             self.define_from_variant('USE_CUDA', 'cuda'),
             self.define_from_variant('USE_NCCL', 'nccl'),
-            self.define_from_variant('USE_OPENMP', 'openmp'),
         ]
+        # disable openmp when using clang
+        # cmake file does not detect openmp correctly for clang
+        if not self.spec.satisfies('%clang'):
+            args.append(self.define_from_variant('USE_OPENMP', 'openmp'))
+        else:
+            args.append('-DUSE_OPENMP=False')
 
         if '+cuda' in self.spec and 'cuda_arch=none' not in self.spec:
             args.append(self.define(
