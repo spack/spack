@@ -15,7 +15,7 @@ class PyScikitOptimize(PythonPackage):
        The library is built on top of NumPy, SciPy and Scikit-Learn."""
 
     homepage = "https://scikit-optimize.github.io"
-    pypi = "scikit-optimize/scikit-optimize-0.9.0.tar.gz"
+    pypi = "scikit-optimize/scikit-optimize-0.5.2.tar.gz"
     git      = "https://github.com/scikit-optimize/scikit-optimize.git"
 
     maintainers = ['liuyangzhuan']
