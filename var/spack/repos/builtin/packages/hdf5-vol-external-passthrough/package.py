@@ -17,7 +17,6 @@ class Hdf5VolExternalPassthrough(CMakePackage):
     depends_on('hdf5@develop-1.13')
 
     def cmake_args(self):
-        """Populate cmake arguments for HDF5 DAOS."""
         args = [
             self.define('BUILD_SHARED_LIBS:BOOL', True),
             self.define('BUILD_TESTING:BOOL=ON', self.run_tests)
