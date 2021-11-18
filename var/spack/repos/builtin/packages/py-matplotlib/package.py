@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 
@@ -96,12 +97,17 @@ class PyMatplotlib(PythonPackage):
     depends_on('libpng@1.2:')
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type='build')
+    depends_on('py-setuptools-scm@4:', when='@3.5:', type='build')
+    depends_on('py-setuptools-scm-git-archive', when='@3.5:', type='build')
+    depends_on('py-cycler@0.10:', type=('build', 'run'))
+    depends_on('py-fonttools@4.22:', when='@3.5:', type=('build', 'run'))
+    depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
     depends_on('py-numpy@1.16:', when='@3.4:', type=('build', 'run'))
-    depends_on('py-cycler@0.10:', type=('build', 'run'))
-    depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
-    depends_on('pil@6.2.0:', when='@3.3:', type=('build', 'run'))
+    depends_on('py-numpy@1.17:', when='@3.5:', type=('build', 'run'))
+    depends_on('py-packaging', when='@3.5:', type=('build', 'run'))
+    depends_on('pil@6.2:', when='@3.3:', type=('build', 'run'))
     depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
     depends_on('py-pyparsing@2.2.1:', when='@3.4:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
@@ -160,6 +166,15 @@ class PyMatplotlib(PythonPackage):
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
+    @property
+    def config_file(self):
+        # https://github.com/matplotlib/matplotlib/pull/20871
+        return 'mplsetup.cfg' if self.spec.satisfies('@3.5:') else 'setup.cfg'
+
+    @property
+    def archive_files(self):
+        return [os.path.join(self.build_directory, self.config_file)]
+
     def setup_build_environment(self, env):
         include = []
         library = []
@@ -180,22 +195,19 @@ class PyMatplotlib(PythonPackage):
 
         backend = self.spec.variants['backend'].value
 
-        # https://github.com/matplotlib/matplotlib/pull/20871
-        setup_file = 'mplsetup.cfg' if self.spec.satisfies('@3.5:') else 'setup.cfg'
-
-        with open(setup_file, 'w') as setup:
+        with open(self.config_file, 'w') as config:
             # Default backend
-            setup.write('[rc_options]\n')
-            setup.write('backend = ' + backend + '\n')
+            config.write('[rc_options]\n')
+            config.write('backend = ' + backend + '\n')
 
             # Starting with version 3.3.0, freetype is downloaded by default
             # Force matplotlib to use Spack installations of freetype and qhull
-            if self.version >= Version('3.3.0'):
-                setup.write('[libs]\n')
-                setup.write('system_freetype = True\n')
-                setup.write('system_qhull = True\n')
+            if self.spec.satisfies('@3.3:'):
+                config.write('[libs]\n')
+                config.write('system_freetype = True\n')
+                config.write('system_qhull = True\n')
                 if self.spec.satisfies('%clang'):
-                    setup.write('enable_lto = False\n')
+                    config.write('enable_lto = False\n')
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
