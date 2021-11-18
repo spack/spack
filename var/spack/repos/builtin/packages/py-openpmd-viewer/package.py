@@ -10,8 +10,8 @@ class PyOpenpmdViewer(PythonPackage):
     """Python visualization tools for openPMD files"""
 
     homepage = "https://www.openPMD.org"
-    url      = "https://github.com/openPMD/openPMD-viewer/archive/refs/tags/1.2.0.tar.gz"
     git      = "https://github.com/openPMD/openPMD-viewer.git"
+    pypi     = 'openPMD-viewer/openPMD-viewer-1.2.0.tar.gz'
 
     maintainers = ['RemiLehe', 'ax3l']
 
