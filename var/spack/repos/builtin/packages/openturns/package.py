@@ -37,7 +37,6 @@ class Openturns(CMakePackage):
     depends_on('py-cloudpickle', type=('build', 'run'))
     depends_on('py-urllib3', type=('build', 'run'))
 
-
     def cmake_args(self):
         spec = self.spec
 

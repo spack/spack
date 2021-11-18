@@ -15,7 +15,6 @@ class PySerpent(PythonPackage):
     pypi = 'serpent/serpent-1.40.tar.gz'
     maintainers = ['liuyangzhuan']
 
-    
     version('1.9', sha256='46311ae0e93c30c3b93e9153ffd6c76e595aaaca9d390f0cda1a750d5957f90f')
     version('1.8', sha256='9bd9adfde5337d839c16a62b7d02b058b3612a1beaccf2dc5f5000656c406336')
     version('1.7', sha256='5345587dff787431df668c19de56b74ada02fb893c2d9687572ffecc63d4d33a')
