@@ -34,6 +34,9 @@ class Openturns(CMakePackage):
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('boost+system+serialization+thread', type=('build', 'run'))
     depends_on('intel-tbb', type=('build', 'run'))
+    depends_on('py-cloudpickle', type=('build', 'run'))
+    depends_on('py-urllib3', type=('build', 'run'))
+
 
     def cmake_args(self):
         spec = self.spec
