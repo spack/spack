@@ -629,7 +629,7 @@ class Llvm(CMakePackage, CudaPackage):
         define = CMakePackage.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
-        if "+cuda" in self.spec and "+omp_as_runtime" not in self.spec:
+        if "+cuda ~omp_as_runtime" in self.spec:
             ompdir = "build-bootstrapped-omp"
             # rebuild libomptarget to get bytecode runtime library files
             with working_dir(ompdir, create=True):
@@ -648,8 +648,8 @@ class Llvm(CMakePackage, CudaPackage):
                                          spec["libelf"].prefix.include))
 
                 cmake(*cmake_args)
-                make()
-                make("install")
+                ninja()
+                ninja("install")
         if "+python" in self.spec:
             install_tree("llvm/bindings/python", site_packages_dir)
 
