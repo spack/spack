@@ -16,6 +16,8 @@ class GasnetLegacy(AutotoolsPackage):
     homepage = "https://gasnet.lbl.gov"
     url      = "https://gasnet.lbl.gov/EX/GASNet-2020.3.0.tar.gz"
 
+    version('2021.9.0', sha256='1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee', deprecated=True)
+    version('2021.3.0', sha256='8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747', deprecated=True)
     version('2020.3.0', sha256='019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274', deprecated=True)
     version('2019.9.0', sha256='117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c', deprecated=True)
     version('2019.6.0', sha256='839ba115bfb48083c66b4c1c27703d73063b75d2f1e0501d5eab2ad7f0f776c8', deprecated=True)
