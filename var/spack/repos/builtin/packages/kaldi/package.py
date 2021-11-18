@@ -41,9 +41,10 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst@1.6.0:', when='@2019-07-29')
     depends_on('openfst@1.6.7:1.7.3', when='@2019-09-29:')
-    depends_on('cub', when='@2019-07-29:')
+    depends_on('cub', when='@2019-07-29:^cuda@:10.9.999')
 
     patch('openfst-1.4.1.patch', when='@2015-10-07')
+    patch('0001_CMakeLists_txt.patch', when='+cuda@11:')
 
     # Change process of version analysis when using Fujitsu compiler.
     patch('fujitsu_fix_version_analysis.patch', when='@2018-07-11:%fj')
@@ -52,6 +53,7 @@ class Kaldi(Package):    # Does not use Autotools
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
         configure_args.append('--fst-version=' + str(spec['openfst'].version))
         configure_args.append('--speex-root=' + spec['speex'].prefix)
+        configure_args.append('--cub-root=' + spec['cuda'].prefix.include)
 
         if '~shared' in spec:
             configure_args.append('--static')
@@ -78,7 +80,7 @@ class Kaldi(Package):    # Does not use Autotools
             configure_args.append('--use-cuda=yes')
             configure_args.append('--cudatk-dir=' + spec['cuda'].prefix)
 
-        if spec.satisfies('@2019-07-29:'):
+        if spec.satisfies('@2019-07-29:') and '^cuda@:10.9.999' in spec:
             configure_args.append('--cub-root=' + spec['cub'].prefix.include)
 
         with working_dir("src"):
