@@ -55,9 +55,7 @@ class Gptune(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         fc_flags = []
-        if '%gcc@10:' in spec:
-            fc_flags.append('-fallow-argument-mismatch')
-        if self.spec.satisfies('%apple-clang@11:'):
+        if '%gcc@10:' in spec or self.spec.satisfies('%apple-clang@11:'):
             fc_flags.append('-fallow-argument-mismatch')
 
         args = [
