@@ -42,5 +42,26 @@ class Trexio(AutotoolsPackage):
     depends_on("m4", type='build')
     depends_on("hdf5@1.8:+hl", when='+hdf5')
 
+    # This patch is needed to append -lhdf5_hl to $LIBS because by default
+    # ./configure cannot properly compile the hdf5_hl test (AC_HAVE_LIBRARY) and thus does not link it.
+    def configure_args(self):
+        cflags = []
+        cppflags = []
+        ldflags = []
+        libs = []
+
+        hdf5_hl = self.spec['hdf5:hl']
+        #ldflags.append(hdf5_hl.libs.search_flags)
+        #libs.append(hdf5_hl.libs.link_flags)
+        libs.append('-lhdf5_hl')
+ 
+        config_args = []
+
+        config_args.append('CFLAGS=' + ' '.join(cflags))
+        config_args.append('CPPFLAGS=' + ' '.join(cppflags))
+        config_args.append('LDFLAGS=' + ' '.join(ldflags))
+        config_args.append('LIBS=' + ' '.join(libs))
+
+        return config_args
 
 
