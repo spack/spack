@@ -163,6 +163,8 @@ class PyMatplotlib(PythonPackage):
 
     conflicts('~image', when='@3.3:', msg='Pillow is no longer an optional dependency')
 
+    # https://github.com/matplotlib/matplotlib/pull/21662
+    patch('matplotlibrc.patch', when='@3.5.0')
     # Patch to pick up correct freetype headers
     patch('freetype-include-path.patch', when='@2.2.2:2.9.9')
 
