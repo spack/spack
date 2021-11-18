@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Gamblin"
+  given-names: "Todd"
+- family-names: "LeGendre"
+  given-names: "Matthew"
+- family-names: "Collette"
+  given-names: "Michael R."
+- family-names: "Lee"
+  given-names: "Gregory L."
+- family-names: "Moody"
+  given-names: "Adam"
+- family-names: "de Supinski"
+  given-names: "Bronis R."
+- family-names: "Futral"
+  given-names: "Scott"
+title: "The Spack package manager: bringing order to HPC software chaos"
+version: 0.17.0
+doi: 10.1145/2807591.2807623
+url: "https://github.com/spack/spack"
+preferred-citation:
+  type: inproceedings
+  authors:
+  - family-names: "Gamblin"
+    given-names: "Todd"
+  - family-names: "LeGendre"
+    given-names: "Matthew"
+  - family-names: "Collette"
+    given-names: "Michael R."
+  - family-names: "Lee"
+    given-names: "Gregory L."
+  - family-names: "Moody"
+    given-names: "Adam"
+  - family-names: "de Supinski"
+    given-names: "Bronis R."
+  - family-names: "Futral"
+    given-names: "Scott"
+  title: "The Spack package manager: bringing order to HPC software chaos"
+  booktitle: "SC15: International Conference for High-Performance Computing, Networking, Storage and Analysis"
+  publisher: "IEEE Computer Society"
+  year: 2015
+  month: 11
+  start: 1
+  end: 12
+  doi: 10.1145/2807591.2807623
