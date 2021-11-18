@@ -421,9 +421,12 @@ class _SourceBootstrapper(object):
             abstract_spec_str += ' os=fe'
 
         concrete_spec = spack.spec.Spec(abstract_spec_str)
-        concrete_spec.concretize()
+        if concrete_spec.name == 'patchelf':
+            concrete_spec._old_concretize(deprecation_warning=False)
+        else:
+            concrete_spec.concretize()
 
-        msg = "[BOOTSTRAP GnuPG] Try installing '{0}' from sources"
+        msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         concrete_spec.package.do_install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
@@ -753,9 +756,22 @@ def gnupg_root_spec():
 
 def ensure_gpg_in_path_or_raise():
     """Ensure gpg or gpg2 are in the PATH or raise."""
-    ensure_executables_in_path_or_raise(
+    return ensure_executables_in_path_or_raise(
         executables=['gpg2', 'gpg'], abstract_spec=gnupg_root_spec()
     )
+
+
+def patchelf_root_spec():
+    """Return the root spec used to bootstrap GnuPG"""
+    return _root_spec('patchelf')
+
+
+def ensure_patchelf_in_path_or_raise():
+    """Ensure gpg or gpg2 are in the PATH or raise."""
+    return ensure_executables_in_path_or_raise(
+        executables=['patchelf'], abstract_spec=patchelf_root_spec()
+    )
+
 
 ###
 # Development dependencies

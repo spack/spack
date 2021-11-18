@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections
 import os.path
 import re
 import shutil
@@ -71,47 +70,6 @@ def source_file(tmpdir, is_relocatable):
         src.write(text)
 
     return src
-
-
-@pytest.fixture(params=['which_found', 'installed', 'to_be_installed'])
-def expected_patchelf_path(request, mutable_database, monkeypatch):
-    """Prepare the stage to tests different cases that can occur
-    when searching for patchelf.
-    """
-    case = request.param
-
-    # Mock the which function
-    which_fn = {
-        'which_found': lambda x: collections.namedtuple(
-            '_', ['path']
-        )('/usr/bin/patchelf')
-    }
-    monkeypatch.setattr(
-        spack.util.executable, 'which',
-        which_fn.setdefault(case, lambda x: None)
-    )
-    if case == 'which_found':
-        return '/usr/bin/patchelf'
-
-    # TODO: Mock a case for Darwin architecture
-
-    spec = spack.spec.Spec('patchelf')
-    spec.concretize()
-
-    patchelf_cls = type(spec.package)
-    do_install = patchelf_cls.do_install
-    expected_path = os.path.join(spec.prefix.bin, 'patchelf')
-
-    def do_install_mock(self, **kwargs):
-        do_install(self, fake=True)
-        with open(expected_path):
-            pass
-
-    monkeypatch.setattr(patchelf_cls, 'do_install', do_install_mock)
-    if case == 'installed':
-        spec.package.do_install()
-
-    return expected_path
 
 
 @pytest.fixture()
@@ -225,8 +183,9 @@ def copy_binary():
 
 
 @pytest.mark.requires_executables(
-    '/usr/bin/gcc', 'patchelf', 'strings', 'file'
+    '/usr/bin/gcc', 'strings', 'file'
 )
+@skip_unless_linux
 def test_file_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable('/usr/bin/gcc')
     executable = str(source_file).replace('.c', '.x')
@@ -239,7 +198,8 @@ def test_file_is_relocatable(source_file, is_relocatable):
     assert spack.relocate.file_is_relocatable(executable) is is_relocatable
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file')
+@pytest.mark.requires_executables('strings', 'file')
+@skip_unless_linux
 def test_patchelf_is_relocatable():
     patchelf = spack.relocate._patchelf()
     assert llnl.util.filesystem.is_exe(patchelf)
@@ -261,12 +221,6 @@ def test_file_is_relocatable_errors(tmpdir):
         with pytest.raises(ValueError) as exc_info:
             spack.relocate.file_is_relocatable('delete.me')
         assert 'is not an absolute path' in str(exc_info.value)
-
-
-@skip_unless_linux
-def test_search_patchelf(expected_patchelf_path):
-    current = spack.relocate._patchelf()
-    assert current == expected_patchelf_path
 
 
 @pytest.mark.parametrize('patchelf_behavior,expected', [
@@ -332,7 +286,7 @@ def test_set_elf_rpaths_warning(mock_patchelf):
     assert output is None
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.requires_executables('strings', 'file', 'gcc')
 @skip_unless_linux
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
@@ -345,7 +299,7 @@ def test_replace_prefix_bin(hello_world):
     assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.requires_executables('strings', 'file', 'gcc')
 @skip_unless_linux
 def test_relocate_elf_binaries_absolute_paths(
         hello_world, copy_binary, tmpdir
@@ -370,7 +324,7 @@ def test_relocate_elf_binaries_absolute_paths(
     assert '/foo/lib:/usr/lib64' in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.requires_executables('strings', 'file', 'gcc')
 @skip_unless_linux
 def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
@@ -391,7 +345,7 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
     assert '/foo/lib:/foo/lib64:/opt/local/lib' in rpaths_for(new_binary)
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.requires_executables('strings', 'file', 'gcc')
 @skip_unless_linux
 def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
@@ -415,7 +369,7 @@ def test_raise_if_not_relocatable(monkeypatch):
         )
 
 
-@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+@pytest.mark.requires_executables('strings', 'file', 'gcc')
 @skip_unless_linux
 def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_binary = hello_world(rpaths=[
