@@ -8,6 +8,7 @@ import sys
 
 import llnl.util.tty as tty
 
+import spack.build_environment
 import spack.util.executable
 
 
@@ -631,21 +632,25 @@ class Llvm(CMakePackage, CudaPackage):
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
         if "+cuda ~omp_as_runtime" in self.spec:
             ompdir = "build-bootstrapped-omp"
+            prefix_paths = spack.build_environment.get_cmake_prefix_path(self)
+            prefix_paths.append(str(spec.prefix))
             # rebuild libomptarget to get bytecode runtime library files
             with working_dir(ompdir, create=True):
                 cmake_args = [
-                    self.stage.source_path + "/openmp",
+                    '-G', 'Ninja',
+                    define('CMAKE_BUILD_TYPE', spec.variants['build_type'].value),
                     define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
                     define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
                     define("CMAKE_INSTALL_PREFIX", spec.prefix),
+                    define('CMAKE_PREFIX_PATH', prefix_paths)
                 ]
                 cmake_args.extend(self.cmake_args())
-                cmake_args.append(define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB",
-                                         True))
-
-                # work around bad libelf detection in libomptarget
-                cmake_args.append(define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
-                                         spec["libelf"].prefix.include))
+                cmake_args.extend([
+                    define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
+                    define("LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR",
+                           spec["libelf"].prefix.include),
+                    self.stage.source_path + "/openmp",
+                ])
 
                 cmake(*cmake_args)
                 ninja()
