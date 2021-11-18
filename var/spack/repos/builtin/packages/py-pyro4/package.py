@@ -81,4 +81,5 @@ class PyPyro4(PythonPackage):
     version('4.10', sha256='de74e5e020a8a26cd357f5917afb48f7e14e161ca58574a1c653441bdbe9711c')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-serpent', type=('build', 'run'))
+    depends_on('py-serpent@1.27:', type=('build', 'run'))
+    depends_on('py-selectors34', when='^python@:3.3', type=('build', 'run'))
