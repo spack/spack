@@ -50,8 +50,8 @@ class PyOpenpmdViewer(PythonPackage):
     with when('+plot'):
         depends_on('py-matplotlib', type=('build', 'run'))
         # missing in Spack:
-        #with when('+jupyter'):
-        #    depends_on('py-ipympl', type=('build', 'run'))
+        # with when('+jupyter'):
+        #     depends_on('py-ipympl', type=('build', 'run'))
 
     with when('+tutorials'):
         depends_on('py-wget', type=('build', 'run'))
