@@ -37,6 +37,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on('python', type=('build', 'link'))
     depends_on('zlib', type='link')
     depends_on('babeltrace@1.2.4', type='link')
+    depends_on('gmp',      type=('build', 'link'), when='@4.5.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0']:

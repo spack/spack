@@ -34,8 +34,19 @@ class Rocblas(CMakePackage):
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
+    # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
+    # gfx803 till gfx1030  are valid gpus for @4.3.0:
     conflicts('tensile_architecture=gfx906', when='@4.0.1:')
     conflicts('tensile_architecture=gfx908', when='@4.0.1:')
+    conflicts('tensile_architecture=gfx906:xnack-', when='@:4.0.0')
+    conflicts('tensile_architecture=gfx908:xnack-', when='@:4.0.0')
+    conflicts('tensile_architecture=gfx90a:xnack+', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx90a:xnack-', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1010', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1011', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1012', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1030', when='@:4.2.1')
 
     depends_on('cmake@3:', type='build')
 
@@ -91,10 +102,8 @@ class Rocblas(CMakePackage):
     def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants['tensile_architecture'].value
         if arch[0] == 'all':
-            if self.spec.satisfies('@:4.0.1'):
-                arch_value = self.tensile_architecture[1:5]
-            elif self.spec.satisfies('@4.1.0:4.2.1'):
-                arch_value = self.tensile_architecture[3:7]
+            if self.spec.satisfies('@:4.2.1'):
+                arch_value = self.tensile_architecture[0]
             elif self.spec.satisfies('@4.3.0:'):
                 arch_value = self.tensile_architecture[3:]
             return arch_value

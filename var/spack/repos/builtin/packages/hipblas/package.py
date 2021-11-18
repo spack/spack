@@ -32,9 +32,10 @@ class Hipblas(CMakePackage):
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
-    depends_on('boost@1.64.0: cxxstd=14', type='test')
+    depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
 
-    patch('link-clients-blas.patch', when='@4.3.0:')
+    patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
+    patch('link-clients-blas-4.5.0.patch', when='@4.5.0:')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
