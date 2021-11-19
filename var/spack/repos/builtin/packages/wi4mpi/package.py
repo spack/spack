@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 from spack.util.environment import set_env
-import os
 
 
 class Wi4mpi(CMakePackage):
@@ -13,6 +13,7 @@ class Wi4mpi(CMakePackage):
 
     homepage = "https://github.com/cea-hpc/wi4mpi"
     url      = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
+    maintainers = ['adrien-cotte', 'marcjoos-cea']
 
     version('3.4.1', sha256='92bf6738216426069bc07bff19cd7c933e33e397a941ff9f89a639380fab3737')
     version('3.3.0', sha256='fb7fb3b591144e90b3d688cf844c2246eb185f54e1da6baef857e035ef730d96')
@@ -46,6 +47,7 @@ class Wi4mpi(CMakePackage):
 
     def setup_run_environment(self, env):
         env.set('WI4MPI_ROOT', self.prefix)
+        env.set('WI4MPI_VERSION', self.version)
         if '%gcc' in self.spec:
             env.set('WI4MPI_CC', "gcc")
             env.set('WI4MPI_CXX', "g++")
