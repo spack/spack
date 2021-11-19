@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import pytest
 import stat
 
-from spack.util.file_permissions import (
-    set_permissions, InvalidPermissionsError
-)
+import pytest
+
 import llnl.util.filesystem as fs
+
+from spack.util.file_permissions import InvalidPermissionsError, set_permissions
 
 
 def test_chmod_real_entries_ignores_suid_sgid(tmpdir):

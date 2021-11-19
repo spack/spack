@@ -18,7 +18,7 @@ class JhpcnDf(CMakePackage):
     to truncating some lower bits of significand.
     """
 
-    homepage = "http://avr-aics-riken.github.io/JHPCN-DF/"
+    homepage = "https://avr-aics-riken.github.io/JHPCN-DF/"
     url      = "https://github.com/avr-aics-riken/JHPCN-DF/archive/1.1.0.tar.gz"
 
     version('1.1.0', sha256='106d99cc4faac5c76e51e8bfe3193c1d3dc91648072cf418d868ed830592b04b')

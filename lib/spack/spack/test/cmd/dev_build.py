@@ -4,10 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import pytest
-import spack.spec
+
 import llnl.util.filesystem as fs
+
 import spack.environment as ev
+import spack.spec
 from spack.main import SpackCommand
 
 dev_build = SpackCommand('dev-build')
@@ -242,7 +245,7 @@ env:
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
+            with pytest.raises(RuntimeError):
                 install()
 
 

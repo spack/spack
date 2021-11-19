@@ -10,6 +10,7 @@ import collections
 import os
 import sys
 from typing import Callable, DefaultDict, Dict, List  # novm
+
 if sys.version_info >= (3, 5):
     CallbackDict = DefaultDict[str, List[Callable]]
 else:
@@ -18,7 +19,8 @@ else:
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers'
+    'filter_compiler_wrappers',
+    'PackageMixinsMeta',
 ]
 
 
@@ -190,7 +192,11 @@ def filter_compiler_wrappers(*files, **kwargs):
         ]
         for env_var, compiler_path in replacements:
             if env_var in os.environ:
-                x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
+                # filter spack wrapper and links to spack wrapper in case
+                # build system runs realpath
+                wrapper = os.environ[env_var]
+                for wrapper_path in (wrapper, os.path.realpath(wrapper)):
+                    x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
         x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',

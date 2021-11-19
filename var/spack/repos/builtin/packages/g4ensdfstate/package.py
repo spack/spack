@@ -9,8 +9,8 @@ from spack import *
 
 class G4ensdfstate(Package):
     """Geant4 data for nuclides properties"""
-    homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ENSDFSTATE.2.1.tar.gz"
+    homepage = "https://geant4.web.cern.ch"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4ENSDFSTATE.2.1.tar.gz"
 
     tags = ['hep']
 

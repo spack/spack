@@ -14,7 +14,7 @@ class PySparse(PythonPackage):
 
     version('0.11.2', sha256='365b6f038c4d331b3913e5fb00f5bc5dc5eadc49ef2feef332214f9bf33dbc82')
 
-    depends_on('python@3.6:3.999', type=('build', 'run'))
+    depends_on('python@3.6:3', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy@0.19:', type=('build', 'run'))

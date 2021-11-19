@@ -5,16 +5,17 @@
 
 import filecmp
 import os
+
 import pytest
 
-import spack.repo
+from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+
 import spack.mirror
+import spack.repo
 import spack.util.executable
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
-
-from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 
 pytestmark = pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')
 

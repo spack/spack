@@ -22,6 +22,7 @@ class PyNetworkit(PythonPackage):
 
     maintainers = ['fabratu']
 
+    version('9.0', sha256='e27872d0d6a8a0a1ba862b0dab6adb4f0046fe6b20d3c47863075d1ee70226d3')
     version('8.1', sha256='5ff9e61496259280df4f913b1e37f51ca6f94974c4b9f623851f4d518f5ce0d5')
     version('8.0', sha256='36c30e894e835bf93f0aa0fb0b526758234e74318150820911e024ffe5ec1fd2')
     version('7.1', sha256='8609dc7a574a8a82d8880b8b1e3dfdd9c59ad67cd02135628e675c482fe98a96')
@@ -30,6 +31,7 @@ class PyNetworkit(PythonPackage):
 
     # Required dependencies
     depends_on('cmake', type='build')
+    depends_on('libnetworkit@9.0', type=('build', 'link'), when='@9.0')
     depends_on('libnetworkit@8.1', type=('build', 'link'), when='@8.1')
     depends_on('libnetworkit@8.0', type=('build', 'link'), when='@8.0')
     depends_on('libnetworkit@7.1', type=('build', 'link'), when='@7.1')

@@ -9,7 +9,7 @@ from spack import *
 class Libpciaccess(AutotoolsPackage, XorgPackage):
     """Generic PCI access library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libpciaccess/"
     xorg_mirror_path = "lib/libpciaccess-0.13.5.tar.gz"
 
     version('0.16', sha256='84413553994aef0070cf420050aa5c0a51b1956b404920e21b81e96db6a61a27')
@@ -30,6 +30,8 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     # When the ability to use dependencies built by another compiler, using a
     # libpciaccess built by gcc should be usable by PGI builds.
     conflicts('%pgi')
+
+    conflicts('platform=darwin')
 
     def configure_args(self):
         config_args = []

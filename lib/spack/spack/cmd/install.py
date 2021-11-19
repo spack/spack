@@ -23,7 +23,6 @@ import spack.report
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
-
 description = "build and install packages"
 section = "build"
 level = "short"
@@ -39,7 +38,7 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'verbose': args.verbose,
+        'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'use_cache': args.use_cache,
@@ -79,7 +78,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -131,7 +130,7 @@ remote spec matches that of the local spec""")
         help="install source files in prefix")
     arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
-        '-v', '--verbose', action='store_true',
+        '-v', '--verbose', action='store_true', dest='install_verbose',
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
@@ -199,13 +198,13 @@ def install_specs(cli_args, kwargs, specs):
     """Do the actual installation.
 
     Args:
-        cli_args (Namespace): argparse namespace with command arguments
+        cli_args (argparse.Namespace): argparse namespace with command arguments
         kwargs (dict):  keyword arguments
-        specs (list of tuples):  list of (abstract, concrete) spec tuples
+        specs (list):  list of (abstract, concrete) spec tuples
     """
 
     # handle active environment, if any
-    env = ev.get_env(cli_args, 'install')
+    env = ev.active_environment()
 
     try:
         if env:
@@ -220,7 +219,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 # If there is any ambiguity in the above call to matching_spec
                 # (i.e. if more than one spec in the environment matches), then
-                # SpackEnvironmentError is rasied, with a message listing the
+                # SpackEnvironmentError is raised, with a message listing the
                 # the matches.  Getting to this point means there were either
                 # no matches or exactly one match.
 
@@ -244,7 +243,7 @@ def install_specs(cli_args, kwargs, specs):
 
                 if m_spec in env.roots() or cli_args.no_add:
                     # either the single match is a root spec (and --no-add is
-                    # the default for roots) or --no-add was stated explictly
+                    # the default for roots) or --no-add was stated explicitly
                     tty.debug('just install {0}'.format(m_spec.name))
                     specs_to_install.append(m_spec)
                 else:
@@ -261,7 +260,7 @@ def install_specs(cli_args, kwargs, specs):
                     with env.write_transaction():
                         specs_to_install.append(
                             env.concretize_and_add(abstract, concrete))
-                        env.write(regenerate_views=False)
+                        env.write(regenerate=False)
 
             # Install the validated list of cli specs
             if specs_to_install:
@@ -286,6 +285,8 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -306,6 +307,7 @@ environment variables:
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
+            save_local=args.monitor_save_local,
         )
 
     reporter = spack.report.collect_info(
@@ -324,38 +326,46 @@ environment variables:
         else:
             return False
 
+    # Parse cli arguments and construct a dictionary
+    # that will be passed to the package installer
+    update_kwargs_from_args(args, kwargs)
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
-        env = ev.get_env(args, 'install')
+        env = ev.active_environment()
         if env:
             tests = get_tests(env.user_specs)
             kwargs['tests'] = tests
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests)
+                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
                     # once, as it can be slow.
-                    env.write(regenerate_views=False)
+                    env.write(regenerate=False)
 
             specs = env.all_specs()
             if not args.log_file and not reporter.filename:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
 
+            # Tell the monitor about the specs
+            if args.use_monitor and specs:
+                monitor.new_configuration(specs)
+
             tty.msg("Installing environment {0}".format(env.name))
             with reporter('build'):
-                env.install_all(args, **kwargs)
+                env.install_all(**kwargs)
 
             tty.debug("Regenerating environment views for {0}"
                       .format(env.name))
             with env.write_transaction():
-                # It is not strictly required to synchronize view regeneration
-                # but doing so can prevent redundant work in the filesystem.
-                env.regenerate_views()
+                # write env to trigger view generation and modulefile
+                # generation
+                env.write()
             return
         else:
             msg = "install requires a package argument or active environment"
@@ -377,10 +387,6 @@ environment variables:
     if args.deprecated:
         spack.config.set('config:deprecated', True, scope='command_line')
 
-    # Parse cli arguments and construct a dictionary
-    # that will be passed to the package installer
-    update_kwargs_from_args(args, kwargs)
-
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = get_tests(abstract_specs)
@@ -388,7 +394,8 @@ environment variables:
 
     try:
         specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests, reuse=args.reuse
+        )
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
@@ -397,7 +404,10 @@ environment variables:
     # 2. Concrete specs from yaml files
     for file in args.specfiles:
         with open(file, 'r') as f:
-            s = spack.spec.Spec.from_yaml(f)
+            if file.endswith('yaml') or file.endswith('yml'):
+                s = spack.spec.Spec.from_yaml(f)
+            else:
+                s = spack.spec.Spec.from_json(f)
 
         concretized = s.concretized()
         if concretized.dag_hash() != s.dag_hash():

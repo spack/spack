@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Findutils(AutotoolsPackage, GNUMirrorPackage):
@@ -49,7 +50,7 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     # Detect this case and use the fallback path.
     patch('nvhpc.patch', when='@4.6.0 %nvhpc')
     # Workaround bug where __LONG_WIDTH__ is not defined
-    patch('nvhpc-long-width.patch', when='@4.8.0:4.8.99 %nvhpc')
+    patch('nvhpc-long-width.patch', when='@4.8.0:4.8 %nvhpc')
 
     build_directory = 'spack-build'
 

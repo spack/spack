@@ -37,5 +37,5 @@ class PyCinemaLib(PythonPackage):
     depends_on('py-numpy@1.13:', when='+opencv', type=('build', 'run'))
     depends_on('py-scikit-image@0.13.1:', when='+image',
                type=('build', 'run'))
-    depends_on('opencv@3.4:+python', when='+opencv', type=('build', 'run'))
+    depends_on('opencv@3.4:+python3', when='+opencv', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))

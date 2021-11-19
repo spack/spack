@@ -17,8 +17,9 @@ class Openldap(AutotoolsPackage):
     """
 
     homepage = "https://www.openldap.org/"
-    url      = "ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.48.tgz"
+    url      = "https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.6.0.tgz"
 
+    version('2.6.0',  sha256='b71c580eac573e9aba15d95f33dd4dd08f2ed4f0d7fc09e08ad4be7ed1e41a4f')
     version('2.4.49', sha256='e3b117944b4180f23befe87d0dcf47f29de775befbc469dcf4ac3dab3311e56e')
     version('2.4.48', sha256='d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d')
 
@@ -42,8 +43,9 @@ class Openldap(AutotoolsPackage):
     # depends_on('openslp', when='~client_only') # not avail. in spack yet
     # depends_on('Pth', when='~client_only') # not avail. in spack yet
     depends_on('perl', when='~client_only+perl')  # for slapd
+    depends_on('groff', type='build')
 
-    # Ref: http://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
+    # Ref: https://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when('+client_only')
     def configure_args(self):
         return ['CPPFLAGS=-D_GNU_SOURCE',

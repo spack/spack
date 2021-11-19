@@ -4,22 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
-import os
+
 import argparse
-import textwrap
-import inspect
 import fnmatch
+import inspect
+import os
 import re
 import shutil
 import sys
+import textwrap
 
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
-import spack.install_test
-import spack.environment as ev
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.install_test
 import spack.package
 import spack.repo
 import spack.report
@@ -88,6 +89,12 @@ def setup_parser(subparser):
         "-a", "--all", action="store_true", dest="list_all",
         help="list all packages with tests (not just installed)")
 
+    list_parser.add_argument(
+        'tag',
+        nargs='*',
+        help="limit packages to those with all listed tags"
+    )
+
     # Find
     find_parser = sp.add_parser('find', description=test_find.__doc__,
                                 help=first_line(test_find.__doc__))
@@ -136,6 +143,12 @@ def test_run(args):
     If no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment.
     """
+    if args.alias:
+        suites = spack.install_test.get_named_test_suites(args.alias)
+        if suites:
+            tty.die('Test suite "{0}" already exists. Try another alias.'
+                    .format(args.alias))
+
     # cdash help option
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -154,7 +167,7 @@ environment variables:
         spack.config.set('config:fail_fast', True, scope='command_line')
 
     # Get specs to test
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
@@ -207,24 +220,34 @@ def has_test_method(pkg):
 
 def test_list(args):
     """List installed packages with available tests."""
+    tagged = set(spack.repo.path.packages_with_tags(*args.tag)) if args.tag \
+        else set()
+
+    def has_test_and_tags(pkg_class):
+        return has_test_method(pkg_class) and \
+            (not args.tag or pkg_class.name in tagged)
+
     if args.list_all:
-        all_packages_with_tests = [
+        report_packages = [
             pkg_class.name
             for pkg_class in spack.repo.path.all_package_classes()
-            if has_test_method(pkg_class)
+            if has_test_and_tags(pkg_class)
         ]
+
         if sys.stdout.isatty():
-            tty.msg("%d packages with tests." % len(all_packages_with_tests))
-        colify.colify(all_packages_with_tests)
+            filtered = ' tagged' if args.tag else ''
+            tty.msg("{0}{1} packages with tests.".
+                    format(len(report_packages), filtered))
+        colify.colify(report_packages)
         return
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.get_env(args, 'test')
+    env = ev.active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.db.query(hashes=hashes)
-    specs = list(filter(lambda s: has_test_method(s.package_class), specs))
+    specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)
 

@@ -4,14 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
-import platform
 import os
+import platform
+import shutil
 
 import pytest
 
-import spack.main
 import spack.binary_distribution
 import spack.environment as ev
+import spack.main
 import spack.spec
 from spack.spec import Spec
 
@@ -89,7 +90,7 @@ def tests_buildcache_create(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
@@ -111,7 +112,7 @@ def tests_buildcache_create_env(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
@@ -138,8 +139,6 @@ def test_buildcache_create_fail_on_perm_denied(
     tmpdir.chmod(0o700)
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 def test_update_key_index(tmpdir, mutable_mock_env_path,
                           install_mockery, mock_packages, mock_fetch,
                           mock_stage, mock_gnupghome):
@@ -174,3 +173,98 @@ def test_update_key_index(tmpdir, mutable_mock_env_path,
     mirror('rm', 'test-mirror')
 
     assert 'index.json' in key_dir_list
+
+
+def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
+                         mock_packages, mock_fetch, mock_stage, tmpdir):
+    """
+    Make sure buildcache sync works in an environment-aware manner, ignoring
+    any specs that may be in the mirror but not in the environment.
+    """
+    working_dir = tmpdir.join('working_dir')
+
+    src_mirror_dir = working_dir.join('src_mirror').strpath
+    src_mirror_url = 'file://{0}'.format(src_mirror_dir)
+
+    dest_mirror_dir = working_dir.join('dest_mirror').strpath
+    dest_mirror_url = 'file://{0}'.format(dest_mirror_dir)
+
+    in_env_pkg = 'trivial-install-test-package'
+    out_env_pkg = 'libdwarf'
+
+    def verify_mirror_contents():
+        dest_list = os.listdir(
+            os.path.join(dest_mirror_dir, 'build_cache'))
+
+        found_pkg = False
+
+        for p in dest_list:
+            assert(out_env_pkg not in p)
+            if in_env_pkg in p:
+                found_pkg = True
+
+        if not found_pkg:
+            print('Expected to find {0} in {1}'.format(
+                in_env_pkg, dest_mirror_dir))
+            assert(False)
+
+    # Install a package and put it in the buildcache
+    s = Spec(out_env_pkg).concretized()
+    install(s.name)
+    buildcache(
+        'create', '-u', '-f', '-a', '--mirror-url', src_mirror_url, s.name)
+
+    env('create', 'test')
+    with ev.read('test'):
+        add(in_env_pkg)
+        install()
+        buildcache(
+            'create', '-u', '-f', '-a', '--mirror-url', src_mirror_url, in_env_pkg)
+
+        # Now run the spack buildcache sync command with all the various options
+        # for specifying mirrors
+
+        # Use urls to specify mirrors
+        buildcache('sync',
+                   '--src-mirror-url', src_mirror_url,
+                   '--dest-mirror-url', dest_mirror_url)
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        # Use local directory paths to specify fs locations
+        buildcache('sync',
+                   '--src-directory', src_mirror_dir,
+                   '--dest-directory', dest_mirror_dir)
+
+        verify_mirror_contents()
+        shutil.rmtree(dest_mirror_dir)
+
+        # Use mirror names to specify mirrors
+        mirror('add', 'src', src_mirror_url)
+        mirror('add', 'dest', dest_mirror_url)
+
+        buildcache('sync',
+                   '--src-mirror-name', 'src',
+                   '--dest-mirror-name', 'dest')
+
+        verify_mirror_contents()
+
+
+def test_buildcache_create_install(mutable_mock_env_path,
+                                   install_mockery_mutable_config,
+                                   mock_packages, mock_fetch, mock_stage,
+                                   monkeypatch, tmpdir):
+    """"Ensure that buildcache create creates output files"""
+    pkg = 'trivial-install-test-package'
+    install(pkg)
+
+    buildcache('create', '-d', str(tmpdir), '--unsigned', pkg)
+
+    spec = Spec(pkg).concretized()
+    tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+    assert os.path.exists(
+        os.path.join(str(tmpdir), 'build_cache', tarball))

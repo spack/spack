@@ -10,7 +10,7 @@ class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system
        command monitoring tool."""
 
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-lanl.git"
 
     version('develop', branch='master')

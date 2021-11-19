@@ -11,20 +11,21 @@ import functools
 import inspect
 import itertools
 import re
-from six import StringIO
 import sys
+
+from six import StringIO
 
 if sys.version_info >= (3, 5):
     from collections.abc import Sequence  # novm
 else:
     from collections import Sequence
 
-import llnl.util.tty.color
 import llnl.util.lang as lang
+import llnl.util.tty.color
 
-from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
+from spack.util.string import comma_or
 
 special_variant_values = [None, 'none', '*']
 
@@ -93,8 +94,8 @@ class Variant(object):
         exception if any error is found.
 
         Args:
-            vspec (VariantSpec): instance to be validated
-            pkg (Package): the package that required the validation,
+            vspec (Variant): instance to be validated
+            pkg (spack.package.Package): the package that required the validation,
                 if available
 
         Raises:
@@ -180,6 +181,17 @@ class Variant(object):
             return BoolValuedVariant
         return SingleValuedVariant
 
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.default == other.default and
+                self.values == other.values and
+                self.multi == other.multi and
+                self.single_value_validator == other.single_value_validator and
+                self.group_validator == other.group_validator)
+
+    def __ne__(self, other):
+        return not self == other
+
 
 def implicit_variant_conversion(method):
     """Converts other to type(self) and calls method(self, other)
@@ -253,7 +265,7 @@ class AbstractVariant(object):
         the variant.
 
         Returns:
-            tuple of str: values stored in the variant
+            tuple: values stored in the variant
         """
         return self._value
 
@@ -295,7 +307,7 @@ class AbstractVariant(object):
         """Returns an instance of a variant equivalent to self
 
         Returns:
-            any variant type: a copy of self
+            AbstractVariant: a copy of self
 
         >>> a = MultiValuedVariant('foo', True)
         >>> b = a.copy()
@@ -644,10 +656,10 @@ def substitute_abstract_variants(spec):
                 new_variant = SingleValuedVariant(name, v._original_value)
                 spec.variants.substitute(new_variant)
             continue
-        pkg_variant = spec.package_class.variants.get(name, None)
-        if not pkg_variant:
+        if name not in spec.package_class.variants:
             failed.append(name)
             continue
+        pkg_variant, _ = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
@@ -666,7 +678,7 @@ class DisjointSetsOfValues(Sequence):
     and therefore no other set can contain the item ``'none'``.
 
     Args:
-        *sets (list of tuples): mutually exclusive sets of values
+        *sets (list): mutually exclusive sets of values
     """
 
     _empty_set = set(('none',))
@@ -876,6 +888,16 @@ class InvalidVariantValueError(error.SpecError):
             pkg_info = ' in package "{0}"'.format(pkg.name)
         super(InvalidVariantValueError, self).__init__(
             msg.format(variant, invalid_values, pkg_info)
+        )
+
+
+class InvalidVariantForSpecError(error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+    def __init__(self, variant, when, spec):
+        msg = "Invalid variant {0} for spec {1}.\n"
+        msg += "{0} is only available for {1.name} when satisfying one of {2}."
+        super(InvalidVariantForSpecError, self).__init__(
+            msg.format(variant, spec, when)
         )
 
 

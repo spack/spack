@@ -13,19 +13,21 @@ class PyOpenmc(PythonPackage):
        sections. The project started under the Computational Reactor Physics
        Group at MIT."""
 
-    homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.11.0"
+    homepage = "https://docs.openmc.org/"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.12.2"
     git = "https://github.com/openmc-dev/openmc.git"
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('0.12.2', tag='v0.12.2', submodules=True)
+    version('0.12.1', tag='v0.12.1', submodules=True)
     version('0.12.0', tag='v0.12.0', submodules=True)
     version('0.11.0', sha256='19a9d8e9c3b581e9060fbd96d30f1098312d217cb5c925eb6372a5786d9175af')
 
     variant('mpi', default=False, description='Enable MPI support')
 
     # keep py-openmc and openmc at the same version
-    for ver in ['develop', 'master', '0.12.0', '0.11.0']:
+    for ver in ['develop', 'master', '0.12.2', '0.12.1', '0.12.0', '0.11.0']:
         depends_on(
             'openmc+mpi@{0}'.format(ver), when='@{0}+mpi'.format(ver),
             type=('build', 'run')

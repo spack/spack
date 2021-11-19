@@ -12,7 +12,9 @@ class Otf(AutotoolsPackage):
        successor format to the Vampir Trace Format (VTF3)."""
 
     homepage = "http://tu-dresden.de/die_tu_dresden/zentrale_einrichtungen/zih/forschung/projekte/otf/index_html/document_view?set_language=en"
-    url      = "http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz"
+    url      = "https://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz"
+
+    maintainers = ['michaelkuhn']
 
     version('1.12.5salmon', sha256='0a8427360dedb38e8ddca30f14d95f826420c550337c5a79dbb754904e194088')
 
@@ -21,7 +23,11 @@ class Otf(AutotoolsPackage):
     def configure_args(self):
         args = []
 
+        args.append('--without-mpi')
         args.append('--without-vtf3')
+        args.append('--without-zoidfs')
+
         args.append('--with-zlib')
-        args.append('--with-zlibsymbols')
+        args.append('--with-zlib-dir={0}'.format(self.spec['zlib'].prefix))
+
         return args

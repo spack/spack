@@ -17,6 +17,6 @@ class PyMsalExtensions(PythonPackage):
     version('0.1.3', sha256='59e171a9a4baacdbf001c66915efeaef372fb424421f1a4397115a3ddd6205dc')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-msal@0.4.1:1.999', type=('build', 'run'))
-    depends_on('py-portalocker@1.0:1.999', type=('build', 'run'))
+    depends_on('py-msal@0.4.1:1', type=('build', 'run'))
+    depends_on('py-portalocker@1.0:1', type=('build', 'run'))
     depends_on('py-pathlib2', when='@0.2:^python@:2', type=('build', 'run'))

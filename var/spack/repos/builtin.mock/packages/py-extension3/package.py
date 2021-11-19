@@ -16,6 +16,6 @@ class PyExtension3(Package):
     depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
     depends_on('patchelf@0.10', when='@1.0:1.1 ^python@3:')
 
-    version('2.0', 'hash-extension3-1.0')
-    version('1.1', 'hash-extension3-1.0')
-    version('1.0', 'hash-extension3-1.0')
+    version('2.0', '00000000000000000000000000000320')
+    version('1.1', '00000000000000000000000000000311')
+    version('1.0', '00000000000000000000000000000310')

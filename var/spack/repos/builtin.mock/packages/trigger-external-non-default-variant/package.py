@@ -7,6 +7,6 @@ class TriggerExternalNonDefaultVariant(Package):
     homepage = "http://www.example.com"
     url = "http://www.someurl.tar.gz"
 
-    version('1.0', 'foobarbaz')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     depends_on('external-non-default-variant')

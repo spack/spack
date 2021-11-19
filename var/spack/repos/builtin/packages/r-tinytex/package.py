@@ -16,11 +16,12 @@ class RTinytex(RPackage):
     'LaTeX' packages automatically."""
 
     homepage = "https://github.com/yihui/tinytex"
-    url      = "https://cloud.r-project.org/src/contrib/tinytex_0.15.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/tinytex"
+    cran     = "tinytex"
 
+    version('0.32', sha256='70fa28195ae6c8b8d43790205b49745c5a062aab78e64cec39bfbe5ed604c29f')
     version('0.28', sha256='76a0650aeab04eb252dc9cfa9ba855d88b09dfc2207c4a8ea2ea04fa0e0eea86')
     version('0.15', sha256='5d0988d3b7f763dfa65c722f177452a21344e428415a4b31aeb51478f0abad90')
 
     depends_on('r-xfun@0.5:', type=('build', 'run'))
     depends_on('r-xfun@0.19:', when='@0.28:', type=('build', 'run'))
+    depends_on('r-xfun@0.23:', when='@0.32:', type=('build', 'run'))

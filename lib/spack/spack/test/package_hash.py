@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.package_hash import package_hash, package_content
 from spack.spec import Spec
+from spack.util.package_hash import package_content, package_hash
 
 
 def test_hash(tmpdir, mock_packages, config):

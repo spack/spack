@@ -75,10 +75,9 @@
 #    does not like its directory structure.
 #
 
-from spack.package import PackageBase
-from spack.directives import depends_on, variant, conflicts
-
 import spack.variant
+from spack.directives import conflicts, depends_on, variant
+from spack.package import PackageBase
 
 
 class ROCmPackage(PackageBase):

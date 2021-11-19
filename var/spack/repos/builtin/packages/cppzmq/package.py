@@ -9,11 +9,12 @@ from spack import *
 class Cppzmq(CMakePackage):
     """C++ binding for 0MQ"""
 
-    homepage = "http://www.zeromq.org"
+    homepage = "https://www.zeromq.org"
     url      = "https://github.com/zeromq/cppzmq/archive/v4.2.2.tar.gz"
     git      = "https://github.com/zeromq/cppzmq.git"
 
     version('master', branch='master')
+    version('4.7.1', sha256='9853e0437d834cbed5d3c223bf1d755cadee70e7c964c6e42c4c6783dee5d02c')
     version('4.6.0', sha256='e9203391a0b913576153a2ad22a2dc1479b1ec325beb6c46a3237c669aef5a52')
     version('4.5.0', sha256='64eb4e58eaf0c77505391c6c9a606cffcb57c6086f3431567a1ef4a25b01fa36')
     version('4.4.1', sha256='117fc1ca24d98dbe1a60c072cde13be863d429134907797f8e03f654ce679385')
@@ -22,12 +23,19 @@ class Cppzmq(CMakePackage):
     version('4.2.3', sha256='3e6b57bf49115f4ae893b1ff7848ead7267013087dc7be1ab27636a97144d373')
     version('4.2.2', sha256='3ef50070ac5877c06c6bb25091028465020e181bbfd08f110294ed6bc419737d')
 
+    variant("drafts", default=False,
+            description="Build and install draft classes and methods")
+
     depends_on('cmake@3.0.0:', type='build')
     depends_on('libzmq')
     depends_on('libzmq@4.2.2', when='@4.2.2:4.2.3')
+    depends_on('libzmq+drafts', when='+drafts')
 
     def cmake_args(self):
         args = []
+
+        args.append(self.define_from_variant("ENABLE_DRAFTS", "drafts"))
+
         # https://github.com/zeromq/cppzmq/issues/422
         # https://github.com/zeromq/cppzmq/pull/288
         args.append('-DCPPZMQ_BUILD_TESTS=OFF')

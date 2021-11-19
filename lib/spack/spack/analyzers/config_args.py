@@ -8,10 +8,11 @@ already existing metadata about config args from a package spec install
 directory."""
 
 
-import spack.monitor
-from .analyzer_base import AnalyzerBase
-
 import os
+
+import spack.monitor
+
+from .analyzer_base import AnalyzerBase
 
 
 class ConfigArgs(AnalyzerBase):

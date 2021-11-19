@@ -21,6 +21,7 @@ class PyFiscalyear(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.3.2', sha256='0697b2af4ab2d4c6188fac33d340f31dea9b0e1f0d3666d6752faeedd744f019')
     version('0.3.1', sha256='5964b4be71453c1fa5da804343cea866e0299aff874aa59ae186a8a9b9ff62d0')
     version('0.3.0', sha256='64f97b3a0ab6b2857d09f0016bd3aae37646a454a5c2c66e907fef03ae54a816')
     version('0.2.0', sha256='f513616aeb03046406c56d7c69cd9e26f6a12963c71c1410cc3d4532a5bfee71')

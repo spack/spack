@@ -16,4 +16,4 @@ class PySpacyModelsEnCoreWebSm(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-spacy@2.2.2:', type=('build', 'run'), when='@:2.2.5')
-    depends_on('py-spacy@2.3.0:2.3.999', type=('build', 'run'), when='@2.3.1:')
+    depends_on('py-spacy@2.3.0:2.3', type=('build', 'run'), when='@2.3.1:')

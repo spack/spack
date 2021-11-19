@@ -8,10 +8,9 @@ import os
 
 import pytest
 
+import spack.cmd.install
 import spack.config
 import spack.package
-import spack.cmd.install
-
 from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 
@@ -40,11 +39,29 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
+def test_test_dup_alias(
+        mock_test_stage, mock_packages, mock_archive, mock_fetch,
+        install_mockery_mutable_config, capfd):
+    """Ensure re-using an alias fails with suggestion to change."""
+    install('libdwarf')
+
+    # Run the tests with the alias once
+    out = spack_test('run', '--alias', 'libdwarf', 'libdwarf')
+    assert "Spack test libdwarf" in out
+
+    # Try again with the alias but don't let it fail on the error
+    with capfd.disabled():
+        out = spack_test(
+            'run', '--alias', 'libdwarf', 'libdwarf', fail_on_error=False)
+
+    assert "already exists" in out
+
+
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
-    spack_test('run', 'printing-package')
+    spack_test('run', '--alias', 'printpkg', 'printing-package')
 
     stage_files = os.listdir(mock_test_stage)
     assert len(stage_files) == 1
@@ -116,7 +133,8 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     with tmpdir.as_cwd():
         spack_test('run',
                    '--log-format=junit', '--log-file=test.xml',
-                   pkg_name)
+                   pkg_name,
+                   fail_on_error=False)
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -143,7 +161,8 @@ def test_cdash_output_test_error(
         spack_test('run',
                    '--log-format=cdash',
                    '--log-file=cdash_reports',
-                   'test-error')
+                   'test-error',
+                   fail_on_error=False)
         report_dir = tmpdir.join('cdash_reports')
         print(tmpdir.listdir())
         assert report_dir in tmpdir.listdir()

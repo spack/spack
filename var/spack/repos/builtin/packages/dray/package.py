@@ -3,12 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
 import socket
 
 import llnl.util.tty as tty
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -69,6 +69,7 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared~openmp~mpi", when="~shared~openmp~mpi")
     depends_on("apcomp+shared~openmp~mpi", when="+shared~openmp~mpi")
 
+    depends_on("raja@:0.13", when="@:0.1.6")
     depends_on("raja+cuda~openmp+shared", when="+cuda~openmp+shared")
     depends_on("raja+cuda+openmp+shared", when="+cuda+openmp+shared")
     depends_on("raja+cuda~openmp~shared", when="+cuda~openmp~shared")
@@ -79,6 +80,7 @@ class Dray(Package, CudaPackage):
     depends_on("raja~cuda~openmp~shared", when="~cuda~openmp~shared")
     depends_on("raja~cuda+openmp~shared", when="~cuda+openmp~shared")
 
+    depends_on("umpire@:4.9", when="@:0.1.6")
     depends_on("umpire+cuda+shared", when="+cuda+shared")
     depends_on("umpire+cuda~shared", when="+cuda~shared")
     depends_on("umpire~cuda+shared", when="~cuda+shared")
@@ -127,7 +129,7 @@ class Dray(Package, CudaPackage):
         all of the options used to configure and build ascent.
 
         For more details about 'host-config' files see:
-            http://ascent.readthedocs.io/en/latest/BuildingAscent.html
+            https://ascent.readthedocs.io/en/latest/BuildingAscent.html
         """
 
         #######################
@@ -202,6 +204,23 @@ class Dray(Package, CudaPackage):
             cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
             cfg.write("# cpp compiler used by spack\n")
             cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
+
+        # use global spack compiler flags
+        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += ' '
+        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if self.spec.satisfies('%cce'):
+            fflags += " -ef"
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
         #######################
         # Backends

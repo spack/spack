@@ -2,8 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import re
+from tempfile import NamedTemporaryFile
 
-from spack import architecture
+import spack.platforms
 
 
 class Sqlite(AutotoolsPackage):
@@ -13,6 +16,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
     version('3.35.5', sha256='f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0')
     version('3.35.4', sha256='7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d')
     version('3.35.3', sha256='ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b')
@@ -47,7 +51,7 @@ class Sqlite(AutotoolsPackage):
     variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
-    conflicts('+fts', when='@:3.25.99.99')
+    conflicts('+fts', when='@:3.25')
 
     resource(name='extension-functions',
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
@@ -69,6 +73,65 @@ class Sqlite(AutotoolsPackage):
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
     patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
+
+    executables = ['^sqlite3$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # `sqlite3 --version` prints only the version number, timestamp, commit
+        # hash(?) but not the program name. As a basic sanity check, the code
+        # calls re.match() and attempts to match the ISO 8601 date following the
+        # version number as well.
+        match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        all_variants = []
+
+        def call(exe, query):
+            with NamedTemporaryFile(mode='w', buffering=1) as sqlite_stdin:
+                sqlite_stdin.write(query + '\n')
+                e = Executable(exe)
+                e(fail_on_error=False,
+                  input=sqlite_stdin.name,
+                  output=os.devnull,
+                  error=os.devnull)
+            return e.returncode
+
+        def get_variant(name, has_variant):
+            fmt = "+{:s}" if has_variant else "~{:s}"
+            return fmt.format(name)
+
+        for exe in exes:
+            variants = []
+
+            # check for fts
+            def query_fts(version):
+                return 'CREATE VIRTUAL TABLE name ' \
+                       'USING fts{:d}(sender, title, body);'.format(version)
+
+            rc_fts4 = call(exe, query_fts(4))
+            rc_fts5 = call(exe, query_fts(5))
+            variants.append(get_variant('fts', rc_fts4 == 0 and rc_fts5 == 0))
+
+            # check for functions
+            # SQL query taken from extension-functions.c usage instructions
+            query_functions = "SELECT load_extension('libsqlitefunctions');"
+            rc_functions = call(exe, query_functions)
+            variants.append(get_variant('functions', rc_functions == 0))
+
+            # check for rtree
+            query_rtree = 'CREATE VIRTUAL TABLE name USING rtree(id, x, y);'
+            rc_rtree = call(exe, query_rtree)
+            variants.append(get_variant('rtree', rc_rtree == 0))
+
+            # TODO: column_metadata
+
+            all_variants.append(''.join(variants))
+
+        return all_variants
 
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
@@ -104,9 +167,8 @@ class Sqlite(AutotoolsPackage):
         return find_libraries('libsqlite3', root=self.prefix.lib)
 
     def get_arch(self):
-        arch = architecture.Arch()
-        arch.platform = architecture.platform()
-        return str(arch.platform.target('default_target'))
+        host_platform = spack.platforms.host()
+        return str(host_platform.target('default_target'))
 
     def configure_args(self):
         args = []
@@ -118,8 +180,7 @@ class Sqlite(AutotoolsPackage):
             args.extend(['--disable-fts4', '--disable-fts5'])
 
         # Ref: https://sqlite.org/rtree.html
-        if '+rtree' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_RTREE=1')
+        args.extend(self.enable_or_disable('rtree'))
 
         # Ref: https://sqlite.org/compile.html
         if '+column_metadata' in self.spec:

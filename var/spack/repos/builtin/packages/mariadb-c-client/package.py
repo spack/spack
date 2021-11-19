@@ -16,7 +16,7 @@ class MariadbCClient(CMakePackage):
     Connector', which enables connections to MariaDB and MySQL servers.
     """
 
-    homepage = "http://mariadb.org/about/"
+    homepage = "https://mariadb.org/about/"
 
     url      = "https://downloads.mariadb.com/Connectors/c/connector-c-3.0.3/mariadb-connector-c-3.0.3-src.tar.gz"
     list_url = "https://downloads.mariadb.com/Connectors/c/"
@@ -57,6 +57,7 @@ class MariadbCClient(CMakePackage):
     depends_on('pcre')
     depends_on('openssl')
     depends_on('zlib')
+    depends_on('krb5')
 
     # patch needed for cmake-3.20
     patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',

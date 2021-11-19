@@ -9,7 +9,6 @@ from six import string_types
 
 import spack.spec
 
-
 #: The types of dependency relationships that Spack understands.
 all_deptypes = ('build', 'link', 'run', 'test')
 

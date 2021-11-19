@@ -12,10 +12,12 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git      = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.3.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.1', sha256='6fce0ac22051a454fe984283766eb473dc50752cd30bad05acb3dbde6ef4f8b1')
+    version('4.3.0', sha256='911c0cdb0146d43a2a59170e6a803f414a2b68df7d9ff369ab784d11a08d7264')
     version('4.2.0', sha256='198e357a14a79366b27b1097856d4821996bc36163be0cd2668910b253721060')
     version('4.1.0', sha256='92b8ee13dfc11a67d5136227ee985622685790fd3f0f0e1ec6db411d4e9a3419')
     version('4.0.0', sha256='cf105ce8c3e352d19713b3bf8bda77f25c1a692c4f2ca82d631ba15523ecc1cd')
@@ -27,6 +29,7 @@ class RocmTensile(CMakePackage):
 
     tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
     variant('openmp', default=True, description='Enable OpenMP')
 
@@ -36,20 +39,19 @@ class RocmTensile(CMakePackage):
     depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        # used in Tensile
-        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver + '+openmp')
-        depends_on('llvm-amdgpu@' + ver + '~openmp', type='build', when='@' + ver + '~openmp')
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('rocm-cmake@' + ver, type='build',  when='@' + ver)
+        depends_on('hip@' + ver,                       when='@' + ver)
+        depends_on('comgr@' + ver,                     when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,               when='@' + ver + '+openmp')
+        depends_on('llvm-amdgpu@' + ver + '~openmp',   when='@' + ver + '~openmp')
+        depends_on('rocminfo@' + ver,    type='build', when='@' + ver)
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
@@ -63,24 +65,28 @@ class RocmTensile(CMakePackage):
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
         args = [
-            '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
-            '-DTensile_COMPILER=hipcc',
-            '-DTensile_LOGIC=asm_full',
-            '-DTensile_CODE_OBJECT_VERSION=V3',
-            '-DBoost_USE_STATIC_LIBS=OFF',
-            '-DTENSILE_USE_OPENMP=ON',
-            '-DBUILD_WITH_TENSILE_HOST={0}'.format(
+            self.define('amd_comgr_DIR', self.spec['comgr'].prefix),
+            self.define('Tensile_COMPILER', 'hipcc'),
+            self.define('Tensile_LOGIC', 'asm_full'),
+            self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
+            self.define('Boost_USE_STATIC_LIBS', 'OFF'),
+            self.define('TENSILE_USE_OPENMP', 'ON'),
+            self.define(
+                'BUILD_WITH_TENSILE_HOST',
                 'ON' if '@3.7.0:' in self.spec else 'OFF'
             )
         ]
 
         if '@3.7.0:' in self.spec:
-            args.append('-DTensile_LIBRARY_FORMAT=msgpack')
+            args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
 
         if self.spec.satisfies('@4.1.0:'):
             if arch == 'gfx906' or arch == 'gfx908':
                 arch = arch + ':xnack-'
-        args.append('-DTensile_ARCHITECTURE={0}'.format(arch))
+        args.append(self.define('Tensile_ARCHITECTURE', arch))
+
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args
 

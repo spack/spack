@@ -14,9 +14,11 @@ class Ncdu(Package):
     to run in any minimal POSIX-like environment with ncurses installed.
     """
 
-    homepage = "http://dev.yorhel.nl/ncdu"
-    url      = "http://dev.yorhel.nl/download/ncdu-1.11.tar.gz"
+    homepage = "https://dev.yorhel.nl/ncdu"
+    url      = "https://dev.yorhel.nl/download/ncdu-1.11.tar.gz"
 
+    version('1.15.1', sha256='b02ddc4dbf1db139cc6fbbe2f54a282770380f0ca5c17089855eab52a9ea3fb0')
+    version('1.14.2', sha256='947a7f5c1d0cd4e338e72b4f5bc5e2873651442cec3cb012e04ad2c37152c6b1')
     version('1.13', sha256='f4d9285c38292c2de05e444d0ba271cbfe1a705eee37c2b23ea7c448ab37255a')
     version('1.12', sha256='820e4e4747a2a2ec7a2e9f06d2f5a353516362c22496a10a9834f871b877499a')
     version('1.11', sha256='d0aea772e47463c281007f279a9041252155a2b2349b18adb9055075e141bb7b')
@@ -26,6 +28,7 @@ class Ncdu(Package):
     version('1.7', sha256='70dfe10b4c0843050ee17ab27b7ad4d65714682f117079b85d779f83431fb333')
 
     depends_on("ncurses")
+    depends_on('pkgconfig', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,

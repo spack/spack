@@ -9,7 +9,7 @@ from spack import *
 class PerlTestFatal(PerlPackage):
     """Incredibly simple helpers for testing code with exceptions"""
 
-    homepage = "http://search.cpan.org/~rjbs/Test-Fatal-0.014/lib/Test/Fatal.pm"
+    homepage = "https://metacpan.org/pod/Test::Fatal"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Test-Fatal-0.014.tar.gz"
 
     version('0.014', sha256='bcdcef5c7b2790a187ebca810b0a08221a63256062cfab3c3b98685d91d1cbb0')

@@ -10,7 +10,7 @@ class PyLazyarray(PythonPackage):
     """a Python package that provides a lazily-evaluated numerical array class,
     larray, based on and compatible with NumPy arrays."""
 
-    homepage = "http://bitbucket.org/apdavison/lazyarray/"
+    homepage = "https://lazyarray.readthedocs.io/en/latest/"
     pypi = "lazyarray/lazyarray-0.2.8.tar.gz"
 
     version('0.3.2',  sha256='be980534c5950a976709085570f69be9534bdf0f3e5c21a9113de3ee2052683e')

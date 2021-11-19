@@ -15,8 +15,9 @@ class Vim(AutotoolsPackage):
     composing email to editing configuration files.
     """
 
-    homepage = "http://www.vim.org"
+    homepage = "https://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
+    maintainers = ['sethrj']
 
     version('8.2.2541', sha256='2699dfe87b524169e7390f0b383c406cb77a9fde7431665d3b9b80964d8d5daf')
     version('8.2.1201', sha256='39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d')
@@ -30,108 +31,76 @@ class Vim(AutotoolsPackage):
     version('8.0.0134', sha256='1b3e3e7d187eed55cbdb0a1dae6b8f3b885005fbae84222420877d7afa3b2310')
     version('7.4.2367', sha256='a9ae4031ccd73cc60e771e8bf9b3c8b7f10f63a67efce7f61cd694cd8d7cda5c')
 
-    feature_sets = ('huge', 'big', 'normal', 'small', 'tiny')
-    for fs in feature_sets:
-        variant(fs, default=False, description="Use '%s' feature set" % fs)
-
-    variant('python', default=False, description="build with Python")
-    depends_on('python', when='+python')
-
-    variant('ruby', default=False, description="build with Ruby")
-    depends_on('ruby', when='+ruby')
-
-    variant('lua', default=False, description="build with Lua")
-    depends_on('lua', when='+lua')
-
-    variant('perl', default=False, description="build with Perl")
-    depends_on('perl', when='+perl')
+    _features = ('huge', 'big', 'normal', 'small', 'tiny')
 
     variant('cscope', default=False, description="build with cscope support")
-    depends_on('cscope', when='+cscope', type='run')
-
-    # TODO: Once better support for multi-valued variants is added, add
-    # support for auto/no/gtk2/gnome2/gtk3/motif/athena/neXtaw/photon/carbon
+    variant('features', default='normal', description="feature set",
+            values=_features, multi=False)
     variant('gui', default=False, description="build with gui (gvim)")
+    variant('lua', default=False, description="build with Lua")
+    variant('perl', default=False, description="build with Perl")
+    variant('python', default=False, description="build with Python")
+    variant('ruby', default=False, description="build with Ruby")
     variant('x', default=False, description="use the X Window System")
+
+    for _f in _features[1:]:
+        conflicts('+gui', when='features=' + _f,
+                  msg='+gui requires features=huge')
+
+    depends_on('findutils', type='build')
+    depends_on('ncurses', when='@7.4:')
+
+    depends_on('cscope', when='+cscope', type='run')
+    depends_on('lua', when='+lua')
+    depends_on('perl', when='+perl')
+    depends_on('python', when='+python')
+    depends_on('ruby', when='+ruby')
+    depends_on('fontconfig', when="+gui")
     depends_on('libx11', when="+x")
     depends_on('libsm', when="+x")
     depends_on('libxpm', when="+x")
     depends_on('libxt', when="+x")
     depends_on('libxtst', when="+x")
 
-    depends_on('ncurses', when="@7.4:")
-    depends_on('findutils', type='build')
-    depends_on('fontconfig', when="+gui")
+    provides('xxd')
 
     def configure_args(self):
         spec = self.spec
-        feature_set = None
-        for fs in self.feature_sets:
-            if "+" + fs in spec:
-                if feature_set is not None:
-                    raise InstallError(
-                        "Only one feature set allowed, specified %s and %s"
-                        % (feature_set, fs))
-                feature_set = fs
-        if '+gui' in spec:
-            if feature_set is not None:
-                if feature_set != 'huge':
-                    raise InstallError(
-                        "+gui variant requires 'huge' feature set, "
-                        "%s was specified" % feature_set)
-            feature_set = 'huge'
-        if feature_set is None:
-            feature_set = 'normal'
+        args = ["--enable-fail-if-missing"]
 
-        configure_args = ["--enable-fail-if-missing"]
+        def yes_or_no(variant):
+            return 'yes' if spec.variants[variant].value else 'no'
 
         if '+termlib' in spec['ncurses']:
-            configure_args.append("--with-tlib=tinfow")
+            args.append("--with-tlib=tinfow")
         else:
-            configure_args.append("--with-tlib=ncursesw")
+            args.append("--with-tlib=ncursesw")
 
-        configure_args.append("--with-features=" + feature_set)
+        args.append("--with-features=" + spec.variants['features'].value)
 
         if '+python' in spec:
-            if 'python@3:' in self.spec:
-                configure_args.append("--enable-python3interp=dynamic")
-                configure_args.append("--enable-pythoninterp=no")
+            if spec['python'].version >= Version('3'):
+                args.append("--enable-python3interp=dynamic")
+                args.append("--enable-pythoninterp=no")
             else:
-                configure_args.append("--enable-python3interp=no")
-                configure_args.append("--enable-pythoninterp=dynamic")
+                args.append("--enable-python3interp=no")
+                args.append("--enable-pythoninterp=dynamic")
         else:
-            configure_args.append("--enable-python3interp=no")
+            args.append("--enable-python3interp=no")
 
-        if '+ruby' in spec:
-            configure_args.append("--enable-rubyinterp=yes")
-        else:
-            configure_args.append("--enable-rubyinterp=no")
+        args.extend([
+            "--enable-gui=" + ('auto' if '+gui' in spec else 'no'),
+            "--enable-luainterp=" + yes_or_no('lua'),
+            "--enable-perlinterp=" + yes_or_no('perl'),
+            "--enable-rubyinterp=" + yes_or_no('ruby'),
+        ])
+        args.extend(self.enable_or_disable('cscope'))
+        args.extend(self.with_or_without('x'))
 
         if '+lua' in spec:
-            configure_args.append("--enable-luainterp=yes")
-            configure_args.append("--with-lua-prefix=%s" % spec['lua'].prefix)
-        else:
-            configure_args.append("--enable-luainterp=no")
+            args.append("--with-lua-prefix=" + spec['lua'].prefix)
 
-        if '+perl' in spec:
-            configure_args.append("--enable-perlinterp=yes")
-        else:
-            configure_args.append("--enable-perlinterp=no")
-
-        if '+gui' in spec:
-            configure_args.append("--enable-gui=auto")
-        else:
-            configure_args.append("--enable-gui=no")
-
-        if '+x' in spec:
-            configure_args.append("--with-x")
-        else:
-            configure_args.append("--without-x")
-
-        if '+cscope' in spec:
-            configure_args.append("--enable-cscope")
-
-        return configure_args
+        return args
 
     # Tests must be run in serial
     def check(self):

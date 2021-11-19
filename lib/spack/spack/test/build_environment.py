@@ -8,16 +8,20 @@ import platform
 
 import pytest
 
+from llnl.util.filesystem import HeaderList, LibraryList
+
 import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.build_environment import (
+    _static_to_shared_library,
+    determine_number_of_jobs,
+    dso_suffix,
+)
 from spack.paths import build_env_path
-from spack.build_environment import dso_suffix, _static_to_shared_library
-from spack.build_environment import determine_number_of_jobs
-from spack.util.executable import Executable
 from spack.util.environment import EnvironmentModifications
-from llnl.util.filesystem import LibraryList, HeaderList
+from spack.util.executable import Executable
 
 
 @pytest.fixture
@@ -225,7 +229,7 @@ def test_package_inheritance_module_setup(config, mock_packages, working_env):
     assert os.environ['TEST_MODULE_VAR'] == 'test_module_variable'
 
 
-def test_set_build_environment_variables(
+def test_wrapper_variables(
         config, mock_packages, working_env, monkeypatch,
         installation_dir_with_headers
 ):
@@ -264,8 +268,8 @@ def test_set_build_environment_variables(
     try:
         pkg = root.package
         env_mods = EnvironmentModifications()
-        spack.build_environment.set_build_environment_variables(
-            pkg, env_mods, dirty=False)
+        spack.build_environment.set_wrapper_variables(
+            pkg, env_mods)
 
         env_mods.apply_modifications()
 
@@ -324,8 +328,8 @@ dt-diamond-left:
     )
 
     env_mods = EnvironmentModifications()
-    spack.build_environment.set_build_environment_variables(
-        top.package, env_mods, False)
+    spack.build_environment.set_wrapper_variables(
+        top.package, env_mods)
 
     env_mods.apply_modifications()
     link_dir_var = os.environ['SPACK_LINK_DIRS']

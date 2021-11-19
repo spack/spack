@@ -363,7 +363,7 @@ to ``spack install`` on the command line, ``--no-add`` is the default,
 while for dependency specs on the other hand, it is optional.  In other
 words, if there is an unambiguous match in the active concrete environment
 for a root spec provided to ``spack install`` on the command line, spack
-does not require you to specify the ``--no-add` option to prevent the spec
+does not require you to specify the ``--no-add`` option to prevent the spec
 from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
@@ -723,6 +723,8 @@ Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
 environment and the view are always compatible.
 
+.. _configuring_environment_views:
+
 """""""""""""""""""""""""""""
 Configuring environment views
 """""""""""""""""""""""""""""
@@ -730,13 +732,17 @@ Configuring environment views
 The Spack Environment manifest file has a top-level keyword
 ``view``. Each entry under that heading is a view descriptor, headed
 by a name. The view descriptor contains the root of the view, and
-optionally the projections for the view, and ``select`` and
-``exclude`` lists for the view. For example, in the following manifest
+optionally the projections for the view, ``select`` and
+``exclude`` lists for the view and link information via ``link`` and
+``link_type``. For example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
 package. This view selects all packages that depend on MPI, and
 excludes those built with the PGI compiler at version 18.5.
+All the dependencies of each root spec in the environment will be linked
+in the view due to the command ``link: all`` and the files in the view will
+be symlinks to the spack install directories.
 
 .. code-block:: yaml
 
@@ -749,11 +755,16 @@ excludes those built with the PGI compiler at version 18.5.
          exclude: ['%pgi@18.5']
          projections:
            all: {name}/{version}-{compiler.name}
+         link: all
+         link_type: symlink
 
 For more information on using view projections, see the section on
 :ref:`adding_projections_to_views`. The default for the ``select`` and
 ``exclude`` values is to select everything and exclude nothing. The
-default projection is the default view projection (``{}``).
+default projection is the default view projection (``{}``). The ``link``
+defaults to ``all`` but can also be ``roots`` when only the root specs
+in the environment are desired in the view. The ``link_type`` defaults
+to ``symlink`` but can also take the value of ``hardlink`` or ``copy``.
 
 Any number of views may be defined under the ``view`` heading in a
 Spack Environment.

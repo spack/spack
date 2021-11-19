@@ -25,13 +25,15 @@ class PyPillowBase(PythonPackage):
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
-    depends_on('python@3.6:3.9',         when='@8:',          type=('build', 'run'))
+    depends_on('python@3.7:3.10',        when='@9:',          type=('build', 'run'))
+    depends_on('python@3.6:3.10',        when='@8.3.2:8.4',   type=('build', 'run'))
+    depends_on('python@3.6:3.9',         when='@8:8.3.1',     type=('build', 'run'))
     depends_on('python@3.5:3.8',         when='@7.0:7.2',     type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:3.8', when='@6.2.1:6.2.2', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:3.7', when='@6.0:6.2.0',   type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:3.7', when='@5.2:5.4',     type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:3.6', when='@5.0:5.1',     type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.3:3.6', when='@4.0:4.999',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:3.6', when='@4.0:4',       type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:3.5', when='@2:3',         type=('build', 'run'))
     depends_on('python@2.4:2.7',         when='@:1',          type=('build', 'run'))
     depends_on('py-setuptools', type='build')
@@ -108,6 +110,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version('8.4.0', sha256='b8e2f83c56e141920c39464b852de3719dfbfb6e3c99a2d8da0edf4fb33176ed')
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
     version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
@@ -121,7 +124,10 @@ class PyPillow(PyPillowBase):
     version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     for ver in [
-        '7.2.0', '7.0.0', '6.2.2', '6.2.1', '6.2.0', '6.0.0',
-        '5.4.1', '5.1.0', '3.2.0', '3.0.0'
+        '8.4.0', '8.0.0',
+        '7.2.0', '7.0.0',
+        '6.2.2', '6.2.1', '6.2.0', '6.0.0',
+        '5.4.1', '5.1.0',
+        '3.2.0', '3.0.0'
     ]:
         provides('pil@' + ver, when='@' + ver)

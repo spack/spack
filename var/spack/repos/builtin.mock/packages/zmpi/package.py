@@ -12,7 +12,7 @@ class Zmpi(Package):
     homepage = "http://www.spack-fake-zmpi.org"
     url      = "http://www.spack-fake-zmpi.org/downloads/zmpi-1.0.tar.gz"
 
-    version('1.0', 'foobarbaz')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     provides('mpi@:10.0')
     depends_on('fake')

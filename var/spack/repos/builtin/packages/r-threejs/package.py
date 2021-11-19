@@ -10,9 +10,9 @@ class RThreejs(RPackage):
     """Interactive 3D Scatter Plots, Networks and Globes
 
     Create interactive 3D scatter plots, network plots, and globes using the
-    'three.js' visualization library ("http://threejs.org")."""
+    'three.js' visualization library ("https://threejs.org/")."""
 
-    homepage = "http://bwlewis.github.io/rthreejs"
+    homepage = "https://bwlewis.github.io/rthreejs"
     url      = "https://cloud.r-project.org/src/contrib/threejs_0.2.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/threejs"
 

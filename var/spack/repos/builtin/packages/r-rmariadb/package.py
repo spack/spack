@@ -30,8 +30,8 @@ class RRmariadb(RPackage):
     depends_on('r-plogr', type=('build', 'run'))
     depends_on('mariadb-client')
 
-    patch('configure_add_rpath.patch')
-
+    # Set the library explicitly to prevent configure from finding a system
+    # mysql-client
     def configure_vars(self):
         lib_dir = self.spec['mariadb-client'].prefix.lib.mariadb
         inc_dir = self.spec['mariadb-client'].prefix.include.mariadb

@@ -20,4 +20,4 @@ class Shiro(MavenPackage):
     version('1.5.3', sha256='25c5d99eddf790969e0f80bd9769f773465c9c9e1e8ec1f549f476bdae8c6983')
 
     depends_on('java@8:', type=('build', 'run'))
-    depends_on('maven@3.5:3.999', type='build')
+    depends_on('maven@3.5:3', type='build')

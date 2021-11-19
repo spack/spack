@@ -22,7 +22,10 @@ def test_list_with_pytest_arg():
 
 
 def test_list_with_keywords():
-    output = spack_test('--list', '-k', 'cmd/unit_test.py')
+    # Here we removed querying with a "/" to separate directories
+    # since the behavior is inconsistent across different pytest
+    # versions, see https://stackoverflow.com/a/48814787/771663
+    output = spack_test('--list', '-k', 'unit_test.py')
     assert output.strip() == cmd_test_py
 
 

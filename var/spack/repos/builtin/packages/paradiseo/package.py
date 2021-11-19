@@ -10,7 +10,7 @@ class Paradiseo(CMakePackage):
     """A C++ white-box object-oriented framework dedicated to the reusable
        design of metaheuristics."""
 
-    homepage = "http://paradiseo.gforge.inria.fr/"
+    homepage = "https://paradiseo.gforge.inria.fr/"
     git      = "https://gforge.inria.fr/git/paradiseo/paradiseo.git"
 
     # Installing from the development version is a better option at this
@@ -31,7 +31,6 @@ class Paradiseo(CMakePackage):
     variant('edo',      default=True,
             description='Compile with (Experimental) EDO module')
 
-    # variant('doc', default=False, description='Compile with documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('gnuplot',  default=False, description='Enable GnuPlot support')
 
@@ -40,7 +39,6 @@ class Paradiseo(CMakePackage):
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
-    depends_on("doxygen", when='+doc', type='build')
     depends_on("gnuplot", when='+gnuplot')
     depends_on("eigen", when='+edo', type='build')
     depends_on("boost~mpi", when='+edo~mpi')

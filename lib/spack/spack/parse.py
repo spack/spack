@@ -3,10 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import re
 import shlex
 import sys
-import itertools
+
 from six import string_types
 
 import spack.error

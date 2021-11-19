@@ -19,7 +19,7 @@ class Fstrack(MakefilePackage):
 
     variant('flow', default=True, description='Build the flow tracker')
 
-    depends_on('gmt@4.0:4.999', when='+flow')
+    depends_on('gmt@4.0:4', when='+flow')
     depends_on('netcdf-c', when='+flow')
 
     parallel = False
