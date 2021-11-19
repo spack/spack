@@ -46,10 +46,16 @@ class Opencv(CMakePackage, CudaPackage):
     # `ocv_add_module(...)` and `ocv_define_module(...)`
     modules = [
         'apps', 'calib3d', 'core', 'dnn', 'features2d', 'flann', 'gapi', 'highgui',
-        'imgcodecs', 'imgproc', 'java', 'java_bindings_generator', 'js',
-        'js_bindings_generator', 'ml', 'objc', 'objc_bindings_generator', 'objdetect',
+        'imgcodecs', 'imgproc', 'java', 'java_bindings_generator',
+        'ml', 'objc', 'objc_bindings_generator', 'objdetect',
         'photo', 'python2', 'python3', 'python_bindings_generator', 'python_tests',
         'stitching', 'ts', 'video', 'videoio', 'world'
+    ]
+
+    # These need additional spack packages
+    # js needs Emscripten
+    modules_pending = [
+        'js', 'js_bindings_generator',
     ]
 
     for mod in modules:
@@ -101,6 +107,7 @@ class Opencv(CMakePackage, CudaPackage):
                  when='@{0}+contrib'.format(cv))
 
     # Required (dependencies)
+    depends_on('gmake', type='build')
     depends_on('cmake@3.5.1:', type='build')
     depends_on('python@2.7:2.8,3.2:', type='build')
     depends_on('zlib@1.2.3:')
@@ -182,6 +189,7 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+calib3d', when='~imgproc')
     conflicts('+dnn', when='~core')
     conflicts('+dnn', when='~imgproc')
+    conflicts('+dnn', when='~protobuf')
     conflicts('+features2d', when='~imgproc')
     conflicts('+flann', when='~core')
     conflicts('+gapi', when='~imgproc')
@@ -192,6 +200,7 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+java', when='~core')
     conflicts('+java', when='~imgproc')
     conflicts('+java', when='~java_bindings_generator')
+    conflicts('+java', when='~python2~python3')
     conflicts('+js', when='~js_bindings_generator')
     conflicts('+ml', when='~core')
     conflicts('+objc', when='~core')
@@ -224,7 +233,7 @@ class Opencv(CMakePackage, CudaPackage):
     # Optional 3rd party components (conflicts)
     # Defined in `CMakeLists.txt` and `modules/gapi/cmake/init.cmake`
     # using `OCV_OPTION(WITH_* ...)`
-    conflicts('+ade', when='~gapi')
+    conflicts('+gapi', when='~ade')
     conflicts('+android_mediandk', when='platform=darwin', msg='Android only')
     conflicts('+android_mediandk', when='platform=linux', msg='Android only')
     conflicts('+android_mediandk', when='platform=cray', msg='Android only')
