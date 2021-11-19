@@ -155,7 +155,9 @@ class Rivet(AutotoolsPackage):
         # this avoids an "import site" error in the build
         env.unset('PYTHONHOME')
         fjcontrib_home = self.spec['fjcontrib'].prefix
+        fastjet_home = self.spec['fastjet'].prefix
         env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
+        env.prepend_path('LD_LIBRARY_PATH', fastjet_home.lib)
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('@3.1.2:') and name == 'cxxflags':
