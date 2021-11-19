@@ -29,7 +29,7 @@ class PyPythran(PythonPackage):
     depends_on('python@3:', when='@0.9.6:', type=('build', 'run'))
     depends_on('python@2.7:', when='@:0.9.5', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest-runner', type='build')
+    depends_on('py-pytest-runner', type='build', when='@:0.9')
     depends_on('py-ply@3.4:', type=('build', 'run'))
     depends_on('py-networkx@2:', when='@:0.9.11', type=('build', 'run'))
     depends_on('py-decorator', when='@:0.9.11', type=('build', 'run'))
