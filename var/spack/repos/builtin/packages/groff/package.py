@@ -43,6 +43,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
     depends_on('uchardet', when='@1.22.4:')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libice', when='+x')
     depends_on('libxaw', when='+x')
@@ -58,7 +59,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def parallel(self):
-        return self.spec.satisfies('@1.22.4')
+        return False
 
     @classmethod
     def determine_version(cls, exe):

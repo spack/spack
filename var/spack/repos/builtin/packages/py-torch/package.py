@@ -23,6 +23,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.10.0', tag='v1.10.0', submodules=True)
     version('1.9.1', tag='v1.9.1', submodules=True)
     version('1.9.0', tag='v1.9.0', submodules=True)
     version('1.8.2', tag='v1.8.2', submodules=True)
@@ -74,6 +75,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('gloo', default=not is_darwin, description='Use Gloo')
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API')
+    variant('breakpad', default=True, description='Enable breakpad crash dump library')
 
     conflicts('+cuda', when='+rocm')
     conflicts('+cudnn', when='~cuda')
@@ -97,6 +99,9 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+fbgemm', when='@:0.4,1.4.0')
     conflicts('+qnnpack', when='@:0.4')
     conflicts('+mkldnn', when='@:0.4')
+    conflicts('+breakpad', when='@:1.9')  # Option appeared in 1.10.0
+    conflicts('+breakpad', when='target=ppc64:', msg='Unsupported')
+    conflicts('+breakpad', when='target=ppc64le:', msg='Unsupported')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -118,8 +123,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
-    depends_on('py-pybind11@master', when='@master', type=('build', 'link', 'run'))
-    depends_on('py-pybind11@2.6.2', when='@1.8.0:1.9', type=('build', 'link', 'run'))
+    depends_on('py-pybind11@2.6.2', when='@1.8.0:', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.3.0', when='@1.1.0:1.7', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.2.4', when='@1.0.0:1.0', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.2.2', when='@0.4.0:0.4', type=('build', 'link', 'run'))
@@ -131,25 +135,19 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('lapack')
     depends_on('eigen', when='@0.4:')
     # https://github.com/pytorch/pytorch/issues/60329
-    # depends_on('cpuinfo@master', when='@master')
-    # depends_on('cpuinfo@2020-12-17', when='@1.8.0:1.9')
+    # depends_on('cpuinfo@2020-12-17', when='@1.8.0:')
     # depends_on('cpuinfo@2020-06-11', when='@1.6.0:1.7')
     # https://github.com/shibatch/sleef/issues/427
-    # depends_on('sleef@master', when='@master')
-    # depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:1.9')
+    # depends_on('sleef@3.5.1_2020-12-22', when='@1.8.0:')
     # https://github.com/pytorch/pytorch/issues/60334
     # depends_on('sleef@3.4.0_2019-07-30', when='@1.6.0:1.7')
     # https://github.com/Maratyszcza/FP16/issues/18
-    # depends_on('fp16@master', when='@master')
-    # depends_on('fp16@2020-05-14', when='@1.6.0:1.9')
-    depends_on('pthreadpool@master', when='@master')
-    depends_on('pthreadpool@2021-04-13', when='@1.9.0:1.9')
+    # depends_on('fp16@2020-05-14', when='@1.6.0:')
+    depends_on('pthreadpool@2021-04-13', when='@1.9.0:')
     depends_on('pthreadpool@2020-10-05', when='@1.8.0:1.8')
     depends_on('pthreadpool@2020-06-15', when='@1.6.0:1.7')
-    depends_on('psimd@master', when='@master')
-    depends_on('psimd@2020-05-17', when='@1.6.0:1.9')
-    depends_on('fxdiv@master', when='@master')
-    depends_on('fxdiv@2020-04-17', when='@1.6.0:1.9')
+    depends_on('psimd@2020-05-17', when='@1.6.0:')
+    depends_on('fxdiv@2020-04-17', when='@1.6.0:')
     depends_on('benchmark', when='@1.6:+test')
 
     # Optional dependencies
@@ -166,18 +164,15 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('valgrind', when='+valgrind')
     # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on('xnnpack@master', when='@master+xnnpack')
-    # depends_on('xnnpack@2021-02-22', when='@1.8.0:1.9+xnnpack')
+    # depends_on('xnnpack@2021-02-22', when='@1.8.0:+xnnpack')
     # depends_on('xnnpack@2020-03-23', when='@1.6.0:1.7+xnnpack')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on('gloo@master', when='@master+gloo')
-    # depends_on('gloo@2021-05-04', when='@1.9.0:1.9+gloo')
+    # depends_on('gloo@2021-05-04', when='@1.9.0:+gloo')
     # depends_on('gloo@2020-09-18', when='@1.7.0:1.8+gloo')
     # depends_on('gloo@2020-03-17', when='@1.6.0:1.6+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on('onnx@master', when='@master+onnx_ml')
-    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8.0:1.9+onnx_ml')
+    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8.0:+onnx_ml')
     # depends_on('onnx@1.7.0_2020-05-31', when='@1.6.0:1.7+onnx_ml')
     depends_on('mkl', when='+mkldnn')
 
@@ -223,6 +218,11 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
+
+    # Fix compilation of +distributed~tensorpipe
+    # https://github.com/pytorch/pytorch/issues/68002
+    patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
+          sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
 
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
@@ -321,6 +321,8 @@ class PyTorch(PythonPackage, CudaPackage):
             enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
+        if self.spec.satisfies('@1.10:'):
+            enable_or_disable('breakpad')
 
         enable_or_disable('nccl')
         if '+nccl' in self.spec:

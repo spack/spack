@@ -13,7 +13,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.0.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.1.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -22,6 +22,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
     version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')
     version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
     version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
@@ -146,6 +147,10 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # set SLEPC_DIR & PETSC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
         env.set('PETSC_DIR', self.spec['petsc'].prefix)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Set up SLEPC_DIR for dependent packages built with SLEPc
+        env.set('SLEPC_DIR', self.prefix)
 
     def run_hello_test(self):
         """Run stand alone test: hello"""

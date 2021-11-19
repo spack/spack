@@ -994,6 +994,16 @@ class IntelPackage(PackageBase):
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True) + result
+            # Intel MPI since 2019 depends on libfabric which is not in the
+            # lib directory but in a directory of its own which should be
+            # included in the rpath
+            if self.version_yearlike >= ver('2019'):
+                d = ancestor(self.component_lib_dir('mpi'))
+                if '+external-libfabric' in self.spec:
+                    result += self.spec['libfabric'].libs
+                else:
+                    result += find_libraries(['libfabric'],
+                                             os.path.join(d, 'libfabric', 'lib'))
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):
@@ -1091,15 +1101,6 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
-
-                # Intel MPI since 2019 depends on libfabric which is not in the
-                # lib directory but in a directory of its own which should be
-                # included in the rpath
-                if self.version_yearlike >= ver('2019'):
-                    d = ancestor(self.component_lib_dir('mpi'))
-                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
-                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 

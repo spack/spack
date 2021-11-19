@@ -12,7 +12,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.10/amrex-21.10.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.11/amrex-21.11.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True

@@ -11,6 +11,8 @@ from spack import *
 class IntelMkl(IntelPackage):
     """Intel Math Kernel Library."""
 
+    maintainers = ['rscohn2']
+
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
     version('2020.4.304', sha256='2314d46536974dbd08f2a4e4f9e9a155dc7e79e2798c74e7ddfaad00a5917ea5',

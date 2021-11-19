@@ -22,7 +22,7 @@ class Isescan(Package):
     depends_on('py-fastcluster', type='run')
     depends_on('py-argparse', type='run')
     depends_on('blast-plus@2.2.31:', type='run')
-    depends_on('fraggenescan@1.30:', type='run')
+    depends_on('fraggenescan@:1.30', type='run')
     depends_on('hmmer@3.1b2:', type='run')
 
     def setup_run_environment(self, env):

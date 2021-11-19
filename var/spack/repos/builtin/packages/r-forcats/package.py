@@ -15,9 +15,9 @@ class RForcats(RPackage):
     into other, 'anonymising', and manually 'recoding')."""
 
     homepage = "https://forcats.tidyverse.org/"
-    url      = "https://cloud.r-project.org/src/contrib/forcats_0.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/forcats"
+    cran = "forcats"
 
+    version('0.5.1', sha256='c4fb96e874e2bedaa8a1aa32ea22abdee7906d93b5c5c7b42c0894c0c5b6a289')
     version('0.5.0', sha256='8f960e789333ec597ddf2d653a64e330f03b86f465e9b71f6779f227355d90c4')
     version('0.4.0', sha256='7c83cb576aa6fe1379d7506dcc332f7560068b2025f9e3ab5cd0a5f28780d2b2')
     version('0.3.0', sha256='95814610ec18b8a8830eba63751954387f9d21400d6ab40394ed0ff22c0cb657')

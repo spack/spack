@@ -320,3 +320,11 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
         default=None,
         help=cdash_help['buildstamp']
     )
+
+
+@arg
+def reuse():
+    return Args(
+        '--reuse', action='store_true', default=False,
+        help='reuse installed dependencies'
+    )

@@ -13,9 +13,9 @@ class RCar(RPackage):
     Companion to Applied Regression, Second Edition, Sage, 2011."""
 
     homepage = "https://r-forge.r-project.org/projects/car/"
-    url      = "https://cloud.r-project.org/src/contrib/car_2.1-4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/car"
+    cran = "car"
 
+    version('3.0-11', sha256='b32c927206f515631ff276dbb337b0f22e9b2d851f4abb1d2c272e534c19542c')
     version('3.0-10', sha256='1ce316d2fee9b47c951d25d096be732489a3c9f6fc9e612a1eca2e50fb5925f1')
     version('3.0-3', sha256='fa807cb12f6e7fb38ec534cac4eef54747945c2119a7d51155a2492ad778c36f')
     version('3.0-2', sha256='df59a9ba8fed67eef5ddb8f92f2b41745df715d5695c71d562d7031513f37c50')
@@ -33,5 +33,6 @@ class RCar(RPackage):
     depends_on('r-quantreg', type=('build', 'run'))
     depends_on('r-maptools', when='@3.0:', type=('build', 'run'))
     depends_on('r-rio', when='@3.0:', type=('build', 'run'))
+    depends_on('r-lme4@1.1-27.1:', when='@3.0-11:', type=('build', 'run'))
     depends_on('r-lme4', when='@3.0:', type=('build', 'run'))
     depends_on('r-nlme', when='@3.0:', type=('build', 'run'))

@@ -70,13 +70,13 @@ b_module=$(spack -m module tcl find b)
 # Create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
-test_env_location=$(spack location -e spack_test_env)
+spack env create spack_test_2_env
 
 # Ensure that we uninstall b on exit
 cleanup() {
     echo "Removing test environment before exiting."
-    spack env deactivate 2>&1 > /dev/null
-    spack env rm -y spack_test_env
+    spack env deactivate > /dev/null 2>&1
+    spack env rm -y spack_test_env spack_test_2_env
 
     title "Cleanup"
     echo "Removing test packages before exiting."
@@ -106,6 +106,9 @@ contains "usage: spack module " spack -m module
 title 'Testing `spack load`'
 contains "export PATH=$(spack -m location -i b)/bin" spack -m load --only package --sh b
 succeeds spack -m load b
+LIST_CONTENT=`spack -m load b; spack load --list`
+contains "b@" echo $LIST_CONTENT
+does_not_contain "a@" echo $LIST_CONTENT
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
 contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
@@ -149,14 +152,17 @@ contains "usage: spack env deactivate " spack env deactivate --help
 
 title 'Testing activate and deactivate together'
 echo "Testing 'spack env activate spack_test_env'"
+succeeds spack env activate spack_test_env
 spack env activate spack_test_env
 is_set SPACK_ENV
 
 echo "Testing 'spack env deactivate'"
+succeeds spack env deactivate
 spack env deactivate
 is_not_set SPACK_ENV
 
 echo "Testing 'spack env activate spack_test_env'"
+succeeds spack env activate spack_test_env
 spack env activate spack_test_env
 is_set SPACK_ENV
 
@@ -165,6 +171,7 @@ despacktivate
 is_not_set SPACK_ENV
 
 echo "Testing 'spack env activate --prompt spack_test_env'"
+succeeds spack env activate --prompt spack_test_env
 spack env activate --prompt spack_test_env
 is_set SPACK_ENV
 is_set SPACK_OLD_PS1
@@ -175,7 +182,21 @@ is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
 
 echo "Testing 'spack env activate --temp'"
+succeeds spack env activate --temp
 spack env activate --temp
 is_set SPACK_ENV
+succeeds spack env deactivate
 spack env deactivate
 is_not_set SPACK_ENV
+
+echo "Testing spack env activate repeatedly"
+spack env activate spack_test_env
+succeeds spack env activate spack_test_2_env
+spack env activate spack_test_2_env
+contains "spack_test_2_env" sh -c 'echo $PATH'
+does_not_contain "spack_test_env" sh -c 'echo $PATH'
+despacktivate
+
+echo "Correct error exit codes for activate and deactivate"
+fails spack env activate nonexisiting_environment
+fails spack env deactivate
