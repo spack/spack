@@ -18,3 +18,4 @@ class PySelectors34(PythonPackage):
     version('1.2', sha256='09f5066337f8a76fb5233f267873f89a27a17c10bf79575954894bb71686451c')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-six', type='build')
