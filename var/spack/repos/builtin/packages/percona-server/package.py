@@ -21,7 +21,8 @@ class PerconaServer(CMakePackage):
     depends_on('openssl')
     depends_on('ncurses')
     depends_on('readline')
-    depends_on('openldap')
+    # Links to libldap_r, which was merged with libldap in OpenLDAP 2.5
+    depends_on('openldap@:2.4')
     depends_on('libtirpc')
     depends_on('curl')
     depends_on('bison', type='build')
