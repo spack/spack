@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from __future__ import print_function
 
+import argparse
 import contextlib
 import fnmatch
 import functools
@@ -25,7 +26,6 @@ import spack.binary_distribution
 import spack.config
 import spack.detection
 import spack.environment
-import spack.main
 import spack.modules
 import spack.paths
 import spack.platforms
@@ -35,9 +35,6 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.path
-
-#: "spack buildcache" command, initialized lazily
-_buildcache_cmd = None
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -258,10 +255,10 @@ class _BuildcacheBootstrapper(object):
         return data
 
     def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
-        global _buildcache_cmd
-
-        if _buildcache_cmd is None:
-            _buildcache_cmd = spack.main.SpackCommand('buildcache')
+        # TODO: The local import is due to a circular import error. The
+        # TODO: correct fix for this is a refactor of the API used for
+        # TODO: binary relocation
+        import spack.cmd.buildcache
 
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
@@ -282,13 +279,16 @@ class _BuildcacheBootstrapper(object):
                     'compilers', [{'compiler': compiler_entry}]
             ):
                 spec_str = '/' + pkg_hash
+                parser = argparse.ArgumentParser()
+                spack.cmd.buildcache.setup_parser(parser)
                 install_args = [
                     'install',
                     '--sha256', pkg_sha256,
                     '--only-root',
                     '-a', '-u', '-o', '-f', spec_str
                 ]
-                _buildcache_cmd(*install_args, fail_on_error=False)
+                args = parser.parse_args(install_args)
+                spack.cmd.buildcache.installtarball(args)
 
     def _install_and_test(
             self, abstract_spec, bincache_platform, bincache_data, test_fn
