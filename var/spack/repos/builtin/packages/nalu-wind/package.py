@@ -61,7 +61,7 @@ class NaluWind(CMakePackage, CudaPackage):
     depends_on('hypre@develop,2.18.2: ~int64+mpi~superlu-dist', when='+hypre')
     depends_on('kokkos-nvcc-wrapper', type='build', when='+cuda')
     for _arch in CudaPackage.cuda_arch_values:
-        depends_on('trilinos@master,develop ~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre+cuda+cuda_rdc+wrapper'.format(_arch),
+        depends_on('trilinos@master,develop ~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist~superlu+hdf5+shards~hypre+cuda+cuda_rdc+wrapper cuda_arch={0}'.format(_arch),
                    when='+cuda cuda_arch={0}'.format(_arch))
         depends_on('hypre@develop +mpi+cuda~int64~superlu-dist cuda_arch={0}'.format(_arch),
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))
