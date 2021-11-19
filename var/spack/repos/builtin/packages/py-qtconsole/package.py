@@ -28,5 +28,5 @@ class PyQtconsole(PythonPackage):
     depends_on('py-ipython-genutils',    type=('build', 'run'), when='@4.5.1:')
     depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
     depends_on('py-pyqt5',               type='run', when='@:5.1')
-    depends_on('py-qtpy',                type='run', when='@5.2.0:')
-    depends_on('py-pyzmq@17.1:',         type='run', when='@5.2.0:')
+    depends_on('py-qtpy',                type=('build', 'run'), when='@5.2.0:')
+    depends_on('py-pyzmq@17.1:',         type=('build', 'run'), when='@5.2.0:')
