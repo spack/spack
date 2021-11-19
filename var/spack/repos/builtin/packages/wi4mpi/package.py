@@ -7,8 +7,8 @@ from spack import *
 
 
 class Wi4mpi(CMakePackage):
-    """WI4MPI: Wrapper Interface For MPI performing a light translation between MPI constants
-    and MPI objects from an MPI implementation to another one"""
+    """WI4MPI: Wrapper Interface For MPI performing a light translation between MPI
+    constants and MPI objects from an MPI implementation to another one"""
 
     homepage = "https://github.com/cea-hpc/wi4mpi"
     url      = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
@@ -41,7 +41,7 @@ class Wi4mpi(CMakePackage):
             wi4mpi_build_type = 'NORMAL'
         elif self.spec.variants["build_type"].value == "Debug":
             wi4mpi_build_type = 'DEBUG'
-        args = ["-DWI4MPI_REALEASE=" + wi4mpi_build_type, 
+        args = ["-DWI4MPI_REALEASE=" + wi4mpi_build_type,
                 "-DWI4MPI_COMPILER=" + compiler]
         return args
 
