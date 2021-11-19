@@ -19,15 +19,13 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels', 'liuyangzhuan']
 
     version('develop', branch='master')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('amd', branch='amd')
     version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
     version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
-    version('6.4.0-amd', sha256='e5ffbdc4647473fc606d7c78e3207df40dce61cba1a2f8953ba3ffe88c9eacf4')
     version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
     version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')
     version('6.2.0', sha256='15ad1badd81b41e37941dd124d06d3b92e51c4f0ff532ad23fb09c4ebfe6eb9e')
-    version('6.1.1-amd1', sha256='03a03517a125da7c60f3c5ec7e6652d5a63dd474ceb5efc6d19242e0f999b69f')
     version('6.1.1', sha256='35d25cff592c724439870444ed45e1d1d15ca2c65f02ccd4b83a6d3c9d220bd1')
     version('6.1.0', sha256='92c6d1424dd830ee2d1e7396a418a5f6645160aea8472e558c4e4bfe006593c4')
     version('6.0.0', sha256='ff6cdfa0263d595708bbb6d11fb780915d8cfddab438db651e246ea292f37ee4')
@@ -102,7 +100,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
-        if '+rocm' in spec:
+        if '+rocm' in spec and spec.satisfies('@amd'):
             args.append('-DTPL_ENABLE_HIPLIB=TRUE')
             args.append(
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
