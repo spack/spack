@@ -155,6 +155,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('libwebp', when='+webp')
     depends_on('tesseract', when='+tesseract')
     depends_on('leptonica', when='+tesseract')
+    depends_on('libdc1394', when='+1394')
 
     # Other (dependencies)
     depends_on('hdf5', when='+contrib')
@@ -253,6 +254,7 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts('+gtk', when='platform=darwin', msg='Linux only')
     conflicts('+gtk_2_x', when='platform=darwin', msg='Linux only')
     conflicts('+ipp', when='target=aarch64:', msg='x86 or x86_64 only')
+    conflicts('+jasper', when='+openjpeg')
     conflicts('+msmf', when='platform=darwin', msg='Windows only')
     conflicts('+msmf', when='platform=linux', msg='Windows only')
     conflicts('+msmf', when='platform=cray', msg='Windows only')
