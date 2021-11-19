@@ -3,14 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack import *
-from spack.util.environment import set_env
 
 
 class Wi4mpi(CMakePackage):
-    """WI4MPI: Wrapper Interface For MPI performing a light translation between MPI constants and MPI objects from an MPI implementation to another one"""
+    """WI4MPI: Wrapper Interface For MPI performing a light translation between MPI constants 
+    and MPI objects from an MPI implementation to another one"""
 
     homepage = "https://github.com/cea-hpc/wi4mpi"
     url      = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
@@ -22,8 +20,8 @@ class Wi4mpi(CMakePackage):
     version('3.2.1', sha256='0d928cb930b6cb1ae648eca241db59812ee0e5c041faf2f57728bbb6ee4e36df')
     version('3.2.0', sha256='3322f6823dbec1d58a1fcf163b2bcdd7b9cd75dc6c7f78865fc6cb0a91bf6f94')
     variant('build_type', default='Release',
-        description='The build type to build',
-        values=('Debug', 'Release', 'RelWithDebInfo'))
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     depends_on('mpi')
 
@@ -43,7 +41,7 @@ class Wi4mpi(CMakePackage):
             wi4mpi_build_type = 'NORMAL'
         elif self.spec.variants["build_type"].value == "Debug":
             wi4mpi_build_type = 'DEBUG'
-        args = ["-DWI4MPI_REALEASE="+wi4mpi_build_type, "-DWI4MPI_COMPILER="+compiler]
+        args = ["-DWI4MPI_REALEASE=" + wi4mpi_build_type, "-DWI4MPI_COMPILER=" + compiler]
         return args
 
     def setup_run_environment(self, env):
