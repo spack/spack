@@ -30,6 +30,7 @@ class Racket(Package):
     variant('jit', default=True, description="Just-in-Time Compilation")
 
     parallel = False
+    extendable = True
 
     def toggle(self, spec, variant):
         toggle_text = ("enable" if spec.variants[variant].value else "disable")
