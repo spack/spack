@@ -11,19 +11,18 @@ class Racket(Package):
 
     homepage = "https://www.racket-lang.org"
 
-    maintainers = ['arjunguha','elfprince13']
+    maintainers = ['arjunguha', 'elfprince13']
 
-    version('8.3','3b963cd29ae119e1acc2c6dc4781bd9f25027979589caaae3fdfc021aac2324b')
+    version('8.3', '3b963cd29ae119e1acc2c6dc4781bd9f25027979589caaae3fdfc021aac2324b')
 
     depends_on('libffi', type=('build', 'link', 'run'))
     depends_on('patchutils')
-    depends_on('libtool',type=('build'))
+    depends_on('libtool', type=('build'))
 
     phases = ['configure', 'build', 'install']
 
     def url_for_version(self, version):
         return "https://mirror.racket-lang.org/installers/{0}/racket-minimal-{0}-src-builtpkgs.tgz".format(version)
-
 
     variant('cs', default=True, description='Build Racket CS (new ChezScheme VM)')
     variant('bc', default=False, description='Build Racket BC (old MZScheme VM)')
@@ -33,13 +32,15 @@ class Racket(Package):
     parallel = False
 
     def toggle(self, spec, variant):
-        print("{0}? {1}".format(variant, spec.variants[variant].value))
-        return "--{0}-{1}".format(("enable" if spec.variants[variant].value else "disable"), variant)
-    
+        toggle_text = ("enable" if spec.variants[variant].value else "disable")
+        return "--{0}-{1}".format(toggle_text, variant)
+
     def configure(self, spec, prefix):
         with working_dir('src'):
             configure = Executable("./configure")
-            configure_args = [self.toggle(spec, 'cs'), self.toggle(spec, 'bc'), self.toggle(spec, 'jit')]
+            configure_args = [self.toggle(spec, 'cs'),
+                              self.toggle(spec, 'bc'),
+                              self.toggle(spec, 'jit')]
             toggle_shared = self.toggle(spec,'shared')
             if sys.platform == 'darwin':
                 configure_args += ["--enable-macprefix"]
@@ -49,7 +50,7 @@ class Racket(Package):
                 configure_args += [toggle_shared]
             configure_args += ["--prefix={0}".format(prefix)]
             configure(*configure_args)
-    
+
     def build(self, spec, prefix):
         with working_dir('src'):
             if spec.variants["bc"].value:
