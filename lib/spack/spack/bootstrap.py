@@ -647,8 +647,30 @@ def _add_externals_if_missing():
     spack.detection.update_configuration(detected_packages, scope='bootstrap')
 
 
+#: Reference counter for the bootstrapping configuration context manager
+_REF_COUNT = 0
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    # The context manager is reference counted to ensure we don't swap multiple
+    # times if there's nested use of it in the stack. One compelling use case
+    # is bootstrapping patchelf during the bootstrap of clingo.
+    global _REF_COUNT
+    already_swapped = bool(_REF_COUNT)
+    _REF_COUNT += 1
+    try:
+        if already_swapped:
+            yield
+        else:
+            with _ensure_bootstrap_configuration():
+                yield
+    finally:
+        _REF_COUNT -= 1
+
+
+@contextlib.contextmanager
+def _ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
