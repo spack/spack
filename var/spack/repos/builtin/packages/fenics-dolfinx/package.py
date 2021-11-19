@@ -22,6 +22,7 @@ class FenicsDolfinx(CMakePackage):
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
+    variant("adios2", default=False, description="adios2 support")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("pkgconfig", type="build")
@@ -36,6 +37,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
+    depends_on("adios2", when="+adios2")
 
     depends_on("py-fenics-ffcx", type=("build", "run"))
     depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
