@@ -39,6 +39,7 @@ class Migraphx(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     patch('0001-Adding-nlohmann-json-include-directory.patch', when='@3.9.0:')
+    patch('0002-restrict-python-2.7-usage.patch', when='@3.9.0:')
 
     depends_on('cmake@3:', type='build')
     depends_on('protobuf', type='link')
