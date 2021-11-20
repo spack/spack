@@ -12,13 +12,12 @@ import sys
 import tarfile
 import tempfile
 import traceback
-from ordereddict_backport import OrderedDict
+from contextlib import closing
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union  # novm
 
-from contextlib import closing
-
 import ruamel.yaml as yaml
-from six.moves.urllib.error import URLError, HTTPError
+from ordereddict_backport import OrderedDict
+from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -33,12 +32,11 @@ import spack.hooks.sbang
 import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
+import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.mirror
-import spack.store
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
@@ -47,6 +45,25 @@ from spack.stage import Stage
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
+
+
+class FetchCacheError(Exception):
+    """Error thrown when fetching the cache failed, usually a composite error list."""
+    def __init__(self, errors):
+        if not isinstance(errors, list):
+            raise TypeError("Expected a list of errors")
+        self.errors = errors
+        if len(errors) > 1:
+            msg = "        Error {0}: {1}: {2}"
+            self.message = "Multiple errors during fetching:\n"
+            self.message += "\n".join((
+                msg.format(i + 1, err.__class__.__name__, str(err))
+                for (i, err) in enumerate(errors)
+            ))
+        else:
+            err = errors[0]
+            self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
+        super(FetchCacheError, self).__init__(self.message)
 
 
 class BinaryCacheIndex(object):
@@ -579,6 +596,12 @@ def generate_package_index(cache_prefix):
 
     all_mirror_specs = {}
 
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir,
+                           enable_transaction_locking=False,
+                           record_fields=['spec', 'ref_count', 'in_buildcache'])
+
     for file_path in file_list:
         try:
             yaml_url = url_util.join(cache_prefix, file_path)
@@ -593,12 +616,6 @@ def generate_package_index(cache_prefix):
 
     sorted_specs = sorted(all_mirror_specs.keys(),
                           key=lambda k: all_mirror_specs[k]['num_deps'])
-
-    tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, 'db_root')
-    db = spack_db.Database(None, db_dir=db_root_dir,
-                           enable_transaction_locking=False,
-                           record_fields=['spec', 'ref_count', 'in_buildcache'])
 
     try:
         tty.debug('Specs sorted by number of dependencies:')

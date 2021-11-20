@@ -7,10 +7,6 @@
 This test checks the binary packaging infrastructure
 """
 import os
-import stat
-import shutil
-import pytest
-import re
 import platform
 import re
 import shutil
@@ -20,10 +16,10 @@ import pytest
 
 from llnl.util.filesystem import mkdirp
 
+import spack.binary_distribution as bindist
 import spack.main
 import spack.repo
 import spack.store
-import spack.binary_distribution as bindist
 import spack.util.gpg
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
@@ -39,7 +35,6 @@ from spack.relocate import (
     relocate_text,
 )
 from spack.spec import Spec
-
 
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 

@@ -532,7 +532,7 @@ def remove_pr_mirror():
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                             check_index_only=False, run_optimizer=False,
-                            use_dependencies=False):
+                            use_dependencies=False, artifacts_root=None):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
