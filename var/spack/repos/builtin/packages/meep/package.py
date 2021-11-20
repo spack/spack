@@ -32,6 +32,8 @@ class Meep(AutotoolsPackage):
     variant('mpi',     default=True, description='Enable MPI support')
     variant('hdf5',    default=True, description='Enable HDF5 support')
     variant('gsl',     default=True, description='Enable GSL support')
+    variant('python',  default=True, description='Enable Python support')
+    variant('single',  default=False,description='Enable Single Precision')
 
     depends_on('autoconf', type='build', when='@1.21.0')
     depends_on('automake', type='build', when='@1.21.0')
@@ -40,12 +42,19 @@ class Meep(AutotoolsPackage):
     depends_on('blas',        when='+blas')
     depends_on('lapack',      when='+lapack')
     depends_on('harminv',     when='+harminv')
-    depends_on('guile',       when='+guile')
-    depends_on('libctl',      when='+libctl')
+    depends_on('guile@:2',    when='@:1.4+guile')
+    depends_on('guile@2:',    when='@1.4:+guile')
+    depends_on('libctl@3.2',  when='@:1.3+libctl')
+    depends_on('libctl@4:',   when='+libctl')
     depends_on('mpi',         when='+mpi')
     depends_on('hdf5~mpi',    when='+hdf5~mpi')
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
     depends_on('gsl',         when='+gsl')
+    depends_on('python',      when='+python')
+    depends_on('py-numpy',    when='+python')
+    depends_on('py-mpi4py',   when='+python+mpi')
+    depends_on('swig',        when='+python')
+    
 
     def configure_args(self):
         spec = self.spec
@@ -81,6 +90,15 @@ class Meep(AutotoolsPackage):
             config_args.append('--with-hdf5')
         else:
             config_args.append('--without-hdf5')
+
+        if '+python' in spec:
+            config_args.append('--with-python')
+        else:
+            config_args.append('--without-python')
+            config_args.append('--without-scheme')
+        
+        if '+single' in spec:
+            config_args.append('--enable-single')
 
         if spec.satisfies('@1.21.0:'):
             config_args.append('--enable-maintainer-mode')
