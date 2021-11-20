@@ -47,6 +47,9 @@ class Ccache(CMakePackage):
     conflicts('%gcc@:5', when='@4.4:')
     conflicts('%clang@:4', when='@4.4:')
 
+    def cmake_args(self):
+        return [self.define('ENABLE_TESTING', False)]
+
     # Before 4.0 this was an Autotools package
     @when('@:3')
     def cmake(self, spec, prefix):
