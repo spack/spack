@@ -19,6 +19,8 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.2.5', sha256='8e49585fb760d973723dab6435d0c86f7849b8305b1e6d99f475138d896bacbb')
+    version('21.2.4', sha256='fe6ede82d1ac02339da3c2ec1820a379641902fd351a52cc01153f76eff85b44')
     version('21.2.3', sha256='7245284a159d2484770e1835a673e79e4322a9ddf43b17859668244946db7174')
     version('21.2.1', sha256='2c65e6710b419b67456a48beefd0be827b32db416772e0e363d5f7d54dc01787')
     version('21.0.3', sha256='565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b')
