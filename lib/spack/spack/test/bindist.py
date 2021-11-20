@@ -252,6 +252,12 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
     # This guy tests for symlink relocation
     sy_spec = Spec('symly').concretized()
 
+    # Install 'corge' into the buildcache.
+    install_cmd('--no-cache', cspec.name)
+    buildcache_cmd('create', '-au', '--rebuild-index', '-d', mirror_dir, cspec.name)
+    bindist.binary_index.refresh_mirrors()
+    uninstall_cmd('-y', cspec.name)
+
     # Install some packages with dependent packages
     # test install in non-default install path scheme
     buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
@@ -396,7 +402,7 @@ def test_built_spec_cache(mirror_dir):
         'corge': cspec.full_hash(),
     }
 
-    gspec_results = bindist.get_mirrors_for_spec(gspec)
+    gspec_results = bindist.binary_index.get_mirrors_for_spec(gspec)
 
     gspec_mirrors = {}
     for result in gspec_results:
@@ -405,7 +411,8 @@ def test_built_spec_cache(mirror_dir):
         assert(result['mirror_url'] not in gspec_mirrors)
         gspec_mirrors[result['mirror_url']] = True
 
-    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
+    cspec_results = bindist.binary_index.get_mirrors_for_spec(
+        cspec, full_hash_match=True)
 
     cspec_mirrors = {}
     for result in cspec_results:
@@ -568,6 +575,8 @@ def test_update_sbang(tmpdir, test_mirror):
 
     # Need to force an update of the buildcache index
     buildcache_cmd('update-index', '-d', mirror_url)
+
+    bindist.binary_index.refresh_mirrors()
 
     # Uninstall the original package.
     uninstall_cmd('-y', old_spec_hash_str)

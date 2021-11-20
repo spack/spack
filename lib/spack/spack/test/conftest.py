@@ -1540,4 +1540,4 @@ def mock_test_stage(mutable_config, tmpdir):
 def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
-        spack.binary_distribution._binary_index)
+        spack.binary_distribution.BinaryCacheIndex)

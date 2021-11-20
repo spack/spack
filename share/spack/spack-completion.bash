@@ -598,10 +598,6 @@ _spack_ci_generate() {
     SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only --artifacts-root"
 }
 
-_spack_ci_rebuild_index() {
-    SPACK_COMPREPLY="-h --help"
-}
-
 _spack_ci_rebuild() {
     SPACK_COMPREPLY="-h --help"
 }
