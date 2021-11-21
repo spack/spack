@@ -11,6 +11,7 @@ import spack.util.executable
 # for now just find patchelf in the path, cause we don't want to trigger
 # infinite recursion during when bootstrapping patchelf.
 patchelf = spack.util.executable.which('patchelf')
+libwhich = spack.util.executable.which('libwhich')
 
 origin_regex = re.compile(r'\${ORIGIN}|\$ORIGIN')
 
@@ -66,14 +67,18 @@ def absolutify_needed_libs_for(path):
 
     # Replace sonames with rpaths
     for rpath in rpaths:
+        todo = []
         for soname in sonames:
             candidate = os.path.join(rpath, soname)
             if elf_type == is_64_bit_elf_exec_or_dyn(candidate):
                 patchelf('--replace-needed', soname, candidate, path)
+            else:
+                todo.append(soname)
+        sonames = todo
 
-    # Everything else is assumed to be a system library
-    # Note: this breaks dlopen(...) search paths, so should be configurable.
-    patchelf('--remove-rpath', path)
+    for soname in sonames:
+        libpath = libwhich('-p', soname, env={}, output=str)
+        patchelf('--replace-needed', soname, libpath, path)
 
 
 def check_elf_files(prefix):
@@ -88,7 +93,7 @@ def check_elf_files(prefix):
 
 
 def post_install(spec):
-    if spec.external or patchelf is None:
+    if spec.external or patchelf is None or libwhich is None:
         return
 
     check_elf_files(spec.prefix)
