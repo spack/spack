@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.directives import variant
+from spack.directives import variant, conflicts
 from spack.package import PackageBase
 
 
