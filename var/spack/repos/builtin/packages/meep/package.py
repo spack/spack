@@ -24,16 +24,16 @@ class Meep(AutotoolsPackage):
     version('1.1.1', sha256='7a97b5555da1f9ea2ec6eed5c45bd97bcd6ddbd54bdfc181f46c696dffc169f2',
             url='http://ab-initio.mit.edu/meep/old/meep-1.1.1.tar.gz')
 
-    variant('blas',    default=True, description='Enable BLAS support')
-    variant('lapack',  default=True, description='Enable LAPACK support')
-    variant('harminv', default=True, description='Enable Harminv support')
-    variant('guile',   default=True, description='Enable Guilde support')
-    variant('libctl',  default=True, description='Enable libctl support')
-    variant('mpi',     default=True, description='Enable MPI support')
-    variant('hdf5',    default=True, description='Enable HDF5 support')
-    variant('gsl',     default=True, description='Enable GSL support')
-    variant('python',  default=True, description='Enable Python support')
-    variant('single',  default=False,description='Enable Single Precision')
+    variant('blas',    default=True,  description='Enable BLAS support')
+    variant('lapack',  default=True,  description='Enable LAPACK support')
+    variant('harminv', default=True,  description='Enable Harminv support')
+    variant('guile',   default=True,  description='Enable Guilde support')
+    variant('libctl',  default=True,  description='Enable libctl support')
+    variant('mpi',     default=True,  description='Enable MPI support')
+    variant('hdf5',    default=True,  description='Enable HDF5 support')
+    variant('gsl',     default=True,  description='Enable GSL support')
+    variant('python',  default=True,  description='Enable Python support')
+    variant('single',  default=False, description='Enable Single Precision')
 
     depends_on('autoconf', type='build', when='@1.21.0')
     depends_on('automake', type='build', when='@1.21.0')
@@ -55,7 +55,6 @@ class Meep(AutotoolsPackage):
     depends_on('py-mpi4py',   when='+python+mpi')
     depends_on('swig',        when='+python')
     
-
     def configure_args(self):
         spec = self.spec
 
