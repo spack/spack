@@ -17,6 +17,8 @@ class PyStevedore(PythonPackage):
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@3.5.0:')
+    
+    depends_on('py-setuptools', type='build')
 
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:3.4')
     depends_on('py-pbr@2.0.0:2.1.0', type=('build', 'run'), when='@:3.4')
