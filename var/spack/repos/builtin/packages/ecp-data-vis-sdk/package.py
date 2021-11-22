@@ -40,8 +40,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('cinema', default=False, description="Enable Cinema")
 
     # Outstanding build issues
-    variant('catalyst', default=False, description="Enable Catalyst")
-    conflicts('+catalyst')
     variant('visit', default=False, description="Enable VisIt")
     conflicts('+visit')
 
@@ -112,12 +110,10 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
                        when='+ascent')
 
-    dav_sdk_depends_on('catalyst', when='+catalyst')
-
     depends_on('py-cinemasci', when='+cinema')
 
     # +adios2 is not yet enabled in the paraview package
-    paraview_base_spec = 'paraview+mpi+python3+kits'
+    paraview_base_spec = 'paraview +mpi +python3 +kits'
     # Want +shared when not using cuda
     dav_sdk_depends_on(paraview_base_spec + '+shared ~cuda',
                        when='+paraview ~cuda',

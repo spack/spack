@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
+import platform
 import sys
 
 import llnl.util.tty as tty
@@ -12,6 +13,7 @@ from spack import *
 from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
+LINUX_VERSION = Version(platform.release()) if platform.system() == 'Linux' else None
 
 
 class Qt(Package):
@@ -191,10 +193,25 @@ class Qt(Package):
         depends_on("flex", type='build')
         depends_on("bison", type='build')
         depends_on("gperf")
-        depends_on("python@2.7.5:2", type='build')
+
+        # qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2
+        with when('@5.7:5.15'):
+            depends_on('python@2.7.5:2', type='build')
+            # mesa inherits MesonPackage (since October 2020) which depends on Py@3.
+            # The conflicts('mesa') enables a regular build of `qt@5.7:5.15+webkit`
+            # without having to specify the exact version by causing the concretizer
+            # to select mesa18 which does not depend on python@3.
+            conflicts('mesa')
+
+        with when('@5.10:'):
+            depends_on('nss@3.62:')
 
         with when('@5.7:'):
-            depends_on("nss")
+            # https://www.linuxfromscratch.org/blfs/view/svn/x/qtwebengine.html
+            depends_on('ninja', type='build')
+
+        # https://doc.qt.io/qt-5.15/qtwebengine-platform-notes.html
+        with when('@5.7: platform=linux'):
             depends_on("libdrm")
             depends_on("libxcomposite")
             depends_on("libxcursor")
@@ -636,6 +653,20 @@ class Qt(Package):
             if '+opengl' in spec:
                 config_args.append('-I{0}/include'.format(spec['libx11'].prefix))
                 config_args.append('-I{0}/include'.format(spec['xproto'].prefix))
+
+        # If the version of glibc is new enough Qt will configure features that
+        # may not be supported by the kernel version on the system. This will
+        # cause errors like:
+        #   error while loading shared libraries: libQt5Core.so.5: cannot open
+        #   shared object file: No such file or directory
+        # Test the kernel version and disable features that Qt detects in glibc
+        # but that are not supported in the kernel as determined by information
+        # in: qtbase/src/corelib/global/minimum-linux_p.h.
+        if LINUX_VERSION and version >= Version('5.10'):
+            if LINUX_VERSION < Version('3.16'):
+                config_args.append('-no-feature-renameat2')
+            if LINUX_VERSION < Version('3.17'):
+                config_args.append('-no-feature-getentropy')
 
         if '~webkit' in spec:
             config_args.extend([
