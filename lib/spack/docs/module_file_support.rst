@@ -273,29 +273,30 @@ of the installed software. For instance, in the snippet below:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       # The keyword `all` selects every package
-       all:
-         environment:
-           set:
-             BAR: 'bar'
-       # This anonymous spec selects any package that
-       # depends on openmpi. The double colon at the
-       # end clears the set of rules that matched so far.
-       ^openmpi::
-         environment:
-           set:
-             BAR: 'baz'
-       # Selects any zlib package
-       zlib:
-         environment:
-           prepend_path:
-             LD_LIBRARY_PATH: 'foo'
-       # Selects zlib compiled with gcc@4.8
-       zlib%gcc@4.8:
-         environment:
-           unset:
-           - FOOBAR
+     default:
+       tcl:
+         # The keyword `all` selects every package
+         all:
+           environment:
+             set:
+               BAR: 'bar'
+         # This anonymous spec selects any package that
+         # depends on openmpi. The double colon at the
+         # end clears the set of rules that matched so far.
+         ^openmpi::
+           environment:
+             set:
+               BAR: 'baz'
+         # Selects any zlib package
+         zlib:
+           environment:
+             prepend_path:
+               LD_LIBRARY_PATH: 'foo'
+         # Selects zlib compiled with gcc@4.8
+         zlib%gcc@4.8:
+           environment:
+             unset:
+             - FOOBAR
 
 you are instructing Spack to set the environment variable ``BAR=bar`` for every module,
 unless the associated spec satisfies ``^openmpi`` in which case ``BAR=baz``.
@@ -322,9 +323,10 @@ your system. If you write a configuration file like:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       whitelist: ['gcc', 'llvm']  # Whitelist will have precedence over blacklist
-       blacklist: ['%gcc@4.4.7']   # Assuming gcc@4.4.7 is the system compiler
+     default:
+       tcl:
+         whitelist: ['gcc', 'llvm']  # Whitelist will have precedence over blacklist
+         blacklist: ['%gcc@4.4.7']   # Assuming gcc@4.4.7 is the system compiler
 
 you will prevent the generation of module files for any package that
 is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc``
@@ -349,8 +351,9 @@ shows how to set hash length in the module file names:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       hash_length: 7
+     default:
+       tcl:
+         hash_length: 7
 
 To help make module names more readable, and to help alleviate name conflicts
 with a short hash, one can use the ``suffixes`` option in the modules
@@ -360,11 +363,12 @@ For instance, the following config options,
 .. code-block:: yaml
 
    modules:
-     tcl:
-       all:
-         suffixes:
-           ^python@2.7.12: 'python-2.7.12'
-           ^openblas: 'openblas'
+     default:
+       tcl:
+         all:
+           suffixes:
+             ^python@2.7.12: 'python-2.7.12'
+             ^openblas: 'openblas'
 
 will add a ``python-2.7.12`` version string to any packages compiled with
 python matching the spec, ``python@2.7.12``. This is useful to know which
@@ -379,10 +383,11 @@ covered in :ref:`adding_projections_to_views`.
 .. code-block:: yaml
 
   modules:
-    tcl:
-      projections:
-        all: '{name}/{version}-{compiler.name}-{compiler.version}-module'
-        ^mpi: '{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module'
+    default:
+      tcl:
+        projections:
+          all: '{name}/{version}-{compiler.name}-{compiler.version}-module'
+          ^mpi: '{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module'
 
 will create module files that are nested in directories by package
 name, contain the version and compiler name and version, and have the
@@ -403,15 +408,16 @@ that are already in the LMod hierarchy.
      .. code-block:: yaml
 
         modules:
-          enable:
-            - tcl
-          tcl:
-            projections:
-              all: '{name}/{version}-{compiler.name}-{compiler.version}'
-            all:
-              conflict:
-                - '{name}'
-                - 'intel/14.0.1'
+          default:
+            enable:
+              - tcl
+            tcl:
+              projections:
+                all: '{name}/{version}-{compiler.name}-{compiler.version}'
+              all:
+                conflict:
+                  - '{name}'
+                  - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
      base directory of the same module, effectively preventing the possibility to
@@ -431,16 +437,17 @@ that are already in the LMod hierarchy.
      .. code-block:: yaml
 
        modules:
-         enable:
-           - lmod
-         lmod:
-           core_compilers:
-             - 'gcc@4.8'
-           core_specs:
-             - 'python'
-           hierarchy:
-             - 'mpi'
-             - 'lapack'
+         default:
+           enable:
+             - lmod
+           lmod:
+             core_compilers:
+               - 'gcc@4.8'
+             core_specs:
+               - 'python'
+             hierarchy:
+               - 'mpi'
+               - 'lapack'
 
      that will generate a hierarchy in which the ``lapack`` and ``mpi`` layer can be switched
      independently. This allows a site to build the same libraries or applications against different
@@ -591,11 +598,12 @@ do so by using the environment blacklist:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       all:
-         filter:
-           # Exclude changes to any of these variables
-           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+     default:
+       tcl:
+         all:
+           filter:
+             # Exclude changes to any of these variables
+             environment_blacklist: ['CPATH', 'LIBRARY_PATH']
 
 The configuration above will generate module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH``.
@@ -614,9 +622,10 @@ activated using ``spack activate``:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       ^python:
-         autoload: 'direct'
+     default:
+       tcl:
+         ^python:
+           autoload: 'direct'
 
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
@@ -633,9 +642,10 @@ The allowed values for the ``autoload`` statement are either ``none``,
   .. code-block:: yaml
 
      modules:
-       lmod:
-         all:
-           autoload: 'direct'
+       default:
+         lmod:
+           all:
+             autoload: 'direct'
 
 .. note::
   TCL prerequisites
