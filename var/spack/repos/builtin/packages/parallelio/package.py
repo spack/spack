@@ -20,6 +20,7 @@ class Parallelio(CMakePackage):
     version('2_5_2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
     variant('pnetcdf', default=False, description='enable pnetcdf')
+    variant('timing', default=False, description='enable GPTL timing')
 
     depends_on('mpi')
     depends_on('netcdf-c +mpi', type='link')
@@ -50,4 +51,7 @@ class Parallelio(CMakePackage):
                 define('PnetCDF_C_PATH', spec['parallel-netcdf'].prefix),
                 define('PnetCDF_Fortran_PATH', spec['parallel-netcdf'].prefix),
             ])
+        args.extend([
+            self.define_from_variant('PIO_ENABLE_TIMING', 'timing'),
+        ])
         return args
