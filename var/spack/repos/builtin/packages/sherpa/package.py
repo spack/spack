@@ -57,7 +57,6 @@ class Sherpa(AutotoolsPackage):
     variant('lhole',      default=False, description='Enable Les Houches One-Loop Generator interface')
     variant('root',       default=False, description='Enable ROOT support')
     variant('lhapdf',     default=True, description='Enable LHAPDF support')
-    variant('cernlib',    default=False, description='Enable cernlib')
     variant('gzip',       default=False, description='Enable gzip support')
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('sqlite3',    default=True, description='Use SQLite 3 library')
