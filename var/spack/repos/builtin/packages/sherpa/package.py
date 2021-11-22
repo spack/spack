@@ -59,7 +59,6 @@ class Sherpa(AutotoolsPackage):
     variant('lhapdf',     default=True, description='Enable LHAPDF support')
     variant('gzip',       default=False, description='Enable gzip support')
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
-    variant('sqlite3',    default=True, description='Use SQLite 3 library')
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
 
@@ -99,6 +98,7 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-static')
         args.append('--enable-hepevtsize=200000')
         args.append('--disable-manual')
+        args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         if self.spec.satisfies('+mpi'):
             args.append('--enable-mpi')
         if self.spec.satisfies('+python'):
@@ -131,6 +131,4 @@ class Sherpa(AutotoolsPackage):
             args.append('--enable-hztool=' + self.spec['hztool'].prefix)
         if self.spec.satisfies('+cernlib'):
             args.append('--enable-cernlib=' + self.spec['cernlib'].prefix)
-        if self.spec.satisfies('+sqlite3'):
-            args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         return args
