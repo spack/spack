@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -18,7 +20,6 @@ class Open3d(CMakePackage, CudaPackage):
 
     # http://www.open3d.org/docs/latest/compilation.html
     depends_on('cmake@3.19:', type='build')
-    depends_on('cuda@10.1:', when='+cuda')
     depends_on('eigen')
     depends_on('flann')
     depends_on('fmt')
@@ -34,6 +35,14 @@ class Open3d(CMakePackage, CudaPackage):
     depends_on('tinygltf')
     depends_on('tinyobjloader')
 
+    extends('python@3.6:', when='+python')
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-setuptools@40.8:', when='+python', type='build')
+    depends_on('py-wheel@0.36:', when='+python', type='build')
+    depends_on('py-numpy@1.18:', when='+python', type=('build', 'run'))
+    depends_on('py-pytest', when='+python', type='test')
+    depends_on('cuda@10.1:', when='+cuda')
+
     # C++14 compiler required
     conflicts('%gcc@:4')
     conflicts('%clang@:6')
@@ -44,7 +53,7 @@ class Open3d(CMakePackage, CudaPackage):
                     os.path.join('cpp', 'pybind', 'make_install_pip_package.cmake'))
 
     def cmake_args(self):
-        return [
+        args = [
             self.define_from_variant('BUILD_PYTHON_MODULE', 'python'),
             self.define_from_variant('BUILD_CUDA_MODULE', 'cuda'),
             # Use Spack-installed dependencies instead of vendored dependencies
@@ -63,3 +72,34 @@ class Open3d(CMakePackage, CudaPackage):
             self.define('USE_SYSTEM_TINYGLTF', True),
             self.define('USE_SYSTEM_TINYOBJLOADER', True),
         ]
+
+        if '+python' in self.spec:
+            args.append(self.define('Python3_ROOT', self.spec['python'].command.path))
+
+        return args
+
+    def check(self):
+        sh = which('sh')
+        sh(os.path.join('bin', 'tests'))
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make('install')
+            if '+python' in spec:
+                make('install-pip-package')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def unit_test(self):
+        if '+python' in self.spec:
+            pytest = which('pytest')
+            pytest(os.path.join('python', 'test'))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        if '+python' in self.spec:
+            self.run_test(self.spec['python'].command.path,
+                          ['-c', 'import open3d'],
+                          purpose='checking import of open3d',
+                          work_dir='spack-test')
