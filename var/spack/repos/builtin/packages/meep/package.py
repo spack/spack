@@ -54,7 +54,7 @@ class Meep(AutotoolsPackage):
     depends_on('py-numpy',    when='+python')
     depends_on('py-mpi4py',   when='+python+mpi')
     depends_on('swig',        when='+python')
-    
+
     def configure_args(self):
         spec = self.spec
 
@@ -95,7 +95,7 @@ class Meep(AutotoolsPackage):
         else:
             config_args.append('--without-python')
             config_args.append('--without-scheme')
-        
+
         if '+single' in spec:
             config_args.append('--enable-single')
 
