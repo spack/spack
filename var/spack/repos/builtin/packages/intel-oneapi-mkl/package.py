@@ -38,11 +38,10 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     variant('ilp64', default=False,
             description='Build with ILP64 support')
     variant('cluster', default=False,
-            description='Build with cluster support: scalapak, blacs, etc')
+            description='Build with cluster support: scalapack, blacs, etc')
 
     depends_on('intel-oneapi-tbb')
     # cluster libraries need mpi
-    depends_on('mpi', when='scalapack')
     depends_on('mpi', when='+cluster')
 
     provides('fftw-api@3')
@@ -68,7 +67,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     # provide cluster libraries if +cluster variant is used or
     # the scalapack virtual package was requested
     def cluster(self):
-        return '+cluster' in self.spec or 'scalapack' in self.spec
+        return '+cluster' in self.spec
 
     @property
     def libs(self):
