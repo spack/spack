@@ -103,6 +103,10 @@ properties = {
                 'type': 'string',
                 'enum': ['urllib', 'curl']
             },
+            'additional_external_search_paths': {
+                'type': 'array',
+                'items': {'type': 'string'}
+            }
         },
     },
 }

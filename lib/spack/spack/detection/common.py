@@ -198,6 +198,7 @@ def find_win32_additional_install_paths():
                               add_path()])
     windows_search_ext.append("C:\\PrograData\\chocolatey\\bin")
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
+    windows_search_ext.extend(spack.config.get("config:additional_external_search_paths"))
 
     return windows_search_ext
 
