@@ -64,6 +64,8 @@ class FenicsDolfinx(CMakePackage):
                 'ON' if "+parmetis" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_SLEPC=%s" % (
                 'ON' if "+slepc" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_ADIOS2=%s" % (
+                'ON' if "+adios2" in self.spec else 'OFF'),
             "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]
