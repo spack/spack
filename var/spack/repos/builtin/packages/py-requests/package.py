@@ -12,6 +12,7 @@ class PyRequests(PythonPackage):
     homepage = "http://python-requests.org"
     pypi = "requests/requests-2.24.0.tar.gz"
 
+    version('2.26.0', sha256='b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7')
     version('2.25.1', sha256='27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804')
     version('2.24.0', sha256='b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b')
     version('2.23.0', sha256='b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6')
@@ -25,11 +26,15 @@ class PyRequests(PythonPackage):
     variant('socks', default=False, description='SOCKS and HTTP proxy support')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.6:', type=('build', 'run'), when='@2.26.0:')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-chardet@3.0.2:4', type=('build', 'run'), when='@2.25.1:')
     depends_on('py-chardet@3.0.2:3', type=('build', 'run'), when='@2.23.0:2.25.0')
     depends_on('py-chardet@3.0.2:3.0', type=('build', 'run'), when='@2.16.0:2.22')
+    depends_on('py-charset-normalizer@2.0.0:2', type=('build', 'run'), when='@2.26.0: ^python@3:')
+    depends_on('py-idna@2.5:3', type=('build', 'run'), when='@2.26.0: ^python@3:')
+    depends_on('py-idna@2.5:2', type=('build', 'run'), when='@2.26.0: ^python@2:2')
     depends_on('py-idna@2.5:2', type=('build', 'run'), when='@2.23.0:')
     depends_on('py-idna@2.5:2.8', type=('build', 'run'), when='@2.16.0:2.22')
     depends_on('py-urllib3@1.21.1:1.26', type=('build', 'run'), when='@2.25.0:')
