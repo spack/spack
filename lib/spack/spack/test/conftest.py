@@ -430,8 +430,14 @@ def _skip_if_missing_executables(request):
     """Permits to mark tests with 'require_executables' and skip the
     tests if the executables passed as arguments are not found.
     """
-    if request.node.get_marker('requires_executables'):
-        required_execs = request.node.get_marker('requires_executables').args
+    if hasattr(request.node, 'get_marker'):
+        # TODO: Remove the deprecated API as soon as we drop support for Python 2.6
+        marker = request.node.get_marker('requires_executables')
+    else:
+        marker = request.node.get_closest_marker('requires_executables')
+
+    if marker:
+        required_execs = marker.args
         missing_execs = [
             x for x in required_execs if spack.util.executable.which(x) is None
         ]
@@ -1453,7 +1459,7 @@ def invalid_spec(request):
     return request.param
 
 
-@pytest.fixture("module")
+@pytest.fixture(scope='module')
 def mock_test_repo(tmpdir_factory):
     """Create an empty repository."""
     repo_namespace = 'mock_test_repo'

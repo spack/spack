@@ -24,8 +24,8 @@ properties = {
                         'type': 'object',
                         'required': ['fetch', 'push'],
                         'properties': {
-                            'fetch': {'type': 'string'},
-                            'push': {'type': 'string'}
+                            'fetch': {'type': ['string', 'object']},
+                            'push': {'type': ['string', 'object']}
                         }
                     }
                 ]

@@ -206,8 +206,12 @@ def test_prs_update_old_api():
     """Ensures that every package modified in a PR doesn't contain
     deprecated calls to any method.
     """
+    ref = os.getenv("GITHUB_BASE_REF")
+    if not ref:
+        pytest.skip("No base ref found")
+
     changed_package_files = [
-        x for x in style.changed_files() if style.is_package(x)
+        x for x in style.changed_files(base=ref) if style.is_package(x)
     ]
     failing = []
     for file in changed_package_files:

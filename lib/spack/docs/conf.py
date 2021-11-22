@@ -30,6 +30,7 @@ from sphinx.ext.apidoc import main as sphinx_apidoc
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external'))
+sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external/pytest-fallback'))
 
 if sys.version_info[0] < 3:
     sys.path.insert(
