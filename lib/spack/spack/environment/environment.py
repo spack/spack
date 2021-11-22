@@ -15,7 +15,6 @@ import ruamel.yaml as yaml
 import six
 
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.bootstrap
@@ -285,6 +284,51 @@ def _eval_conditional(string):
         'env': os.environ,
     })
     return eval(string, valid_variables)
+
+
+def _is_dev_spec_and_has_changed(spec):
+    """Check if the passed spec is a dev build and whether it has changed since the
+    last installation"""
+    # First check if this is a dev build and in the process already try to get
+    # the dev_path
+    dev_path_var = spec.variants.get('dev_path', None)
+    if not dev_path_var:
+        return False
+
+    # Now we can check whether the code changed since the last installation
+    if not spec.package.installed:
+        # Not installed -> nothing to compare against
+        return False
+
+    _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    mtime = fs.last_modification_time_recursive(dev_path_var.value)
+    return mtime > record.installation_time
+
+
+def _spec_needs_overwrite(spec, changed_dev_specs):
+    """Check whether the current spec needs to be overwritten because either it has
+    changed itself or one of its dependencies have changed"""
+    # if it's not installed, we don't need to overwrite it
+    if not spec.package.installed:
+        return False
+
+    # If the spec itself has changed this is a trivial decision
+    if spec in changed_dev_specs:
+        return True
+
+    # if spec and all deps aren't dev builds, we don't need to overwrite it
+    if not any(spec.satisfies(c)
+               for c in ('dev_path=*', '^dev_path=*')):
+        return False
+
+    # If any dep needs overwrite, or any dep is missing and is a dev build then
+    # overwrite this package
+    if any(
+        ((not dep.package.installed) and dep.satisfies('dev_path=*')) or
+        _spec_needs_overwrite(dep, changed_dev_specs)
+        for dep in spec.traverse(root=False)
+    ):
+        return True
 
 
 class ViewDescriptor(object):
@@ -1393,55 +1437,19 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    @lang.memoized
-    def _spec_needs_overwrite(self, spec):
-        # Overwrite the install if it's a dev build (non-transitive)
-        # and the code has been changed since the last install
-        # or one of the dependencies has been reinstalled since
-        # the last install
-
-        # if it's not installed, we don't need to overwrite it
-        if not spec.package.installed:
-            return False
-
-        # if spec and all deps aren't dev builds, we don't need to overwrite it
-        if not any(spec.satisfies(c)
-                   for c in ('dev_path=*', '^dev_path=*')):
-            return False
-
-        # if any dep needs overwrite, or any dep is missing and is a dev build
-        # then overwrite this package
-        if any(
-            self._spec_needs_overwrite(dep) or
-            ((not dep.package.installed) and dep.satisfies('dev_path=*'))
-            for dep in spec.traverse(root=False)
-        ):
-            return True
-
-        # if it's not a direct dev build and its dependencies haven't
-        # changed, it hasn't changed.
-        # We don't merely check satisfaction (spec.satisfies('dev_path=*')
-        # because we need the value of the variant in the next block of code
-        dev_path_var = spec.variants.get('dev_path', None)
-        if not dev_path_var:
-            return False
-
-        # if it is a direct dev build, check whether the code changed
-        # we already know it is installed
-        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-        mtime = fs.last_modification_time_recursive(dev_path_var.value)
-        return mtime > record.installation_time
-
     def _get_overwrite_specs(self):
-        # TODO: Can the cache even be populated at this point?
-        self._spec_needs_overwrite.cache.clear()
-        ret = []
+        # Collect all specs in the environment first before checking which ones
+        # to rebuild to avoid checking the same specs multiple times
+        specs_to_check = set()
         for dag_hash in self.concretized_order:
-            spec = self.specs_by_hash[dag_hash]
-            ret.extend([d.dag_hash() for d in spec.traverse(root=True)
-                        if self._spec_needs_overwrite(d)])
+            root_spec = self.specs_by_hash[dag_hash]
+            specs_to_check.update(root_spec.traverse(root=True))
 
-        return ret
+        changed_dev_specs = set(s for s in specs_to_check if
+                                _is_dev_spec_and_has_changed(s))
+
+        return [s.dag_hash() for s in specs_to_check if
+                _spec_needs_overwrite(s, changed_dev_specs)]
 
     def _install_log_links(self, spec):
         if not spec.external:
@@ -1512,8 +1520,12 @@ class Environment(object):
         tty.debug('Processing {0} uninstalled specs'.format(
             len(specs_to_install)))
 
+        specs_to_overwrite = self._get_overwrite_specs()
+        tty.debug('{0} specs need to be overwritten'.format(
+            len(specs_to_overwrite)))
+
         install_args['overwrite'] = install_args.get(
-            'overwrite', []) + self._get_overwrite_specs()
+            'overwrite', []) + specs_to_overwrite
 
         installs = []
         for spec in specs_to_install:
