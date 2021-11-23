@@ -42,7 +42,7 @@ class Racket(Package):
             configure_args = [self.toggle(spec, 'cs'),
                               self.toggle(spec, 'bc'),
                               self.toggle(spec, 'jit')]
-            toggle_shared = self.toggle(spec,'shared')
+            toggle_shared = self.toggle(spec, 'shared')
             if sys.platform == 'darwin':
                 configure_args += ["--enable-macprefix"]
                 if "+xonx" in spec:
