@@ -1635,15 +1635,7 @@ def relocate_package(spec, allow_root):
                 new_prefix,
             )
         if "elf" in platform.binary_formats:
-            relocate.relocate_elf_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
+            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
 
         # Relocate links to the new install prefix
         links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
