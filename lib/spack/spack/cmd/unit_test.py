@@ -129,7 +129,7 @@ def do_list(args, extra_args):
         # in the future - so this manipulation might be fragile
         if nodetype.lower() == 'function':
             name_parts.append(item)
-            key_end = os.path.join(*str(*[x[1] for x in key_parts]).split('/'))
+            key_end = os.path.join(*list(str(*[x[1] for x in key_parts]).split('/')))
             key = next(f for f in files if f.endswith(key_end))
             tests[key].add(tuple(x[1] for x in name_parts))
         elif nodetype.lower() == 'class':
