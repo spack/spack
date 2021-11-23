@@ -15,6 +15,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.bootstrap
+import spack.object_file.elf as elf
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -88,10 +89,8 @@ def _patchelf():
     return patchelf.path
 
 
-def _elf_rpaths_for(path):
+def _elf_rpaths_for(path, force_patchelf=False):
     """Return the RPATHs for an executable or a library.
-
-    The RPATHs are obtained by ``patchelf --print-rpath PATH``.
 
     Args:
         path (str): full path to the executable or library
@@ -99,6 +98,12 @@ def _elf_rpaths_for(path):
     Return:
         RPATHs as a list of strings.
     """
+    # Try the Python elf parser first, and if it fails, fall back to patchelf.
+    if not force_patchelf:
+        result = elf.get_rpaths(path)
+        if result is not None:
+            return result
+
     # If we're relocating patchelf itself, use it
     patchelf_path = path if path.endswith("/bin/patchelf") else _patchelf()
     patchelf = executable.Executable(patchelf_path)
@@ -390,16 +395,18 @@ def _set_elf_rpaths(target, rpaths):
     """Replace the original RPATH of the target with the paths passed
     as arguments.
 
-    This function uses ``patchelf`` to set RPATHs.
-
     Args:
         target: target executable. Must be an ELF object.
         rpaths: paths to be set in the RPATH
 
     Returns:
         A string concatenating the stdout and stderr of the call
-        to ``patchelf``
+        to ``patchelf`` if it was invoked
     """
+    # Try a fast in-place method before trying patchelf
+    if elf.replace_rpaths(target, rpaths, force=elf.RPathType.RPATH):
+        return ''
+
     # Join the paths using ':' as a separator
     rpaths_str = ':'.join(rpaths)
 

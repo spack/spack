@@ -1542,3 +1542,33 @@ def brand_new_binary_cache():
     yield
     spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
         spack.binary_distribution._binary_index)
+
+
+@pytest.fixture()
+def binary_with_rpaths(tmpdir):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
+    def _factory(rpaths, message="Hello world!"):
+        source = tmpdir.join('main.c')
+        source.write("""
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(message))
+        gcc = spack.util.executable.which('gcc')
+        executable = source.dirpath('main.x')
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join('$ORIGIN', x)
+                  for x in rpaths]
+        rpath_str = ':'.join(rpaths)
+        opts = [
+            '-Wl,--disable-new-dtags',
+            '-Wl,-rpath={0}'.format(rpath_str),
+            str(source), '-o', str(executable)
+        ]
+        gcc(*opts)
+        return executable
+
+    return _factory
