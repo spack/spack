@@ -431,7 +431,6 @@ class _SourceBootstrapper(object):
         msg = "[BOOTSTRAP GnuPG] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         concrete_spec.package.do_install()
-        print('Here')
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True
