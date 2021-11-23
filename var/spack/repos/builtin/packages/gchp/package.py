@@ -12,7 +12,7 @@ class Gchp(CMakePackage):
     """GEOS-Chem High Performance model of atmospheric chemistry"""
 
     homepage = "https://gchp.readthedocs.io/"
-    url      = "https://github.com/geoschem/GCHP/archive/13.2.1.tar.gz"
+    url      = "https://github.com/geoschem/GCHP/archive/feature/spack-pipeline2.tar.gz"
     git      = "https://github.com/geoschem/GCHP.git"
     maintainers = ['lizziel', 'laestrada']
 
