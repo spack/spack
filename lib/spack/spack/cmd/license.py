@@ -46,7 +46,7 @@ licensed_files = [
     r'^lib/spack/docs/.*\.py$',
     r'^lib/spack/docs/spack.yaml$',
 
-    # 1 files in external
+    # 1 file in external
     r'^lib/spack/external/__init__.py$',
 
     # shell scripts in share
