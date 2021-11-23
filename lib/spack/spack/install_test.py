@@ -293,7 +293,6 @@ class TestSuite(object):
                 return test_suite
         except Exception as e:
             tty.debug(e)
-            tty.debug('while attempting to read', filename)
             raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
 
 
