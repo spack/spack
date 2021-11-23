@@ -52,3 +52,5 @@ class Uncrustify(Package):
         configure('--prefix={0}'.format(self.prefix))
         make()
         make('install')
+
+    patch('uncrustify-includes.patch', when='@0.73')
