@@ -41,8 +41,10 @@ class Wi4mpi(CMakePackage):
             wi4mpi_build_type = 'NORMAL'
         elif self.spec.variants["build_type"].value == "Debug":
             wi4mpi_build_type = 'DEBUG'
-        args = ["-DWI4MPI_REALEASE=" + wi4mpi_build_type,
-                "-DWI4MPI_COMPILER=" + compiler]
+        args = [
+            self.define('WI4MPI_REALEASE', wi4mpi_build_type),
+            self.define('WI4MPI_COMPILER', compiler)
+        ]
         return args
 
     def setup_run_environment(self, env):
