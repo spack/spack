@@ -7,8 +7,7 @@ import os
 import re
 import shutil
 import tempfile
-
-from ordereddict_backport import OrderedDict
+from collections import OrderedDict
 
 import spack.binary_distribution as bindist
 import spack.hooks
@@ -90,12 +89,13 @@ def rewire_node(spec, explicit):
                                    prefixes=prefix_to_prefix)
     # copy package into place (shutil.copytree)
     shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
-                    ignore=shutil.ignore_patterns('spec.json'))
+                    ignore=shutil.ignore_patterns('spec.json',
+                                                  'install_manifest.json'))
     if manifest.get('link_to_relocate'):
         _relocate_spliced_links(manifest.get('link_to_relocate'),
                                 spec.build_spec.prefix,
                                 spec.prefix)
-    shutil.rmtree(os.path.join(tempdir, spec.dag_hash()))
+    shutil.rmtree(tempdir)
     # handle all metadata changes; don't copy over spec.json file in .spack/
     spack.store.layout.write_spec(spec, spack.store.layout.spec_file_path(spec))
     # add to database, not sure about explicit
