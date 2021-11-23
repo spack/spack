@@ -8,8 +8,7 @@ import sys
 
 from spack import *
 
-
-class Hypre(AutotoolsPackage, CudaPackage):
+class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -87,7 +86,8 @@ class Hypre(AutotoolsPackage, CudaPackage):
     depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     conflicts('+cuda', when='+int64')
-    conflicts('+unified-memory', when='~cuda')
+    conflicts('+rocm', when='+int64')
+    conflicts('+unified-memory', when='~cuda ~rocm')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -102,6 +102,9 @@ class Hypre(AutotoolsPackage, CudaPackage):
 
     # Option added in v2.16.0
     conflicts('+mixedint', when='@:2.15')
+
+    # HIP support added in v2.21.0
+    conflicts('+rocm', when='@:2.21.0')
 
     configure_directory = 'src'
 
@@ -184,6 +187,22 @@ class Hypre(AutotoolsPackage, CudaPackage):
             ])
             if '@:2.20.99' in spec:
                 configure_args.append('--disable-cub')
+        if '+rocm' in spec:
+            configure_args.extend([
+                '--with-hip',
+                '--enable-rocrand',
+                '--enable-rocsparse'
+            ])
+            archs = spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+            configure_args.append('--with-gpu-arch=%s' % arch_str)
+        else:
+            configure_args.extend([
+                '--without-hip',
+                '--disable-rocrand',
+                '--disable-rocsparse'
+            ])
 
         if '+unified-memory' in spec:
             configure_args.append('--enable-unified-memory')
