@@ -997,7 +997,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             with working_dir(dest):
                 args = ['submodule', 'init']
                 if isinstance(submodules, list):
-                    args += ["--"] + list(submodules)
+                    args += ["--"] + submodules
                 if not spack.config.get('config:debug'):
                     args.insert(1, '--quiet')
                 git(*args)
