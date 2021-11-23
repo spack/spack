@@ -328,3 +328,22 @@ def reuse():
         '--reuse', action='store_true', default=False,
         help='reuse installed dependencies'
     )
+
+
+def add_s3_connection_args(subparser, add_help):
+    subparser.add_argument(
+        '--s3-access-key-id',
+        help="ID string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-key-secret',
+        help="Secret string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-token',
+        help="Access Token to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-profile',
+        help="S3 profile name to use to connect to this S3 mirror",
+        default=None)
+    subparser.add_argument(
+        '--s3-endpoint-url',
+        help="Access Token to use to connect to this S3 mirror")

@@ -429,3 +429,19 @@ class TestXorgPackage(object):
 
         assert pkg.urls[0] == 'https://www.x.org/archive/individual/' \
                               'util/util-macros-1.19.1.tar.bz2'
+
+
+def test_cmake_define_from_variant_conditional(config, mock_packages):
+    """Test that define_from_variant returns empty string when a condition on a variant
+    is not met. When this is the case, the variant is not set in the spec."""
+    s = Spec('cmake-conditional-variants-test').concretized()
+    assert 'example' not in s.variants
+    assert s.package.define_from_variant('EXAMPLE', 'example') == ''
+
+
+def test_autotools_args_from_conditional_variant(config, mock_packages):
+    """Test that _activate_or_not returns an empty string when a condition on a variant
+    is not met. When this is the case, the variant is not set in the spec."""
+    s = Spec('autotools-conditional-variants-test').concretized()
+    assert 'example' not in s.variants
+    assert len(s.package._activate_or_not('example', 'enable', 'disable')) == 0
