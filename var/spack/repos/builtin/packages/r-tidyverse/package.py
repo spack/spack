@@ -102,4 +102,3 @@ class RTidyverse(RPackage):
     depends_on('r-xml2@1.3.2:', when='@1.3.1:', type=('build', 'run'))
     depends_on('r-xml2@1.2.2:', when='@1.3.0:', type=('build', 'run'))
     depends_on('r-xml2@1.1.1:', type=('build', 'run'))
-
