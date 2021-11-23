@@ -241,7 +241,7 @@ def test_file_is_relocatable(source_file, is_relocatable):
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file')
 def test_patchelf_is_relocatable():
-    patchelf = spack.relocate._patchelf()
+    patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
     assert spack.relocate.file_is_relocatable(patchelf)
 
