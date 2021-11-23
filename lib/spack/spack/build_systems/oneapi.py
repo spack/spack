@@ -122,7 +122,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 class IntelOneApiStaticLibraryList(object):
     """Provides ld_flags when static linking is needed
 
-    oneapi puts static and dynamic libraries in the same directory, so
+    Oneapi puts static and dynamic libraries in the same directory, so
     -l will default to finding the dynamic library. Use absolute
     paths, as recommended by oneapi documentation.
 
