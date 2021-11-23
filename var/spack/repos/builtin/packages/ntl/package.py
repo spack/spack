@@ -8,7 +8,7 @@ from spack import *
 
 class Ntl(Package):
     """
-    NTL  -- a library for doing numbery theory
+    NTL  -- a library for doing number theory
 
     NTL is open-source software distributed under the terms of the GNU Lesser
     General Public License (LGPL) version 2.1 or later.  See the file
