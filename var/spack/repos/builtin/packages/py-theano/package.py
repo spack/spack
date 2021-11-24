@@ -15,6 +15,7 @@ class PyTheano(PythonPackage, CudaPackage):
     git      = "https://github.com/Theano/Theano.git"
 
     version('master', branch='master')
+    version('1.0.5', sha256='6e9439dd53ba995fcae27bf20626074bfc2fff446899dc5c53cb28c1f9202e89')
     version('1.0.4', sha256='35c9bbef56b61ffa299265a42a4e8f8cb5a07b2997dabaef0f8830b397086913')
     version('1.0.2', sha256='6768e003d328a17011e6fca9126fbb8a6ffd3bb13cb21c450f3e724cca29abde')
     version('1.0.1', sha256='88d8aba1fe2b6b75eacf455d01bc7e31e838c5a0fb8c13dde2d9472495ff4662')
