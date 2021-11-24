@@ -28,7 +28,7 @@ packages:
       glu: [mesa-glu, openglu]
       gl: [libglvnd-fe, mesa~glvnd, mesa18, opengl~glvnd]
       glx: [libglvnd-fe+glx, mesa+glx~glvnd, mesa18+glx, opengl+glx~glvnd]
-      egl: [libglvnd-fe+egl, opengl+egl~glvnd]
+      egl: [libglvnd-fe+egl, mesa+egl~opengl, opengl+egl~glvnd]
       libglvnd-be-gl: [mesa+glvnd, opengl+glvnd]
       libglvnd-be-glx: [mesa+glx+glvnd, opengl+glx+glvnd]
       libglvnd-be-egl: [mesa+egl+glvnd, opengl+egl+glvnd]
