@@ -784,12 +784,12 @@ def ensure_gpg_in_path_or_raise():
 
 
 def patchelf_root_spec():
-    """Return the root spec used to bootstrap GnuPG"""
-    return _root_spec('patchelf')
+    """Return the root spec used to bootstrap patchelf"""
+    return _root_spec('patchelf@0.13:')
 
 
 def ensure_patchelf_in_path_or_raise():
-    """Ensure gpg or gpg2 are in the PATH or raise."""
+    """Ensure patchelf is in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
         executables=['patchelf'], abstract_spec=patchelf_root_spec()
     )
