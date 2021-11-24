@@ -102,7 +102,7 @@ common_compile_args = (
 )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def wrapper_environment():
     with set_env(
             SPACK_CC=real_cc,

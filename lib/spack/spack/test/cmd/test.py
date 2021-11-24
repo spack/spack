@@ -11,6 +11,7 @@ import pytest
 import spack.cmd.install
 import spack.config
 import spack.package
+import spack.store
 from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 
@@ -231,3 +232,31 @@ def test_has_test_method_fails(capsys):
 
     captured = capsys.readouterr()[1]
     assert 'is not a class' in captured
+
+
+def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
+                     install_mockery_mutable_config):
+    """Ensure output printed from pkgs is captured by output redirection."""
+    install('printing-package')
+    spack_test('run', '--alias', 'printpkg', 'printing-package')
+
+    stage_files = os.listdir(mock_test_stage)
+
+    # Grab test stage directory contents
+    testdir = os.path.join(mock_test_stage, stage_files[0])
+
+    outfile = os.path.join(testdir, 'test_suite.lock')
+    with open(outfile, 'r') as f:
+        output = f.read()
+        changed_hash = output.replace(
+            spack.store.db.query('printing-package')[0].full_hash(),
+            'fakehash492ucwhwvzhxfbmcc45x49ha')
+    with open(outfile, 'w') as f:
+        f.write(changed_hash)
+
+    # The find command should show the contents
+    find_output = spack_test('find')
+    assert 'printpkg' in find_output
+    # The results should be obtainable
+    results_output = spack_test('results')
+    assert 'PASSED' in results_output

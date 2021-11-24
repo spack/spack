@@ -17,7 +17,7 @@ argparse
 --------
 
 * Homepage: https://pypi.python.org/pypi/argparse
-* Usage: We include our own version to be Python 2.6 compatible.
+* Usage: We include our own version to be Python 3.X compatible.
 * Version: 1.4.0
 * Note: This package has been slightly modified to improve
   error message formatting. See the following commit if the
@@ -39,21 +39,12 @@ distro
 * Usage: Provides a more stable linux distribution detection.
 * Version: 1.0.4 (last version supporting Python 2.6)
 
-functools
----------
-
-* Homepage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
-* Usage: Used for implementation of total_ordering.
-* Version: Unversioned
-* Note: This is the functools.total_ordering implementation
-  from Python 2.7 backported so we can run on Python 2.6.
-
 jinja2
 ------
 
 * Homepage: https://pypi.python.org/pypi/Jinja2
 * Usage: A modern and designer-friendly templating language for Python.
-* Version: 2.10
+* Version: 2.11.3 (last version supporting Python 2.7)
 
 jsonschema
 ----------
@@ -71,15 +62,7 @@ markupsafe
 
 * Homepage: https://pypi.python.org/pypi/MarkupSafe
 * Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
-* Version: 1.0
-
-orderddict
-----------
-
-* Homepage: https://pypi.org/project/ordereddict/
-* Usage: A drop-in substitute for Py2.7's new collections.OrderedDict
-  that works in Python 2.4-2.6.
-* Version: 1.1
+* Version: 1.1.1 (last version supporting Python 2.7)
 
 py
 --
@@ -120,7 +103,7 @@ six
 
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
-* Version: 1.11.0
+* Version: 1.16.0
 
 macholib
 --------
