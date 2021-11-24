@@ -11,11 +11,11 @@ class OmegaH(CMakePackage):
     hardware including GPUs.
     """
 
-    homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/BlueBrain/omega_h/archive/v9.22.1.tar.gz"
-    git      = "https://github.com/BlueBrain/omega_h.git"
+    homepage = "https://github.com/sandialabs/omega_h"
+    url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
+    git      = "https://github.com/sandialabs/omega_h.git"
 
-    version('develop', branch='master')
+    version('main', branch='main')
     version('9.34.6', sha256='0fcdfedab6afb855ca982c429698eaa2c25e78909152b8bee508c80a54234aac')
     version('9.34.5', sha256='1fa67122d2b6d2b3d0d05fa0c5ed1fa24234d072292b29cb334879ffb5adcc92')
     version('9.33.2', sha256='02ddea3aca36170edb1a63c6e2af419004727d2346d759ab224c70bbfa3455da')
@@ -34,7 +34,7 @@ class OmegaH(CMakePackage):
     variant('mpi', default=True, description='Activates MPI support')
     variant('zlib', default=True, description='Activates ZLib support')
     variant('trilinos', default=False, description='Use Teuchos and Kokkos')
-    variant('build_type', default='RelWithDebugInfo')
+    variant('build_type', default='Release')
     variant('throw', default=False, description='Errors throw exceptions instead of abort')
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
@@ -90,9 +90,10 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_THROW:BOOL=ON')
         else:
             args.append('-DOmega_h_THROW:BOOL=OFF')
-        # omega-h requires empty CMAKE_BUILD_TYPE
-        args.append('-DCMAKE_BUILD_TYPE:STRING=')
-        args += list(self._bob_options())
+        if '@:9.29.99' in self.spec:
+            # omega-h requires empty CMAKE_BUILD_TYPE
+            args.append('-DCMAKE_BUILD_TYPE:STRING=')
+            args += list(self._bob_options())
         return args
 
     def flag_handler(self, name, flags):
