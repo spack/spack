@@ -103,7 +103,7 @@ six
 
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
-* Version: 1.11.0
+* Version: 1.16.0
 
 macholib
 --------
