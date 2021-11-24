@@ -26,3 +26,9 @@ class PyMayavi(PythonPackage):
     depends_on('py-traitsui@6:', type=('build', 'run'))
     depends_on('vtk+python', type=('build', 'run'))
     depends_on('py-pyqt5', type=('build', 'run'))
+
+    def patch(self):
+        # to remove Error when starting `mayavi2`:
+        # pkg_resources.DistributionNotFound: The 'vtk' distribution was not
+        # found and is required by mayavi
+        filter_file('vtk', '', 'mayavi/__init__.py', string=True)
