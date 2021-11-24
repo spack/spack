@@ -327,13 +327,15 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_gitsubmodules_callable(mock_git_repository, config,
+@pytest.mark.parametrize("submodules", [list, str, None])
+def test_gitsubmodules_callable(submodules, mock_git_repository, config,
                                 mutable_mock_repo, monkeypatch):
     """
     Test GitFetchStrategy behavior with submodules selected after concretization
     """
-    def submodules(package):
-        return ['third_party/submodule0']
+    def submodules_callback(package):
+        name = 'third_party/submodule0'
+        return [name] if submodules is list else name if submodules is str else None
 
     type_of_test = 'tag-branch'
     t = mock_git_repository.checks[type_of_test]
@@ -343,13 +345,16 @@ def test_gitsubmodules_callable(mock_git_repository, config,
     spec.concretize()
     pkg = spack.repo.get(spec)
     args = copy.copy(t.args)
-    args['submodules'] = submodules
+    args['submodules'] = submodules_callback
     monkeypatch.setitem(pkg.versions, ver('git'), args)
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule0/r0_file_0')
-        assert os.path.isfile(file_path)
+        if submodules is not None:
+            assert os.path.isfile(file_path)
+        else:
+            assert not os.path.isfile(file_path)
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule1/r0_file_1')
         assert not os.path.isfile(file_path)
