@@ -37,7 +37,8 @@ distro
 
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
-* Version: 1.0.4 (last version supporting Python 2.6)
+* Version: 1.6.0 (64946a1e2a9ff529047070657728600e006c99ff)
+* Note: Last version supporting Python 2.7
 
 jinja2
 ------
