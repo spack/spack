@@ -114,6 +114,46 @@ class Opengl(Package):
                     break
         return result
 
+    @property
+    def libs(self):
+        spec = self.spec
+        libs_to_seek = set()
+
+        if '~glvnd' in spec:
+            if '+glx' in spec:
+                libs_to_seek.add('libGL')
+
+            if '+egl' in spec:
+                libs_to_seek.add('libEGL')
+
+            if '+opengl' in spec:
+                libs_to_seek.add('libGL')
+
+        if libs_to_seek:
+            return find_libraries(list(libs_to_seek),
+                                  root=self.spec.prefix,
+                                  recursive=True)
+        return LibraryList(())
+
+    @property
+    def glx_libs(self):
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
+    def egl_libs(self):
+        return find_libraries('libEGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+    @property
+    def gl_libs(self):
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              recursive=True)
+
+
     def setup_run_environment(self, env):
         if '+glx +glvnd' in self.spec:
             env.set('__GLX_VENDOR_LIBRARY_NAME',

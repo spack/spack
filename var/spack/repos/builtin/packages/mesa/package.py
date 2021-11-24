@@ -75,7 +75,7 @@ class Mesa(MesonPackage):
     provides('libglvnd-be-gl', when='+opengl +glvnd')
     provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
     provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
-    provides('osmesa', when='+osmesa +glvnd')
+    provides('osmesa', when='+osmesa')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -109,7 +109,7 @@ class Mesa(MesonPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
     conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
 
-    # Requre glx or egl when glvnd is enabled
+    # Requires glx or egl when glvnd is enabled
     conflicts('~egl ~glx +glvnd')
 
     # Require at least 1 front-end
@@ -252,10 +252,10 @@ class Mesa(MesonPackage):
         spec = self.spec
         libs_to_seek = set()
 
-        if '~glvnd' in spec:
-            if '+osmesa' in spec:
-                libs_to_seek.add('libOSMesa')
+        if '+osmesa' in spec:
+            libs_to_seek.add('libOSMesa')
 
+        if '~glvnd' in spec:
             if '+glx' in spec:
                 libs_to_seek.add('libGL')
 
@@ -269,10 +269,10 @@ class Mesa(MesonPackage):
                 libs_to_seek.add('libGLES')
                 libs_to_seek.add('libGLES2')
 
-            if libs_to_seek:
-                return find_libraries(list(libs_to_seek),
-                                      root=self.spec.prefix,
-                                      recursive=True)
+        if libs_to_seek:
+            return find_libraries(list(libs_to_seek),
+                                  root=self.spec.prefix,
+                                  recursive=True)
         return LibraryList(())
 
     @property

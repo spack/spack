@@ -1057,9 +1057,9 @@ configuration so that the necessary environment variables are set.
         variants: +egl+glx+glvnd
       all:
         providers:
-          libglvnd-be-gl: [opengl+glvnd]
-          libglvnd-be-glx: [opengl+glx+glvnd]
-          libglvnd-be-egl: [opengl+egl+glvnd]
+          libglvnd-be-gl: [opengl]
+          libglvnd-be-glx: [opengl]
+          libglvnd-be-egl: [opengl]
 
 One final detail about the above example is that it avoids setting the true
 root of the external OpenGL implementation, instead opting to set it to a path
