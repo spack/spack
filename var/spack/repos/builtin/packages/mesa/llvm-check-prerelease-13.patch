@@ -1,0 +1,27 @@
+From 820058a9c3a646d5c6e4f95069c361db706c6f8f Mon Sep 17 00:00:00 2001
+From: Ryan Krattiger <ryan.krattiger@kitware.com>
+Date: Thu, 16 Dec 2021 11:25:25 -0600
+Subject: [PATCH] Check the LLVM version suffix for API in llvm 13
+
+This patch depends on LLVM https://reviews.llvm.org/D115818
+---
+ src/gallium/auxiliary/gallivm/lp_bld_misc.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index be288ab02e2..44c55467fe9 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -619,7 +619,8 @@ lp_is_function(LLVMValueRef v)
+ extern "C" void
+ lp_set_module_stack_alignment_override(LLVMModuleRef MRef, unsigned align)
+ {
+-#if LLVM_VERSION_MAJOR >= 13
++#if (LLVM_VERSION_MAJOR == 13 && LLVM_VERSION_MINOR == 0 && LLVM_VERSION_PATCH == 0 && !defined(LLVM_VERSION_SUFFIX)) || \
++    (LLVM_VERSION_MAJOR >= 13 && LLVM_VERSION_MINOR >= 1)
+    llvm::Module *M = llvm::unwrap(MRef);
+    M->setOverrideStackAlignment(align);
+ #endif
+-- 
+GitLab
+
