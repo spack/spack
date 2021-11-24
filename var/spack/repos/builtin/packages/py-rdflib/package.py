@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,13 @@ class PyRdflib(PythonPackage):
     homepage = "https://github.com/RDFLib/rdflib"
     url      = "https://pypi.io/packages/source/r/rdflib/rdflib-6.0.0.tar.gz"
 
+    version('6.0.2', sha256='6136ae056001474ee2aff5fc5b956e62a11c3a9c66bb0f3d9c0aaa5fbb56854e')
     version('6.0.0', sha256='7ce4d757eb26f4dd43205ec340d8c097f29e5adfe45d6ea20238c731dc679879')
     version('5.0.0', sha256='78149dd49d385efec3b3adfbd61c87afaf1281c30d3fcaf1b323b34f603fb155')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.7:', when='@6.0.0:', type=('build', 'run'))
-    depends_on('python@2.7,3.4:', when='@:5.999', type=('build', 'run'))
-    depends_on('py-six', when='@:5.999', type=('build', 'run'))
+    depends_on('python@3.7:', when='@6:', type='build')
+    depends_on('py-setuptools', when='@:5', type='build')
+    depends_on('py-setuptools', when='@6:', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-isodate', type=('build', 'run'))
+    depends_on('py-six', when='@:5', type=('build', 'run'))
