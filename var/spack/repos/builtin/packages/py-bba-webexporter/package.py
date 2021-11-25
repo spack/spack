@@ -14,6 +14,7 @@ class PyBbaWebexporter(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_web_exporter"
     git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_atlas_web_exporter.git"
 
+    version('0.1.4', tag='v0.1.4')
     version('0.1.3', tag='v0.1.3')
 
     depends_on('py-setuptools', type=('build', 'run'))
