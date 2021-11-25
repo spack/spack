@@ -37,11 +37,13 @@ class RocmValidationSuite(CMakePackage):
     patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:4.3.2')
     patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:4.3.2')
     patch('004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.3.0:4.3.2')
-    patch('005-set-rocm-smi-path-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.5.0:')
+    patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@4.5.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
     depends_on('yaml-cpp~shared')
+    depends_on('googletest~shared', when='@4.5.0:')
+    depends_on('doxygen', type='build', when='@4.5.0:')
 
     def setup_build_environment(self, build_env):
         spec = self.spec
@@ -56,10 +58,14 @@ class RocmValidationSuite(CMakePackage):
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('HIP_INC_DIR', self.spec['hip'].prefix),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
             self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
             self.define('YAML_INC_DIR', self.spec['yaml-cpp'].prefix.include),
-            self.define('YAML_LIB_DIR', self.spec['yaml-cpp'].libs.directories[0])
+            self.define('YAML_LIB_DIR', self.spec['yaml-cpp'].libs.directories[0]),
         ]
+        if self.spec.satisfies('@4.5.0:'):
+            args.append(self.define('UT_INC', self.spec['googletest'].prefix.include))
+            args.append(self.define('UT_LIB', self.spec['googletest'].prefix.lib64))
+        return args

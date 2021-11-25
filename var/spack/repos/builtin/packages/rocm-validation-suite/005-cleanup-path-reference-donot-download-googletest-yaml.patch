@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 9ce8b3b..434b07d 100644
+index 9ce8b3b..8644d10 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -43,14 +43,12 @@ endif(rocblas_FOUND)
@@ -31,10 +31,11 @@ index 9ce8b3b..434b07d 100644
  
  if (${RVS_OS_TYPE} STREQUAL "centos")
    set(ROCT_LIB_DIR "${ROCM_PATH}/lib64" CACHE PATH "Contains library files exported by ROC Trunk")
-@@ -208,39 +204,6 @@ endif()
+@@ -207,86 +203,6 @@ if (NOT DEFINED CPACK_GENERATOR )
+ endif()
  message (STATUS "CPACK_GENERATOR ${CPACK_GENERATOR}" )
  
- 
+-
 -################################################################################
 -# Download and unpack yaml-cpp at configure time
 -configure_file(CMakeYamlDownload.cmake yaml-download/CMakeLists.txt)
@@ -68,10 +69,56 @@ index 9ce8b3b..434b07d 100644
 -  VERBATIM)
 -
 -################################################################################
- ## GOOGLE TEST
- if(RVS_BUILD_TESTS)
-   # Download and unpack googletest at configure time
-@@ -410,16 +373,16 @@ if (RVS_ROCBLAS EQUAL 1)
+-## GOOGLE TEST
+-if(RVS_BUILD_TESTS)
+-  # Download and unpack googletest at configure time
+-  configure_file(CMakeGtestDownload.cmake googletest-download/CMakeLists.txt)
+-  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+-    RESULT_VARIABLE result
+-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+-  if(result)
+-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+-  endif()
+-  execute_process(COMMAND ${CMAKE_COMMAND} --build .
+-    RESULT_VARIABLE result
+-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
+-  if(result)
+-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+-  endif()
+-  execute_process(COMMAND ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR}/googletest-src -B${CMAKE_BINARY_DIR}/googletest-build
+-    RESULT_VARIABLE result
+-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-src )
+-  if(result)
+-    message(FATAL_ERROR "Config step for googletest-src failed: ${result}")
+-  endif()
+-
+-  add_custom_target(rvs_gtest_target
+-    DEPENDS ${CMAKE_BINARY_DIR}/googletest-build/lib/libgtest_main.a
+-  )
+-
+-  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/googletest-build/lib/libgtest_main.a
+-    COMMAND make -C ${CMAKE_BINARY_DIR}/googletest-build
+-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-src
+-    COMMENT "Generating googletest targets"
+-    VERBATIM)
+-
+-  ## Set default unit test framework include path
+-  if (NOT DEFINED UT_INC)
+-      set (UT_INC "${CMAKE_BINARY_DIR}/googletest-src/googletest/include")
+-      message ("UT_INC ${UT_INC}")
+-  endif ()
+-
+-  ## Set default unit test framework include path
+-  if (NOT DEFINED UT_LIB)
+-      set (UT_LIB "${CMAKE_BINARY_DIR}/googletest-build/lib")
+-      message ("UT_LIB ${UT_LIB}")
+-  endif()
+-
+-endif()
+ ################################################################################
+ ## rocBLAS
+ 
+@@ -410,16 +326,16 @@ if (RVS_ROCBLAS EQUAL 1)
    set(ROCBLAS_INC_DIR "${CMAKE_BINARY_DIR}/rvs_rblas-src/build/release/rocblas-install")
    set(ROCBLAS_LIB_DIR "${CMAKE_BINARY_DIR}/rvs_rblas-src/build/release/rocblas-install/lib/")
  else()
@@ -92,7 +139,7 @@ index 9ce8b3b..434b07d 100644
  endif()
  set(ROCM_SMI_LIB "rocm_smi64" CACHE STRING "rocm_smi library name")
  
-@@ -454,7 +417,7 @@ if (RVS_BUILD_TESTS)
+@@ -454,7 +370,7 @@ if (RVS_BUILD_TESTS)
    add_subdirectory(testif.so)
  endif()
  
@@ -101,3 +148,12 @@ index 9ce8b3b..434b07d 100644
  
  
  add_dependencies(pesm rvslib rvslibrt)
+@@ -489,7 +405,7 @@ if (RVS_BUILD_TESTS)
+   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   COMMENT "Create the bintest directory"
+   VERBATIM)
+-  add_dependencies(rvshelper rvs_bintest_folder rvs_gtest_target)
++  add_dependencies(rvshelper rvs_bintest_folder)
+ endif()
+ 
+ add_custom_target(rvs_doc ALL
