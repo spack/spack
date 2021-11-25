@@ -112,7 +112,7 @@ if sys.version_info < (3, 7, 4):
             def lookup(name):
                 fn = getattr(os, name, _nop)
                 if sys.version_info >= (3, 3):
-                    if fn in os.supports_follow_symlinks:
+                    if fn in os.supports_follow_symlinks:  # novermin
                         return fn
                 return _nop
 
