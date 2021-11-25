@@ -602,6 +602,17 @@ class SpackCommand(object):
         self.returncode = None
         self.error = None
 
+        class Tee(object):
+            def __init__(self, real):
+                self.real = real
+                self.buf = StringIO()
+
+            def write(self, val):
+                self.real.write(val)
+                self.buf.write(val)
+
+        tee = Tee(sys.stdout)
+
         prepend = kwargs['global_args'] if 'global_args' in kwargs else []
 
         args, unknown = self.parser.parse_known_args(
@@ -609,9 +620,8 @@ class SpackCommand(object):
 
         fail_on_error = kwargs.get('fail_on_error', True)
 
-        out = StringIO()
         try:
-            with log_output(out):
+            with log_output(tee):
                 self.returncode = _invoke_command(
                     self.command, self.parser, args, unknown)
 
@@ -619,20 +629,17 @@ class SpackCommand(object):
             self.returncode = e.code
 
         except BaseException as e:
-            tty.debug(e)
             self.error = e
             if fail_on_error:
-                self._log_command_output(out)
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
-            self._log_command_output(out)
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
-        return out.getvalue()
+        return tee.buf.getvalue()
 
     def _log_command_output(self, out):
         if tty.is_verbose():
