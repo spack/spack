@@ -18,6 +18,7 @@ on:
 
 jobs:
   deploy-images:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     permissions:
       packages: write

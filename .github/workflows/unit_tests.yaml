@@ -13,6 +13,7 @@ jobs:
   # Validate that the code can be run on all the Python versions
   # supported by Spack
   validate:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
@@ -29,6 +30,7 @@ jobs:
       run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.5- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
@@ -50,6 +52,7 @@ jobs:
           share/spack/qa/run-style-tests
   # Check which files have been updated by the PR
   changes:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -92,6 +95,7 @@ jobs:
 
   # Run unit tests with different configurations on linux
   unittests:
+    if: startsWith(github.repository, 'spack/')
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     strategy:
@@ -157,6 +161,7 @@ jobs:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
+    if: startsWith(github.repository, 'spack/')
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
@@ -197,6 +202,7 @@ jobs:
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
   rhel8-platform-python:
+    if: startsWith(github.repository, 'spack/')
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.with_coverage == 'true' }}
@@ -223,6 +229,7 @@ jobs:
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
+    if: startsWith(github.repository, 'spack/')
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
@@ -269,6 +276,7 @@ jobs:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   build:
+    if: startsWith(github.repository, 'spack/')
     needs: [ validate, style, changes ]
     runs-on: macos-latest
     strategy:

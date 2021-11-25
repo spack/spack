@@ -22,6 +22,7 @@ on:
 jobs:
 
   fedora-clingo-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     container: "fedora:latest"
     steps:
@@ -49,6 +50,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   ubuntu-clingo-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
@@ -79,6 +81,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   opensuse-clingo-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     container: "opensuse/leap:latest"
     steps:
@@ -105,6 +108,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: macos-latest
     steps:
       - name: Install dependencies
@@ -121,6 +125,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-clingo-binaries:
+    if: startsWith(github.repository, 'spack/')
     runs-on: macos-latest
     strategy:
       matrix:
@@ -141,6 +146,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   ubuntu-clingo-binaries:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -163,6 +169,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   ubuntu-gnupg-binaries:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
@@ -191,6 +198,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   ubuntu-gnupg-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
     steps:
@@ -221,6 +229,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-gnupg-binaries:
+    if: startsWith(github.repository, 'spack/')
     runs-on: macos-latest
     steps:
       - name: Install dependencies
@@ -237,6 +246,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   macos-gnupg-sources:
+    if: startsWith(github.repository, 'spack/')
     runs-on: macos-latest
     steps:
       - name: Install dependencies

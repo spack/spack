@@ -21,6 +21,7 @@ on:
 
 jobs:
   install_gcc:
+    if: startsWith(github.repository, 'spack/')
     name: gcc with clang
     runs-on: macos-latest
     steps:
@@ -35,6 +36,7 @@ jobs:
         spack install -v --fail-fast gcc@9.2.0 %apple-clang
 
   install_jupyter_clang:
+    if: startsWith(github.repository, 'spack/')
     name: jupyter
     runs-on: macos-latest
     timeout-minutes: 700
@@ -49,6 +51,7 @@ jobs:
         spack install -v --fail-fast py-jupyterlab %apple-clang
 
   install_scipy_clang:
+    if: startsWith(github.repository, 'spack/')
     name: scipy, mpl, pd
     runs-on: macos-latest
     steps:
