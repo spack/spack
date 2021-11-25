@@ -7,8 +7,7 @@ import os
 import re
 import shutil
 import tempfile
-
-from ordereddict_backport import OrderedDict
+from collections import OrderedDict
 
 import spack.binary_distribution as bindist
 import spack.hooks
