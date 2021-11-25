@@ -12,21 +12,19 @@
   default unorderd dict.
 
 """
+import collections
 import ctypes
 import re
 import sys
 from typing import List  # novm
 
-from ordereddict_backport import OrderedDict
-from six import string_types, StringIO
-
 import ruamel.yaml as yaml
-from ruamel.yaml import RoundTripLoader, RoundTripDumper
+from ruamel.yaml import RoundTripDumper, RoundTripLoader
+from six import StringIO, string_types
 
-from llnl.util.tty.color import colorize, clen, cextra
+from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import Mapping  # novm
@@ -41,7 +39,7 @@ __all__ = ['load', 'dump', 'SpackYAMLError']
 # Also, use OrderedDict instead of just dict.
 
 
-class syaml_dict(OrderedDict):
+class syaml_dict(collections.OrderedDict):
     def __repr__(self):
         mappings = ('%r: %r' % (k, v) for k, v in self.items())
         return '{%s}' % ', '.join(mappings)

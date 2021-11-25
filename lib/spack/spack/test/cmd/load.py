@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+
 import pytest
-from spack.main import SpackCommand, SpackCommandError
+
 import spack.spec
 import spack.user_environment as uenv
+from spack.main import SpackCommand, SpackCommandError
 
 load = SpackCommand('load')
 unload = SpackCommand('unload')

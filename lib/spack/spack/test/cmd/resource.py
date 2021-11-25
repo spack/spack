@@ -5,7 +5,6 @@
 
 from spack.main import SpackCommand
 
-
 resource = SpackCommand('resource')
 
 #: these are hashes used in mock packages

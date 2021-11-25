@@ -15,6 +15,10 @@ class N2p2(MakefilePackage):
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"
 
     version(
+        "2.1.4",
+        sha256="f1672c09af4ed16a7f396606977e4675a0fee98f04bfd9574907fba4b83a14ef",
+    )
+    version(
         "2.1.1",
         sha256="90fbc0756132984d0d7e6d92d2f53358c120e75f148910d90c027158163251b9",
     )
@@ -26,8 +30,9 @@ class N2p2(MakefilePackage):
     variant("doc", default=False, description="build documentation with Doxygen")
 
     patch("interface-makefile.patch", when="@2.1.0")
-    patch("interface-makefile211.patch", when="@2.1.1")
-    patch("libnnp-makefile.patch")
+    patch("interface-makefile211.patch", when="@2.1.1:")
+    patch("libnnp-makefile.patch", when="@:2.1.1")
+    patch("libnnp-makefile212.patch", when="@2.1.2:")
     patch("nnp_test.h.patch")
 
     depends_on("mpi")

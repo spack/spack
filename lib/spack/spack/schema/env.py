@@ -126,6 +126,9 @@ schema = {
                                                 'type': 'string',
                                                 'pattern': '(roots|all)',
                                             },
+                                            'link_type': {
+                                                'type': 'string'
+                                            },
                                             'select': {
                                                 'type': 'array',
                                                 'items': {

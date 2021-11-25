@@ -17,7 +17,7 @@ class RSeurat(RPackage):
     R, et al (2015) <doi:10.1016/j.cell.2015.05.002>, and Stuart T, Butler A,
     et al (2019) <doi:10.1016/j.cell.2019.05.031> for more details."""
 
-    homepage = "http://satijalab.org/seurat/"
+    homepage = "https://satijalab.org/seurat/"
     url      = "https://cloud.r-project.org/src/contrib/Seurat_2.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Seurat"
 

@@ -14,11 +14,18 @@ class Tmux(AutotoolsPackage):
     background) and reattach them to a different terminal. And do a lot more.
     """
 
-    homepage = "http://tmux.github.io"
+    homepage = "https://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('3.2a', sha256='551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f')
+    version('3.2', sha256='664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399')
+    version('3.1c', sha256='918f7220447bef33a1902d4faff05317afd9db4ae1c9971bef5c787ac6c88386')
     version('3.1b', sha256='d93f351d50af05a75fe6681085670c786d9504a5da2608e481c47cf5e1486db9')
+    version('3.1a', sha256='10687cbb02082b8b9e076cf122f1b783acc2157be73021b4bedb47e958f4e484')
+    version('3.1', sha256='979bf38db2c36193de49149aaea5c540d18e01ccc27cf76e2aff5606bd186722')
     version('3.0a', sha256='4ad1df28b4afa969e59c08061b45082fdc49ff512f30fc8e43217d7b0e5f8db9')
+    version('3.0', sha256='9edcd78df80962ee2e6471a8f647602be5ded62bb41c574172bb3dc3d0b9b4b4')
+    version('2.9a', sha256='839d167a4517a6bffa6b6074e89a9a8630547b2dea2086f1fad15af12ab23b25')
     version('2.9', sha256='34901232f486fd99f3a39e864575e658b5d49f43289ccc6ee57c365f2e2c2980')
     version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
     version('2.7', sha256='9ded7d100313f6bc5a87404a4048b3745d61f2332f99ec1400a7c4ed9485d452')

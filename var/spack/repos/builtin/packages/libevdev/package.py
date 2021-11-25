@@ -11,7 +11,7 @@ class Libevdev(AutotoolsPackage):
     tasks when dealing with evdev devices into a library and provides a
     library interface to the callers, thus avoiding erroneous ioctls, etc."""
 
-    homepage = "http://cgit.freedesktop.org/libevdev"
+    homepage = "https://cgit.freedesktop.org/libevdev"
     url      = "https://github.com/whot/libevdev/archive/libevdev-1.5.4.tar.gz"
 
     version('1.5.4', sha256='11ef3510970c049b0e30985be3149d27b4b36b7cbe14ca678746aac1ca86744d')

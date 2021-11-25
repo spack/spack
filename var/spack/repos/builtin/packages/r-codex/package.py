@@ -20,7 +20,7 @@ class RCodex(RPackage):
     segmentation procedure that explicitly models the count-based exome
     sequencing data."""
 
-    homepage = "http://www.bioconductor.org/packages/release/bioc/html/CODEX.html"
+    homepage = "https://www.bioconductor.org/packages/release/bioc/html/CODEX.html"
     git      = "https://git.bioconductor.org/packages/CODEX"
 
     version('1.22.0', commit='aa0ee4278111a46e0c790312b0526ba07aab22eb')

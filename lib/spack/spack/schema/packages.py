@@ -22,8 +22,11 @@ def deprecate_paths_and_modules(instance, deprecated_properties):
     """
     import copy
     import os.path
+
     import llnl.util.tty
+
     import spack.util.spack_yaml as syaml
+
     # Copy the instance to remove default attributes that are not related
     # to the part that needs to be reported
     instance_copy = copy.copy(instance)

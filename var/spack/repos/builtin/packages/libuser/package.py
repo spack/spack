@@ -10,7 +10,7 @@ class Libuser(AutotoolsPackage):
     """A user and group account administration library."""
 
     homepage = "https://pagure.io/libuser"
-    url      = "http://releases.pagure.org/libuser/libuser-0.62.tar.xz"
+    url      = "https://releases.pagure.org/libuser/libuser-0.62.tar.xz"
 
     version('0.62', sha256='a58ff4fabb01a25043b142185a33eeea961109dd60d4b40b6a9df4fa3cace20b')
     version('0.61', sha256='0a114a52446e12781e2ffdf26f59df0d14e7809c7db5e551d3cf61c4e398751d')

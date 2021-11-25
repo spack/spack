@@ -7,7 +7,7 @@
 class PyAzuremlDataprep(Package):
     """Azure ML Data Preparation SDK."""
 
-    homepage = "http://aka.ms/data-prep-sdk"
+    homepage = "https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py"
     url      = "https://pypi.io/packages/py3/a/azureml_dataprep/azureml_dataprep-2.0.2-py3-none-any.whl"
 
     version('2.11.0', sha256='755c0d7cfe228705aee7adc97813fb6d7d6ecb048b66f47c1fd5897f2709c3a2', expand=False)
@@ -21,15 +21,15 @@ class PyAzuremlDataprep(Package):
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-pip', type='build')
 
-    depends_on('py-dotnetcore2@2.1.14:2.999', type=('build', 'run'))
-    depends_on('py-azureml-dataprep-native@30.0.0:30.999', when='@2.10.0:', type=('build', 'run'))
-    depends_on('py-azureml-dataprep-native@14.2.1:14.999', when='@:2.0.2', type=('build', 'run'))
-    depends_on('py-azureml-dataprep-rslex@1.9.0:1.9.999', when='@2.11.0:', type=('build', 'run'))
-    depends_on('py-azureml-dataprep-rslex@1.8.0:1.8.999', when='@2.10.1', type=('build', 'run'))
-    depends_on('py-cloudpickle@1.1.0:1.999', type=('build', 'run'))
-    depends_on('py-azure-identity@1.2.0:1.4.999', when='@2.10.0:', type=('build', 'run'))
-    depends_on('py-azure-identity@1.2.0:1.2.999', when='@:2.0.2', type=('build', 'run'))
-    depends_on('py-fusepy@3.0.1:3.999', when='+fuse', type=('build', 'run'))
+    depends_on('py-dotnetcore2@2.1.14:2', type=('build', 'run'))
+    depends_on('py-azureml-dataprep-native@30.0.0:30', when='@2.10.0:', type=('build', 'run'))
+    depends_on('py-azureml-dataprep-native@14.2.1:14', when='@:2.0.2', type=('build', 'run'))
+    depends_on('py-azureml-dataprep-rslex@1.9.0:1.9', when='@2.11.0:', type=('build', 'run'))
+    depends_on('py-azureml-dataprep-rslex@1.8.0:1.8', when='@2.10.1', type=('build', 'run'))
+    depends_on('py-cloudpickle@1.1.0:1', type=('build', 'run'))
+    depends_on('py-azure-identity@1.2.0:1.4', when='@2.10.0:', type=('build', 'run'))
+    depends_on('py-azure-identity@1.2.0:1.2', when='@:2.0.2', type=('build', 'run'))
+    depends_on('py-fusepy@3.0.1:3', when='+fuse', type=('build', 'run'))
 
     def install(self, spec, prefix):
         pip = which('pip')

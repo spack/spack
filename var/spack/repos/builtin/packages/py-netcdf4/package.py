@@ -18,15 +18,20 @@ class PyNetcdf4(PythonPackage):
     version('1.4.2',   sha256='b934af350459cf9041bcdf5472e2aa56ed7321c018d918e9f325ec9a1f9d1a30')
     version('1.2.7',   sha256='0c449b60183ee06238a8f9a75de7b0eed3acaa7a374952ff9f1ff06beb8f94ba')
     version('1.2.3.1', sha256='55edd74ef9aabb1f7d1ea3ffbab9c555da2a95632a97f91c0242281dc5eb919f')
+    variant("mpi", default=True, description="Parallel IO support")
 
     depends_on('py-setuptools',   type='build')
     depends_on('py-cython@0.19:', type='build')
 
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-cftime', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
-    depends_on('netcdf-c')
-    depends_on('hdf5@1.8.0:+hl')
+    depends_on('netcdf-c', when='-mpi')
+    depends_on('netcdf-c+mpi', when='+mpi')
+
+    depends_on('hdf5@1.8.0:+hl', when='-mpi')
+    depends_on('hdf5@1.8.0:+hl+mpi', when='+mpi')
 
     # The installation script tries to find hdf5 using pkg-config. However, the
     # version of hdf5 installed with Spack does not have pkg-config files.

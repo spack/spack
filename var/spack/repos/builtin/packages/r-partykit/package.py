@@ -21,7 +21,7 @@ class RPartykit(RPackage):
     published by Hothorn and Zeileis (2015)
     <https://jmlr.org/papers/v16/hothorn15a.html>."""
 
-    homepage = "http://partykit.r-forge.r-project.org/partykit"
+    homepage = "https://partykit.r-forge.r-project.org/partykit"
     url      = "https://cloud.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/partykit"
 

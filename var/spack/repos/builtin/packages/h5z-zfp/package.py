@@ -10,7 +10,7 @@ class H5zZfp(MakefilePackage):
     """A highly flexible floating point and integer compression plugin for the
        HDF5 library using ZFP compression."""
 
-    homepage = "http://h5z-zfp.readthedocs.io/en/latest"
+    homepage = "https://h5z-zfp.readthedocs.io/en/latest"
     git      = "https://github.com/LLNL/H5Z-ZFP.git"
 
     version('develop', branch='master')

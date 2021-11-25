@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
@@ -16,8 +17,11 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ['tcojean', 'hartwiganzt']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master', branch='master')
+    version('1.4.0', commit='f811917c1def4d0fcd8db3fe5c948ce13409e28e')  # v1.4.0
     version('1.3.0', commit='4678668c66f634169def81620a85c9a20b7cec78')  # v1.3.0
     version('1.2.0', commit='b4be2be961fd5db45c3d02b5e004d73550722e31')  # v1.2.0
     version('1.1.1', commit='08d2c5200d3c78015ac8a4fd488bafe1e4240cf5')  # v1.1.1
@@ -51,13 +55,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
-    conflicts("^hip@4.1.0:", when="@master")
     conflicts("^hipblas@4.1.0:", when="@:1.3.0")
-    conflicts("^hipblas@4.1.0:", when="@master")
     conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
-    conflicts("^hipsparse@4.1.0:", when="@master")
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
-    conflicts("^rocthrust@4.1.0:", when="@master")
+
+    # Skip smoke tests if compatible hardware isn't found
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@master')
+    patch('1.4.0_skip_invalid_smoke_tests.patch', when='@1.4.0')
 
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
@@ -126,19 +130,19 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     @run_after('install')
     def setup_build_tests(self):
         """Build and install the smoke tests."""
-        # For now only develop and next releases support this scheme.
-        if not self.spec.satisfies('@develop') and not self.spec.satisfies('@1.4.0:'):
+        # For now only 1.4.0 and later releases support this scheme.
+        if self.spec.satisfies('@:1.3.0'):
             return
         with working_dir(self.build_directory):
             make("test_install")
-        smoke_test_path = join_path(self.build_directory, 'test_install')
+        smoke_test_path = join_path(self.build_directory, 'test', 'test_install')
         with working_dir(smoke_test_path):
             make("install")
 
     def test(self):
         """Run the smoke tests."""
-        # For now only develop and next releases support this scheme.
-        if not self.spec.satisfies('@develop') and not self.spec.satisfies('@1.4.0:'):
+        # For now only 1.4.0 and later releases support this scheme.
+        if self.spec.satisfies('@:1.3.0'):
             print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
         files = [('test_install', [r'REFERENCE',

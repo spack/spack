@@ -12,7 +12,7 @@ class Ant(Package):
        dependent upon each other
     """
 
-    homepage = "http://ant.apache.org/"
+    homepage = "https://ant.apache.org/"
     url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
 
     version('1.10.7', sha256='2f9c4ef094581663b41a7412324f65b854f17622e5b2da9fcb9541ca8737bd52')

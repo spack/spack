@@ -5,9 +5,11 @@
 
 # Need this because of spack.util.string
 from __future__ import absolute_import
-import string
+
 import itertools
 import re
+import string
+
 from six import StringIO
 
 import spack.error

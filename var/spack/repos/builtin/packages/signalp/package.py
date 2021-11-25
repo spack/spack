@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Signalp(Package):
@@ -15,9 +16,9 @@ class Signalp(Package):
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
        For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html"""
+       https://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.cbs.dtu.dk/services/SignalP/"
+    homepage = "https://www.cbs.dtu.dk/services/SignalP/"
     url      = "file://{0}/signalp-4.1f.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

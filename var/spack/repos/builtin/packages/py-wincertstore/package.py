@@ -10,7 +10,7 @@ class PyWincertstore(PythonPackage):
     """wincertstore provides an interface to access Windows' CA and CRL certificates.
     It uses ctypes and Windows's sytem cert store API through crypt32.dll."""
 
-    homepage = "https://bitbucket.org/tiran/wincertstore"
+    homepage = "https://github.com/tiran/wincertstore"
     pypi     = "wincertstore/wincertstore-0.2.zip"
 
     version('0.2', sha256='780bd1557c9185c15d9f4221ea7f905cb20b93f7151ca8ccaed9714dce4b327a')

@@ -13,7 +13,7 @@ class GdkPixbuf(Package):
        GTK+ 2 but it was split off into a separate package in
        preparation for the change to GTK+ 3."""
 
-    homepage = "https://developer.gnome.org/gdk-pixbuf/"
+    homepage = "https://gitlab.gnome.org/GNOME/gdk-pixbuf"
     url      = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.40/gdk-pixbuf-2.40.0.tar.xz"
     list_url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
     list_depth = 1
@@ -32,8 +32,8 @@ class GdkPixbuf(Package):
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')
     depends_on('ninja', type='build', when='@2.37.0:')
-    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=linux')
-    depends_on('shared-mime-info', type='build', when='@2.36.8: platform=cray')
+    depends_on('shared-mime-info', when='@2.36.8: platform=linux')
+    depends_on('shared-mime-info', when='@2.36.8: platform=cray')
     depends_on('pkgconfig', type='build')
     # Building the man pages requires libxslt and the Docbook stylesheets
     depends_on('libxslt', type='build', when='+man')

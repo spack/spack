@@ -11,7 +11,7 @@ class Ssmtp(AutotoolsPackage):
     mail via the departmental mailhub from which they pick up their mail."""
 
     homepage = "https://salsa.debian.org/debian/ssmtp"
-    url = "http://deb.debian.org/debian/pool/main/s/ssmtp/ssmtp_2.64.orig.tar.bz2"
+    url = "https://deb.debian.org/debian/pool/main/s/ssmtp/ssmtp_2.64.orig.tar.bz2"
 
     version('2.64', sha256='22c37dc90c871e8e052b2cab0ad219d010fa938608cd66b21c8f3c759046fa36')
 

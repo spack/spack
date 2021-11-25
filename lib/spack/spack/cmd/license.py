@@ -46,9 +46,8 @@ licensed_files = [
     r'^lib/spack/docs/.*\.py$',
     r'^lib/spack/docs/spack.yaml$',
 
-    # 2 files in external
+    # 1 file in external
     r'^lib/spack/external/__init__.py$',
-    r'^lib/spack/external/ordereddict_backport.py$',
 
     # shell scripts in share
     r'^share/spack/.*\.sh$',
@@ -175,7 +174,8 @@ def _check_license(lines, path):
             if error:
                 return error
 
-    print('{0}: the license does not match the expected format'.format(path))
+    print('{0}: the license header at the top of the file does not match the \
+          expected format'.format(path))
     return GENERAL_MISMATCH
 
 

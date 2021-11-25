@@ -6,6 +6,9 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
+
+import pytest
+
 import spack.paths
 import spack.util.url as url_util
 
@@ -302,3 +305,73 @@ def test_url_join_absolute_paths():
 
     assert(url_util.join(*args, resolve_href=False) ==
            'http://example.com/path/resource')
+
+
+@pytest.mark.parametrize("url,parts", [
+    ("ssh://user@host.xz:500/path/to/repo.git/",
+     ("ssh", "user", "host.xz", 500, "/path/to/repo.git")),
+    ("ssh://user@host.xz/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "/path/to/repo.git")),
+    ("ssh://host.xz:500/path/to/repo.git/",
+     ("ssh", None, "host.xz", 500, "/path/to/repo.git")),
+    ("ssh://host.xz/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "/path/to/repo.git")),
+    ("ssh://user@host.xz/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "/path/to/repo.git")),
+    ("ssh://host.xz/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "/path/to/repo.git")),
+    ("ssh://user@host.xz/~user/path/to/repo.git/",
+     ("ssh", "user", "host.xz", None, "~user/path/to/repo.git")),
+    ("ssh://host.xz/~user/path/to/repo.git/",
+     ("ssh", None, "host.xz", None, "~user/path/to/repo.git")),
+    ("ssh://user@host.xz/~/path/to/repo.git",
+     ("ssh", "user", "host.xz", None, "~/path/to/repo.git")),
+    ("ssh://host.xz/~/path/to/repo.git",
+     ("ssh", None, "host.xz", None, "~/path/to/repo.git")),
+    ("git@github.com:spack/spack.git",
+     (None, "git", "github.com", None, "spack/spack.git")),
+    ("user@host.xz:/path/to/repo.git/",
+     (None, "user", "host.xz", None, "/path/to/repo.git")),
+    ("host.xz:/path/to/repo.git/",
+     (None, None, "host.xz", None, "/path/to/repo.git")),
+    ("user@host.xz:~user/path/to/repo.git/",
+     (None, "user", "host.xz", None, "~user/path/to/repo.git")),
+    ("host.xz:~user/path/to/repo.git/",
+     (None, None, "host.xz", None, "~user/path/to/repo.git")),
+    ("user@host.xz:path/to/repo.git",
+     (None, "user", "host.xz", None, "path/to/repo.git")),
+    ("host.xz:path/to/repo.git",
+     (None, None, "host.xz", None, "path/to/repo.git")),
+    ("rsync://host.xz/path/to/repo.git/",
+     ("rsync", None, "host.xz", None, "/path/to/repo.git")),
+    ("git://host.xz/path/to/repo.git/",
+     ("git", None, "host.xz", None, "/path/to/repo.git")),
+    ("git://host.xz/~user/path/to/repo.git/",
+     ("git", None, "host.xz", None, "~user/path/to/repo.git")),
+    ("http://host.xz/path/to/repo.git/",
+     ("http", None, "host.xz", None, "/path/to/repo.git")),
+    ("https://host.xz/path/to/repo.git/",
+     ("https", None, "host.xz", None, "/path/to/repo.git")),
+    ("https://github.com/spack/spack",
+     ("https", None, "github.com", None, "/spack/spack")),
+    ("https://github.com/spack/spack/",
+     ("https", None, "github.com", None, "/spack/spack")),
+    ("file:///path/to/repo.git/",
+     ("file", None, None, None, "/path/to/repo.git")),
+    ("file://~/path/to/repo.git/",
+     ("file", None, None, None, "~/path/to/repo.git")),
+    # bad ports should give us None
+    ("ssh://host.xz:port/path/to/repo.git/", None),
+    # bad ports should give us None
+    ("ssh://host-foo.xz:port/path/to/repo.git/", None),
+    # regular file paths should give us None
+    ("/path/to/repo.git/", None),
+    ("path/to/repo.git/", None),
+    ("~/path/to/repo.git", None),
+])
+def test_git_url_parse(url, parts):
+    if parts is None:
+        with pytest.raises(ValueError):
+            url_util.parse_git_url(url)
+    else:
+        assert parts == url_util.parse_git_url(url)

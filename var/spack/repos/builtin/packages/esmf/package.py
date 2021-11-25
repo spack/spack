@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Esmf(MakefilePackage):
@@ -17,12 +18,14 @@ class Esmf(MakefilePackage):
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = 'https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz'
 
+    version('8.2.0',  sha256='3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485')
+    version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
     version('8.0.0',  sha256='051dca45f9803d7e415c0ea146df15ce487fb55f0fce18ca61d96d4dba0c8774')
     version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
 
     variant('mpi',     default=True,  description='Build with MPI support')
-    variant('lapack',  default=True,  description='Build with LAPACK support')
+    variant('external-lapack', default=False, description='Build with external LAPACK support')
     variant('netcdf',  default=True,  description='Build with NetCDF support')
     variant('pnetcdf', default=True,  description='Build with pNetCDF support')
     variant('xerces',  default=True,  description='Build with Xerces support')
@@ -35,7 +38,7 @@ class Esmf(MakefilePackage):
 
     # Optional dependencies
     depends_on('mpi', when='+mpi')
-    depends_on('lapack@3:', when='+lapack')
+    depends_on('lapack@3:', when='+external-lapack')
     depends_on('netcdf-c@3.6:', when='+netcdf')
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
@@ -45,25 +48,25 @@ class Esmf(MakefilePackage):
     depends_on('perl', type='test')
 
     # Make esmf build with newer intel versions
-    patch('intel.patch', when='@:7.0.99 %intel@17:')
+    patch('intel.patch', when='@:7.0 %intel@17:')
     # Make esmf build with newer gcc versions
     # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
-    patch('gcc.patch', when='@:7.0.99 %gcc@6:')
+    patch('gcc.patch', when='@:7.0 %gcc@6:')
 
     # Fix undefined reference errors with mvapich2
     # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
-    patch('mvapich2.patch', when='@:7.0.99')
+    patch('mvapich2.patch', when='@:7.0')
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
-    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0.99')
+    patch('darwin_dylib_install_name.patch', when='platform=darwin @:7.0')
 
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
     patch('cstddef.patch', when='@7.1.0r %gcc@8:')
 
     # Make script from mvapich2.patch executable
-    @when('@:7.0.99')
+    @when('@:7.0')
     @run_before('build')
     def chmod_scripts(self):
         chmod = which('chmod')
@@ -174,7 +177,9 @@ class Esmf(MakefilePackage):
                 os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
-            elif '^intel-parallel-studio+mpi' in spec or '^intel-mpi' in spec:
+            elif '^intel-parallel-studio+mpi' in spec or \
+                 '^intel-mpi' in spec or \
+                 '^intel-oneapi-mpi' in spec:
                 os.environ['ESMF_COMM'] = 'intelmpi'
         else:
             # Force use of the single-processor MPI-bypass library.
@@ -184,7 +189,7 @@ class Esmf(MakefilePackage):
         # LAPACK #
         ##########
 
-        if '+lapack' in spec:
+        if '+external-lapack' in spec:
             # A system-dependent external LAPACK/BLAS installation is used
             # to satisfy the external dependencies of the LAPACK-dependent
             # ESMF code.
@@ -198,8 +203,7 @@ class Esmf(MakefilePackage):
             # to the application.
             os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
         else:
-            # Disables LAPACK-dependent code.
-            os.environ['ESMF_LAPACK'] = 'OFF'
+            os.environ['ESMF_LAPACK'] = 'internal'
 
         ##########
         # NetCDF #

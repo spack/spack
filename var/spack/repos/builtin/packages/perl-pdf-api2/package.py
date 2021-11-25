@@ -9,7 +9,7 @@ from spack import *
 class PerlPdfApi2(PerlPackage):
     """Facilitates the creation and modification of PDF files"""
 
-    homepage = "http://search.cpan.org/~ssimms/PDF-API2-2.033/lib/PDF/API2.pm"
+    homepage = "https://metacpan.org/pod/PDF::API2"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SS/SSIMMS/PDF-API2-2.033.tar.gz"
 
     version('2.033', sha256='9c0866ec1a3053f73afaca5f5cdbe6925903b4ce606f4bf4ac317731a69d27a0')

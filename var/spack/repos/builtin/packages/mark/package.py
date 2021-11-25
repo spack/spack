@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Mark(Package):
@@ -17,7 +18,7 @@ class Mark(Package):
     Step(1). Spack will search your current directory for the download file.
     Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
-    http://spack.readthedocs.io/en/latest/mirrors.html"""
+    https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.phidot.org/software/mark/index.html"
     manual_download = True

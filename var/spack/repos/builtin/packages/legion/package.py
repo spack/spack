@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Legion(CMakePackage):
@@ -21,11 +22,11 @@ class Legion(CMakePackage):
        that is orthogonal to correctness, thereby enabling easy porting and
        tuning of Legion applications to new architectures."""
 
-    homepage = "http://legion.stanford.edu/"
+    homepage = "https://legion.stanford.edu/"
     git = "https://github.com/StanfordLegion/legion.git"
 
     maintainers = ['pmccormick', 'streichler']
-
+    tags = ['e4s']
     version('21.03.0', tag='legion-21.03.0')
     version('stable', branch='stable')
     version('master', branch='master')
@@ -55,7 +56,7 @@ class Legion(CMakePackage):
                    when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
 
     depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
-    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='+kokkos+openmp')
 
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
@@ -72,6 +73,14 @@ class Legion(CMakePackage):
             values=('gasnet', 'mpi', 'none'),
             description="The network communications/transport layer to use.",
             multi=False)
+
+    # Add Gasnet tarball dependency in spack managed manner
+    # TODO: Provide less mutable tag instead of branch
+    resource(name='stanfordgasnet',
+             git='https://github.com/StanfordLegion/gasnet.git',
+             destination='stanfordgasnet',
+             branch='master',
+             when='network=gasnet')
 
     # We default to automatically embedding a gasnet build. To override this
     # point the package a pre-installed version of GASNet-Ex via the gasnet_root
@@ -203,7 +212,11 @@ class Legion(CMakePackage):
                 gasnet_dir = spec.variants['gasnet_root'].value
                 options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
             else:
+                gasnet_dir = join_path(self.stage.source_path,
+                                       "stanfordgasnet",
+                                       "gasnet")
                 options.append('-DLegion_EMBED_GASNet=ON')
+                options.append('-DLegion_EMBED_GASNet_LOCALSRC=%s' % gasnet_dir)
 
             gasnet_conduit = spec.variants['conduit'].value
             options.append('-DGASNet_CONDUIT=%s' % gasnet_conduit)
@@ -331,3 +344,44 @@ class Legion(CMakePackage):
             options.append('-DBUILD_MARCH:STRING=native')
 
         return options
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('examples', 'local_function_tasks')])
+
+    def run_local_function_tasks_test(self):
+        """Run stand alone test: local_function_tasks"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'local_function_tasks')
+
+        if not os.path.exists(test_dir):
+            print('Skipping local_function_tasks test')
+            return
+
+        exe = 'local_function_tasks'
+
+        cmake_args = ['-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
+                      '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
+                      '-DLegion_DIR={0}'.format(join_path(self.prefix,
+                                                          'share',
+                                                          'Legion',
+                                                          'cmake'))]
+
+        self.run_test('cmake',
+                      options=cmake_args,
+                      purpose='test: generate makefile for {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test('make',
+                      purpose='test: build {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_local_function_tasks_test()

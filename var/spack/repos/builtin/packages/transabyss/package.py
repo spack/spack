@@ -9,8 +9,8 @@ from spack import *
 class Transabyss(Package):
     """De novo assembly of RNAseq data using ABySS"""
 
-    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
-    url      = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
+    homepage = "https://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
+    url      = "https://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
 
     version('1.5.5', sha256='7804961c13296c587a1b22180dd3f02091a4494cbbd04fc33c2060599caadb0b')
 

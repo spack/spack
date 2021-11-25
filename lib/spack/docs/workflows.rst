@@ -387,7 +387,7 @@ some nice features:
    Spack-built compiler can be given to an IDE without requiring the
    IDE to load that compiler's module.
 
-Unfortunately, Spack's RPATH support does not work in all case.  For example:
+Unfortunately, Spack's RPATH support does not work in every case.  For example:
 
 #. Software comes in many forms --- not just compiled ELF binaries,
    but also as interpreted code in Python, R, JVM bytecode, etc.
@@ -543,7 +543,8 @@ specified from the command line using the ``--projection-file`` option
 to the ``spack view`` command.
 
 The projections configuration file is a mapping of partial specs to
-spec format strings, as shown in the example below.
+spec format strings, defined by the :meth:`~spack.spec.Spec.format`
+function, as shown in the example below.
 
 .. code-block:: yaml
 

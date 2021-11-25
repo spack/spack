@@ -44,5 +44,5 @@ class PyJedi(PythonPackage):
     depends_on('py-parso@0.1.1', type=('build', 'run'), when='@0.11.1')
     depends_on('py-parso@0.2.0:', type=('build', 'run'), when='@0.12.0')
     depends_on('py-parso@0.3.0:', type=('build', 'run'), when='@0.12.1:0.14.0')
-    depends_on('py-parso@0.7.0:0.7.99', type=('build', 'run'), when='@0.17.2')
-    depends_on('py-parso@0.8.0:0.8.99', type=('build', 'run'), when='@0.18.0')
+    depends_on('py-parso@0.7.0:0.7', type=('build', 'run'), when='@0.17.2')
+    depends_on('py-parso@0.8.0:0.8', type=('build', 'run'), when='@0.18.0')

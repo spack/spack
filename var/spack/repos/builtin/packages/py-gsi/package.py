@@ -14,6 +14,6 @@ class PyGsi(PythonPackage):
 
     version('0.6.5', sha256='8291dd2fab2be12626272629f7f9661487c4e29f1f9ab8c61614c54b06cb0643')
 
-    depends_on('python@2.7:2.7.99', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('openssl', type='link')

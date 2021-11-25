@@ -9,7 +9,7 @@ from spack import *
 class PyDeap(PythonPackage):
     """Distributed Evolutionary Algorithms in Python."""
 
-    homepage = "http://deap.readthedocs.org/"
+    homepage = "https://deap.readthedocs.org/"
     pypi = "deap/deap-1.3.1.tar.gz"
 
     version('1.3.1', sha256='11f54493ceb54aae10dde676577ef59fc52d52f82729d5a12c90b0813c857a2f')

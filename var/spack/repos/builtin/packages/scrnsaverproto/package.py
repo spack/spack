@@ -12,7 +12,7 @@ class Scrnsaverproto(AutotoolsPackage, XorgPackage):
     This extension defines a protocol to control screensaver features
     and also to query screensaver info on specific windows."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/scrnsaverproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/scrnsaverproto"
     xorg_mirror_path = "proto/scrnsaverproto-1.2.2.tar.gz"
 
     version('1.2.2', sha256='d8dee19c52977f65af08fad6aa237bacee11bc5a33e1b9b064e8ac1fd99d6e79')

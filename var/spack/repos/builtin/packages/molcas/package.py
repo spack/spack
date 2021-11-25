@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Molcas(CMakePackage):
@@ -13,7 +14,7 @@ class Molcas(CMakePackage):
        Please set the path to licence file with the following command
        export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
-    homepage = "http://www.molcas.org/"
+    homepage = "https://www.molcas.org/"
     url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
     manual_download = True
 

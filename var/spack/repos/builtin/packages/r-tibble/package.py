@@ -13,9 +13,9 @@ class RTibble(RPackage):
     and better formatting than the traditional data frame."""
 
     homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cloud.r-project.org/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/tibble"
+    cran = "tibble"
 
+    version('3.1.5', sha256='da6387ba683a67cd7fc2a111f6b62468e480a8078bc1867d433a40c5460edbe7')
     version('3.0.5', sha256='1cc92d7bf5ecf8291718682fb7fcb96f6f87751f1ed101a7441cad5120195190')
     version('2.1.3', sha256='9a8cea9e6b5d24a7e9bf5f67ab38c40b2b6489eddb0d0edb8a48a21ba3574e1a')
     version('2.0.1', sha256='7ab2cc295eecf00a5310993c99853cd6622ad468e7a60d004b8a73957a713d13')
@@ -28,18 +28,24 @@ class RTibble(RPackage):
 
     depends_on('r@3.1.2:', when='@:1.2', type=('build', 'run'))
     depends_on('r@3.1.0:', when='@1.3.0:', type=('build', 'run'))
-    depends_on('r-cli', when='@1.4.2:', type=('build', 'run'))
-    depends_on('r-crayon@1.3.4:', when='@1.4.1:', type=('build', 'run'))
     depends_on('r-ellipsis@0.2.0:', when='@3.0.5:', type=('build', 'run'))
+    depends_on('r-ellipsis@0.3.2:', when='@3.1.2:', type=('build', 'run'))
     depends_on('r-fansi@0.4.0:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-lifecycle@0.2.0:', when='@3.0.5:', type=('build', 'run'))
+    depends_on('r-lifecycle@1.0.0:', when='@3.1.5:', type=('build', 'run'))
     depends_on('r-magrittr', when='@3.0.5:', type=('build', 'run'))
     depends_on('r-pillar@1.3.1:', when='@1.4.1:', type=('build', 'run'))
     depends_on('r-pillar@1.4.3:', when='@3.0.5:', type=('build', 'run'))
+    depends_on('r-pillar@1.6.0:', when='@3.1:', type=('build', 'run'))
+    depends_on('r-pillar@1.6.2:', when='@3.1.4:', type=('build', 'run'))
     depends_on('r-pkgconfig', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-rlang@0.3.0:', when='@1.3.1:', type=('build', 'run'))
     depends_on('r-rlang@0.4.3:', when='@3.0.5:', type=('build', 'run'))
     depends_on('r-vctrs@0.3.2:', when='@3.0.5:', type=('build', 'run'))
+    depends_on('r-vctrs@0.3.8:', when='@3.1.2:', type=('build', 'run'))
+
+    depends_on('r-cli', when='@1.4.2:3.0', type=('build', 'run'))
+    depends_on('r-crayon@1.3.4:', when='@1.4.1:3.0', type=('build', 'run'))
     depends_on('r-assertthat', when='@:1.3.1', type=('build', 'run'))
     depends_on('r-lazyeval@0.1.10:', when='@:1.3.0', type=('build', 'run'))
     depends_on('r-rcpp@0.12.3:', when='@:1.3.4', type=('build', 'run'))

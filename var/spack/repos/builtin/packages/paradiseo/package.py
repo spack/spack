@@ -10,7 +10,7 @@ class Paradiseo(CMakePackage):
     """A C++ white-box object-oriented framework dedicated to the reusable
        design of metaheuristics."""
 
-    homepage = "http://paradiseo.gforge.inria.fr/"
+    homepage = "https://paradiseo.gforge.inria.fr/"
     git      = "https://gforge.inria.fr/git/paradiseo/paradiseo.git"
 
     # Installing from the development version is a better option at this

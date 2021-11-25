@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Igvtools(Package):
@@ -12,7 +13,7 @@ class Igvtools(Package):
     files"""
 
     homepage = "https://software.broadinstitute.org/software/igv/home"
-    url      = "http://data.broadinstitute.org/igv/projects/downloads/2.3/igvtools_2.3.98.zip"
+    url      = "https://data.broadinstitute.org/igv/projects/downloads/2.3/igvtools_2.3.98.zip"
 
     version('2.3.98', sha256='07027c179f25960bab9919f255c0f8e08f0861861ac6dc02d92be8313e0316a4')
 

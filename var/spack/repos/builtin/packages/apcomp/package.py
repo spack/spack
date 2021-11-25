@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
 import socket
+
 import llnl.util.tty as tty
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -33,6 +35,8 @@ class Apcomp(Package):
     maintainers = ['mclarsen', 'cyrush']
 
     version('master', branch='master', submodules='True')
+    version('0.0.3', sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
+    version('0.0.2', sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
     version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
 
     variant('openmp', default=True, description='Build with openmp support')

@@ -14,6 +14,8 @@ class Ipopt(AutotoolsPackage):
     url      = "https://www.coin-or.org/download/source/Ipopt/Ipopt-3.13.2.tgz"
     # Alternative: url      = "https://github.com/coin-or/Ipopt/archive/releases/3.13.2.tar.gz"
 
+    version('3.14.0',  sha256='9bed72a5456ef37f1b95746c932986e6664eb70b983d4fab61cf8aa811facdf1')
+    version('3.13.4',  sha256='1fdd0f8ea637856d66b1ebdd7d52ad1b8b8c1142d1a4ce0976b200ab280e5683')
     version('3.13.3',  sha256='86354b36c691e6cd6b8049218519923ab0ce8a6f0a432c2c0de605191f2d4a1c')
     version('3.13.2',  sha256='891ab9e9c7db29fc8ac5c779ccec6313301098de7bbf735ca230cd5544c49496')
     version('3.13.1',  sha256='64fc63a3fe27cf5efaf17ebee861f7db5bf70aacf9c316c0d37e4beb4eb72e11')
@@ -73,11 +75,19 @@ class Ipopt(AutotoolsPackage):
             "--prefix=%s" % self.prefix,
             "--enable-shared",
             "coin_skip_warn_cxxflags=yes",
-            "--with-blas-incdir=%s" % blas_dir.include,
-            "--with-blas-lib=%s" % blas_lib,
-            "--with-lapack-incdir=%s" % lapack_dir.include,
-            "--with-lapack-lib=%s" % lapack_lib
         ]
+
+        if spec.satisfies('@:3.12.10'):
+            args.extend([
+                "--with-lapack-lib={0}".format(lapack_lib),
+                "--with-lapack-incdir={0}".format(lapack_dir.include),
+                "--with-blas-lib={0}".format(blas_lib),
+                "--with-blas-incdir={0}".format(blas_dir.include),
+            ])
+        else:
+            args.extend([
+                "--with-lapack-lflags={0} {1}".format(lapack_lib, blas_lib),
+            ])
 
         if '+mumps' in spec:
             # Add directory with fake MPI headers in sequential MUMPS

@@ -1,0 +1,28 @@
+From a78e6df557b1dfaead886fdac9fda0a3a9086493 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Mon, 8 Nov 2021 10:18:54 +0100
+Subject: [PATCH] Add a library/install target
+
+---
+ Makefile | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 5cc4ed6..a9dcd99 100644
+--- a/Makefile
++++ b/Makefile
+@@ -196,3 +196,10 @@ test-sse2-M216091: test.c dSFMT.c dSFMT.h
+ 
+ clean:
+ 	rm -f *.o *~ test-*-M*
++
++library: dSFMT.c
++	$(CC) $(CCFLAGS) -shared -fPIC dSFMT.c -o libdSFMT.so
++
++install: library
++	install -d $(PREFIX)/lib/
++	install -m 644 libdSFMT.so $(PREFIX)/lib/
+\ No newline at end of file
+-- 
+2.25.1
+

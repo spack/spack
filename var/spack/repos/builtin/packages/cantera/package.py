@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Cantera(SConsPackage):
     """Cantera is a suite of object-oriented software tools for problems
     involving chemical kinetics, thermodynamics, and/or transport processes."""
 
-    homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
+    homepage = "https://www.cantera.org/docs/sphinx/html/index.html"
     url      = "https://github.com/Cantera/cantera/archive/v2.5.1.tar.gz"
 
     version('2.5.1', sha256='59f673cec686bc9b1eeccc1b1c9158a3978a3abe7491d00e8b355908c1c3be0a')
@@ -42,8 +43,8 @@ class Cantera(SConsPackage):
     depends_on('py-numpy',  when='+python', type=('build', 'run'))
     depends_on('py-scipy',  when='+python', type=('build', 'run'))
     depends_on('py-3to2',   when='+python', type=('build', 'run'))
-    depends_on('py-unittest2',     when='+python^python@2.6.0:2.6.999', type=('build', 'run'))
-    depends_on('py-unittest2py3k', when='+python^python@3.1.0:3.1.999', type=('build', 'run'))
+    depends_on('py-unittest2',     when='+python^python@2.6.0:2.6', type=('build', 'run'))
+    depends_on('py-unittest2py3k', when='+python^python@3.1.0:3.1', type=('build', 'run'))
 
     # Matlab toolbox dependencies
     extends('matlab', when='+matlab')

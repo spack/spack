@@ -12,6 +12,7 @@ class PyHatchet(PythonPackage):
 
     homepage = "https://github.com/hatchet/hatchet"
     url      = "https://github.com/hatchet/hatchet/archive/v1.0.0.tar.gz"
+    tags     = ['radiuss']
 
     maintainers = ["slabasan", "bhatele", "tgamblin"]
 

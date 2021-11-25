@@ -34,7 +34,7 @@ class Xgboost(CMakePackage, CudaPackage):
     depends_on('nccl', when='+nccl')
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
-    conflicts('%gcc@:4.999', msg='GCC version must be at least 5.0!')
+    conflicts('%gcc@:4', msg='GCC version must be at least 5.0!')
     conflicts('+nccl', when='~cuda', msg='NCCL requires CUDA')
     conflicts('+cuda', when='~openmp', msg='CUDA requires OpenMP')
 

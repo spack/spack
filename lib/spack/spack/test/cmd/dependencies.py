@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+
 import pytest
 
 from llnl.util.tty.color import color_when
@@ -13,7 +14,9 @@ from spack.main import SpackCommand
 
 dependencies = SpackCommand('dependencies')
 
-mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
+mpis = [
+    'low-priority-provider', 'mpich', 'mpich2', 'multi-provider-mpi', 'zmpi'
+]
 mpi_deps = ['fake']
 
 

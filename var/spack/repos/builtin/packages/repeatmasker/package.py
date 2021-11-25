@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
+
+from spack import *
 
 
 class Repeatmasker(Package):
     """RepeatMasker is a program that screens DNA sequences for interspersed
        repeats and low complexity DNA sequences."""
 
-    homepage = "http://www.repeatmasker.org"
+    homepage = "https://www.repeatmasker.org"
 
     version('4.1.2-p1', sha256='4be54bf6c050422b211e24a797feb06fd7954c8b4ee6f3ece94cb6faaf6b0e96')
     version('4.0.9', sha256='8d67415d89ed301670b7632ea411f794c6e30d8ed0f007a726c4b0a39c8638e5')

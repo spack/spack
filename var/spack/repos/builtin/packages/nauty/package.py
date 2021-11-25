@@ -5,14 +5,15 @@
 
 
 import os
+
 from spack import *
 
 
 class Nauty(AutotoolsPackage):
     """nauty and Traces are programs for computing automorphism groups of
     graphsq and digraphs"""
-    homepage = "http://pallini.di.uniroma1.it/index.html"
-    url      = "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"
+    homepage = "https://pallini.di.uniroma1.it/index.html"
+    url      = "https://pallini.di.uniroma1.it//nauty26r7.tar.gz"
 
     version('2.6r7', sha256='97b5648de17645895cbd56a9a0b3e23cf01f5332c476d013ea459f1a0363cdc6')
 
@@ -65,7 +66,7 @@ class Nauty(AutotoolsPackage):
         return self.spec.satisfies('@2.6r7')
 
     def url_for_version(self, version):
-        url = "http://pallini.di.uniroma1.it/nauty{0}.tar.gz"
+        url = "https://pallini.di.uniroma1.it//nauty{0}.tar.gz"
         return url.format(version.joined)
 
     def patch(self):

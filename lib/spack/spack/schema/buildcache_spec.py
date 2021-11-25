@@ -10,12 +10,11 @@
 """
 import spack.schema.spec
 
-
 schema = {
     '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack buildcache spec.yaml schema',
+    'title': 'Spack buildcache specfile schema',
     'type': 'object',
-    # 'additionalProperties': True,
+    'additionalProperties': False,
     'properties': {
         'buildinfo': {
             'type': 'object',
@@ -27,7 +26,8 @@ schema = {
             },
         },
         'spec': {
-            'type': 'array',
+            'type': 'object',
+            'additionalProperties': True,
             'items': spack.schema.spec.properties,
         },
         'binary_cache_checksum': {

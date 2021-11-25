@@ -9,7 +9,7 @@ from spack import *
 class Nano(AutotoolsPackage):
     """Tiny little text editor"""
 
-    homepage = "http://www.nano-editor.org"
+    homepage = "https://www.nano-editor.org"
     url      = "https://www.nano-editor.org/dist/v4/nano-4.9.tar.xz"
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1

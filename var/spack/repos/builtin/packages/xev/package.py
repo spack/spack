@@ -15,7 +15,7 @@ class Xev(AutotoolsPackage, XorgPackage):
     debugging and development tool, and should not be needed in normal
     usage."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xev"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xev"
     xorg_mirror_path = "app/xev-1.2.2.tar.gz"
 
     version('1.2.2', sha256='e4c0c7b6f411e8b9731f2bb10d729d167bd00480d172c28b62607a6ea9e45c57')

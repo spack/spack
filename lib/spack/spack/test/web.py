@@ -2,17 +2,18 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import os
 
-import ordereddict_backport
 import pytest
-import spack.config
-import spack.paths
-import spack.util.web
-import spack.util.s3
-from spack.version import ver
 
 import llnl.util.tty as tty
+
+import spack.config
+import spack.paths
+import spack.util.s3
+import spack.util.web
+from spack.version import ver
 
 
 def _create_url(relative_url):
@@ -151,7 +152,7 @@ def test_get_header():
     # If lookup has to fallback to fuzzy matching and there are more than one
     # fuzzy match, the result depends on the internal ordering of the given
     # mapping
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['Content-type'] = 'text/plain'
     headers['contentType'] = 'text/html'
 
@@ -160,7 +161,7 @@ def test_get_header():
     assert(spack.util.web.get_header(headers, 'CONTENT_TYPE') == 'text/html')
 
     # Same as above, but different ordering
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['contentType'] = 'text/html'
     headers['Content-type'] = 'text/plain'
 
@@ -248,7 +249,7 @@ class MockS3Client(object):
 def test_remove_s3_url(monkeypatch, capfd):
     fake_s3_url = 's3://my-bucket/subdirectory/mirror'
 
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
 
     monkeypatch.setattr(
@@ -268,7 +269,7 @@ def test_remove_s3_url(monkeypatch, capfd):
 
 
 def test_s3_url_exists(monkeypatch, capfd):
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
     monkeypatch.setattr(
         spack.util.s3, 'create_s3_session', mock_create_s3_session)
@@ -278,3 +279,8 @@ def test_s3_url_exists(monkeypatch, capfd):
 
     fake_s3_url_does_not_exist = 's3://my-bucket/subdirectory/my-notfound-file'
     assert(not spack.util.web.url_exists(fake_s3_url_does_not_exist))
+
+
+def test_s3_url_parsing():
+    assert(spack.util.s3._parse_s3_endpoint_url("example.com") == 'https://example.com')
+    assert(spack.util.s3._parse_s3_endpoint_url("http://example.com") == 'http://example.com')

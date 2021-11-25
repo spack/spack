@@ -21,6 +21,9 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.2.7', sha256='929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03')
+    version('7.2.6', sha256='e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a')
+    version('7.2.5', sha256='794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22')
     version('7.2.4', sha256='aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d')
     version('7.2.3', sha256='6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906')
     version('7.2.1', sha256='01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7')
@@ -73,6 +76,8 @@ class Sirius(CMakePackage, CudaPackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('apps', default=True, description="Build applications")
     variant('tests', default=False, description="Build tests")
+    variant('single_precision', default=False, description="Use single precision arithmetics")
+    variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
@@ -97,6 +102,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('spfft@0.9.6: +mpi', when='@6.4.0:')
     depends_on('spfft@0.9.13:', when='@7.0.1:')
+    depends_on('spfft+single_precision', when='+single_precision ^spfft')
     depends_on('spfft+cuda', when='+cuda ^spfft')
     depends_on('spfft+rocm', when='+rocm ^spfft')
     depends_on('spfft+openmp', when='+openmp ^spfft')
@@ -121,9 +127,10 @@ class Sirius(CMakePackage, CudaPackage):
 
     extends('python', when='+python')
 
-    conflicts('+shared', when='@6.3.0:6.4.999')
+    conflicts('+shared', when='@6.3.0:6.4')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
+    conflicts('+single_precision', when='@:7.2.4')
 
     # Propagate openmp to blas
     depends_on('openblas threads=openmp', when='+openmp ^openblas')
@@ -140,6 +147,7 @@ class Sirius(CMakePackage, CudaPackage):
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
     patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
+    patch("mpi_datatypes.patch", when="@:7.2.6")
 
     @property
     def libs(self):
@@ -181,7 +189,9 @@ class Sirius(CMakePackage, CudaPackage):
             self.define_from_variant('USE_ROCM', 'rocm'),
             self.define_from_variant('BUILD_TESTING', 'tests'),
             self.define_from_variant('BUILD_APPS', 'apps'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('USE_FP32', 'single_precision'),
+            self.define_from_variant('USE_PROFILER', 'profiler')
         ]
 
         lapack = spec['lapack']

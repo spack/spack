@@ -14,18 +14,18 @@ It is up to the user to ensure binary compatibility between the deprecated
 installation and its deprecator.
 '''
 from __future__ import print_function
+
 import argparse
 import os
 
 import llnl.util.tty as tty
 
 import spack.cmd
-import spack.store
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
-
-from spack.error import SpackError
+import spack.store
 from spack.database import InstallStatuses
+from spack.error import SpackError
 
 description = "Replace one package with another via symlinks"
 section = "admin"
@@ -71,7 +71,7 @@ def setup_parser(sp):
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    env = ev.get_env(args, 'deprecate')
+    env = ev.active_environment()
     specs = spack.cmd.parse_specs(args.specs)
 
     if len(specs) != 2:

@@ -3,14 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import pytest
+
+import llnl.util.tty as tty
+
 import spack.config
+import spack.monitor
 import spack.spec
 from spack.main import SpackCommand
 from spack.monitor import SpackMonitorClient
-import llnl.util.tty as tty
-import spack.monitor
-import pytest
-import os
 
 install = SpackCommand('install')
 

@@ -9,7 +9,7 @@ from spack import *
 class Libxcursor(AutotoolsPackage, XorgPackage):
     """libXcursor - X Window System Cursor management library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXcursor"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXcursor"
     xorg_mirror_path = "lib/libXcursor-1.1.14.tar.gz"
 
     version('1.1.14', sha256='be0954faf274969ffa6d95b9606b9c0cfee28c13b6fc014f15606a0c8b05c17b')

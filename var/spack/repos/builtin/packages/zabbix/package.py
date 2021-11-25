@@ -10,7 +10,7 @@ class Zabbix(AutotoolsPackage):
     """Real-time monitoring of IT components and services,
     such as networks, servers, VMs, applications and the cloud."""
 
-    homepage = "http://www.zabbix.com"
+    homepage = "https://www.zabbix.com"
     url      = "https://github.com/zabbix/zabbix/archive/5.0.3.tar.gz"
 
     version('5.0.3',       sha256='d579c5fa4e9065e8041396ace24d7132521ef5054ce30dfd9d151cbb7f0694ec')

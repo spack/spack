@@ -12,7 +12,6 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
-
 import spack.repo
 
 description = "get information about package maintainers"

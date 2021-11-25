@@ -22,12 +22,12 @@ class PyPygtk(AutotoolsPackage):
     depends_on('atk@:2.20.0')
     # PyGTK requires python 2
     # Use py-pygobject@3: for GTK bindings for python 3
-    depends_on('python@2:2.99', type=('build', 'run'))
+    depends_on('python@2.0:2', type=('build', 'run'))
     depends_on('cairo')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus@2.24:2.99')
-    depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
+    depends_on('gtkplus@2.24:2')
+    depends_on('py-pygobject@2.28:2', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
 
     def install(self, spec, prefix):

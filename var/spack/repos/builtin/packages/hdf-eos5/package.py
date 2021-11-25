@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import sys
+
+from spack import *
 
 
 class HdfEos5(AutotoolsPackage):
@@ -96,7 +97,7 @@ class HdfEos5(AutotoolsPackage):
         extra_args.append('--with-hdf5={0}'.format(self.spec['hdf5'].prefix))
         if 'szip' in self.spec:
             extra_args.append('--with-szlib={0}'.format(
-                self.spec['libszip'].prefix))
+                self.spec['szip'].prefix))
         if 'zlib' in self.spec:
             extra_args.append('--with-zlib={0}'.format(
                 self.spec['zlib'].prefix))

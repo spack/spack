@@ -9,6 +9,7 @@ from typing import List  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
+
 from spack.package import PackageBase, run_after
 
 
@@ -109,3 +110,6 @@ class MakefilePackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)

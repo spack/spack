@@ -43,6 +43,8 @@ class Librsvg(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        # librsvg uses pthread_atfork() but does not use -pthread on Ubuntu 18.04 %gcc@8
+        env.append_flags('LDFLAGS', '-pthread')
 
     def setup_run_environment(self, env):
         env.prepend_path('XDG_DATA_DIRS', self.prefix.share)

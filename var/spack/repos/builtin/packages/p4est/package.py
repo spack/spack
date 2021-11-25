@@ -14,10 +14,11 @@ class P4est(AutotoolsPackage):
     # Only use the official tarball releases provided on p4est.org or
     # p4est.github.io. The automatically generated releases from the
     # Github repository lack important parts.
-    url = "https://p4est.github.io/release/p4est-2.3.2.tar.gz"
+    url = "https://p4est.github.io/release/p4est-2.8.tar.gz"
 
     maintainers = ['davydden']
 
+    version('2.8', sha256='6a0586e3abac06c20e31b1018f3a82a564a6a0d9ff6b7f6c772a9e6b0f0cc5e4')
     version('2.3.2', sha256='076df9e5578e0e7fcfbe12e1a0b080104001f8c986ab1d5a69ec2220050df8e6')
     version('2.3.1', sha256='be66893b039fb3f27aca3d5d00acff42c67bfad5aa09cea9253cdd628b2bdc9a')
     version('2.2', sha256='1549cbeba29bee2c35e7cc50a90a04961da5f23b6eada9c8047f511b90a8e438')
@@ -29,8 +30,8 @@ class P4est(AutotoolsPackage):
     variant('openmp', default=False, description='Enable OpenMP')
 
     # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
+    depends_on('automake', when='@2.0', type='build')
+    depends_on('autoconf', when='@2.0', type='build')
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
@@ -48,8 +49,9 @@ class P4est(AutotoolsPackage):
           when='@2.0')
 
     def autoreconf(self, spec, prefix):
-        bootstrap = Executable('./bootstrap')
-        bootstrap()
+        if self.spec.satisfies('@2.0'):
+            bootstrap = Executable('./bootstrap')
+            bootstrap()
 
     def configure_args(self):
         args = [

@@ -9,7 +9,7 @@ from spack import *
 class RBeeswarm(RPackage):
     """beeswarm: The Bee Swarm Plot, an Alternative to Stripchart"""
 
-    homepage = "http://www.cbs.dtu.dk/~eklund/beeswarm/"
+    homepage = "https://www.cbs.dtu.dk/~eklund/beeswarm/"
     url      = "https://cloud.r-project.org/src/contrib/beeswarm_0.2.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/beeswarm"
 

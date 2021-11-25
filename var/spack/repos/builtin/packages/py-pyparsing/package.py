@@ -8,7 +8,7 @@ from spack import *
 
 class PyPyparsing(PythonPackage):
     """A Python Parsing Module."""
-    homepage = "http://pyparsing.wikispaces.com/"
+    homepage = "https://pyparsing-docs.readthedocs.io/en/latest/"
     pypi = "pyparsing/pyparsing-2.4.2.tar.gz"
 
     version('2.4.7',  sha256='c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1')

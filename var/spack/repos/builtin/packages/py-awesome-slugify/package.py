@@ -17,4 +17,4 @@ class PyAwesomeSlugify(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-regex', type=('build', 'run'))
-    depends_on('py-unidecode@0.04.14:0.04.99', type=('build', 'run'))
+    depends_on('py-unidecode@0.04.14:0.04', type=('build', 'run'))

@@ -11,7 +11,7 @@ class PyRuamelOrdereddict(PythonPackage):
     at the back). The standard library module OrderedDict, implemented later,
     implements a subset of ordereddict functionality."""
 
-    homepage = "https://bitbucket.org/ruamel/ordereddict"
+    homepage = "https://sourceforge.net/projects/ruamel-ordereddict/"
     pypi = "ruamel.ordereddict/ruamel.ordereddict-0.4.14.tar.gz"
 
     version('0.4.14', sha256='281051d26eb2b18ef3d920e1e260716a52bd058a6b1a2f324102fc6a15cb8d4a')

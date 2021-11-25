@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import pytest
 
 from llnl.util.filesystem import set_executable
 
 import spack.util.editor as ed
-
 
 pytestmark = pytest.mark.usefixtures('working_env')
 
