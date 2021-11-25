@@ -13,6 +13,8 @@ class PyCgalPybind(PythonPackage):
     git = "git@bbpgitlab.epfl.ch:nse/cgal-pybind.git"
 
     version("develop", submodules=True)
+    version("0.1.3", tag="cgal-pybind-v0.1.3", submodules=True)
+    version("0.1.2", tag="cgal-pybind-v0.1.2", submodules=True)
     version("0.1.1", tag="cgal-pybind-v0.1.1", submodules=True)
     version("0.1.0", tag="cgal_pybind-v0.1.0", submodules=True)
 

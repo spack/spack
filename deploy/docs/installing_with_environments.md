@@ -11,9 +11,14 @@ We can start by creating an environment:
 
     $ spack env create -d spamhameggs
 
-and then activating it:
+and then activating it, and fixing the configuration to consider all
+software together:
 
     $ spack env activate -d spamhameggs
+    $ spack config add config:spack:concretization=together
+
+This will make sure that every package is only built once, in the specified
+version.
 
 All subsequent actions now act on this environment. To leave the
 environment, use the command `despacktivate` or `spack env deactivate`.

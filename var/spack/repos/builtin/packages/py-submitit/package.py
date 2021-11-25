@@ -13,7 +13,8 @@ class PySubmitit(PythonPackage):
     pypi = "submitit/submitit-1.3.3.tar.gz"
     git      = "https://github.com/facebookincubator/submitit.git"
 
-    version('1.3.3.20210820', commit='6f9e1f67178b08b050576fe6bc02e4555568128a')
+    # specify the commit because submitit-1.4.0.tar.gz is broken on pypi
+    version('1.4.0', commit='d85b7abf73d094dd11c4a89343afa88f8908b316')
     version('1.3.3', sha256='efaa77b2df9ea9ee02545478cbfc377853ddf8016bff59df6988bebcf51ffa7e')
 
     depends_on('python@3.6:', type=('build', 'run'))

@@ -28,6 +28,9 @@ class Steps(CMakePackage):
     variant("bundle", default=False, description="Use bundled libraries")
     variant("stochtests", default=True, description="Add stochastic tests to ctests")
     variant("timemory", default=False, description="Add timemory API to instrument time/memory")
+    variant("build_type", default="RelWithDebInfo", description="CMake build type",
+            values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel",
+                    "RelWithDebInfoAndAssert"))
 
     depends_on("boost")
     depends_on("blas")
@@ -50,7 +53,7 @@ class Steps(CMakePackage):
     depends_on("python")
     depends_on('py-pre-commit', type='build', when='+codechecks')
     depends_on('py-pyyaml', type='build', when='+codechecks')
-    depends_on("omega-h+gmsh+mpi@:9.29.99", when="~bundle+distmesh")
+    depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("gmsh", when="+distmesh")
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
@@ -114,10 +117,10 @@ class Steps(CMakePackage):
         else:
             args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=False")
 
-        if "+timemory" in spec:
-            args.append("-USE_TIMEMORY:BOOL=TRUE")
+        if "+codechecks" in spec:
+            args.append("-DSTEPS_FORMATTING:BOOL=ON")
         else:
-            args.append("-USE_TIMEMORY:BOOL=FALSE")
+            args.append("-DSTEPS_FORMATTING:BOOL=OFF")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         args.append('-DPYTHON_EXECUTABLE='

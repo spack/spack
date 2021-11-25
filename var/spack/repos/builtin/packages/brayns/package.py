@@ -36,6 +36,10 @@ class Brayns(CMakePackage):
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
+    depends_on('git', when='@1.1.1:')
+    depends_on('libsonata', when='@1.1.1: +brion')
+    depends_on('morphio', when='@1.1.1: +brion')
+    depends_on('mvdtool', when='@1.1.1: +brion')
     depends_on('assimp@5.0.1', when='@1.1.1: +assimp')
     depends_on('assimp@4.1.0', when='@:1.1.0 +assimp')
     depends_on('bbptestdata', type='test', when='+test')
@@ -61,11 +65,13 @@ class Brayns(CMakePackage):
     patch('fix_forgotten_algorithm.patch', when='@0.8.0')
 
     def patch(self):
-        if self.spec.satisfies('%gcc@9:'):
+        cmake_common_file = 'CMake/common/CommonCompiler.cmake'
+        if can_access(self.stage.source_path + "/" + cmake_common_file) \
+                and self.spec.satisfies('%gcc@9:'):
             filter_file(
                 r'-Werror',
                 '-Werror -Wno-error=deprecated-copy',
-                'CMake/common/CommonCompiler.cmake'
+                cmake_common_file
             )
         for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
             filter_file(r'\$\{GLEW_LIBRARIES\}', 'GLEW', cmake_filename)
@@ -80,31 +86,35 @@ class Brayns(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DDISABLE_SUBPROJECTS=ON',
-            '-DBRAYNS_ASSIMP_ENABLED={0}'.format(
-                'ON' if '+assimp' in self.spec else 'OFF'),
-            '-DBRAYNS_OSPRAY_ENABLED={0}'.format(
-                'ON' if '+ospray' in self.spec else 'OFF'),
             '-DBRAYNS_CIRCUITEXPLORER_ENABLED={0}'.format(
-                'ON' if '+brion' in self.spec else 'OFF'),
-            '-DBRAYNS_CIRCUITVIEWER_ENABLED={0}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_DTI_ENABLED={0}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_CIRCUITINFO_ENABLED={0}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
-            '-DBRAYNS_NETWORKING_ENABLED={0}'.format(
-                'ON' if '+net' in self.spec else 'OFF'),
             '-DBRAYNS_DEFLECT_ENABLED={0}'.format(
                 'ON' if '+deflect' in self.spec else 'OFF')
         ]
 
+        if self.spec.satisfies('@:1.1.0'):
+            args.append('-DDISABLE_SUBPROJECTS=ON')
+            args.append('-DBRAYNS_NETWORKING_ENABLED={0}'.format(
+                'ON' if '+net' in self.spec else 'OFF'))
+            args.append('-DBRAYNS_ASSIMP_ENABLED={0}'.format(
+                'ON' if '+assimp' in self.spec else 'OFF'))
+            args.append('-DBRAYNS_OSPRAY_ENABLED={0}'.format(
+                'ON' if '+ospray' in self.spec else 'OFF'))
+            args.append('-DBRAYNS_CIRCUITVIEWER_ENABLED={0}'.format(
+                'ON' if '+brion' in self.spec else 'OFF'))
+
+            if '+optix' in self.spec:
+                args.append('-DBRAYNS_OPTIX_ENABLED=ON')
+                args.append('-DBRAYNS_OPTIX_TESTS_ENABLED=ON')
+
         if '+opendeck' in self.spec:
             args.append('-DBRAYNS_OPENDECK_ENABLED=ON')
             args.append('-DBRAYNS_VRPN_ENABLED=ON')
-        if '+optix' in self.spec:
-            args.append('-DBRAYNS_OPTIX_ENABLED=ON')
-            args.append('-DBRAYNS_OPTIX_TESTS_ENABLED=ON')
+
         return args
 
     def check(self):
