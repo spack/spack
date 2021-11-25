@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import os.path
 import re
 import sys
@@ -163,11 +164,13 @@ class Llvm(CMakePackage, CudaPackage):
     variant("python", default=False, description="Install python bindings")
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
+    variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
     extends("python", when="+python")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
+    depends_on('cmake@3.13.4:', type='build', when='@12:')
     depends_on("ninja", type="build")
     depends_on("python@2.7:2.8", when="@:4 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
@@ -176,8 +179,7 @@ class Llvm(CMakePackage, CudaPackage):
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4+python")
     depends_on("python", when="@5:+python")
-    # While not required for @8:9, cmake can find a z3 on the system, causing failures:
-    depends_on('z3', when='@8:')
+    depends_on('z3', when='@8:+clang+z3')
 
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
@@ -273,7 +275,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
 
     # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
-    patch('llvm5-sanitizer-ustat.patch', when="@4:5+compiler-rt")
+    patch('llvm5-sanitizer-ustat.patch', when="@4:6+compiler-rt")
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch('llvm4-lld-ELF-Symbols.patch', when="@4+lld%clang@6:")
@@ -284,6 +286,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # https://github.com/llvm/llvm-project/commit/947f9692440836dcb8d88b74b69dd379d85974ce
     patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
+    patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
 
     # github.com/spack/spack/issues/24270 and MicrosoftDemangle: %gcc@10: and %clang@13:
     patch('missing-includes.patch', when='@8:11')
@@ -315,7 +318,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Remove cyclades support to build against newer kernel headers
     # https://reviews.llvm.org/D102059
-    patch('no_cyclades.patch', when='@10:11')
+    patch('no_cyclades.patch', when='@10:12.0.0')
+    patch('no_cyclades9.patch', when='@6:9')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -577,6 +581,13 @@ class Llvm(CMakePackage, CudaPackage):
             else:
                 projects.append("openmp")
 
+            if self.spec.satisfies("@8"):
+                cmake_args.append(define('CLANG_ANALYZER_ENABLE_Z3_SOLVER',
+                                         self.spec.satisfies('@8+z3')))
+            if self.spec.satisfies("@9:"):
+                cmake_args.append(define('LLVM_ENABLE_Z3_SOLVER',
+                                         self.spec.satisfies('@9:+z3')))
+
         if "+flang" in spec:
             projects.append("flang")
         if "+lldb" in spec:
@@ -600,14 +611,12 @@ class Llvm(CMakePackage, CudaPackage):
             from_variant("BUILD_SHARED_LIBS", "shared_libs"),
             from_variant("LLVM_BUILD_LLVM_DYLIB", "build_llvm_dylib"),
             from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
-            from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf")
+            from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
+            # By default on Linux, libc++.so is a ldscript. CMake fails to add
+            # CMAKE_INSTALL_RPATH to it, which fails. Statically link libc++abi.a
+            # into libc++.so, linking with -lc++ or -stdlib=libc++ is enough.
+            define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True)
         ])
-
-        # By default on Linux, libc++.so is a linker script, and CMake tries to add the
-        # CMAKE_INSTALL_RPATH to it, which fails, causing installation to fail. The
-        # easiest workaround is to just statically link libc++abi.a into libc++.so,
-        # so that linking with -lc++ or -stdlib=libc++ is enough.
-        cmake_args.append(define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True))
 
         if "+all_targets" not in spec:  # all is default on cmake
 
