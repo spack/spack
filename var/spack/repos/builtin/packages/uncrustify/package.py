@@ -12,7 +12,7 @@ class Uncrustify(Package):
     homepage = "http://uncrustify.sourceforge.net/"
     git      = "https://github.com/uncrustify/uncrustify"
     url      = "https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.69/uncrustify-0.69.tar.gz"
-    
+
     maintainers = ['gmaurel']
 
     version('master', branch='master')
