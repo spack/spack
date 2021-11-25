@@ -17,6 +17,10 @@ class Freeimage(MakefilePackage):
 
     patch('install_fixes.patch', when='@3.18.0')
 
+    def patch(self):
+        # Somehow defaults to C++1&
+        filter_file(r'(CXXFLAGS \?=)', r'\1 --std=c++14', 'Makefile.gnu')
+
     def edit(self, spec, prefix):
         env["DESTDIR"] = prefix
         env["INCDIR"] = prefix.join("include")

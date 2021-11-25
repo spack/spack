@@ -13,6 +13,8 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ['bvanessen', 'adamjstewart']
 
     version('master', branch='master')
+    version('4.5.4',    sha256='c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d')
+    version('4.5.3',    sha256='77f616ae4bea416674d8c373984b20c8bd55e7db887fd38c6df73463a0647bab')
     version('4.5.2',    sha256='ae258ed50aa039279c3d36afdea5c6ecf762515836b27871a8957c610d0424f8')
     version('4.5.1',    sha256='e27fe5b168918ab60d58d7ace2bd82dd14a4d0bd1d3ae182952c2113f5637513')
     version('4.5.0',    sha256='dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907')

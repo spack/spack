@@ -16,6 +16,7 @@ class Assimp(CMakePackage):
 
     version('master', branch='master')
     version('5.0.1', sha256='11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc')
+    version('4.1.0', sha256='3520b1e9793b93a2ca3b797199e16f40d61762617e072f2d525fad70f9678a71')
     version('4.0.1', sha256='60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e')
 
     variant('shared',  default=True,

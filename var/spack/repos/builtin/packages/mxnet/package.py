@@ -89,6 +89,10 @@ class Mxnet(CMakePackage, CudaPackage):
     patch('cmake_cuda_flags.patch', when='@1.6:1.7')
     patch('parallell_shuffle.patch', when='@1.6.0')
 
+    patch('https://patch-diff.githubusercontent.com/raw/apache/incubator-mxnet/pull/20216.patch',
+          sha256='508fb1ea6f10afda92a58f41edf02e255f09e348ec381fab650fe4689c98cbde',
+          when='@1.8.0:1.8')
+
     # python/setup.py assumes libs can be found in build directory
     build_directory = 'build'
     generator = 'Ninja'

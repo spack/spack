@@ -119,5 +119,4 @@ spack:
     - vrpn
     - zlib
     # Viz stuff that complicates specs
-    - ospray%intel target=x86_64
     - optix

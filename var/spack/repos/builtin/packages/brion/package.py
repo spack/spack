@@ -54,24 +54,28 @@ class Brion(CMakePackage):
     depends_on('glm@:0.9.9.5')
 
     def patch(self):
-        filter_file(
-            r'-Werror',
-            '-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct '
-            '-Wno-error=unused-function',
-            'CMake/CompileOptions.cmake'
-        )
         if self.spec.version == Version('3.1.0'):
             filter_file(r'-py36', r'36 -py36',
                         'CMake/common/ChoosePython.cmake')
         if self.spec.satisfies('@3.2.0'):
             filter_file(r'-Werror', r'# -Werror',
                         'CMake/CompileOptions.cmake')
+        elif self.spec.satisfies('@3.3.0:'):
+            filter_file(
+                r'-Werror',
+                '-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct '
+                '-Wno-error=unused-function',
+                'CMake/CompileOptions.cmake'
+            )
 
     def cmake_args(self):
-        return ['-DBRION_SKIP_LIBSONATA_SUBMODULE=ON',
+        args = ['-DBRION_SKIP_LIBSONATA_SUBMODULE=ON',
                 '-DDISABLE_SUBPROJECTS=0N',
                 '-DBRION_REQUIRE_PYTHON=%s' % ("ON" if "+python" in self.spec
                                                else "OFF")]
+        if self.spec.satisfies('@3.1.0'):
+            args.append('-DCOMMON_DISABLE_WERROR:BOOL=ON')
+        return args
 
     def setup_run_environment(self, env):
         if self.spec.satisfies('+python'):

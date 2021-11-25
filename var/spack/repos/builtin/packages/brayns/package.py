@@ -46,7 +46,7 @@ class Brayns(CMakePackage):
     depends_on('brion', when='+brion')
     depends_on('brion@3.1.0', when='@0.8.0 +brion')
     depends_on('deflect ~deflect-qt', when='+deflect')
-    depends_on('freeimage', when='@develop')
+    depends_on('freeimage')
     depends_on('ffmpeg@4.2.2', when='+net')
     depends_on('glew', when='+viewer')
     depends_on('libarchive')
@@ -64,13 +64,17 @@ class Brayns(CMakePackage):
     # patch('brion.patch', when='@develop')
     patch('fix_forgotten_algorithm.patch', when='@0.8.0')
 
+    patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/938.patch',
+          sha256='e1ace3dc7c3dcbea05ea1be90173e0f8ae8401b92b2554114d20b2c6da40eca7',
+          when='%gcc@11:')
+
     def patch(self):
         cmake_common_file = 'CMake/common/CommonCompiler.cmake'
         if can_access(self.stage.source_path + "/" + cmake_common_file) \
                 and self.spec.satisfies('%gcc@9:'):
             filter_file(
                 r'-Werror',
-                '-Werror -Wno-error=deprecated-copy',
+                '-Werror -Wno-error=deprecated-copy -Wno-error=range-loop-construct',
                 cmake_common_file
             )
         for cmake_filename in find(self.stage.source_path, "CMakeLists.txt"):
@@ -86,6 +90,7 @@ class Brayns(CMakePackage):
 
     def cmake_args(self):
         args = [
+            '-DCOMMON_DISABLE_WERROR:BOOL=ON',
             '-DBRAYNS_CIRCUITEXPLORER_ENABLED={0}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_DTI_ENABLED={0}'.format(
