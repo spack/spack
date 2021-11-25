@@ -24,9 +24,9 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv var/spack/repos
+      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.5- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -193,39 +193,6 @@ jobs:
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
-  # Test for Python2.6 run on Centos 6
-  centos6:
-    needs: [ validate, style, changes ]
-    runs-on: ubuntu-latest
-    container: spack/github-actions:centos6
-    steps:
-    - name: Run unit tests (full test-suite)
-      # The CentOS 6 container doesn't run with coverage, but
-      # under the same conditions it runs the full test suite
-      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
-      env:
-          HOME: /home/spack-test
-          SPACK_TEST_SOLVER: original
-      run: |
-          whoami && echo $HOME && cd $HOME
-          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
-          git fetch origin "${{ github.ref }}:test-branch"
-          git checkout test-branch
-          . .github/workflows/setup_git.sh
-          bin/spack unit-test -x
-    - name: Run unit tests (only package tests)
-      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
-      env:
-          HOME: /home/spack-test
-          ONLY_PACKAGES: true
-          SPACK_TEST_SOLVER: original
-      run: |
-          whoami && echo $HOME && cd $HOME
-          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
-          git fetch origin "${{ github.ref }}:test-branch"
-          git checkout test-branch
-          . .github/workflows/setup_git.sh
-          bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack

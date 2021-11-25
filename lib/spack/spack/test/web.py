@@ -2,9 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import os
 
-import ordereddict_backport
 import pytest
 
 import llnl.util.tty as tty
@@ -152,7 +152,7 @@ def test_get_header():
     # If lookup has to fallback to fuzzy matching and there are more than one
     # fuzzy match, the result depends on the internal ordering of the given
     # mapping
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['Content-type'] = 'text/plain'
     headers['contentType'] = 'text/html'
 
@@ -161,7 +161,7 @@ def test_get_header():
     assert(spack.util.web.get_header(headers, 'CONTENT_TYPE') == 'text/html')
 
     # Same as above, but different ordering
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['contentType'] = 'text/html'
     headers['Content-type'] = 'text/plain'
 

@@ -2,15 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import multiprocessing.pool
 import os
 import re
 import shutil
-from collections import defaultdict
 
 import macholib.mach_o
 import macholib.MachO
-from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -807,7 +806,7 @@ def relocate_text(files, prefixes, concurrency=32):
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    compiled_prefixes = OrderedDict({})
+    compiled_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -845,7 +844,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = OrderedDict({})
+    byte_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -1032,7 +1031,7 @@ def fixup_macos_rpath(root, filename):
     # Convert rpaths list to (name -> number of occurrences)
     add_rpaths = set()
     del_rpaths = set()
-    rpaths = defaultdict(int)
+    rpaths = collections.defaultdict(int)
     for rpath in rpath_list:
         rpaths[rpath] += 1
 
