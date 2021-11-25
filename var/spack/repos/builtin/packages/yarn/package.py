@@ -12,6 +12,8 @@ class Yarn(Package):
     homepage = "https://yarnpkg.com"
     url      = "https://github.com/yarnpkg/yarn/releases/download/v1.22.4/yarn-v1.22.4.tar.gz"
 
+    depends_on('node-js@4.0:', type='run')
+
     version('1.22.4', sha256='bc5316aa110b2f564a71a3d6e235be55b98714660870c5b6b2d2d3f12587fb58')
     version('1.22.2', sha256='de4cff575ae7151f8189bf1d747f026695d768d0563e2860df407ab79c70693d')
     version('1.22.1', sha256='3af905904932078faa8f485d97c928416b30a86dd09dcd76e746a55c7f533b72')
