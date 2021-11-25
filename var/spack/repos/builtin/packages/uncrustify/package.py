@@ -12,6 +12,8 @@ class Uncrustify(Package):
     homepage = "http://uncrustify.sourceforge.net/"
     git      = "https://github.com/uncrustify/uncrustify"
     url      = "https://sourceforge.net/projects/uncrustify/files/uncrustify/uncrustify-0.69/uncrustify-0.69.tar.gz"
+    
+    maintainers = ['gmaurel']
 
     version('master', branch='master')
     version('0.74', commit='62048b')
@@ -33,7 +35,7 @@ class Uncrustify(Package):
     depends_on('automake', type='build', when='@0.63')
     depends_on('autoconf', type='build', when='@0.63')
 
-    @when('@0.64:,master')
+    @when('@0.64:,develop')
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake('..', *std_cmake_args)
