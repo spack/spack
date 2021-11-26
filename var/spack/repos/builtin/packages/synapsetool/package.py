@@ -10,9 +10,8 @@ class Synapsetool(CMakePackage):
     """Synapsetool provides a C++ and a python API to read / write neuron
        connectivity informations. Synapsetool is designed to support large
        connectivity data with billions of connections."""
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/synapse-tool"
-    url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
-    git      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/synapse-tool"
+    git      = "git@bbpgitlab.epfl.ch:hpc/synapse-tool.git"
 
     version('develop', submodules=True)
     version('0.6.3', tag='v0.6.3', submodules=True)
