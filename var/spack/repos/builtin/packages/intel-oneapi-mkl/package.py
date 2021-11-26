@@ -34,13 +34,18 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
                 sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c',
                 expand=False)
 
+    variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False,
             description='Build with ILP64 support')
+    variant('cluster', default=False,
+            description='Build with cluster support: scalapack, blacs, etc')
 
     depends_on('intel-oneapi-tbb')
+    # cluster libraries need mpi
+    depends_on('mpi', when='+cluster')
 
     provides('fftw-api@3')
-    provides('scalapack')
+    provides('scalapack', when='+cluster')
     provides('mkl')
     provides('lapack')
     provides('blas')
@@ -59,13 +64,31 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         include_path = join_path(self.component_path, 'include')
         return find_headers('*', include_path)
 
+    # provide cluster libraries if +cluster variant is used or
+    # the scalapack virtual package was requested
+    def cluster(self):
+        return '+cluster' in self.spec
+
     @property
     def libs(self):
-        mkl_libs = [self.xlp64_lib('libmkl_intel'), 'libmkl_sequential', 'libmkl_core']
+        shared = '+shared' in self.spec
+        mkl_libs = []
+        if self.cluster():
+            mkl_libs += [self.xlp64_lib('libmkl_scalapack'),
+                         'libmkl_cdft_core']
+        mkl_libs += [self.xlp64_lib('libmkl_intel'),
+                     'libmkl_sequential',
+                     'libmkl_core']
+        if self.cluster():
+            mkl_libs += [self.xlp64_lib('libmkl_blacs_intelmpi')]
         libs = find_libraries(mkl_libs,
-                              join_path(self.component_path, 'lib', 'intel64'))
-        libs += find_system_libraries(['libpthread', 'libm', 'libdl'])
-        return libs
+                              join_path(self.component_path, 'lib', 'intel64'),
+                              shared=shared)
+        system_libs = find_system_libraries(['libpthread', 'libm', 'libdl'])
+        if shared:
+            return libs + system_libs
+        else:
+            return IntelOneApiStaticLibraryList(libs, system_libs)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MKLROOT', self.component_path)

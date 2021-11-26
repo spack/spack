@@ -2,9 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import codecs
+import collections
 import hashlib
 import os.path
 import platform
@@ -13,7 +12,6 @@ import socket
 import time
 import xml.sax.saxutils
 
-from ordereddict_backport import OrderedDict
 from six import iteritems, text_type
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
@@ -96,7 +94,7 @@ class CDash(Reporter):
             buildstamp_format = "%Y%m%d-%H%M-{0}".format(args.cdash_track)
             self.buildstamp = time.strftime(buildstamp_format,
                                             time.localtime(self.endtime))
-        self.buildIds = OrderedDict()
+        self.buildIds = collections.OrderedDict()
         self.revision = ''
         git = which('git')
         with working_dir(spack.paths.spack_root):
