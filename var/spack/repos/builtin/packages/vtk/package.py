@@ -105,8 +105,7 @@ class Vtk(CMakePackage):
     depends_on('freetype')
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
-    depends_on('hdf5+hl~mpi', when='~mpi')
-    depends_on('hdf5+hl+mpi', when='+mpi')
+    depends_on('hdf5+hl')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
@@ -123,7 +122,7 @@ class Vtk(CMakePackage):
     depends_on('pugixml', when='@9:')
     depends_on('libogg')
     depends_on('libtheora')
-    depends_on('utf8', when='@9:')
+    depends_on('utf8cpp', when='@9:')
     depends_on('gl2ps', when='@8.1:')
     depends_on('gl2ps@1.4.1:', when='@9:')
     depends_on('proj@4', when='@8.2')
@@ -248,6 +247,8 @@ class Vtk(CMakePackage):
             qmake_exe = os.path.join(qt_bin, 'qmake')
 
             # https://github.com/martijnkoopman/Qt-VTK-viewer/blob/master/doc/Build-VTK.md
+            # The content of the above link changes over time with versions.
+            # Older commits have information on VTK-8.
             if spec.satisfies('@:8'):
                 cmake_args.extend([
                     '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
