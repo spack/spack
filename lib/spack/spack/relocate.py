@@ -403,6 +403,10 @@ def _set_elf_rpaths(target, rpaths):
     # Join the paths using ':' as a separator
     rpaths_str = ':'.join(rpaths)
 
+    # patchelf segfaults when you pass it an empty rpath string.
+    if len(rpaths_str) == 0:
+        return ''
+
     # If we're relocating patchelf itself, make a copy and use it
     bak_path = None
     if target.endswith("/bin/patchelf"):
