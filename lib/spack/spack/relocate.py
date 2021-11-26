@@ -14,6 +14,7 @@ import macholib.MachO
 import llnl.util.lang
 import llnl.util.tty as tty
 
+import spack.bootstrap
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -75,32 +76,16 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 
 def _patchelf():
-    """Return the full path to the patchelf binary, if available, else None.
-
-    Search first the current PATH for patchelf. If not found, try to look
-    if the default patchelf spec is installed and if not install it.
-
-    Return None on Darwin or if patchelf cannot be found.
-    """
-    # Check if patchelf is already in the PATH
-    patchelf = executable.which('patchelf')
-    if patchelf is not None:
-        return patchelf.path
-
-    # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf')
-    spec._old_concretize(deprecation_warning=False)
-    exe_path = os.path.join(spec.prefix.bin, "patchelf")
-    if spec.package.installed and os.path.exists(exe_path):
-        return exe_path
-
-    # Skip darwin
+    """Return the full path to the patchelf binary, if available, else None."""
     if is_macos:
         return None
 
-    # Install the spec and return its path
-    spec.package.do_install()
-    return exe_path if os.path.exists(exe_path) else None
+    patchelf = executable.which('patchelf')
+    if patchelf is None:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+    return patchelf.path
 
 
 def _elf_rpaths_for(path):

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from __future__ import print_function
 
+import argparse
 import contextlib
 import fnmatch
 import functools
@@ -25,7 +26,6 @@ import spack.binary_distribution
 import spack.config
 import spack.detection
 import spack.environment
-import spack.main
 import spack.modules
 import spack.paths
 import spack.platforms
@@ -35,9 +35,6 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.path
-
-#: "spack buildcache" command, initialized lazily
-_buildcache_cmd = None
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -258,10 +255,10 @@ class _BuildcacheBootstrapper(object):
         return data
 
     def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
-        global _buildcache_cmd
-
-        if _buildcache_cmd is None:
-            _buildcache_cmd = spack.main.SpackCommand('buildcache')
+        # TODO: The local import is due to a circular import error. The
+        # TODO: correct fix for this is a refactor of the API used for
+        # TODO: binary relocation
+        import spack.cmd.buildcache
 
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
@@ -282,13 +279,16 @@ class _BuildcacheBootstrapper(object):
                     'compilers', [{'compiler': compiler_entry}]
             ):
                 spec_str = '/' + pkg_hash
+                parser = argparse.ArgumentParser()
+                spack.cmd.buildcache.setup_parser(parser)
                 install_args = [
                     'install',
                     '--sha256', pkg_sha256,
                     '--only-root',
                     '-a', '-u', '-o', '-f', spec_str
                 ]
-                _buildcache_cmd(*install_args, fail_on_error=False)
+                args = parser.parse_args(install_args)
+                spack.cmd.buildcache.installtarball(args)
 
     def _install_and_test(
             self, abstract_spec, bincache_platform, bincache_data, test_fn
@@ -421,9 +421,12 @@ class _SourceBootstrapper(object):
             abstract_spec_str += ' os=fe'
 
         concrete_spec = spack.spec.Spec(abstract_spec_str)
-        concrete_spec.concretize()
+        if concrete_spec.name == 'patchelf':
+            concrete_spec._old_concretize(deprecation_warning=False)
+        else:
+            concrete_spec.concretize()
 
-        msg = "[BOOTSTRAP GnuPG] Try installing '{0}' from sources"
+        msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         concrete_spec.package.do_install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
@@ -644,8 +647,30 @@ def _add_externals_if_missing():
     spack.detection.update_configuration(detected_packages, scope='bootstrap')
 
 
+#: Reference counter for the bootstrapping configuration context manager
+_REF_COUNT = 0
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
+    # The context manager is reference counted to ensure we don't swap multiple
+    # times if there's nested use of it in the stack. One compelling use case
+    # is bootstrapping patchelf during the bootstrap of clingo.
+    global _REF_COUNT
+    already_swapped = bool(_REF_COUNT)
+    _REF_COUNT += 1
+    try:
+        if already_swapped:
+            yield
+        else:
+            with _ensure_bootstrap_configuration():
+                yield
+    finally:
+        _REF_COUNT -= 1
+
+
+@contextlib.contextmanager
+def _ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
@@ -753,9 +778,22 @@ def gnupg_root_spec():
 
 def ensure_gpg_in_path_or_raise():
     """Ensure gpg or gpg2 are in the PATH or raise."""
-    ensure_executables_in_path_or_raise(
+    return ensure_executables_in_path_or_raise(
         executables=['gpg2', 'gpg'], abstract_spec=gnupg_root_spec()
     )
+
+
+def patchelf_root_spec():
+    """Return the root spec used to bootstrap patchelf"""
+    return _root_spec('patchelf@0.13:')
+
+
+def ensure_patchelf_in_path_or_raise():
+    """Ensure patchelf is in the PATH or raise."""
+    return ensure_executables_in_path_or_raise(
+        executables=['patchelf'], abstract_spec=patchelf_root_spec()
+    )
+
 
 ###
 # Development dependencies
