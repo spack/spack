@@ -97,6 +97,16 @@ class IntelOneApiPackage(Package):
         env.extend(EnvironmentModifications.from_sourcing_file(
             join_path(self.component_path, 'env', 'vars.sh')))
 
+        # On Debian/Ubuntu, /usr/include/x86_64-linux-gnu needs
+        # to be included in $CPATH for icc
+        cmd_out = subprocess.run(['gcc', '-print-multiarch'],
+                                 capture_output=True, check=True,
+                                 text=True)
+        if cmd_out.returncode == 0 and cmd_out.stdout:
+            # System headers should be located at the end
+            env.append_path('CPATH', join_path('/usr', 'include',
+                                               cmd_out.stdout.strip()))
+
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
     """Base class for Intel oneAPI library packages.
