@@ -19,5 +19,6 @@ class Emsim(CMakePackage):
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ninja', type='build')
-    depends_on('brion@3.3.3')
+    depends_on('brion@3.3.3:3.999')
     depends_on('ispc', type='build')
+    depends_on('boost +shared')
