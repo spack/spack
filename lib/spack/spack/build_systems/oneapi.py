@@ -10,6 +10,7 @@
 import getpass
 import platform
 import shutil
+import subprocess
 from os.path import basename, dirname, isdir
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
