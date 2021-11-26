@@ -38,6 +38,9 @@ spack:
         - totalview
         - valgrind
         - virtualgl
+        - freeimage
+        - ilmbase
+        - openexr
   packages:
     all:
       compiler: [gcc@9.3.0]
@@ -116,3 +119,7 @@ spack:
     - virtualgl
     - vrpn
     - zlib
+    # Viz needs; FreeImage should be axed ASAP
+    - freeimage
+    - ilmbase
+    - openexr
