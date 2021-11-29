@@ -41,14 +41,14 @@ def create_s3_session(url, connection={}):
     from botocore.exceptions import ClientError
 
     s3_connection = {}
-
-    if connection:
-        if connection['access_token']:
+    s3_connection_is_dict = connection and isinstance(connection, dict)
+    if s3_connection_is_dict:
+        if connection.get("aws_session_token"):
             s3_connection["aws_session_token"] = connection["access_token"]
-        if connection["access_pair"][0]:
+        if connection.get("access_pair"):
             s3_connection["aws_access_key_id"] = connection["access_pair"][0]
             s3_connection["aws_secret_access_key"] = connection["access_pair"][1]
-        if connection["profile"]:
+        if connection.get("profile"):
             s3_connection["profile_name"] = connection["profile"]
 
     session = Session(**s3_connection)
@@ -57,8 +57,9 @@ def create_s3_session(url, connection={}):
     endpoint_url = os.environ.get('S3_ENDPOINT_URL')
     if endpoint_url:
         s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
-    elif connection and 'endpoint_url' in connection:
+    elif s3_connection_is_dict and connection.get("endpoint_url"):
         s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])  # noqa: E501
+
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
         from botocore import UNSIGNED

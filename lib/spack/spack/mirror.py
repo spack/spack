@@ -90,7 +90,9 @@ class Mirror(object):
 
     def to_dict(self):
         if self._push_url is None:
-            return self._fetch_url
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._fetch_url)])
         else:
             return syaml_dict([
                 ('fetch', self._fetch_url),
