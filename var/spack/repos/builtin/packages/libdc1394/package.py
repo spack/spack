@@ -25,15 +25,11 @@ class Libdc1394(AutotoolsPackage):
     depends_on("libraw1394")
 
     def configure_args(self):
-        args = []
-        args.extend(
-            [
-                "--disable-dependency-tracking",
-                "--disable-examples",
-                "--disable-sdltest",
-            ]
-        )
-        return args
+        return [
+            "--disable-dependency-tracking",
+            "--disable-examples",
+            "--disable-sdltest",
+        ]
 
     def setup_build_environment(self, env):
         env.set("SDL_CONFIG", join_path(self.spec["sdl2"].prefix.bin, "sdl2-config"))

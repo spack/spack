@@ -56,10 +56,7 @@ class PyTorchgeo(PythonPackage):
     # Optional dependencies
     with when('+datasets'):
         depends_on('py-h5py', type='run')
-        depends_on('py-laspy@2:', when='@0.2:', type='run')
-        depends_on('open3d@0.11.2:+python', when='@0.2:', type='run')
-        depends_on('opencv+python3+imgcodecs+tiff+jpeg+png', type='run')
-        depends_on('py-pandas@0.19.1:', when='@0.2:', type='run')
+        depends_on('opencv+python3+imgcodecs+tiff+jpeg+png+datasets', type='run')
         depends_on('py-pycocotools', type='run')
         depends_on('py-radiant-mlhub@0.2.1:', type='run')
         depends_on('py-rarfile@3:', type='run')

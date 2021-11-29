@@ -23,5 +23,7 @@ class PyMmcv(PythonPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('opencv+python3', type=('build', 'run'))
     depends_on('py-cython', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
 
     patch('opencv_for0.5.1.patch', when='@0.5.1')

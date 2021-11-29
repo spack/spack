@@ -32,8 +32,8 @@ class Cntk(Package):
     depends_on('protobuf')
     # CNTK depends on kaldi@c02e8.
     # See https://github.com/Microsoft/CNTK/blob/master/Tools/docker/CNTK-CPUOnly-Image/Dockerfile#L105-L125
-    depends_on('kaldi@2015-10-07', when='+kaldi')
-    depends_on('opencv', when='+opencv')
+    depends_on('kaldi@c024e8', when='+kaldi')
+    depends_on('opencv@:3', when='+opencv')
     depends_on('cuda', when='+cuda')
     depends_on('cub@1.4.1', when='+cuda')
     depends_on('cudnn@5.1', when='+cuda')
@@ -48,6 +48,16 @@ class Cntk(Package):
     patch('kaldireader-openblas.patch')
     # Patch to change behaviour of lock file - https://github.com/Microsoft/CNTK/issues/62
     patch('lock-file.patch')
+
+    def patch(self):
+        if 'protobuf+shared' in self.spec:
+            library_suffix = 'so'
+        else:
+            library_suffix = 'a'
+
+        filter_file(r'(protobuf_check=)lib/(libprotobuf\.)a',
+                    r'\1lib64/\2{0}'.format(library_suffix),
+                    'configure')
 
     def install(self, spec, prefix):
         args = []

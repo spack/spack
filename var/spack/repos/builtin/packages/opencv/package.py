@@ -12,7 +12,7 @@ class Opencv(CMakePackage, CudaPackage):
     url = "https://github.com/opencv/opencv/archive/4.5.0.tar.gz"
     git = "https://github.com/opencv/opencv.git"
 
-    maintainers = ["bvanessen", "adamjstewart"]
+    maintainers = ["bvanessen", "adamjstewart", "glennpj"]
 
     version("master", branch="master")
     version(
@@ -91,50 +91,8 @@ class Opencv(CMakePackage, CudaPackage):
         "3.3.0",
         sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6",
     )
-    version(
-        "3.2.0",
-        sha256="9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2",
-        deprecated=True,
-    )
-    version(
-        "3.1.0",
-        sha256="f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15",
-        deprecated=True,
-    )
-    version(
-        "2.4.13.2",
-        sha256="4b00c110e6c54943cbbb7cf0d35c5bc148133ab2095ee4aaa0ac0a4f67c58080",
-        deprecated=True,
-    )
-    version(
-        "2.4.13.1",
-        sha256="0d5ce5e0973e3a745f927d1ee097aaf909aae59f787be6d27a03d639e2d96bd7",
-        deprecated=True,
-    )
-    version(
-        "2.4.13",
-        sha256="94ebcca61c30034d5fb16feab8ec12c8a868f5162d20a9f0396f0f5f6d8bbbff",
-        deprecated=True,
-    )
-    version(
-        "2.4.12.3",
-        sha256="a4cbcd2d470860b0cf1f8faf504619c18a8ac38fd414c5a88ed3e94c963aa750",
-        deprecated=True,
-    )
-    version(
-        "2.4.12.2",
-        sha256="150a165eb14a5ea74fb94dcc16ac7d668a6ff20a4449df2570734a2abaab9c0e",
-        deprecated=True,
-    )
-    version(
-        "2.4.12.1",
-        sha256="c1564771f79304a2597ae4f74f44032021e3a46657e4a117060c08f5ed05ad83",
-        deprecated=True,
-    )
 
     contrib_vers = [
-        "3.1.0",
-        "3.2.0",
         "3.3.0",
         "3.3.1",
         "3.4.0",
@@ -169,17 +127,17 @@ class Opencv(CMakePackage, CudaPackage):
     patch("dnn_cuda.patch", when="@3.3.0:3.4.1+cuda+dnn")
 
     patch("opencv3.2_cmake.patch", when="@3.2:3.4.1")
-    patch("opencv3.2_compiler_cmake.patch", when="@3.2")
-    patch("opencv3.2_vtk.patch", when="@3.2+vtk")
-    patch("opencv3.2_regacyvtk.patch", when="@3.2+vtk")
-    patch("opencv3.2_ffmpeg.patch", when="@3.2+videoio")
-    patch("opencv3.2_python3.7.patch", when="@3.2+python3")
-    patch("opencv3.2_fj.patch", when="@3.2 %fj")
 
     # do not prepend system paths
     patch("cmake_no-system-paths.patch")
-    patch("clp_cmake.patch")
-    patch("cvv_cmake.patch")
+
+    patch("opencv4.1.1_clp_cmake.patch", when="@4.1.1:")
+    patch("opencv4.0.0_clp_cmake.patch", when="@4.0.0:4.1.0")
+    patch("opencv3.4.12_clp_cmake.patch", when="@3.4.12")
+    patch("opencv3.3_clp_cmake.patch", when="@:3.4.6")
+
+    patch("opencv3.4.4_cvv_cmake.patch", when="@3.4.4:")
+    patch("opencv3.3_cvv_cmake.patch", when="@:3.4.3")
 
     # OpenCV prebuilt apps (variants)
     # Defined in `apps/*/CMakeLists.txt` using

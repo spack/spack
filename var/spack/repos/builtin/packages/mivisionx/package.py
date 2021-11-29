@@ -65,7 +65,7 @@ class Mivisionx(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     depends_on('ffmpeg@:4', type='build')
     depends_on('protobuf@:3', type='build')
-    depends_on('opencv@:3.4 +calib3d+core+features2d+highgui+imgcodecs+imgproc+video+videoio+flann+photo+objdetect', type='build')
+    depends_on('opencv@:3.4 +calib3d+features2d+highgui+imgcodecs+imgproc+video+videoio+flann+photo+objdetect', type='build')
     depends_on('rocm-opencl@3.5.0', when='@1.7')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
     depends_on('miopen-opencl@3.5.0', when='@1.7')

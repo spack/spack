@@ -10,7 +10,9 @@ class Openvslam(CMakePackage):
     homepage = "https://openvslam.readthedocs.io/"
     git      = "https://github.com/xdspacelab/openvslam.git"
 
-    version('master', branch='master')
+    # This project consists only of a README file, that announces the
+    # termination of the project.
+    version('master', branch='master', deprecated=True)
 
     # https://openvslam.readthedocs.io/en/master/installation.html
     depends_on('cmake@3.1:', type='build')
@@ -18,7 +20,7 @@ class Openvslam(CMakePackage):
     depends_on('g2o')
     depends_on('dbow2@shinsumicco')
     depends_on('yaml-cpp@0.6.0:')
-    depends_on('opencv@3.3.1:+core+imgcodecs+videoio+features2d+calib3d+highgui')
+    depends_on('opencv@3.3.1:+imgcodecs+videoio+features2d+calib3d+highgui')
     depends_on('pangolin')
 
     patch('https://github.com/xdspacelab/openvslam/commit/eeb58880443700fd79688d9646fd633c42fa60eb.patch',
