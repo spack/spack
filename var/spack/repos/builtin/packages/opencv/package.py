@@ -775,7 +775,6 @@ class Opencv(CMakePackage, CudaPackage):
     variant("nonfree", default=False, description="Enable non-free algorithms")
 
     # Required (dependencies)
-    depends_on("gmake", type="build")
     depends_on("cmake@3.5.1:", type="build")
     depends_on("python@2.7:2.8,3.2:", type="build")
     depends_on("java", type="build")
