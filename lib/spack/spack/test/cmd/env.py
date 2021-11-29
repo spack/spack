@@ -102,7 +102,7 @@ def test_env_list(mutable_mock_env_path):
     assert '.DS_Store' not in out
 
 
-def test_env_remove(capfd):
+def test_env_remove():
     env('create', 'foo')
     env('create', 'bar')
 
@@ -113,8 +113,7 @@ def test_env_remove(capfd):
     foo = ev.read('foo')
     with foo:
         with pytest.raises(spack.main.SpackCommandError):
-            with capfd.disabled():
-                env('remove', '-y', 'foo')
+            env('remove', '-y', 'foo')
         assert 'foo' in env('list')
 
     env('remove', '-y', 'foo')
