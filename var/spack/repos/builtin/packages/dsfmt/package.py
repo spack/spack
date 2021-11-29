@@ -10,7 +10,7 @@ class Dsfmt(MakefilePackage):
     """Double precision SIMD-oriented Fast Mersenne Twister"""
 
     homepage = "http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/SFMT/"
-    url      = "http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/SFMT/dSFMT-src-2.2.3.tar.gz"
+    url      = "https://github.com/MersenneTwister-Lab/dSFMT/archive/v2.2.4.tar.gz"
 
     maintainers = ['haampie']
 
@@ -18,14 +18,15 @@ class Dsfmt(MakefilePackage):
     # so we add it for them.
     patch('targets.patch')
 
-    version('2.2.3', sha256='82344874522f363bf93c960044b0a6b87b651c9565b6312cf8719bb8e4c26a0e')
+    version('2.2.5', sha256='b7bc498cd140b4808963b1ff9f33b42a491870f54775c1060ecad0e02bcaffb4')
+    version('2.2.4', sha256='39682961ecfba621a98dbb6610b6ae2b7d6add450d4f08d8d4edd0e10abd8174')
 
     @property
     def libs(self):
         return find_libraries('libdSFMT', root=self.prefix, recursive=True)
 
-    def make(self, spec, prefix):
-        make('library')
+    def build(self, spec, prefix):
+        make('build-library')
 
     def install(self, spec, prefix):
         make('PREFIX={0}'.format(prefix), 'install')
