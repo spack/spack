@@ -788,7 +788,7 @@ def patchelf_root_spec():
     # TODO: patchelf is restricted to v0.13 since earlier versions have
     # TODO: bugs that we don't to deal with, while v0.14 requires a C++17
     # TODO: which may not be available on all platforms.
-    return _root_spec('patchelf@0.13:0.13.1')
+    return _root_spec('patchelf@0.13.1:0.13.99')
 
 
 def ensure_patchelf_in_path_or_raise():
