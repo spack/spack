@@ -61,7 +61,7 @@ class Gtkplus(MesonPackage):
                     '', 'configure', string=True)
 
         # https://gitlab.gnome.org/GNOME/gtk/-/issues/3776
-        if self.spec.satisfies('%gcc@11:'):
+        if self.spec.satisfies('@3:%gcc@11:'):
             filter_file("    '-Werror=array-bounds',",
                         '', 'meson.build', string=True)
 
@@ -123,3 +123,7 @@ class Gtkplus(MesonPackage):
     @when('@:3.20.10')
     def install(self, spec, prefix):
         make('install')
+
+    def check(self):
+        """All build time checks open windows in the X server, don't do that"""
+        pass
