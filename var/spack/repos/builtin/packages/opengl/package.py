@@ -91,31 +91,6 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        result = LibraryList(())
-
-        # "libs" provided by glvnd; this package sets the environment variables
-        # so that glvnd, in turn, loads this package's libraries at run-time.
-        if '+glvnd' in self.spec:
-            return result
-
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                result.extend(libs)
-                break
-
-        if '+egl' in self.spec:
-            for dir in ['lib64', 'lib']:
-                libs = find_libraries('libEGL', join_path(self.prefix, dir),
-                                      shared=True, recursive=False)
-                if libs:
-                    result.extend(libs)
-                    break
-        return result
-
-    @property
-    def libs(self):
         spec = self.spec
         libs_to_seek = set()
 
@@ -152,7 +127,6 @@ class Opengl(Package):
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
-
 
     def setup_run_environment(self, env):
         if '+glx +glvnd' in self.spec:
