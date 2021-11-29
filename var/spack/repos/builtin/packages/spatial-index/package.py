@@ -24,14 +24,15 @@ class SpatialIndex(PythonPackage):
     version('0.1.0', tag='0.1.0', submodules=True)
 
     depends_on("py-setuptools")
-    depends_on("cmake@3.2:",     type="build")
+    depends_on("cmake@3.2:", type="build")
     depends_on("boost@:1.70.0")
-    depends_on("py-numpy",       type=("build", "run"))
-    depends_on("py-morphio",     type="run")
-    depends_on("py-mvdtool~mpi", type="run")
-    depends_on("py-morpho-kit",  type="run")
-    depends_on("py-numpy-quaternion", type="run", when="@0.2.1:")
-    depends_on("py-libsonata",   type="run", when="@0.2.2:")
+    depends_on("py-docopt", type=("build", "run"))
+    depends_on("py-libsonata", type=("build", "run"), when="@0.2.2:")
+    depends_on("py-morphio", type=("build", "run"))
+    depends_on("py-morpho-kit", type=("build", "run"))
+    depends_on("py-mvdtool~mpi", type=("build", "run"))
+    depends_on("py-numpy-quaternion", type=("build", "run"), when="@0.2.1:")
+    depends_on("py-numpy", type=("build", "run"))
 
     @run_after('install')
     def install_headers(self):

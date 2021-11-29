@@ -19,6 +19,9 @@ class PyBbaDatafetch(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-nexus-sdk', type=('build', 'run'))
+    depends_on('py-click', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pynrrd', type=('build', 'run'))
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-cov', type='test')
 

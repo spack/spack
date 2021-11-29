@@ -1,13 +1,17 @@
 #!/bin/bash -eu
 
+set -o nounset
+
 CONFIG=$1
 
 . /etc/profile.d/modules.sh
 
-unset MODULEPATH
+if [[ -n "${MODULEPATH:-}" ]]; then
+    export MODULEPATH=
+fi
 . ${CONFIG}
 
-RELEASE=unstable
+RELEASE=${2:-unstable}
 STAGES="applications"
 VENV=$(mktemp -d)/venv
 MAKEFILE=$(mktemp)
@@ -16,7 +20,10 @@ trap "echo 'Removing temporary files'; rm -rf ${VENV} ${MAKEFILE}" EXIT
 echo "Using release: ${RELEASE}"
 
 module purge
-module load ${RELEASE} python
+echo module load "${RELEASE}"
+module load "${RELEASE}"
+module av
+module load python
 
 python3 -mvenv ${VENV}
 source ${VENV}/bin/activate

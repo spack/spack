@@ -20,10 +20,11 @@ class PyTmd(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-morphio@2.7.1:', type='run')
-    depends_on('py-enum34@1.0:', type='run', when='^python@:3.3.99')
-    depends_on('py-h5py@2.8:', type='run')
-    depends_on('py-munkres@1.0.12:', type='run')
-    depends_on('py-numpy@1.8:', type='run')
-    depends_on('py-scikit-learn@0.19:', type='run')
-    depends_on('py-scipy@0.13:', type='run')
+    depends_on('py-cached-property', type=('build', 'run'))
+    depends_on('py-enum34@1.0:', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-h5py@2.8:', type=('build', 'run'))
+    depends_on('py-morphio@2.7.1:', type=('build', 'run'))
+    depends_on('py-munkres@1.0.12:', type=('build', 'run'))
+    depends_on('py-numpy@1.8:', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.19:', type=('build', 'run'))
+    depends_on('py-scipy@0.13:', type=('build', 'run'))

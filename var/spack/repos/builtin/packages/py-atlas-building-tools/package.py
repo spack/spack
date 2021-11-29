@@ -20,6 +20,7 @@ class PyAtlasBuildingTools(PythonPackage):
     version('0.1.1', tag='atlas_building_tools-v0.1.1')
 
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-cached-property', type=('build', 'run'))
     depends_on('py-cgal-pybind@0.1.1:', type=('build', 'run'), when='@0.1.2:')
     depends_on('py-cgal-pybind@0.1.0:', type=('build', 'run'), when='@0.1.1')
     depends_on('py-click@7.0:', type=('build', 'run'))
@@ -46,6 +47,11 @@ class PyAtlasBuildingTools(PythonPackage):
     depends_on('regiodesics@0.1.0:', type='run')
     depends_on('ultraliser@0.2.0:', type='run')
     depends_on('py-pytest', type='test')
+
+    def patch(self):
+        # Purge version constraints caused by old (outdated) numba incompatibilities
+        filter_file(r'"numba.*",', '"numba",', 'setup.py')
+        filter_file(r'"numpy-quaternion.*",', '"numpy-quaternion",', 'setup.py')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

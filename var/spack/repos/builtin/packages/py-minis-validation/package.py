@@ -31,6 +31,10 @@ class PyMinisValidation(PythonPackage):
     depends_on('py-bluepy-configfile@0.1.10:0.999', type='run')
     depends_on('py-bglibpy@4.4:4.999', type='run')
 
+    def patch(self):
+        # Purge version constraints caused by old (outdated) numba incompatibilities
+        filter_file(r'((dask|distributed).*),<=.*([\'"])', r'\1\3', 'setup.py')
+
     def setup_run_environment(self, env):
         env.set('NEURON_INIT_MPI', "0")
         env.unset('PMI_RANK')

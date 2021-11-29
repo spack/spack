@@ -16,9 +16,8 @@ SED_SCRIPT=$(mktemp)
 cat <<EOF >${SED_SCRIPT}
 /requires neuron, which is not installed/d
 /requires tensorflow, which is not installed/d
-/requires opencv-python, which is not installed/d
 EOF
-trap "echo 'Removing temporary files'; rm -rf '${SED_SCRIPT}'" EXIT
+trap "rm -rf '${SED_SCRIPT}'" EXIT
 
 module purge
 module load "${RELEASE}" "${MODULE}" 2> /dev/null
@@ -26,7 +25,7 @@ source ${VENV}/bin/activate
 PIP_CHECK=$(python -mpip check || true)
 if [[ ${PIP_CHECK} =~ "No broken requirements found." ]]; then
     exit 0
-elif [[ -z $(echo "${PIP_CHECK}"|sed "${SED_SCRIPT}") ]]; then
+elif [[ -z $(echo "${PIP_CHECK}"|sed -f "${SED_SCRIPT}") ]]; then
     exit 0
 else
     MSG=$(echo "Module ${MODULE##*x86_64/}")
