@@ -530,11 +530,16 @@ def add(name, url, scope, args={}):
 
     items = [(n, u) for n, u in mirrors.items()]
     mirror_data = url
-    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
+    key_values = ["s3_access_key_id",
+                  "s3_access_token",
+                  "s3_profile",
+                  "s3_endpoint_url"]
     # On creation, assume connection data is set for both
-    if any(value for value in key_values if value in args):
+    # Check for value in each key, instead of presence of each key
+    if any(vars(args)[value] for value in key_values if value in args):
         url_dict = {"url": url,
-                    "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+                    "access_pair": (args.s3_access_key_id,
+                                    args.s3_access_key_secret),
                     "access_token": args.s3_access_token,
                     "profile": args.s3_profile,
                     "endpoint_url": args.s3_endpoint_url}
