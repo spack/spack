@@ -20,14 +20,8 @@ class PyPyparsing(PythonPackage):
     version('2.1.10', sha256='811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188')
     version('2.0.3',  sha256='06e729e1cbf5274703b1f47b6135ed8335999d547f9d8cf048b210fb8ebf844f')
 
-    patch('setuptools-import.patch', when='@:2.1.10')
-
     depends_on('python@3.6:', when='@3:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
-    # Newer versions of setuptools require pyparsing. Although setuptools is an
-    # optional dependency of pyparsing, if it is not found, setup.py will
-    # fallback on distutils.core instead. Don't add a setuptools dependency
-    # or we won't be able to bootstrap setuptools.
-    depends_on('py-setuptools', when='@2.3.1:', type='build')
+    depends_on('py-setuptools', when='@2.1:', type='build')
 
     import_modules = ['pyparsing']
