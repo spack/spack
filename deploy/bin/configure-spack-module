@@ -1,0 +1,34 @@
+#!/bin/bash -eu
+
+set -o nounset
+
+if [[ -z "${SPACK_ROOT:-}" ]]; then
+    echo "need to operate with a sourced Spack!"
+    exit 1
+fi
+
+if [[ -z "${DEPLOYMENT_ROOT:-}" ]]; then
+    echo "need to operate with DEPLOYMENT_ROOT set!"
+    exit 1
+fi
+
+cat <<EOF
+#%Module1.0
+
+if [ module-info mode load ] {
+    puts stderr "Welcome to the central Spack installation!\n"
+    puts stderr "Software will be installed into ~/spack_install."
+    puts stderr "To modify this, use\n"
+    puts stderr "\tspack config add config:install_tree:root:\$\{NEW_INSTALL_DIR\}\n"
+    puts stderr "To create a modifiable version, use\n"
+    puts stderr "\tspack clone \$\{NEW_SPACK_DIR\}"
+    puts stderr "\tcp \$\{NEW_SPACK_DIR\}/{deploy/config/*.yaml,etc/spack}"
+    puts stderr "\t. \$\{NEW_SPACK_DIR\}/share/spack/setup-env.sh\n"
+}
+
+module-whatis   Spack is our software building and deployment toolkit
+
+append-path     PATH ${SPACK_ROOT}/bin
+setenv          SPACK_ROOT ${SPACK_ROOT}
+setenv          SPACK_SYSTEM_CONFIG_PATH ${DEPLOYMENT_ROOT}/config
+EOF

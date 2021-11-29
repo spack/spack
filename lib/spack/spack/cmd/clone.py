@@ -31,7 +31,10 @@ def get_origin_info(remote):
     git_dir = os.path.join(spack.paths.prefix, '.git')
     git = which('git', required=True)
     try:
-        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
+        branch = git(
+            '--git-dir=%s' % git_dir,
+            'symbolic-ref', '--short', 'HEAD',
+            output=str)
     except ProcessError:
         branch = 'develop'
         tty.warn('No branch found; using default branch: %s' % branch)

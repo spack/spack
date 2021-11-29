@@ -323,7 +323,7 @@ update_config:
                   module="unstable"
               else
                   module="archive/${time}"
-                  if [ -f "${root}/${module}" ]; then
+                  if [ -f "$MODULE_ROOT/_meta/$module" ]; then
                       echo "...skipping ${module}"
                       continue
                   fi
@@ -341,6 +341,9 @@ update_config:
               fi
           done
       done
+    # Create a module for Spack itself, then move it "transactionally"
+    - configure-spack-module > "$MODULE_ROOT/_meta/.spack"
+    - mv "$MODULE_ROOT/_meta/"{.,}spack
     # Create the configuration
     - mkdir -p "$DEPLOYMENT_ROOT/config"
     - |
@@ -361,8 +364,9 @@ update_config:
       cat <<EOF > "$DEPLOYMENT_ROOT/config/config.yaml"
       config:
         install_tree:
+          root: \${HOME}/spack_install
           projections:
-            all: install_${COMPILERNAME}-${COMPILERVER}-${TARGET}/${PACKAGE}-${VERSION}-${HASH:6}
+            all: install_\${COMPILERNAME}-\${COMPILERVER}-\${TARGET}/\${PACKAGE}-\${VERSION}-\${HASH:6}
       EOF
     # Link configuration into global deployment directory
     - ln -sf "$DEPLOYMENT_ROOT/config" "$DEPLOYMENT_BASE"
