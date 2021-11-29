@@ -99,18 +99,13 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-hepevtsize=200000')
         args.append('--disable-manual')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
-        if self.spec.satisfies('+mpi'):
-            args.append('--enable-mpi')
+        args.extend(self.enable_or_disable('mpi'))
         if self.spec.satisfies('+python'):
             args.append('--enable-pyext')
-        if self.spec.satisfies('+analysis'):
-            args.append('--enable-analysis')
-        if self.spec.satisfies('+lhole'):
-            args.append('--enable-lhole')
-        if self.spec.satisfies('+gzip'):
-            args.append('--enable-gzip')
-        if self.spec.satisfies('+pythia'):
-            args.append('--enable-pythia')
+        args.extend(self.enable_or_disable('analysis'))
+        args.extend(self.enable_or_disable('lhole'))
+        args.extend(self.enable_or_disable('gzip'))
+        args.extend(self.enable_or_disable('pythia'))
         if self.spec.satisfies('+hepmc2'):
             args.append('--enable-hepmc2=' + self.spec['hepmc'].prefix)
         if self.spec.satisfies('+hepmc3'):
