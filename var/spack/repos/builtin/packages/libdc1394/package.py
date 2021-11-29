@@ -21,7 +21,6 @@ class Libdc1394(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("libusb")
-    depends_on("sdl2")
     depends_on("libraw1394")
 
     def configure_args(self):
@@ -30,6 +29,3 @@ class Libdc1394(AutotoolsPackage):
             "--disable-examples",
             "--disable-sdltest",
         ]
-
-    def setup_build_environment(self, env):
-        env.set("SDL_CONFIG", join_path(self.spec["sdl2"].prefix.bin, "sdl2-config"))
