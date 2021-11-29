@@ -272,11 +272,6 @@ class Hip(CMakePackage):
                     'hipconfig', 'hipify-cmakefile',
                     'roc-obj-ls', 'hipvars.pm'
                 ]
-            elif self.spec.satisfies('@4.5.0:'):
-                files = [
-                    'hipify-perl', 'hipcc', 'hipconfig',
-                    'hipify-cmakefile', 'hipvars.pm'
-                ]
             filter_file(match, substitute, *files, **kwargs)
             # This guy is used during the cmake phase, so we have to fix the
             # shebang already here in case it is too long.
