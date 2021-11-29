@@ -135,6 +135,14 @@ class Hwloc(AutotoolsPackage):
         if '+opencl' not in self.spec:
             args.append('--disable-opencl')
 
+        # If ROCm libraries are found in system /opt/rocm
+        # during config stage, hwloc builds itself with
+        # librocm_smi support.
+        # This can fail the config tests while building
+        # OpenMPI due to lack of rpath to librocm_smi
+        if '+rocm' not in self.spec:
+            args.append('--disable-rsmi')
+
         if '+netloc' in self.spec:
             args.append('--enable-netloc')
 

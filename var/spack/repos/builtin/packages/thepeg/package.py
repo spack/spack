@@ -99,7 +99,7 @@ class Thepeg(AutotoolsPackage):
         if self.spec.satisfies('@2.0.3:'):
             args += ['--with-rivet=' + self.spec['rivet'].prefix]
 
-        if self.spec.satisfies('@:2.1'):
+        if self.spec.satisfies('@2.1.1:'):
             args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['CFLAGS=-O2', 'CXXFLAGS=-O2', 'FFLAGS=-O2']

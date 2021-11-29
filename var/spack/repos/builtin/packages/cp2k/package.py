@@ -53,14 +53,15 @@ class Cp2k(MakefilePackage, CudaPackage):
                          ' and BQB compression'))
     variant('spglib', default=False, description='Enable support for spglib')
 
-    variant('cuda_arch_35_k20x', default=False,
-            description=('CP2K (resp. DBCSR) has specific parameter sets for'
-                         ' different GPU models. Enable this when building'
-                         ' with cuda_arch=35 for a K20x instead of a K40'))
-    variant('cuda_fft', default=False,
-            description=('Use CUDA also for FFTs in the PW part of CP2K'))
-    variant('cuda_blas', default=False,
-            description=('Use CUBLAS for general matrix operations in DBCSR'))
+    with when('+cuda'):
+        variant('cuda_arch_35_k20x', default=False,
+                description=('CP2K (resp. DBCSR) has specific parameter sets for'
+                             ' different GPU models. Enable this when building'
+                             ' with cuda_arch=35 for a K20x instead of a K40'))
+        variant('cuda_fft', default=False,
+                description=('Use CUDA also for FFTs in the PW part of CP2K'))
+        variant('cuda_blas', default=False,
+                description=('Use CUBLAS for general matrix operations in DBCSR'))
 
     HFX_LMAX_RANGE = range(4, 8)
 
@@ -167,8 +168,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
     depends_on('spglib', when='+spglib')
-    conflicts('~cuda', '+cuda_fft')
-    conflicts('~cuda', '+cuda_blas')
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL

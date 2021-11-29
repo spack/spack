@@ -47,7 +47,7 @@ class PyIpykernel(PythonPackage):
     depends_on('py-traitlets@4.1.0:', type=('build', 'run'))
     depends_on('py-traitlets@4.1.0:5', when='@6:', type=('build', 'run'))
     depends_on('py-jupyter-client', type=('build', 'run'))
-    depends_on('py-jupyter-client@:6', when='@6.0.2:', type=('build', 'run'))
+    depends_on('py-jupyter-client@:6', when='@6.0.2:6.1', type=('build', 'run'))
     depends_on('py-jupyter-client@:7', when='@6.2:', type=('build', 'run'))
     depends_on('py-tornado@4.0:', when='@:4', type=('build', 'run'))
     depends_on('py-tornado@4.2:', when='@5', type=('build', 'run'))
