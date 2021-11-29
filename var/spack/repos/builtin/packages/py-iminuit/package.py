@@ -11,7 +11,7 @@ class PyIminuit(PythonPackage):
 
     pypi = "iminuit/iminuit-1.2.tar.gz"
 
-    version('2.8.4', sha256='4b09189f3094896cfc68596adc95b7f1d92772e1de1424e5dc4dd81def56e8b0')    
+    version('2.8.4', sha256='4b09189f3094896cfc68596adc95b7f1d92772e1de1424e5dc4dd81def56e8b0')
     version('1.5.2', sha256='0b54f4d4fc3175471398b573d24616ddb8eb7d63808aa370cfc71fc1d636a1fd')
     version('1.3.7', sha256='9173e52cc4a0c0bda13ebfb862f9b074dc5de345b23cb15c1150863aafd8a26c')
     version('1.3.6', sha256='d79a197f305d4708a0e3e52b0a6748c1a6997360d2fbdfd09c022995a6963b5e')
