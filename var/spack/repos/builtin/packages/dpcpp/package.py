@@ -16,24 +16,24 @@ class Dpcpp(CMakePackage):
     git = 'https://github.com/intel/llvm.git'
 
     version('develop', branch='sycl')
-    version('stable', commit='7981e6027a8cb43028be55d19f12cb1e30a28f5a')
+    version('2021-09', commit='bd68232bb96386bf7649345c0557ba520e73c02d')
 
     maintainers = ['ravil-mobile']
     variant('cuda', default=False, description='switch from OpenCL to CUDA')
     variant('rocm', default=False, description='switch from OpenCL to ROCm')
     variant('rocm-platform', default='AMD', values=('AMD', 'NVIDIA'), multi=False, description='choose ROCm backend')
-    variant('arm', default=False, description='build ARM support rather than x86')
     variant('esimd-cpu', default=False, description='build with ESIMD_CPU support')
     variant('assertions', default=False, description='build with assertions')
     variant('docs', default=False, description='build Doxygen documentation')
     variant('werror', default=False, description='Treat warnings as errors')
     variant('shared', default=False, description='Build shared libraries')
+    variant('remangle_libclc', default=True, description='remangle libclc gen. variants')
     variant('lld', default=False, description='Use LLD linker for build')
 
     depends_on('cmake@3.16.2:', type='build')
     depends_on('ninja@1.10.0:', type='build')
 
-    depends_on('cuda@10.2.0:10.2.999', when='+cuda')
+    depends_on('cuda@10.2.0:11.4.999', when='+cuda')
 
     # NOTE: AMD HIP needs to be tested; it will be done in the next update
     # depends_on('cuda@10.2.0:10.2.999', when='rocm-platform=NVIDIA', type='build')
@@ -44,8 +44,6 @@ class Dpcpp(CMakePackage):
 
     root_cmakelists_dir = 'llvm'
 
-    patch('cuda-backend.patch', when='@stable +cuda')
-
     def cmake_args(self):
         llvm_external_projects = 'sycl;llvm-spirv;opencl;libdevice;xpti;xptifw'
 
@@ -54,14 +52,17 @@ class Dpcpp(CMakePackage):
         xpti_dir = os.path.join(self.stage.source_path, 'xpti')
         xptifw_dir = os.path.join(self.stage.source_path, 'xptifw')
         libdevice_dir = os.path.join(self.stage.source_path, 'libdevice')
-        llvm_targets_to_build = 'X86'
         llvm_enable_projects = 'clang;' + llvm_external_projects
         libclc_targets_to_build = ''
         sycl_build_pi_rocm_platform = self.spec.variants['rocm-platform'].value
 
-        # replace not append, so ARM ^ X86
-        if '+arm' in self.spec:
+        if self.spec.satisfies('target=x86_64:'):
+            llvm_targets_to_build = 'X86'
+        elif self.spec.satisfies('target=aarch64:'):
             llvm_targets_to_build = 'ARM;AArch64'
+        else:
+            raise InstallError('target is not supported. '
+                               'This package only works on x86_64 or aarch64')
 
         is_cuda = '+cuda' in self.spec
         is_rocm = '+rocm' in self.spec
@@ -99,6 +100,8 @@ class Dpcpp(CMakePackage):
             self.define('LLVM_BUILD_TOOLS', True),
             self.define_from_variant('SYCL_ENABLE_WERROR', 'werror'),
             self.define('SYCL_INCLUDE_TESTS', True),
+            self.define_from_variant('LIBCLC_GENERATE_REMANGLED_VARIANTS',
+                                     'remangle_libclc'),
             self.define_from_variant('LLVM_ENABLE_DOXYGEN', 'docs'),
             self.define_from_variant('LLVM_ENABLE_SPHINX', 'docs'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
@@ -107,11 +110,20 @@ class Dpcpp(CMakePackage):
             self.define_from_variant('SYCL_BUILD_PI_ESIMD_CPU', 'esimd-cpu'),
         ]
 
+        if is_cuda or (is_rocm and sycl_build_pi_rocm_platform == 'NVIDIA'):
+            args.append(
+                self.define('CUDA_TOOLKIT_ROOT_DIR', self.spec['cuda'].prefix)
+            )
+
         if self.compiler.name == 'gcc':
             gcc_prefix = ancestor(self.compiler.cc, 2)
             args.append(self.define('GCC_INSTALL_PREFIX', gcc_prefix))
 
         return args
+
+    def setup_build_environment(self, env):
+        if '+cuda' in self.spec:
+            env.set('CUDA_LIB_PATH', '{0}/lib64/stubs'.format(self.spec['cuda'].prefix))
 
     def setup_run_environment(self, env):
         bin_path = self.spec.prefix.bin
@@ -124,5 +136,6 @@ class Dpcpp(CMakePackage):
             env.prepend_path(var, self.prefix.include.sycl)
 
         sycl_build_pi_rocm_platform = self.spec.variants['rocm-platform'].value
-        if '+cuda' in self.spec or sycl_build_pi_rocm_platform == 'cuda':
+        if '+cuda' in self.spec or sycl_build_pi_rocm_platform == 'NVIDIA':
             env.prepend_path('PATH', self.spec['cuda'].prefix.bin)
+            env.set('CUDA_TOOLKIT_ROOT_DIR', self.spec['cuda'].prefix)
