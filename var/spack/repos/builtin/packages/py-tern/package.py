@@ -20,6 +20,3 @@ class PyTern(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
     depends_on('py-pip', type='build')
-
-    # this version has a setup.cfg warning that will prevent build success, use main
-    version('2.8.0', sha256='dd7d8ad929ffe951b1f7f86310b9d5ba749b4306132c3611ff1d5a2c4d79d2bd')
