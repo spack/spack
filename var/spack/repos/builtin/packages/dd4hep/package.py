@@ -24,6 +24,7 @@ class Dd4hep(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('1.19', sha256='d2eccf5e8402ba7dab2e1d7236e12ee4db9b1c5e4253c40a140bf35580db1d9b')
     version('1.18', sha256='1e909a42b969dfd966224fa8ab1eca5aa05136baf3c00a140f2f6d812b497152')
     version('1.17', sha256='036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826')
     version('1.16.1', sha256='c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a')
@@ -50,9 +51,20 @@ class Dd4hep(CMakePackage):
     # See https://github.com/spack/spack/issues/24232
     patch('cmake_language.patch', when='@:1.17')
 
+    # variants for subpackages
+    variant('ddcad', default=True, description="Enable CAD interface based on Assimp")
+    variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
+    variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
+    variant('ddrec', default=True, description="Build DDRec subpackage.")
+    variant('dddetectors', default=True, description="Build DDDetectors subpackage.")
+    variant('ddcond', default=True, description="Build DDCond subpackage.")
+    variant('ddalign', default=True, description="Build DDAlign subpackage.")
+    variant('dddigi', default=True, description="Build DDDigi subpackage.")
+    variant('ddeve', default=True, description="Build DDEve subpackage.")
+    variant('utilityapps', default=True, description='Build UtilityApps subpackage.')
+
+    # variants for other build options
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
-    variant('geant4', default=False, description="Enable the simulation part based on Geant4")
-    variant('assimp', default=False, description="Enable CAD interface based on Assimp")
     variant('hepmc3', default=False, description="Enable build with hepmc3")
     variant('lcio', default=False, description="Enable build with lcio")
     variant('edm4hep', default=True, description="Enable build with edm4hep")
@@ -64,11 +76,12 @@ class Dd4hep(CMakePackage):
     depends_on('cmake @3.12:', type='build')
     depends_on('ninja', type='build')
     depends_on('boost @1.49:')
-    depends_on('root @6.08: +gdml +math +opengl +python +x')
+    depends_on('root @6.08: +gdml +math +python')
+    depends_on('root @6.08: +gdml +math +python +x +opengl', when="+ddeve")
     extends('python')
     depends_on('xerces-c', when='+xercesc')
-    depends_on('geant4@10.2.2:', when='+geant4')
-    depends_on('assimp@5.0.2:', when='+assimp')
+    depends_on('geant4@10.2.2:', when='+ddg4')
+    depends_on('assimp@5.0.2:', when='+ddcad')
     depends_on('hepmc3', when="+hepmc3")
     depends_on('lcio', when="+lcio")
     depends_on('edm4hep', when="+edm4hep")
@@ -77,6 +90,7 @@ class Dd4hep(CMakePackage):
     # See https://github.com/AIDASoft/DD4hep/pull/771
     conflicts('^cmake@3.16:3.17.0', when='@1.15',
               msg='cmake version with buggy FindPython breaks dd4hep cmake config')
+    conflicts('~ddrec+dddetectors', msg="Need to enable +ddrec to build +dddetectors.")
 
     def cmake_args(self):
         spec = self.spec
@@ -87,7 +101,7 @@ class Dd4hep(CMakePackage):
         args = [
             self.define_from_variant('DD4HEP_USE_EDM4HEP', 'edm4hep'),
             self.define_from_variant('DD4HEP_USE_XERCESC', 'xercesc'),
-            self.define_from_variant('DD4HEP_USE_GEANT4', 'geant4'),
+            self.define_from_variant('DD4HEP_USE_GEANT4', 'ddg4'),
             self.define_from_variant('DD4HEP_USE_LCIO', 'lcio'),
             self.define_from_variant('DD4HEP_USE_HEPMC3', 'hepmc3'),
             self.define_from_variant('DD4HEP_USE_GEANT4_UNITS', 'geant4units'),
@@ -102,6 +116,27 @@ class Dd4hep(CMakePackage):
             "-DBoost_NO_BOOST_CMAKE=ON",
             "-DPYTHON_EXECUTABLE={0}".format(spec['python'].command.path),
         ]
+        subpackages = []
+        if spec.satisfies('+ddg4'):
+            subpackages += ['DDG4']
+        if spec.satisfies('+ddcond'):
+            subpackages += ['DDCond']
+        if spec.satisfies('+ddcad'):
+            subpackages += ['DDCAD']
+        if spec.satisfies('+ddrec'):
+            subpackages += ['DDRec']
+        if spec.satisfies('+dddetectors'):
+            subpackages += ['DDDetectors']
+        if spec.satisfies('+ddalign'):
+            subpackages += ['DDAlign']
+        if spec.satisfies('+dddigi'):
+            subpackages += ['DDDigi']
+        if spec.satisfies('+ddeve'):
+            subpackages += ['DDEve']
+        if spec.satisfies('+utilityapps'):
+            subpackages += ['UtilityApps']
+        subpackages = ' '.join(subpackages)
+        args += [self.define('DD4HEP_BUILD_PACKAGES', subpackages)]
         return args
 
     def setup_run_environment(self, env):
