@@ -33,32 +33,28 @@ def test_unmaintained(mock_packages):
         set(['maintainers-1', 'maintainers-2']))
 
 
-def test_all(mock_packages, capfd):
-    with capfd.disabled():
-        out = split(maintainers('--all'))
+def test_all(mock_packages):
+    out = split(maintainers('--all'))
     assert out == [
         'maintainers-1:', 'user1,', 'user2',
         'maintainers-2:', 'user2,', 'user3',
     ]
 
-    with capfd.disabled():
-        out = split(maintainers('--all', 'maintainers-1'))
+    out = split(maintainers('--all', 'maintainers-1'))
     assert out == [
         'maintainers-1:', 'user1,', 'user2',
     ]
 
 
-def test_all_by_user(mock_packages, capfd):
-    with capfd.disabled():
-        out = split(maintainers('--all', '--by-user'))
+def test_all_by_user(mock_packages):
+    out = split(maintainers('--all', '--by-user'))
     assert out == [
         'user1:', 'maintainers-1',
         'user2:', 'maintainers-1,', 'maintainers-2',
         'user3:', 'maintainers-2',
     ]
 
-    with capfd.disabled():
-        out = split(maintainers('--all', '--by-user', 'user1', 'user2'))
+    out = split(maintainers('--all', '--by-user', 'user1', 'user2'))
     assert out == [
         'user1:', 'maintainers-1',
         'user2:', 'maintainers-1,', 'maintainers-2',
@@ -80,39 +76,32 @@ def test_mutex_args_fail(mock_packages):
         maintainers('--maintained', '--unmaintained')
 
 
-def test_maintainers_list_packages(mock_packages, capfd):
-    with capfd.disabled():
-        out = split(maintainers('maintainers-1'))
+def test_maintainers_list_packages(mock_packages):
+    out = split(maintainers('maintainers-1'))
     assert out == ['user1', 'user2']
 
-    with capfd.disabled():
-        out = split(maintainers('maintainers-1', 'maintainers-2'))
+    out = split(maintainers('maintainers-1', 'maintainers-2'))
     assert out == ['user1', 'user2', 'user3']
 
-    with capfd.disabled():
-        out = split(maintainers('maintainers-2'))
+    out = split(maintainers('maintainers-2'))
     assert out == ['user2', 'user3']
 
 
-def test_maintainers_list_fails(mock_packages, capfd):
+def test_maintainers_list_fails(mock_packages):
     out = maintainers('a', fail_on_error=False)
     assert not out
     assert maintainers.returncode == 1
 
 
-def test_maintainers_list_by_user(mock_packages, capfd):
-    with capfd.disabled():
-        out = split(maintainers('--by-user', 'user1'))
+def test_maintainers_list_by_user(mock_packages):
+    out = split(maintainers('--by-user', 'user1'))
     assert out == ['maintainers-1']
 
-    with capfd.disabled():
-        out = split(maintainers('--by-user', 'user1', 'user2'))
+    out = split(maintainers('--by-user', 'user1', 'user2'))
     assert out == ['maintainers-1', 'maintainers-2']
 
-    with capfd.disabled():
-        out = split(maintainers('--by-user', 'user2'))
+    out = split(maintainers('--by-user', 'user2'))
     assert out == ['maintainers-1', 'maintainers-2']
 
-    with capfd.disabled():
-        out = split(maintainers('--by-user', 'user3'))
+    out = split(maintainers('--by-user', 'user3'))
     assert out == ['maintainers-2']

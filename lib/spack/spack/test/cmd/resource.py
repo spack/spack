@@ -22,9 +22,8 @@ mock_hashes = [
 ]
 
 
-def test_resource_list(mock_packages, capfd):
-    with capfd.disabled():
-        out = resource('list')
+def test_resource_list(mock_packages):
+    out = resource('list')
 
     for h in mock_hashes:
         assert h in out
@@ -39,17 +38,15 @@ def test_resource_list(mock_packages, capfd):
     assert 'patched by: builtin.mock.patch-a-dependency' in out
 
 
-def test_resource_list_only_hashes(mock_packages, capfd):
-    with capfd.disabled():
-        out = resource('list', '--only-hashes')
+def test_resource_list_only_hashes(mock_packages):
+    out = resource('list', '--only-hashes')
 
     for h in mock_hashes:
         assert h in out
 
 
-def test_resource_show(mock_packages, capfd):
-    with capfd.disabled():
-        out = resource('show', 'c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8')
+def test_resource_show(mock_packages):
+    out = resource('show', 'c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8')
 
     assert out.startswith('c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8')
     assert 'repos/builtin.mock/packages/patch-a-dependency/libelf.patch' in out

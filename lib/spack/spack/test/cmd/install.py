@@ -142,15 +142,13 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
-                                       config, install_mockery, capfd):
+                                       config, install_mockery):
     """
     This test used to assume receiving full output, but since we've updated
     spack to generate logs on the level of phases, it will only return the
     last phase, install.
     """
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        out = install('-v', 'build-error', fail_on_error=False)
+    out = install('-v', 'build-error', fail_on_error=False)
     assert 'Installing build-error' in out
 
 
@@ -186,13 +184,11 @@ def test_install_env_variables(
 
 @pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
-                           config, install_mockery, capfd):
+                           config, install_mockery):
     """
     Make sure --show-log-on-error works.
     """
-    with capfd.disabled():
-        out = install('--show-log-on-error', 'build-error',
-                      fail_on_error=False)
+    out = install('--show-log-on-error', 'build-error', fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.pkg.name == 'build-error'
 
@@ -510,28 +506,26 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
-                                           capfd, conflict_spec):
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        with tmpdir.as_cwd():
-            with pytest.raises(SpackError):
-                install(
-                    '--log-format=cdash',
-                    '--log-file=cdash_reports',
-                    conflict_spec)
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Update.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            assert '<UpdateReturnStatus>' in content
-            # The message is different based on using the
-            # new or the old concretizer
-            expected_messages = (
-                'Conflicts in concretized spec',
-                'A conflict was triggered',
-            )
-            assert any(x in content for x in expected_messages)
+                                           conflict_spec):
+    with tmpdir.as_cwd():
+        with pytest.raises(SpackError):
+            install(
+                '--log-format=cdash',
+                '--log-file=cdash_reports',
+                conflict_spec)
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('Update.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert '<UpdateReturnStatus>' in content
+        # The message is different based on using the
+        # new or the old concretizer
+        expected_messages = (
+            'Conflicts in concretized spec',
+            'A conflict was triggered',
+        )
+        assert any(x in content for x in expected_messages)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -555,103 +549,94 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing of e.g., Build.xml output
-    with capfd.disabled():
-        with tmpdir.as_cwd():
-            install(
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                'a')
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('a_Build.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            assert '</Build>' in content
-            assert '<Text>' not in content
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery):
+    with tmpdir.as_cwd():
+        install(
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            'a')
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('a_Build.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert '</Build>' in content
+        assert '<Text>' not in content
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capture of e.g., Build.xml output
-    with capfd.disabled():
-        with tmpdir.as_cwd():
-            install(
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                '--cdash-build=my_custom_build',
-                '--cdash-site=my_custom_site',
-                '--cdash-track=my_custom_track',
-                'a')
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('a_Build.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            assert 'Site BuildName="my_custom_build - a"' in content
-            assert 'Name="my_custom_site"' in content
-            assert '-my_custom_track' in content
+def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery):
+    with tmpdir.as_cwd():
+        install(
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            '--cdash-build=my_custom_build',
+            '--cdash-site=my_custom_site',
+            '--cdash-track=my_custom_track',
+            'a')
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('a_Build.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert 'Site BuildName="my_custom_build - a"' in content
+        assert 'Name="my_custom_site"' in content
+        assert '-my_custom_track' in content
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capture of e.g., Build.xml output
-    with capfd.disabled():
-        with tmpdir.as_cwd():
-            cdash_track = 'some_mocked_track'
-            buildstamp_format = "%Y%m%d-%H%M-{0}".format(cdash_track)
-            buildstamp = time.strftime(buildstamp_format,
-                                       time.localtime(int(time.time())))
-            install(
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                '--cdash-buildstamp={0}'.format(buildstamp),
-                'a')
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('a_Build.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            assert buildstamp in content
+def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery):
+    with tmpdir.as_cwd():
+        cdash_track = 'some_mocked_track'
+        buildstamp_format = "%Y%m%d-%H%M-{0}".format(cdash_track)
+        buildstamp = time.strftime(buildstamp_format,
+                                   time.localtime(int(time.time())))
+        install(
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            '--cdash-buildstamp={0}'.format(buildstamp),
+            'a')
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('a_Build.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert buildstamp in content
 
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
-                                      capfd, mock_packages, mock_archive,
-                                      config):
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        with tmpdir.as_cwd():
+                                      mock_packages, mock_archive, config):
+    with tmpdir.as_cwd():
 
-            spec_yaml_path = str(tmpdir.join('spec.yaml'))
+        spec_yaml_path = str(tmpdir.join('spec.yaml'))
 
-            pkg_spec = Spec('a')
-            pkg_spec.concretize()
+        pkg_spec = Spec('a')
+        pkg_spec.concretize()
 
-            with open(spec_yaml_path, 'w') as fd:
-                fd.write(pkg_spec.to_yaml(hash=ht.build_hash))
+        with open(spec_yaml_path, 'w') as fd:
+            fd.write(pkg_spec.to_yaml(hash=ht.build_hash))
 
-            install(
-                '--log-format=cdash',
-                '--log-file=cdash_reports',
-                '--cdash-build=my_custom_build',
-                '--cdash-site=my_custom_site',
-                '--cdash-track=my_custom_track',
-                '-f', spec_yaml_path)
+        install(
+            '--log-format=cdash',
+            '--log-file=cdash_reports',
+            '--cdash-build=my_custom_build',
+            '--cdash-site=my_custom_site',
+            '--cdash-track=my_custom_track',
+            '-f', spec_yaml_path)
 
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('a_Configure.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            install_command_regex = re.compile(
-                r'<ConfigureCommand>(.+)</ConfigureCommand>',
-                re.MULTILINE | re.DOTALL)
-            m = install_command_regex.search(content)
-            assert m
-            install_command = m.group(1)
-            assert 'a@' in install_command
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('a_Configure.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        install_command_regex = re.compile(
+            r'<ConfigureCommand>(.+)</ConfigureCommand>',
+            re.MULTILINE | re.DOTALL)
+        m = install_command_regex.search(content)
+        assert m
+        install_command = m.group(1)
+        assert 'a@' in install_command
 
 
 @pytest.mark.disable_clean_stage_check
@@ -682,11 +667,10 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         assert 'foo.c:89: warning: some weird warning!' in msg
 
 
-def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
-    with capfd.disabled():
-        out = install('--cache-only', 'libdwarf', fail_on_error=False)
+    out = install('--cache-only', 'libdwarf', fail_on_error=False)
 
     assert 'Failed to install libelf' in out
     assert 'Skipping build of libdwarf' in out
@@ -708,13 +692,12 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
     assert not os.path.exists(root.prefix)
 
 
-def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
+def test_install_only_package(tmpdir, mock_fetch, install_mockery):
     msg = ''
-    with capfd.disabled():
-        try:
-            install('--only', 'package', 'dependent-install')
-        except spack.installer.InstallError as e:
-            msg = str(e)
+    try:
+        install('--only', 'package', 'dependent-install')
+    except spack.installer.InstallError as e:
+        msg = str(e)
 
     assert 'Cannot proceed with dependent-install'  in msg
     assert '1 uninstalled dependency' in msg
@@ -891,36 +874,32 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery):
     with tmpdir.as_cwd():
-        with capfd.disabled():
-            os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
-            out = install(
-                '-v',
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                'a')
-            assert 'Using CDash auth token from environment' in out
+        os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
+        out = install(
+            '-v',
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            'a')
+        assert 'Using CDash auth token from environment' in out
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing of e.g., Build.xml output
-    with capfd.disabled():
-        with tmpdir.as_cwd():
-            # Test would fail if install raised an error.
-            install(
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                'configure-warning')
-            # Verify Configure.xml exists with expected contents.
-            report_dir = tmpdir.join('cdash_reports')
-            assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Configure.xml')
-            assert report_file in report_dir.listdir()
-            content = report_file.open().read()
-            assert 'foo: No such file or directory' in content
+def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery):
+    with tmpdir.as_cwd():
+        # Test would fail if install raised an error.
+        install(
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            'configure-warning')
+        # Verify Configure.xml exists with expected contents.
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('Configure.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert 'foo: No such file or directory' in content
 
 
 def test_compiler_bootstrap(

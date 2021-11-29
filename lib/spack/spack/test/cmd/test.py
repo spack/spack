@@ -41,7 +41,7 @@ def test_test_dirty_flag(arguments, expected):
 
 def test_test_dup_alias(
         mock_test_stage, mock_packages, mock_archive, mock_fetch,
-        install_mockery_mutable_config, capfd):
+        install_mockery_mutable_config):
     """Ensure re-using an alias fails with suggestion to change."""
     install('libdwarf')
 
@@ -50,9 +50,7 @@ def test_test_dup_alias(
     assert "Spack test libdwarf" in out
 
     # Try again with the alias but don't let it fail on the error
-    with capfd.disabled():
-        out = spack_test(
-            'run', '--alias', 'libdwarf', 'libdwarf', fail_on_error=False)
+    out = spack_test('run', '--alias', 'libdwarf', 'libdwarf', fail_on_error=False)
 
     assert "already exists" in out
 
@@ -84,12 +82,10 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
 
 def test_test_output_on_error(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage
+    mock_test_stage
 ):
     install('test-error')
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        out = spack_test('run', 'test-error', fail_on_error=False)
+    out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert "TestFailure" in out
     assert "Command exited with status 1" in out
@@ -97,11 +93,10 @@ def test_test_output_on_error(
 
 def test_test_output_on_failure(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage
+    mock_test_stage
 ):
     install('test-fail')
-    with capfd.disabled():
-        out = spack_test('run', 'test-fail', fail_on_error=False)
+    out = spack_test('run', 'test-fail', fail_on_error=False)
 
     assert "Expected 'not in the output' to match output of `true`" in out
     assert "TestFailure" in out
@@ -109,12 +104,11 @@ def test_test_output_on_failure(
 
 def test_show_log_on_error(
     mock_packages, mock_archive, mock_fetch,
-    install_mockery_mutable_config, capfd, mock_test_stage
+    install_mockery_mutable_config, mock_test_stage
 ):
     """Make sure spack prints location of test log on failure."""
     install('test-error')
-    with capfd.disabled():
-        out = spack_test('run', 'test-error', fail_on_error=False)
+    out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert 'See test log' in out
     assert mock_test_stage in out
@@ -155,7 +149,7 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
 
 def test_cdash_output_test_error(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
-        mock_archive, mock_test_stage, capfd):
+        mock_archive, mock_test_stage):
     install('test-error')
     with tmpdir.as_cwd():
         spack_test('run',
