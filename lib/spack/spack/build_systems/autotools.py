@@ -498,6 +498,9 @@ To resolve this problem, please try the following:
 
             for ``<spec-name> foo=x +bar``
 
+        Note: returns an empty list when the variant is conditional and its condition
+              is not met.
+
         Returns:
             list: list of strings that corresponds to the activation/deactivation
             of the variant that has been processed
@@ -519,9 +522,13 @@ To resolve this problem, please try the following:
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.name))
 
+        if variant not in spec.variants:
+            return []
+
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
-        if set(self.variants[variant].values) == set((True, False)):
+        variant_desc, _ = self.variants[variant]
+        if set(variant_desc.values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
             # in an iterable of one element.
@@ -534,8 +541,8 @@ To resolve this problem, please try the following:
             # package's build system. It excludes values which have special
             # meanings and do not correspond to features (e.g. "none")
             feature_values = getattr(
-                self.variants[variant].values, 'feature_values', None
-            ) or self.variants[variant].values
+                variant_desc.values, 'feature_values', None
+            ) or variant_desc.values
 
             options = [
                 (value,

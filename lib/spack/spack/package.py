@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -469,8 +468,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):
@@ -903,7 +901,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
@@ -1975,11 +1973,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """On Darwin, make installed libraries more easily relocatable.
 
         Some build systems (handrolled, autotools, makefiles) can set their own
-        rpaths that are duplicated by spack's compiler wrapper. Additionally,
-        many simpler build systems do not link using ``-install_name
-        @rpath/foo.dylib``, which propagates the library's hardcoded
-        absolute path into downstream dependencies. This fixup interrogates,
-        and postprocesses if necessary, all libraries installed by the code.
+        rpaths that are duplicated by spack's compiler wrapper. This fixup
+        interrogates, and postprocesses if necessary, all libraries installed
+        by the code.
 
         It should be added as a @run_after to packaging systems (or individual
         packages) that do not install relocatable libraries by default.

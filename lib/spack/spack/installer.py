@@ -1022,7 +1022,7 @@ class PackageInstaller(object):
                 tty.debug(msg.format('Upgrading to', desc, pkg_id, timeout))
                 op = 'upgrade to'
                 lock.upgrade_read_to_write(timeout)
-            tty.verbose('{0} is now {1} locked'.format(pkg_id, lock_type))
+            tty.debug('{0} is now {1} locked'.format(pkg_id, lock_type))
 
         except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
             tty.debug(err.format(op, desc, pkg_id, exc.__class__.__name__,
@@ -1254,7 +1254,7 @@ class PackageInstaller(object):
         # Remove any associated build task since its sequence will change
         self._remove_task(task.pkg_id)
         desc = 'Queueing' if task.attempts == 0 else 'Requeueing'
-        tty.verbose(msg.format(desc, task.pkg_id, task.status))
+        tty.debug(msg.format(desc, task.pkg_id, task.status))
 
         # Now add the new task to the queue with a new sequence number to
         # ensure it is the last entry popped with the same priority.  This
@@ -1276,7 +1276,7 @@ class PackageInstaller(object):
             ltype, lock = self.locks[pkg_id]
             if lock is not None:
                 try:
-                    tty.verbose(msg.format(ltype, pkg_id))
+                    tty.debug(msg.format(ltype, pkg_id))
                     if ltype == 'read':
                         lock.release_read()
                     else:
@@ -1296,8 +1296,8 @@ class PackageInstaller(object):
             pkg_id (str): identifier for the package to be removed
         """
         if pkg_id in self.build_tasks:
-            tty.verbose('Removing build task for {0} from list'
-                        .format(pkg_id))
+            tty.debug('Removing build task for {0} from list'
+                      .format(pkg_id))
             task = self.build_tasks.pop(pkg_id)
             task.status = STATUS_REMOVED
             return task
@@ -1381,8 +1381,8 @@ class PackageInstaller(object):
                 self._update_failed(dep_task, mark)
                 self._remove_task(dep_id)
             else:
-                tty.verbose('No build task for {0} to skip since {1} failed'
-                            .format(dep_id, pkg_id))
+                tty.debug('No build task for {0} to skip since {1} failed'
+                          .format(dep_id, pkg_id))
 
     def _update_installed(self, task):
         """
@@ -1511,7 +1511,7 @@ class PackageInstaller(object):
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
             term_title.set('Processing {0}'.format(pkg.name))
-            tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
+            tty.debug('Processing {0}: task={1}'.format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
             #

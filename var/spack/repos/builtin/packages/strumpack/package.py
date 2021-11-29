@@ -20,7 +20,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.0.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.1.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ['e4s']
@@ -30,6 +30,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.1.0', sha256='219ec7360594172464aafa6ecac1fd161097db6fb9ee35af5c1ca61531f4f5c4')
     version('6.0.0', sha256='fcea150b68172d5a4ec2c02f9cce0b7305919b86871c9cf34a9f65b1567d58b7')
     version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
     version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
@@ -56,10 +57,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             description='Build with flop counters')
     variant('task_timers', default=False,
             description='Build with timers for internal routines')
-    variant('build_dev_tests', default=False,
-            description='Build developer test routines')
-    variant('build_tests', default=False,
-            description='Build test routines')
     variant('slate', default=True,
             description="Build with SLATE support")
 
@@ -112,8 +109,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('TPL_ENABLE_BPACK', 'butterflypack'),
             self.define_from_variant('STRUMPACK_COUNT_FLOPS', 'count_flops'),
             self.define_from_variant('STRUMPACK_TASK_TIMERS', 'task_timers'),
-            self.define_from_variant('STRUMPACK_DEV_TESTING', 'build_dev_tests'),
-            self.define_from_variant('STRUMPACK_BUILD_TESTS', 'build_tests'),
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')

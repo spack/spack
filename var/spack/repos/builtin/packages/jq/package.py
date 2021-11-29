@@ -4,8 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import sys
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Jq(AutotoolsPackage):
@@ -19,6 +21,9 @@ class Jq(AutotoolsPackage):
 
     depends_on('oniguruma')
     depends_on('bison@3.0:', type='build')
+
+    if sys.platform == 'darwin' and macos_version() >= Version('10.15'):
+        patch('builtinc.patch', when='@1.5:')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

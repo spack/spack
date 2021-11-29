@@ -130,7 +130,7 @@ spack:
     - libnrm
     - libquo
     - libunwind
-    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +build_llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
@@ -173,7 +173,7 @@ spack:
     - swig@4.0.2-fortran
     - sz
     - tasmanian
-    - tau
+    - tau +mpi +python
     - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     - turbine
     - umap
@@ -217,12 +217,16 @@ spack:
 
     mappings:
       - match:
+        - llvm
+        - llvm-amdgpu
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match:
         - cuda
         - dyninst
         - hpx
         - kokkos-kernels
-        - llvm
-        - llvm-amdgpu
         - precice
         - rocblas
         - rocsolver

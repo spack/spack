@@ -44,6 +44,7 @@ class Hipace(CMakePackage):
         depends_on('openpmd-api +mpi', when='+mpi')
     with when('compute=omp'):
         depends_on('fftw@3: +openmp')
+        depends_on('fftw ~mpi', when='~mpi')
         depends_on('fftw +mpi', when='+mpi')
         depends_on('pkgconfig', type='build')
         depends_on('llvm-openmp', when='%apple-clang')

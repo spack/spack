@@ -13,7 +13,6 @@ import time
 
 import ruamel.yaml as yaml
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -100,6 +99,16 @@ user_speclist_name = 'specs'
 default_view_name = 'default'
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = 'all'
+
+
+def installed_specs():
+    """
+    Returns the specs of packages installed in the active environment or None
+    if no packages are installed.
+    """
+    env = spack.environment.active_environment()
+    hashes = env.all_hashes() if env else None
+    return spack.store.db.query(hashes=hashes)
 
 
 def valid_env_name(name):
@@ -308,7 +317,11 @@ class ViewDescriptor(object):
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
             # so we have to check for both
-            types = (OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
+            types = (
+                collections.OrderedDict,
+                syaml.syaml_dict,
+                yaml.comments.CommentedMap
+            )
             assert isinstance(self.projections, types)
             ret['projections'] = self.projections
         if self.select:
@@ -628,7 +641,7 @@ class Environment(object):
         else:
             self.raw_yaml, self.yaml = _read_yaml(f)
 
-        self.spec_lists = OrderedDict()
+        self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get('definitions', []):
             entry = copy.deepcopy(item)
@@ -1025,7 +1038,7 @@ class Environment(object):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def concretize(self, force=False, tests=False):
+    def concretize(self, force=False, tests=False, reuse=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1039,6 +1052,8 @@ class Environment(object):
                already concretized
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1052,14 +1067,15 @@ class Environment(object):
 
         # Pick the right concretization strategy
         if self.concretization == 'together':
-            return self._concretize_together(tests=tests)
+            return self._concretize_together(tests=tests, reuse=reuse)
+
         if self.concretization == 'separately':
-            return self._concretize_separately(tests=tests)
+            return self._concretize_separately(tests=tests, reuse=reuse)
 
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self, tests=False):
+    def _concretize_together(self, tests=False, reuse=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1092,13 +1108,14 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs, tests=tests)
+            *self.user_specs, tests=tests, reuse=reuse
+        )
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self, tests=False):
+    def _concretize_separately(self, tests=False, reuse=False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -1123,7 +1140,7 @@ class Environment(object):
         ):
             if uspec not in old_concretized_user_specs:
                 root_specs.append(uspec)
-                arguments.append((uspec_constraints, tests))
+                arguments.append((uspec_constraints, tests, reuse))
 
         # Ensure we don't try to bootstrap clingo in parallel
         if spack.config.get('config:concretizer') == 'clingo':
@@ -1978,7 +1995,7 @@ def display_specs(concretized_specs):
         print('')
 
 
-def _concretize_from_constraints(spec_constraints, tests=False):
+def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
@@ -1997,7 +2014,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             if c not in invalid_constraints:
                 s.constrain(c)
         try:
-            return s.concretized(tests=tests)
+            return s.concretized(tests=tests, reuse=reuse)
         except spack.spec.InvalidDependencyError as e:
             invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints
@@ -2017,9 +2034,9 @@ def _concretize_from_constraints(spec_constraints, tests=False):
 
 
 def _concretize_task(packed_arguments):
-    spec_constraints, tests = packed_arguments
+    spec_constraints, tests, reuse = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
-        return _concretize_from_constraints(spec_constraints, tests)
+        return _concretize_from_constraints(spec_constraints, tests, reuse)
 
 
 def make_repo_path(root):

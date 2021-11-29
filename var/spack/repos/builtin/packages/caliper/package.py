@@ -18,7 +18,7 @@ class Caliper(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
-    url      = "https://github.com/LLNL/Caliper/archive/v2.6.0.tar.gz"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.7.0.tar.gz"
     tags     = ['e4s', 'radiuss']
 
     maintainers = ["daboehme"]
@@ -26,6 +26,7 @@ class Caliper(CMakePackage, CudaPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.7.0', sha256='b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b')
     version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')

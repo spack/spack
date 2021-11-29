@@ -607,7 +607,7 @@ class log_output(object):
         self._active = True
 
         # return this log_output object so that the user can do things
-        # like temporarily echo some ouptut.
+        # like temporarily echo some output.
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -780,7 +780,12 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(in_pipe.readline)()
+                            try:
+                                line = _retry(in_pipe.readline)()
+                            except UnicodeDecodeError:
+                                # installs like --test=root gpgme produce non-UTF8 logs
+                                line = '<line lost: output was not encoded as UTF-8>\n'
+
                             if not line:
                                 return
                             line_count += 1

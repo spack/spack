@@ -3,45 +3,23 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install runc
-#
-# You can edit this file again by typing:
-#
-#     spack edit runc
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 
 
-#class Runc(AutotoolsPackage):
 class Runc(MakefilePackage):
-    """CLI tool for spawning and running containers according to the OCI specification"""
+    """CLI tool for spawning containers on Linux according to the OCI specification"""
 
-    homepage = "https://github.com/opencontainers/runc"
-    url = "https://github.com/opencontainers/runc/archive/refs/tags/v1.0.2.tar.gz"
-    maintainers = ["teonnik", "Madeeks"]
+    homepage    = 'https://github.com/opencontainers/runc'
+    url         = 'https://github.com/opencontainers/runc/releases/download/v1.0.2/runc.tar.xz'
+    maintainers = ['bernhardkaindl']
 
-    version(
-        "1.0.2",
-        sha256="6c3cca4bbeb5d9b2f5e3c0c401c9d27bc8a5d2a0db8a2f6a06efd03ad3c38a33",
-    )
-    version(
-        "1.0.1",
-        sha256="b25e4273a895af3239bc5e495a007266356038adfb34c4b94b4fc39627a89ad9",
-    )
+    version('1.0.2', sha256='740acb49e33eaf4958b5109c85363c1d3900f242d4cab47fbdbefa6f8f3c6909')
 
-    depends_on('go@1.16:')
+    depends_on('go',          type='build')
+    depends_on('go-md2man',   type='build')
+    depends_on('pkgconfig',   type='build')
     depends_on('libseccomp')
 
-    def edit(self, spec, prefix):
-        env['PREFIX'] = prefix
+    def install(self, spec, prefix):
+        make('install', 'PREFIX=' + prefix)

@@ -41,12 +41,14 @@ class PyGrpcio(PythonPackage):
     depends_on('openssl')
     depends_on('zlib')
     depends_on('c-ares')
+    depends_on('re2+shared')
 
     def setup_build_environment(self, env):
         env.set('GRPC_PYTHON_BUILD_WITH_CYTHON', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_RE2', True)
         # https://github.com/grpc/grpc/pull/24449
         env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
         env.set('GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS', str(make_jobs))
@@ -59,3 +61,17 @@ class PyGrpcio(PythonPackage):
     def patch(self):
         if self.spec.satisfies('%fj'):
             filter_file("-std=gnu99", "", "setup.py")
+
+        # use the spack packages
+        filter_file(r'(\s+SSL_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['openssl'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+ZLIB_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['zlib'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+CARES_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['c-ares'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+RE2_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['re2'].prefix.include),
+                    'setup.py')

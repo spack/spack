@@ -409,8 +409,6 @@ Spack understands several special variables. These are:
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
 * ``$user``: name of the current user
-* ``$user_config_path``: user configuration directory (``~/.spack`` unless
-  :ref:`overridden <local-config-overrides>`)
 * ``$user_cache_path``: user cache directory (``~/.spack`` unless
   :ref:`overridden <local-config-overrides>`)
 
@@ -587,9 +585,9 @@ Spack provides three environment variables that allow you to override or opt out
 configuration locations:
 
 * ``SPACK_USER_CONFIG_PATH``: Override the path to use for the
-  ``user`` (``~/.spack``) scope.
-* ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the ``system``
-  (``/etc/spack``) scope.
+  ``user`` scope (``~/.spack`` by default).
+* ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the
+  ``system`` scope (``/etc/spack`` by default).
 * ``SPACK_DISABLE_LOCAL_CONFIG``: set this environment variable to completely disable
   **both** the system and user configuration directories. Spack will only consider its
   own defaults and ``site`` configuration locations.

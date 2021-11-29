@@ -91,6 +91,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
         variant(tpl, default=deflt, description=descr)
         depends_on(spackname, when="+%s" % tpl)
 
+    variant('shared', default=True, description='Build shared libraries')
+
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -151,5 +153,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
                     options.append("-DKokkosKernels_INST_%s=ON" % eti.upper())
                 elif off_flag in self.spec:
                     options.append("-DKokkosKernels_INST_%s=OFF" % eti.upper())
+
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
         return options

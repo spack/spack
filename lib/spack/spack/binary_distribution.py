@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
+import collections
 import hashlib
 import json
 import os
@@ -15,7 +16,6 @@ import traceback
 from contextlib import closing
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.lang
@@ -241,11 +241,16 @@ class BinaryCacheIndex(object):
                     ]
         """
         self.regenerate_spec_cache()
+        return self.find_by_hash(spec.dag_hash())
 
-        find_hash = spec.dag_hash()
+    def find_by_hash(self, find_hash):
+        """Same as find_built_spec but uses the hash of a spec.
+
+        Args:
+            find_hash (str): hash of the spec to search
+        """
         if find_hash not in self._mirrors_for_spec:
             return None
-
         return self._mirrors_for_spec[find_hash]
 
     def update_spec(self, spec, found_list):
@@ -608,6 +613,16 @@ def get_buildfile_manifest(spec):
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
+
+        # Directories may need to be relocated too.
+        for directory in dirs:
+            dir_path_name = os.path.join(root, directory)
+            rel_path_name = os.path.relpath(dir_path_name, spec.prefix)
+            if os.path.islink(dir_path_name):
+                link = os.readlink(dir_path_name)
+                if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+                    data['link_to_relocate'].append(rel_path_name)
+
         for filename in files:
             path_name = os.path.join(root, filename)
             m_type, m_subtype = relocate.mime_type(path_name)
@@ -1263,8 +1278,8 @@ def relocate_package(spec, allow_root):
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = OrderedDict({})
-    prefix_to_prefix_bin = OrderedDict({})
+    prefix_to_prefix_text = collections.OrderedDict()
+    prefix_to_prefix_bin = collections.OrderedDict()
 
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()

@@ -51,9 +51,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             description='Max number of OS-threads for HPX applications',
             values=lambda x: isinstance(x, str) and x.isdigit())
 
-    variant('instrumentation', values=any_combination_of(
-        'apex', 'google_perftools', 'papi', 'valgrind'
-    ), description='Add support for various kind of instrumentation')
+    instrumentation_values = ('apex', 'google_perftools', 'papi', 'valgrind')
+    variant('instrumentation', values=any_combination_of(*instrumentation_values),
+            description='Add support for various kind of instrumentation')
 
     variant(
         "networking",
@@ -163,13 +163,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def instrumentation_args(self):
-        for value in self.variants['instrumentation'].values:
-            if value == 'none':
-                continue
-
+        args = []
+        for value in self.instrumentation_values:
             condition = 'instrumentation={0}'.format(value)
-            yield self.define(
-                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec)
+            args.append(self.define(
+                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec
+            ))
+        return args
 
     def cmake_args(self):
         spec, args = self.spec, []

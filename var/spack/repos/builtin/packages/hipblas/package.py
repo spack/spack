@@ -29,6 +29,16 @@ class Hipblas(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('netlib-lapack@3.7.1:', type='test')
+    depends_on('boost@1.64.0: cxxstd=14', type='test')
+
+    patch('link-clients-blas.patch', when='@4.3.0:')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
+        self.run_test(exe)
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, when='@' + ver)
@@ -42,7 +52,7 @@ class Hipblas(CMakePackage):
             # Make sure find_package(HIP) finds the module.
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
-            self.define('BUILD_CLIENTS_TESTS', 'OFF')
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests)
         ]
 
         # hipblas actually prefers CUDA over AMD GPUs when you have it

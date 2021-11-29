@@ -9,6 +9,8 @@ from spack import *
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
+    maintainers = ['rscohn2']
+
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
     version('2019.10.317', sha256='28e1b615e63d2170a99feedc75e3b0c5a7e1a07dcdaf0a4181831b07817a5346',
@@ -56,6 +58,9 @@ class IntelMpi(IntelPackage):
             url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
     provides('mpi')
+
+    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    depends_on('libfabric', when='+external-libfabric', type=('build', 'link', 'run'))
 
     def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.

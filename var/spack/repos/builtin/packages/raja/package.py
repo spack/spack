@@ -126,10 +126,16 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = []
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
-        entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
+        if 'camp' in self.spec:
+            entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
-        entries.append(cmake_cache_option("ENABLE_EXERCISES", '+exercises' in spec))
+        if spec.satisfies('@0.14.0:'):
+            entries.append(cmake_cache_option("RAJA_ENABLE_EXERCISES",
+                                              '+exercises' in spec))
+        else:
+            entries.append(cmake_cache_option("ENABLE_EXERCISES",
+                                              '+exercises' in spec))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT

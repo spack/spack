@@ -104,9 +104,8 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # https://github.com/LLNL/Umpire/issues/653
     # This range looks weird, but it ensures the concretizer looks at it as a
-    # range, not as a concrete version, so that it also matches compilers
-    # specified as `gcc@10.3.0-identifier`. See #8957.
-    conflicts('%gcc@10.3.0:10.3.0.0', when='+cuda')
+    # range, not as a concrete version, so that it also matches 10.3.* versions.
+    conflicts('%gcc@10.3.0:10.3', when='+cuda')
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture
@@ -192,6 +191,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option(
             "ENABLE_BENCHMARKS", 'tests=benchmarks' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
+        entries.append(cmake_cache_option("ENABLE_DOCS", False))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
 

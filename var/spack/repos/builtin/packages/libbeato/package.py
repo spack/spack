@@ -14,4 +14,4 @@ class Libbeato(AutotoolsPackage):
     homepage = "https://github.com/CRG-Barcelona/libbeato"
     git      = "https://github.com/CRG-Barcelona/libbeato.git"
 
-    version('master', brancch='master')
+    version('master', branch='master')

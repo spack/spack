@@ -63,6 +63,7 @@ class Yoda(AutotoolsPackage):
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
+    depends_on('zlib')
     depends_on('boost', when='@:1.6.0', type=('build', 'run'))
     depends_on('py-cython@0.18:', type='build', when='@:1.4.0')
     depends_on('py-cython@0.20:', type='build', when='@1.4.0:1.6.5')

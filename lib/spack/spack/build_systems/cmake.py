@@ -267,6 +267,10 @@ class CMakePackage(PackageBase):
                  "-DSWR:STRING=avx;avx2]
 
             for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+
+        Note: if the provided variant is conditional, and the condition is not met,
+                this function returns an empty string. CMake discards empty strings
+                provided on the command line.
         """
 
         if variant is None:
@@ -275,6 +279,9 @@ class CMakePackage(PackageBase):
         if variant not in self.variants:
             raise KeyError(
                 '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+
+        if variant not in self.spec.variants:
+            return ''
 
         value = self.spec.variants[variant].value
         if isinstance(value, (tuple, list)):

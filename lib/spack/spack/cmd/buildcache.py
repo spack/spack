@@ -104,6 +104,9 @@ def setup_parser(subparser):
                               " instead of default platform and OS")
     # This argument is needed by the bootstrapping logic to verify checksums
     install.add_argument('--sha256', help=argparse.SUPPRESS)
+    install.add_argument(
+        '--only-root', action='store_true', help=argparse.SUPPRESS
+    )
 
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
@@ -534,9 +537,14 @@ def install_tarball(spec, args):
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
-    for d in s.dependencies(deptype=('link', 'run')):
-        tty.msg("Installing buildcache for dependency spec %s" % d)
-        install_tarball(d, args)
+
+    # This argument is used only for bootstrapping specs without signatures,
+    # since we need to check the sha256 of each tarball
+    if not args.only_root:
+        for d in s.dependencies(deptype=('link', 'run')):
+            tty.msg("Installing buildcache for dependency spec %s" % d)
+            install_tarball(d, args)
+
     package = spack.repo.get(spec)
     if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
