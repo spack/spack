@@ -31,3 +31,4 @@ class Tini(CMakePackage):
     maintainers = ["teonnik", "Madeeks"]
 
     version('0.19.0', sha256='0fd35a7030052acd9f58948d1d900fe1e432ee37103c5561554408bdac6bbf0d')
+    patch('disable_tini_static.patch', when='@0.19.0:')
