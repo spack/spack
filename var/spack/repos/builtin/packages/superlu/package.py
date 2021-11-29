@@ -26,6 +26,7 @@ class Superlu(CMakePackage):
 
     variant('pic',    default=True,
             description='Build with position independent code')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake', when='@5:', type='build')
     depends_on('blas')
@@ -36,6 +37,7 @@ class Superlu(CMakePackage):
 
     # CMake installation method
     def cmake_args(self):
+        spec = self.spec
         if self.version > Version('5.2.1'):
             _blaslib_key = 'enable_internal_blaslib'
         else:
@@ -46,7 +48,10 @@ class Superlu(CMakePackage):
             self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
             self.define('enable_tests', self.run_tests),
         ]
-
+        if '+shared' in spec:
+            args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
+        else:
+            args.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
         return args
 
     # Pre-cmake installation method
