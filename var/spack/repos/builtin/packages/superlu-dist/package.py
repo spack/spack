@@ -66,8 +66,8 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
             '-DCMAKE_INSTALL_BINDIR:STRING=%s' % self.prefix.bin,
-            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
-            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
+            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.ld_flags,
+            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.ld_flags,
             '-DUSE_XSDK_DEFAULTS=YES',
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,
