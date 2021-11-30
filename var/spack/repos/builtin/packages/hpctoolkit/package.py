@@ -18,8 +18,11 @@ class Hpctoolkit(AutotoolsPackage):
     git      = "https://github.com/HPCToolkit/hpctoolkit.git"
     maintainers = ['mwkrentel']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
     version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
     version('2020.08.03', commit='d9d13c705d81e5de38e624254cf0875cce6add9a')
@@ -72,18 +75,18 @@ class Hpctoolkit(AutotoolsPackage):
     )
 
     depends_on('binutils +libiberty', type='link', when='@2021.00:')
-    depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020.99')
-    depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03.99')
+    depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020')
+    depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
     depends_on('bzip2+shared', type='link')
     depends_on('dyninst@10.2.0:', when='@2021.00:')
-    depends_on('dyninst@9.3.2:', when='@:2020.99')
+    depends_on('dyninst@9.3.2:', when='@:2020')
     depends_on('elfutils+bzip2+xz~nls', type='link')
     depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
-    depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020.99')
+    depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
     depends_on('libunwind@1.4: +xz+pic')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
@@ -102,30 +105,30 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('rocm-dbgapi', when='+rocm')
     depends_on('roctracer-dev', when='+rocm')
 
-    conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
+    conflicts('%gcc@:4.7', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
 
-    conflicts('%gcc@:4.99.99', when='@2020.03:2020.99',
+    conflicts('%gcc@:4', when='@2020.03:2020',
               msg='hpctoolkit requires gnu gcc 5.x or later')
 
-    conflicts('%gcc@:6.99.99', when='@2021.00:',
+    conflicts('%gcc@:6', when='@2021.00:',
               msg='hpctoolkit requires gnu gcc 7.x or later')
 
-    conflicts('+cuda', when='@:2019.99.99',
+    conflicts('+cuda', when='@:2019',
               msg='cuda requires 2020.03.01 or later')
 
-    conflicts('+rocm', when='@:2020.99.99',
+    conflicts('+rocm', when='@:2020',
               msg='rocm requires 2021.03.01 or later')
 
     conflicts('^binutils@2.35:2.35.1',
               msg='avoid binutils 2.35 and 2.35.1 (spews errors)')
 
     # Fix the build for old revs with gcc 10.x.
-    patch('gcc10-enum.patch', when='@2020.01.01:2020.08.99 %gcc@10.0:')
+    patch('gcc10-enum.patch', when='@2020.01.01:2020.08 %gcc@10.0:')
 
     patch('https://github.com/HPCToolkit/hpctoolkit/commit/511afd95b01d743edc5940c84e0079f462b2c23e.patch',
           sha256='fd0fd7419f66a1feba8046cff9df7f27abce8629ee2708b8a9daa12c1b51243c',
-          when='@2019.08.01:2021.03.99 %gcc@11.0:')
+          when='@2019.08.01:2021.03 %gcc@11.0:')
 
     flag_handler = AutotoolsPackage.build_system_flags
 

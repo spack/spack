@@ -107,11 +107,11 @@ class Openloops(Package):
                 else:
                     f.write('-mcmodel=medium\n')
 
-        if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
+        if self.spec.satisfies('@:1 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
         elif self.spec.satisfies('@2:2.1.2 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft2.coll'), 'lcg.coll')
-        elif self.spec.satisfies('@2.1.2:2.99.99 processes=lcg.coll'):
+        elif self.spec.satisfies('@2.1.2:2 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft3.coll'), 'lcg.coll')
 
     def setup_build_environment(self, env):

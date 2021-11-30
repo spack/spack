@@ -23,7 +23,7 @@ class PyHpcbench(PythonPackage):
     depends_on('py-clustershell@1.8:', type=('build', 'run'))
     depends_on('py-cookiecutter@1.6.0', type=('build', 'run'))
     depends_on('py-docopt@0.6.2', type=('build', 'run'))
-    depends_on('py-elasticsearch@6:6.999', type=('build', 'run'))
+    depends_on('py-elasticsearch@6.0:6', type=('build', 'run'))
     depends_on('py-jinja2@2.10', type=('build', 'run'))
     depends_on('py-mock@2.0.0', type=('build', 'run'))
     depends_on('py-numpy@1.13.3', type=('build', 'run'))

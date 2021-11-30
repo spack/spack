@@ -17,6 +17,10 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html'
 
     if platform.system() == 'Linux':
+        version('2021.4.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18218/l_daal_oneapi_p_2021.4.0.729_offline.sh',
+                sha256='61da9d2a40c75edadff65d052fd84ef3db1da5d94f86ad3956979e6988549dda',
+                expand=False)
         version('2021.3.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17905/l_daal_oneapi_p_2021.3.0.557_offline.sh',
                 sha256='4c2e77a3a2fa5f8a09b7d68760dfca6c07f3949010836cd6da34075463467995',

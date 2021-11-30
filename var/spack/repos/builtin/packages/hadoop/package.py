@@ -24,6 +24,7 @@ class Hadoop(Package):
     version('2.9.2',  sha256='3d2023c46b1156c1b102461ad08cbc17c8cc53004eae95dab40a1f659839f28a')
     version('2.8.5',  sha256='f9c726df693ce2daa4107886f603270d66e7257f77a92c9886502d6cd4a884a4')
     version('2.7.7',  sha256='d129d08a2c9dafec32855a376cbd2ab90c6a42790898cabbac6be4d29f9c2026')
+    version('2.7.5',  sha256='0bfc4d9b04be919be2fdf36f67fa3b4526cdbd406c512a7a1f5f1b715661f831')
 
     depends_on('java', type='run')
 

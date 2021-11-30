@@ -21,9 +21,7 @@ RUN apt-get -yqq update \
         git \
         gnupg2 \
         iproute2 \
-        lmod \
         locales \
-        lua-posix \
         make \
         python3 \
         python3-pip \
@@ -65,14 +63,11 @@ RUN [ -f ~/.profile ]                                               \
  && sed -i 's/mesg n/( tty -s \&\& mesg n || true )/g' ~/.profile \
  || true
 
-# [WORKAROUND]
-# https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
-RUN ln -s posix_c.so /usr/lib/$(uname -m)-linux-gnu/lua/5.2/posix.so
-
 WORKDIR /root
 SHELL ["docker-shell"]
 
 # TODO: add a command to Spack that (re)creates the package cache
+RUN spack bootstrap untrust spack-install
 RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]

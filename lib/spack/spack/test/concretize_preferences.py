@@ -396,3 +396,23 @@ mpi:
 
         assert s.satisfies('^version-test-pkg@2.4.6')
         assert 'version-test-dependency-preferred' not in s
+
+    @pytest.mark.regression('26598')
+    def test_multivalued_variants_are_lower_priority_than_providers(self):
+        """Test that the rule to maximize the number of values for multivalued
+        variants is considered at lower priority than selecting the default
+        provider for virtual dependencies.
+
+        This ensures that we don't e.g. select openmpi over mpich even if we
+        specified mpich as the default mpi provider, just because openmpi supports
+        more fabrics by default.
+        """
+        with spack.config.override(
+            'packages:all', {
+                'providers': {
+                    'somevirtual': ['some-virtual-preferred']
+                }
+            }
+        ):
+            s = Spec('somevirtual').concretized()
+            assert s.name == 'some-virtual-preferred'

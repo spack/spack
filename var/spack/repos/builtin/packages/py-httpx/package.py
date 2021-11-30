@@ -21,4 +21,4 @@ class PyHttpx(PythonPackage):
     depends_on('py-certifi')
     depends_on('py-sniffio')
     depends_on('py-httpcore@0.11:')
-    depends_on('py-rfc3986+idna2008@1.3:1.99')
+    depends_on('py-rfc3986+idna2008@1.3:1')

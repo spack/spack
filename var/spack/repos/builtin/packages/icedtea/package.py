@@ -69,7 +69,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('zlib')
     depends_on('alsa-lib', when='platform=linux')
 
-    provides('java@8', when='@3.4.0:3.99.99')
+    provides('java@8', when='@3.4.0:3')
 
     force_autoreconf = True
 

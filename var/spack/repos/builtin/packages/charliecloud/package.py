@@ -14,6 +14,8 @@ class Charliecloud(AutotoolsPackage):
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('0.25',   sha256='62d6fd211e3a573f54578e1b01d5c298f9788b7eaf2db46ac94c2dcef604cc94')
     version('0.24',   sha256='63379bcbad7b90b33457251696d6720416e4acefcf2b49cd6cb495a567e511c2')

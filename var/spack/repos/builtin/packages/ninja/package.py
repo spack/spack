@@ -16,6 +16,8 @@ class Ninja(Package):
 
     executables = ['^ninja$']
 
+    tags = ['e4s']
+
     version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
     version('master', branch='master')
     version('1.10.2', sha256='ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed')

@@ -21,7 +21,7 @@ class PyPythonKeystoneclient(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
 
-    depends_on('py-pbr@2.0.0:2.0.999,2.1.1:', type='build')
+    depends_on('py-pbr@2.0.0:2.0,2.1.1:', type='build')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-debtcollector@1.2.0:', type=('build', 'run'))

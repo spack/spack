@@ -8,6 +8,7 @@ class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using
     Python interactively."""
 
+    homepage = "https://ipython.readthedocs.org/"
     pypi = "ipython/ipython-7.18.1.tar.gz"
 
     # 'IPython.kernel' is deprecated and fails to import, leave out of 'import_modules'
@@ -22,6 +23,8 @@ class PyIpython(PythonPackage):
         'IPython.external', 'IPython.external.decorators'
     ]
 
+    version('7.28.0', sha256='2097be5c814d1b974aea57673176a924c4c8c9583890e7a5f082f547b9975b11')
+    version('7.27.0', sha256='58b55ebfdfa260dad10d509702dc2857cb25ad82609506b070cf2d7b7df5af13')
     version('7.26.0', sha256='0cff04bb042800129348701f7bd68a430a844e8fb193979c08f6c99f28bb735e')
     version('7.21.0', sha256='04323f72d5b85b606330b6d7e2dc8d2683ad46c3905e955aa96ecc7a99388e70')
     version('7.18.1', sha256='a331e78086001931de9424940699691ad49dfb457cea31f5471eae7b78222d5e')
@@ -43,18 +46,20 @@ class PyIpython(PythonPackage):
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-pickleshare', type=('build', 'run'))
     depends_on('py-traitlets@4.2:', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@1.0.4:1.999',  when='@:7.0.0', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@2.0.0:2.999',  when='@7.0.0:7.5.0', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@2.0.0:2.0.999', when='@7.5.0', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@3.0.2:3.0.999', when='@7.18:7.25', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@2.0.0:2.999,3.0.2:3.0.999', when='@7.26:', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@1.0.4:1',  when='@:7.0.0', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.0:2',  when='@7.0.0:7.5.0', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.0:2.0', when='@7.5.0', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@3.0.2:3.0', when='@7.18:7.25', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.0:2,3.0.2:3.0', when='@7.26:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-backcall', type=('build', 'run'), when='@7.3.0:')
     depends_on('py-matplotlib-inline', when='@7.23:', type=('build', 'run'))
     depends_on('py-pexpect', type=('build', 'run'))
-    depends_on('py-pexpect@4.3:', type=('build', 'run'), when='@7.18:')
+    depends_on('py-pexpect@4.4:', type=('build', 'run'), when='@7.18: platform=linux')
+    depends_on('py-pexpect@4.4:', type=('build', 'run'), when='@7.18: platform=darwin')
+    depends_on('py-pexpect@4.4:', type=('build', 'run'), when='@7.18: platform=cray')
     depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')
-    depends_on('py-colorama', when='platform=win32', type=('build', 'run'))
+    depends_on('py-colorama', when='platform=windows', type=('build', 'run'))
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-simplegeneric@0.8:', type=('build', 'run'), when='@:7.0.0')

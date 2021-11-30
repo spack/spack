@@ -181,6 +181,17 @@ class Variant(object):
             return BoolValuedVariant
         return SingleValuedVariant
 
+    def __eq__(self, other):
+        return (self.name == other.name and
+                self.default == other.default and
+                self.values == other.values and
+                self.multi == other.multi and
+                self.single_value_validator == other.single_value_validator and
+                self.group_validator == other.group_validator)
+
+    def __ne__(self, other):
+        return not self == other
+
 
 def implicit_variant_conversion(method):
     """Converts other to type(self) and calls method(self, other)
@@ -645,10 +656,10 @@ def substitute_abstract_variants(spec):
                 new_variant = SingleValuedVariant(name, v._original_value)
                 spec.variants.substitute(new_variant)
             continue
-        pkg_variant = spec.package_class.variants.get(name, None)
-        if not pkg_variant:
+        if name not in spec.package_class.variants:
             failed.append(name)
             continue
+        pkg_variant, _ = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
@@ -877,6 +888,16 @@ class InvalidVariantValueError(error.SpecError):
             pkg_info = ' in package "{0}"'.format(pkg.name)
         super(InvalidVariantValueError, self).__init__(
             msg.format(variant, invalid_values, pkg_info)
+        )
+
+
+class InvalidVariantForSpecError(error.SpecError):
+    """Raised when an invalid conditional variant is specified."""
+    def __init__(self, variant, when, spec):
+        msg = "Invalid variant {0} for spec {1}.\n"
+        msg += "{0} is only available for {1.name} when satisfying one of {2}."
+        super(InvalidVariantForSpecError, self).__init__(
+            msg.format(variant, spec, when)
         )
 
 

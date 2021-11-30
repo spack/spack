@@ -200,12 +200,14 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     into the default directory layout scheme.
     """
     gspec, cspec = Spec('garply').concretized(), Spec('corge').concretized()
+    sy_spec = Spec('symly').concretized()
 
     # Install 'corge' without using a cache
     install_cmd('--no-cache', cspec.name)
+    install_cmd('--no-cache', sy_spec.name)
 
     # Create a buildache
-    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name, sy_spec.name)
     # Test force overwrite create buildcache (-f option)
     buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
 
@@ -219,7 +221,7 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     uninstall_cmd('-y', '--dependents', gspec.name)
 
     # Test installing from build caches
-    buildcache_cmd('install', '-au', cspec.name)
+    buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
 
     # This gives warning that spec is already installed
     buildcache_cmd('install', '-au', cspec.name)
@@ -247,10 +249,12 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
     into the non-default directory layout scheme.
     """
     cspec = Spec('corge').concretized()
+    # This guy tests for symlink relocation
+    sy_spec = Spec('symly').concretized()
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd('install', '-au', cspec.name)
+    buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
 
     # Test force install in non-default install path scheme
     buildcache_cmd('install', '-auf', cspec.name)
@@ -666,3 +670,26 @@ def test_update_index_fix_deps(monkeypatch, tmpdir, mutable_config):
 
     # Make sure the full hash of b in a's spec json matches the new value
     assert(a_prime[b.name].full_hash() == new_b_full_hash)
+
+
+def test_FetchCacheError_only_accepts_lists_of_errors():
+    with pytest.raises(TypeError, match="list"):
+        bindist.FetchCacheError("error")
+
+
+def test_FetchCacheError_pretty_printing_multiple():
+    e = bindist.FetchCacheError([RuntimeError("Oops!"), TypeError("Trouble!")])
+    str_e = str(e)
+    print("'" + str_e + "'")
+    assert "Multiple errors" in str_e
+    assert "Error 1: RuntimeError: Oops!" in str_e
+    assert "Error 2: TypeError: Trouble!" in str_e
+    assert str_e.rstrip() == str_e
+
+
+def test_FetchCacheError_pretty_printing_single():
+    e = bindist.FetchCacheError([RuntimeError("Oops!")])
+    str_e = str(e)
+    assert "Multiple errors" not in str_e
+    assert "RuntimeError: Oops!" in str_e
+    assert str_e.rstrip() == str_e

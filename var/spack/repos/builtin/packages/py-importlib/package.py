@@ -14,4 +14,4 @@ class PyImportlib(PythonPackage):
 
     version('1.0.4', sha256='b6ee7066fea66e35f8d0acee24d98006de1a0a8a94a8ce6efe73a9a23c8d9826')
 
-    depends_on('python@:2.6.999,3.0.0:3.0.999', type=('build', 'run'))
+    depends_on('python@:2.6,3.0.0:3.0', type=('build', 'run'))

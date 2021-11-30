@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 
 import py
 import pytest
@@ -1177,3 +1178,97 @@ def test_install_skip_patch(install_mockery, mock_fetch):
 
     spec, install_args = const_arg[0]
     assert inst.package_id(spec.package) in installer.installed
+
+
+def test_overwrite_install_backup_success(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should restore the backup
+    of the original prefix, and leave the original spec marked installed.
+    """
+    # Where to store the backups
+    backup = str(tmpdir.mkdir("backup"))
+
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists with some trivial file
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    class InstallerThatWipesThePrefixDir:
+        def _install_task(self, task):
+            shutil.rmtree(task.pkg.prefix, ignore_errors=True)
+            fs.mkdirp(task.pkg.prefix)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    fake_installer = InstallerThatWipesThePrefixDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(
+        fake_installer, fake_db, task, tmp_root=backup)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure the package is not marked uninstalled and the original dir
+    # is back.
+    assert not fake_db.called
+    assert os.path.exists(installed_file)
+
+
+def test_overwrite_install_backup_failure(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should try to recover the
+    original prefix. If that fails, the spec is lost, and it should be removed
+    from the database.
+    """
+    # Where to store the backups
+    backup = str(tmpdir.mkdir("backup"))
+
+    class InstallerThatAccidentallyDeletesTheBackupDir:
+        def _install_task(self, task):
+            # Remove the backup directory so that restoring goes terribly wrong
+            shutil.rmtree(backup)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(
+        fake_installer, fake_db, task, tmp_root=backup)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure that `remove` was called on the database after an unsuccessful
+    # attempt to restore the backup.
+    assert fake_db.called

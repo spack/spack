@@ -39,7 +39,7 @@ class Amdlibm(SConsPackage):
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
 
-    conflicts("%gcc@:9.1.999", msg="Minimum required GCC version is 9.2.0")
+    conflicts("%gcc@:9.1", msg="Minimum required GCC version is 9.2.0")
 
     def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm """

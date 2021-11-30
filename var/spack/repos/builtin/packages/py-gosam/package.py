@@ -24,7 +24,7 @@ class PyGosam(PythonPackage):
     depends_on('form', type='run')
     depends_on('qgraf', type='run')
     depends_on('gosam-contrib', type='link')
-    depends_on('python@2.7:2.7.99', type=('build', 'run'), when='@:2.0.4')
+    depends_on('python@2.7.0:2.7', type=('build', 'run'), when='@:2.0.4')
     depends_on('python@3:', type=('build', 'run'), when='@2.1.1:')
 
     def setup_run_environment(self, env):

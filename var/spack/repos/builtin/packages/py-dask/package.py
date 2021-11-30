@@ -15,6 +15,7 @@ class PyDask(PythonPackage):
     maintainers = ['skosukhin']
 
     version('2021.6.2', sha256='8588fcd1a42224b7cfcd2ebc8ad616734abb6b1a4517efd52d89c7dd66eb91f8')
+    version('2021.4.1', sha256='195e4eeb154222ea7a1c368119b5f321ee4ec9d78531471fe0145a527f744aa8')
     version('2020.12.0', sha256='43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0')
     version('2.16.0', sha256='2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350')
     version('1.2.2', sha256='5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c')
@@ -148,7 +149,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.diagnostics
     depends_on('py-bokeh@1.0.0:',       type=('build', 'run'), when='@2.0.0: +diagnostics')
-    depends_on('py-bokeh@1.0.0:1.999,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
+    depends_on('py-bokeh@1.0.0:1,2.0.1:', type=('build', 'run'), when='@2.26.0: +diagnostics')
 
     # Requirements for dask.delayed
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='@2.7.0: +delayed')

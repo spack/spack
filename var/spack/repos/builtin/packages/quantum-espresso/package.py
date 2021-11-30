@@ -18,6 +18,7 @@ class QuantumEspresso(Package):
     maintainers = ['naromero77']
 
     version('develop', branch='develop')
+    version('6.8', sha256='654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2')
     version('6.7', sha256='fe0ce74ff736b10d2a20c9d59025c01f88f86b00d229c123b1791f1edd7b4315',
             url='https://gitlab.com/QEF/q-e/-/archive/qe-6.7MaX-Release/q-e-qe-6.7MaX-Release.tar.gz'
             )
@@ -36,14 +37,14 @@ class QuantumEspresso(Package):
     resource(name='environ',
              git='https://github.com/environ-developers/Environ.git',
              tag='v1.1',
-             when='@6.3:6.4.99 +environ',
+             when='@6.3:6.4 +environ',
              destination='.'
              )
 
     resource(name='environ',
              git='https://github.com/environ-developers/Environ.git',
              tag='v1.0',
-             when='@6.2.1:6.2.99 +environ',
+             when='@6.2.1:6.2 +environ',
              destination='.'
              )
 
@@ -181,7 +182,7 @@ class QuantumEspresso(Package):
     conflicts('+epw', when='~mpi', msg='EPW needs MPI')
 
     # EPW doesn't gets along well with OpenMPI 2.x.x
-    conflicts('+epw', when='^openmpi@2.0.0:2.999.999',
+    conflicts('+epw', when='^openmpi@2.0.0:2',
               msg='OpenMPI version incompatible with EPW')
 
     # EPW also doesn't gets along well with PGI 17.x + OpenMPI 1.10.7
@@ -193,7 +194,7 @@ class QuantumEspresso(Package):
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
 
-    # QMCPACK converter patches for QE 6.7, 6.4.1, 6.4, and 6.3
+    # QMCPACK converter patches for QE 6.8, 6.7, 6.4.1, 6.4, and 6.3
     conflicts('@:6.2,6.5:6.6', when='+qmcpack',
               msg='QMCPACK converter NOT available for this version of QE')
 
@@ -208,6 +209,11 @@ class QuantumEspresso(Package):
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
     patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
     patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
+
+    # 6.8
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'
+    patch_checksum = '69f7fbd72aba810c35a0b034188e45bea8f9f11d3150c0715e1b3518d5c09248'
+    patch(patch_url, sha256=patch_checksum, when='@6.8+qmcpack')
 
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
@@ -279,7 +285,7 @@ class QuantumEspresso(Package):
           when='+patch@6.4.1:6.5.0')
 
     # Configure updated to work with AOCC compilers
-    patch('configure_aocc.patch', when='@6.7 %aocc')
+    patch('configure_aocc.patch', when='@6.7:6.8 %aocc')
 
     # Configure updated to work with NVIDIA compilers
     patch('nvhpc.patch', when='@6.5 %nvhpc')

@@ -14,5 +14,5 @@ class PyMutagen(PythonPackage):
 
     version('1.45.1', sha256='6397602efb3c2d7baebd2166ed85731ae1c1d475abca22090b7141ff5034b3e1')
 
-    depends_on('python@3.5:3.99', type=('build', 'run'))
+    depends_on('python@3.5:3', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

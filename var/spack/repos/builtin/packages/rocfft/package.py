@@ -33,7 +33,7 @@ class Rocfft(CMakePackage):
         'gfx1011', 'gfx1012'
     )
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
     variant('amdgpu_target_sram_ecc', default='none', multi=True, values=amdgpu_targets)
 
@@ -66,7 +66,7 @@ class Rocfft(CMakePackage):
             args.append(self.define('AMDGPU_TARGETS_SRAM_ECC', ";".join(tgt_sram)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

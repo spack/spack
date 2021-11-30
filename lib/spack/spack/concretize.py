@@ -16,13 +16,12 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
+import functools
 import os.path
 import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
-
-from functools_backport import reverse_order
 
 import archspec.cpu
 
@@ -31,10 +30,10 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.abi
-import spack.architecture
 import spack.compilers
 import spack.environment
 import spack.error
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.target
@@ -46,6 +45,23 @@ from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+
+
+@functools.total_ordering
+class reverse_order(object):
+    """Helper for creating key functions.
+
+       This is a wrapper that inverts the sense of the natural
+       comparisons on the object.
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return other.value == self.value
+
+    def __lt__(self, other):
+        return other.value < self.value
 
 
 class Concretizer(object):
@@ -130,11 +146,11 @@ class Concretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not spec.external,                            # prefer externals
-            pref_key(spec),                               # respect prefs
-            spec.name,                                    # group by name
-            reverse_order(spec.versions),                 # latest version
-            spec                                          # natural order
+            not spec.external,             # prefer externals
+            pref_key(spec),                # respect prefs
+            spec.name,                     # group by name
+            reverse_order(spec.versions),  # latest version
+            spec                           # natural order
         ))
 
     def choose_virtual_or_external(self, spec):
@@ -269,7 +285,7 @@ class Concretizer(object):
                 new_plat = spack.platforms.by_name(platform_spec.architecture.platform)
             else:
                 # If no platform anywhere in this spec, grab the default
-                new_plat = spack.architecture.platform()
+                new_plat = spack.platforms.host()
 
         # Get nearest spec with relevant platform and an os
         # Generally, same algorithm as finding platform, except we only
@@ -384,7 +400,8 @@ class Concretizer(object):
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
-        for name, variant in pkg_cls.variants.items():
+        for name, entry in pkg_cls.variants.items():
+            variant, when = entry
             var = spec.variants.get(name, None)
             if var and '*' in var:
                 # remove variant wildcard before concretizing
@@ -392,12 +409,16 @@ class Concretizer(object):
                 # multivalue variant, a concrete variant cannot have the value
                 # wildcard, and a wildcard does not constrain a variant
                 spec.variants.pop(name)
-            if name not in spec.variants:
+            if name not in spec.variants and any(spec.satisfies(w)
+                                                 for w in when):
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
                     spec.variants[name] = variant.make_default()
+            if name in spec.variants and not any(spec.satisfies(w)
+                                                 for w in when):
+                raise vt.InvalidVariantForSpecError(name, when, spec)
 
         return changed
 
@@ -727,12 +748,12 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
-    result = spack.solver.asp.solve(abstract_specs)
-
-    if not result.satisfiable:
-        result.print_cores()
-        tty.die("Unsatisfiable spec.")
-
+    concretization_kwargs = {
+        'tests': kwargs.get('tests', False),
+        'reuse': kwargs.get('reuse', False)
+    }
+    result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
+    result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
 
@@ -767,10 +788,15 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
     concretization_repository = make_concretization_repository(abstract_specs)
 
+    concretization_kwargs = {
+        'tests': kwargs.get('tests', False),
+        'reuse': kwargs.get('reuse', False)
+    }
+
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize(tests=kwargs.get('tests', False))
+        concretization_root.concretize(**concretization_kwargs)
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs

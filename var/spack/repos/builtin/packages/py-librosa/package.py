@@ -18,7 +18,7 @@ class PyLibrosa(PythonPackage):
     depends_on('py-audioread@2.0.0:', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:', type=('build', 'run'))
     depends_on('py-scipy@1.0.0:', type=('build', 'run'))
-    depends_on('py-scikit-learn@0.14.0:0.18.999,0.19.1:', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.14.0:0.18,0.19.1:', type=('build', 'run'))
     depends_on('py-joblib@0.12:', type=('build', 'run'))
     depends_on('py-decorator@3.0.0:', type=('build', 'run'))
     depends_on('py-six@1.3:', type=('build', 'run'))

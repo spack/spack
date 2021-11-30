@@ -14,6 +14,7 @@ import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 import spack.util.crypto
+from spack.package import preferred_version
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import Version, ver
 
@@ -26,9 +27,16 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
-    subparser.add_argument(
+    sp = subparser.add_mutually_exclusive_group()
+    sp.add_argument(
         '-b', '--batch', action='store_true',
         help="don't ask which versions to checksum")
+    sp.add_argument(
+        '-l', '--latest', action='store_true',
+        help="checksum the latest available version only")
+    sp.add_argument(
+        '-p', '--preferred', action='store_true',
+        help="checksum the preferred version only")
     arguments.add_common_arguments(subparser, ['package'])
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
@@ -48,15 +56,18 @@ def checksum(parser, args):
     # Get the package we're going to generate checksums for
     pkg = spack.repo.get(args.package)
 
+    url_dict = {}
     if args.versions:
         # If the user asked for specific versions, use those
-        url_dict = {}
         for version in args.versions:
             version = ver(version)
             if not isinstance(version, Version):
                 tty.die("Cannot generate checksums for version lists or "
                         "version ranges. Use unambiguous versions.")
             url_dict[version] = pkg.url_for_version(version)
+    elif args.preferred:
+        version = preferred_version(pkg)
+        url_dict = dict([(version, pkg.url_for_version(version))])
     else:
         # Otherwise, see what versions we can find online
         url_dict = pkg.fetch_remote_versions()
@@ -76,7 +87,7 @@ def checksum(parser, args):
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,
         batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),
-        fetch_options=pkg.fetch_options)
+        latest=args.latest, fetch_options=pkg.fetch_options)
 
     print()
     print(version_lines)

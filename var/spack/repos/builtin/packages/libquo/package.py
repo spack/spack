@@ -17,6 +17,8 @@ class Libquo(AutotoolsPackage):
 
     maintainers = ['samuelkgutierrez']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('1.3.1', sha256='407f7c61cc80aa934cf6086f3516a31dee3b803047713c297102452c3d7d6ed1')
     version('1.3',   sha256='61b0beff15eae4be94b5d3cbcbf7bf757659604465709ed01827cbba45efcf90')

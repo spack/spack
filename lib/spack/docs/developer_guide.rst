@@ -210,15 +210,6 @@ Spec-related modules
      but compilers aren't fully integrated with the build process
      yet.
 
-:mod:`spack.architecture`
-  :func:`architecture.default_arch <spack.architecture.default_arch>` is used
-  to determine the host architecture while building.
-
-  .. warning::
-
-     Not yet implemented.  Should eventually have architecture
-     descriptions for cross-compiling.
-
 ^^^^^^^^^^^^^^^^^
 Build environment
 ^^^^^^^^^^^^^^^^^

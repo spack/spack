@@ -41,5 +41,5 @@ class VotcaCsg(CMakePackage):
               "stable"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")
-    depends_on("gromacs~mpi@5.1:2019.9999")
+    depends_on("gromacs~mpi@5.1:2019")
     depends_on("hdf5~mpi")

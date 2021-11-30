@@ -32,4 +32,4 @@ class PyJsonschema(PythonPackage):
     depends_on('py-pyrsistent@0.14.0:', when='@3:', type=('build', 'run'))
     depends_on('py-six@1.11.0:', when='@3:', type=('build', 'run'))
 
-    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7.99', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7', type=('build', 'run'))

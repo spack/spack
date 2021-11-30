@@ -3,13 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import functools as ft
 import os
 import re
 import shutil
 import sys
-
-from ordereddict_backport import OrderedDict
 
 from llnl.util import tty
 from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
@@ -19,7 +18,6 @@ from llnl.util.tty.color import colorize
 
 import spack.config
 import spack.projections
-import spack.relocate
 import spack.schema.projections
 import spack.spec
 import spack.store
@@ -74,10 +72,13 @@ def view_copy(src, dst, view, spec=None):
         # TODO: Not sure which one to use...
         import spack.hooks.sbang as sbang
 
+        # Break a package include cycle
+        import spack.relocate
+
         orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
         new_sbang = sbang.sbang_shebang_line()
 
-        prefix_to_projection = OrderedDict({
+        prefix_to_projection = collections.OrderedDict({
             spec.prefix: view.get_projection_for_spec(spec)})
 
         for dep in spec.traverse():
@@ -406,7 +407,7 @@ class YamlFilesystemView(FilesystemView):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            self.layout.hidden_file_paths, ignore)
+            self.layout.hidden_file_regexes, ignore)
 
         # check for dir conflicts
         conflicts = tree.find_dir_conflicts(view_dst, ignore_file)
@@ -432,7 +433,7 @@ class YamlFilesystemView(FilesystemView):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            self.layout.hidden_file_paths, ignore)
+            self.layout.hidden_file_regexes, ignore)
 
         merge_map = tree.get_file_map(view_dst, ignore_file)
         pkg.remove_files_from_view(self, merge_map)
@@ -440,11 +441,7 @@ class YamlFilesystemView(FilesystemView):
         # now unmerge the directory tree
         tree.unmerge_directories(view_dst, ignore_file)
 
-    def remove_file(self, src, dest):
-        if not os.path.lexists(dest):
-            tty.warn("Tried to remove %s which does not exist" % dest)
-            return
-
+    def remove_files(self, files):
         def needs_file(spec, file):
             # convert the file we want to remove to a source in this spec
             projection = self.get_projection_for_spec(spec)
@@ -463,16 +460,23 @@ class YamlFilesystemView(FilesystemView):
                 manifest = {}
             return test_path in manifest
 
-        # remove if dest is not owned by any other package in the view
-        # This will only be false if two packages are merged into a prefix
-        # and have a conflicting file
+        specs = self.get_all_specs()
 
-        # check all specs for whether they own the file. That include the spec
-        # we are currently removing, as we remove files before unlinking the
-        # metadata directory.
-        if len([s for s in self.get_all_specs()
-                if needs_file(s, dest)]) <= 1:
-            os.remove(dest)
+        for file in files:
+            if not os.path.lexists(file):
+                tty.warn("Tried to remove %s which does not exist" % file)
+                continue
+
+            # remove if file is not owned by any other package in the view
+            # This will only be false if two packages are merged into a prefix
+            # and have a conflicting file
+
+            # check all specs for whether they own the file. That include the spec
+            # we are currently removing, as we remove files before unlinking the
+            # metadata directory.
+            if len([s for s in specs if needs_file(s, file)]) <= 1:
+                tty.debug("Removing file " + file)
+                os.remove(file)
 
     def check_added(self, spec):
         assert spec.concrete

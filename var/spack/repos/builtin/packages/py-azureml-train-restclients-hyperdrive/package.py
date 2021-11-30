@@ -16,7 +16,7 @@ class PyAzuremlTrainRestclientsHyperdrive(Package):
     version('1.8.0',  sha256='1633c7eb0fd96714f54f72072ccf1c5ee1ef0a8ba52680793f20d27e0fd43c87', expand=False)
 
     extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
+    depends_on('python@3.5:3', type=('build', 'run'))
     depends_on('py-pip', type='build')
     depends_on('py-requests@2.19.1:', type=('build', 'run'))
     depends_on('py-msrest@0.5.1:', type=('build', 'run'))

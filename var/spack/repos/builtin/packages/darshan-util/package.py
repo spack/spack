@@ -18,6 +18,8 @@ class DarshanUtil(AutotoolsPackage):
 
     maintainers = ['shanedsnyder', 'carns']
 
+    tags = ['e4s']
+
     version('main', branch='main', submodules='True')
     version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')
     version('3.3.0', sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a')

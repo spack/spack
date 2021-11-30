@@ -15,10 +15,11 @@ class Mbedtls(MakefilePackage):
 
     homepage = "https://tls.mbed.org"
     url      = "https://github.com/ARMmbed/mbedtls/archive/mbedtls-2.2.1.tar.gz"
-    maintainers = ['mwkrentel']
+    maintainers = ['mwkrentel', 'haampie']
 
     version('3.0.0', sha256='377d376919be19f07c7e7adeeded088a525be40353f6d938a78e4f986bce2ae0')
     version('2.27.0', sha256='4f6a43f06ded62aa20ef582436a39b65902e1126cbbe2fb17f394e9e9a552767')
+    version('2.24.0', sha256='b5a779b5f36d5fc4cba55faa410685f89128702423ad07b36c5665441a06a5f3')
     version('2.16.11', sha256='51bb9685c4f4ff9255da5659ff346b89dcaf129e3ba0f3b2b0c48a1a7495e701')
     version('2.16.9', sha256='b7ca99ee10551b5b13242b7effebefd2a5cc38c287e5f5be1267d51ee45effe3', deprecated=True)
     version('2.16.7', sha256='4786b7d1676f5e4d248f3a7f2d28446876d64962634f060ff21b92c690cfbe86', deprecated=True)
@@ -41,6 +42,10 @@ class Mbedtls(MakefilePackage):
     depends_on('perl', type='test')
     depends_on('python@3:', type='test', when='@3:')
     depends_on('python@:2', type='test', when='@:2')
+
+    # See https://github.com/ARMmbed/mbedtls/pull/5126
+    # and the 2.x backport: https://github.com/ARMmbed/mbedtls/pull/5133
+    patch('fix-dt-needed-shared-libs.patch', when='@2.7:3.0.0')
 
     build_type_to_flags = {
         'Debug': '-O0 -g',

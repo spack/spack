@@ -159,6 +159,57 @@ create a new patch that directly modifies ``configure``. That way,
 Spack can use the secondary patch and additional build system
 dependencies aren't necessary.
 
+""""""""""""""""""""""""""""
+Old Autotools helper scripts
+""""""""""""""""""""""""""""
+
+Autotools based tarballs come with helper scripts such as ``config.sub`` and
+``config.guess``. It is the responsibility of the developers to keep these files
+up to date so that they run on every platform, but for very old software
+releases this is impossible. In these cases Spack can help to replace these
+files with newer ones, without having to add the heavy dependency on
+``automake``.
+
+Automatic helper script replacement is currently enabled by default on
+``ppc64le`` and ``aarch64``, as these are the known cases where old scripts fail.
+On these targets, ``AutotoolsPackage`` adds a build dependency on ``gnuconfig``,
+which is a very light-weight package with newer versions of the helper files.
+Spack then tries to run all the helper scripts it can find in the release, and
+replaces them on failure with the helper scripts from ``gnuconfig``.
+
+To opt out of this feature, use the following setting:
+
+.. code-block:: python
+
+   patch_config_files = False
+
+To enable it conditionally on different architectures, define a property and
+make the package depend on ``gnuconfig`` as a build dependency:
+
+.. code-block
+
+   depends_on('gnuconfig', when='@1.0:')
+
+   @property
+   def patch_config_files(self):
+      return self.spec.satisfies("@1.0:")
+
+.. note::
+
+    On some exotic architectures it is necessary to use system provided
+    ``config.sub`` and ``config.guess`` files. In this case, the most
+    transparent solution is to mark the ``gnuconfig`` package as external and
+    non-buildable, with a prefix set to the directory containing the files:
+
+   .. code-block:: yaml
+
+       gnuconfig:
+         buildable: false
+         externals:
+         - spec: gnuconfig@master
+           prefix: /usr/share/configure_files/
+
+
 """"""""""""""""
 force_autoreconf
 """"""""""""""""
@@ -368,6 +419,24 @@ Or when one variant controls multiple flags:
    variant('debug_tools', default=False)
    config_args += self.with_or_without('memchecker', variant='debug_tools')
    config_args += self.with_or_without('profiler', variant='debug_tools')
+
+
+""""""""""""""""""""
+Conditional variants
+""""""""""""""""""""
+
+When a variant is conditional and its condition is not met on the concrete spec, the
+``with_or_without`` and ``enable_or_disable`` methods will simply return an empty list.
+
+For example:
+
+.. code-block:: python
+
+   variant('profiler', when='@2.0:')
+   config_args += self.with_or_without('profiler)
+
+will neither add ``--with-profiler`` nor ``--without-profiler`` when the version is
+below ``2.0``.
 
 """"""""""""""""""""
 Activation overrides

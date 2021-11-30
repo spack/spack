@@ -18,5 +18,5 @@ class PyPytestCpp(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('py-pytest@:5.3.999,5.4.2:', type=('build', 'run'))
+    depends_on('py-pytest@:5.3,5.4.2:', type=('build', 'run'))
     depends_on('py-colorama', type=('build', 'run'))

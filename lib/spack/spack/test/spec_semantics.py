@@ -7,7 +7,6 @@ import sys
 
 import pytest
 
-import spack.architecture
 import spack.directives
 import spack.error
 from spack.error import SpecError, UnsatisfiableSpecError
@@ -690,7 +689,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf', 'debug=2')
         check_constrain_changed('libelf', 'cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         check_constrain_changed(
             'libelf', 'target=' + platform.target('default_target').name)
         check_constrain_changed(
@@ -709,7 +708,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf cppflags="-O3"', 'cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_not_changed(
             'libelf target=' + default_target, 'target=' + default_target)
@@ -723,7 +722,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf^foo', 'libelf^foo~debug')
         check_constrain_changed('libelf', '^foo')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_changed(
             'libelf^foo', 'libelf^foo target=' + default_target)
@@ -742,7 +741,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
 
-        platform = spack.architecture.platform()
+        platform = spack.platforms.host()
         default_target = platform.target('default_target').name
         check_constrain_not_changed(
             'libelf^foo target=' + default_target,
@@ -1213,3 +1212,19 @@ def test_spec_dict_hashless_dep():
                 }
             }
         )
+
+
+@pytest.mark.parametrize('specs,expected', [
+    # Anonymous specs without dependencies
+    (['+baz', '+bar'], '+baz+bar'),
+    (['@2.0:', '@:5.1', '+bar'], '@2.0:5.1 +bar'),
+    # Anonymous specs with dependencies
+    (['^mpich@3.2', '^mpich@:4.0+foo'], '^mpich@3.2 +foo'),
+    # Mix a real package with a virtual one. This test
+    # should fail if we start using the repository
+    (['^mpich@3.2', '^mpi+foo'], '^mpich@3.2 ^mpi+foo'),
+])
+def test_merge_abstract_anonymous_specs(specs, expected):
+    specs = [Spec(x) for x in specs]
+    result = spack.spec.merge_abstract_anonymous_specs(*specs)
+    assert result == Spec(expected)

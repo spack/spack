@@ -13,11 +13,12 @@ class PyRadicalPilot(PythonPackage):
 
     homepage = 'https://radical-cybertools.github.io'
     git      = 'https://github.com/radical-cybertools/radical.pilot.git'
-    pypi     = 'radical.pilot/radical.pilot-1.8.0.tar.gz'
+    pypi     = 'radical.pilot/radical.pilot-1.9.2.tar.gz'
 
     maintainers = ['andre-merzky']
 
     version('develop', branch='devel')
+    version('1.9.2',   sha256='7c872ac9103a2aed0c5cd46057048a182f672191e194e0fd42794b0012e6e947')
     version('1.8.0',   sha256='a4c3bca163db61206e15a2d820d9a64e888da5c72672448ae975c26768130b9d')
     version('1.6.8',   sha256='fa8fd3f348a68b54ee8338d5c5cf1a3d99c10c0b6da804424a839239ee0d313d')
     version('1.6.7',   sha256='6ca0a3bd3cda65034fa756f37fa05681d5a43441c1605408a58364f89c627970')

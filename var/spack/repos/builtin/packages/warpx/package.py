@@ -21,9 +21,12 @@ class Warpx(CMakePackage):
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
+    tags = ['e4s']
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
+    version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
     version('21.08', sha256='6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86')
     version('21.07', sha256='a8740316d813c365715f7471201499905798b50bd94950d33f1bd91478d49561')
@@ -88,6 +91,7 @@ class Warpx(CMakePackage):
         depends_on('blaspp +cuda', when='compute=cuda')
     with when('+psatd compute=omp'):
         depends_on('fftw@3: +openmp')
+        depends_on('fftw ~mpi', when='~mpi')
         depends_on('fftw +mpi', when='+mpi')
         depends_on('pkgconfig', type='build')
     with when('+openpmd'):

@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -25,6 +26,12 @@ from spack.util.executable import which
 def apply_patch(stage, patch_path, level=1, working_dir='.'):
     """Apply the patch at patch_path to code in the stage.
 
+    Spack runs ``patch`` with ``-N`` so that it does not reject already-applied
+    patches.  This is useful for develop specs, so that the build does not fail
+    due to repeated application of patches, and for easing requirements on patch
+    specifications in packages -- packages won't stop working when patches we
+    previously had to apply land in upstream.
+
     Args:
         stage (spack.stage.Stage): stage with code that will be patched
         patch_path (str): filesystem location for the patch to apply
@@ -34,10 +41,31 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
     """
     patch = which("patch", required=True)
     with llnl.util.filesystem.working_dir(stage.source_path):
-        patch('-s',
-              '-p', str(level),
-              '-i', patch_path,
-              '-d', working_dir)
+        output = patch(
+            '-N',               # don't reject already-applied patches
+            '-p', str(level),   # patch level (directory depth)
+            '-i', patch_path,   # input source is the patch file
+            '-d', working_dir,  # patch chdir's to here before patching
+            output=str,
+            fail_on_error=False,
+        )
+
+        if patch.returncode != 0:
+            # `patch` returns 1 both:
+            #   a) when an error applying a patch, and
+            #   b) when -N is supplied and the patch has already been applied
+            #
+            # It returns > 1 if there's something more serious wrong.
+            #
+            # So, the best we can do is to look for return code 1, look for output
+            # indicating that the patch was already applied, and ignore the error
+            # if we see it. Most implementations (BSD and GNU) seem to have the
+            # same messages, so we expect these checks to be reliable.
+            if patch.returncode > 1 or not any(
+                    s in output for s in ("Skipping patch", "ignored")
+            ):
+                sys.stderr.write(output)
+                raise patch.error
 
 
 class Patch(object):

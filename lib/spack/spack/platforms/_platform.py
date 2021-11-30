@@ -15,7 +15,26 @@ class NoPlatformError(spack.error.SpackError):
 
 @llnl.util.lang.lazy_lexicographic_ordering
 class Platform(object):
-    """Base class for each type of Platform"""
+    """Platform is an abstract class extended by subclasses.
+
+    To add a new type of platform (such as cray_xe), create a subclass and set all the
+    class attributes such as priority, front_target, back_target, front_os, back_os.
+
+    Platform also contain a priority class attribute. A lower number signifies higher
+    priority. These numbers are arbitrarily set and can be changed though often there
+    isn't much need unless a new platform is added and the user wants that to be
+    detected first.
+
+    Targets are created inside the platform subclasses. Most architecture (like linux,
+    and darwin) will have only one target family (x86_64) but in the case of Cray
+    machines, there is both a frontend and backend processor. The user can specify
+    which targets are present on front-end and back-end architecture.
+
+    Depending on the platform, operating systems are either autodetected or are
+    set. The user can set the frontend and backend operating setting by the class
+    attributes front_os and back_os. The operating system will be responsible for
+    compiler detection.
+    """
 
     # Subclass sets number. Controls detection order
     priority = None   # type: int

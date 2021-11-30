@@ -22,12 +22,15 @@ class ArmForge(Package):
     #       versions (and checksums) based on the target platform shows up
 
     if platform.machine() == "aarch64":
+        version("21.1",   sha256="d6f6444eb2d47fd884d8b125f890d6a02a9d5bcfc10950af46b11d3b1e1189fd")
         version("21.0.2", sha256="ca547d11086ddd2704468166ad01f34132fcfa8d416239ad85c87a6c5f042298")
         version("21.0",   sha256="2bcc745d0049d6b25c77c97b2d7bad7b4f804180972a2306a8599ce41f6a4573")
     elif platform.machine() == "ppc64le":
+        version("21.1",   sha256="24e6fb120fcecf854a069ce6c993d430e892a18f415603009768e43317980491")
         version("21.0.2", sha256="302cadf6c6ddd6f41fafb0d490a92ae0919a7b24d6c212228311253cec2ff1b7")
         version("21.0",   sha256="60cfa7dd1cd131ec85e67cb660f2f84cf30bb700d8979cae1f5f88af658fd249")
     elif platform.machine() == "x86_64":
+        version("21.1",   sha256="933dce5980ab0f977a79d24eecf4464bd7c5ff22fa74fb2758f68d1ccb7723d2")
         version("21.0.2", sha256="741ff2a995c8cf7ce5d346a3f7d2a552ec602b995e477e9a5a3a6319d3907980")
         version("21.0",   sha256="71b713a05d431a3c26bd83cc4d0b65a0afd7d7f5bf57aa11edfb41da90f01774")
 

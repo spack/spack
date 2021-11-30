@@ -15,7 +15,8 @@ class Meshtool(MakefilePackage):
     maintainers = ['MarieHouillon']
 
     version('master', branch='master')
-    # Version to use with opencarp@7.0
+    # Version to use with openCARP releases
+    version('oc8.1', commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
     version('oc7.0', commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
 
     def install(self, spec, prefix):

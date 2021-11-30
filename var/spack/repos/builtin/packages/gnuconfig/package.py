@@ -14,13 +14,13 @@ class Gnuconfig(Package):
     """
 
     homepage = "https://www.gnu.org/software/config/"
-    git      = "https://github.com/haampie/config.git"
-    url      = "https://github.com/haampie/config/archive/refs/tags/2021-08-14.tar.gz"
+    git      = "https://github.com/spack/gnuconfig.git"
+    url      = "https://github.com/spack/gnuconfig/releases/download/2021-08-14/gnuconfig-2021-08-14.tar.gz"
 
     maintainers = ['haampie']
 
     version('master', branch='master')
-    version('2021-08-14', sha256='1d1134f2f9d5f1342693793a536643c9aa11eaf672d1bf453ce2a415fdb8ebcc')
+    version('2021-08-14', sha256='69b6d2868e70167ba1bdb9030b49beeb20f00b37e30825e83fd04291d96bc5f7')
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):

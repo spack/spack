@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 
@@ -54,8 +55,8 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     @when('@1.4.19')
     def patch(self):
         """ skip texinfo of m4.info for patched m4.texi (patched only a test in it) """
-        touch('doc/m4.info')
-        touch('doc/stamp-vti')
+        timestamp = os.path.getmtime('doc/m4.info')
+        os.utime('doc/m4.texi', (timestamp, timestamp))
 
     @classmethod
     def determine_version(cls, exe):
@@ -89,7 +90,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
             spec.satisfies('%fj')) and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
-        if spec.satisfies('%intel@:18.999'):
+        if spec.satisfies('%intel@:18'):
             args.append('CFLAGS=-no-gcc')
 
         if '+sigsegv' in spec:
