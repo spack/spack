@@ -49,7 +49,7 @@ class Gptune(CMakePackage):
     depends_on('openturns', type=('build', 'run'))
 
     depends_on('superlu-dist@develop', when='+app', type=('build', 'run'))
-    
+
     depends_on('openmpi@4:', when='+openmpi')
     conflicts('mpich', when='+openmpi')
     conflicts('spectrum-mpi', when='+openmpi')
@@ -87,7 +87,8 @@ class Gptune(CMakePackage):
         spec = self.spec
         comp_name = self.compiler.name
         comp_version = str(self.compiler.version).replace('.', ',')
-        test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.examples_src_dir)
 
         if '+app' in spec:
             superludriver = join_path(spec['superlu-dist'].prefix.bin, 'pddrive_spawn')
@@ -97,10 +98,10 @@ class Gptune(CMakePackage):
             self.run_test('rm', options=['-rf', 'superlu_dist'], work_dir=wd)
             self.run_test('git', options=['clone', 'https://github.com/xiaoyeli/superlu_dist.git'], work_dir=wd)
             self.run_test('mkdir', options=['-p',
-                                            'build'], work_dir=wd+'/superlu_dist')
+                                            'build'], work_dir=wd + '/superlu_dist')
             self.run_test('mkdir', options=['-p', 'EXAMPLE'],
-                            work_dir=wd+'/superlu_dist/build')
-            self.run_test('cp', options=op, work_dir=wd+'/superlu_dist/build/EXAMPLE')
+                          work_dir=wd + '/superlu_dist/build')
+            self.run_test('cp', options=op, work_dir=wd + '/superlu_dist/build/EXAMPLE')
 
         wd = self.test_suite.current_test_cache_dir
         cdir = join_path(self.prefix, 'gptuneclcm')
@@ -114,16 +115,16 @@ class Gptune(CMakePackage):
             envfile.write('elif [[ $(uname -s) = "Darwin" ]]; then\n')
             envfile.write('    export machine=mac\n')
             envfile.write('elif [[ $(dnsdomainname) = ' +
-                            '"summit.olcf.ornl.gov" ]]; then\n')
+                          '"summit.olcf.ornl.gov" ]]; then\n')
             envfile.write('    export machine=summit\n')
             envfile.write('elif [[ $(cat /etc/os-release | grep "PRETTY_NAME") ==' +
-                            ' *"Ubuntu"* || $(cat /etc/os-release | grep' +
-                            ' "PRETTY_NAME") == *"Debian"* ]]; then\n')
+                          ' *"Ubuntu"* || $(cat /etc/os-release | grep' +
+                          ' "PRETTY_NAME") == *"Debian"* ]]; then\n')
             envfile.write('    export machine=unknownlinux\n')
             envfile.write('fi\n')
             envfile.write('export GPTUNEROOT=$PWD\n')
             envfile.write('export MPIRUN={0}\n'.format
-                            (which(spec['mpi'].prefix.bin + '/mpirun')))
+                          (which(spec['mpi'].prefix.bin + '/mpirun')))
             envfile.write('export proc=$(spack arch)\n')
             envfile.write('export mpi={0}\n'.format(spec['mpi'].name))
             envfile.write('export compiler={0}\n'.format(comp_name))
@@ -131,44 +132,44 @@ class Gptune(CMakePackage):
             envfile.write('export cores={0} \n'.format(self.cores))
             envfile.write('export ModuleEnv=$machine-$proc-$mpi-$compiler \n')
             envfile.write('software_json=$(echo ",\\\"software_configuration\\\":' +
-                            '{\\\"' + spec['blas'].name +
-                            '\\\":{\\\"version_split\\\":' +
-                            ' [' + str(spec['blas'].versions).replace('.', ',') +
-                            ']},\\\"' + spec['mpi'].name +
-                            '\\\":{\\\"version_split\\\": [' +
-                            str(spec['mpi'].versions).replace('.', ',') + ']},\\\"' +
-                            spec['scalapack'].name +
-                            '\\\":{\\\"version_split\\\": [' +
-                            str(spec['scalapack'].versions).replace('.', ',') +
-                            ']},\\\"' +
-                            str(comp_name) + '\\\":{\\\"version_split\\\": [' +
-                            str(comp_version) + ']}}") \n')
+                          '{\\\"' + spec['blas'].name +
+                          '\\\":{\\\"version_split\\\":' +
+                          ' [' + str(spec['blas'].versions).replace('.', ',') +
+                          ']},\\\"' + spec['mpi'].name +
+                          '\\\":{\\\"version_split\\\": [' +
+                          str(spec['mpi'].versions).replace('.', ',') + ']},\\\"' +
+                          spec['scalapack'].name +
+                          '\\\":{\\\"version_split\\\": [' +
+                          str(spec['scalapack'].versions).replace('.', ',') +
+                          ']},\\\"' +
+                          str(comp_name) + '\\\":{\\\"version_split\\\": [' +
+                          str(comp_version) + ']}}") \n')
             envfile.write('loadable_software_json=$(echo ",\\\"loadable_software_' +
-                            'configurations\\\":{\\\"' + spec['blas'].name +
-                            '\\\":{\\\"version_split\\\": [' +
-                            str(spec['blas'].versions).replace('.', ',') +
-                            ']},\\\"' + spec['mpi'].name +
-                            '\\\":{\\\"version_split\\\": [' +
-                            str(spec['mpi'].versions).replace('.', ',') + ']},\\\"' +
-                            spec['scalapack'].name +
-                            '\\\":{\\\"version_split\\\": [' +
-                            str(spec['scalapack'].versions).replace('.', ',') +
-                            ']},\\\"' + str(comp_name) +
-                            '\\\":{\\\"version_split\\\": ['
-                            + str(comp_version) + ']}}") \n')
+                          'configurations\\\":{\\\"' + spec['blas'].name +
+                          '\\\":{\\\"version_split\\\": [' +
+                          str(spec['blas'].versions).replace('.', ',') +
+                          ']},\\\"' + spec['mpi'].name +
+                          '\\\":{\\\"version_split\\\": [' +
+                          str(spec['mpi'].versions).replace('.', ',') + ']},\\\"' +
+                          spec['scalapack'].name +
+                          '\\\":{\\\"version_split\\\": [' +
+                          str(spec['scalapack'].versions).replace('.', ',') +
+                          ']},\\\"' + str(comp_name) +
+                          '\\\":{\\\"version_split\\\": ['
+                          + str(comp_version) + ']}}") \n')
             envfile.write('machine_json=$(echo ",\\\"machine_configuration\\\":' +
-                            '{\\\"machine_name\\\":\\\"$machine\\\",\\\"$proc\\\":' +
-                            '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}") \n')
+                          '{\\\"machine_name\\\":\\\"$machine\\\",\\\"$proc\\\":' +
+                          '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}") \n')
             envfile.write('loadable_machine_json=$(echo ",\\\"loadable_machine_' +
-                            'configurations\\\":{\\\"$machine\\\":{\\\"$proc\\\":' +
-                            '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}}") \n')
+                          'configurations\\\":{\\\"$machine\\\":{\\\"$proc\\\":' +
+                          '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}}") \n')
 
         if '+app' in spec:
             if '+openmpi' in spec:
                 apps = ['GPTune-Demo', 'SuperLU_DIST', 'SuperLU_DIST_RCI',
-                        'Scalapack-PDGEQRF', 'Scalapack-PDGEQRF_RCI']                
+                        'Scalapack-PDGEQRF', 'Scalapack-PDGEQRF_RCI']
             else:
-                apps = ['SuperLU_DIST_RCI', 'Scalapack-PDGEQRF_RCI'] 
+                apps = ['SuperLU_DIST_RCI', 'Scalapack-PDGEQRF_RCI']
         else:
             if '+openmpi' in spec:
                 apps = ['GPTune-Demo', 'Scalapack-PDGEQRF', 'Scalapack-PDGEQRF_RCI']
@@ -178,4 +179,4 @@ class Gptune(CMakePackage):
         for app in apps:
             wd = join_path(test_dir, app)
             self.run_test('bash', options=['run_examples.sh'], work_dir=wd,
-                            purpose='gptune smoke test for {0}'.format(app))
+                          purpose='gptune smoke test for {0}'.format(app))
