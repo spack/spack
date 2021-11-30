@@ -1,0 +1,16 @@
+diff -ru a/CMake/FindHDF5.cmake b/CMake/FindHDF5.cmake
+--- a/CMake/FindHDF5.cmake	2019-01-30 11:15:13.000000000 -0600
++++ b/CMake/FindHDF5.cmake	2021-11-15 18:01:39.314264619 -0600
+@@ -3,11 +3,7 @@
+ # (BUG #0014363).
+ 
+ # include the default FindHDF5.cmake.
+-if(CMAKE_VERSION VERSION_LESS 3.6.1)
+-  include(${CMAKE_CURRENT_LIST_DIR}/NewCMake/FindHDF5.cmake)
+-else()
+-  include(${CMAKE_ROOT}/Modules/FindHDF5.cmake)
+-endif()
++include(${CMAKE_CURRENT_LIST_DIR}/NewCMake/FindHDF5.cmake)
+ 
+ if(HDF5_FOUND AND (HDF5_IS_PARALLEL OR HDF5_ENABLE_PARALLEL))
+   include(vtkMPI)

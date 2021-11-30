@@ -126,6 +126,8 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_MPI:BOOL=ON',
                 '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix,
             ])
+        else:
+            '-DTPL_ENABLE_MPI:BOOL=OFF'
 
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',
