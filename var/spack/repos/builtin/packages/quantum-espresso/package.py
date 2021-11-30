@@ -324,11 +324,11 @@ class QuantumEspresso(CMakePackage):
             self.define_from_variant('QE_ENABLE_LIBXC', 'libxc'),
         ]
 
-        if not 'hdf5=none' in spec:
-            cmake_args.append( self.define('QE_ENABLE_HDF5', True) )
+        if not spec.satisfies('hdf5=none'):
+            cmake_args.append(self.define('QE_ENABLE_HDF5', True))
 
         if '+qmcpack' in spec:
-            cmake_args.append( self.define_from_variant('QE_ENABLE_PW2QMCPACK', 'qmcpack') )
+            cmake_args.append(self.define('QE_ENABLE_PW2QMCPACK', True))
 
         return cmake_args
 
