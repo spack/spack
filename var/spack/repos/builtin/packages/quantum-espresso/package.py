@@ -15,7 +15,7 @@ class QuantumEspresso(CMakePackage):
     url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
-    maintainers = ['naromero77']
+    maintainers = ['ye-luo']
 
     version('develop', branch='develop')
     version('6.8', sha256='654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2')
