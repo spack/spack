@@ -519,7 +519,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
-        make('MAKE_NP=%s' % make_jobs, parallel=False)
+        make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
         if self.run_tests:
@@ -540,6 +540,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # Set up PETSC_DIR for everyone using PETSc package
         env.set('PETSC_DIR', self.prefix)
         env.unset('PETSC_ARCH')
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     @property
     def headers(self):
