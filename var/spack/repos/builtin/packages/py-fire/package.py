@@ -9,10 +9,10 @@ from spack import *
 
 class PyFire(PythonPackage):
     """Python Fire is a library for automatically generating command line
-interfaces (CLIs) with a single line of code."""
+    interfaces (CLIs) with a single line of code."""
 
     homepage = "https://https://github.com/google/python-fire"
-    url      = "https://pypi.io/packages/source/f/fire/fire-0.2.1.tar.gz"
+    pypi     = "fire/fire-0.2.1.tar.gz"
 
     version('0.4.0', sha256='c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62')
     version('0.3.1', sha256='9736a16227c3d469e5d2d296bce5b4d8fa8d7851e953bda327a455fc2994307f')
@@ -22,7 +22,7 @@ interfaces (CLIs) with a single line of code."""
     depends_on('python@2.7:3.7.999', when='@0.2.1:0.3.999')
     depends_on('python@2.7:3.9.999', when='@0.4.0')
 
-    depends_on('py-setuptools',                         type='build')
-    depends_on('py-six',                                type=('build', 'run'))
-    depends_on('py-termcolor',                          type=('build', 'run'))
-    depends_on('enum34',                                type=('build', 'run'), when='^python@:3.3.999')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=('build', 'run'))
+    depends_on('py-termcolor',  type=('build', 'run'))
+    depends_on('enum34',        type=('build', 'run'), when='^python@:3.3.999')
