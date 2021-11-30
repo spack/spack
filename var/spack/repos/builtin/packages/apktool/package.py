@@ -38,8 +38,30 @@ class Apktool(Package):
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('java@8:', type=('build', 'run'))
+
+    phases = ['build', 'install']
+
+    def setup_build_environment(self, env):
+        env.set('LC_ALL', 'en_US.UTF-8')
+
+    def build(self, spec, prefix):
+        stty = which('stty')
+        stty()
+        gradlew = Executable('./gradlew')
+        gradlew('--info', '--debug', 'build', 'shadowJar')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+        ln = which('ln')
+        mkdir(join_path(prefix, 'bin'))
+        install(
+            join_path('brut.apktool', 'apktool-cli', 'build', 'libs',
+                      'apktool-cli-all.jar'),
+            join_path(prefix, 'bin'))
+        install(
+            join_path('scripts', 'linux', 'apktool'),
+            join_path(prefix, 'bin'))
+        ln(
+            '-s',
+            join_path(prefix, 'bin', 'apktool-cli-all.jar'),
+            join_path(prefix, 'bin', 'apktool.jar'))
