@@ -18,4 +18,4 @@ class PyYq(PythonPackage):
     depends_on('py-toml@0.10.0:',       type=('build', 'run'))
     depends_on('py-pyyaml@3.11:',       type=('build', 'run'))
     depends_on('py-argcomplete@1.8.1:', type=('build', 'run'))
-    depends_on('py-xmltodict@0.11.0',   type=('build', 'run'))
+    depends_on('py-xmltodict@0.11.0:',   type=('build', 'run'))
