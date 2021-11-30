@@ -52,7 +52,6 @@ class Vtk(CMakePackage):
           when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
     # Patch to include device searching for EGL
-
     patch('egl-device.patch', when='@9:')
     # patch('https://gitlab.kitware.com/vtk/vtk/-/commit/932dce1212a70a63943b3c979263f356215dac58.diff',
     #       when="@9:", sha256='ef9130f4396cbf0d1f655c3d7d28a02fa6760bbdc96de22a6609cd3da63bb044')
@@ -277,6 +276,10 @@ class Vtk(CMakePackage):
                 '-DVTK_USE_COCOA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_EGL:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9d60c00f3560e2edba2781e10fba4b27cf32e6b2
         elif '+egl' in spec:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
