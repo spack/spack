@@ -85,9 +85,10 @@ class Mumps(Package):
         # without the PIC option.
         shared = '+shared' in self.spec
 
-        lapack_blas = (self.spec['lapack'].libs + self.spec['blas'].libs)
+        lapack_blas_ld_flags = (self.spec['lapack'].libs.ld_flags + ' ' +
+                                self.spec['blas'].libs.ld_flags)
         makefile_conf = ["LIBBLAS = %s" %
-                         lapack_blas.ld_flags if not shared else '']
+                         lapack_blas_ld_flags if not shared else '']
 
         orderings = ['-Dpord']
         # All of the lib[cdsz]mumps.* libs depend on mumps_common
@@ -249,7 +250,7 @@ class Mumps(Package):
             elif '+metis' in self.spec:
                 inject_libs += [
                     "-L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')]
-            inject_libs += [lapack_blas.ld_flags]
+            inject_libs += [lapack_blas_ld_flags]
             inject_libs = ' '.join(inject_libs)
 
             if sys.platform == 'darwin':
