@@ -1,42 +1,45 @@
-variables:
-  # We will do this ourselves, will be on GPFS
-  GIT_STRATEGY: none
-  # All the variables below should be added to `deployment.env` to build
-  # the basis for further stages without relying to much on the
-  # `variables` key of GitLab
-  #
-  # Needed for Intel compilers, which may re-use some libraries from a
-  # GCC
-  BASE_GCC_VERSION: "9.4.0"
-  DEPLOYMENT_BRANCH: "merge-upstream"
-  # Proprietary sources
-  DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
-  # This date should increment for new deployments — about once a year
-  DEPLOYMENT_DATE: "2021-11"
-  # Global base directory
-  DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
-  # Global module archive
-  MODULE_ROOT: "$DEPLOYMENT_BASE/modules"
-  # Previous deployment modules
-  OLD_DEPLOYMENT_MODULES: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/modules/all/archive"
-  # All directories below should change for pull requests (replacing the
-  # date)
-  DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
-  DEPLOYMENT_UPSTREAM: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
-  DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE/mirror/proprietary"
-  # Artifacts to be passed back from the child pipeline: needs GitLab
-  # fix/new feature
-  DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
-
+# FIXME revisit whenever GitLab gets their act together and makes it easier
+# to avoid doubled pipelines…
 workflow:
   rules:
-    - when: always
+    - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
+    # Branch needs to be the same as $DEPLOYMENT_BRANCH below
+    - if: '$CI_COMMIT_BRANCH == "merge-upstream"'
 
 # This prepares the environment for the rest of the pipeline.  Could have
 # been a simple function in a CI environment with a proper DSL ¯\_(ツ)_/¯
 #
 # Needed as jobs can't inherit from this *and* augment the rules
 setup_environment:
+  variables:
+    # We will do this ourselves, will be on GPFS
+    GIT_STRATEGY: none
+    # All the variables below should be added to `deployment.env` to build
+    # the basis for further stages without relying to much on the
+    # `variables` key of GitLab
+    #
+    # Needed for Intel compilers, which may re-use some libraries from a
+    # GCC
+    BASE_GCC_VERSION: "9.4.0"
+    DEPLOYMENT_BRANCH: "merge-upstream"
+    # Proprietary sources
+    DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
+    # This date should increment for new deployments — about once a year
+    DEPLOYMENT_DATE: "2021-11"
+    # Global base directory
+    DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
+    # Global module archive
+    MODULE_ROOT: "$DEPLOYMENT_BASE/modules"
+    # Previous deployment modules
+    OLD_DEPLOYMENT_MODULES: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/modules/all/archive"
+    # All directories below should change for pull requests (replacing the
+    # date)
+    DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
+    DEPLOYMENT_UPSTREAM: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
+    DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE/mirror/proprietary"
+    # Artifacts to be passed back from the child pipeline: needs GitLab
+    # fix/new feature
+    DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
   rules:
     - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
       variables:

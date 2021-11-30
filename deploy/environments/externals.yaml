@@ -84,7 +84,7 @@ spack:
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man
-    - hpctoolkit@2020.03.01
+    - hpctoolkit
     - hpcviewer
     - hpe-mpi@2.25.hmpt
     - intel-mkl
@@ -104,15 +104,13 @@ spack:
     # - openblas
     - poppler
     - python
-    - qhull@2015.2
-    - qt@5.14.2
+    - qhull
+    - "qt@5:"  # Forcefully avoid qt@4
     - readline
     - snakemake
     - sqlite
     # Broken, broken, broken… :(
     # - stat
-    # - symengine@0.3.0
-    # - timemory
     - totalview
     - valgrind~mpi
     - virtualgl

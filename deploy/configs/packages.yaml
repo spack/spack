@@ -87,6 +87,7 @@ packages:
   py-tables:
     variants: +lzo     # leads to compile errors otherwise
   qt:
+    version: [5.14.2]
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc

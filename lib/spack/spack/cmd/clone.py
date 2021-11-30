@@ -33,6 +33,7 @@ def get_origin_info(remote):
     try:
         branch = git(
             '--git-dir=%s' % git_dir,
+            '--work-dir=%s' % spack.paths.prefix,
             'symbolic-ref', '--short', 'HEAD',
             output=str)
     except ProcessError:
