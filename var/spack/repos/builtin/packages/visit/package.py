@@ -212,7 +212,8 @@ class Visit(CMakePackage):
     depends_on('python@3.7', when='+python')
     # llvm@12.0.1, @11.1.0, @10.0.1 fail in build phase with gcc 6.1.0.
     # llvm@9.0.1 fails in cmake phase with gcc 6.1.0.
-    depends_on('llvm@6:8', when='^mesa')
+    # llvm@12.0.1, llvm@8.0.1 fail in build phase with gcc 11.2.0
+    depends_on('llvm@6:', when='^mesa')
     depends_on('mesa+glx', when='^mesa')
     depends_on('mesa-glu', when='^mesa')
     # VisIt doesn't build with hdf5@1.12 and hdf5@1.10 produces files that

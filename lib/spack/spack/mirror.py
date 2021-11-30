@@ -11,6 +11,7 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
+import collections
 import operator
 import os
 import os.path
@@ -19,7 +20,6 @@ import traceback
 
 import ruamel.yaml.error as yaml_error
 import six
-from ordereddict_backport import OrderedDict
 
 if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
@@ -230,7 +230,7 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = OrderedDict(
+        self._mirrors = collections.OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
