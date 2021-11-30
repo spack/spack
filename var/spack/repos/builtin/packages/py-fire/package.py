@@ -19,10 +19,7 @@ class PyFire(PythonPackage):
     version('0.3.0', sha256='96c372096afcf33ddbadac8a7ca5b7e829e8d7157d0030bd964bf959afde5c2c')
     version('0.2.1', sha256='6865fefc6981a713d2ce56a2a2c92c56c729269f74a6cddd6f4b94d16ae084c9')
 
-    depends_on('python@2.7:3.7.999', when='@0.2.1:0.3.999')
-    depends_on('python@2.7:3.9.999', when='@0.4.0')
-
     depends_on('py-setuptools', type='build')
     depends_on('py-six',        type=('build', 'run'))
     depends_on('py-termcolor',  type=('build', 'run'))
-    depends_on('enum34',        type=('build', 'run'), when='^python@:3.3.999')
+    depends_on('py-enum34',     type=('build', 'run'), when='@0.3.0: ^python@:3.3.999')
