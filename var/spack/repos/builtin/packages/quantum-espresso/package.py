@@ -55,6 +55,8 @@ class QuantumEspresso(CMakePackage):
     variant('openmp', default=False, description='Enables openMP support')
     variant('scalapack', default=True, description='Enables scalapack support')
     variant('elpa', default=False, description='Uses elpa as an eigenvalue solver')
+    variant('libxc', default=False, description='Uses libxc')
+    conflicts('+libxc', when='~cmake', msg='Using libxc requires building with CMake')
 
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
@@ -103,6 +105,7 @@ class QuantumEspresso(CMakePackage):
     depends_on('hdf5', when='+qmcpack')
     # TODO: enable building EPW when ~mpi and ~cmake
     depends_on('mpi', when='+epw~cmake')
+    depends_on('libxc@5.1.2:', when='+libxc')
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
@@ -312,14 +315,13 @@ class QuantumEspresso(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        #define = CMakePackage.define
 
         cmake_args = [
             self.define_from_variant('QE_ENABLE_MPI', 'mpi'),
             self.define_from_variant('QE_ENABLE_OPENMP', 'openmp'),
             self.define_from_variant('QE_ENABLE_SCALAPACK', 'scalapack'),
             self.define_from_variant('QE_ENABLE_ELPA', 'elpa'),
-            self.define_from_variant('QE_ENABLE_PW2QMCPACK', 'qmcpack'),
+            self.define_from_variant('QE_ENABLE_LIBXC', 'libxc'),
         ]
 
         if not 'hdf5=none' in spec:
