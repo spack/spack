@@ -20,14 +20,18 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/v5.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.1.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
+
+    tags = ['e4s']
 
     maintainers = ['pghysels']
 
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.1.0', sha256='219ec7360594172464aafa6ecac1fd161097db6fb9ee35af5c1ca61531f4f5c4')
+    version('6.0.0', sha256='fcea150b68172d5a4ec2c02f9cce0b7305919b86871c9cf34a9f65b1567d58b7')
     version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
     version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
     version('4.0.0', sha256='a3629f1f139865c74916f8f69318f53af6319e7f8ec54e85c16466fd7d256938')
@@ -53,10 +57,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             description='Build with flop counters')
     variant('task_timers', default=False,
             description='Build with timers for internal routines')
-    variant('build_dev_tests', default=False,
-            description='Build developer test routines')
-    variant('build_tests', default=False,
-            description='Build test routines')
     variant('slate', default=True,
             description="Build with SLATE support")
 
@@ -64,12 +64,13 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('openblas threads=openmp', when='^openblas')
     depends_on('scalapack', when='+mpi')
     depends_on('metis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
-    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9.999 +butterflypack+mpi')
+    depends_on('butterflypack@1.1.0', when='@3.3.0:3.9 +butterflypack+mpi')
     depends_on('butterflypack@1.2.0:', when='@4.0.0: +butterflypack+mpi')
     depends_on('cuda', when='@4.0.0: +cuda')
     depends_on('zfp', when='+zfp')
@@ -77,20 +78,20 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('rocsolver', when='+rocm')
     depends_on('slate', when='+slate')
     depends_on('slate+cuda', when='+cuda+slate')
+    depends_on('slate+rocm', when='+rocm+slate')
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('slate amdgpu_target={0}'.format(val),
+                   when='amdgpu_target={0}'.format(val))
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
     conflicts('+butterflypack', when='@:3.2.0')
-    conflicts('+zfp', when='@:3.9.999')
-    conflicts('+cuda', when='@:3.9.999')
-    conflicts('+rocm', when='@:5.0.999')
+    conflicts('+zfp', when='@:3.9')
+    conflicts('+cuda', when='@:3.9')
+    conflicts('+rocm', when='@:5.0')
     conflicts('+rocm', when='+cuda')
     conflicts('+slate', when='@:5.1.1')
     conflicts('+slate', when='~mpi')
-    conflicts('^openblas@0.3.6: threads=none', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
-    conflicts('^openblas@0.3.6: threads=pthreads', when='+openmp',
-              msg='STRUMPACK requires openblas with OpenMP threading support')
 
     patch('intel-19-compile.patch', when='@3.1.1')
     patch('shared-rocm.patch', when='@5.1.1')
@@ -108,8 +109,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('TPL_ENABLE_BPACK', 'butterflypack'),
             self.define_from_variant('STRUMPACK_COUNT_FLOPS', 'count_flops'),
             self.define_from_variant('STRUMPACK_TASK_TIMERS', 'task_timers'),
-            self.define_from_variant('STRUMPACK_DEV_TESTING', 'build_dev_tests'),
-            self.define_from_variant('STRUMPACK_BUILD_TESTS', 'build_tests'),
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
@@ -120,7 +119,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
                 libs.joined(";"))
 
-        if spec.satisfies('@:3.9.999'):
+        if spec.satisfies('@:3.9'):
             if '+mpi' in spec:
                 args.extend([
                     '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
@@ -227,3 +226,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                     break
         else:
             self._test_example(test_exe, test_dir, test_exe, exe_arg)
+
+    def check(self):
+        """Skip the builtin testsuite, use the stand-alone tests instead."""
+        pass

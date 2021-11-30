@@ -29,5 +29,5 @@ class PyPint(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', type=('build'))
     depends_on('py-packaging', type=('build', 'run'), when='@0.17:')
-    depends_on('py-importlib-metadata', type=('build', 'run'), when='@0.17: ^python@:3.7.999')
-    depends_on('py-importlib-resources', type=('build', 'run'), when='@0.17: ^python@:3.6.999')
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@0.17: ^python@:3.7')
+    depends_on('py-importlib-resources', type=('build', 'run'), when='@0.17: ^python@:3.6')

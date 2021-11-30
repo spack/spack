@@ -404,3 +404,10 @@ class TestTcl(object):
 
         assert old_format == new_format
         assert old_format == settings['tcl']
+
+    def test_modules_no_arch(self, factory, module_configuration):
+        module_configuration('no_arch')
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
+
+        assert str(spec.os) not in path

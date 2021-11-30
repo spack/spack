@@ -15,6 +15,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/kokkos/kokkos.git"
     url      = "https://github.com/kokkos/kokkos/archive/3.4.01.tar.gz"
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     maintainers = ['DavidPoliakoff', 'jciesko']
@@ -173,11 +175,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+wrapper", when="~cuda")
 
     stds = ["11", "14", "17", "20"]
+    # TODO: This should be named cxxstd for consistency with other packages
     variant("std", default="14", values=stds, multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
-    conflicts("+cuda", when="std=17 ^cuda@:10.99.99")
+    conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
 
     # HPX should use the same C++ standard
@@ -206,18 +209,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     def append_args(self, cmake_prefix, cmake_options, spack_options):
         variant_to_cmake_option = {'rocm': 'hip'}
         for variant_name in cmake_options:
-            enablestr = "+%s" % variant_name
             opt = variant_to_cmake_option.get(variant_name, variant_name)
-            optuc = opt.upper()
-            optname = "Kokkos_%s_%s" % (cmake_prefix, optuc)
-            option = None
-            if enablestr in self.spec:
-                option = "-D%s=ON" % optname
-            else:
-                # explicitly turn off if not enabled
-                # this avoids any confusing implicit defaults
-                # that come from the CMake
-                option = "-D%s=OFF" % optname
+            optname = "Kokkos_%s_%s" % (cmake_prefix, opt.upper())
+            # Explicitly enable or disable
+            option = self.define_from_variant(optname, variant_name)
             if option not in spack_options:
                 spack_options.append(option)
 
@@ -229,6 +224,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         if spec.satisfies("~wrapper+cuda") and not (
             spec.satisfies("%clang") or spec.satisfies("%cce")
@@ -236,14 +232,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             raise InstallError("Kokkos requires +wrapper when using +cuda"
                                "without clang")
 
-        options = []
-
-        isdiy = "+diy" in spec
-        if isdiy:
-            options.append("-DSpack_WORKAROUND=On")
-
-        if "+pic" in spec:
-            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE=ON")
+        options = [
+            from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            from_variant("Kokkos_CXX_STANDARD", "std"),
+            from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
 
         spack_microarches = []
         if "+cuda" in spec:
@@ -270,29 +263,24 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                             amdgpu_target))
 
         for arch in spack_microarches:
-            options.append("-DKokkos_ARCH_%s=ON" % arch.upper())
+            options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
 
         self.append_args("ENABLE", self.devices_values, options)
         self.append_args("ENABLE", self.options_values, options)
         self.append_args("ENABLE", self.tpls_values, options)
 
         for tpl in self.tpls_values:
-            var = "+%s" % tpl
-            if var in self.spec:
-                options.append("-D%s_DIR=%s" % (tpl, spec[tpl].prefix))
+            if spec.variants[tpl].value:
+                options.append(self.define(tpl + "_DIR", spec[tpl].prefix))
 
         if '+rocm' in self.spec:
-            options.append('-DCMAKE_CXX_COMPILER=%s' %
-                           self.spec['hip'].hipcc)
+            options.append(self.define(
+                'CMAKE_CXX_COMPILER', self.spec['hip'].hipcc))
         elif '+wrapper' in self.spec:
-            options.append("-DCMAKE_CXX_COMPILER=%s" %
-                           self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-
-        # Set the C++ standard to use
-        options.append("-DKokkos_CXX_STANDARD=%s" %
-                       self.spec.variants["std"].value)
-
-        options.append('-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec))
+            options.append(self.define(
+                "CMAKE_CXX_COMPILER",
+                self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
+            ))
 
         return options
 

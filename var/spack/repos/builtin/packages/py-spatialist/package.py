@@ -27,7 +27,7 @@ class PySpatialist(PythonPackage):
     depends_on('py-ipython', type=('build', 'run'))
     depends_on('py-ipywidgets', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-prompt-toolkit@2.0.10:2.0.999', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.10:2.0', type=('build', 'run'))
     depends_on('py-pathos@0.2:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scoop', type=('build', 'run'))

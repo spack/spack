@@ -10,7 +10,6 @@ import tempfile
 
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -105,6 +104,9 @@ def setup_parser(subparser):
                               " instead of default platform and OS")
     # This argument is needed by the bootstrapping logic to verify checksums
     install.add_argument('--sha256', help=argparse.SUPPRESS)
+    install.add_argument(
+        '--only-root', action='store_true', help=argparse.SUPPRESS
+    )
 
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
@@ -335,9 +337,13 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
 
-    specs = bindist.update_cache_and_get_specs()
+    try:
+        specs = bindist.update_cache_and_get_specs()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
+
     if not other_arch:
-        arch = spack.architecture.default_arch().to_spec()
+        arch = spack.spec.Spec.default_arch()
         specs = [s for s in specs if s.satisfies(arch)]
 
     for pkg in pkgs:
@@ -531,9 +537,14 @@ def install_tarball(spec, args):
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
-    for d in s.dependencies(deptype=('link', 'run')):
-        tty.msg("Installing buildcache for dependency spec %s" % d)
-        install_tarball(d, args)
+
+    # This argument is used only for bootstrapping specs without signatures,
+    # since we need to check the sha256 of each tarball
+    if not args.only_root:
+        for d in s.dependencies(deptype=('link', 'run')):
+            tty.msg("Installing buildcache for dependency spec %s" % d)
+            install_tarball(d, args)
+
     package = spack.repo.get(spec)
     if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
@@ -561,9 +572,13 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.update_cache_and_get_specs()
+    try:
+        specs = bindist.update_cache_and_get_specs()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
+
     if not args.allarch:
-        arch = spack.architecture.default_arch().to_spec()
+        arch = spack.spec.Spec.default_arch()
         specs = [s for s in specs if s.satisfies(arch)]
 
     if args.specs:

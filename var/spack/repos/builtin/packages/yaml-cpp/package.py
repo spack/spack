@@ -30,7 +30,7 @@ class YamlCpp(CMakePackage):
     variant('tests', default=False,
             description='Build yaml-cpp tests using internal gtest')
 
-    depends_on('boost@:1.66.99', when='@0.5.0:0.5.3')
+    depends_on('boost@:1.66', when='@0.5.0:0.5.3')
 
     conflicts('%gcc@:4.7', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")

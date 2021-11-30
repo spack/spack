@@ -20,7 +20,7 @@ class PyKombu(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-amqp@2.5.2:2.5.999', when="@:4.6.6", type=('build', 'run'))
-    depends_on('py-amqp@2.6.0:2.6.999', when="@4.6.7:4.999", type=('build', 'run'))
-    depends_on('py-amqp@5.0.0:5.999', when="@5.0.0:", type=('build', 'run'))
+    depends_on('py-amqp@2.5.2:2.5', when="@:4.6.6", type=('build', 'run'))
+    depends_on('py-amqp@2.6.0:2.6', when="@4.6.7:4", type=('build', 'run'))
+    depends_on('py-amqp@5.0.0:5', when="@5.0.0:", type=('build', 'run'))
     depends_on('py-importlib-metadata@0.18:', type=('build', 'run'))

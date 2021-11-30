@@ -18,6 +18,8 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     version('master', branch='master')
@@ -129,7 +131,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(['-DMAGMA_ENABLE_HIP=ON'])
             options.extend(['-DCMAKE_CXX_COMPILER=hipcc'])
             # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
-            if spec.satisfies('^cmake@3.21:'):
+            if spec.satisfies('^cmake@3.21.0:3.21.2'):
                 options.extend(['-D__skip_rocmclang=ON'])
         else:
             options.extend(['-DMAGMA_ENABLE_CUDA=ON'])

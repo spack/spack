@@ -25,6 +25,8 @@ class Masurca(Package):
     patch('arm.patch', when='target=aarch64:')
 
     def patch(self):
+        filter_file('#include <sys/sysctl.h>', '',
+                    'global-1/CA8/src/AS_BAT/memoryMappedFile.H')
         if self.spec.target.family == 'aarch64':
             for makefile in 'Makefile.am', 'Makefile.in':
                 m = join_path('global-1', 'prepare', makefile)

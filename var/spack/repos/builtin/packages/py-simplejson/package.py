@@ -14,6 +14,7 @@ class PySimplejson(PythonPackage):
     pypi = "simplejson/simplejson-3.10.0.tar.gz"
 
     version('3.17.2', sha256='75ecc79f26d99222a084fbdd1ce5aad3ac3a8bd535cd9059528452da38b68841')
+    version('3.16.1', url='https://github.com/simplejson/simplejson/releases/download/v3.16.1/simplejson-3.16.1.tar.gz', sha256='20c626174a3cfcc69c783930ac2d5daa72787a8e26398e33c978065a51cc8bf4')
     version('3.16.0', sha256='b1f329139ba647a9548aa05fb95d046b4a677643070dc2afc05fa2e975d09ca5')
     version('3.10.0', sha256='953be622e88323c6f43fad61ffd05bebe73b9fd9863a46d68b052d2aa7d71ce2')
     version('3.9.0',  sha256='e9abeee37424f4bfcd27d001d943582fb8c729ffc0b74b72bd0e9b626ed0d1b6')

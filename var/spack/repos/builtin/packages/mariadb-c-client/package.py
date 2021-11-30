@@ -57,6 +57,7 @@ class MariadbCClient(CMakePackage):
     depends_on('pcre')
     depends_on('openssl')
     depends_on('zlib')
+    depends_on('krb5')
 
     # patch needed for cmake-3.20
     patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',

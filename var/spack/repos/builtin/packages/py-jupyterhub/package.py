@@ -11,6 +11,8 @@ class PyJupyterhub(PythonPackage):
 
     pypi = "jupyterhub/jupyterhub-1.0.0.tar.gz"
 
+    tags = ['e4s']
+
     version('1.4.1',    sha256='ee1b0718a4db8e0b339796e3e50b704ca6822ab22a7435289dbb5932f65b5199')
     version('1.0.0',    sha256='33541a515a041b9a518ca057c1c4ab4215a7450fdddc206401713ee8137fa67f')
     version('0.9.4',    sha256='7848bbb299536641a59eb1977ec3c7c95d931bace4a2803d7e9b28b9256714da')

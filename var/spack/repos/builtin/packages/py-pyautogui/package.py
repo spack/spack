@@ -24,7 +24,7 @@ class PyPyautogui(PythonPackage):
     depends_on('py-mouseinfo', type=('build', 'run'))
 
     depends_on('py-python3-xlib', when='^python@3: platform=linux', type=('build', 'run'))
-    depends_on('py-python-xlib', when='^python@:2.999 platform=linux', type=('build', 'run'))
+    depends_on('py-python-xlib', when='^python@:2 platform=linux', type=('build', 'run'))
 
     # Missing packages; commented out for now
     # depends_on('py-pyobjc-core', when='platform=darwin', type=('build', 'run'))

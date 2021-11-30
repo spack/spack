@@ -17,6 +17,10 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 
     if platform.system() == 'Linux':
+        version('2021.4.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18194/l_tbb_oneapi_p_2021.4.0.643_offline.sh',
+                sha256='33332012ff8ffe7987b1a20bea794d76f7d8050ccff04fa6e1990974c336ee24',
+                expand=False)
         version('2021.3.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17952/l_tbb_oneapi_p_2021.3.0.511_offline.sh',
                 sha256='b83f5e018e3d262e42e9c96881845bbc09c3f036c265e65023422ca8e8637633',

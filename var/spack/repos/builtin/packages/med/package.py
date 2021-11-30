@@ -30,11 +30,15 @@ class Med(CMakePackage):
     depends_on('hdf5@1.10.2:1.10.7+mpi', when='@4.0.0:+mpi')
     depends_on('hdf5@:1.8.22~mpi', when='@3.2.0~mpi')
     depends_on('hdf5@1.10.2:1.10.7~mpi', when='@4.0.0:~mpi')
+    # the "TARGET hdf5" patch below only works with HDF5 shared library builds
+    depends_on('hdf5+shared', when='@4.0.0:4.1.99')
 
     conflicts("@4.1.0", when="~shared", msg="Link error when static")
 
     # C++11 requires a space between literal and identifier
     patch('add_space.patch', when='@3.2.0')
+    # fix problem where CMake "could not find TARGET hdf5"
+    patch('med-4.1.0-hdf5-target.patch', when='@4.0.0:4.1.99')
 
     def cmake_args(self):
         spec = self.spec

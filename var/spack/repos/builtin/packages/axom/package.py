@@ -95,7 +95,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~hdf5", when="~hdf5")
 
     # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8.999~cxx~fortran", when="+hdf5")
+    depends_on("hdf5@1.8.19:1.8~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 
@@ -107,9 +107,10 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("raja+openmp", when="+raja+openmp")
     depends_on("raja+cuda", when="+raja+cuda")
 
-    depends_on("umpire~openmp", when="+umpire~openmp")
-    depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire+cuda", when="+umpire+cuda")
+    with when('+umpire'):
+        depends_on('umpire@5.0.1:5')
+        depends_on('umpire +openmp', when='+openmp')
+        depends_on('umpire +cuda', when='+cuda')
 
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja cuda_arch={0}'.format(sm_),

@@ -23,8 +23,12 @@ class PyWarpx(PythonPackage):
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
+    tags = ['e4s']
+
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
+    version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
     version('21.08', sha256='6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86')
     version('21.07', sha256='a8740316d813c365715f7471201499905798b50bd94950d33f1bd91478d49561')
@@ -35,15 +39,16 @@ class PyWarpx(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['21.09', '21.08', '21.07', '21.06', '21.05', '21.04', 'develop']:
+    for v in ['21.11', '21.10', '21.09', '21.08', '21.07', '21.06', '21.05',
+              '21.04', 'develop']:
         depends_on('warpx@{0}'.format(v),
                    when='@{0}'.format(v),
                    type=['build', 'link'])
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.15.0:1.99.99', type=('build', 'run'))
+    depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
-    depends_on('py-periodictable@1.5:1.99', type=('build', 'run'))
+    depends_on('py-periodictable@1.5:1', type=('build', 'run'))
     depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
     depends_on('py-setuptools@38.6:', type='build')
     depends_on('py-wheel', type='build')

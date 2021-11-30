@@ -236,16 +236,28 @@ layout = llnl.util.lang.LazyReference(_store_layout)
 
 
 def reinitialize():
-    """Restore globals to the same state they would have at start-up"""
+    """Restore globals to the same state they would have at start-up. Return a token
+    containing the state of the store before reinitialization.
+    """
     global store
     global root, unpadded_root, db, layout
 
-    store = llnl.util.lang.Singleton(_store)
+    token = store, root, unpadded_root, db, layout
 
+    store = llnl.util.lang.Singleton(_store)
     root = llnl.util.lang.LazyReference(_store_root)
     unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
     db = llnl.util.lang.LazyReference(_store_db)
     layout = llnl.util.lang.LazyReference(_store_layout)
+
+    return token
+
+
+def restore(token):
+    """Restore the environment from a token returned by reinitialize"""
+    global store
+    global root, unpadded_root, db, layout
+    store, root, unpadded_root, db, layout = token
 
 
 def retrieve_upstream_dbs():

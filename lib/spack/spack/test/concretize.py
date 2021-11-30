@@ -11,12 +11,12 @@ import archspec.cpu
 
 import llnl.util.lang
 
-import spack.architecture
 import spack.compilers
 import spack.concretize
 import spack.error
 import spack.platforms
 import spack.repo
+import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
@@ -299,7 +299,7 @@ class TestConcretize(object):
 
         with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
-                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+                        ' ^barpkg os=CNL ^bazpkg os=CNL')
             spec.concretize()
 
             for s in spec.traverse(root=False):
@@ -428,7 +428,7 @@ class TestConcretize(object):
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        platform = spack.architecture.real_platform().name
+        platform = spack.platforms.real_host().name
         if platform == 'darwin' or platform == 'linux':
             return
 
@@ -738,6 +738,41 @@ class TestConcretize(object):
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('conditional-variant-pkg@1.0',
+         ['two_whens'],
+         ['version_based', 'variant_based']),
+        ('conditional-variant-pkg@2.0',
+         ['version_based', 'variant_based'],
+         ['two_whens']),
+        ('conditional-variant-pkg@2.0~version_based',
+         ['version_based'],
+         ['variant_based', 'two_whens']),
+        ('conditional-variant-pkg@2.0+version_based+variant_based',
+         ['version_based', 'variant_based', 'two_whens'],
+         [])
+    ])
+    def test_conditional_variants(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for var in expected:
+            assert s.satisfies('%s=*' % var)
+        for var in unexpected:
+            assert not s.satisfies('%s=*' % var)
+
+    @pytest.mark.parametrize('bad_spec', [
+        '@1.0~version_based',
+        '@1.0+version_based',
+        '@2.0~version_based+variant_based',
+        '@2.0+version_based~variant_based+two_whens',
+    ])
+    def test_conditional_variants_fail(self, bad_spec):
+        with pytest.raises(
+                (spack.error.UnsatisfiableSpecError,
+                 vt.InvalidVariantForSpecError)
+        ):
+            _ = Spec('conditional-variant-pkg' + bad_spec).concretized()
 
     @pytest.mark.parametrize('spec_str,expected,unexpected', [
         ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
@@ -1268,3 +1303,44 @@ class TestConcretize(object):
         s = spack.spec.Spec('root-adds-virtual').concretized()
         assert s['leaf-adds-virtual'].satisfies('@2.0')
         assert 'blas' in s
+
+    @pytest.mark.regression('26718')
+    def test_versions_in_virtual_dependencies(self):
+        # Ensure that a package that needs a given version of a virtual
+        # package doesn't end up using a later implementation
+        s = spack.spec.Spec('hpcviewer@2019.02').concretized()
+        assert s['java'].satisfies('virtual-with-versions@1.8.0')
+
+    @pytest.mark.regression('26866')
+    def test_non_default_provider_of_multiple_virtuals(self):
+        s = spack.spec.Spec(
+            'many-virtual-consumer ^low-priority-provider'
+        ).concretized()
+        assert s['mpi'].name == 'low-priority-provider'
+        assert s['lapack'].name == 'low-priority-provider'
+
+        for virtual_pkg in ('mpi', 'lapack'):
+            for pkg in spack.repo.path.providers_for(virtual_pkg):
+                if pkg.name == 'low-priority-provider':
+                    continue
+                assert pkg not in s
+
+    @pytest.mark.regression('27237')
+    @pytest.mark.parametrize('spec_str,expect_installed', [
+        ('mpich', True),
+        ('mpich+debug', False),
+        ('mpich~debug', True)
+    ])
+    def test_concrete_specs_are_not_modified_on_reuse(
+            self, mutable_database, spec_str, expect_installed
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse specs')
+
+        # Test the internal consistency of solve + DAG reconstruction
+        # when reused specs are added to the mix. This prevents things
+        # like additional constraints being added to concrete specs in
+        # the answer set produced by clingo.
+        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        assert s.package.installed is expect_installed
+        assert s.satisfies(spec_str, strict=True)

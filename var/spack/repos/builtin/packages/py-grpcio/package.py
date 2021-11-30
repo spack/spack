@@ -26,6 +26,7 @@ class PyGrpcio(PythonPackage):
     version('1.32.0', sha256='01d3046fe980be25796d368f8fc5ff34b7cf5e1444f3789a017a7fe794465639')
     version('1.30.0', sha256='e8f2f5d16e0164c415f1b31a8d9a81f2e4645a43d1b261375d6bab7b0adf511f')
     version('1.29.0', sha256='a97ea91e31863c9a3879684b5fb3c6ab4b17c5431787548fc9f52b9483ea9c25')
+    version('1.28.1', sha256='cbc322c5d5615e67c2a15be631f64e6c2bab8c12505bc7c150948abdaa0bdbac')
     version('1.27.2', sha256='5ae532b93cf9ce5a2a549b74a2c35e3b690b171ece9358519b3039c7b84c887e')
     version('1.25.0', sha256='c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4')
     version('1.16.0', sha256='d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1')
@@ -40,12 +41,14 @@ class PyGrpcio(PythonPackage):
     depends_on('openssl')
     depends_on('zlib')
     depends_on('c-ares')
+    depends_on('re2+shared')
 
     def setup_build_environment(self, env):
         env.set('GRPC_PYTHON_BUILD_WITH_CYTHON', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_RE2', True)
         # https://github.com/grpc/grpc/pull/24449
         env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
         env.set('GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS', str(make_jobs))
@@ -58,3 +61,17 @@ class PyGrpcio(PythonPackage):
     def patch(self):
         if self.spec.satisfies('%fj'):
             filter_file("-std=gnu99", "", "setup.py")
+
+        # use the spack packages
+        filter_file(r'(\s+SSL_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['openssl'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+ZLIB_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['zlib'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+CARES_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['c-ares'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+RE2_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['re2'].prefix.include),
+                    'setup.py')

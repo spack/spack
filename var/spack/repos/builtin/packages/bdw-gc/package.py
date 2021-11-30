@@ -11,8 +11,9 @@ class BdwGc(AutotoolsPackage):
     collecting replacement for C malloc or C++ new."""
 
     homepage = "https://www.hboehm.info/gc/"
-    url      = "https://www.hboehm.info/gc/gc_source/gc-8.0.0.tar.gz"
+    url      = "https://github.com/ivmai/bdwgc/releases/download/v8.0.6/gc-8.0.6.tar.gz"
 
+    version('8.0.6', sha256='3b4914abc9fa76593596773e4da671d7ed4d5390e3d46fbf2e5f155e121bea11')
     version('8.0.0', sha256='8f23f9a20883d00af2bff122249807e645bdf386de0de8cbd6cce3e0c6968f04')
     version('7.6.0', sha256='a14a28b1129be90e55cd6f71127ffc5594e1091d5d54131528c24cd0c03b7d90')
     version('7.4.4', sha256='e5ca9b628b765076b6ab26f882af3a1a29cde786341e08b9f366604f74e4db84')

@@ -46,7 +46,7 @@ class Stat(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('dyninst', when='~dysect')
-    depends_on('dyninst@:9.99', when='@:4.0.1')
+    depends_on('dyninst@:9', when='@:4.0.1')
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     # we depend on fgfs@master to avoid seg faults with fgfs 1.1
     depends_on('fast-global-file-status@master', when='+fgfs')

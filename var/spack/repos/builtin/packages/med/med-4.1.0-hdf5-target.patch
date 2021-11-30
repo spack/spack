@@ -1,0 +1,13 @@
+diff --git a/config/cmake_files/FindMedfileHDF5.cmake b/config/cmake_files/FindMedfileHDF5.cmake
+index fbadbf4..5ed78f5 100644
+--- a/config/cmake_files/FindMedfileHDF5.cmake
++++ b/config/cmake_files/FindMedfileHDF5.cmake
+@@ -115,7 +115,7 @@ IF (HDF5_FOUND)
+       # HDF5 was compiled with MPI support
+       # Unfortunately HDF5 doesn't expose its MPI configuration easily ...
+       # We sniff the properties of the HDF5 target which should also be there:
+-      GET_PROPERTY(_lib_lst TARGET hdf5 PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
++      GET_PROPERTY(_lib_lst TARGET hdf5-shared PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES_NOCONFIG)
+       FOREACH(s ${_lib_lst})
+         STRING(FIND "${s}" "mpi." _res)   # should cover WIN(?) and LINUX
+         IF(_res GREATER -1)

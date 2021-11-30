@@ -48,14 +48,18 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
 
+    # 2.36 is missing some dependencies, this patch allows a parallel build.
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
+    patch('parallel-build-2.36.patch', when='@2.36')
+
     depends_on('zlib')
     depends_on('diffutils', type='build')
     depends_on('gettext', when='+nls')
 
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
-    depends_on('m4', type='build', when='@:2.29.99 +gold')
-    depends_on('bison', type='build', when='@:2.29.99 +gold')
+    depends_on('m4', type='build', when='@:2.29 +gold')
+    depends_on('bison', type='build', when='@:2.29 +gold')
 
     # 2.34 needs makeinfo due to a bug, see:
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
@@ -122,13 +126,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             args.append('--program-prefix=g')
 
         return args
-
-    # 2.36 is missing some dependencies and requires serial make install.
-    # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
-    @when('@2.36:')
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make('-j', '1', *self.install_targets)
 
     @run_after('install')
     def install_headers(self):

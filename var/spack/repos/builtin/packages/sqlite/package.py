@@ -2,12 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 import re
 from tempfile import NamedTemporaryFile
 
-from spack import architecture
+import spack.platforms
 
 
 class Sqlite(AutotoolsPackage):
@@ -52,7 +51,7 @@ class Sqlite(AutotoolsPackage):
     variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
-    conflicts('+fts', when='@:3.25.99.99')
+    conflicts('+fts', when='@:3.25')
 
     resource(name='extension-functions',
              url='https://sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
@@ -168,9 +167,8 @@ class Sqlite(AutotoolsPackage):
         return find_libraries('libsqlite3', root=self.prefix.lib)
 
     def get_arch(self):
-        arch = architecture.Arch()
-        arch.platform = architecture.platform()
-        return str(arch.platform.target('default_target'))
+        host_platform = spack.platforms.host()
+        return str(host_platform.target('default_target'))
 
     def configure_args(self):
         args = []

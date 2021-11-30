@@ -197,17 +197,6 @@ Spack will build the required software on the first request to concretize a spec
    [ ... ]
    zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
 
-.. tip::
-
-   If you want to speed-up bootstrapping ``clingo`` from sources, you may try to
-   search for ``cmake`` and ``bison`` on your system:
-
-   .. code-block:: console
-
-      $ spack external find cmake bison
-      ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
-      bison@3.0.4  cmake@3.19.4
-
 """""""""""""""""""
 The Bootstrap Store
 """""""""""""""""""

@@ -13,13 +13,14 @@ class PyAnyio(PythonPackage):
     homepage = "https://github.com/agronholm/anyio"
     pypi     = "anyio/anyio-3.2.1.tar.gz"
 
+    version('3.3.4', sha256='67da67b5b21f96b9d3d65daa6ea99f5d5282cb09f50eb4456f8fb51dffefc3ff')
     version('3.2.1', sha256='07968db9fa7c1ca5435a133dc62f988d84ef78e1d9b22814a59d1c62618afbc5')
 
     depends_on('python@3.6.2:', type=('build', 'run'))
     depends_on('py-setuptools@42:', type='build')
     depends_on('py-setuptools-scm+toml@3.4:', type='build')
-    depends_on('py-async-generator', when='^python@:3.6.999', type=('build', 'run'))
-    depends_on('py-dataclasses', when='^python@:3.6.999', type=('build', 'run'))
+    depends_on('py-async-generator', when='@:3.2 ^python@:3.6', type=('build', 'run'))
+    depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-idna@2.8:', type=('build', 'run'))
     depends_on('py-sniffio@1.1:', type=('build', 'run'))
-    depends_on('py-typing-extensions', when='^python@:3.7.999', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='^python@:3.7', type=('build', 'run'))

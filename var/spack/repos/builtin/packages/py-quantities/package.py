@@ -16,7 +16,7 @@ class PyQuantities(PythonPackage):
     version('0.11.1', sha256='4382098a501b55bf0fdb3dba2061a161041253697d78811ecfd7c55449836660',
             url="https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip")
 
-    conflicts('^py-numpy@1.13:', when='@:0.11.99')
+    conflicts('^py-numpy@1.13:', when='@:0.11')
 
     depends_on('python@2.6.0:')
     depends_on('py-numpy@1.4.0:', type=('build', 'run'))

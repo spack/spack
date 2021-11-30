@@ -33,11 +33,6 @@ class Squashfs(MakefilePackage):
     conflicts('squashfs~xz default_compression=xz', msg='Cannot set default compression to missing algorithm')
     conflicts('squashfs~zstd default_compression=zstd', msg='Cannot set default compression to missing algorithm')
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-
     depends_on('zlib', when='+gzip')
     depends_on('lz4', when='+lz4')
     depends_on('lzo', when='+lzo')

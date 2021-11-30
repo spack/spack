@@ -101,10 +101,10 @@ class Amber(Package, CudaPackage):
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
     # Patch to add ppc64le in config.guess
-    patch('ppc64le.patch', when='@18: target=ppc64le')
+    patch('ppc64le.patch', when='@18: target=ppc64le:')
 
     # Patch to add aarch64 in config.guess
-    patch('aarch64.patch', when='@18: target=aarch64')
+    patch('aarch64.patch', when='@18: target=aarch64:')
 
     # Workaround to modify the AmberTools script when using the NVIDIA
     # compilers

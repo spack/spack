@@ -1024,12 +1024,7 @@ class Database(object):
             raise
 
     def _read(self):
-        """Re-read Database from the data in the set location.
-
-        This does no locking, with one exception: it will automatically
-        try to regenerate a missing DB if local. This requires taking a
-        write lock.
-        """
+        """Re-read Database from the data in the set location. This does no locking."""
         if os.path.isfile(self._index_path):
             current_verifier = ''
             if _use_uuid:
@@ -1048,12 +1043,6 @@ class Database(object):
             raise UpstreamDatabaseLockingError(
                 "No database index file is present, and upstream"
                 " databases cannot generate an index file")
-
-        # The file doesn't exist, try to traverse the directory.
-        # reindex() takes its own write lock, so no lock here.
-        with lk.WriteTransaction(self.lock):
-            self._write(None, None, None)
-        self.reindex(spack.store.layout)
 
     def _add(
             self,

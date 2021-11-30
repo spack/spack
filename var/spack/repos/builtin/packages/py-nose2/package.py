@@ -19,4 +19,4 @@ class PyNose2(PythonPackage):
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-cov-core@1.12:', type=('build', 'run'), when='@0.6.0:0.6.5')
     depends_on('py-coverage@4.4.1:', type=('build', 'run'), when='@0.7.0:')
-    depends_on('py-mock@2.0.0:', type=('build', 'run'), when='^python@2.7:3.5.99')
+    depends_on('py-mock@2.0.0:', type=('build', 'run'), when='^python@2.7:3.5')

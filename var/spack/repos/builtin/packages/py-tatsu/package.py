@@ -21,6 +21,6 @@ class PyTatsu(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@4.5:')
     depends_on('py-setuptools', type='build')
     # part of the standard lib in python@3.7.0, required in the current HEAD
-    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6.99')
+    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6')
     # optional dependency, otherwise falls back to standard implementation
     depends_on('py-regex@2018.8:', type=('build', 'run'), when='+future_regex')

@@ -11,10 +11,22 @@ import spack.util.spack_yaml as syaml
 class OperatingSystem(object):
     """Base class for all the Operating Systems.
 
-     Each Operating System contain its own compiler finding logic, that is used
-     to detect compilers.
-    """
+    On a multiple architecture machine, the architecture spec field can be set to
+    build a package against any target and operating system that is present on the
+    platform. On Cray platforms or any other architecture that has different front
+    and back end environments, the operating system will determine the method of
+    compiler detection.
 
+    There are two different types of compiler detection:
+
+        1. Through the $PATH env variable (front-end detection)
+        2. Through the module system. (back-end detection)
+
+    Depending on which operating system is specified, the compiler will be detected
+    using one of those methods.
+
+    For platforms such as linux and darwin, the operating system is autodetected.
+    """
     def __init__(self, name, version):
         self.name = name.replace('-', '_')
         self.version = str(version).replace('-', '_')

@@ -18,6 +18,8 @@ class Adios2(CMakePackage):
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
+    tags = ['e4s']
+
     version('master', branch='master')
     version('2.7.1', sha256='c8e237fd51f49d8a62a0660db12b72ea5067512aa7970f3fcf80b70e3f87ca3e')
     version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
@@ -122,6 +124,15 @@ class Adios2(CMakePackage):
     # Fix an unnecessary python dependency when testing is disabled
     # See https://github.com/ornladios/ADIOS2/pull/2596
     patch('2.7-fix-python-test-deps.patch', when='@2.5.0:2.7.0')
+
+    # Fix unresolved symbols when built with gcc10.
+    # See https://github.com/ornladios/ADIOS2/pull/2714
+    patch('2.6-fix-gcc10-symbols.patch', when='@2.6.0')
+
+    # Add missing include <memory>
+    # https://github.com/ornladios/adios2/pull/2710
+    patch('https://github.com/ornladios/adios2/pull/2710.patch', when='@:2.7.1',
+          sha256='8d301e8232baf4049b547f22bd73774309662017a62dac36360d2965907062bf')
 
     @when('%fj')
     def patch(self):

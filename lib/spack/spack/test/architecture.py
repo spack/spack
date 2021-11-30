@@ -7,22 +7,11 @@ import platform
 
 import pytest
 
-import spack.architecture
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
 import spack.spec
 import spack.target
-
-
-@pytest.fixture
-def sample_arch():
-    """Sample test architecture"""
-    arch = spack.architecture.Arch()
-    arch.platform = spack.architecture.platform()
-    arch.os = arch.platform.operating_system('default_os')
-    arch.target = arch.platform.target('default_target')
-    return arch
 
 
 @pytest.fixture
@@ -61,39 +50,10 @@ def os_str(request):
     return str(request.param)
 
 
-def test_dict_round_trip(sample_arch):
-    """Check that a round trip through dict return an equivalent architecture"""
-    sample_arch_copy = spack.architecture.Arch.from_dict(sample_arch.to_dict())
-
-    assert sample_arch == sample_arch_copy
-    for current_arch in (sample_arch, sample_arch_copy):
-        assert isinstance(current_arch, spack.architecture.Arch)
-        assert isinstance(current_arch.platform, spack.platforms.Platform)
-        assert isinstance(current_arch.os, spack.operating_systems.OperatingSystem)
-        assert isinstance(current_arch.target, spack.target.Target)
-
-
 def test_platform(current_host_platform):
     """Check that current host detection return the correct platform"""
-    detected_platform = spack.architecture.real_platform()
+    detected_platform = spack.platforms.real_host()
     assert str(detected_platform) == str(current_host_platform)
-
-
-@pytest.mark.parametrize('attribute_name,expected', [
-    # Make sure architecture reports that it's False when nothing's set.
-    (None, False),
-    # ... and it reports True otherwise
-    ('platform', True),
-    ('os', True),
-    ('target', True)
-])
-def test_boolness(sample_arch, attribute_name, expected):
-    """Boolean checks on an architecture object"""
-    arch = spack.architecture.Arch()
-    if attribute_name:
-        setattr(arch, attribute_name, getattr(sample_arch, attribute_name))
-
-    assert bool(arch) is expected
 
 
 def test_user_input_combination(config, target_str, os_str):

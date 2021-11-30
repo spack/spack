@@ -40,7 +40,7 @@ class Pajeng(CMakePackage):
     depends_on('boost')
     depends_on('flex')
     depends_on('bison')
-    depends_on('qt@:4.999+opengl', when='@:1.3.2+gui')
+    depends_on('qt@:4+opengl', when='@:1.3.2+gui')
     depends_on('freeglut', when='@:1.3.2+gui')
     depends_on('fmt', when='@develop')
 

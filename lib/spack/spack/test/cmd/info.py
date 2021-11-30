@@ -48,6 +48,22 @@ def test_it_just_runs(pkg):
     info(pkg)
 
 
+def test_info_noversion(mock_packages, info_lines, mock_print):
+    """Check that a mock package with no versions or variants outputs None."""
+    info('noversion')
+
+    line_iter = info_lines.__iter__()
+    for line in line_iter:
+        if 'version' in line:
+            has = [desc in line for desc in ['Preferred', 'Safe', 'Deprecated']]
+            if not any(has):
+                continue
+        elif 'Variants' not in line:
+            continue
+
+        assert 'None' in next(line_iter).strip()
+
+
 @pytest.mark.parametrize('pkg_query,expected', [
     ('zlib', 'False'),
     ('gcc', 'True (version, variants)'),

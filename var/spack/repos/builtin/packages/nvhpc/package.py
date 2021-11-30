@@ -77,6 +77,7 @@ class Nvhpc(Package):
     homepage = "https://developer.nvidia.com/hpc-sdk"
 
     maintainers = ['samcmill']
+    tags = ['e4s']
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())

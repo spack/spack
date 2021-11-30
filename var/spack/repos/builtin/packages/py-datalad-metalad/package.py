@@ -17,9 +17,3 @@ class PyDataladMetalad(PythonPackage):
     depends_on('py-setuptools',      type=('build'))
     depends_on('py-datalad@0.12.3:', type=('build', 'run'))
     depends_on('git-annex',          type=('run'))
-    depends_on('py-nose',            type=('run', 'test'))
-
-    install_time_test_callbacks = ['test', 'installtest']
-
-    def installtest(self):
-        which('datalad')('wtf')

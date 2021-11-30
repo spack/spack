@@ -38,11 +38,11 @@ class Metis(Package):
 
     # Prior to version 5, the (non-cmake) build system only knows about
     # 'build_type=Debug|Release'.
-    conflicts('@:4.999', when='build_type=RelWithDebInfo')
-    conflicts('@:4.999', when='build_type=MinSizeRel')
-    conflicts('@:4.999', when='+gdb')
-    conflicts('@:4.999', when='+int64')
-    conflicts('@:4.999', when='+real64')
+    conflicts('@:4', when='build_type=RelWithDebInfo')
+    conflicts('@:4', when='build_type=MinSizeRel')
+    conflicts('@:4', when='+gdb')
+    conflicts('@:4', when='+int64')
+    conflicts('@:4', when='+real64')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
