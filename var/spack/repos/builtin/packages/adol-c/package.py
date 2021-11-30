@@ -30,6 +30,8 @@ class AdolC(AutotoolsPackage):
             description='Enable advanced branching to reduce retaping')
     variant('atrig_erf', default=True,
             description='Enable arc-trig and error functions')
+    variant('stdczero', default=True,
+            description='Enable default initialization for the adouble datatype')
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
@@ -78,6 +80,11 @@ class AdolC(AutotoolsPackage):
         if '+atrig_erf' in spec:
             configure_args.append(
                 '--enable-atrig-erf'
+            )
+
+        if '~stdczero' in spec:
+            configure_args.append(
+                '--disable-stdczero'
             )
 
         if '+openmp' in spec:
