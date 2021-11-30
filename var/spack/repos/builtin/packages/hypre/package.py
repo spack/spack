@@ -121,10 +121,8 @@ class Hypre(AutotoolsPackage, CudaPackage):
 
         configure_args = [
             '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % ' '.join(lapack.names),
-            '--with-lapack-lib-dirs=%s' % ' '.join(lapack.directories),
-            '--with-blas-libs=%s' % ' '.join(blas.names),
-            '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
+            '--with-lapack-lib=%s' % ' '.join(lapack.ld_flags),
+            '--with-blas-lib=%s' % ' '.join(blas.ld_flags),
         ]
 
         if '+mpi' in spec:
