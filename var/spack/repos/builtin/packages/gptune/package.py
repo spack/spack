@@ -50,7 +50,7 @@ class Gptune(CMakePackage):
 
     depends_on('superlu-dist@develop', when='+app', type=('build', 'run'))
 
-    depends_on('openmpi@4:', when='+openmpi')
+    depends_on('openmpi@4:', when='+openmpi', type=('build', 'run'))
     conflicts('mpich', when='+openmpi')
     conflicts('spectrum-mpi', when='+openmpi')
     conflicts('cray-mpich', when='+openmpi')
