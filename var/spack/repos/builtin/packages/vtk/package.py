@@ -276,10 +276,6 @@ class Vtk(CMakePackage):
                 '-DVTK_USE_COCOA:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_EGL:BOOL=OFF',
                 '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
-<<<<<<< HEAD
-=======
-
->>>>>>> 9d60c00f3560e2edba2781e10fba4b27cf32e6b2
         elif '+egl' in spec:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
