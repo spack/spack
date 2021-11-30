@@ -1,7 +1,9 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you are referencing Spack in a publication, please cite the paper below."
 preferred-citation:
-  type: inproceedings
+  type: conference-paper
+  doi: "10.1145/2807591.2807623"
+  url: "https://github.com/spack/spack"
   authors:
   - family-names: "Gamblin"
     given-names: "Todd"
@@ -17,12 +19,12 @@ preferred-citation:
     given-names: "Bronis R."
   - family-names: "Futral"
     given-names: "Scott"
-  booktitle: "SC15: International Conference for High-Performance Computing, Networking, Storage and Analysis"
-  doi: 10.1145/2807591.2807623
-  end: 12
-  month: 11
-  publisher: "IEEE Computer Society"
-  start: 1
-  title: "The Spack package manager: bringing order to HPC software chaos"
-  url: "https://github.com/spack/spack"
+  title: "The Spack Package Manager: Bringing Order to HPC Software Chaos"
+  conference:
+    name: "Supercomputing 2015 (SC’15)"
+    city: "Austin"
+    region: "Texas"
+    country: "USA"
+  month: November 15-20
   year: 2015
+  notes: LLNL-CONF-669890
