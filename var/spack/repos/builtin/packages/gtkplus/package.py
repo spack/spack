@@ -114,7 +114,7 @@ class Gtkplus(MesonPackage):
 
     @when('@:3.20.10')
     def meson(self, spec, prefix):
-        configure(*self.configure_args)
+        configure(*self.configure_args())
 
     @when('@:3.20.10')
     def build(self, spec, prefix):
