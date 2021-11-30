@@ -11,7 +11,7 @@ class PyFire(PythonPackage):
     """Python Fire is a library for automatically generating command line
     interfaces (CLIs) with a single line of code."""
 
-    homepage = "https://https://github.com/google/python-fire"
+    homepage = "https://github.com/google/python-fire"
     pypi     = "fire/fire-0.2.1.tar.gz"
 
     version('0.4.0', sha256='c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62')
