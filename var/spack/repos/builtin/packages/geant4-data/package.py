@@ -18,6 +18,7 @@ class Geant4Data(BundlePackage):
 
     tags = ['hep']
 
+    version('10.7.3')
     version('10.7.2')
     version('10.7.1')
     version('10.7.0')

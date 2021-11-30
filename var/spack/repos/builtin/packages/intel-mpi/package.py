@@ -59,6 +59,9 @@ class IntelMpi(IntelPackage):
 
     provides('mpi')
 
+    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    depends_on('libfabric', when='+external-libfabric', type=('build', 'link', 'run'))
+
     def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:

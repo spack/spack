@@ -12,6 +12,7 @@ class PyWheel(PythonPackage):
     homepage = "https://github.com/pypa/wheel"
     pypi = "wheel/wheel-0.34.2.tar.gz"
 
+    version('0.37.0', sha256='e2ef7239991699e3355d54f8e968a21bb940a1dbf34a4d226741e64462516fad')
     version('0.36.2', sha256='e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e')
     version('0.35.1', sha256='99a22d87add3f634ff917310a3d87e499f19e663413a52eb9232c447aa646c9f')
     version('0.34.2', sha256='8788e9155fe14f54164c1b9eb0a319d98ef02c160725587ad60f14ddc57b6f96')

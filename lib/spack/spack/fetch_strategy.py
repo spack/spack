@@ -1437,7 +1437,13 @@ class GCSFetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            _, headers, stream = web_util.read_from_url(self.url)
+            import spack.util.s3 as s3_util
+            s3 = s3_util.create_s3_session(self.url,
+                                           connection=s3_util.get_mirror_connection(parsed_url), url_type="fetch")  # noqa: E501
+
+            headers = s3.get_object(Bucket=parsed_url.netloc,
+                                    Key=parsed_url.path.lstrip("/"))
+            stream = headers["Body"]
 
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)

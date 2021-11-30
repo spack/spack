@@ -14,15 +14,15 @@
 # Usage:
 #     run-flake8-tests
 #
-. "$(dirname $0)/setup.sh"
+. "$(dirname "$0")/setup.sh"
 
-BASE=""
-if [ -n "$GITHUB_BASE_REF" ]; then
-    BASE="--base ${GITHUB_BASE_REF}"
+args=()
+if [[ -n $GITHUB_BASE_REF ]]; then
+    args+=("--base" "${GITHUB_BASE_REF}")
 fi
 
 # verify that the code style is correct
-spack style --root-relative $BASE
+spack style --root-relative "${args[@]}"
 
 # verify that the license headers are present
 spack license verify

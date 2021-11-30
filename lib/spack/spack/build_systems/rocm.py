@@ -100,7 +100,8 @@ class ROCmPackage(PackageBase):
     # possible amd gpu targets for rocm builds
     variant('amdgpu_target',
             description='AMD GPU architecture',
-            values=spack.variant.any_combination_of(*amdgpu_targets))
+            values=spack.variant.any_combination_of(*amdgpu_targets),
+            when='+rocm')
 
     depends_on('llvm-amdgpu', when='+rocm')
     depends_on('hsa-rocr-dev', when='+rocm')
