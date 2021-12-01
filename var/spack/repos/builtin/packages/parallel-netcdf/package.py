@@ -177,14 +177,16 @@ class ParallelNetcdf(AutotoolsPackage):
 
         return args
 
+    examples_src_dir = join_path('examples', 'CXX')
+
     @run_after('install')
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path('examples', 'CXX'))
+        self.cache_extra_test_sources(examples_src_dir)
 
     def test(self):
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'CXX')
+        test_dir = join_path(self.test_suite.current_test_cache_dir, examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.
         # column_wise was chosen based on the E4S test suite. Other
         # examples should work as well.
