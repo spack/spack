@@ -15,7 +15,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Package information
     homepage = "https://www.qmcpack.org/"
     git      = "https://github.com/QMCPACK/qmcpack.git"
-    maintainers = ['naromero77']
+    maintainers = ['ye-luo']
     tags = ['ecp', 'ecp-apps']
 
     # This download method is untrusted, and is not recommended by the
@@ -96,6 +96,12 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
+
+    conflicts('^openblas threads=none',
+              msg='QMCPACK does not support OpenBLAS without threading')
+
+    conflicts('^openblas threads=pthreads',
+              msg='QMCPACK does not support OpenBLAS with pthreads')
 
     conflicts('cuda_arch=none',
               when='+cuda',
