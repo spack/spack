@@ -173,6 +173,14 @@ class Paraview(CMakePackage, CudaPackage):
     # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
     depends_on('cli11@1.9.1', when='@5.10:')
 
+    # ParaView depends on nlohmann-json due to changes in MR
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8550
+    depends_on('nlohmann-json', when='@master')
+
+    # ParaView depends on proj@8.1.0 due to changes in MR
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
+    depends_on('proj@8.1.0', when='@master')
+
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
     # Broken gcc-detection - improved in 5.1.0, redundant later
