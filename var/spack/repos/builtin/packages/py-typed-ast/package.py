@@ -12,6 +12,7 @@ class PyTypedAst(PythonPackage):
     homepage = "https://github.com/python/typed_ast"
     pypi = "typed-ast/typed_ast-1.4.0.tar.gz"
 
+    version('1.5.3', sha256='27f25232e2dd0edfe1f019d6bfaaf11e86e657d9bdb7b0956db95f560cceb2b3')
     version('1.4.3', sha256='fb1bbeac803adea29cedd70781399c99138358c26d05fcbd23c13016b7f5ec65')
     version('1.4.2', sha256='9fc0b3cb5d1720e7141d103cf4819aea239f7d136acf9ee4a69b047b7986175a')
     version('1.4.1', sha256='8c8aaad94455178e3187ab22c8b01a3837f8ee50e09cf31f1ba129eb293ec30b')
@@ -19,6 +20,7 @@ class PyTypedAst(PythonPackage):
     version('1.3.5', sha256='5315f4509c1476718a4825f45a203b82d7fdf2a6f5f0c8f166435975b1c9f7d4',
             url='https://files.pythonhosted.org/packages/source/t/typed-ast/typed-ast-1.3.5.tar.gz')
 
+    depends_on('python@3.6:', when='@1.5:', type=('build', 'link', 'run'))
     depends_on('python@3.3:', type=('build', 'link', 'run'))
-    depends_on('python@:3.8', when="@:1.4.0")  # build errors with 3.9 until 1.4.1
+    depends_on('python@:3.8', when="@:1.4.0", type=('build', 'link', 'run'))  # build errors with 3.9 until 1.4.1
     depends_on('py-setuptools', type='build')
