@@ -69,3 +69,8 @@ class Hipblas(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
+
+    @property
+    def headers(self):
+        return find_headers('hipblas', self.prefix.include, recursive=False) \
+            or None
