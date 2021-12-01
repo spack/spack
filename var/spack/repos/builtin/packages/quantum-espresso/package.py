@@ -324,6 +324,11 @@ class QuantumEspresso(CMakePackage):
             self.define_from_variant('QE_ENABLE_LIBXC', 'libxc'),
         ]
 
+        # QE prefers taking MPI compiler wrappers as CMake compilers.
+        if '+mpi' in spec:
+            cmake_args.append(self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc))
+            cmake_args.append(self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc))
+
         if not spec.satisfies('hdf5=none'):
             cmake_args.append(self.define('QE_ENABLE_HDF5', True))
 
