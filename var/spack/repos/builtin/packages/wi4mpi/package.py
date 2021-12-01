@@ -50,19 +50,6 @@ class Wi4mpi(CMakePackage):
     def setup_run_environment(self, env):
         env.set('WI4MPI_ROOT', self.prefix)
         env.set('WI4MPI_VERSION', self.version)
-        if '%gcc' in self.spec:
-            env.set('WI4MPI_CC', "gcc")
-            env.set('WI4MPI_CXX', "g++")
-            env.set('WI4MPI_FC', "gfortran")
-        elif '%intel' in self.spec:
-            env.set('WI4MPI_CC', "icc")
-            env.set('WI4MPI_CXX', "icpc")
-            env.set('WI4MPI_FC', "ifort")
-        elif '%clang' in self.spec:
-            env.set('WI4MPI_CC', "clang")
-            env.set('WI4MPI_CXX', "clang++")
-            env.set('WI4MPI_FC', "flang")
-        elif '%pgi' in self.spec:
-            env.set('WI4MPI_CC', "pgcc")
-            env.set('WI4MPI_CXX', "pgc++")
-            env.set('WI4MPI_FC', "pgfortran")
+        env.set('WI4MPI_CC', self.compiler.cc)
+        env.set('WI4MPI_CXX', self.compiler.cxx)
+        env.set('WI4MPI_FC', self.compiler.fc)
