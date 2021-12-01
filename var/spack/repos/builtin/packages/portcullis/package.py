@@ -19,7 +19,7 @@ class Portcullis(AutotoolsPackage):
     depends_on('autoconf@2.53:', type='build')
     depends_on('automake@1.11:', type='build')
     depends_on('libtool@2.4.2:',  type='build')
-    depends_on('boost', type='build')
+    depends_on('boost')
     depends_on('m4', type='build')
 
     depends_on('zlib', type='build')
