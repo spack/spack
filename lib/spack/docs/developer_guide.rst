@@ -1177,6 +1177,10 @@ completed, the steps to make the major release are:
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
 
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
+
 #. Follow the steps in :ref:`publishing-releases`.
 
 #. Follow the steps in :ref:`merging-releases`.
