@@ -285,24 +285,32 @@ def _construct_upstream_dbs_from_install_roots(
     return accumulated_upstream_dbs
 
 
-def find(constraints, multiple=False, restrict_to=None):
+def find(constraints, multiple=False, query_fn=None, **kwargs):
     """Return a list of specs matching the constraints passed as inputs.
 
     At least one spec per constraint must match, otherwise the function
     will error with an appropriate message.
 
+    By default this function queries the current store, but a custom query
+    function can be passed to hit any other source of concretized specs
+    (e.g. a binary cache).
+
+    The query function must accept a spec as its first argument.
+
     Args:
         constraints (list of Spec): specs to be matched against installed packages
         multiple (bool): if True multiple matches per constraint are admitted
-        restrict_to (list of str or None): optional list of hashes on which
-            we want to restrict matching. If None the entire database is searched
+        query_fn (callable): query function to get matching specs. By default
+            ``spack.store.db.query``
+        **kwargs: keyword arguments forwarded to the query function
 
     Return:
         List of matching specs
     """
     matching_specs, errors = [], []
+    query_fn = query_fn or spack.store.db.query
     for spec in constraints:
-        current_matches = spack.store.db.query(spec, hashes=restrict_to)
+        current_matches = query_fn(spec, **kwargs)
 
         # For each spec provided, make sure it refers to only one package.
         if not multiple and len(current_matches) > 1:

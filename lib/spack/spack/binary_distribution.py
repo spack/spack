@@ -1937,3 +1937,40 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
             continue
 
     return False
+
+
+class BinaryCacheQuery(object):
+    """Callable object to query if a spec is in a binary cache"""
+    def __init__(self, all_architectures):
+        """
+        Args:
+            all_architectures (bool): if True consider all the spec for querying,
+                otherwise restrict to the current default architecture
+        """
+        self.all_architectures = all_architectures
+
+        try:
+            specs = update_cache_and_get_specs()
+        except FetchCacheError as e:
+            tty.error(e)
+
+        if not self.all_architectures:
+            arch = spack.spec.Spec.default_arch()
+            specs = [s for s in specs if s.satisfies(arch)]
+
+        self.possible_specs = specs
+
+    def __call__(self, spec, **kwargs):
+        matches = []
+        if spec.startswith('/'):
+            # Matching a DAG hash
+            query_hash = spec.replace('/', '')
+            for candidate_spec in self.possible_specs:
+                if candidate_spec.dag_hash().startswith(query_hash):
+                    matches.append(candidate_spec)
+        else:
+            # Matching a spec constraint
+            matches = [
+                s for s in self.possible_specs if s.satisfies(spec)
+            ]
+        return matches

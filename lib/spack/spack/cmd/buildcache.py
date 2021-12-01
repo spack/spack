@@ -278,66 +278,17 @@ def setup_parser(subparser):
     update_index.set_defaults(func=buildcache_update_index)
 
 
-def _find_matching_specs(spec_constraints, multiple_matches=False, env=None):
+def _find_matching_specs(constraints, multiple_matches=False, env=None):
     hashes = env.all_hashes() if env else None
-    specs = spack.cmd.parse_specs(spec_constraints)
-    matching_specs = spack.store.find(
-        specs, multiple=multiple_matches, restrict_to=hashes
+    constraints = spack.cmd.parse_specs(constraints)
+    return spack.store.find(constraints, multiple=multiple_matches, hashes=hashes)
+
+
+def _match_downloaded_specs(constraints, multiple_matches=False, other_arch=False):
+    query = bindist.BinaryCacheQuery(all_architectures=other_arch)
+    return spack.store.find(
+        constraints, multiple=multiple_matches, query_fn=query
     )
-    return matching_specs
-
-
-def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
-                           other_arch=False):
-    """Returns a list of specs matching the not necessarily
-       concretized specs given from cli
-
-    Args:
-        specs: list of specs to be matched against buildcaches on mirror
-        allow_multiple_matches : if True multiple matches are admitted
-
-    Return:
-        list of specs
-    """
-    # List of specs that match expressions given via command line
-    specs_from_cli = []
-    has_errors = False
-
-    specs = bindist.update_cache_and_get_specs()
-
-    if not other_arch:
-        arch = spack.spec.Spec.default_arch()
-        specs = [s for s in specs if s.satisfies(arch)]
-
-    for pkg in pkgs:
-        matches = []
-        tty.msg("buildcache spec(s) matching %s \n" % pkg)
-        for spec in sorted(specs):
-            if pkg.startswith('/'):
-                pkghash = pkg.replace('/', '')
-                if spec.dag_hash().startswith(pkghash):
-                    matches.append(spec)
-            else:
-                if spec.satisfies(pkg):
-                    matches.append(spec)
-        # For each pkg provided, make sure it refers to only one package.
-        # Fail and ask user to be unambiguous if it doesn't
-        if not allow_multiple_matches and len(matches) > 1:
-            tty.error('%s matches multiple downloaded packages:' % pkg)
-            for match in matches:
-                tty.msg('"%s"' % match.format())
-            has_errors = True
-
-        # No downloaded package matches the query
-        if len(matches) == 0:
-            tty.error('%s does not match any downloaded packages.' % pkg)
-            has_errors = True
-
-        specs_from_cli.extend(matches)
-    if has_errors:
-        tty.die('use one of the matching specs above')
-
-    return specs_from_cli
 
 
 def _createtarball(env, spec_file=None, packages=None, add_spec=True,
@@ -488,8 +439,7 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
-                                     args.otherarch)
+    matches = _match_downloaded_specs(pkgs, args.multiple, args.otherarch)
 
     for match in matches:
         install_tarball(match, args)
@@ -535,7 +485,10 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.update_cache_and_get_specs()
+    try:
+        specs = bindist.update_cache_and_get_specs()
+    except bindist.FetchCacheError as e:
+        tty.error(e)
 
     if not args.allarch:
         arch = spack.spec.Spec.default_arch()
