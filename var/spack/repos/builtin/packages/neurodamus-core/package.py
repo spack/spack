@@ -16,10 +16,10 @@ _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
 class NeurodamusCore(SimModel):
     """Library of channels developed by Blue Brain Project, EPFL"""
 
-    homepage = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
-    git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/sim/neurodamus-core"
+    git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-core.git"
 
-    version('develop', branch='master', get_full_repo=False)
+    version('develop', branch='main', get_full_repo=False)
     version('3.3.3',  tag='3.3.3', get_full_repo=False)
     version('3.3.2',  tag='3.3.2', get_full_repo=False)
     version('3.3.1',  tag='3.3.1', get_full_repo=False)

@@ -11,8 +11,8 @@ from spack.pkg.builtin.neurodamus_model import NeurodamusModel, \
 class NeurodamusNeocortex(NeurodamusModel):
     """Neurodamus with built-in neocortex model
     """
-    homepage = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
-    git      = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
+    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git"
 
     # IMPORTANT: Register versions (only) here to make them stable
     # Final version name is combined e.g. "1.0-3.0.1"
@@ -26,7 +26,7 @@ class NeurodamusNeocortex(NeurodamusModel):
     version_from_model_core_deps(model_core_dep_v)
 
     # Legacy versions
-    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('develop', branch='main', submodules=True, get_full_repo=True)
     version('1.0', tag='1.0', submodules=True, get_full_repo=True)
     version('0.3', tag='0.3-1', submodules=True, get_full_repo=True)
     version('0.2', tag='0.2', submodules=True, get_full_repo=True)

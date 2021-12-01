@@ -11,9 +11,8 @@ from spack.pkg.builtin.neurodamus_model import NeurodamusModel, \
 class NeurodamusHippocampus(NeurodamusModel):
     """Neurodamus with built-in Hippocampus model.
     """
-
-    homepage = "ssh://bbpcode.epfl.ch/sim/models/hippocampus"
-    git      = "ssh://bbpcode.epfl.ch/sim/models/hippocampus"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/hippocampus"
+    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/hippocampus.git"
 
     mech_name = "hippocampus"
 
@@ -29,7 +28,7 @@ class NeurodamusHippocampus(NeurodamusModel):
     version_from_model_core_deps(model_core_dep_v)
 
     # Legacy versions
-    version('develop', branch='master', submodules=True, get_full_repo=False)
+    version('develop', branch='main', submodules=True, get_full_repo=False)
     version('1.0', tag='1.0', submodules=True, get_full_repo=False)
     version('0.4', tag='0.4-1', submodules=True, get_full_repo=False)
     version('0.3', tag='0.3', submodules=True, get_full_repo=False)
