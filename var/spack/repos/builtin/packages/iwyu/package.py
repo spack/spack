@@ -33,14 +33,14 @@ class Iwyu(CMakePackage):
     depends_on('llvm+clang@7.0:7', when='@0.11')
 
     # Non-X86 CPU use all_targets variants because iwyu use X86AsmParser
-    depends_on('llvm+all_targets', when='target=aarch64:')
-    depends_on('llvm+all_targets', when='target=arm:')
-    depends_on('llvm+all_targets', when='target=ppc:')
-    depends_on('llvm+all_targets', when='target=ppcle:')
-    depends_on('llvm+all_targets', when='target=ppc64:')
-    depends_on('llvm+all_targets', when='target=ppc64le:')
-    depends_on('llvm+all_targets', when='target=sparc:')
-    depends_on('llvm+all_targets', when='target=sparc64:')
+    depends_on('llvm', when='target=aarch64:')
+    depends_on('llvm', when='target=arm:')
+    depends_on('llvm', when='target=ppc:')
+    depends_on('llvm', when='target=ppcle:')
+    depends_on('llvm', when='target=ppc64:')
+    depends_on('llvm', when='target=ppc64le:')
+    depends_on('llvm', when='target=sparc:')
+    depends_on('llvm', when='target=sparc64:')
 
     @when('@0.14:')
     def cmake_args(self):
