@@ -18,4 +18,4 @@ class PyRetry(PythonPackage):
     depends_on('py-setuptools',       type='build')
     depends_on('py-pbr',              type='build')
     depends_on('py-decorator@3.4.2:', type=('build', 'run'))
-    depends_on('py-py@1.4.26:1.999',  type=('build', 'run'))
+    depends_on('py-py@1.4.26:1',  type=('build', 'run'))
