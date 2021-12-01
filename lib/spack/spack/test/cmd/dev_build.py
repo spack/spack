@@ -134,7 +134,7 @@ def mock_module_noop(*args):
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
-                           install_mockery):
+                           install_mockery, working_env):
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
     monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)
