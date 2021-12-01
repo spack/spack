@@ -13,29 +13,31 @@ class Open3d(CMakePackage, CudaPackage):
 
     homepage = "http://www.open3d.org/"
     url      = "https://github.com/isl-org/Open3D/archive/refs/tags/v0.13.0.tar.gz"
+    git      = "https://github.com/isl-org/Open3D.git"
 
-    version('0.13.0', sha256='b5994a9853f1c01e59f6d682ef0cc42c73071fd49c3e30593dc2f21ec61cf940')
+    version('0.13.0', tag='v0.13.0', submodules=True)
 
     variant('python', default=False, description='Build the Python module')
 
     # http://www.open3d.org/docs/latest/compilation.html
-    depends_on('cmake@3.19:', type='build')
-    depends_on('eigen')
-    depends_on('flann')
-    depends_on('fmt')
-    depends_on('glew')
-    depends_on('glfw')
-    depends_on('googletest')
-    depends_on('imgui')
-    depends_on('jpeg')
-    depends_on('liblzf')
-    depends_on('libpng')
-    depends_on('py-pybind11')
-    depends_on('qhull')
-    depends_on('tinygltf')
-    depends_on('tinyobjloader')
 
-    extends('python@3.6:', when='+python')
+    depends_on('cmake@3.19:', type='build')
+    # depends_on('eigen')
+    # depends_on('flann')
+    # depends_on('fmt')
+    # depends_on('glew')
+    # depends_on('glfw')
+    # depends_on('imgui')
+    # depends_on('jpeg')
+    # depends_on('liblzf')
+    # depends_on('libpng')
+    # depends_on('py-pybind11')
+    # depends_on('qhull')
+    # depends_on('tinygltf')
+    # depends_on('tinyobjloader')
+
+    extends('python', when='+python', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='+python', type=('build', 'link', 'run'))
     depends_on('py-pip', when='+python', type='build')
     depends_on('py-setuptools@40.8:', when='+python', type='build')
     depends_on('py-wheel@0.36:', when='+python', type='build')
@@ -54,33 +56,38 @@ class Open3d(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         args = [
+            self.define('BUILD_UNIT_TESTS', self.run_tests),
             self.define_from_variant('BUILD_PYTHON_MODULE', 'python'),
             self.define_from_variant('BUILD_CUDA_MODULE', 'cuda'),
             # Use Spack-installed dependencies instead of vendored dependencies
-            self.define('USE_SYSTEM_EIGEN3', True),
-            self.define('USE_SYSTEM_FLANN', True),
-            self.define('USE_SYSTEM_FMT', True),
-            self.define('USE_SYSTEM_GLEW', True),
-            self.define('USE_SYSTEM_GLFW', True),
-            self.define('USE_SYSTEM_GOOGLETEST', True),
-            self.define('USE_SYSTEM_IMGUI', True),
-            self.define('USE_SYSTEM_JPEG', True),
-            self.define('USE_SYSTEM_LIBLZF', True),
-            self.define('USE_SYSTEM_PNG', True),
-            self.define('USE_SYSTEM_PYBIND11', True),
-            self.define('USE_SYSTEM_QHULL', True),
-            self.define('USE_SYSTEM_TINYGLTF', True),
-            self.define('USE_SYSTEM_TINYOBJLOADER', True),
+            # Numerous issues with using externally installed dependencies:
+            # https://github.com/isl-org/Open3D/issues/4333
+            # https://github.com/isl-org/Open3D/issues/4360
+            # self.define('USE_SYSTEM_EIGEN3', True),
+            # self.define('USE_SYSTEM_FLANN', True),
+            # self.define('USE_SYSTEM_FMT', True),
+            # self.define('USE_SYSTEM_GLEW', True),
+            # self.define('USE_SYSTEM_GLFW', True),
+            # self.define('USE_SYSTEM_IMGUI', True),
+            # self.define('USE_SYSTEM_JPEG', True),
+            # self.define('USE_SYSTEM_LIBLZF', True),
+            # self.define('USE_SYSTEM_PNG', True),
+            # self.define('USE_SYSTEM_PYBIND11', True),
+            # self.define('USE_SYSTEM_QHULL', True),
+            # self.define('USE_SYSTEM_TINYGLTF', True),
+            # self.define('USE_SYSTEM_TINYOBJLOADER', True),
         ]
 
         if '+python' in self.spec:
-            args.append(self.define('Python3_ROOT', self.spec['python'].command.path))
+            args.append(
+                self.define('PYTHON_EXECUTABLE', self.spec['python'].command.path))
 
         return args
 
     def check(self):
-        sh = which('sh')
-        sh(os.path.join('bin', 'tests'))
+        with working_dir(self.build_directory):
+            tests = Executable(os.path.join('bin', 'tests'))
+            tests()
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -88,12 +95,13 @@ class Open3d(CMakePackage, CudaPackage):
             if '+python' in spec:
                 make('install-pip-package')
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def unit_test(self):
-        if '+python' in self.spec:
-            pytest = which('pytest')
-            pytest(os.path.join('python', 'test'))
+    # Tests don't pass unless all optional features are compiled, including PyTorch
+    # @run_after('install')
+    # @on_package_attributes(run_tests=True)
+    # def unit_test(self):
+    #     if '+python' in self.spec:
+    #         pytest = which('pytest')
+    #         pytest(os.path.join('python', 'test'))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
