@@ -16,7 +16,7 @@ class PyYq(PythonPackage):
 
     version('2.12.2', sha256='2f156d0724b61487ac8752ed4eaa702a5737b804d5afa46fa55866951cd106d2')
 
-    depends_on('py-setuptools',         type='build')
+    depends_on('py-setuptools',         type=('build', 'run'))
     depends_on('py-toml@0.10.0:',       type=('build', 'run'))
     depends_on('py-pyyaml@3.11:',       type=('build', 'run'))
     depends_on('py-argcomplete@1.8.1:', type=('build', 'run'))
