@@ -22,4 +22,4 @@ class PyFire(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-six',        type=('build', 'run'))
     depends_on('py-termcolor',  type=('build', 'run'))
-    depends_on('py-enum34',     type=('build', 'run'), when='@0.3.0: ^python@:3.3.999')
+    depends_on('py-enum34',     type=('build', 'run'), when='@0.3.0: ^python@:3.3')
