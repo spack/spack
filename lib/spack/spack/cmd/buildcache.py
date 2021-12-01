@@ -278,47 +278,13 @@ def setup_parser(subparser):
     update_index.set_defaults(func=buildcache_update_index)
 
 
-def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
-    """Returns a list of specs matching the not necessarily
-       concretized specs given from cli
-
-    Args:
-        pkgs (str): spec to be matched against installed packages
-        allow_multiple_matches (bool): if True multiple matches are admitted
-        env (spack.environment.Environment or None): active environment, or ``None``
-            if there is not one
-
-    Return:
-        list: list of specs
-    """
+def _find_matching_specs(spec_constraints, multiple_matches=False, env=None):
     hashes = env.all_hashes() if env else None
-
-    # List of specs that match expressions given via command line
-    specs_from_cli = []
-    has_errors = False
-    tty.debug('find_matching_specs: about to parse specs for {0}'.format(pkgs))
-    specs = spack.cmd.parse_specs(pkgs)
-    for spec in specs:
-        matching = spack.store.db.query(spec, hashes=hashes)
-        # For each spec provided, make sure it refers to only one package.
-        # Fail and ask user to be unambiguous if it doesn't
-        if not allow_multiple_matches and len(matching) > 1:
-            tty.error('%s matches multiple installed packages:' % spec)
-            for match in matching:
-                tty.msg('"%s"' % match.format())
-            has_errors = True
-
-        # No installed package matches the query
-        if len(matching) == 0 and spec is not any:
-            tty.error('{0} does not match any installed packages.'.format(
-                spec))
-            has_errors = True
-
-        specs_from_cli.extend(matching)
-    if has_errors:
-        tty.die('use one of the matching specs above')
-
-    return specs_from_cli
+    specs = spack.cmd.parse_specs(spec_constraints)
+    matching_specs = spack.store.find(
+        specs, multiple=multiple_matches, restrict_to=hashes
+    )
+    return matching_specs
 
 
 def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
@@ -388,10 +354,10 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
             else:
                 s = Spec.from_yaml(specfile_contents)
             package = '/{0}'.format(s.dag_hash())
-            matches = find_matching_specs(package, env=env)
+            matches = _find_matching_specs(package, env=env)
 
     elif packages:
-        matches = find_matching_specs(packages, env=env)
+        matches = _find_matching_specs(packages, env=env)
 
     elif env:
         matches = [env.specs_by_hash[h] for h in env.concretized_order]
@@ -599,7 +565,7 @@ def preview(args):
     Args:
         args: command line arguments
     """
-    specs = find_matching_specs(args.specs, allow_multiple_matches=True)
+    specs = _find_matching_specs(args.specs, multiple_matches=True)
 
     # Cycle over the specs that match
     for spec in specs:
@@ -703,7 +669,7 @@ def get_concrete_spec(args):
 
     if spec_str:
         try:
-            spec = find_matching_specs(spec_str)[0]
+            spec = _find_matching_specs(spec_str)[0]
             spec.concretize()
         except SpecError as spec_error:
             tty.error('Unable to concrectize spec {0}'.format(args.spec))

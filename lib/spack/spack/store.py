@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.database
 import spack.directory_layout
+import spack.error
 import spack.paths
 import spack.util.path
 
@@ -284,6 +285,48 @@ def _construct_upstream_dbs_from_install_roots(
     return accumulated_upstream_dbs
 
 
+def find(constraints, multiple=False, restrict_to=None):
+    """Return a list of specs matching the constraints passed as inputs.
+
+    At least one spec per constraint must match, otherwise the function
+    will error with an appropriate message.
+
+    Args:
+        constraints (list of Spec): specs to be matched against installed packages
+        multiple (bool): if True multiple matches per constraint are admitted
+        restrict_to (list of str or None): optional list of hashes on which
+            we want to restrict matching. If None the entire database is searched
+
+    Return:
+        List of matching specs
+    """
+    matching_specs, errors = [], []
+    for spec in constraints:
+        current_matches = spack.store.db.query(spec, hashes=restrict_to)
+
+        # For each spec provided, make sure it refers to only one package.
+        if not multiple and len(current_matches) > 1:
+            msg_fmt = '"{0}" matches multiple packages: [{1}]'
+            errors.append(
+                msg_fmt.format(spec, ', '.join([m.format() for m in current_matches]))
+            )
+
+        # No installed package matches the query
+        if len(current_matches) == 0 and spec is not any:
+            msg_fmt = '"{0}" does not match any installed packages'
+            errors.append(msg_fmt.format(spec))
+
+        matching_specs.extend(current_matches)
+
+    if errors:
+        raise MatchError(
+            message="errors occurred when looking for specs in the store",
+            long_message='\n'.join(errors)
+        )
+
+    return matching_specs
+
+
 @contextlib.contextmanager
 def use_store(store_or_path):
     """Use the store passed as argument within the context manager.
@@ -314,3 +357,7 @@ def use_store(store_or_path):
         store = original_store
         db, layout = original_store.db, original_store.layout
         root, unpadded_root = original_store.root, original_store.unpadded_root
+
+
+class MatchError(spack.error.SpackError):
+    """Error occurring when trying to match specs in store against a constraint"""
