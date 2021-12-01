@@ -8,6 +8,7 @@ import sys
 
 from spack import *
 
+
 class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
@@ -136,7 +137,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             if '+fortran' in spec:
                 os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
-            configure_args.append('--with-MPI-include={0}/include'.format(spec['mpi'].prefix))
+            configure_args.append(
+                '--with-MPI-include={0}/include'.format(spec['mpi'].prefix))
         else:
             configure_args.append('--without-MPI')
 
