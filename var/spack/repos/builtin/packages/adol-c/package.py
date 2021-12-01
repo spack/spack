@@ -72,30 +72,17 @@ class AdolC(AutotoolsPackage):
                 '--with-boost=no'
             )
 
-        if '+advanced_branching' in spec:
-            configure_args.append(
-                '--enable-advanced-branching'
-            )
-
-        if '+atrig_erf' in spec:
-            configure_args.append(
-                '--enable-atrig-erf'
-            )
-
-        if '~stdczero' in spec:
-            configure_args.append(
-                '--disable-stdczero'
-            )
-
         if '+openmp' in spec:
             configure_args.append(
                 '--with-openmp-flag={0}'.format(self.compiler.openmp_flag)
             )
 
-        if '+sparse' in spec:
-            configure_args.append(
-                '--enable-sparse'
-            )
+        configure_args.extend(self.enable_or_disable('advanced-branching',
+                                                     variant='advanced_branching'))
+
+        configure_args.extend(self.enable_or_disable('atrig-erf', variant='atrig_erf'))
+        configure_args.extend(self.enable_or_disable('sparse'))
+        configure_args.extend(self.enable_or_disable('stdczero'))
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected
