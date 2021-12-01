@@ -28,14 +28,13 @@ class PyOpenpmdViewer(PythonPackage):
     variant('tutorials', default=True,
             description='Enable dependencies for tutorials')
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-numpy@1.15:1', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-tqdm', type=('build', 'run'))
 
-    with when('backend=h5py'):
-        depends_on('py-h5py@2.8.0:', type=('build', 'run'))
+    depends_on('py-h5py@2.8.0:', type=('build', 'run'))
     with when('backend=openpmd-api'):
         depends_on('openpmd-api +python -mpi', type=('build', 'run'))
 
