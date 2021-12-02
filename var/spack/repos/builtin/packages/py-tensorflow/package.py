@@ -709,23 +709,23 @@ def protobuf_deps():
         if spec.satisfies('+rocm'):
             rocm_configure = FileFilter("third_party/gpus/rocm_configure.bzl")
             rocm_configure.filter(r'\@SPACK_HIP_ROOT\@',
-                        '"{0}"'.format(spec['hip'].prefix))
+                                  '"{0}"'.format(spec['hip'].prefix))
             rocm_configure.filter(r'\@SPACK_ROCFFT_ROOT\@',
-                        '"{0}"'.format(spec['rocfft'].prefix))
+                                  '"{0}"'.format(spec['rocfft'].prefix))
             rocm_configure.filter(r'\@SPACK_ROCBLAS_ROOT\@',
-                        '"{0}"'.format(spec['rocblas'].prefix))
+                                  '"{0}"'.format(spec['rocblas'].prefix))
             rocm_configure.filter(r'\@SPACK_MIOPEN_ROOT\@',
-                        '"{0}"'.format(spec['miopen-hip'].prefix))
+                                  '"{0}"'.format(spec['miopen-hip'].prefix))
             rocm_configure.filter(r'\@SPACK_RCCL_ROOT\@',
-                        '"{0}"'.format(spec['rccl'].prefix))
+                                  '"{0}"'.format(spec['rccl'].prefix))
             rocm_configure.filter(r'\@SPACK_HIPRAND_ROOT\@',
-                        '"{0}"'.format(spec['rocrand'].prefix))
+                                  '"{0}"'.format(spec['rocrand'].prefix))
             rocm_configure.filter(r'\@SPACK_HIPSPARSE_ROOT\@',
-                        '"{0}"'.format(spec['hipsparse'].prefix))
+                                  '"{0}"'.format(spec['hipsparse'].prefix))
             rocm_configure.filter(r'\@SPACK_ROCPRIM_ROOT\@',
-                        '"{0}"'.format(spec['rocprim'].prefix))
+                                  '"{0}"'.format(spec['rocprim'].prefix))
             rocm_configure.filter(r'\@SPACK_HIPCUB_ROOT\@',
-                        '"{0}"'.format(spec['hipcub'].prefix))
+                                  '"{0}"'.format(spec['hipcub'].prefix))
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']
