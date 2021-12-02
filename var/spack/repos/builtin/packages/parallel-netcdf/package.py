@@ -193,8 +193,8 @@ class ParallelNetcdf(AutotoolsPackage):
         # examples should work as well.
         test_exe = 'column_wise'
         options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf',
-                   '-L{0}'.format(join_path(self.prefix, 'lib')),
-                   '-I{0}'.format(join_path(self.prefix, 'include'))]
+                   '-L{0}'.format(self.prefix.lib),
+                   '-I{0}'.format(self.prefix.include)]
         reason = 'test: compiling and linking pnetcdf example'
         self.run_test(self.spec['mpi'].mpicxx, options, [],
                       installed=False, purpose=reason, work_dir=test_dir)
