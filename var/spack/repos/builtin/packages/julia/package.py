@@ -177,6 +177,12 @@ class Julia(Package):
                     target_str = "znver1"
                 if target_str == "zen2":
                     target_str = "znver2"
+                if target_str == "zen3":
+                    if spec.satisfies('@1.7.0:'):
+                        target_str = "znver3"
+                    else:
+                        # The LLVM in @1.6.4 doesn't support znver3.
+                        target_str = "znver2"
                 options += [
                     'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]
