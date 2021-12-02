@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyVectorQuantizePytorch(PythonPackage):
-    """A vector quantization library originally transcribed from Deepmind's tensorflow implementation, made conveniently into a package. It uses exponential moving averages to update the dictionary."""
+    """A vector quantization library originally transcribed
+    from Deepmind's tensorflow implementation, made
+    conveniently into a package. It uses exponential moving
+    averages to update the dictionary."""
 
     homepage = "https://github.com/lucidrains/vector-quantize-pytorch"
     pypi     = "vector_quantize_pytorch/vector_quantize_pytorch-0.3.9.tar.gz"
