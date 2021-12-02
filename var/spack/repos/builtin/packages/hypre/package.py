@@ -105,7 +105,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts('+mixedint', when='@:2.15')
 
     # HIP support added in v2.21.0
-    conflicts('+rocm', when='@:2.21.0')
+    conflicts('+rocm', when='@:2.20')
 
     configure_directory = 'src'
 
