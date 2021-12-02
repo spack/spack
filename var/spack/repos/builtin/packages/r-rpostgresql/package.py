@@ -17,7 +17,7 @@ class RRpostgresql(RPackage):
     issue tracking system for the package are available at Google Code at
     https://code.google.com/p/rpostgresql/."""
 
-    homepage = "https://code.google.com/p/rpostgresql/"
+    homepage = "https://cran.r-project.org/web/packages/RPostgreSQL/index.html"
     url      = "https://cloud.r-project.org/src/contrib/RPostgreSQL_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RPostgreSQL"
 

@@ -1,11 +1,12 @@
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
 [![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
-[![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
+[![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
+[![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
-[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
+[![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -26,7 +27,7 @@ for examples and highlights.
 To install spack and your first package, make sure you have Python.
 Then:
 
-    $ git clone https://github.com/spack/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
     $ cd spack/bin
     $ ./spack install zlib
 
@@ -35,6 +36,8 @@ Documentation
 
 [**Full documentation**](https://spack.readthedocs.io/) is available, or
 run `spack help` or `spack help --all`.
+
+For a cheat sheet on Spack syntax, run `spack help --spec`.
 
 Tutorial
 ----------------
@@ -58,7 +61,7 @@ packages to bugfixes, documentation, or even new core features.
 Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
-  To get an invitation, [**click here**](https://spackpm.herokuapp.com).
+  To get an invitation, visit [slack.spack.io](https://slack.spack.io).
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
@@ -72,7 +75,7 @@ When you send your request, make ``develop`` the destination branch on the
 
 Your PR must pass Spack's unit tests and documentation tests, and must be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with our CI process. To run these tests locally, and for 
+these guidelines with our CI process. To run these tests locally, and for
 helpful tips on git, see our
 [Contribution Guide](https://spack.readthedocs.io/en/latest/contribution_guide.html).
 
@@ -121,6 +124,9 @@ If you are referencing Spack in a publication, please cite the following paper:
    Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
+
+On GitHub, you can copy this citation in APA or BibTeX format via the "Cite this repository"
+button. Or, see the comments in `CITATION.cff` for the raw BibTeX.
 
 License
 ----------------

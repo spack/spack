@@ -18,7 +18,7 @@ class RRgexf(RPackage):
     through "sigmajs" (a javascript library) and interact with the igraph
     package."""
 
-    homepage = "http://bitbucket.org/gvegayon/rgexf"
+    homepage = "https://bitbucket.org/gvegayon/rgexf"
     url      = "https://cloud.r-project.org/src/contrib/rgexf_0.15.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgexf"
 

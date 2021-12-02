@@ -25,7 +25,9 @@ class PyTensorboardPluginWit(Package):
     version('1.8.0', sha256='1e4de1bbf6ae61c4d27b114ec2e1093bc4765b8c2bbb2cc5d43e2075b08a5fea')
     version('1.7.0', sha256='30dcab9065b02c3f1476f4fb92b27f6feb6c00cdb281699c44d8e69c86745247')
 
-    depends_on('bazel@:2.1.0', type='build')
+    # Bazel 3.7+ does not work
+    # https://github.com/PAIR-code/what-if-tool/issues/140
+    depends_on('bazel@0.26.1:3.6', type='build')
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
@@ -33,6 +35,11 @@ class PyTensorboardPluginWit(Package):
     extends('python')
 
     patch('tboard_shellenv.patch')
+
+    # On Ubuntu, sh -> dash, and the script contains tools like pushd that require bash
+    patch('https://patch-diff.githubusercontent.com/raw/PAIR-code/what-if-tool/pull/154.patch',
+          sha256='b40fbc73fb07ed933f9d845b65fdbf7a94644f7ec7ca8637eda002171e71bbb6',
+          when='@:1.8.0')
 
     phases = ['setup', 'build', 'install']
 

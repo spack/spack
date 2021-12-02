@@ -5,6 +5,7 @@
 
 from __future__ import unicode_literals
 
+import contextlib
 import fcntl
 import os
 import struct
@@ -12,12 +13,13 @@ import sys
 import termios
 import textwrap
 import traceback
-import six
 from datetime import datetime
+
+import six
 from six import StringIO
 from six.moves import input
 
-from llnl.util.tty.color import cprint, cwrite, cescape, clen
+from llnl.util.tty.color import cescape, clen, cprint, cwrite
 
 # Globals
 _debug = 0
@@ -27,6 +29,7 @@ _timestamp = False
 _msg_enabled = True
 _warn_enabled = True
 _error_enabled = True
+_output_filter = lambda s: s
 indent = "  "
 
 
@@ -87,6 +90,18 @@ def warn_enabled():
 
 def error_enabled():
     return _error_enabled
+
+
+@contextlib.contextmanager
+def output_filter(filter_fn):
+    """Context manager that applies a filter to all output."""
+    global _output_filter
+    saved_filter = _output_filter
+    try:
+        _output_filter = filter_fn
+        yield
+    finally:
+        _output_filter = saved_filter
 
 
 class SuppressOutput:
@@ -165,13 +180,23 @@ def msg(message, *args, **kwargs):
     if _stacktrace:
         st_text = process_stacktrace(2)
     if newline:
-        cprint("@*b{%s==>} %s%s" % (
-            st_text, get_timestamp(), cescape(message)))
+        cprint(
+            "@*b{%s==>} %s%s" % (
+                st_text,
+                get_timestamp(),
+                cescape(_output_filter(message))
+            )
+        )
     else:
-        cwrite("@*b{%s==>} %s%s" % (
-            st_text, get_timestamp(), cescape(message)))
+        cwrite(
+            "@*b{%s==>} %s%s" % (
+                st_text,
+                get_timestamp(),
+                cescape(_output_filter(message))
+            )
+        )
     for arg in args:
-        print(indent + six.text_type(arg))
+        print(indent + _output_filter(six.text_type(arg)))
 
 
 def info(message, *args, **kwargs):
@@ -187,18 +212,29 @@ def info(message, *args, **kwargs):
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s%s" % (
-        format, st_text, get_timestamp(), cescape(six.text_type(message))
-    ), stream=stream)
+    cprint(
+        "@%s{%s==>} %s%s" % (
+            format,
+            st_text,
+            get_timestamp(),
+            cescape(_output_filter(six.text_type(message)))
+        ),
+        stream=stream
+    )
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                six.text_type(arg), initial_indent=indent,
-                subsequent_indent=indent, break_long_words=break_long_words)
+                _output_filter(six.text_type(arg)),
+                initial_indent=indent,
+                subsequent_indent=indent,
+                break_long_words=break_long_words
+            )
             for line in lines:
                 stream.write(line + '\n')
         else:
-            stream.write(indent + six.text_type(arg) + '\n')
+            stream.write(
+                indent + _output_filter(six.text_type(arg)) + '\n'
+            )
 
 
 def verbose(message, *args, **kwargs):

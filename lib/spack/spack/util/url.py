@@ -11,8 +11,8 @@ import itertools
 import os.path
 import re
 
-from six import string_types
 import six.moves.urllib.parse as urllib_parse
+from six import string_types
 
 import spack.util.path
 
@@ -151,21 +151,21 @@ def join(base_url, path, *extra, **kwargs):
         for x in itertools.chain((base_url, path), extra)]
     n = len(paths)
     last_abs_component = None
-    scheme = None
+    scheme = ''
     for i in range(n - 1, -1, -1):
         obj = urllib_parse.urlparse(
-            paths[i], scheme=None, allow_fragments=False)
+            paths[i], scheme='', allow_fragments=False)
 
         scheme = obj.scheme
 
         # in either case the component is absolute
-        if scheme is not None or obj.path.startswith('/'):
-            if scheme is None:
+        if scheme or obj.path.startswith('/'):
+            if not scheme:
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
                 for j in range(i - 1, -1, -1):
                     obj = urllib_parse.urlparse(
-                        paths[j], scheme=None, allow_fragments=False)
+                        paths[j], scheme='', allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = '{SM}://{NL}{PATH}'.format(
@@ -248,3 +248,56 @@ def _join(base_url, path, *extra, **kwargs):
                                            params=params,
                                            query=query,
                                            fragment=None))
+
+
+git_re = (
+    r"^(?:([a-z]+)://)?"        # 1. optional scheme
+    r"(?:([^@]+)@)?"            # 2. optional user
+    r"([^:/~]+)?"               # 3. optional hostname
+    r"(?(1)(?::([^:/]+))?|:)"   # 4. :<optional port> if scheme else :
+    r"(.*[^/])/?$"              # 5. path
+)
+
+
+def parse_git_url(url):
+    """Parse git URL into components.
+
+    This parses URLs that look like:
+
+    * ``https://host.com:443/path/to/repo.git``, or
+    * ``git@host.com:path/to/repo.git``
+
+    Anything not matching those patterns is likely a local
+    file or invalid.
+
+    Returned components are as follows (optional values can be ``None``):
+
+    1. ``scheme`` (optional): git, ssh, http, https
+    2. ``user`` (optional): ``git@`` for github, username for http or ssh
+    3. ``hostname``: domain of server
+    4. ``port`` (optional): port on server
+    5. ``path``: path on the server, e.g. spack/spack
+
+    Returns:
+        (tuple): tuple containing URL components as above
+
+    Raises ``ValueError`` for invalid URLs.
+    """
+    match = re.match(git_re, url)
+    if not match:
+        raise ValueError("bad git URL: %s" % url)
+
+    # initial parse
+    scheme, user, hostname, port, path = match.groups()
+
+    # special handling for ~ paths (they're never absolute)
+    if path.startswith("/~"):
+        path = path[1:]
+
+    if port is not None:
+        try:
+            port = int(port)
+        except ValueError:
+            raise ValueError("bad port in git url: %s" % url)
+
+    return (scheme, user, hostname, port, path)

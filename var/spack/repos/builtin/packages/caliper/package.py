@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
+import os
 import sys
+
+from spack import *
 
 
 class Caliper(CMakePackage, CudaPackage):
@@ -17,11 +18,16 @@ class Caliper(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
-    url      = "https://github.com/LLNL/Caliper/archive/v2.5.0.tar.gz"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.7.0.tar.gz"
+    tags     = ['e4s', 'radiuss']
 
     maintainers = ["daboehme"]
 
+    test_requires_compiler = True
+
     version('master', branch='master')
+    version('2.7.0', sha256='b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b')
+    version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
@@ -60,26 +66,26 @@ class Caliper(CMakePackage, CudaPackage):
     variant('fortran', default=False,
             description='Enable Fortran support')
 
-    depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
+    depends_on('adiak@0.1:0', when='@2.2: +adiak')
 
-    depends_on('papi@5.3:5.99', when='@:2.2 +papi')
-    depends_on('papi@5.3:6.99', when='@2.3: +papi')
+    depends_on('papi@5.3:5', when='@:2.2 +papi')
+    depends_on('papi@5.3:6', when='@2.3: +papi')
 
-    depends_on('libpfm4@4.8:4.99', when='+libpfm')
+    depends_on('libpfm4@4.8:4', when='+libpfm')
 
     depends_on('mpi', when='+mpi')
-    depends_on('unwind@1.2:1.99', when='+libunwind')
+    depends_on('unwind@1.2:1', when='+libunwind')
     depends_on('elfutils', when='+libdw')
 
-    depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
+    depends_on('sosflow@spack', when='@1.0:1+sosflow')
 
     depends_on('cmake',  type='build')
     depends_on('python', type='build')
 
     # sosflow support not yet in 2.0
-    conflicts('+sosflow', '@2.0.0:2.5.99')
-    conflicts('+adiak', '@:2.1.99')
-    conflicts('+libdw', '@:2.4.99')
+    conflicts('+sosflow', '@2.0.0:2.5')
+    conflicts('+adiak', '@:2.1')
+    conflicts('+libdw', '@:2.4')
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
@@ -136,3 +142,35 @@ class Caliper(CMakePackage, CudaPackage):
             args.append('-DWITH_CUPTI=Off')
 
         return args
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('examples', 'apps')])
+
+    def run_cxx_example_test(self):
+        """Run stand alone test: cxx_example"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
+
+        if not os.path.exists(test_dir):
+            print('Skipping caliper test')
+            return
+
+        exe = 'cxx-example'
+
+        self.run_test(exe='gcc',
+                      options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
+                               '-L{0}'.format(join_path(self.prefix, 'lib64')),
+                               '-I{0}'.format(join_path(self.prefix, 'include')),
+                               '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_cxx_example_test()

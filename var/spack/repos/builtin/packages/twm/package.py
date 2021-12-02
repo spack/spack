@@ -12,7 +12,7 @@ class Twm(AutotoolsPackage, XorgPackage):
     user-defined macro functions, click-to-type and pointer-driven
     keyboard focus, and user-specified key and pointer button bindings."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/twm"
+    homepage = "https://cgit.freedesktop.org/xorg/app/twm"
     xorg_mirror_path = "app/twm-1.0.9.tar.gz"
 
     version('1.0.9', sha256='1c325e8456a200693c816baa27ceca9c5e5e0f36af63d98f70a335853a0039e8')

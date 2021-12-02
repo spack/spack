@@ -6,9 +6,9 @@
 """Test for multi_method dispatch."""
 import pytest
 
+import spack.platforms
 import spack.repo
 from spack.multimethod import NoSuchMethodError
-
 
 pytestmark = pytest.mark.usefixtures('mock_packages')
 
@@ -80,7 +80,7 @@ def test_default_works(pkg_name):
 
 
 def test_target_match(pkg_name):
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     targets = list(platform.targets.values())
     for target in targets[:-1]:
         pkg = spack.repo.get(pkg_name + ' target=' + target.name)

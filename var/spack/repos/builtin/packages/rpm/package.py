@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-from spack import *
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Rpm(AutotoolsPackage):
@@ -19,45 +19,51 @@ class Rpm(AutotoolsPackage):
 
     homepage = "https://github.com/rpm-software-management/rpm"
     url      = "https://github.com/rpm-software-management/rpm/archive/rpm-4.16.0-release.tar.gz"
+    git      = "https://github.com/rpm-software-management/rpm.git"
 
-    version('4.16.0', sha256='a62b744e3404b107e8467e1a36ff0f2bf9e5c1b748dbfeb36db54bbb859446ea')
+    maintainers = ['haampie']
+
+    version('master', branch='master')
     version('4.16.1.2', sha256='3d2807807a8ccaa92a8ced74e09b5bf5b2417a5bbf9bee4abc7c6aa497547bf3')
+    version('4.16.0', sha256='a62b744e3404b107e8467e1a36ff0f2bf9e5c1b748dbfeb36db54bbb859446ea')
 
-    variant('openssl', default=False, description='use openssl for cryptographic library')
-    variant('sqlite', default=False, description='use sqlite instead of ndb')
-    variant('bdb_ro', default=False, description='standalone support for read-only BDB databases')
-    variant('selinux', default=False, description="enable support for SELinux")
-    variant('python', default=False, description="build Python bindings to RPM library")
-    variant('posix', default=False, description="enable POSIX.1e draft 15 file capabilities support")
-    variant('gpg', default=False, description="install gpg for using cryptographic signatures")
+    variant('crypto', values=('openssl', 'libgcrypt'), default='libgcrypt',
+            multi=False, description='What cryptographic library to use')
+    variant('sqlite', default=False, description='Use sqlite instead of ndb')
+    variant('berkeley-db', values=('full', 'readonly', 'none'), default='none',
+            multi=False, description='Type of support for Berkeley DB')
+    variant('selinux', default=False, description="Enable support for SELinux")
+    variant('python', default=False, description="Build Python bindings to RPM library")
+    variant('lua', default=True, description='Build with lua support')
+    variant('zstd', default=False, description='Build with zstd suport')
+    variant('posix', default=False, description="Enable POSIX.1e draft 15 file capabilities support")
+    variant('gpg', default=False, description="Install gpg for using cryptographic signatures")
     variant('openmp', default=True, description="OpenMP multithreading support")
-    variant('docs', default=False, description='build documentation')
+    variant('nls', default=False, description='Enable native language support')
 
     # Always required
     depends_on('popt')
 
     # Without this file patch, we don't detect lua
-    depends_on('lua+pcfile@5.3.5:')
-
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    depends_on('lua+pcfile@5.3.5:', when='+lua')
 
     # Enable POSIX.1e draft 15 file capabilities support
     depends_on('libcap', when="+posix")
-    depends_on('berkeley-db@4.5:')
+    depends_on('berkeley-db@4.5:', when='berkeley-db=full')
+    depends_on('berkeley-db@4.5:', when='berkeley-db=readonly')
 
-    # Required for National Language Support, if not present autopoint error
-    depends_on('gettext')
+    depends_on('gettext', when='+nls')
+    depends_on('gettext', type='build')
+    depends_on('iconv')
     depends_on('file')  # provides magic.h
     depends_on('libarchive')
 
-    # suppot for cryptographic signatures
-    depends_on('gnupg', when="+gpg")
+    # support for cryptographic signatures
+    depends_on('gnupg', when='+gpg')
 
     # cryptographic library to support digests and signatures
-    depends_on('libgcrypt', when='-openssl')
-    depends_on('openssl@1.0.2:', when='+openssl')
+    depends_on('libgcrypt', when='crypto=libgcrypt')
+    depends_on('openssl@1.0.2:', when='crypto=openssl')
 
     # RPM needs some database, ndb requires no extra dependencies but sqlite does
     depends_on('sqlite@3.22.0:', when='+sqlite')
@@ -65,22 +71,29 @@ class Rpm(AutotoolsPackage):
     # Python 2.x support is being deprecated
     depends_on('python@3.1:', when='+sqlite')
 
-    # compression support
+    # compression support -- there is no configure option for many of these
+    # and they autodetect the libraries, so it's better to just make them
+    # hard requirements to avoid linking against system libraries.
     depends_on('zlib')
-
-    # Desired to install these formats for use
     depends_on('bzip2')
     depends_on('gzip')
     depends_on('xz')
+    depends_on('lzma')
+    depends_on('zstd', when='+zstd')
 
     # java jar dependency analysis (already requirement for lua)
     depends_on('unzip', type='run')
 
-    # Documentation dependencies
-    depends_on('doxygen', type="build", when="+docs")
+    # Build dependencies
+    depends_on('doxygen',   type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('autoconf',  type='build')
+    depends_on('automake',  type='build')
+    depends_on('libtool',   type='build')
+    depends_on('m4',        type='build')
 
-    def setup_build_environment(self, env):
-        env.set('LIBS', self.spec['gettext'].libs.search_flags + ' -lintl')
+    # Lua is about to become a hard requirement
+    conflicts('~lua', when='@4.17:')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
@@ -89,39 +102,38 @@ class Rpm(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = ["--enable-ndb"]
+        args = [
+            '--enable-ndb',
+            '--disable-inhibit-plugin',
+            '--with-crypto={0}'.format(spec.variants['crypto'].value)
+        ]
 
-        pkg_config = os.path.join(spec['lua'].prefix.lib, "pkgconfig")
-        os.environ['PKG_CONFIG_PATH'] = pkg_config
-        os.putenv('PKG_CONFIG_PATH', pkg_config)
-
-        # cryptography library defaults to libgcrypt, but doesn't hurt to specify
-        if "+openssl" in spec:
-            args.append("--with-crypto=openssl")
-            tty.warning(openssl_warning)
-        else:
-            args.append("--with-crypto=libgcrypt")
-
-        # Default to ndb (no deps) if sqlite not wanted
-        if "+sqlite" in spec:
-            args.append("--enable-sqlite")
-        if "+bdb_ro" in spec:
-            args.append("--bdb-ro")
-
-        # Enable support for selinux
-        if "+selinux" in spec:
-            args.append('--with-selinux')
-        if "+python" in spec:
-            args.append("--enable-python")
-
-        # enable POSIX.1e draft 15 file capabilities support
-        if "+posix" in spec:
-            args.append('--with-cap')
-
+        args += self.enable_or_disable('nls')
+        args += self.enable_or_disable('sqlite')
+        args += self.with_or_without('selinux')
+        args += self.with_or_without('python')
         # OpenMP multithreading support automatically enabled if C compiler has
         # support for OpenMP version 4.5 or higher
-        if "~openmp" in spec:
-            args.append("--disable-openmp")
+        args += self.enable_or_disable('openmp')
+
+        # Option got removed in 4.17
+        if self.spec.satisfies('@:4.16'):
+            args += self.with_or_without('lua')
+
+        # Legacy berkely db support
+        if 'berkeley-db=full' in spec:
+            args.extend(['--enable-bdb', '--disable-bdb-ro'])
+        elif 'berkeley-db=readonly' in spec:
+            args.extend(['--disable-bdb', '--enable-bdb-ro'])
+        else:
+            args.extend(['--disable-bdb', '--disable-bdb-ro'])
+
+        # enable POSIX.1e draft 15 file capabilities support
+        if '+posix' in spec:
+            args.append('--with-cap')
+
+        if 'crypto=openssl' in spec:
+            tty.warn(openssl_warning)
 
         return args
 

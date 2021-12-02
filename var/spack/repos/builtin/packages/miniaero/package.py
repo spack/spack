@@ -12,7 +12,7 @@ class Miniaero(MakefilePackage):
        of programming models and hardware for next generation platforms.
     """
 
-    homepage = "http://mantevo.org"
+    homepage = "https://mantevo.org"
     git      = "https://github.com/Mantevo/miniAero.git"
 
     tags = ['proxy-app']

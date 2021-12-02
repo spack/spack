@@ -10,7 +10,7 @@ class Flatbuffers(CMakePackage):
     """Memory Efficient Serialization Library
     """
 
-    homepage = "http://google.github.io/flatbuffers/"
+    homepage = "https://google.github.io/flatbuffers/"
     url      = "https://github.com/google/flatbuffers/archive/v1.9.0.tar.gz"
 
     version('1.12.0', sha256='62f2223fb9181d1d6338451375628975775f7522185266cd5296571ac152bc45')
@@ -54,8 +54,7 @@ class Flatbuffers(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DFLATBUFFERS_BUILD_SHAREDLIB={0}'.format(
-            'ON' if '+shared' in self.spec else 'OFF'))
+        args.append(self.define_from_variant('FLATBUFFERS_BUILD_SHAREDLIB', 'shared'))
         args.append('-DFLATBUFFERS_BUILD_FLATLIB={0}'.format(
             'ON' if '+shared' not in self.spec else 'OFF'))
         if 'darwin' in self.spec.architecture:

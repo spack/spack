@@ -3,10 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import platform
+import re
 import tempfile
+
+from spack import *
 
 
 class Texlive(AutotoolsPackage):
@@ -17,8 +19,8 @@ class Texlive(AutotoolsPackage):
     and fonts that are free software, including support for many languages
     around the world."""
 
-    homepage = "http://www.tug.org/texlive"
-    url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
+    homepage = "https://www.tug.org/texlive"
+    url = 'https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2020/texlive-20200406-source.tar.xz'
     base_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz'
     list_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive'
     list_depth = 1
@@ -29,11 +31,17 @@ class Texlive(AutotoolsPackage):
     # connection at install time and the package versions could change over
     # time. It is better to use a version built from tarballs, as defined with
     # the "releases" below.
-    version('live', sha256='7c90a50e55533d57170cbc7c0370a010019946eb18570282948e1af6f809382d',
-            url='ftp://tug.org/historic/systems/texlive/2020/install-tl-unx.tar.gz')
+    version('live', sha256='74eac0855e1e40c8db4f28b24ef354bd7263c1f76031bdc02b52156b572b7a1d',
+            url='ftp://tug.org/historic/systems/texlive/2021/install-tl-unx.tar.gz')
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20210325',
+            'year': '2021',
+            'sha256_source': '7aefd96608d72061970f2d73f275be5648ea8ae815af073016d3106acc0d584b',
+            'sha256_texmf': 'ff12d436c23e99fb30aad55924266104356847eb0238c193e839c150d9670f1c',
+        },
         {
             'version': '20200406',
             'year': '2020',
@@ -107,7 +115,7 @@ class Texlive(AutotoolsPackage):
     depends_on('mpfr', when='@2019:')
     depends_on('perl', when='@2019:')
     depends_on('pixman', when='@2019:')
-    depends_on('poppler', when='@2019:')
+    depends_on('poppler@:0.84', when='@2019:')
     depends_on('teckit', when='@2019:')
     depends_on('zlib', when='@2019:')
     depends_on('zziplib', when='@2019:')
@@ -180,6 +188,9 @@ class Texlive(AutotoolsPackage):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
     @when('@live')
     def autoreconf(self, spec, prefix):
         touch('configure')
@@ -202,7 +213,7 @@ class Texlive(AutotoolsPackage):
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
-        _repository = 'http://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
+        _repository = 'https://ctan.math.washington.edu/tex-archive/systems/texlive/tlnet/'
         env = os.environ
         env['TEXLIVE_INSTALL_PREFIX'] = prefix
         perl = which('perl')
@@ -212,3 +223,39 @@ class Texlive(AutotoolsPackage):
              '-portable', '-profile', tmp_profile.name)
 
         tmp_profile.close()
+
+    executables = [r'^tex$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # https://askubuntu.com/questions/100406/finding-the-tex-live-version
+        # Thanks to @michaelkuhn that told how to reuse the package releases
+        # variable.
+        # Added 3 older releases: 2018 (CentOS-8), 2017 (Ubuntu-18.04), 2013 (CentOS-7).
+        releases = cls.releases
+        releases.extend([
+            {
+                'version': '20180414',
+                'year': '2018',
+            },
+            {
+                'version': '20170524',
+                'year': '2017',
+            },
+            {
+                'version': '20130530',
+                'year': '2013',
+            },
+        ])
+        # tex indicates the year only
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'TeX Live (\d+)', output)
+        ver = match.group(1) if match else None
+        # We search for the repo actual release
+        if ver is not None:
+            for release in releases:
+                year = release['year']
+                if year == ver:
+                    ver = release['version']
+                    break
+        return ver

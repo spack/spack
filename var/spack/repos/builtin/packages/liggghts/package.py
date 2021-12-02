@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from glob import glob
-
 import os
+from glob import glob
 
 from spack import *
 

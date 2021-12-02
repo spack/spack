@@ -10,8 +10,8 @@ class Powertop(AutotoolsPackage):
     """Powertop is a Linux tool to diagnose issues with power consumption
     and power management"""
 
-    homepage = "http://01.org/powertop/"
-    url      = "http://01.org/sites/default/files/downloads/powertop/powertop-v2.9.tar.gz"
+    homepage = "https://01.org/powertop/"
+    url      = "https://01.org/sites/default/files/downloads/powertop/powertop-v2.9.tar.gz"
 
     version('2.9', sha256='aa7fb7d8e9a00f05e7d8a7a2866d85929741e0d03a5bf40cab22d2021c959250')
 

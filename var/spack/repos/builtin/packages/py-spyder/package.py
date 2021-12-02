@@ -29,7 +29,7 @@ class PySpyder(PythonPackage):
     # with this change until @3.2.0
     # https://github.com/PyCQA/pycodestyle/issues/466
     # https://github.com/spyder-ide/spyder/blob/master/CHANGELOG.md#version-32-2017-07-24
-    depends_on('py-pycodestyle@:1.7.1', when='@:3.1.99', type=('build', 'run'))
+    depends_on('py-pycodestyle@:1.7.1', when='@:3.1', type=('build', 'run'))
     depends_on('py-pycodestyle@2.1.0:', when='@3.2.0:',  type=('build', 'run'))
     depends_on('py-pylint',           type=('build', 'run'))
     depends_on('py-psutil',           type=('build', 'run'))

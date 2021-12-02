@@ -30,7 +30,7 @@ class Libbsd(AutotoolsPackage):
     version('0.8.6', sha256='467fbf9df1f49af11f7f686691057c8c0a7613ae5a870577bef9155de39f9687')
 
     patch('cdefs.h.patch', when='@0.8.6 %gcc@:4')
-    patch('local-elf.h.patch', when='%intel')
+    patch('local-elf.h.patch', when='@:0.10 %intel')
     patch('nvhpc.patch', when='%nvhpc')
 
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1

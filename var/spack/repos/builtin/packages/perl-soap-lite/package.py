@@ -9,7 +9,7 @@ from spack import *
 class PerlSoapLite(PerlPackage):
     """Perl's Web Services Toolkit"""
 
-    homepage = "http://search.cpan.org/~phred/SOAP-Lite-1.20/lib/SOAP/Lite.pm"
+    homepage = "https://metacpan.org/pod/SOAP::Lite"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
 
     version('1.22', sha256='92f492f8722cb3002cd1dce11238cee5599bb5bd451a062966df45223d33693a')

@@ -21,13 +21,13 @@ class Assimp(CMakePackage):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
 
+    depends_on('zlib')
     depends_on('boost')
 
     def cmake_args(self):
         args = [
             '-DASSIMP_BUILD_TESTS=OFF',
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in self.spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
         return args
 

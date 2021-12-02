@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import re
 
 
 class Gawk(AutotoolsPackage, GNUMirrorPackage):
@@ -23,6 +22,10 @@ class Gawk(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gawk/"
     gnu_mirror_path = "gawk/gawk-4.1.4.tar.xz"
 
+    executables = ['^gawk$']
+
+    tags = ['build-tools']
+
     version('5.1.0', sha256='cf5fea4ac5665fd5171af4716baab2effc76306a9572988d5ba1078f196382bd')
     version('5.0.1', sha256='8e4e86f04ed789648b66f757329743a0d6dfb5294c3b91b756a474f1ce05a794')
     version('4.1.4', sha256='53e184e2d0f90def9207860531802456322be091c7b48f23fdc79cda65adc266')
@@ -36,3 +39,9 @@ class Gawk(AutotoolsPackage, GNUMirrorPackage):
     provides('awk')
 
     build_directory = 'spack-build'
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU Awk\s+([\d\.]+)', output)
+        return match.group(1) if match else None

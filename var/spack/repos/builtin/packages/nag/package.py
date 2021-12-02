@@ -5,16 +5,17 @@
 import os
 import re
 
-import spack.compiler
 import llnl.util.tty as tty
+
+import spack.compiler
 
 
 class Nag(Package):
     """The NAG Fortran Compiler."""
-    homepage = "http://www.nag.com/nagware/np.asp"
+    homepage = "https://www.nag.com/nagware/np.asp"
     maintainers = ['ThemosTsikas']
 
-    version('7.0', sha256='99d5ba10b629ce1487a900d7a8fd92608536a6d0b168cd6cd8c5e7d000c30e2f')
+    version('7.0', sha256='6d509208533d79139e5a9f879b7b93e7b58372b78d404d51f35e491ecbaa54c7')
     version('6.2', sha256='9b60f6ffa4f4be631079676963e74eea25e8824512e5c864eb06758b2a3cdd2d')
     version('6.1', sha256='32580e0004e6798abf1fa52f0070281b28abeb0da2387530a4cc41218e813c7c')
 

@@ -10,7 +10,7 @@ class PyModred(PythonPackage):
     """Modred is a parallelized library for finding
     modal decompositions and reduced-order models.
     """
-    homepage = "http://github.com/belson17/modred"
+    homepage = "https://github.com/belson17/modred"
     git      = "https://github.com/belson17/modred.git"
 
     version('2.0.4', tag='v2.0.4')

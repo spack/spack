@@ -6,13 +6,19 @@
 import os
 
 import pytest
+
 import spack.util.environment as environment
 from spack.paths import spack_root
-from spack.util.environment import EnvironmentModifications
-from spack.util.environment import RemovePath, PrependPath, AppendPath
-from spack.util.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths, is_system_path
-
+from spack.util.environment import (
+    AppendPath,
+    EnvironmentModifications,
+    PrependPath,
+    RemovePath,
+    SetEnv,
+    UnsetEnv,
+    filter_system_paths,
+    is_system_path,
+)
 
 datadir = os.path.join(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
 

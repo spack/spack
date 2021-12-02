@@ -35,17 +35,24 @@ class GoBootstrap(Package):
 
     depends_on('git', type=('build', 'link', 'run'))
 
-    # NOTE: Older versions of Go attempt to download external files that have
-    # since been moved while running the test suite.  This patch modifies the
-    # test files so that these tests don't cause false failures.
-    # See: https://github.com/golang/go/issues/15694
-    @when('@:1.4.3')
     def patch(self):
-        test_suite_file = FileFilter(join_path('src', 'run.bash'))
-        test_suite_file.filter(
-            r'^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$',
-            r'# \1\2\3',
-        )
+        if self.spec.satisfies('@:1.4.3'):
+            # NOTE: Older versions of Go attempt to download external files that have
+            # since been moved while running the test suite.  This patch modifies the
+            # test files so that these tests don't cause false failures.
+            # See: https://github.com/golang/go/issues/15694
+            test_suite_file = FileFilter(join_path('src', 'run.bash'))
+            test_suite_file.filter(
+                r'^(.*)(\$GOROOT/src/cmd/api/run.go)(.*)$',
+                r'# \1\2\3',
+            )
+
+        # Go uses a hardcoded limit of 4096 bytes for its printf functions.
+        # This can cause environment variables to be truncated.
+        filter_file('char buf[4096];',
+                    'char buf[131072];',
+                    'src/cmd/dist/unix.c',
+                    string=True)
 
     def install(self, spec, prefix):
         env['CGO_ENABLED'] = '0'

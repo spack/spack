@@ -15,7 +15,7 @@ class RAmelia(RPackage):
     time-series-cross-sectional data set (such as collected by
     years for each of several countries)."""
 
-    homepage = "http://gking.harvard.edu/amelia"
+    homepage = "https://gking.harvard.edu/amelia"
     url      = "https://cloud.r-project.org/src/contrib/Amelia_1.7.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Amelia"
 

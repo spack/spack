@@ -9,7 +9,7 @@ class PyXattr(PythonPackage):
     sans libattr dependency.
     """
 
-    homepage = "http://pyxattr.k1024.org/"
+    homepage = "https://pyxattr.k1024.org/"
     pypi = "xattr/xattr-0.9.6.tar.gz"
     git = "https://github.com/iustin/pyxattr.git"
 

@@ -10,7 +10,7 @@ class SublimeText(Package):
     """Sublime Text is a sophisticated text editor for code, markup and
     prose."""
 
-    homepage = "http://www.sublimetext.com/"
+    homepage = "https://www.sublimetext.com/"
     url      = "https://download.sublimetext.com/sublime_text_3_build_3211_x64.tar.bz2"
 
     version('3.2.2.3211', sha256='0b3c8ca5e6df376c3c24a4b9ac2e3b391333f73b229bc6e87d0b4a5f636d74ee')

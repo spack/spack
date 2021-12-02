@@ -26,6 +26,7 @@ class Butterflypack(CMakePackage):
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
+    version('2.0.0', sha256='84f0e5ac40997409f3c80324238a07f9c700a1263b84140ed97275d67b577b80')
     version('1.2.1', sha256='cd61b0e033f55a932f13d9902e28a7abbf029c279cec9ab1b2a063525d036fa2')
     version('1.2.0', sha256='870b8acd826eb414dc38fa25e22c9c09ddeb5ca595b1dfdaa1fd65ae964d4e94')
     version('1.1.0', sha256='0e6fd0f9e27b3ee8a273dc52f4d24b8737e7279dc26d461ef5658b317215f1dc')
@@ -48,9 +49,6 @@ class Butterflypack(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        def on_off(varstr):
-            return 'ON' if varstr in spec else 'OFF'
-
         args = [
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
@@ -60,7 +58,7 @@ class Butterflypack(CMakePackage):
             '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
             libs.joined(";"),
             '-DTPL_ARPACK_LIBRARIES=%s' % spec['arpack-ng'].libs.joined(";"),
-            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
         return args

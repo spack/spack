@@ -10,8 +10,8 @@ from spack import *
 class Redland(AutotoolsPackage):
     """Redland RDF Library - librdf providing the RDF API and triple stores"""
 
-    homepage = "http://librdf.org/"
-    url      = "http://download.librdf.org/source/redland-1.0.17.tar.gz"
+    homepage = "https://librdf.org/"
+    url      = "https://download.librdf.org/source/redland-1.0.17.tar.gz"
 
     version('1.0.17', sha256='de1847f7b59021c16bdc72abb4d8e2d9187cd6124d69156f3326dd34ee043681')
     version('1.0.16', sha256='d9a274fc086e61119d5c9beafb8d05527e040ec86f4c0961276ca8de0a049dbd')

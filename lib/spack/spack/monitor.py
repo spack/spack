@@ -8,30 +8,38 @@ https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 """
 
 import base64
+import hashlib
 import os
 import re
+from datetime import datetime
 
 try:
-    from urllib.request import Request, urlopen
     from urllib.error import URLError
+    from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import urlopen, Request, URLError  # type: ignore  # novm
 
+from copy import deepcopy
+from glob import glob
+
+import llnl.util.tty as tty
+
 import spack
+import spack.config
 import spack.hash_types as ht
 import spack.main
+import spack.paths
 import spack.store
+import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import llnl.util.tty as tty
-from copy import deepcopy
-
 
 # A global client to instantiate once
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
+def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None,
+               save_local=False):
     """
     Get a monitor client for a particular host and prefix.
 
@@ -46,26 +54,26 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
     the monitor use it.
     """
     global cli
-    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail)
+    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
+                             tags=tags, save_local=save_local)
 
     # If we don't disable auth, environment credentials are required
-    if not disable_auth:
+    if not disable_auth and not save_local:
         cli.require_auth()
 
-    # We will exit early if the monitoring service is not running
-    info = cli.service_info()
+    # We will exit early if the monitoring service is not running, but
+    # only if we aren't doing a local save
+    if not save_local:
+        info = cli.service_info()
 
-    # If we allow failure, the response will be done
-    if info:
-        tty.debug("%s v.%s has status %s" % (
-            info['id'],
-            info['version'],
-            info['status'])
-        )
-        return cli
-
-    else:
-        tty.debug("spack-monitor server not found, continuing as allow_fail is True.")
+        # If we allow failure, the response will be done
+        if info:
+            tty.debug("%s v.%s has status %s" % (
+                info['id'],
+                info['version'],
+                info['status'])
+            )
+    return cli
 
 
 def get_monitor_group(subparser):
@@ -80,10 +88,16 @@ def get_monitor_group(subparser):
     monitor_group = subparser.add_argument_group()
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
-        help="interact with a montor server during builds.")
+        help="interact with a monitor server during builds.")
+    monitor_group.add_argument(
+        '--monitor-save-local', action='store_true', dest='monitor_save_local',
+        default=False, help="save monitor results to .spack instead of server.")
     monitor_group.add_argument(
         '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
         default=False, help="the monitoring server does not require auth.")
+    monitor_group.add_argument(
+        '--monitor-tags', dest='monitor_tags', default=None,
+        help="One or more (comma separated) tags for a build.")
     monitor_group.add_argument(
         '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
         default=False, help="continue the build if a request to monitor fails.")
@@ -106,7 +120,8 @@ class SpackMonitorClient:
     to the client on init.
     """
 
-    def __init__(self, host=None, prefix="ms1", allow_fail=False):
+    def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None,
+                 save_local=False):
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
@@ -115,9 +130,36 @@ class SpackMonitorClient:
         self.allow_fail = allow_fail
         self.spack_version = spack.main.get_version()
         self.capture_build_environment()
+        self.tags = tags
+        self.save_local = save_local
 
         # We keey lookup of build_id by full_hash
         self.build_ids = {}
+        self.setup_save()
+
+    def setup_save(self):
+        """Given a local save "save_local" ensure the output directory exists.
+        """
+        if not self.save_local:
+            return
+
+        save_dir = spack.util.path.canonicalize_path(
+            spack.config.get('config:monitor_dir', spack.paths.default_monitor_path)
+        )
+
+        # Name based on timestamp
+        now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
+        self.save_dir = os.path.join(save_dir, now)
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+    def save(self, obj, filename):
+        """
+        Save a monitor json result to the save directory.
+        """
+        filename = os.path.join(self.save_dir, filename)
+        write_json(obj, filename)
+        return {"message": "Build saved locally to %s" % filename}
 
     def load_build_environment(self, spec):
         """
@@ -134,7 +176,7 @@ class SpackMonitorClient:
         env_file = os.path.join(pkg_dir, "install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
-            tty.warning(
+            tty.warn(
                 "install_environment.json not found in package folder. "
                 " This means that the current environment metadata will be used."
             )
@@ -169,7 +211,7 @@ class SpackMonitorClient:
 
         The token and username must not be unset
         """
-        if not self.token or not self.username:
+        if not self.save_local and (not self.token or not self.username):
             tty.die("You are required to export SPACKMON_TOKEN and SPACKMON_USER")
 
     def set_header(self, name, value):
@@ -201,7 +243,8 @@ class SpackMonitorClient:
         # Always reset headers for new request.
         self.reset()
 
-        headers = headers or {}
+        # Preserve previously used auth token
+        headers = headers or self.headers
 
         # The calling function can provide a full or partial url
         if not endpoint.startswith("http"):
@@ -228,7 +271,7 @@ class SpackMonitorClient:
         except URLError as e:
 
             # If we have an authorization request, retry once with auth
-            if e.code == 401 and retry:
+            if hasattr(e, "code") and e.code == 401 and retry:
                 if self.authenticate_request(e):
                     request = self.prepare_request(
                         e.url,
@@ -237,12 +280,34 @@ class SpackMonitorClient:
                     )
                     return self.issue_request(request, False)
 
+            # Handle permanent re-directs!
+            elif hasattr(e, "code") and e.code == 308:
+                location = e.headers.get('Location')
+
+                request_data = None
+                if request.data:
+                    request_data = sjson.load(request.data.decode('utf-8'))[0]
+
+                if location:
+                    request = self.prepare_request(
+                        location,
+                        request_data,
+                        self.headers
+                    )
+                    return self.issue_request(request, True)
+
             # Otherwise, relay the message and exit on error
             msg = ""
             if hasattr(e, 'reason'):
                 msg = e.reason
             elif hasattr(e, 'code'):
                 msg = e.code
+
+            # If we can parse the message, try it
+            try:
+                msg += "\n%s" % e.read().decode("utf8", 'ignore')
+            except Exception:
+                pass
 
             if self.allow_fail:
                 tty.warning("Request to %s was not successful, but continuing." % e.url)
@@ -338,10 +403,18 @@ class SpackMonitorClient:
             # Not sure if this is needed here, but I see it elsewhere
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
+
+            # Remove extra level of nesting
+            as_dict = {"spec": spec.to_dict(hash=ht.full_hash)['spec'],
                        "spack_version": self.spack_version}
-            response = self.do_request("specs/new/", data=sjson.dump(as_dict))
-            configs[spec.package.name] = response.get('data', {})
+
+            if self.save_local:
+                filename = "spec-%s-%s-config.json" % (spec.name, spec.version)
+                self.save(as_dict, filename)
+            else:
+                response = self.do_request("specs/new/", data=sjson.dump(as_dict))
+                configs[spec.package.name] = response.get('data', {})
+
         return configs
 
     def new_build(self, spec):
@@ -367,13 +440,42 @@ class SpackMonitorClient:
         data = self.build_environment.copy()
         data['full_hash'] = full_hash
 
+        # If the build should be tagged, add it
+        if self.tags:
+            data['tags'] = self.tags
+
         # If we allow the spec to not exist (meaning we create it) we need to
-        # include the full spec.yaml here
+        # include the full specfile here
         if not spec_exists:
             meta_dir = os.path.dirname(spec.package.install_log_path)
-            spec_file = os.path.join(meta_dir, "spec.yaml")
-            data['spec'] = syaml.load(read_file(spec_file))
+            spec_file = os.path.join(meta_dir, "spec.json")
+            if os.path.exists(spec_file):
+                data['spec'] = sjson.load(read_file(spec_file))
+            else:
+                spec_file = os.path.join(meta_dir, "spec.yaml")
+                data['spec'] = syaml.load(read_file(spec_file))
 
+        if self.save_local:
+            return self.get_local_build_id(data, full_hash, return_response)
+        return self.get_server_build_id(data, full_hash, return_response)
+
+    def get_local_build_id(self, data, full_hash, return_response):
+        """
+        Generate a local build id based on hashing the expected data
+        """
+        hasher = hashlib.md5()
+        hasher.update(str(data).encode('utf-8'))
+        bid = hasher.hexdigest()
+        filename = "build-metadata-%s.json" % bid
+        response = self.save(data, filename)
+        if return_response:
+            return response
+        return bid
+
+    def get_server_build_id(self, data, full_hash, return_response=False):
+        """
+        Retrieve a build id from the spack monitor server
+        """
         response = self.do_request("builds/new/", data=sjson.dump(data))
 
         # Add the build id to the lookup
@@ -393,6 +495,10 @@ class SpackMonitorClient:
         successful install. This endpoint can take a general status to update.
         """
         data = {"build_id": self.get_build_id(spec), "status": status}
+        if self.save_local:
+            filename = "build-%s-status.json" % data['build_id']
+            return self.save(data, filename)
+
         return self.do_request("builds/update/", data=sjson.dump(data))
 
     def fail_task(self, spec):
@@ -434,6 +540,10 @@ class SpackMonitorClient:
                      "output": read_file(phase_output_file),
                      "phase_name": phase_name})
 
+        if self.save_local:
+            filename = "build-%s-phase-%s.json" % (data['build_id'], phase_name)
+            return self.save(data, filename)
+
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
     def upload_specfile(self, filename):
@@ -449,7 +559,79 @@ class SpackMonitorClient:
         # We load as json just to validate it
         spec = read_json(filename)
         data = {"spec": spec, "spack_verison": self.spack_version}
+
+        if self.save_local:
+            filename = "spec-%s-%s.json" % (spec.name, spec.version)
+            return self.save(data, filename)
+
         return self.do_request("specs/new/", data=sjson.dump(data))
+
+    def iter_read(self, pattern):
+        """
+        A helper to read json from a directory glob and return it loaded.
+        """
+        for filename in glob(pattern):
+            basename = os.path.basename(filename)
+            tty.info("Reading %s" % basename)
+            yield read_json(filename)
+
+    def upload_local_save(self, dirname):
+        """
+        Upload results from a locally saved directory to spack monitor.
+
+        The general workflow will first include an install with save local:
+        spack install --monitor --monitor-save-local
+        And then a request to upload the root or specific directory.
+        spack upload monitor ~/.spack/reports/monitor/<date>/
+        """
+        dirname = os.path.abspath(dirname)
+        if not os.path.exists(dirname):
+            tty.die("%s does not exist." % dirname)
+
+        # We can't be sure the level of nesting the user has provided
+        # So we walk recursively through and look for build metadata
+        for subdir, dirs, files in os.walk(dirname):
+            root = os.path.join(dirname, subdir)
+
+            # A metadata file signals a monitor export
+            metadata = glob("%s%sbuild-metadata*" % (root, os.sep))
+            if not metadata or not files or not root or not subdir:
+                continue
+            self._upload_local_save(root)
+        tty.info("Upload complete")
+
+    def _upload_local_save(self, dirname):
+        """
+        Given a found metadata file, upload results to spack monitor.
+        """
+        # First find all the specs
+        for spec in self.iter_read("%s%sspec*" % (dirname, os.sep)):
+            self.do_request("specs/new/", data=sjson.dump(spec))
+
+        # Load build metadata to generate an id
+        metadata = glob("%s%sbuild-metadata*" % (dirname, os.sep))
+        if not metadata:
+            tty.die("Build metadata file(s) missing in %s" % dirname)
+
+        # Create a build_id lookup based on hash
+        hashes = {}
+        for metafile in metadata:
+            data = read_json(metafile)
+            build = self.do_request("builds/new/", data=sjson.dump(data))
+            localhash = os.path.basename(metafile).replace(".json", "")
+            hashes[localhash.replace('build-metadata-', "")] = build
+
+        # Next upload build phases
+        for phase in self.iter_read("%s%sbuild*phase*" % (dirname, os.sep)):
+            build_id = hashes[phase['build_id']]['data']['build']['build_id']
+            phase['build_id'] = build_id
+            self.do_request("builds/phases/update/", data=sjson.dump(phase))
+
+        # Next find the status objects
+        for status in self.iter_read("%s%sbuild*status*" % (dirname, os.sep)):
+            build_id = hashes[status['build_id']]['data']['build']['build_id']
+            status['build_id'] = build_id
+            self.do_request("builds/update/", data=sjson.dump(status))
 
 
 # Helper functions

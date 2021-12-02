@@ -14,7 +14,7 @@ class Astyle(MakefilePackage):
     homepage = "http://astyle.sourceforge.net/"
     url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz"
     # Gentoo alternative
-    # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
+    # url = "https://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
     version('3.1',    sha256='cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7')
     version('3.0.1',  sha256='6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd')

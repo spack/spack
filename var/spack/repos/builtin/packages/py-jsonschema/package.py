@@ -9,7 +9,7 @@ from spack import *
 class PyJsonschema(PythonPackage):
     """Jsonschema: An(other) implementation of JSON Schema for Python."""
 
-    homepage = "http://github.com/Julian/jsonschema"
+    homepage = "https://github.com/Julian/jsonschema"
     pypi = "jsonschema/jsonschema-3.2.0.tar.gz"
 
     version('3.2.0', sha256='c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a')
@@ -32,4 +32,4 @@ class PyJsonschema(PythonPackage):
     depends_on('py-pyrsistent@0.14.0:', when='@3:', type=('build', 'run'))
     depends_on('py-six@1.11.0:', when='@3:', type=('build', 'run'))
 
-    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7.99', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7', type=('build', 'run'))

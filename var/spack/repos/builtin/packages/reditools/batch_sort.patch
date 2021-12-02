@@ -1,0 +1,168 @@
+diff -ru a/accessory/GFFtoTabix.py b/accessory/GFFtoTabix.py
+--- a/accessory/GFFtoTabix.py	2021-05-19 15:28:02.000000000 -0500
++++ b/accessory/GFFtoTabix.py	2021-05-20 16:06:25.187316573 -0500
+@@ -102,7 +102,7 @@
+ 	chunks = []
+ 	xx=0
+ 	try:
+-		with open(input,'rb',64*1024) as input_file:
++		with open(input,'r',64*1024) as input_file:
+ 			input_iterator = iter(input_file)
+ 			for tempdir in cycle(tempdirs):
+ 				current_chunk2=[]
+@@ -119,13 +119,13 @@
+ 				xx+=len(current_chunk3)
+ 				if not current_chunk3: break
+ 				sys.stdout.write("Loaded and sorted %i lines.\n"%(xx))
+-				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+b',64*1024)
++				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+',64*1024)
+ 				chunks.append(output_chunk)
+ 				output_chunk.writelines(current_chunk3)
+ 				output_chunk.flush()
+ 				output_chunk.seek(0)
+ 		sys.stdout.write("Merging from %i files.\n"%(len(chunks)))
+-		with open(output,'wb',64*1024) as output_file:
++		with open(output,'w',64*1024) as output_file:
+ 			output_file.writelines(merge(key, *chunks))
+ 	finally:
+ 		for chunk in chunks:
+@@ -150,4 +150,4 @@
+ sys.stdout.write("Tabix file saved on %s.\n" %(GFFfile))
+ sys.stdout.write("Indices saved on %s.tbi.\n" %(GFFfile))
+ script_time=time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(time.time()))
+-sys.stdout.write("Script time --> END: %s\n"%(script_time))
+\ No newline at end of file
++sys.stdout.write("Script time --> END: %s\n"%(script_time))
+diff -ru a/accessory/SortGFF.py b/accessory/SortGFF.py
+--- a/accessory/SortGFF.py	2021-05-19 15:28:02.000000000 -0500
++++ b/accessory/SortGFF.py	2021-05-20 16:06:01.023238792 -0500
+@@ -102,7 +102,7 @@
+ 	chunks = []
+ 	xx=0
+ 	try:
+-		with open(input,'rb',64*1024) as input_file:
++		with open(input,'r',64*1024) as input_file:
+ 			input_iterator = iter(input_file)
+ 			for tempdir in cycle(tempdirs):
+ 				current_chunk2=[]
+@@ -119,13 +119,13 @@
+ 				xx+=len(current_chunk3)
+ 				if not current_chunk3: break
+ 				sys.stdout.write("Loaded and sorted %i lines.\n"%(xx))
+-				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+b',64*1024)
++				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+',64*1024)
+ 				chunks.append(output_chunk)
+ 				output_chunk.writelines(current_chunk3)
+ 				output_chunk.flush()
+ 				output_chunk.seek(0)
+ 		sys.stdout.write("Merging from %i files.\n"%(len(chunks)))
+-		with open(output,'wb',64*1024) as output_file:
++		with open(output,'w',64*1024) as output_file:
+ 			output_file.writelines(merge(key, *chunks))
+ 	finally:
+ 		for chunk in chunks:
+@@ -140,4 +140,4 @@
+ batch_sort(GFFfile,outfile,key_,buffer_size,tempdirs)
+ sys.stdout.write("Sorted GFF saved on %s\n"%(outfile))
+ script_time=time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(time.time()))
+-sys.stdout.write("Script time --> END: %s\n"%(script_time))
+\ No newline at end of file
++sys.stdout.write("Script time --> END: %s\n"%(script_time))
+diff -ru a/accessory/SortTable.py b/accessory/SortTable.py
+--- a/accessory/SortTable.py	2021-05-19 15:28:02.000000000 -0500
++++ b/accessory/SortTable.py	2021-05-20 16:05:35.857157751 -0500
+@@ -122,7 +122,7 @@
+ 	chunks = []
+ 	xx=0
+ 	try:
+-		with open(input,'rb',64*1024) as input_file:
++		with open(input,'r',64*1024) as input_file:
+ 			input_iterator = iter(input_file)
+ 			for tempdir in cycle(tempdirs):
+ 				current_chunk2=[]
+@@ -142,13 +142,13 @@
+ 				xx+=len(current_chunk3)
+ 				if not current_chunk3: break
+ 				sys.stdout.write("Loaded and sorted %i lines.\n"%(xx))
+-				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+b',64*1024)
++				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+',64*1024)
+ 				chunks.append(output_chunk)
+ 				output_chunk.writelines(current_chunk3)
+ 				output_chunk.flush()
+ 				output_chunk.seek(0)
+ 		sys.stdout.write("Merging from %i files.\n"%(len(chunks)))
+-		with open(output,'wb',64*1024) as output_file:
++		with open(output,'w',64*1024) as output_file:
+ 			output_file.writelines(merge(key, *chunks))
+ 	finally:
+ 		for chunk in chunks:
+@@ -163,4 +163,4 @@
+ batch_sort(GFFfile,outfile,key_,buffer_size,tempdirs)
+ sys.stdout.write("Sorted GFF saved on %s\n"%(outfile))
+ script_time=time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(time.time()))
+-sys.stdout.write("Script time --> END: %s\n"%(script_time))
+\ No newline at end of file
++sys.stdout.write("Script time --> END: %s\n"%(script_time))
+diff -ru a/accessory/TableToGFF.py b/accessory/TableToGFF.py
+--- a/accessory/TableToGFF.py	2021-05-19 15:28:02.000000000 -0500
++++ b/accessory/TableToGFF.py	2021-05-20 16:05:11.309078667 -0500
+@@ -104,7 +104,7 @@
+ 	chunks = []
+ 	xx=0
+ 	try:
+-		with open(input,'rb',64*1024) as input_file:
++		with open(input,'r',64*1024) as input_file:
+ 			input_iterator = iter(input_file)
+ 			for tempdir in cycle(tempdirs):
+ 				current_chunk2=[]
+@@ -121,13 +121,13 @@
+ 				xx+=len(current_chunk3)
+ 				if not current_chunk3: break
+ 				sys.stdout.write("Loaded and sorted %i lines.\n"%(xx))
+-				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+b',64*1024)
++				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+',64*1024)
+ 				chunks.append(output_chunk)
+ 				output_chunk.writelines(current_chunk3)
+ 				output_chunk.flush()
+ 				output_chunk.seek(0)
+ 		sys.stdout.write("Merging from %i files.\n"%(len(chunks)))
+-		with open(output,'wb',64*1024) as output_file:
++		with open(output,'w',64*1024) as output_file:
+ 			output_file.writelines(merge(key, *chunks))
+ 	finally:
+ 		for chunk in chunks:
+diff -ru a/accessory/tableToTabix.py b/accessory/tableToTabix.py
+--- a/accessory/tableToTabix.py	2021-05-19 15:28:02.000000000 -0500
++++ b/accessory/tableToTabix.py	2021-05-20 16:04:45.468995382 -0500
+@@ -117,7 +117,7 @@
+ 	chunks = []
+ 	xx=0
+ 	try:
+-		with open(input,'rb',64*1024) as input_file:
++		with open(input,'r',64*1024) as input_file:
+ 			input_iterator = iter(input_file)
+ 			for tempdir in cycle(tempdirs):
+ 				current_chunk2=[]
+@@ -136,13 +136,13 @@
+ 				xx+=len(current_chunk3)
+ 				if not current_chunk3: break
+ 				sys.stdout.write("Loaded and sorted %i lines.\n"%(xx))
+-				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+b',64*1024)
++				output_chunk = open(os.path.join(tempdir,'%06i_%s'%(len(chunks),pid)),'w+',64*1024)
+ 				chunks.append(output_chunk)
+ 				output_chunk.writelines(current_chunk3)
+ 				output_chunk.flush()
+ 				output_chunk.seek(0)
+ 		sys.stdout.write("Merging from %i files.\n"%(len(chunks)))
+-		with open(output,'wb',64*1024) as output_file:
++		with open(output,'w',64*1024) as output_file:
+ 			output_file.writelines(merge(key, *chunks))
+ 	finally:
+ 		for chunk in chunks:
+@@ -167,4 +167,4 @@
+ sys.stdout.write("Tabix file saved on %s.\n" %(GFFfile))
+ sys.stdout.write("Indices saved on %s.tbi.\n" %(GFFfile))
+ script_time=time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(time.time()))
+-sys.stdout.write("Script time --> END: %s\n"%(script_time))
+\ No newline at end of file
++sys.stdout.write("Script time --> END: %s\n"%(script_time))

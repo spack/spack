@@ -6,8 +6,8 @@
 from six import StringIO
 
 import spack.repo
+from spack.graph import AsciiGraph, graph_dot, topological_sort
 from spack.spec import Spec
-from spack.graph import AsciiGraph, topological_sort, graph_dot
 
 
 def test_topo_sort(mock_packages):

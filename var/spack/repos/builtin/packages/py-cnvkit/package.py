@@ -21,7 +21,7 @@ class PyCnvkit(PythonPackage):
     depends_on('py-pomegranate@0.9.0:', type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
     depends_on('py-numpy@1.9:', type=('build', 'run'))
-    depends_on('py-pandas@0.20.1:0.24.999', type=('build', 'run'))
+    depends_on('py-pandas@0.20.1:0.24', type=('build', 'run'))
     depends_on('py-pyfaidx@0.4.7:', type=('build', 'run'))
     depends_on('py-pysam@0.10.0:', type=('build', 'run'))
     depends_on('py-reportlab@3.0:', type=('build', 'run'))

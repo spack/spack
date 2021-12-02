@@ -16,9 +16,12 @@ class Gmsh(CMakePackage):
     files using Gmsh's own scripting language.
     """
 
-    homepage = 'http://gmsh.info'
-    url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
+    homepage = 'https://gmsh.info'
+    url = 'https://gmsh.info/src/gmsh-4.4.1-source.tgz'
+    git = 'https://gitlab.onelab.info/gmsh/gmsh.git'
 
+    version('master', branch='master')
+    version('4.8.4', sha256='760dbdc072eaa3c82d066c5ba3b06eacdd3304eb2a97373fe4ada9509f0b6ace')
     version('4.7.1', sha256='c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a')
     version('4.7.0', sha256='e27f32f92b374ba2a746a9d9c496401c13f66ac6e3e70753e16fa4012d14320e')
     version('4.6.0', sha256='0f2c55e50fb6c478ebc8977f6341c223754cbf3493b7b0d683b4395ae9f2ad1c')
@@ -32,132 +35,134 @@ class Gmsh(CMakePackage):
     version('3.0.1',  sha256='830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
     version('2.16.0', sha256='e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
     version('2.15.0', sha256='992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
-    version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
-    version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
 
+    variant('external',    default=False,
+            description='Use system versions of contrib libraries, when possible')
     variant('shared',      default=True,  description='Enables the build of shared libraries')
-    variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
+    variant('mpi',         default=False, description='Builds MPI support for parser and solver')
     variant('openmp',      default=False, description='Enable OpenMP support')
-    variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
+    variant('fltk',        default=True,  description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
+    variant('gmp',         default=True,  description='Enable GMP for Kbipack (advanced)')
+    variant('cairo',       default=False, description='Enable Cairo to render fonts (experimental)')
     variant('compression', default=True,  description='Enables IO compression through zlib')
-    variant('netgen',      default=False, description='Build with Netgen')
+    variant('med',         default=True,  description='Build with MED(HDF5)')
+    variant('mmg',         default=True,  description='Build with Mmg3d')
+    variant('netgen',      default=True,  description='Build with Netgen (built-in)')
     variant('opencascade', default=False, description='Build with OpenCASCADE')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
     variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
-    variant('tetgen',      default=False, description='Build with Tetgen')
-    variant('metis',       default=False, description='Build with Metis')
+    variant('tetgen',      default=False, description='Build with Tetgen (built-in)')
+    variant('metis',       default=True,  description='Build with Metis (built-in)')
     variant('privateapi',  default=False, description='Enable the private API')
+    variant('alglib',      default=True,  description='Build with Alglib (built-in or 3rd party)')
+    variant('eigen',       default=False, description='Build with Eigen (built-in or 3rd party)')
+    variant('voropp',      default=True,  description='Build with voro++ (built-in or 3rd party')
+    variant('cgns',        default=True,  description='Build with CGNS')
 
-    depends_on('blas')
-    depends_on('lapack')
+    # https://gmsh.info/doc/texinfo/gmsh.html#Compiling-the-source-code
+    # We make changes to the GMSH default, such as external blas.
+    depends_on('blas',    when='~eigen')
+    depends_on('lapack',  when='~eigen')
+    depends_on('eigen@3:', when='+eigen+external')
+    depends_on('alglib',  when='+alglib+external')
+    depends_on('voropp',  when='+voropp+external')
     depends_on('cmake@2.8:', type='build')
-    depends_on('gmp')
-    depends_on('mpi',  when='+mpi')
-    # Assumes OpenGL with GLU is already provided by the system:
-    depends_on('fltk', when='+fltk')
-    depends_on('hdf5', when='+hdf5')
-    depends_on('netgen', when='+netgen')
+    depends_on('gmp',     when='+gmp')
+    depends_on('mpi',     when='+mpi')
+    depends_on('fltk+gl', when='+fltk')
+    depends_on('gl',      when='+fltk')
+    depends_on('glu',     when='+fltk')
+    depends_on('cairo',   when='+cairo')
+    depends_on('hdf5',    when='+hdf5')
+    depends_on('hdf5',    when='+med')
+    depends_on('med',     when='+med')
+    depends_on('mmg',     when='+mmg')
     depends_on('opencascade', when='+opencascade')
-    depends_on('oce',  when='+oce')
+    depends_on('oce',     when='+oce')
+    depends_on('freetype', when='+oce')
+    depends_on('freetype', when='+opencascade')
     depends_on('petsc+mpi', when='+petsc+mpi')
-    depends_on('petsc', when='+petsc~mpi')
-    depends_on('slepc', when='+slepc+petsc')
-    depends_on('tetgen', when='+tetgen')
-    depends_on('zlib',  when='+compression')
-    depends_on('metis', when='+metis')
+    depends_on('petsc',    when='+petsc~mpi')
+    depends_on('slepc',   when='+slepc+petsc')
+    depends_on('zlib',    when='+compression')
+    depends_on('metis',   when='+metis+external')
+    depends_on('cgns',    when='+cgns')
+    # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
+    # But Gmsh ships with its own version of this library, so it is not a
+    # dependency of this package.
+    # See https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.h
+    # and https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.cpp
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')
+    conflicts('+metis', when='+external',
+              msg="External Metis cannot build with GMSH")
 
     def cmake_args(self):
         spec = self.spec
-        prefix = self.prefix
 
-        options = []
+        options = [
+            self.define_from_variant('ENABLE_ALGLIB', 'alglib'),
+            self.define_from_variant('ENABLE_CAIRO', 'cairo'),
+            self.define_from_variant('ENABLE_CGNS', 'cgns'),
+            self.define_from_variant('ENABLE_EIGEN', 'eigen'),
+            self.define_from_variant('ENABLE_FLTK', 'fltk'),
+            self.define_from_variant('ENABLE_GMP', 'gmp'),
+            self.define_from_variant('ENABLE_MED', 'med'),
+            self.define_from_variant('ENABLE_METIS', 'metis'),
+            self.define_from_variant('ENABLE_MMG', 'mmg'),
+            self.define_from_variant('ENABLE_MPI', 'mpi'),
+            self.define_from_variant('ENABLE_NETGEN', 'netgen'),
+            self.define_from_variant('ENABLE_OPENMP', 'openmp'),
+            self.define_from_variant('ENABLE_PETSC', 'petsc'),
+            self.define_from_variant('ENABLE_PRIVATE_API', 'privateapi'),
+            self.define_from_variant('ENABLE_SLEPC', 'slepc'),
+            self.define_from_variant('ENABLE_VOROPP', 'voropp'),
+        ]
+
+        # Use system versions of contrib libraries, when possible:
+        if '+external' in spec:
+            options.append(self.define('ENABLE_SYSTEM_CONTRIB', True))
 
         # Make sure native file dialogs are used
-        options.extend(['-DENABLE_NATIVE_FILE_CHOOSER=ON'])
+        options.append('-DENABLE_NATIVE_FILE_CHOOSER=ON')
 
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' % self.prefix.lib)
 
         # Prevent GMsh from using its own strange directory structure on OSX
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        blas_lapack = spec['lapack'].libs + spec['blas'].libs
-        options.append(
-            '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
-
-        # Gmsh does not have an option to compile against external metis.
-        # Its own Metis, however, fails to build.
-        # However, Metis is needed for the Hxt library.
-        if '+metis' in spec:
-            options.append('-DENABLE_METIS=ON')
-        else:
-            options.append('-DENABLE_METIS=OFF')
-
-        if '+fltk' in spec:
-            options.append('-DENABLE_FLTK=ON')
-        else:
-            options.append('-DENABLE_FLTK=OFF')
+        if '~eigen' in spec:
+            options.append('-DENABLE_BLAS_LAPACK=ON')
+            blas_lapack = spec['lapack'].libs + spec['blas'].libs
+            options.append(
+                '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 
         if '+oce' in spec:
-            env['CASROOT'] = self.spec['oce'].prefix
             options.append('-DENABLE_OCC=ON')
         elif '+opencascade' in spec:
-            env['CASROOT'] = self.spec['opencascade'].prefix
             options.append('-DENABLE_OCC=ON')
         else:
             options.append('-DENABLE_OCC=OFF')
 
-        if '+petsc' in spec:
-            env['PETSC_DIR'] = self.spec['petsc'].prefix
-            options.append('-DENABLE_PETSC=ON')
-        else:
-            options.append('-DENABLE_PETSC=OFF')
+        if '@:3.0.6' in spec:
+            options.append(self.define_from_variant('ENABLE_TETGEN', 'tetgen'))
 
-        if '+tetgen' in spec:
-            env['TETGEN_DIR'] = self.spec['tetgen'].prefix
-            options.append('-DENABLE_TETGEN=ON')
-        else:
-            options.append('-DENABLE_TETGEN=OFF')
-
-        if '+netgen' in spec:
-            env['NETGEN_DIR'] = self.spec['netgen'].prefix
-            options.append('-DENABLE_NETGEN=ON')
-        else:
-            options.append('-DENABLE_NETGEN=OFF')
-
-        if '+slepc' in spec:
-            env['SLEPC_DIR'] = self.spec['slepc'].prefix
-            options.append('-DENABLE_SLEPC=ON')
-        else:
-            options.append('-DENABLE_SLEPC=OFF')
+        if '@:4.6' in spec:
+            options.append(self.define_from_variant('ENABLE_MMG3D', 'mmg'))
 
         if '+shared' in spec:
             # Builds dynamic executable and installs shared library
-            options.extend(['-DENABLE_BUILD_SHARED:BOOL=ON',
-                            '-DENABLE_BUILD_DYNAMIC:BOOL=ON'])
+            options.append(self.define('ENABLE_BUILD_SHARED', True))
+            options.append(self.define('ENABLE_BUILD_DYNAMIC', True))
         else:
             # Builds and installs static library
-            options.append('-DENABLE_BUILD_LIB:BOOL=ON')
-
-        if '+openmp' in spec:
-            options.append('-DENABLE_OPENMP=ON')
-        else:
-            options.append('-DENABLE_OPENMP=OFF')
-
-        if '+mpi' in spec:
-            options.append('-DENABLE_MPI:BOOL=ON')
+            options.append(self.define('ENABLE_BUILD_LIB', True))
 
         if '+compression' in spec:
-            options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
-
-        if '+privateapi' in spec:
-            options.append('-DENABLE_PRIVATE_API=ON')
-        else:
-            options.append('-DENABLE_PRIVATE_API=OFF')
+            options.append(self.define('ENABLE_COMPRESSED_IO', True))
 
         return options

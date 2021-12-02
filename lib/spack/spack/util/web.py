@@ -18,25 +18,24 @@ import traceback
 
 import six
 from six.moves.urllib.error import URLError
-from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.request import Request, urlopen
 
-from llnl.util.filesystem import mkdirp
+import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
-import spack.cmd
 import spack.config
 import spack.error
 import spack.url
 import spack.util.crypto
+import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
-import llnl.util.lang
-
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError  # novm
+    from HTMLParser import HTMLParseError, HTMLParser  # novm
 else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
@@ -76,6 +75,10 @@ def uses_ssl(parsed_url):
         if url_util.parse(endpoint_url, scheme='https').scheme == 'https':
             return True
 
+    elif parsed_url.scheme == 'gs':
+        tty.debug("(uses_ssl) GCS Blob is https")
+        return True
+
     return False
 
 
@@ -105,7 +108,8 @@ def read_from_url(url, accept_content_type=None):
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
-            context = ssl._create_unverified_context()
+            if not __UNABLE_TO_VERIFY_SSL:
+                context = ssl._create_unverified_context()
 
     req = Request(url_util.format(url))
     content_type = None
@@ -189,10 +193,17 @@ def push_to_url(
         while remote_path.startswith('/'):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(remote_url)
+        s3 = s3_util.create_s3_session(remote_url,
+                                       connection=s3_util.get_mirror_connection(remote_url))   # noqa: E501
         s3.upload_file(local_file_path, remote_url.netloc,
                        remote_path, ExtraArgs=extra_args)
 
+        if not keep_original:
+            os.remove(local_file_path)
+
+    elif remote_url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(remote_url)
+        gcs.upload_to_blob(local_file_path)
         if not keep_original:
             os.remove(local_file_path)
 
@@ -209,7 +220,9 @@ def url_exists(url):
         return os.path.exists(local_path)
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        # Check for URL specific connection information
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
+
         try:
             s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
@@ -217,6 +230,10 @@ def url_exists(url):
             if err.response['Error']['Code'] == 'NoSuchKey':
                 return False
             raise err
+
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBlob(url)
+        return gcs.exists()
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL
@@ -249,7 +266,8 @@ def remove_url(url, recursive=False):
         return
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        # Try to find a mirror for potential connection information
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items
@@ -277,7 +295,16 @@ def remove_url(url, recursive=False):
                 r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
                 _debug_print_delete_results(r)
         else:
-            s3.delete_object(Bucket=bucket, Key=url.path)
+            s3.delete_object(Bucket=bucket, Key=url.path.lstrip('/'))
+        return
+
+    elif url.scheme == 'gs':
+        if recursive:
+            bucket = gcs_util.GCSBucket(url)
+            bucket.destroy(recursive=recursive)
+        else:
+            blob = gcs_util.GCSBlob(url)
+            blob.delete_blob()
         return
 
     # Don't even try for other URL schemes.
@@ -359,6 +386,10 @@ def list_url(url, recursive=False):
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
 
+    elif url.scheme == 'gs':
+        gcs = gcs_util.GCSBucket(url)
+        return gcs.get_all_blobs(recursive=recursive)
+
 
 def spider(root_urls, depth=0, concurrency=32):
     """Get web pages from root URLs.
@@ -367,7 +398,7 @@ def spider(root_urls, depth=0, concurrency=32):
     up to <depth> levels of links from each root.
 
     Args:
-        root_urls (str or list of str): root urls used as a starting point
+        root_urls (str or list): root urls used as a starting point
             for spidering
         depth (int): level of recursion into links
         concurrency (int): number of simultaneous requests that can be sent
@@ -508,17 +539,26 @@ def _urlopen(req, *args, **kwargs):
     except AttributeError:
         pass
 
-    # We don't pass 'context' parameter because it was only introduced starting
+    # Note: 'context' parameter was only introduced starting
     # with versions 2.7.9 and 3.4.3 of Python.
-    if 'context' in kwargs:
+    if __UNABLE_TO_VERIFY_SSL:
         del kwargs['context']
 
     opener = urlopen
     if url_util.parse(url).scheme == 's3':
         import spack.s3_handler
         opener = spack.s3_handler.open
+    elif url_util.parse(url).scheme == 'gs':
+        import spack.gcs_handler
+        opener = spack.gcs_handler.gcs_open
 
-    return opener(req, *args, **kwargs)
+    try:
+        return opener(req, *args, **kwargs)
+    except TypeError as err:
+        # If the above fails because of 'context', call without 'context'.
+        if 'context' in kwargs and 'context' in str(err):
+            del kwargs['context']
+        return opener(req, *args, **kwargs)
 
 
 def find_versions_of_archive(

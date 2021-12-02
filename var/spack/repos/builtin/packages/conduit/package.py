@@ -3,15 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-import socket
-import os
 import glob
+import os
 import shutil
+import socket
+from os import environ as env
 
 import llnl.util.tty as tty
-from os import environ as env
+
+from spack import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -33,14 +33,17 @@ class Conduit(CMakePackage):
     scientific data in C++, C, Fortran, and Python. It is used for data
     coupling between packages in-core, serialization, and I/O tasks."""
 
-    homepage = "http://software.llnl.gov/conduit"
+    homepage = "https://software.llnl.gov/conduit"
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
+    tags     = ['radiuss', 'e4s']
 
-    version('develop', branch='develop', submodules=True, preferred=True)
+    version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
+    # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.7.2', sha256='359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a')
     version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
     version('0.7.0', sha256='ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c')
     version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')
@@ -73,6 +76,7 @@ class Conduit(CMakePackage):
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
+    variant("parmetis", default=False, description="Build Conduit Parmetis support")
 
     # zfp compression
     variant("zfp", default=False, description="Build Conduit ZFP support")
@@ -114,10 +118,13 @@ class Conduit(CMakePackage):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+    # we need to hand this to conduit so it can properly
+    # handle downstream linking of zlib reqed by hdf5
+    depends_on("zlib", when="+hdf5")
 
     ###############
     # Silo
@@ -143,6 +150,12 @@ class Conduit(CMakePackage):
     depends_on("h5z-zfp~fortran", when="+hdf5+zfp")
 
     #######################
+    # Parmetis
+    #######################
+    depends_on("parmetis", when="+parmetis")
+    depends_on("metis", when="+parmetis")
+
+    #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
@@ -158,16 +171,15 @@ class Conduit(CMakePackage):
     # Cmake will support fj compiler and this patch will be removed
     patch('fj_flags.patch', when='%fj')
 
+    # Add missing include for numeric_limits
+    # https://github.com/LLNL/conduit/pull/773
+    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
+          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
+
     ###################################
     # build phases used by this package
     ###################################
     phases = ['hostconfig', 'cmake', 'build', 'install']
-
-    def flag_handler(self, name, flags):
-        if name in ('cflags', 'cxxflags', 'fflags'):
-            # the package manages these flags in another way
-            return (None, None, None)
-        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -353,6 +365,8 @@ class Conduit(CMakePackage):
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
         fflags = ' '.join(spec.compiler_flags['fflags'])
+        if self.spec.satisfies('%cce'):
+            fflags += " -ef"
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
@@ -509,6 +523,7 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
@@ -545,6 +560,21 @@ class Conduit(CMakePackage):
         else:
             cfg.write("# adios not built by spack \n")
 
+        #######################
+        # Parmetis
+        #######################
+
+        cfg.write("# parmetis from spack \n")
+
+        if "+parmetis" in spec:
+            cfg.write(cmake_cache_entry("METIS_DIR", spec['metis'].prefix))
+            cfg.write(cmake_cache_entry("PARMETIS_DIR", spec['parmetis'].prefix))
+        else:
+            cfg.write("# parmetis not built by spack \n")
+
+        #######################
+        # Finish host-config
+        #######################
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
         cfg.write("##################################\n")

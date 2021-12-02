@@ -45,10 +45,8 @@ class Libsplash(CMakePackage):
 
         if spec.satisfies('@1.7.0:'):
             args += [
-                '-DSplash_USE_MPI:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF'),
-                '-DSplash_USE_PARALLEL:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF')
+                self.define_from_variant('Splash_USE_MPI', 'mpi'),
+                self.define_from_variant('Splash_USE_PARALLEL', 'mpi')
             ]
 
         return args

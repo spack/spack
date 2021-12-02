@@ -13,8 +13,9 @@ class Mercury(CMakePackage):
     git = 'https://github.com/mercury-hpc/mercury.git'
 
     maintainers = ['soumagne']
-
+    tags = ['e4s']
     version('master', branch='master', submodules=True)
+    version('2.0.1', sha256='335946d9620ac669643ffd9861a5fb3ee486834bab674b7779eaac9d6662e3fa')
     version('2.0.0', sha256='9e80923712e25df56014309df70660e828dbeabbe5fcc82ee024bcc86e7eb6b7')
     version('1.0.1', sha256='02febd56c401ef7afa250caf28d012b37dee842bfde7ee16fcd2f741b9cf25b3')
     version('1.0.0', sha256='fb0e44d13f4652f53e21040435f91d452bc2b629b6e98dcf5292cd0bece899d4')
@@ -57,6 +58,12 @@ class Mercury(CMakePackage):
     # Fix CMake check_symbol_exists
     # See https://github.com/mercury-hpc/mercury/issues/299
     patch('fix-cmake-3.15-check_symbol_exists.patch', when='@1.0.0:1.0.1')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce'):
+            if name == 'ldflags':
+                flags.append('-Wl,-z,muldefs')
+        return (None, None, flags)
 
     def cmake_args(self):
         """Populate cmake arguments for Mercury."""

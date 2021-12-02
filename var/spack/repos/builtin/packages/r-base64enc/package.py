@@ -10,7 +10,7 @@ class RBase64enc(RPackage):
     """This package provides tools for handling base64 encoding. It is more
     flexible than the orphaned base64 package."""
 
-    homepage = "http://www.rforge.net/base64enc"
+    homepage = "https://www.rforge.net/base64enc"
     url      = "https://cloud.r-project.org/src/contrib/base64enc_0.1-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/base64enc"
 

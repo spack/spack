@@ -29,7 +29,7 @@ class Oneapi(Compiler):
     PrgEnv_compiler = 'oneapi'
 
     version_argument = '--version'
-    version_regex = r'(?:(?:oneAPI DPC\+\+ Compiler)|(?:\(IFORT\))) (\S+)'
+    version_regex = r'(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))) (\S+)'
 
     @property
     def verbose_flag(self):
@@ -49,7 +49,7 @@ class Oneapi(Compiler):
 
     @property
     def openmp_flag(self):
-        return "-qopenmp"
+        return "-fiopenmp"
     # There may be some additional options here for offload, e.g. :
     #  -fopenmp-simd           Emit OpenMP code only for SIMD-based constructs.
     #  -fopenmp-targets=<value>

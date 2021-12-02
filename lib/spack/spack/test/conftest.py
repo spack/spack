@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+import datetime
 import errno
 import inspect
 import itertools
 import json
 import os
 import os.path
+import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
@@ -19,30 +21,141 @@ import pytest
 
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
-from llnl.util.filesystem import mkdirp, remove_linked_tree
 
-import spack.architecture
+import llnl.util.lang
+from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+
+import spack.binary_distribution
+import spack.caches
 import spack.compilers
 import spack.config
-import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
 import spack.package
 import spack.package_prefs
 import spack.paths
-import spack.platforms.test
+import spack.platforms
 import spack.repo
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.util.executable
 import spack.util.gpg
-import spack.subprocess_context
 import spack.util.spack_yaml as syaml
-
+from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
-from spack.fetch_strategy import FetchError
+
+
+#
+# Return list of shas for latest two git commits in local spack repo
+#
+@pytest.fixture
+def last_two_git_commits(scope='session'):
+    git = spack.util.executable.which('git', required=True)
+    spack_git_path = spack.paths.prefix
+    with working_dir(spack_git_path):
+        git_log_out = git('log', '-n', '2', output=str, error=os.devnull)
+
+    regex = re.compile(r"^commit\s([^\s]+$)", re.MULTILINE)
+    yield regex.findall(git_log_out)
+
+
+def write_file(filename, contents):
+    with open(filename, 'w') as f:
+        f.write(contents)
+
+
+commit_counter = 0
+
+
+@pytest.fixture
+def mock_git_version_info(tmpdir, scope="function"):
+    """Create a mock git repo with known structure
+
+    The structure of commits in this repo is as follows::
+
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+
+    The repo consists of a single file, in which the Version._cmp representation
+    of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
+    """
+    git = spack.util.executable.which('git', required=True)
+    repo_path = str(tmpdir.mkdir('git_repo'))
+    filename = 'file.txt'
+
+    def commit(message):
+        global commit_counter
+        git('commit', '--date', '2020-01-%02d 12:0:00 +0300' % commit_counter,
+            '-am', message)
+        commit_counter += 1
+
+    with working_dir(repo_path):
+        git("init")
+
+        git('config', 'user.name', 'Spack')
+        git('config', 'user.email', 'spack@spack.io')
+
+        # Add two commits on main branch
+        write_file(filename, '[]')
+        git('add', filename)
+        commit('first commit')
+
+        # Get name of default branch (differs by git version)
+        main = git('rev-parse', '--abbrev-ref', 'HEAD', output=str, error=str).strip()
+
+        # Tag second commit as v1.0
+        write_file(filename, "[1, 0]")
+        commit('second commit')
+        git('tag', 'v1.0')
+
+        # Add two commits and a tag on 1.x branch
+        git('checkout', '-b', '1.x')
+        write_file(filename, "[1, 0, '', 1]")
+        commit('first 1.x commit')
+
+        write_file(filename, "[1, 1]")
+        commit('second 1.x commit')
+        git('tag', 'v1.1')
+
+        # Add two commits and a tag on main branch
+        git('checkout', main)
+        write_file(filename, "[1, 0, '', 1]")
+        commit('third main commit')
+        write_file(filename, "[2, 0]")
+        commit('fourth main commit')
+        git('tag', 'v2.0')
+
+        # Add two more commits on 1.x branch to ensure we aren't cheating by using time
+        git('checkout', '1.x')
+        write_file(filename, "[1, 1, '', 1]")
+        commit('third 1.x commit')
+        write_file(filename, "[1, 2]")
+        commit('fourth 1.x commit')
+        git('tag', '1.2')  # test robust parsing to different syntax, no v
+
+        # Get the commits in topo order
+        log = git('log', '--all', '--pretty=format:%H', '--topo-order',
+                  output=str, error=str)
+        commits = [c for c in log.split('\n') if c]
+
+    # Return the git directory to install, the filename used, and the commits
+    yield repo_path, filename, commits
 
 
 @pytest.fixture(autouse=True)
@@ -77,24 +190,24 @@ def no_path_access(monkeypatch):
 
 
 #
-# Disable any activate Spack environment BEFORE all tests
+# Disable any active Spack environment BEFORE all tests
 #
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
-    env_var = ev.spack_env_var in os.environ
-    active = ev._active_environment
-
-    if env_var:
-        spack_env_value = os.environ.pop(ev.spack_env_var)
-    if active:
-        ev.deactivate()
-
-    yield
-
-    if env_var:
+    spack_env_value = os.environ.pop(ev.spack_env_var, None)
+    with ev.no_active_environment():
+        yield
+    if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
-    if active:
-        ev.activate(active)
+
+
+#
+# Make sure global state of active env does not leak between tests.
+#
+@pytest.fixture(scope='function', autouse=True)
+def clean_test_environment():
+    yield
+    ev.deactivate()
 
 
 def _verify_executables_noop(*args):
@@ -300,13 +413,31 @@ def mock_fetch_cache(monkeypatch):
     monkeypatch.setattr(spack.caches, 'fetch_cache', MockCache())
 
 
+@pytest.fixture()
+def mock_binary_index(monkeypatch, tmpdir_factory):
+    """Changes the directory for the binary index and creates binary index for
+    every test. Clears its own index when it's done.
+    """
+    tmpdir = tmpdir_factory.mktemp('mock_binary_index')
+    index_path = tmpdir.join('binary_index').strpath
+    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    monkeypatch.setattr(spack.binary_distribution, 'binary_index', mock_index)
+    yield
+
+
 @pytest.fixture(autouse=True)
 def _skip_if_missing_executables(request):
     """Permits to mark tests with 'require_executables' and skip the
     tests if the executables passed as arguments are not found.
     """
-    if request.node.get_marker('requires_executables'):
-        required_execs = request.node.get_marker('requires_executables').args
+    if hasattr(request.node, 'get_marker'):
+        # TODO: Remove the deprecated API as soon as we drop support for Python 2.6
+        marker = request.node.get_marker('requires_executables')
+    else:
+        marker = request.node.get_closest_marker('requires_executables')
+
+    if marker:
+        required_execs = marker.args
         missing_execs = [
             x for x in required_execs if spack.util.executable.which(x) is None
         ]
@@ -317,7 +448,7 @@ def _skip_if_missing_executables(request):
 
 @pytest.fixture(scope='session')
 def test_platform():
-    return spack.platforms.test.Test()
+    return spack.platforms.Test()
 
 
 @pytest.fixture(autouse=True, scope='session')
@@ -325,7 +456,7 @@ def _use_test_platform(test_platform):
     # This is the only context manager used at session scope (see note
     # below for more insight) since we want to use the test platform as
     # a default during tests.
-    with spack.architecture.use_platform(test_platform):
+    with spack.platforms.use_platform(test_platform):
         yield
 
 #
@@ -390,10 +521,9 @@ def linux_os():
     """Returns a named tuple with attributes 'name' and 'version'
     representing the OS.
     """
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     name, version = 'debian', '6'
     if platform.name == 'linux':
-        platform = spack.architecture.platform()
         current_os = platform.operating_system('default_os')
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple('LinuxOS', ['name', 'version'])
@@ -460,7 +590,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    solver = os.environ.get('SPACK_TEST_SOLVER', 'original')
+    solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)
@@ -527,6 +657,15 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
+@pytest.fixture
+def no_compilers_yaml(mutable_config):
+    """Creates a temporary configuration without compilers.yaml"""
+    for scope, local_config in mutable_config.scopes.items():
+        compilers_yaml = os.path.join(local_config.path, 'compilers.yaml')
+        if os.path.exists(compilers_yaml):
+            os.remove(compilers_yaml)
+
+
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
@@ -567,6 +706,7 @@ def _populate(mock_db):
     _install('mpileaks ^mpich2')
     _install('mpileaks ^zmpi')
     _install('externaltest')
+    _install('trivial-smoke-test')
 
 
 @pytest.fixture(scope='session')
@@ -740,7 +880,7 @@ class MockLayout(object):
         self.root = root
 
     def path_for_spec(self, spec):
-        return '/'.join([self.root, spec.name])
+        return '/'.join([self.root, spec.name + '-' + spec.dag_hash()])
 
     def check_installed(self, spec):
         return True
@@ -763,11 +903,11 @@ class MockConfig(object):
         self._configuration = configuration
         self.writer_key = writer_key
 
-    def configuration(self):
+    def configuration(self, module_set_name):
         return self._configuration
 
-    def writer_configuration(self):
-        return self.configuration()[self.writer_key]
+    def writer_configuration(self, module_set_name):
+        return self.configuration(module_set_name)[self.writer_key]
 
 
 class ConfigUpdate(object):
@@ -780,7 +920,9 @@ class ConfigUpdate(object):
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + '.yaml')
         with open(file) as f:
-            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+            config_settings = syaml.load_config(f)
+        spack.config.set('modules:default', config_settings)
+        mock_config = MockConfig(config_settings, self.writer_key)
 
         self.monkeypatch.setattr(
             spack.modules.common,
@@ -824,12 +966,21 @@ def mock_gnupghome(monkeypatch):
     # have to make our own tmpdir with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    try:
+        spack.util.gpg.init()
+    except spack.util.gpg.SpackGPGError:
+        if not spack.util.gpg.GPG:
+            pytest.skip('This test requires gpg')
+
     short_name_tmpdir = tempfile.mkdtemp()
-    with spack.util.gpg.gnupg_home_override(short_name_tmpdir):
+    with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually
-    shutil.rmtree(short_name_tmpdir)
+    # Ignore errors cause we seem to be hitting a bug similar to
+    # https://bugs.python.org/issue29699 in CI (FileNotFoundError: [Errno 2] No such
+    # file or directory: 'S.gpg-agent.extra').
+    shutil.rmtree(short_name_tmpdir, ignore_errors=True)
 
 ##########
 # Fake archives and repositories
@@ -882,6 +1033,155 @@ def mock_archive(request, tmpdir_factory):
         archive_file=archive_file,
         path=str(repodir),
         expanded_archive_basedir=spack.stage._source_path_subdir)
+
+
+def _parse_cvs_date(line):
+    """Turn a CVS log date into a datetime.datetime"""
+    # dates in CVS logs can have slashes or dashes and may omit the time zone:
+    # date: 2021-07-07 02:43:33 -0700;  ...
+    # date: 2021-07-07 02:43:33;  ...
+    # date: 2021/07/07 02:43:33;  ...
+    m = re.search(r'date:\s+(\d+)[/-](\d+)[/-](\d+)\s+(\d+):(\d+):(\d+)', line)
+    if not m:
+        return None
+    year, month, day, hour, minute, second = [int(g) for g in m.groups()]
+    return datetime.datetime(year, month, day, hour, minute, second)
+
+
+@pytest.fixture(scope='session')
+def mock_cvs_repository(tmpdir_factory):
+    """Creates a very simple CVS repository with two commits and a branch."""
+    cvs = spack.util.executable.which('cvs', required=True)
+
+    tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    cvsroot = str(repodir)
+
+    # The CVS repository and source tree need to live in a different directories
+    sourcedirparent = tmpdir_factory.mktemp('mock-cvs-source-dir')
+    module = spack.stage._source_path_subdir
+    url = cvsroot + "%module=" + module
+    sourcedirparent.ensure(module, dir=True)
+    sourcedir = sourcedirparent.join(module)
+
+    def format_date(date):
+        if date is None:
+            return None
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+
+    def get_cvs_timestamp(output):
+        """Find the most recent CVS time stamp in a `cvs log` output"""
+        latest_timestamp = None
+        for line in output.splitlines():
+            timestamp = _parse_cvs_date(line)
+            if timestamp:
+                if latest_timestamp is None:
+                    latest_timestamp = timestamp
+                else:
+                    latest_timestamp = max(latest_timestamp, timestamp)
+        return latest_timestamp
+
+    # We use this to record the time stamps for when we create CVS revisions,
+    # so that we can later check that we retrieve the proper commits when
+    # specifying a date. (CVS guarantees checking out the lastest revision
+    # before or on the specified date). As we create each revision, we
+    # separately record the time by querying CVS.
+    revision_date = {}
+
+    # Initialize the repository
+    with sourcedir.as_cwd():
+        cvs('-d', cvsroot, 'init')
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
+            module, 'mockvendor', 'mockrelease')
+        with sourcedirparent.as_cwd():
+            cvs('-d', cvsroot, 'checkout', module)
+
+        # Commit file r0
+        r0_file = 'r0_file'
+        sourcedir.ensure(r0_file)
+        cvs('-d', cvsroot, 'add', r0_file)
+        cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.1'] = format_date(get_cvs_timestamp(output))
+
+        # Commit file r1
+        r1_file = 'r1_file'
+        sourcedir.ensure(r1_file)
+        cvs('-d', cvsroot, 'add', r1_file)
+        cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
+        output = cvs('log', '-N', r0_file, output=str)
+        revision_date['1.2'] = format_date(get_cvs_timestamp(output))
+
+        # Create branch 'mock-branch'
+        cvs('-d', cvsroot, 'tag', 'mock-branch-root')
+        cvs('-d', cvsroot, 'tag', '-b', 'mock-branch')
+
+    # CVS does not have the notion of a unique branch; branches and revisions
+    # are managed separately for every file
+    def get_branch():
+        """Return the branch name if all files are on the same branch, else
+        return None. Also return None if all files are on the trunk."""
+        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
+        branch = None
+        for line in lines:
+            m = re.search(r'(\S+)\s+[(]branch:', line)
+            if m:
+                tag = m.group(1)
+                if branch is None:
+                    # First branch name found
+                    branch = tag
+                elif tag == branch:
+                    # Later branch name found; all branch names found so far
+                    # agree
+                    pass
+                else:
+                    # Later branch name found; branch names differ
+                    branch = None
+                    break
+        return branch
+
+    # CVS does not have the notion of a unique revision; usually, one uses
+    # commit dates instead
+    def get_date():
+        """Return latest date of the revisions of all files"""
+        output = cvs('log', '-N', r0_file, output=str)
+        timestamp = get_cvs_timestamp(output)
+        if timestamp is None:
+            return None
+        return format_date(timestamp)
+
+    checks = {
+        'default': Bunch(
+            file=r1_file,
+            branch=None,
+            date=None,
+            args={'cvs': url},
+        ),
+        'branch': Bunch(
+            file=r1_file,
+            branch='mock-branch',
+            date=None,
+            args={'cvs': url, 'branch': 'mock-branch'},
+        ),
+        'date': Bunch(
+            file=r0_file,
+            branch=None,
+            date=revision_date['1.1'],
+            args={'cvs': url,
+                  'date': revision_date['1.1']},
+        ),
+    }
+
+    test = Bunch(
+        checks=checks,
+        url=url,
+        get_branch=get_branch,
+        get_date=get_date,
+        path=str(repodir),
+    )
+
+    yield test
 
 
 @pytest.fixture(scope='session')
@@ -1094,11 +1394,11 @@ def mock_svn_repository(tmpdir_factory):
 @pytest.fixture()
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = spack.environment.env_path
+    saved_path = ev.environment.env_path
     mock_path = tmpdir_factory.mktemp('mock-env-path')
-    spack.environment.env_path = str(mock_path)
+    ev.environment.env_path = str(mock_path)
     yield mock_path
-    spack.environment.env_path = saved_path
+    ev.environment.env_path = saved_path
 
 
 @pytest.fixture()
@@ -1159,7 +1459,7 @@ def invalid_spec(request):
     return request.param
 
 
-@pytest.fixture("module")
+@pytest.fixture(scope='module')
 def mock_test_repo(tmpdir_factory):
     """Create an empty repository."""
     repo_namespace = 'mock_test_repo'
@@ -1234,3 +1534,10 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set('config:test_stage', tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def brand_new_binary_cache():
+    yield
+    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
+        spack.binary_distribution._binary_index)

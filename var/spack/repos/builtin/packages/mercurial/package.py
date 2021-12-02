@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from llnl.util import tty
+
+from spack import *
 
 
 class Mercurial(PythonPackage):
@@ -13,6 +14,7 @@ class Mercurial(PythonPackage):
     homepage = "https://www.mercurial-scm.org"
     url      = "https://www.mercurial-scm.org/release/mercurial-5.3.tar.gz"
 
+    version('5.8',   sha256='fc5d6a8f6478d88ef83cdd0ab6d86ad68ee722bbdf4964e6a0b47c3c6ba5309f')
     version('5.7.1', sha256='cb5139144ccb2ef648f36963c8606d47dea1cb0e22aa2c055d6f860ce3fde7b0')
     version('5.7',   sha256='609c3e7c9276dd75b03b713eccc10f5e0553001f35ae21600bcea1509699c601')
     version('5.6.1', sha256='e55c254f4904c45226a106780e57f4279aee03368f6ff6a981d5d2a38243ffad')
@@ -29,8 +31,8 @@ class Mercurial(PythonPackage):
     version('3.8.2', sha256='cb78b16956140625266a8a6d1fadc7c868969d994086e1ec60279a66bf20bffd')
     version('3.8.1', sha256='face1f058de5530b56b0dfd3b4d0b23d89590c588605c06f3d18b79e8c30d594')
 
-    depends_on('python@2.6:2.8', when='@:4.2.99', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5.3:3.5.999,3.6.2:', when='@4.3:', type=('build', 'run'))
+    depends_on('python+bz2+ssl+zlib@2.6:2.8', when='@:4.2', type=('build', 'run'))
+    depends_on('python+bz2+ssl+zlib@2.7:2.8,3.5.3:3.5,3.6.2:', when='@4.3:', type=('build', 'run'))
     depends_on('py-setuptools', when='@3.6:', type='build')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))

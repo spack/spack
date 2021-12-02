@@ -21,6 +21,7 @@ class Zfp(CMakePackage, CudaPackage):
     url         = 'https://github.com/LLNL/zfp/releases/download/0.5.5/zfp-0.5.5.tar.gz'
     git         = 'https://github.com/LLNL/zfp.git'
     maintainers = ['lindstro', 'GarrettDMorrison']
+    tags        = ['radiuss', 'e4s']
 
     # Versions
     version('develop', branch='develop')
@@ -78,6 +79,7 @@ class Zfp(CMakePackage, CudaPackage):
     # Dependencies
     depends_on('cmake@3.4.0:', type='build')
     depends_on('cuda@7:',      type=('build', 'test', 'run'), when='+cuda')
+    depends_on('python',       type=('build', 'test', 'run'), when='+python')
     depends_on('py-numpy',     type=('build', 'test', 'run'), when='+python')
     depends_on('py-cython',    type='build',                  when='+python')
 
@@ -92,13 +94,22 @@ class Zfp(CMakePackage, CudaPackage):
             self.define_from_variant('BUILD_CFP', 'c'),
             self.define_from_variant('BUILD_ZFPY', 'python'),
             self.define_from_variant('BUILD_ZFORP', 'fortran'),
+            self.define_from_variant('ZFP_WITH_OPENMP', 'openmp'),
+            self.define_from_variant('ZFP_WITH_CUDA', 'cuda'),
             self.define('ZFP_BIT_STREAM_WORD_SIZE',
                         spec.variants['bsws'].value),
             self.define_from_variant('ZFP_WITH_BIT_STREAM_STRIDED', 'strided'),
             self.define_from_variant('ZFP_WITH_ALIGNED_ALLOC', 'aligned'),
             self.define_from_variant('ZFP_WITH_CACHE_TWOWAY', 'twoway'),
             self.define_from_variant('ZFP_WITH_CACHE_FAST_HASH', 'fasthash'),
-            self.define_from_variant('ZFP_WITH_CACHE_PROFILE', 'profile')
+            self.define_from_variant('ZFP_WITH_CACHE_PROFILE', 'profile'),
         ]
+
+        if '+cuda' in spec:
+            args.append('-DCUDA_BIN_DIR={0}'.format(spec['cuda'].prefix.bin))
+
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                args.append('-DCMAKE_CUDA_FLAGS=-arch sm_{0}'.format(cuda_arch[0]))
 
         return args

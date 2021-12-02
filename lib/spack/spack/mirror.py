@@ -11,17 +11,15 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
-import sys
-import os
-import traceback
-import os.path
+import collections
 import operator
-
-import six
+import os
+import os.path
+import sys
+import traceback
 
 import ruamel.yaml.error as yaml_error
-
-from ordereddict_backport import OrderedDict
+import six
 
 if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
@@ -33,14 +31,18 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
-import spack.url as url
 import spack.fetch_strategy as fs
+import spack.spec
+import spack.url as url
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-import spack.spec
-from spack.version import VersionList
 from spack.util.spack_yaml import syaml_dict
+from spack.version import VersionList
+
+
+def _is_string(url):
+    return isinstance(url, six.string_types)
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -61,7 +63,8 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None):
+    def __init__(self, fetch_url, push_url=None,
+                 name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
@@ -98,7 +101,7 @@ class Mirror(object):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name)
+            return Mirror(d['fetch'], d['push'], name=name)
 
     def display(self, max_len=0):
         if self._push_url is None:
@@ -139,24 +142,83 @@ class Mirror(object):
     def name(self):
         return self._name or "<unnamed>"
 
+    def get_profile(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['profile']
+            return self._fetch_url['profile']
+        else:
+            return None
+
+    def set_profile(self, url_type, profile):
+        if url_type == "push":
+            self._push_url["profile"] = profile
+        else:
+            self._fetch_url["profile"] = profile
+
+    def get_access_pair(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['access_pair']
+            return self._fetch_url['access_pair']
+        else:
+            return None
+
+    def set_access_pair(self, url_type, connection_tuple):
+        if url_type == "push":
+            self._push_url["access_pair"] = connection_tuple
+        else:
+            self._fetch_url["access_pair"] = connection_tuple
+
+    def get_endpoint_url(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['endpoint_url']
+            return self._fetch_url['endpoint_url']
+        else:
+            return None
+
+    def set_endpoint_url(self, url_type, url):
+        if url_type == "push":
+            self._push_url["endpoint_url"] = url
+        else:
+            self._fetch_url["endpoint_url"] = url
+
+    def get_access_token(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url['access_token']
+            return self._fetch_url['access_token']
+        else:
+            return None
+
+    def set_access_token(self, url_type, connection_token):
+        if url_type == "push":
+            self._push_url["access_token"] = connection_token
+        else:
+            self._fetch_url["access_token"] = connection_token
+
     @property
     def fetch_url(self):
-        return self._fetch_url
+        return self._fetch_url if _is_string(self._fetch_url) \
+            else self._fetch_url["url"]
 
     @fetch_url.setter
     def fetch_url(self, url):
-        self._fetch_url = url
+        self._fetch_url["url"] = url
         self._normalize()
 
     @property
     def push_url(self):
         if self._push_url is None:
-            return self._fetch_url
-        return self._push_url
+            return self._fetch_url if _is_string(self._fetch_url) \
+                else self._fetch_url["url"]
+        return self._push_url if _is_string(self._push_url) \
+            else self._push_url["url"]
 
     @push_url.setter
     def push_url(self, url):
-        self._push_url = url
+        self._push_url["url"] = url
         self._normalize()
 
     def _normalize(self):
@@ -168,7 +230,7 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = OrderedDict(
+        self._mirrors = collections.OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
@@ -453,6 +515,62 @@ def create(path, specs, skip_unstable_versions=False):
         _add_single_spec(spec, mirror_cache, mirror_stats)
 
     return mirror_stats.stats()
+
+
+def add(name, url, scope, args={}):
+    """Add a named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name in mirrors:
+        tty.die("Mirror with name %s already exists." % name)
+
+    items = [(n, u) for n, u in mirrors.items()]
+    mirror_data = url
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
+    # On creation, assume connection data is set for both
+    if any(value for value in key_values if value in args):
+        url_dict = {"url": url,
+                    "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+                    "access_token": args.s3_access_token,
+                    "profile": args.s3_profile,
+                    "endpoint_url": args.s3_endpoint_url}
+        mirror_data = {"fetch": url_dict, "push": url_dict}
+
+    items.insert(0, (name, mirror_data))
+    mirrors = syaml_dict(items)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+
+def remove(name, scope):
+    """Remove the named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name not in mirrors:
+        tty.die("No mirror with name %s" % name)
+
+    old_value = mirrors.pop(name)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+    debug_msg_url = "url %s"
+    debug_msg = ["Removed mirror %s with"]
+    values = [name]
+
+    try:
+        fetch_value = old_value['fetch']
+        push_value = old_value['push']
+
+        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
+        values.extend((fetch_value, push_value))
+    except TypeError:
+        debug_msg.append(debug_msg_url)
+        values.append(old_value)
+
+    tty.debug(" ".join(debug_msg) % tuple(values))
+    tty.msg("Removed mirror %s." % name)
 
 
 class MirrorStats(object):

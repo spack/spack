@@ -14,5 +14,7 @@ class PySnappy(PythonPackage):
 
     version('0.1.0-alpha.1', sha256='f94c5bfc0b2bb42f7d442f0d84c9ffd9aa92876632d415612f25bafa61ddcfc4')
 
+    patch('req.patch')
+
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

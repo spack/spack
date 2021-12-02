@@ -21,6 +21,15 @@ class Libcircle(AutotoolsPackage):
     depends_on('mpi')
     depends_on('pkgconfig', type='build')
     depends_on('libpciaccess', type='link')
+    depends_on('autoconf', when='%cce', type='build')
+    depends_on('automake', when='%cce', type='build')
+    depends_on('libtool', when='%cce', type='build')
+
+    patch('CrayPE_configure-ac.patch', when='%cce')
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies('%cce')
 
     @when('@master')
     def autoreconf(self, spec, prefix):

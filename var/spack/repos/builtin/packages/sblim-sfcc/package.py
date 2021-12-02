@@ -9,7 +9,7 @@ from spack import *
 class SblimSfcc(AutotoolsPackage):
     """Small Footprint CIM Client Library"""
 
-    homepage = "http://sourceforge.net/projects/sblim"
+    homepage = "https://sourceforge.net/projects/sblim"
     url      = "https://github.com/kkaempf/sblim-sfcc/archive/SFCC_2_2_1.tar.gz"
 
     version('2_2_8', sha256='d8d0bf06a487483df507f512ddf0c7b2c1b878a1c9b039bf5c2357c4ba13b882')

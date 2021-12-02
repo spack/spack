@@ -10,12 +10,15 @@ class CBlosc2(CMakePackage):
     """Next generation c-blosc with a new API, a new container and
        other bells and whistles"""
 
-    homepage = "http://www.blosc.org"
+    homepage = "https://www.blosc.org/"
+    url      = "https://github.com/Blosc/c-blosc2/archive/refs/tags/v2.0.1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 
-    maintainers = ['ax3l']
+    maintainers = ['ax3l', 'robert-mijakovic']
 
     version('develop', branch='master')
+    version('2.0.2', sha256='fba51ba601610441eea6046e384284b2d8d7884922060cf15369d01d713b9b77')
+    version('2.0.1', sha256='35b93dfed479b1dfd9372d41d7843b60254ed1d71792577b95e489c28705874f')
 
     variant('avx2', default=True, description='Enable AVX2 support')
 
@@ -58,12 +61,9 @@ class CBlosc2(CMakePackage):
             '-DPREFER_EXTERNAL_ZSTD=ON',
             '-DDEACTIVATE_AVX2={0}'.format(
                 'ON' if '~avx2' in spec else 'OFF'),
-            '-DBUILD_TESTS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_BENCHMARKS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_EXAMPLES={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('BUILD_TESTS', self.run_tests),
+            self.define('BUILD_BENCHMARKS', self.run_tests),
+            self.define('BUILD_EXAMPLES', self.run_tests)
         ]
 
         return args

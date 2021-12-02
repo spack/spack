@@ -9,8 +9,8 @@ from spack import *
 
 class G4realsurface(Package):
     """Geant4 data for measured optical surface reflectance"""
-    homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/RealSurface.1.0.tar.gz"
+    homepage = "https://geant4.web.cern.ch"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/RealSurface.1.0.tar.gz"
 
     tags = ['hep']
 

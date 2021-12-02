@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Supernova(Package):
@@ -23,7 +24,7 @@ class Supernova(Package):
     supernova yourself. Spack will search your current directory for the
     download file. Alternatively, add this file yo a mirror so that Spack
     can find it. For instructions on how to set up a mirror, see
-    http://spack.readthedocs.io/en/latest/mirrors.html"""
+    https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://support.10xgenomics.com/de-novo-assembly/software/overview/latest/welcome"
     manual_download = True

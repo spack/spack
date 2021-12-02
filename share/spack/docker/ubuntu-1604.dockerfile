@@ -21,9 +21,7 @@ RUN apt-get -yqq update \
         git \
         gnupg2 \
         iproute2 \
-        lmod \
         locales \
-        lua-posix \
         make \
         python3 \
         python3-pip \
@@ -69,6 +67,7 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # TODO: add a command to Spack that (re)creates the package cache
+RUN spack bootstrap untrust spack-install
 RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]

@@ -13,11 +13,11 @@ import sys
 from llnl.util import filesystem, tty
 
 import spack.cmd
-import spack.modules
-import spack.repo
-import spack.modules.common
-
 import spack.cmd.common.arguments as arguments
+import spack.config
+import spack.modules
+import spack.modules.common
+import spack.repo
 
 description = "manipulate module files"
 section = "environment"
@@ -25,6 +25,11 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-n', '--name',
+        action='store', dest='module_set_name', default='default',
+        help="Named module set to use from modules configuration."
+    )
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
 
     refresh_parser = sp.add_parser('refresh', help='regenerate module files')
@@ -111,6 +116,19 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
+def check_module_set_name(name):
+    modules_config = spack.config.get('modules')
+    valid_names = set([key for key, value in modules_config.items()
+                       if isinstance(value, dict) and value.get('enable', [])])
+    if 'enable' in modules_config and modules_config['enable']:
+        valid_names.add('default')
+
+    if name not in valid_names:
+        msg = "Cannot use invalid module set %s." % name
+        msg += "    Valid module set names are %s" % list(valid_names)
+        raise spack.config.ConfigError(msg)
+
+
 _missing_modules_warning = (
     "Modules have been omitted for one or more specs, either"
     " because they were blacklisted or because the spec is"
@@ -121,6 +139,7 @@ _missing_modules_warning = (
 
 def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
+    check_module_set_name(args.module_set_name)
     out = sys.stdout if out is None else out
 
     # Get a comprehensive list of specs
@@ -142,7 +161,8 @@ def loads(module_type, specs, args, out=None):
     modules = list(
         (spec,
          spack.modules.common.get_module(
-             module_type, spec, get_full_path=False, required=False))
+             module_type, spec, get_full_path=False,
+             module_set_name=args.module_set_name, required=False))
         for spec in specs)
 
     module_commands = {
@@ -177,6 +197,7 @@ def loads(module_type, specs, args, out=None):
 
 def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
+    check_module_set_name(args.module_set_name)
 
     single_spec = one_spec_or_raise(specs)
 
@@ -190,12 +211,14 @@ def find(module_type, specs, args):
     try:
         modules = [
             spack.modules.common.get_module(
-                module_type, spec, args.full_path, required=False)
+                module_type, spec, args.full_path,
+                module_set_name=args.module_set_name, required=False)
             for spec in dependency_specs_to_retrieve]
 
         modules.append(
             spack.modules.common.get_module(
-                module_type, single_spec, args.full_path, required=True))
+                module_type, single_spec, args.full_path,
+                module_set_name=args.module_set_name, required=True))
     except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
 
@@ -209,13 +232,16 @@ def rm(module_type, specs, args):
     """Deletes the module files associated with every spec in specs, for every
     module type in module types.
     """
+    check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(module_cls(x).layout.filename)
+    module_exist = lambda x: os.path.exists(
+        module_cls(x, args.module_set_name).layout.filename)
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    modules = [module_cls(spec) for spec in specs_with_modules]
+    modules = [module_cls(spec, args.module_set_name)
+               for spec in specs_with_modules]
 
     if not modules:
         tty.die('No module file matches your query')
@@ -239,6 +265,7 @@ def refresh(module_type, specs, args):
     """Regenerates the module files for every spec in specs and every module
     type in module types.
     """
+    check_module_set_name(args.module_set_name)
 
     # Prompt a message to the user about what is going to change
     if not specs:
@@ -263,7 +290,7 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages.
     writers = [
-        cls(spec) for spec in specs
+        cls(spec, args.module_set_name) for spec in specs
         if spack.repo.path.exists(spec.name)]
 
     # Filter blacklisted packages early

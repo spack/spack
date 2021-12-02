@@ -22,12 +22,14 @@ Currently the following hooks are supported:
     * on_phase_error(pkg, phase_name, log_file)
     * on_phase_error(pkg, phase_name, log_file)
     * on_analyzer_save(pkg, result)
+    * post_env_write(env)
 
 This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom
 features.
 """
 import llnl.util.lang
+
 import spack.paths
 
 
@@ -91,3 +93,6 @@ on_install_failure = _HookRunner('on_install_failure')
 
 # Analyzer hooks
 on_analyzer_save = _HookRunner('on_analyzer_save')
+
+# Environment hooks
+post_env_write = _HookRunner('post_env_write')

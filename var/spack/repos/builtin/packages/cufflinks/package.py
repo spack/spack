@@ -10,8 +10,8 @@ class Cufflinks(Package):
     """Cufflinks assembles transcripts, estimates their abundances, and tests
        for differential expression and regulation in RNA-Seq samples."""
 
-    homepage = "http://cole-trapnell-lab.github.io/cufflinks"
-    url      = "http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
+    homepage = "https://cole-trapnell-lab.github.io/cufflinks"
+    url      = "https://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
 
     version('2.2.1', sha256='39f812452cae26462e5d2671d38104d9e8ef30aaf9ab6dea8ca57f50f46448e4')
 

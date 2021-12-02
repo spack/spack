@@ -15,7 +15,7 @@ class RRrblup(RPackage):
     calculated based on an additive relationship matrix or a Gaussian
     kernel."""
 
-    homepage = "http://potatobreeding.cals.wisc.edu/software"
+    homepage = "https://potatobreeding.cals.wisc.edu/software"
     url      = "https://cloud.r-project.org/src/contrib/rrBLUP_4.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rrBLUP"
 

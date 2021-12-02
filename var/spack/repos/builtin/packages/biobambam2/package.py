@@ -40,7 +40,10 @@ class Biobambam2(AutotoolsPackage):
         self._fix_shortsort()
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        """Perform stand-alone/smoke test on installed package."""
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.test_src_dir)
         self.run_test('sh', ['testshortsort.sh'],
                       expected='Alignments sorted by coordinate.',
+                      purpose='test: checking alignments',
                       work_dir=test_dir)

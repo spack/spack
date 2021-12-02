@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
 import subprocess
+
+from spack import *
 
 
 class PyNumpy(PythonPackage):
@@ -21,7 +22,13 @@ class PyNumpy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    version('master', branch='master')
+    version('main', branch='main')
+    version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')
+    version('1.21.3', sha256='63571bb7897a584ca3249c86dd01c10bcb5fe4296e3568b2e9c1a55356b6410e')
+    version('1.21.2', sha256='423216d8afc5923b15df86037c6053bf030d15cc9e3224206ef868c2d63dd6dc')
+    version('1.21.1', sha256='dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd')
+    version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
+    version('1.20.3', sha256='e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69')
     version('1.20.2', sha256='878922bf5ad7550aa044aa9301d417e2d3ae50f0f577de92051d739ac6096cee')
     version('1.20.1', sha256='3bc63486a870294683980d76ec1e3efc786295ae00128f9ea38e2c6e74d5a60a')
     version('1.20.0', sha256='3d8233c03f116d068d5365fed4477f2947c7229582dad81e5953088989294cec')
@@ -80,16 +87,18 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16:')
-    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:')
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19:')
-    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'), when='@:1.15')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16')
+    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
+    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:')
     depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
     depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
+    depends_on('py-cython@0.29.24:', when='@1.21.2:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
@@ -113,11 +122,15 @@ class PyNumpy(PythonPackage):
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
 
+    # version 1.21.0 runs into an infinit loop during printing
+    # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
+    conflicts('%gcc@11:', when='@1.21.0')
+
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
-    conflicts('%nvhpc', when='@:1.19.999')
+    conflicts('%nvhpc', when='@:1.19')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
@@ -145,6 +158,7 @@ class PyNumpy(PythonPackage):
                                    '{0}'.format(gcc_version))
             if gcc_version <= Version('5.1'):
                 flags.append(self.compiler.c99_flag)
+
         return (flags, None, None)
 
     @run_before('build')
@@ -193,7 +207,9 @@ class PyNumpy(PythonPackage):
 
         # Tell numpy where to find BLAS/LAPACK libraries
         with open('site.cfg', 'w') as f:
-            if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
+            if '^intel-mkl' in spec or \
+               '^intel-parallel-studio+mkl' or \
+               '^intel-oneapi-mkl' in spec:
                 f.write('[mkl]\n')
                 # FIXME: as of @1.11.2, numpy does not work with separately
                 # specified threading and interface layers. A workaround is a
@@ -286,7 +302,8 @@ class PyNumpy(PythonPackage):
         if 'blas' not in spec:
             blas = ''
         elif spec['blas'].name == 'intel-mkl' or \
-                spec['blas'].name == 'intel-parallel-studio':
+                spec['blas'].name == 'intel-parallel-studio' or \
+                spec['blas'].name == 'intel-oneapi-mkl':
             blas = 'mkl'
         elif spec['blas'].name == 'blis':
             blas = 'blis'
@@ -305,7 +322,8 @@ class PyNumpy(PythonPackage):
         if 'lapack' not in spec:
             lapack = ''
         elif spec['lapack'].name == 'intel-mkl' or \
-                spec['lapack'].name == 'intel-parallel-studio':
+                spec['lapack'].name == 'intel-parallel-studio' or \
+                spec['lapack'].name == 'intel-oneapi-mkl':
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'

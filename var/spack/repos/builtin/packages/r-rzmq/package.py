@@ -13,7 +13,7 @@ class RRzmq(RPackage):
     Interface to the 'ZeroMQ' lightweight messaging kernel (see
     <http://www.zeromq.org/> for more information)."""
 
-    homepage = "http://github.com/armstrtw/rzmq"
+    homepage = "https://github.com/armstrtw/rzmq"
     url      = "https://cloud.r-project.org/src/contrib/rzmq_0.7.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rzmq"
 

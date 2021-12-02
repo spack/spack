@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 # typical working line with extrae 3.0.1
@@ -67,6 +69,13 @@ class Extrae(AutotoolsPackage):
     variant('papi', default=True, description="Use PAPI to collect performance counters")
     depends_on('papi', when='+papi')
 
+    variant('cuda', default=False, description="Enable support for tracing CUDA")
+    depends_on('cuda', when='+cuda')
+
+    variant('cupti', default=False, description='Enable CUPTI support')
+    depends_on('cuda', when='+cupti')
+    conflicts('+cupti', when='~cuda', msg='CUPTI requires CUDA')
+
     def configure_args(self):
         spec = self.spec
         args = ["--with-mpi=%s" % spec['mpi'].prefix,
@@ -85,13 +94,29 @@ class Extrae(AutotoolsPackage):
                  if '+dyninst' in self.spec else
                  ["--without-dyninst"])
 
+        args += (["--with-cuda=%s" % spec['cuda'].prefix]
+                 if '+cuda' in self.spec else
+                 ["--without-cuda"])
+
+        if '+cupti' in self.spec:
+            cupti_h = find_headers('cupti', spec['cuda'].prefix,
+                                   recursive=True)
+            cupti_dir = os.path.dirname(os.path.dirname(cupti_h[0]))
+
+        args += (["--with-cupti=%s" % cupti_dir]
+                 if '+cupti' in self.spec else
+                 ["--without-cupti"])
+
         if spec.satisfies("^dyninst@9.3.0:"):
             make.add_default_arg("CXXFLAGS=%s" % self.compiler.cxx11_flag)
             args.append("CXXFLAGS=%s" % self.compiler.cxx11_flag)
 
-        # This was added due to configure failure
+        # This was added due to:
+        # - configure failure
         # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
-        args.append('LDFLAGS=-lintl')
+        # - linking error
+        # https://github.com/bsc-performance-tools/extrae/issues/57
+        args.append('LDFLAGS=-lintl -pthread')
 
         return(args)
 

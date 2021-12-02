@@ -3,27 +3,29 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
-import sys
 import re
+import sys
+
+from spack import *
 
 
 class Mpich(AutotoolsPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
-    homepage = "http://www.mpich.org"
-    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    homepage = "https://www.mpich.org"
+    url      = "https://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     git      = "https://github.com/pmodels/mpich.git"
-    list_url = "http://www.mpich.org/static/downloads/"
+    list_url = "https://www.mpich.org/static/downloads/"
     list_depth = 1
 
     maintainers = ['raffenet', 'yfguo']
-
+    tags = ['e4s']
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
+    version('3.4.2', sha256='5c19bea8b84e8d74cca5f047e82b147ff3fba096144270e3911ad623d6c587bf')
     version('3.4.1', sha256='8836939804ef6d492bcee7d54abafd6477d2beca247157d92688654d13779727')
     version('3.4',   sha256='ce5e238f0c3c13ab94a64936060cff9964225e3af99df1ea11b130f20036c24b')
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
@@ -79,9 +81,20 @@ spack package at this time.''',
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
 
-    provides('mpi')
-    provides('mpi@:3.0', when='@3:')
-    provides('mpi@:1.3', when='@1:')
+    variant(
+        'two_level_namespace',
+        default=False,
+        description='''Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.'''
+    )
+
+    provides('mpi@:3.1')
+    provides('mpi@:3.0', when='@:3.1')
+    provides('mpi@:2.2', when='@:1.2')
+    provides('mpi@:2.1', when='@:1.1')
+    provides('mpi@:2.0', when='@:1.0')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -188,7 +201,7 @@ spack package at this time.''',
     conflicts('+libxml2', when='@:3.2~hydra')
 
     # see https://github.com/pmodels/mpich/pull/5031
-    conflicts('%clang@:7', when='@3.4:')
+    conflicts('%clang@:7', when='@3.4:3.4.1')
 
     @run_after('configure')
     def patch_cce(self):
@@ -310,6 +323,8 @@ spack package at this time.''',
             env.set('FFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):
@@ -469,4 +484,39 @@ spack package at this time.''',
             config_args.append('--with-thread-package=argobots')
             config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
+        if '+two_level_namespace' in spec:
+            config_args.append('--enable-two-level-namespace')
+
         return config_args
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(['examples', join_path('test', 'mpi')])
+
+    def run_mpich_test(self, example_dir, exe):
+        """Run stand alone tests"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             example_dir)
+        exe_source = join_path(test_dir, '{0}.c'.format(exe))
+
+        if not os.path.isfile(exe_source):
+            print('Skipping {0} test'.format(exe))
+            return
+
+        self.run_test(self.prefix.bin.mpicc,
+                      options=[exe_source, '-Wall', '-g', '-o', exe],
+                      purpose='test: generate {0} file'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_mpich_test(join_path('test', 'mpi', 'init'), 'finalized')
+        self.run_mpich_test(join_path('test', 'mpi', 'basic'), 'sendrecv')
+        self.run_mpich_test(join_path('test', 'mpi', 'perf'), 'manyrma')
+        self.run_mpich_test('examples', 'cpi')

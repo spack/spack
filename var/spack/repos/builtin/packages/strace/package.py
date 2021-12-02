@@ -17,6 +17,11 @@ class Strace(AutotoolsPackage):
 
     conflicts('platform=darwin', msg='strace runs only on Linux.')
 
+    version('5.12', sha256='29171edf9d252f89c988a4c340dfdec662f458cb8c63d85431d64bab5911e7c4')
+    version('5.11', sha256='ffe340b10c145a0f85734271e9cce56457d23f21a7ea5931ab32f8cf4e793879')
+    version('5.10', sha256='fe3982ea4cd9aeb3b4ba35f6279f0b577a37175d3282be24b9a5537b56b8f01c')
+    version('5.9',  sha256='39473eb8465546c3e940fb663cb381eba5613160c7302794699d194a4d5d66d9')
+    version('5.8',  sha256='df4a669f7fff9cc302784085bd4b72fab216a426a3f72c892b28a537b71e7aa9')
     version('5.7', sha256='b284b59f9bcd95b9728cea5bd5c0edc5ebe360af73dc76fbf6334f11c777ccd8')
     version('5.6', sha256='189968eeae06ed9e20166ec55a830943c84374676a457c9fe010edc7541f1b01')
     version('5.5', sha256='9f58958c8e59ea62293d907d10572e352b582bd7948ed21aa28ebb47e5bf30ff')

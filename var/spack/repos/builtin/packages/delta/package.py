@@ -10,7 +10,7 @@ class Delta(Package):
     """Delta Lake is a storage layer that brings scalable, ACID transactions
     to Apache Spark and other big-data engines."""
 
-    homepage = "http://delta.io/"
+    homepage = "https://delta.io/"
     url      = "https://github.com/delta-io/delta/archive/v0.7.0.tar.gz"
 
     version('0.7.0', sha256='1fb01e36c1cf670f201c615e5fd7df88f72c27157b7d2780d146e21b266bdb64')

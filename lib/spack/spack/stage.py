@@ -14,28 +14,32 @@ import shutil
 import stat
 import sys
 import tempfile
-from six import string_types
-from six import iteritems
 from typing import Dict  # novm
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition_path, remove_linked_tree
+from six import iteritems, string_types
 
-import spack.paths
+import llnl.util.lang
+import llnl.util.tty as tty
+from llnl.util.filesystem import (
+    can_access,
+    install,
+    install_tree,
+    mkdirp,
+    partition_path,
+    remove_linked_tree,
+)
+
 import spack.caches
-import spack.cmd
 import spack.config
 import spack.error
-import spack.mirror
-import spack.util.lock
 import spack.fetch_strategy as fs
-import spack.util.pattern as pattern
+import spack.mirror
+import spack.paths
+import spack.util.lock
 import spack.util.path as sup
+import spack.util.pattern as pattern
 import spack.util.url as url_util
-
-from spack.util.crypto import prefix_bits, bit_length
-
+from spack.util.crypto import bit_length, prefix_bits
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'
@@ -44,7 +48,8 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
-def _create_stage_root(path):
+def create_stage_root(path):
+    # type: (str) -> None
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
@@ -99,6 +104,15 @@ def _create_stage_root(path):
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, p_stat.st_uid))
 
+    spack_src_subdir = os.path.join(path, _source_path_subdir)
+    # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
+    # to ensure the `spack-src` subdirectory exists, as we can't rely on it being
+    # created automatically by spack. It's not clear why this is the case for `spack
+    # stage -p`, but since `mkdirp()` is idempotent, this should not change the behavior
+    # for any other code paths.
+    if not os.path.isdir(spack_src_subdir):
+        mkdirp(spack_src_subdir, mode=stat.S_IRWXU)
+
 
 def _first_accessible_path(paths):
     """Find the first path that is accessible, creating it if necessary."""
@@ -110,7 +124,7 @@ def _first_accessible_path(paths):
                     return path
             else:
                 # Now create the stage root with the proper group/perms.
-                _create_stage_root(path)
+                create_stage_root(path)
                 return path
 
         except OSError as e:
@@ -423,11 +437,20 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = []
+            mirror_urls = {}
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    mirror_urls.append(
-                        url_util.join(mirror.fetch_url, rel_path))
+                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
+                    mirror_urls[mirror_url] = {}
+                    if mirror.get_access_pair("fetch") or \
+                       mirror.get_access_token("fetch") or \
+                       mirror.get_profile("fetch"):
+                        mirror_urls[mirror_url] = {
+                            "access_token": mirror.get_access_token("fetch"),
+                            "access_pair": mirror.get_access_pair("fetch"),
+                            "access_profile": mirror.get_profile("fetch"),
+                            "endpoint_url": mirror.get_endpoint_url("fetch")
+                        }
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -446,10 +469,11 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
+            for url in reversed(list(mirror_urls.keys())):
                 fetchers.insert(
                     0, fs.from_url_scheme(
-                        url, digest, expand=expand, extension=extension))
+                        url, digest, expand=expand, extension=extension,
+                        connection=mirror_urls[url]))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
@@ -490,7 +514,8 @@ class Stage(object):
             print_errors(errors)
 
             self.fetcher = self.default_fetcher
-            raise fs.FetchError(err_msg or 'All fetchers failed', None)
+            default_msg = 'All fetchers failed for {0}'.format(self.name)
+            raise fs.FetchError(err_msg or default_msg, None)
 
         print_errors(errors)
 
@@ -551,8 +576,9 @@ class Stage(object):
         """Perform a fetch if the resource is not already cached
 
         Arguments:
-            mirror (MirrorCache): the mirror to cache this Stage's resource in
-            stats (MirrorStats): this is updated depending on whether the
+            mirror (spack.caches.MirrorCache): the mirror to cache this Stage's
+                resource in
+            stats (spack.mirror.MirrorStats): this is updated depending on whether the
                 caching operation succeeded or failed
         """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
@@ -808,9 +834,7 @@ def purge():
                 remove_linked_tree(stage_path)
 
 
-def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False,
-        fetch_options=None, batch=False):
+def get_checksums_for_versions(url_dict, name, **kwargs):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -821,11 +845,12 @@ def get_checksums_for_versions(
     Args:
         url_dict (dict): A dictionary of the form: version -> URL
         name (str): The name of the package
-        first_stage_function (callable): function that takes a Stage and a URL;
+        first_stage_function (typing.Callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
+        latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
 
@@ -833,7 +858,15 @@ def get_checksums_for_versions(
         (str): A multi-line string containing versions and corresponding hashes
 
     """
+    batch = kwargs.get('batch', False)
+    fetch_options = kwargs.get('fetch_options', None)
+    first_stage_function = kwargs.get('first_stage_function', None)
+    keep_stage = kwargs.get('keep_stage', False)
+    latest = kwargs.get('latest', False)
+
     sorted_versions = sorted(url_dict.keys(), reverse=True)
+    if latest:
+        sorted_versions = sorted_versions[:1]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
@@ -842,12 +875,12 @@ def get_checksums_for_versions(
     tty.msg('Found {0} version{1} of {2}:'.format(
             num_ver, '' if num_ver == 1 else 's', name),
             '',
-            *spack.cmd.elide_list(
+            *llnl.util.lang.elide_list(
                 ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()
 
-    if batch:
+    if batch or latest:
         archives_to_fetch = len(sorted_versions)
     else:
         archives_to_fetch = tty.get_number(

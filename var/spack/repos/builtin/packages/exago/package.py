@@ -13,6 +13,7 @@ class Exago(CMakePackage, CudaPackage):
 
     homepage = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago'
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
+    maintainers = ['ashermancinelli', 'CameronRutherford']
 
     version('1.0.0', tag='v1.0.0')
     version('0.99.2', tag='v0.99.2')
@@ -48,14 +49,14 @@ class Exago(CMakePackage, CudaPackage):
     depends_on('cmake@3.18:', type='build')
 
     # HiOp dependency logic
-    depends_on('hiop+shared', when='+hiop')
     depends_on('hiop+raja', when='+hiop+raja')
     depends_on('hiop@0.3.99:', when='@0.99:+hiop')
     depends_on('hiop+cuda', when='+hiop+cuda')
     depends_on('hiop~mpi', when='+hiop~mpi')
     depends_on('hiop+mpi', when='+hiop+mpi')
 
-    depends_on('petsc', when='+petsc')
+    # Require PETSc < 3.15 per ExaGO issue #199
+    depends_on('petsc@3.13:3.14', when='+petsc')
     depends_on('petsc~mpi', when='+petsc~mpi')
     depends_on('ipopt', when='+ipopt')
 

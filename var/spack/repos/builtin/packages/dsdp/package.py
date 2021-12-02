@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Dsdp(MakefilePackage):
@@ -15,8 +16,8 @@ class Dsdp(MakefilePackage):
     allows feasible and infeasible starting points and provides approximate
     certificates of infeasibility when no feasible solution exists."""
 
-    homepage = "http://www.mcs.anl.gov/hs/software/DSDP/"
-    url      = "http://www.mcs.anl.gov/hs/software/DSDP/DSDP5.8.tar.gz"
+    homepage = "https://www.mcs.anl.gov/hs/software/DSDP/"
+    url      = "https://www.mcs.anl.gov/hs/software/DSDP/DSDP5.8.tar.gz"
 
     version('5.8', sha256='26aa624525a636de272c0b329e2dfd01a0d5b7827f1c1c76f393d71e37dead70')
 

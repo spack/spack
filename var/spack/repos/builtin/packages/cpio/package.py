@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 
 class Cpio(AutotoolsPackage, GNUMirrorPackage):
@@ -32,7 +33,7 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
         spec = self.spec
 
         if name == 'cflags':
-            if '%intel@:17.999' in spec:
+            if '%intel@:17' in spec:
                 flags.append('-no-gcc')
 
             elif '%clang' in spec or '%fj' in spec:

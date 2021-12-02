@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
+
+from spack import *
 
 
 class Bwa(Package):
     """Burrow-Wheeler Aligner for pairwise alignment between DNA sequences."""
 
-    homepage = "http://github.com/lh3/bwa"
+    homepage = "https://github.com/lh3/bwa"
     url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
 
     version('0.7.17', sha256='de1b4d4e745c0b7fc3e107b5155a51ac063011d33a5d82696331ecf4bed8d0fd')
@@ -38,6 +39,11 @@ class Bwa(Package):
                     'Makefile')
         # use spack C compiler
         filter_file('^CC=.*', 'CC={0}'.format(spack_cc), 'Makefile')
+        # fix gcc 10+ errors
+        if self.spec.satisfies('%gcc@10:'):
+            filter_file('const uint8_t rle_auxtab[8]',
+                        'extern const uint8_t rle_auxtab[8]',
+                        'rle.h', string=True)
         make()
 
         mkdirp(prefix.bin)

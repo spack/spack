@@ -8,7 +8,7 @@ from spack import *
 
 class PyUrwid(PythonPackage):
     """A full-featured console UI library"""
-    homepage = "http://urwid.org/"
+    homepage = "https://urwid.org/"
     pypi = "urwid/urwid-1.3.0.tar.gz"
 
     version('1.3.0', sha256='29f04fad3bf0a79c5491f7ebec2d50fa086e9d16359896c9204c6a92bc07aba2')

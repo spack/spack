@@ -3,12 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from os.path import split
 import platform
+from os.path import split
 
+from spack import *
 
 _versions = {
+    '4.10.3': {
+        'Linux-x86_64': ('1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f', 'https://repo.anaconda.com/miniconda/Miniconda3-py39_4.10.3-Linux-x86_64.sh')},
     '4.9.2': {
         'Linux-ppc64le': ('2b111dab4b72a34c969188aa7a91eca927a034b14a87f725fa8d295955364e71', 'https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-ppc64le.sh'),
         'Linux-x86_64': ('1314b90489f154602fd794accfc90446111514a5a72fe1f71ab83e07de9504a7', 'https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh')},

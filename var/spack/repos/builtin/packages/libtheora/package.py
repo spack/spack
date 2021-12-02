@@ -9,7 +9,7 @@ from spack import *
 class Libtheora(AutotoolsPackage):
     """Theora Video Compression."""
 
-    homepage = "http://www.theora.org"
+    homepage = "https://www.theora.org"
     url      = "http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz"
 
     version('1.1.1',       sha256='f36da409947aa2b3dcc6af0a8c2e3144bc19db2ed547d64e9171c59c66561c61')

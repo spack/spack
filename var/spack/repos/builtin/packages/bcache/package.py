@@ -10,7 +10,7 @@ class Bcache(MakefilePackage):
     """Bcache is a patch for the Linux kernel to use SSDs to cache other block
     devices."""
 
-    homepage = "http://bcache.evilpiepirate.org"
+    homepage = "https://bcache.evilpiepirate.org/"
     url      = "https://github.com/g2p/bcache-tools/archive/v1.0.8.tar.gz"
 
     version('1.0.8', sha256='d56923936f37287efc57a46315679102ef2c86cd0be5874590320acd48c1201c')

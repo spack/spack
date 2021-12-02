@@ -8,12 +8,18 @@ based on its URL.
 """
 
 import os
+
 import pytest
 
-from spack.url import parse_name_offset, parse_version_offset
-from spack.url import parse_name_and_version, substitute_version
-from spack.url import strip_name_suffixes, strip_version_suffixes
-from spack.url import UndetectableVersionError
+from spack.url import (
+    UndetectableVersionError,
+    parse_name_and_version,
+    parse_name_offset,
+    parse_version_offset,
+    strip_name_suffixes,
+    strip_version_suffixes,
+    substitute_version,
+)
 from spack.version import Version
 
 
@@ -429,6 +435,8 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # .tgz
     ('ADOL-C', '2.6.1',
      'http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz'),
+    # .tbz
+    ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tbz'),
     # .tbz2
     ('mpfr', '4.0.1', 'https://ftpmirror.gnu.org/mpfr/mpfr-4.0.1.tbz2'),
     # .txz

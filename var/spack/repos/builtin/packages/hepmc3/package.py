@@ -18,6 +18,7 @@ class Hepmc3(CMakePackage):
 
     maintainers = ['vvolkl']
 
+    version('3.2.4', sha256='e088fccfd1a6c2f8e1089f457101bee1e5c7a9777e9d51c6419c8a288a49e1bb')
     version('3.2.3', sha256='8caadacc2c969883cd1f994b622795fc885fb4b15dad8c8ae64bcbdbf0cbd47d')
     version('3.2.2', sha256='0e8cb4f78f804e38f7d29875db66f65e4c77896749d723548cc70fb7965e2d41')
     version('3.2.1', sha256='6e4e4bb5708af105d4bf74efc2745e6efe704e942d46a8042f7dcae37a4739fe')
@@ -42,8 +43,6 @@ class Hepmc3(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            '-Dmomentum:STRING=GEV',
-            '-Dlength:STRING=MM',
             '-DHEPMC3_ENABLE_PYTHON={0}'.format(spec.satisfies('+python')),
             '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio')),
             '-DHEPMC3_INSTALL_INTERFACES={0}'.format(
@@ -61,4 +60,5 @@ class Hepmc3(CMakePackage):
 
         if self.spec.satisfies('+rootio'):
             args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix))
+        args.append("-DHEPMC3_ENABLE_TEST={0}".format(self.run_tests))
         return args

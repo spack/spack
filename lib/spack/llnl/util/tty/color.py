@@ -60,9 +60,9 @@ The console can be reset later to plain text with '@.'.
 To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
 from __future__ import unicode_literals
+
 import re
 import sys
-
 from contextlib import contextmanager
 
 import six

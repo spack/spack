@@ -11,7 +11,7 @@ class Orientdb(MavenPackage):
     of Native Graphs, Documents Full-Text, Reactivity, Geo-Spatial and Object
     Oriented concepts. It's written in Java and it's amazingly fast."""
 
-    homepage = "https://orientdb.com/"
+    homepage = "https://orientdb.org"
     url      = "https://github.com/orientechnologies/orientdb/archive/3.1.2.tar.gz"
 
     version('3.1.2', sha256='3c8e1f55de9e1a6c3cd714832deb7369f50096e85f1e048f0c0328e611970850')

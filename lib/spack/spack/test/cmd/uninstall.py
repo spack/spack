@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+
 import llnl.util.tty as tty
+
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
@@ -42,7 +44,7 @@ def test_recursive_uninstall(mutable_database):
     uninstall('-y', '-a', '--dependents', 'callpath')
 
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 8
+    assert len(all_specs) == 9
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
     callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
@@ -56,7 +58,7 @@ def test_recursive_uninstall(mutable_database):
 @pytest.mark.db
 @pytest.mark.regression('3690')
 @pytest.mark.parametrize('constraint,expected_number_of_specs', [
-    ('dyninst', 7), ('libelf', 5)
+    ('dyninst', 8), ('libelf', 6)
 ])
 def test_uninstall_spec_with_multiple_roots(
         constraint, expected_number_of_specs, mutable_database
@@ -69,7 +71,7 @@ def test_uninstall_spec_with_multiple_roots(
 
 @pytest.mark.db
 @pytest.mark.parametrize('constraint,expected_number_of_specs', [
-    ('dyninst', 13), ('libelf', 13)
+    ('dyninst', 14), ('libelf', 14)
 ])
 def test_force_uninstall_spec_with_ref_count_not_zero(
         constraint, expected_number_of_specs, mutable_database
@@ -141,7 +143,8 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
             [s for s in all_specs if s.satisfies('mpi')]
         )
     all_specs, mpileaks_specs, callpath_specs, mpi_specs = db_specs()
-    assert len(all_specs) == 13
+    total_specs = len(all_specs)
+    assert total_specs == 14
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 2
     assert len(mpi_specs) == 3
@@ -152,7 +155,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     validate_callpath_spec(True)
 
     all_specs, mpileaks_specs, callpath_specs, mpi_specs = db_specs()
-    assert len(all_specs) == 14      # back to 14
+    assert len(all_specs) == total_specs + 1   # back to total_specs+1
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 3  # back to 3
     assert len(mpi_specs) == 3

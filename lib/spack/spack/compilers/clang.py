@@ -11,7 +11,6 @@ import llnl.util.lang
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
-
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
     ('gfortran', 'clang/gfortran'),

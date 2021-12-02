@@ -1,0 +1,44 @@
+--- a/configure	2021-04-30 04:25:20.000000000 -0500
++++ b/configure	2021-05-14 17:34:11.666320745 -0500
+@@ -16794,11 +16794,11 @@
+           ;;
+         standard)
+           abi_optim_flavor_opt="standard"
+-          CFLAGS_OPTIM="-O2 -mtune=native -march=native"
++          CFLAGS_OPTIM="-O2"
+           ;;
+         aggressive)
+           abi_optim_flavor_opt="aggressive"
+-          CFLAGS_OPTIM="-O3 -mtune=native -march=native"
++          CFLAGS_OPTIM="-O3"
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;
+@@ -16947,11 +16947,11 @@
+           ;;
+         standard)
+           abi_optim_flavor_opt="standard"
+-          CXXFLAGS_OPTIM="-O2 -mtune=native -march=native"
++          CXXFLAGS_OPTIM="-O2"
+           ;;
+         aggressive)
+           abi_optim_flavor_opt="aggressive"
+-          CXXFLAGS_OPTIM="-O3 -mtune=native -march=native"
++          CXXFLAGS_OPTIM="-O3"
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;
+@@ -17100,11 +17100,11 @@
+           ;;
+         standard)
+           abi_optim_flavor_opt="standard"
+-          FCFLAGS_OPTIM="-O2 -mtune=native -march=native"
++          FCFLAGS_OPTIM="-O2"
+           ;;
+         aggressive)
+           abi_optim_flavor_opt="aggressive"
+-          FCFLAGS_OPTIM="-O3 -mtune=native -march=native -funroll-loops -faggressive-function-elimination"
++          FCFLAGS_OPTIM="-O3 -funroll-loops -faggressive-function-elimination"
+           ;;
+       esac   # [case: abi_optim_flavor, indent: 2, item: True]
+       ;;

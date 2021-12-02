@@ -9,7 +9,7 @@ from spack import *
 class Opus(AutotoolsPackage):
     """Opus is a totally open, royalty-free, highly versatile audio codec."""
 
-    homepage = "http://opus-codec.org/"
+    homepage = "https://opus-codec.org/"
     url      = "http://downloads.xiph.org/releases/opus/opus-1.1.4.tar.gz"
 
     version('1.3.1',      sha256='65b58e1e25b2a114157014736a3d9dfeaad8d41be1c8179866f144a2fb44ff9d')

@@ -11,7 +11,7 @@ class Wt(CMakePackage):
 
     Wt is a C++ library for developing web applications."""
 
-    homepage = "http://www.webtoolkit.eu/wt"
+    homepage = "https://www.webtoolkit.eu/wt"
     url      = "https://github.com/emweb/wt/archive/3.3.7.tar.gz"
     git      = "https://github.com/emweb/wt.git"
 
@@ -52,8 +52,6 @@ class Wt(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     def cmake_args(self):
-        spec = self.spec
-
         cmake_args = [
             '-DBUILD_EXAMPLES:BOOL=OFF',
             '-DCONNECTOR_FCGI:BOOL=OFF',
@@ -61,17 +59,11 @@ class Wt(CMakePackage):
             '-DENABLE_QT4:BOOL=OFF'
         ]
         cmake_args.extend([
-            '-DENABLE_SSL:BOOL={0}'.format((
-                'ON' if '+openssl' in spec else 'OFF')),
-            '-DENABLE_HARU:BOOL={0}'.format((
-                'ON' if '+libharu' in spec else 'OFF')),
-            '-DENABLE_PANGO:BOOL={0}'.format((
-                'ON' if '+pango' in spec else 'OFF')),
-            '-DENABLE_SQLITE:BOOL={0}'.format((
-                'ON' if '+sqlite' in spec else 'OFF')),
-            '-DENABLE_MYSQL:BOOL={0}'.format((
-                'ON' if '+mariadb' in spec else 'OFF')),
-            '-DENABLE_POSTGRES:BOOL={0}'.format((
-                'ON' if '+postgres' in spec else 'OFF'))
+            self.define_from_variant('ENABLE_SSL', 'openssl'),
+            self.define_from_variant('ENABLE_HARU', 'libharu'),
+            self.define_from_variant('ENABLE_PANGO', 'pango'),
+            self.define_from_variant('ENABLE_SQLITE', 'sqlite'),
+            self.define_from_variant('ENABLE_MYSQL', 'mariadb'),
+            self.define_from_variant('ENABLE_POSTGRES', 'postgresql')
         ])
         return cmake_args

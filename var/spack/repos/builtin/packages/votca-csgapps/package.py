@@ -15,7 +15,7 @@ class VotcaCsgapps(CMakePackage):
 
        This package contains the VOTCA coarse-graining extra apps.
     """
-    homepage = "http://www.votca.org"
+    homepage = "https://www.votca.org"
     url      = "https://github.com/votca/csgapps/tarball/v1.4"
     git      = "https://github.com/votca/csgapps.git"
     maintainers = ['junghans']

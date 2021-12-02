@@ -6,8 +6,8 @@
 import pytest
 
 import spack.environment as ev
-import spack.spec
 import spack.main
+import spack.spec
 
 gc = spack.main.SpackCommand('gc')
 

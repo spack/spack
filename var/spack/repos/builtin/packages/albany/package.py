@@ -54,7 +54,7 @@ class Albany(CMakePackage):
 
     # Add dependencies
     depends_on('mpi')
-    depends_on('trilinos~superlu-dist+isorropia+tempus+rythmos+teko+intrepid+intrepid2+minitensor+phalanx+pnetcdf+nox+piro+rol+shards+stk+superlu@master,develop')
+    depends_on('trilinos~superlu-dist+isorropia+tempus+rythmos+teko+intrepid+intrepid2+minitensor+phalanx+nox+piro+rol+shards+stk+superlu@master')
 
     def cmake_args(self):
         spec = self.spec
@@ -67,36 +67,21 @@ class Albany(CMakePackage):
         ])
 
         options.extend([
-                       '-DENABLE_LCM:BOOL=%s' % (
-                           'ON' if '+lcm' in spec else 'OFF'),
-                       '-DENABLE_AERAS:BOOL=%s' % (
-                           'ON' if '+aeras' in spec else 'OFF'),
-                       '-DENABLE_QCAD:BOOL=%s' % (
-                           'ON' if '+qcad' in spec else 'OFF'),
-                       '-DENABLE_HYDRIDE:BOOL=%s' % (
-                           'ON' if '+hydride' in spec else 'OFF'),
-                       '-DENABLE_LCM_SPECULATIVE:BOOL=%s' % (
-                           'ON' if '+lcm_spec' in spec else 'OFF'),
-                       '-DENABLE_LAME:BOOL=%s' % (
-                           'ON' if '+lame' in spec else 'OFF'),
-                       '-DENABLE_DEBUGGING:BOOL=%s' % (
-                           'ON' if '+debug' in spec else 'OFF'),
-                       '-DENABLE_CHECK_FPE:BOOL=%s' % (
-                           'ON' if '+fpe' in spec else 'OFF'),
-                       '-DENABLE_SCOREC:BOOL=%s' % (
-                           'ON' if '+scorec' in spec else 'OFF'),
-                       '-DENABLE_FELIX:BOOL=%s' % (
-                           'ON' if '+felix' in spec else 'OFF'),
-                       '-DENABLE_MOR:BOOL=%s' % (
-                           'ON' if '+mor' in spec else 'OFF'),
-                       '-DENABLE_ALBANY_CI:BOOL=%s' % (
-                           'ON' if '+ci' in spec else 'OFF'),
-                       '-DENABLE_ASCR:BOOL=%s' % (
-                           'ON' if '+ascr' in spec else 'OFF'),
-                       '-DENABLE_PERFORMANCE_TESTS:BOOL=%s' % (
-                           'ON' if '+perf' in spec else 'OFF'),
-                       '-DENABLE_64BIT_INT:BOOL=%s' % (
-                           'ON' if '+64bit' in spec else 'OFF')
+                       self.define_from_variant('ENABLE_LCM', 'lcm'),
+                       self.define_from_variant('ENABLE_AERAS', 'aeras'),
+                       self.define_from_variant('ENABLE_QCAD', 'qcad'),
+                       self.define_from_variant('ENABLE_HYDRIDE', 'hydride'),
+                       self.define_from_variant('ENABLE_LCM_SPECULATIVE', 'lcm_spec'),
+                       self.define_from_variant('ENABLE_LAME', 'lame'),
+                       self.define_from_variant('ENABLE_DEBUGGING', 'debug'),
+                       self.define_from_variant('ENABLE_CHECK_FPE', 'fpe'),
+                       self.define_from_variant('ENABLE_SCOREC', 'scorec'),
+                       self.define_from_variant('ENABLE_FELIX', 'felix'),
+                       self.define_from_variant('ENABLE_MOR', 'mor'),
+                       self.define_from_variant('ENABLE_ALBANY_CI', 'ci'),
+                       self.define_from_variant('ENABLE_ASCR', 'ascr'),
+                       self.define_from_variant('ENABLE_PERFORMANCE_TESTS', 'perf'),
+                       self.define_from_variant('ENABLE_64BIT_INT', '64bit')
                        ])
 
         return options

@@ -5,14 +5,13 @@
 
 from __future__ import print_function
 
-import spack
 import pytest
 
 from llnl.util.filesystem import mkdirp
 
+import spack
 from spack.util.executable import which
 from spack.version import ver
-
 
 git = which("git")
 git_required_version = '2.17.0'
@@ -28,7 +27,7 @@ def check_git_version():
     Refer:
     https://github.com/git/git/commit/cc73385cf6c5c229458775bc92e7dbbe24d11611
     """
-    git_version = ver(git('--version', output=str).lstrip('git version '))
+    git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
     return git_version >= ver(git_required_version)
 
 

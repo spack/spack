@@ -12,10 +12,12 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.3.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
-
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')
+    version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
+    version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
     version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4')
     version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401')
     version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8')
@@ -24,24 +26,27 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
-    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
+    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+                            'gfx90a:xnack+', 'gfx90a:xnack-', 'gfx1010', 'gfx1011',
+                            'gfx1012', 'gfx1030')
 
-    variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
+    variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('hip@' + ver, when='@' + ver)
-        depends_on('comgr@' + ver, type='build', when='@' + ver)
-        # used in Tensile
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('hip@' + ver,                       when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
+        depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
+        depends_on('rocminfo@' + ver,    type='build', when='@' + ver)
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
-    for ver in ['4.1.0']:
-        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
@@ -52,41 +57,24 @@ class Rocblas(CMakePackage):
     depends_on('py-pyyaml', type='build')
     depends_on('py-wheel', type='build')
     depends_on('py-msgpack', type='build')
+    depends_on('py-pip', type='build')
 
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='f842a1a4427624eff6cbddb2405c36dec9a210cd',
-             when='@3.5.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='af71ea890a893e647bf2cf4571a90297d65689ca',
-             when='@3.7.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='9123205f9b5f95c96ff955695e942d2c3b321cbf',
-             when='@3.8.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='b68edc65aaeed08c71b2b8622f69f83498b57d7a',
-             when='@3.9.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
-             when='@3.10.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
-             when='@4.0.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='d175277084d3253401583aa030aba121e8875bfd',
-             when='@4.1.0')
+    for t_version, t_commit in [
+        ('@3.5.0',  'f842a1a4427624eff6cbddb2405c36dec9a210cd'),
+        ('@3.7.0',  'af71ea890a893e647bf2cf4571a90297d65689ca'),
+        ('@3.8.0',  '9123205f9b5f95c96ff955695e942d2c3b321cbf'),
+        ('@3.9.0',  'b68edc65aaeed08c71b2b8622f69f83498b57d7a'),
+        ('@3.10.0', 'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
+        ('@4.0.0',  'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
+        ('@4.1.0',  'd175277084d3253401583aa030aba121e8875bfd'),
+        ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
+        ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
+        ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf')
+    ]:
+        resource(name='Tensile',
+                 git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+                 commit=t_commit,
+                 when=t_version)
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
@@ -95,33 +83,50 @@ class Rocblas(CMakePackage):
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
-    def cmake_args(self):
+    def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants['tensile_architecture'].value
+        if arch[0] == 'all':
+            if self.spec.satisfies('@:4.0.0'):
+                arch_value = self.tensile_architecture[1:2] + 'gfx906,gfx908'
+            elif self.spec.satisfies('@4.1.0:4.2.0'):
+                arch_value = self.tensile_architecture[1:4]
+            elif self.spec.satisfies('@4.3.0:'):
+                arch_value = self.tensile_architecture[1:]
+            return arch_value
+        else:
+            return arch
 
+    def cmake_args(self):
         tensile = join_path(self.stage.source_path, 'Tensile')
-
         args = [
-            '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
-            '-DBUILD_CLIENTS_TESTS=OFF',
-            '-DBUILD_CLIENTS_BENCHMARKS=OFF',
-            '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DRUN_HEADER_TESTING=OFF',
-            '-DBUILD_WITH_TENSILE=ON',
-            '-DTensile_TEST_LOCAL_PATH={0}'.format(tensile),
-            '-DTensile_COMPILER=hipcc',
-            '-DTensile_LOGIC=asm_full',
-            '-DTensile_CODE_OBJECT_VERSION=V3',
-            '-DBUILD_WITH_TENSILE_HOST={0}'.format(
+            self.define('BUILD_CLIENTS_TESTS', 'OFF'),
+            self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF'),
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('RUN_HEADER_TESTING', 'OFF'),
+            self.define('BUILD_WITH_TENSILE', 'ON'),
+            self.define('Tensile_TEST_LOCAL_PATH', tensile),
+            self.define('Tensile_COMPILER', 'hipcc'),
+            self.define('Tensile_LOGIC', 'asm_full'),
+            self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
+            self.define(
+                'BUILD_WITH_TENSILE_HOST',
                 'ON' if '@3.7.0:' in self.spec else 'OFF'
             )
         ]
 
         if '@3.7.0:' in self.spec:
-            args.append('-DTensile_LIBRARY_FORMAT=msgpack')
+            args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
 
-        if self.spec.satisfies('@4.1.0:'):
-            if arch == 'gfx906' or arch == 'gfx908':
-                arch = arch + ':xnack-'
-        args.append('-DTensile_ARCHITECTURE={0}'.format(arch))
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
+        if self.spec.satisfies('@:4.2.0'):
+            args.append(self.define('Tensile_ARCHITECTURE',
+                        self.get_gpulist_for_tensile_support()))
+        else:
+            args.append(self.define('AMDGPU_TARGETS',
+                        self.get_gpulist_for_tensile_support()))
+
+        # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

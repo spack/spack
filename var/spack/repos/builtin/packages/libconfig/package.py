@@ -9,7 +9,7 @@ from spack import *
 class Libconfig(AutotoolsPackage):
     """C/C++ Configuration File Library"""
 
-    homepage = "http://www.hyperrealm.com/libconfig/"
+    homepage = "https://www.hyperrealm.com/libconfig/"
     url      = "https://github.com/hyperrealm/libconfig/archive/v1.5.tar.gz"
 
     force_autoreconf = True

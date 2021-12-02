@@ -14,6 +14,9 @@ class PyGpaw(PythonPackage):
     homepage = "https://wiki.fysik.dtu.dk/gpaw/index.html"
     pypi = "gpaw/gpaw-1.3.0.tar.gz"
 
+    version('21.1.0', sha256='96843b68e04bd1c12606036c9f99b0ddfa5e6ee08ce46835e6bb347a6bd560a3')
+    version('20.10.0', sha256='77c3d3918f5cc118e448f8063af4807d163b31d502067f5cbe31fc756eb3971d')
+    version('20.1.0', sha256='c84307eb9943852d78d966c0c8856fcefdefa68621139906909908fb641b8421')
     version('19.8.1', sha256='79dee367d695d68409c4d69edcbad5c8679137d6715da403f6c2500cb2178c2a')
     version('1.3.0', sha256='cf601c69ac496421e36111682bcc1d23da2dba2aabc96be51accf73dea30655c')
 
@@ -26,11 +29,15 @@ class PyGpaw(PythonPackage):
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
     depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
     depends_on('python@3.5:', type=('build', 'run'), when='@19.8.1:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@20.10.0:')
     depends_on('py-ase@3.13.0:', type=('build', 'run'), when='@1.3.0')
     depends_on('py-ase@3.18.0:', type=('build', 'run'), when='@19.8.1')
+    depends_on('py-ase@3.19.0:', type=('build', 'run'), when='@20.1.0')
+    depends_on('py-ase@3.20.1:', type=('build', 'run'), when='@20.10.0')
+    depends_on('py-ase@3.21.0:', type=('build', 'run'), when='@21.1.0')
     depends_on('py-numpy +blas +lapack', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('libxc')
+    depends_on('libxc@3:4.3.4')
     depends_on('blas')
     depends_on('lapack')
     depends_on('fftw+mpi', when='+fftw +mpi')
@@ -85,7 +92,12 @@ class PyGpaw(PythonPackage):
         libs = list(libs.names)
         rpath_str = ':'.join(self.rpath)
 
-        with open('customize.py', 'w') as f:
+        if spec.satisfies('@:19.8.1'):
+            cfgfile = 'customize.py'
+        else:
+            cfgfile = 'siteconfig.py'
+
+        with open(cfgfile, 'w') as f:
             f.write("libraries = {0}\n".format(repr(libs)))
             f.write("include_dirs = {0}\n".format(repr(include_dirs)))
             f.write("library_dirs = {0}\n".format(repr(lib_dirs)))

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"

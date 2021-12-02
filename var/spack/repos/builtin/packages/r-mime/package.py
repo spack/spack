@@ -13,9 +13,9 @@ class RMime(RPackage):
     from /etc/mime.types in UNIX-type systems."""
 
     homepage = "https://github.com/yihui/mime"
-    url      = "https://cloud.r-project.org/src/contrib/mime_0.5.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mime"
+    cran     = "mime"
 
+    version('0.11', sha256='215427a49f0d0b0e3ab38d419c515a35d57e3bc32535805306275d8b33f8eec0')
     version('0.9', sha256='2ccf97d2940a09539dc051c7a9a1aee90ef04b34e9bc6c0b64b4435fb3c2fa80')
     version('0.7', sha256='11083ee44c92569aadbb9baf60a2e079ab7a721c849b74d102694975cc8d778b')
     version('0.6', sha256='4775b605ab0117406bee7953c8af59eea8b35e67d1bd63f4007686a7097fc401')

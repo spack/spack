@@ -45,13 +45,13 @@ actually on a shared filesystem.
 import collections
 import errno
 import fcntl
+import getpass
+import glob
 import os
-import socket
 import shutil
+import socket
 import tempfile
 import traceback
-import glob
-import getpass
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
 
@@ -60,7 +60,6 @@ import pytest
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
-
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -661,10 +660,6 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
     # ensure lock file exists the first time

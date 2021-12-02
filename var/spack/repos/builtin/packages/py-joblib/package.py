@@ -12,7 +12,8 @@ class PyJoblib(PythonPackage):
     homepage = "https://joblib.readthedocs.io/"
     pypi = "joblib/joblib-0.14.0.tar.gz"
 
-    # 'joblib.test' requires 'pytest'
+    # 'joblib.test' requires 'pytest'. Leave out of 'import_modules' to avoid
+    # unnecessary dependencies.
     import_modules = [
         'joblib', 'joblib.externals', 'joblib.externals.cloudpickle',
         'joblib.externals.loky', 'joblib.externals.loky.backend'

@@ -20,6 +20,8 @@ class Geopm(AutotoolsPackage):
     url      = "https://github.com/geopm/geopm/releases/download/v1.0.0/geopm-1.0.0.tar.gz"
     git      = "https://github.com/geopm/geopm.git"
 
+    tags = ['e4s']
+
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')
     version('master', branch='master')
@@ -61,7 +63,7 @@ class Geopm(AutotoolsPackage):
     depends_on('json-c', when='@:0.9.9')
     depends_on('py-cycler@0.10.0:', when="@1.0.0:", type=('build', 'run'))
     depends_on('py-pandas@0.22.0:', type=('build', 'run'))
-    depends_on('py-tables@3.4.3:3.5.2', when="@1.0.0:", type=('build', 'run'))
+    depends_on('py-tables@3.4.3:', when="@1.0.0:", type=('build', 'run'))
     depends_on('py-cffi@1.6.0:', when="@1.1.0:", type=('build', 'run'))
     depends_on('py-pyyaml@5.1.0:', when="@1.1.0:", type=('build', 'run'))
     depends_on('py-mock@3.0.0:', when="@1.1.0:", type=('build', 'run'))

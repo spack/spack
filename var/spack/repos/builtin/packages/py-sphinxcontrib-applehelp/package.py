@@ -13,8 +13,9 @@ class PySphinxcontribApplehelp(PythonPackage):
     homepage = "http://sphinx-doc.org/"
     pypi = "sphinxcontrib-applehelp/sphinxcontrib-applehelp-1.0.1.tar.gz"
 
-    # Sphinx requires sphinxcontrib-applehelp at build-time, but
-    # sphinxcontrib-applehelp requires sphinx at run-time
+    # 'sphinx' requires 'sphinxcontrib-applehelp' at build-time, but
+    # 'sphinxcontrib-applehelp' requires 'sphinx' at run-time. Don't bother trying to
+    # import any modules for this package.
     import_modules = []
 
     version('1.0.1', sha256='edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897')

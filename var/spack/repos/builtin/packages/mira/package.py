@@ -10,7 +10,7 @@ class Mira(AutotoolsPackage):
     """MIRA is a multi-pass DNA sequence data assembler/mapper for whole genome
        and EST/RNASeq projects."""
 
-    homepage = "http://sourceforge.net/projects/mira-assembler/"
+    homepage = "https://sourceforge.net/projects/mira-assembler/"
     url      = "https://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira-4.0.2.tar.bz2"
 
     version('4.0.2', sha256='a32cb2b21e0968a5536446287c895fe9e03d11d78957554e355c1080b7b92a80')

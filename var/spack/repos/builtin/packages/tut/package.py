@@ -9,7 +9,7 @@ from spack import *
 class Tut(WafPackage):
     """TUT is a small and portable unit test framework for C++."""
 
-    homepage = "http://mrzechonek.github.io/tut-framework/"
+    homepage = "https://mrzechonek.github.io/tut-framework/"
     url      = "https://github.com/mrzechonek/tut-framework/tarball/2016-12-19"
 
     version('2016-12-19', sha256='9fc0325d6db9709cc5213773bf4fd84f2a95154f18f7f8a553e1e52392e15691')
@@ -19,6 +19,10 @@ class Tut(WafPackage):
     # Python 3.7 support is currently broken
     # https://github.com/mrzechonek/tut-framework/issues/18
     depends_on('python@:3.6', type='build')
+
+    # Tut is used for smoke build tests in CI, and started failing as
+    # soon as gcc@11 was introduced in the environment
+    conflicts('%gcc@11:')
 
     def build_args(self):
         args = []

@@ -10,7 +10,7 @@ class PyPureSasl(PythonPackage):
     but by default, support for PLAIN, ANONYMOUS, EXTERNAL, CRAM-MD5,
     DIGEST-MD5, and GSSAPI are provided."""
 
-    homepage = "http://github.com/thobbs/pure-sasl"
+    homepage = "https://github.com/thobbs/pure-sasl"
     pypi = "pure-sasl/pure-sasl-0.6.2.tar.gz"
 
     version('0.6.2', sha256='53c1355f5da95e2b85b2cc9a6af435518edc20c81193faa0eea65fdc835138f4')

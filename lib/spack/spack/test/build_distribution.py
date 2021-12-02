@@ -3,13 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
-
 import os
 import os.path
 
-import spack.spec
+import pytest
+
 import spack.binary_distribution
+import spack.spec
 
 install = spack.main.SpackCommand('install')
 
@@ -31,7 +31,7 @@ def test_build_tarball_overwrite(
             spec, '.', force=True, unsigned=True)
 
         # Remove the tarball and try again.
-        # This must *also* throw, because of the existing .spec.yaml file
+        # This must *also* throw, because of the existing .spec.json file
         os.remove(os.path.join(
             spack.binary_distribution.build_cache_prefix('.'),
             spack.binary_distribution.tarball_directory_name(spec),

@@ -15,12 +15,17 @@ class Lmdb(MakefilePackage):
     homepage = "https://lmdb.tech/"
     url      = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.21.tar.gz"
 
+    version('0.9.29', sha256='22054926b426c66d8f2bc22071365df6e35f3aacf19ad943bc6167d4cae3bebb')
     version('0.9.24', sha256='44602436c52c29d4f301f55f6fd8115f945469b868348e3cddaf91ab2473ea26')
     version('0.9.22', sha256='f3927859882eb608868c8c31586bb7eb84562a40a6bf5cc3e13b6b564641ea28')
     version('0.9.21', sha256='1187b635a4cc415bb6972bba346121f81edd996e99b8f0816151d4090f90b559')
     version('0.9.16', sha256='49d7b40949f2ced9bc8b23ea6a89e75471a1c9126537a8b268c318a00b84322b')
 
     build_directory = 'libraries/liblmdb'
+
+    @property
+    def build_targets(self):
+        return ['CC={0}'.format(spack_cc)]
 
     @property
     def install_targets(self):

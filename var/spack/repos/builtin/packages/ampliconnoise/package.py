@@ -10,7 +10,7 @@ class Ampliconnoise(MakefilePackage):
     """AmpliconNoise is a collection of programs for the removal of noise
        from 454 sequenced PCR amplicons."""
 
-    homepage = "https://code.google.com/archive/p/ampliconnoise/"
+    homepage = "https://directory.fsf.org/wiki/AmpliconNoise"
     url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/ampliconnoise/AmpliconNoiseV1.29.tar.gz"
 
     version('1.29', sha256='0bf946806d77ecaf0994ad8ebf9a5e98ad33c809f6def5c9340a16c367918167')
