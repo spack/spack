@@ -618,7 +618,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             for feature, featureopt in testdict.items():
                 if not feature or feature in spec:
                     self.run_test(runexe,
-                                  options=runopt + testexe + featureopt,
+                                  options=[runopt + testexe + featureopt],
                                   purpose='test: run ex50 example with {0}'.format(feature),
                                   work_dir=w_dir)
             if '+cuda' in spec:
@@ -634,7 +634,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             make('clean', parallel=False)
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
-                             'src', 'snes', 'tutorials')
+                          'src', 'snes', 'tutorials')
 
         if not os.path.exists(w_dir):
             print('Skipping petsc test: SNES tutorial example is missing')
