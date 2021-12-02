@@ -19,7 +19,7 @@ class Sherpa(AutotoolsPackage):
     tags = ['hep', 'eic']
 
     maintainers = ['wdconinc', 'vvolkl']
-
+    version('2.2.12', sha256='4ba78098e45aaac0bc303d1b5abdc15809f30b407abf9457d99b55e63384c83d')
     version('2.2.11', sha256='5e12761988b41429f1d104f84fdf352775d233cde7a165eb64e14dcc20c3e1bd')
     version('2.2.10', sha256='ae23bc8fdcc9f8c26becc41692822233b62203cd72a7e0dab2ca19316aa0aad7')
     version('2.2.9', sha256='ebc836d42269a0c4049d3fc439a983d19d12595d9a06db2d18765bd1e301923e')
