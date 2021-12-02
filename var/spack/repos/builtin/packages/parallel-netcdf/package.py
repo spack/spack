@@ -183,7 +183,7 @@ class ParallelNetcdf(AutotoolsPackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.examples_src_dir)
+        self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir,
