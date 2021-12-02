@@ -216,6 +216,13 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         return targets
 
+    # QMCPACK prefers taking MPI compiler wrappers as CMake compilers.
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+mpi' in spec:
+            env.set('CC', spec['mpi'].mpicc)
+            env.set('CXX', spec['mpi'].mpicxx)
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -353,20 +360,11 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         return args
 
-    # QMCPACK needs custom install method for a couple of reasons:
-    # Firstly, wee follow the recommendation on the Spack website
-    # for defining the compilers variables to be the MPI compiler wrappers.
-    # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
-    #
+    # QMCPACK needs custom install method for the following reason:
     # Note that 3.6.0 release and later has a functioning 'make install',
     # but still does not install nexus, manual, etc. So, there is no compelling
     # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-            env['F77'] = spec['mpi'].mpif77
-            env['FC'] = spec['mpi'].mpifc
 
         # create top-level directory
         mkdirp(prefix)
