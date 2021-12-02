@@ -576,8 +576,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources('src/ksp/ksp/tutorials')
-        self.cache_extra_test_sources('src/snes/tutorials')
+        self.cache_extra_test_sources(join_path('src', 'ksp', 'ksp', 'tutorials'))
+        self.cache_extra_test_sources(join_path('src', 'snes', 'tutorials'))
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
@@ -590,9 +590,17 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             runopt = ['-n', '4']
         else:
             runexe = Executable(join_path(self.prefix,
-                                          'lib/petsc/bin/petsc-mpiexec.uni')).command
+                                          'lib', 'petsc', 'bin',
+                                          'petsc-mpiexec.uni')).command
             runopt = ['-n', '1']
-        w_dir = join_path(self.install_test_root, 'src/ksp/ksp/tutorials')
+
+        w_dir = join_path(self.test_suite.current_test_cache_dir,
+                          'src', 'ksp', 'ksp', 'tutorials')
+
+        if not os.path.exists(w_dir):
+            print('Skipping petsc test: KSP tutorial example is missing')
+            return
+
         with working_dir(w_dir):
             testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
             testdict = {
@@ -609,21 +617,37 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             make('ex50', parallel=False)
             for feature, featureopt in testdict.items():
                 if not feature or feature in spec:
-                    self.run_test(runexe, runopt + testexe + featureopt)
+                    self.run_test(runexe,
+                                  options=runopt + testexe + featureopt,
+                                  purpose='test: run ex50 example with {0}'.format(feature),
+                                  work_dir=w_dir)
             if '+cuda' in spec:
                 make('ex7', parallel=False)
                 testexe = ['ex7', '-mat_type', 'aijcusparse',
                            '-sub_pc_factor_mat_solver_type', 'cusparse',
                            '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
                            '-use_gpu_aware_mpi', '0']
-                self.run_test(runexe, runopt + testexe)
+                self.run_test(runexe,
+                              options=[runopt + testexe],
+                              purpose='test: run ex50 example with {0}'.format(feature),
+                              work_dir=w_dir)
             make('clean', parallel=False)
-        w_dir = join_path(self.install_test_root, 'src/snes/tutorials')
+
+        w_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'src', 'snes', 'tutorials')
+
+        if not os.path.exists(w_dir):
+            print('Skipping petsc test: SNES tutorial example is missing')
+            return
+
         with working_dir(w_dir):
             if '+kokkos' in spec:
                 make('ex3k', parallel=False)
                 testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
                            '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
                            '-snes_monitor']
-                self.run_test(runexe, runopt + testexe)
+                self.run_test(runexe,
+                              options=[runopt + testexe],
+                              purpose='test: run ex3k example with +kokkos',
+                              work_dir=w_dir)
             make('clean', parallel=False)
