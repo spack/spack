@@ -335,6 +335,26 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     return matching_specs
 
 
+def specfile_matches(filename, **kwargs):
+    """Same as find but reads the query from a spec file.
+
+    Args:
+        filename (str): YAML or JSON file from from which to read the query.
+        **kwargs: keyword arguments forwarded to "find"
+
+    Return:
+        List of matches
+    """
+    with open(filename, 'r') as fd:
+        file_content = fd.read()
+        if filename.endswith('.json'):
+            s = spack.spec.Spec.from_json(file_content)
+        else:
+            s = spack.spec.Spec.from_yaml(file_content)
+    query = ['/{0}'.format(s.dag_hash())]
+    return spack.store.find(query, **kwargs)
+
+
 @contextlib.contextmanager
 def use_store(store_or_path):
     """Use the store passed as argument within the context manager.

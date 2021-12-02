@@ -13,6 +13,7 @@ import sys
 import tarfile
 import tempfile
 import traceback
+import warnings
 from contextlib import closing
 
 import ruamel.yaml as yaml
@@ -31,6 +32,7 @@ import spack.hooks.sbang
 import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
+import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
 import spack.util.spack_json as sjson
@@ -975,8 +977,11 @@ def generate_key_index(key_prefix, tmpdir=None):
                 shutil.rmtree(tmpdir)
 
 
-def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
-                  allow_root=False, key=None, regenerate_index=False):
+def _build_tarball(
+        spec, outdir,
+        force=False, relative=False, unsigned=False,
+        allow_root=False, key=None, regenerate_index=False
+):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -1044,11 +1049,11 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     os.remove(temp_tarfile_path)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec, workdir, rel)
+    write_buildinfo_file(spec, workdir, relative)
 
     # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
-    if rel:
+    if relative:
         try:
             make_package_relative(workdir, spec, allow_root)
         except Exception as e:
@@ -1096,7 +1101,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     buildinfo = {}
     buildinfo['relative_prefix'] = os.path.relpath(
         spec.prefix, spack.store.layout.root)
-    buildinfo['relative_rpaths'] = rel
+    buildinfo['relative_rpaths'] = relative
     spec_dict['buildinfo'] = buildinfo
 
     with open(specfile_path, 'w') as outfile:
@@ -1146,6 +1151,64 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
     return None
+
+
+def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
+    """Return the list of nodes to be packaged, given a list of specs.
+
+    Args:
+        specs (list of specs): list of root specs to be processed
+        include_root (bool): include the root of each spec in the nodes
+        include_dependencies (bool): include the dependencies of each
+            spec in the nodes
+    """
+    if not include_root and not include_dependencies:
+        return set()
+
+    def skip_node(current_node):
+        if current_node.external or current_node.virtual:
+            return True
+        return spack.store.db.query_one(current_node) is None
+
+    expanded_set = set()
+    for current_spec in specs:
+        if not include_dependencies:
+            nodes = [current_spec]
+        else:
+            nodes = [n for n in current_spec.traverse(
+                order='post', root=include_root, deptype=('link', 'run')
+            )]
+
+        for node in nodes:
+            if not skip_node(node):
+                expanded_set.add(node)
+
+    return expanded_set
+
+
+def push(specs, push_url, specs_kwargs=None, **kwargs):
+    """Create a binary package for each of the specs passed as input and push them
+    to a given push URL.
+
+    Args:
+        specs (list of Specs): installed specs to be packaged
+        push_url (str): url where to push the binary package
+        specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
+            and "include_dependencies", which determine which part of each spec is
+            packaged and pushed to the mirror
+        **kwargs: TODO
+
+    """
+    specs_kwargs = specs_kwargs or {'include_root': True, 'include_dependencies': True}
+    nodes = nodes_to_be_packaged(specs, **specs_kwargs)
+
+    # TODO: This seems to be an easy target for task
+    # TODO: distribution using a parallel pool
+    for node in nodes:
+        try:
+            _build_tarball(node, push_url, **kwargs)
+        except NoOverwriteException as e:
+            warnings.warn(e)
 
 
 def download_tarball(spec, preferred_mirrors=None):

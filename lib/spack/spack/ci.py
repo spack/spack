@@ -1417,10 +1417,17 @@ def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
         unsigned = not sign_binaries
         tty.debug('Creating buildcache ({0})'.format(
             'unsigned' if unsigned else 'signed'))
-        spack.cmd.buildcache._createtarball(
-            env, spec_file=specfile_path, add_deps=False,
-            output_location=mirror_url, force=True, allow_root=True,
-            unsigned=unsigned)
+        hashes = env.all_hashes()
+        matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
+        push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+
+        spec_kwargs = {'include_root': True, 'include_dependencies': False}
+        kwargs = {
+            'force': True,
+            'allow_root': True,
+            'unsigned': unsigned
+        }
+        bindist.push(matches, push_url, spec_kwargs, **kwargs)
     except Exception as inst:
         # If the mirror we're pushing to is on S3 and there's some
         # permissions problem, for example, we can't just target
