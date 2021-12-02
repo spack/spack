@@ -291,24 +291,25 @@ def _match_downloaded_specs(constraints, multiple_matches=False, other_arch=Fals
     )
 
 
-def _createtarball(env, spec_file=None, packages=None, add_spec=True,
-                   add_deps=True, output_location=os.getcwd(),
-                   signing_key=None, force=False, make_relative=False,
-                   unsigned=False, allow_root=False, rebuild_index=False):
-    if spec_file:
-        with open(spec_file, 'r') as fd:
-            specfile_contents = fd.read()
-            tty.debug('createtarball read specfile contents:')
-            tty.debug(specfile_contents)
-            if spec_file.endswith('.json'):
-                s = Spec.from_json(specfile_contents)
+def _matching_specs(args):
+    """Return a list of matching specs read from either a spec file (JSON or YAML),
+    a query over the store or a query over the active environment.
+    """
+    env = ev.active_environment()
+    if args.spec_file:
+        # Read the spec from a file
+        filename = args.spec_file
+        with open(filename, 'r') as fd:
+            file_content = fd.read()
+            if filename.endswith('.json'):
+                s = Spec.from_json(file_content)
             else:
-                s = Spec.from_yaml(specfile_contents)
-            package = '/{0}'.format(s.dag_hash())
-            matches = _find_matching_specs(package, env=env)
+                s = Spec.from_yaml(file_content)
+            query = '/{0}'.format(s.dag_hash())
+            matches = _find_matching_specs(query, env=env)
 
-    elif packages:
-        matches = _find_matching_specs(packages, env=env)
+    elif args.specs:
+        matches = _find_matching_specs(args.specs, env=env)
 
     elif env:
         matches = [env.specs_by_hash[h] for h in env.concretized_order]
@@ -318,63 +319,55 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
                 " installed package spec, an active environment," +
                 " or else a path to a json or yaml file containing a spec" +
                 " to install")
-    specs = set()
+    return matches
+
+
+def _nodes_to_be_packaged(args):
+    """Return a set of DAG nodes to package in binary format"""
+
+    include_root = 'package' in args.things_to_install
+    include_dependencies = 'dependencies' in args.things_to_install
+    if not include_root and not include_dependencies:
+        return set()
+
+    matches = _matching_specs(args)
+
+    def skip_node(node):
+        if node.external or node.virtual:
+            return True
+        return spack.store.db.query_one(node) is None
+
+    expanded_set = set()
+    for match in matches:
+        tty.debug('[BUILDCACHE] Expanding match "{0}"'.format(match.format()))
+
+        if not include_dependencies:
+            nodes = [match]
+        else:
+            nodes = [n for n in match.traverse(
+                order='post', root=include_root, deptype=('link', 'run')
+            )]
+
+        for node in nodes:
+            if not skip_node(node):
+                expanded_set.add(node)
+
+    return expanded_set
+
+
+def _createtarball(nodes_to_be_packaged, output_location,
+                   signing_key=None, force=False, make_relative=False,
+                   unsigned=False, allow_root=False, rebuild_index=False):
 
     mirror = spack.mirror.MirrorCollection().lookup(output_location)
-    outdir = url_util.format(mirror.push_url)
+    push_url = url_util.format(mirror.push_url)
 
-    msg = 'Buildcache files will be output to %s/build_cache' % outdir
+    msg = 'Pushing buildcache files to {0}/build_cache'.format(push_url)
     tty.msg(msg)
 
-    if matches:
-        tty.debug('Found at least one matching spec')
-
-    for match in matches:
-        tty.debug('examining match {0}'.format(match.format()))
-        if match.external or match.virtual:
-            tty.debug('skipping external or virtual spec %s' %
-                      match.format())
-        else:
-            lookup = spack.store.db.query_one(match)
-
-            if not add_spec:
-                tty.debug('skipping matching root spec %s' % match.format())
-            elif lookup is None:
-                tty.debug('skipping uninstalled matching spec %s' %
-                          match.format())
-            else:
-                tty.debug('adding matching spec %s' % match.format())
-                specs.add(match)
-
-            if not add_deps:
-                continue
-
-            tty.debug('recursing dependencies')
-            for d, node in match.traverse(order='post',
-                                          depth=True,
-                                          deptype=('link', 'run')):
-                # skip root, since it's handled above
-                if d == 0:
-                    continue
-
-                lookup = spack.store.db.query_one(node)
-
-                if node.external or node.virtual:
-                    tty.debug('skipping external or virtual dependency %s' %
-                              node.format())
-                elif lookup is None:
-                    tty.debug('skipping uninstalled depenendency %s' %
-                              node.format())
-                else:
-                    tty.debug('adding dependency %s' % node.format())
-                    specs.add(node)
-
-    tty.debug('writing tarballs to %s/build_cache' % outdir)
-
-    for spec in specs:
-        tty.debug('creating binary cache file for package %s ' % spec.format())
+    for spec in nodes_to_be_packaged:
         try:
-            bindist.build_tarball(spec, outdir, force, make_relative,
+            bindist.build_tarball(spec, push_url, force, make_relative,
                                   unsigned, allow_root, signing_key,
                                   rebuild_index)
         except bindist.NoOverwriteException as e:
@@ -383,10 +376,6 @@ def _createtarball(env, spec_file=None, packages=None, add_spec=True,
 
 def createtarball(args):
     """create a binary package from an existing install"""
-
-    # restrict matching to current environment if one is active
-    env = ev.active_environment()
-
     output_location = None
     if args.directory:
         output_location = args.directory
@@ -422,11 +411,9 @@ def createtarball(args):
         if scheme == '<missing>':
             raise ValueError(
                 '"{url}" is not a valid URL'.format(url=output_location))
-    add_spec = ('package' in args.things_to_install)
-    add_deps = ('dependencies' in args.things_to_install)
 
-    _createtarball(env, spec_file=args.spec_file, packages=args.specs,
-                   add_spec=add_spec, add_deps=add_deps,
+    nodes = _nodes_to_be_packaged(args)
+    _createtarball(nodes,
                    output_location=output_location, signing_key=args.key,
                    force=args.force, make_relative=args.rel,
                    unsigned=args.unsigned, allow_root=args.allow_root,
