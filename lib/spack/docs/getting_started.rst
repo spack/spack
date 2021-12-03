@@ -1061,6 +1061,11 @@ configuration so that the necessary environment variables are set.
           libglvnd-be-glx: [opengl]
           libglvnd-be-egl: [opengl]
 
+The `glx` and `egl` variables in the `extra_attributes` field are used to set
+environment variables for the OpenGL implementation. `glx_driver_name` and
+'/path/to/egl/vendor' should be changed from the placeholders to the OpenGL
+implementation's values before attempting to use an OpenGL implementation. 
+
 One final detail about the above example is that it avoids setting the true
 root of the external OpenGL implementation, instead opting to set it to a path
 that is not expected to exist on the system.  This is done for two reasons.
@@ -1070,7 +1075,7 @@ as ``PATH`` and ``PKG_CONFIG_PATH``.  These additions may potentially prevent
 those packages from installing successfully, and this risk is especially great
 for paths that house many libraries and applications, like ``/usr``.  Second,
 providing the true root of the external implementation in the ``packages``
-configuration is not necessary because libglvnd need only the environment
+configuration is not necessary because libglvnd only needs the environment
 variables set above in the ``packages`` configuration to determine what OpenGL
 implementation to dispatch calls to at run time.
 

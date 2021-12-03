@@ -14,8 +14,7 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
-    # Note that this is a dummy SHA since the package is strictly external
-    version('4.5', sha256='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+    version('4.5')
 
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable GLX API.")
