@@ -288,7 +288,7 @@ class _BuildcacheBootstrapper(object):
                     '-a', '-u', '-o', '-f', spec_str
                 ]
                 args = parser.parse_args(install_args)
-                spack.cmd.buildcache.installtarball(args)
+                spack.cmd.buildcache.install_fn(args)
 
     def _install_and_test(
             self, abstract_spec, bincache_platform, bincache_data, test_fn
