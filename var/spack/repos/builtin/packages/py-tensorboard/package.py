@@ -16,6 +16,7 @@ class PyTensorboard(Package):
 
     maintainers = ['aweits']
 
+    version('2.7.0', sha256='5632812bb9450e5741083b5b7826244ffdb732fb5bce970d526c81874a3e7fb2')
     version('2.6.0', sha256='3d1e0a05828b25c1c28bd90c73d981a0a65c6a5550510bc7983d03ab915e6503')
     version('2.5.0', sha256='58c9e0c31062821ab1c02845c3b7902da92574ef7192d701b1828dacbe4ee610')
     version('2.4.1', sha256='736dc204aa292d221f5871077e60994a9a9ea8e33b841f0d754d510fe6cc7635')
@@ -54,13 +55,15 @@ class PyTensorboard(Package):
     extends('python')
 
     patch('tboard_shellenv.patch', when='@:2.4')
+    patch('webapp.patch', when='@2.7:')
+    patch('vz_projector.patch', when='@2.7:')
 
     phases = ['configure', 'build', 'install']
 
     # Version 2.6.0 does not build in parallel
     @property
     def parallel(self):
-        return self.spec.version != Version('2.6.0')
+        return self.spec.version < Version('2.6.0')
 
     def patch(self):
         filter_file('build --define=angular_ivy_enabled=True',
