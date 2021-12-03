@@ -397,8 +397,12 @@ def ci_rebuild(args):
             tty.debug('Getting {0} buildcache from {1}'.format(
                 job_spec_pkg_name, matching_mirror))
             tty.debug('Downloading to {0}'.format(build_cache_dir))
-            buildcache.download_buildcache_files(
-                job_spec, build_cache_dir, False, matching_mirror)
+            bindist.download_single_spec(
+                job_spec,
+                build_cache_dir,
+                require_cdashid=False,
+                mirror_url=matching_mirror
+            )
 
         # Now we are done and successful
         sys.exit(0)

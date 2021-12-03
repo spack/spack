@@ -290,34 +290,7 @@ def _matching_specs(args):
             " to install")
 
 
-def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
-                              mirror_url=None):
-    tarfile_name = bindist.tarball_name(concrete_spec, '.spack')
-    tarball_dir_name = bindist.tarball_directory_name(concrete_spec)
-    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
-    local_tarball_path = os.path.join(local_dest, tarball_dir_name)
-
-    files_to_fetch = [
-        {
-            'url': [tarball_path_name],
-            'path': local_tarball_path,
-            'required': True,
-        }, {
-            'url': [bindist.tarball_name(concrete_spec, '.spec.json'),
-                    bindist.tarball_name(concrete_spec, '.spec.yaml')],
-            'path': local_dest,
-            'required': True,
-        }, {
-            'url': [bindist.tarball_name(concrete_spec, '.cdashid')],
-            'path': local_dest,
-            'required': require_cdashid,
-        },
-    ]
-
-    return bindist.download_buildcache_entry(files_to_fetch, mirror_url)
-
-
-def get_concrete_spec(args):
+def _concrete_spec_from_args(args):
     spec_str, specfile_path = args.spec, args.spec_file
 
     if not spec_str and not specfile_path:
@@ -435,7 +408,7 @@ def check_fn(args):
     one of the indicated specs needs to be rebuilt.
     """
     if args.spec or args.spec_file:
-        specs = [get_concrete_spec(args)]
+        specs = [_concrete_spec_from_args(args)]
     else:
         env = spack.cmd.require_active_env(cmd_name='buildcache')
         env.concretize()
@@ -477,8 +450,10 @@ def download_fn(args):
         tty.msg('No download path provided, exiting')
         sys.exit(0)
 
-    spec = get_concrete_spec(args)
-    result = download_buildcache_files(spec, args.path, args.require_cdashid)
+    spec = _concrete_spec_from_args(args)
+    result = bindist.download_single_spec(
+        spec, args.path, require_cdashid=args.require_cdashid
+    )
 
     if not result:
         sys.exit(1)
@@ -486,7 +461,7 @@ def download_fn(args):
 
 def get_buildcache_name_fn(args):
     """Get name (prefix) of buildcache entries for this spec"""
-    spec = get_concrete_spec(args)
+    spec = _concrete_spec_from_args(args)
     buildcache_name = bindist.tarball_name(spec, '')
     print('{0}'.format(buildcache_name))
 

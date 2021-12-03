@@ -2064,6 +2064,42 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
     return False
 
 
+def download_single_spec(
+        concrete_spec, destination, require_cdashid=False, mirror_url=None
+):
+    """Download the buildcache files for a single concrete spec.
+
+    Args:
+        concrete_spec: concrete spec to be downloaded
+        destination (str): path where to put the downloaded buildcache
+        require_cdashid (bool): if False the `.cdashid` file is optional
+        mirror_url (str): url of the mirror from which to download
+    """
+    tarfile_name = tarball_name(concrete_spec, '.spack')
+    tarball_dir_name = tarball_directory_name(concrete_spec)
+    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
+    local_tarball_path = os.path.join(destination, tarball_dir_name)
+
+    files_to_fetch = [
+        {
+            'url': [tarball_path_name],
+            'path': local_tarball_path,
+            'required': True,
+        }, {
+            'url': [tarball_name(concrete_spec, '.spec.json'),
+                    tarball_name(concrete_spec, '.spec.yaml')],
+            'path': destination,
+            'required': True,
+        }, {
+            'url': [tarball_name(concrete_spec, '.cdashid')],
+            'path': destination,
+            'required': require_cdashid,
+        },
+    ]
+
+    return download_buildcache_entry(files_to_fetch, mirror_url)
+
+
 class BinaryCacheQuery(object):
     """Callable object to query if a spec is in a binary cache"""
     def __init__(self, all_architectures):
