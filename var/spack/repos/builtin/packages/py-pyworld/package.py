@@ -19,4 +19,4 @@ class PyPyworld(PythonPackage):
 
     depends_on('py-setuptools',     type='build')
     depends_on('py-numpy',          type=('build', 'run'))
-    depends_on('py-cython',         type=('build', 'run'))
+    depends_on('py-cython@0.24.0:', type='build')
