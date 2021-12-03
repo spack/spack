@@ -12,8 +12,8 @@ import pytest
 from jsonschema import ValidationError, validate
 
 import spack
+import spack.binary_distribution
 import spack.ci as ci
-import spack.cmd.buildcache as buildcache
 import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
@@ -897,11 +897,11 @@ spack:
             set_env_var('SPACK_COMPILER_ACTION', 'NONE')
             set_env_var('SPACK_REMOTE_MIRROR_URL', mirror_url)
 
-            def fake_dl_method(spec, dest, require_cdashid, m_url=None):
+            def fake_dl_method(spec, *args, **kwargs):
                 print('fake download buildcache {0}'.format(spec.name))
 
             monkeypatch.setattr(
-                buildcache, 'download_buildcache_files', fake_dl_method)
+                spack.binary_distribution, 'download_single_spec', fake_dl_method)
 
             ci_out = ci_cmd('rebuild', output=str)
 

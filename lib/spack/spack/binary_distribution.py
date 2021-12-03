@@ -1210,7 +1210,7 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
         try:
             _build_tarball(node, push_url, **kwargs)
         except NoOverwriteException as e:
-            warnings.warn(e)
+            warnings.warn(str(e))
 
 
 def download_tarball(spec, preferred_mirrors=None):
