@@ -7,7 +7,13 @@ from spack import *
 
 
 class PyFastai(PythonPackage):
-    """You can use fastai without any installation by using Google Colab. In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU" to have it run fast!) See the fast.ai documentation on Using Colab for more information."""
+    """You can use fastai without any installation by using
+    Google Colab. In fact, every page of this documentation is
+    also available as an interactive notebook - click "Open in
+    colab" at the top of any page to open it (be sure to change
+    the Colab runtime to "GPU" to have it run fast!) See the
+    fast.ai documentation on Using Colab for more
+    information."""
 
     homepage = "https://github.com/fastai/fastai/tree/master/"
     pypi     = "fastai/fastai-2.5.3.tar.gz"
