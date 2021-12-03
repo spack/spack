@@ -155,7 +155,7 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
-    depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-setuptools@:57.99', type='build', when='+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
     depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')
