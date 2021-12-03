@@ -20,7 +20,7 @@ _os_map = {
 }
 
 _armpl_versions = {
-    '21.0' : '21.0.0'
+    '21.0': '21.0.0'
 }
 
 _versions = {
@@ -63,6 +63,7 @@ def get_acfl_prefix(spec):
             get_os()
         )
     )
+
 
 def get_armpl_prefix(spec):
 
@@ -112,7 +113,7 @@ class Arm(Package):
         pkg = packages.get(acfl_os)
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
-    
+
     variant('sve', default=False, description='SVE enabled Armpl library')
     variant('ilp64', default=False, description='use ilp64 specific Armpl library')
     variant('shared', default=True, description='enable shared libs')
@@ -127,7 +128,6 @@ class Arm(Package):
     provides('blas')
     provides('lapack')
     provides('fftw-api@3')
-
 
     # Only install for Aarch64
     conflicts('target=x86_64:', msg='Only available on Aarch64')
@@ -207,7 +207,7 @@ class Arm(Package):
         if self.spec.external:
             return self.spec.extra_attributes['compilers'].get('fortran', None)
         return join_path(get_acfl_prefix(self.spec), 'bin', 'armflang')
-    
+
     @property
     def blas_libs(self):
 
