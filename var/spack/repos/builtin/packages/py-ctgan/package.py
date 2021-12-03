@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyCtgan(PythonPackage):
-    """CTGAN is a collection of Deep Learning based Synthetic Data Generators for single table data, which are able to learn from real data and generate synthetic clones with high fidelity."""
+    """CTGAN is a collection of Deep Learning based Synthetic
+    Data Generators for single table data, which are able to
+    learn from real data and generate synthetic clones with
+    high fidelity."""
 
     homepage = "https://github.com/sdv-dev/CTGAN"
     pypi     = "ctgan/ctgan-0.5.0.tar.gz"
@@ -17,8 +20,8 @@ class PyCtgan(PythonPackage):
     depends_on('python@3.6:',                       type=('build', 'run'))
     depends_on('py-setuptools',                     type='build')
     depends_on('py-packaging@20:21',                type=('build', 'run'))
-    depends_on('py-numpy@1.18:1.19.999',            type=('build', 'run'), when= '+ python@3.6')
-    depends_on('py-numpy@1.20:',                    type=('build', 'run'), when= '+ python@3.7:')
+    depends_on('py-numpy@1.18:1.19.999',            type=('build', 'run'), when='+ python@3.6')
+    depends_on('py-numpy@1.20:',                    type=('build', 'run'), when='+ python@3.7:')
     depends_on('py-pandas@1.1.3:1.999.999',         type=('build', 'run'))
     depends_on('py-scikit-learn@0.24:1.999',        type=('build', 'run'))
     depends_on('py-torch@1.8.0:1.999.999',          type=('build', 'run'))
