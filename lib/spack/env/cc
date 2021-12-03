@@ -248,7 +248,7 @@ case "$command" in
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"

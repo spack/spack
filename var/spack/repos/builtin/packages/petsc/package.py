@@ -164,6 +164,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for openmp')
     variant('hwloc', default=False,
             description='Activates support for hwloc')
+    variant('kokkos', default=False,
+            description='Activates support for kokkos and kokkos-kernels')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -183,6 +185,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+ptscotch', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
+    conflicts('+kokkos', when='~mpi', msg=mpi_msg)
+    conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
 
     # older versions of petsc did not support mumps when +int64
     conflicts('+mumps', when='@:3.12+int64')
@@ -312,6 +316,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('saws', when='+saws')
     depends_on('libyaml', when='+libyaml')
     depends_on('hwloc', when='+hwloc')
+    depends_on('kokkos', when='+kokkos')
+    depends_on('kokkos-kernels', when='+kokkos')
+    depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
+    depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -387,7 +395,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append('--with-x=0')
 
         if 'trilinos' in spec:
-            options.append('--with-cxx-dialect=C++11')
             if spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
@@ -410,6 +417,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'metis',
                 'hypre',
                 'parmetis',
+                ('kokkos', 'kokkos', False, False),
+                ('kokkos-kernels', 'kokkos-kernels', False, False),
                 ('superlu-dist', 'superlu_dist', True, True),
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
@@ -488,7 +497,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                                    .format(cuda_arch[0]))
 
         if 'superlu-dist' in spec:
-            if spec.satisfies('@3.10.3:'):
+            if spec.satisfies('@3.10.3:3.15'):
                 options.append('--with-cxx-dialect=C++11')
 
         if '+mkl-pardiso' in spec:
@@ -501,10 +510,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if '+hpddm' in spec:
             options.append('--download-hpddm')
 
+        # revert changes by kokkos-nvcc-wrapper
+        if spec.satisfies('^kokkos+cuda+wrapper'):
+            env['MPICH_CXX'] = env['CXX']
+            env['OMPI_CXX'] = env['CXX']
+            env['MPICXX_CXX'] = env['CXX']
+
         python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
-        make('MAKE_NP=%s' % make_jobs, parallel=False)
+        make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
         if self.run_tests:
@@ -527,6 +542,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         env.unset('PETSC_ARCH')
 
     @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
+
+    @property
     def headers(self):
         return find_headers('petsc', self.prefix.include, recursive=False) \
             or None  # return None to indicate failure
@@ -538,6 +558,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+        self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
@@ -576,5 +597,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                            '-sub_pc_factor_mat_solver_type', 'cusparse',
                            '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
                            '-use_gpu_aware_mpi', '0']
+                self.run_test(runexe, runopt + testexe)
+            make('clean', parallel=False)
+        w_dir = join_path(self.install_test_root, 'src/snes/tutorials')
+        with working_dir(w_dir):
+            if '+kokkos' in spec:
+                make('ex3k', parallel=False)
+                testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
+                           '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
+                           '-snes_monitor']
                 self.run_test(runexe, runopt + testexe)
             make('clean', parallel=False)
