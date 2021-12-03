@@ -35,7 +35,7 @@ class Uncrustify(Package):
     depends_on('automake', type='build', when='@0.63')
     depends_on('autoconf', type='build', when='@0.63')
 
-    @when('@0.64:,develop')
+    @when('@0.64:')
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake('..', *std_cmake_args)
