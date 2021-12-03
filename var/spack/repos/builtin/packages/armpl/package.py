@@ -22,37 +22,44 @@ _os_map = {
 }
 
 _versions = {
-        '21.1.0_10.2': {
-            'RHEL-7': ('41597c67ff2cd6281961111964e5065a49d32f2550b3290be1e2378aa05df74a', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-10.2.tar'),
-            'RHEL-8': ('fdc9d0a394e58f6a5575862bf9cc375cc1a8b36cb3bbb0ef1dcdeee1873e6959', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-10.2.tar')
-            },
-        '21.1.0_9.3': {
-            'RHEL-7': ('5dbe9e738b6b41df8459417cbca70df924395b8b70825ed793159feb0bdc74da', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-9.3.tar'),
-            'RHEL-8': ('626f91f1facede437d7ebee3bb511f3845b029862298001274685b282200747d', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-9.3.tar')
-            },
-        '21.1.0_8.2': {
-            'RHEL-7': ('2994fce82a7d5b5a72eccbd7281f88d5cd4439a2bad832628d5cabbb8d960135', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-8.2.tar'),
-            'RHEL-8': ('5633768b892db3d959b1d3fc1e435dc022666a5ec8567f9394adbd4edf7972dc', 'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-8.2.tar')
-            }
-        }
-        
+    '21.1.0_10.2': {
+        'RHEL-7': ('41597c67ff2cd6281961111964e5065a49d32f2550b3290be1e2378aa05df74a',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-10.2.tar'),
+        'RHEL-8': ('fdc9d0a394e58f6a5575862bf9cc375cc1a8b36cb3bbb0ef1dcdeee1873e6959',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-10.2.tar')
+    },
+    '21.1.0_9.3': {
+        'RHEL-7': ('5dbe9e738b6b41df8459417cbca70df924395b8b70825ed793159feb0bdc74da',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-9.3.tar'),
+        'RHEL-8': ('626f91f1facede437d7ebee3bb511f3845b029862298001274685b282200747d',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-9.3.tar')
+    },
+    '21.1.0_8.2': {
+        'RHEL-7': ('2994fce82a7d5b5a72eccbd7281f88d5cd4439a2bad832628d5cabbb8d960135',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL7/arm-performance-libraries_21.1_RHEL-7_gcc-8.2.tar'),
+        'RHEL-8': ('5633768b892db3d959b1d3fc1e435dc022666a5ec8567f9394adbd4edf7972dc',
+                   'https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/21-1-0/RHEL8/arm-performance-libraries_21.1_RHEL-8_gcc-8.2.tar')
+    }
+}
+
 
 def get_os():
     spack_os = spack.platforms.host().default_os
     return _os_map.get(spack_os, 'RHEL-7')
 
 
-def get_armpl_prefix(spec,compiler):
+def get_armpl_prefix(spec, compiler):
 
     acfl_prefix = spec.prefix
 
     return os.path.join(
-            acfl_prefix,
-            'armpl_{0}_gcc-{1}'.format(
-                spec.version.up_to(2),
-                compiler.version.up_to(2)
-            )
+        acfl_prefix,
+        'armpl_{0}_gcc-{1}'.format(
+            spec.version.up_to(2),
+            compiler.version.up_to(2)
         )
+    )
+
 
 class Armpl(Package):
     """Arm performance Libraries provide advanced math functions
@@ -62,7 +69,7 @@ class Armpl(Package):
     url = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
 
     maintainers = ['OliverPerks', 'annwon']
-    
+
     for ver, packages in _versions.items():
         key = "{0}".format(get_os())
         pkg = packages.get(key)
@@ -75,7 +82,7 @@ class Armpl(Package):
     conflicts('%gcc@:10.1.999,10.3:', when='@21.1.0_10.2')
     conflicts('%gcc@:9.2.999,9.4:', when='@21.1.0_9.3')
     conflicts('%gcc@:8.1.999,8.3:', when='@21.1.0_8.2')
-    
+
     # Set compiler dependency mapping
 
     variant('ilp64', default=False, description='use ilp64 specific Armpl library')
@@ -83,9 +90,9 @@ class Armpl(Package):
     # Try to match the OpenBLAS threads variant format
     variant(
         'threads', default='none',
-         description='Multithreading support',
-         values=('openmp', 'none'),
-         multi=False
+        description='Multithreading support',
+        values=('openmp', 'none'),
+        multi=False
     )
 
     provides('blas')
@@ -96,12 +103,11 @@ class Armpl(Package):
     def install(self, spec, prefix):
         if self.compiler.name != 'gcc':
             raise SpackError(('Only compatible with GCC.\n'))
-        
+
         exe = Executable('./arm-performance-libraries_{0}_{1}.sh'.format(
             spec.version.up_to(2), get_os())
         )
         exe("--accept", "--force", "--install-to", prefix)
-
 
     @property
     def blas_libs(self):
