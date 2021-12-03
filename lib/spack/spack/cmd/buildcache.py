@@ -298,40 +298,20 @@ def _matching_specs(args):
 
 def install_tarball(spec, args):
     s = Spec(spec)
-    if s.external or s.virtual:
-        tty.warn("Skipping external or virtual package %s" % spec.format())
-        return
 
     # This argument is used only for bootstrapping specs without signatures,
     # since we need to check the sha256 of each tarball
-    if not args.only_root:
-        for d in s.dependencies(deptype=('link', 'run')):
-            tty.msg("Installing buildcache for dependency spec %s" % d)
-            install_tarball(d, args)
-
-    package = spack.repo.get(spec)
-    if s.concrete and package.installed and not args.force:
-        tty.warn("Package for spec %s already installed." % spec.format())
+    if args.only_root:
+        nodes_to_install = [s]
     else:
-        tarball = bindist.download_tarball(spec)
-        if tarball:
-            if args.sha256:
-                checker = spack.util.crypto.Checker(args.sha256)
-                msg = ('cannot verify checksum for "{0}"'
-                       ' [expected={1}]')
-                msg = msg.format(tarball, args.sha256)
-                if not checker.check(tarball):
-                    raise spack.binary_distribution.NoChecksumException(msg)
-                tty.debug('Verified SHA256 checksum of the build cache')
+        nodes_to_install = [
+            n for n in s.traverse(root=True, order='post', deptype=('link', 'run'))
+        ]
 
-            tty.msg('Installing buildcache for spec %s' % spec.format())
-            bindist.extract_tarball(spec, tarball, args.allow_root,
-                                    args.unsigned, args.force)
-            spack.hooks.post_install(spec)
-            spack.store.db.add(spec, spack.store.layout)
-        else:
-            tty.die('Download of binary cache file for spec %s failed.' %
-                    spec.format())
+    for node in nodes_to_install:
+        bindist.install_single_node(
+            node, args.allow_root, args.unsigned, args.force, args.sha256
+        )
 
 
 def download_buildcache_files(concrete_spec, local_dest, require_cdashid,

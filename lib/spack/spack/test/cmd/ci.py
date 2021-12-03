@@ -1063,15 +1063,12 @@ spack:
 
 
 def test_push_mirror_contents_exceptions(monkeypatch, capsys):
-    def faked(env, spec_file=None, packages=None, add_spec=True,
-              add_deps=True, output_location=os.getcwd(),
-              signing_key=None, force=False, make_relative=False,
-              unsigned=False, allow_root=False, rebuild_index=False):
+    def failing_access(*args, **kwargs):
         raise Exception('Error: Access Denied')
 
-    import spack.cmd.buildcache as buildcache
-    monkeypatch.setattr(buildcache, '_createtarball', faked)
+    monkeypatch.setattr(spack.ci, '_push_mirror_contents', failing_access)
 
+    # Input doesn't matter, as wwe are faking exceptional output
     url = 'fakejunk'
     ci.push_mirror_contents(None, None, None, url, None)
 
@@ -1079,7 +1076,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     std_out = captured[0]
     expect_msg = 'Permission problem writing to {0}'.format(url)
 
-    assert(expect_msg in std_out)
+    assert expect_msg in std_out
 
 
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,

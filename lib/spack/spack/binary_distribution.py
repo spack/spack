@@ -28,10 +28,12 @@ import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.hash_types as ht
+import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
 import spack.platforms
 import spack.relocate as relocate
+import spack.repo
 import spack.store
 import spack.util.file_cache as file_cache
 import spack.util.gpg
@@ -1547,6 +1549,47 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
         if os.path.exists(filename):
             os.remove(filename)
+
+
+def install_single_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+    """Install the root node of a concrete spec from a buildcache.
+
+    Args:
+        spec: spec to be installed (note that only the root node will be installed)
+        allow_root (bool): allows the root directory to be present in binaries
+            (may affect relocation)
+        unsigned (bool): if True allows installing unsigned binaries
+        force (bool): force installation if the spec is already present in the
+            local store
+        sha256 (str): optional sha256 of the binary package, to be checked
+            before installation
+    """
+    package = spack.repo.get(spec)
+    # Early termination
+    if spec.external or spec.virtual:
+        warnings.warn("Skipping external or virtual package {0}".format(spec.format()))
+        return
+    elif spec.concrete and package.installed and not force:
+        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
+        return
+
+    tarball = download_tarball(spec)
+    if not tarball:
+        msg = 'download of binary cache file for spec "{0}" failed'
+        raise RuntimeError(msg.format(spec.format()))
+
+    if sha256:
+        checker = spack.util.crypto.Checker(sha256)
+        msg = 'cannot verify checksum for "{0}" [expected={1}]'
+        msg = msg.format(tarball, sha256)
+        if not checker.check(tarball):
+            raise spack.binary_distribution.NoChecksumException(msg)
+        tty.debug('Verified SHA256 checksum of the build cache')
+
+    tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
+    extract_tarball(spec, tarball, allow_root, unsigned, force)
+    spack.hooks.post_install(spec)
+    spack.store.db.add(spec, spack.store.layout)
 
 
 def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
