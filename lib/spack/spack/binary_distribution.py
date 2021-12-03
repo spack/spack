@@ -1551,8 +1551,12 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
-def install_single_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
     """Install the root node of a concrete spec from a buildcache.
+
+    Checking the sha256 sum of a node before installation is usually needed only
+    for software installed during Spack's bootstrapping (since we might not have
+    a proper signature verification mechanism available).
 
     Args:
         spec: spec to be installed (note that only the root node will be installed)
@@ -1590,6 +1594,21 @@ def install_single_node(spec, allow_root, unsigned=False, force=False, sha256=No
     extract_tarball(spec, tarball, allow_root, unsigned, force)
     spack.hooks.post_install(spec)
     spack.store.db.add(spec, spack.store.layout)
+
+
+def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
+    """Install a single concrete spec from a buildcache.
+
+    Args:
+        spec (Spec): spec to be installed
+        allow_root (bool): allows the root directory to be present in binaries
+            (may affect relocation)
+        unsigned (bool): if True allows installing unsigned binaries
+        force (bool): force installation if the spec is already present in the
+            local store
+    """
+    for node in spec.traverse(root=True, order='post', deptype=('link', 'run')):
+        install_root_node(node, allow_root=allow_root, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec, full_hash_match=False, mirrors=None):

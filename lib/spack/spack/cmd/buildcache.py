@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import argparse
 import os
 import shutil
 import sys
@@ -102,11 +101,6 @@ def setup_parser(subparser):
     install.add_argument('-o', '--otherarch', action='store_true',
                          help="install specs from other architectures" +
                               " instead of default platform and OS")
-    # This argument is needed by the bootstrapping logic to verify checksums
-    install.add_argument('--sha256', help=argparse.SUPPRESS)
-    install.add_argument(
-        '--only-root', action='store_true', help=argparse.SUPPRESS
-    )
 
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=install_fn)
@@ -296,24 +290,6 @@ def _matching_specs(args):
             " to install")
 
 
-def install_tarball(spec, args):
-    s = Spec(spec)
-
-    # This argument is used only for bootstrapping specs without signatures,
-    # since we need to check the sha256 of each tarball
-    if args.only_root:
-        nodes_to_install = [s]
-    else:
-        nodes_to_install = [
-            n for n in s.traverse(root=True, order='post', deptype=('link', 'run'))
-        ]
-
-    for node in nodes_to_install:
-        bindist.install_single_node(
-            node, args.allow_root, args.unsigned, args.force, args.sha256
-        )
-
-
 def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
                               mirror_url=None):
     tarfile_name = bindist.tarball_name(concrete_spec, '.spack')
@@ -404,7 +380,12 @@ def install_fn(args):
     query = bindist.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
-        install_tarball(match, args)
+        bindist.install_single_spec(
+            match,
+            allow_root=args.allow_root,
+            unsigned=args.unsigned,
+            force=args.force
+        )
 
 
 def list_fn(args):
