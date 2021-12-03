@@ -345,12 +345,7 @@ def specfile_matches(filename, **kwargs):
     Return:
         List of matches
     """
-    with open(filename, 'r') as fd:
-        file_content = fd.read()
-        if filename.endswith('.json'):
-            s = spack.spec.Spec.from_json(file_content)
-        else:
-            s = spack.spec.Spec.from_yaml(file_content)
+    s = spack.spec.Spec.from_specfile(filename)
     query = ['/{0}'.format(s.dag_hash())]
     return spack.store.find(query, **kwargs)
 

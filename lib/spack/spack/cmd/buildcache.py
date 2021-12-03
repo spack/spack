@@ -318,12 +318,10 @@ def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
 
 
 def get_concrete_spec(args):
-    spec_str = args.spec
-    spec_yaml_path = args.spec_file
+    spec_str, specfile_path = args.spec, args.spec_file
 
-    if not spec_str and not spec_yaml_path:
-        tty.msg('Must provide either spec string or path to ' +
-                'yaml to concretize spec')
+    if not spec_str and not specfile_path:
+        tty.error('must provide either spec string or path to YAML or JSON specfile')
         sys.exit(1)
 
     if spec_str:
@@ -332,14 +330,13 @@ def get_concrete_spec(args):
             spec = spack.store.find(constraints)[0]
             spec.concretize()
         except SpecError as spec_error:
-            tty.error('Unable to concrectize spec {0}'.format(args.spec))
+            tty.error('Unable to concretize spec {0}'.format(spec_str))
             tty.debug(spec_error)
             sys.exit(1)
 
         return spec
 
-    with open(spec_yaml_path, 'r') as fd:
-        return Spec.from_yaml(fd.read())
+    return Spec.from_specfile(specfile_path)
 
 
 def create_fn(args):
