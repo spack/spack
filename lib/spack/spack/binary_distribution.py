@@ -1159,7 +1159,7 @@ def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
-        specs (list of specs): list of root specs to be processed
+        specs (List[spack.spec.Spec]): list of root specs to be processed
         include_root (bool): include the root of each spec in the nodes
         include_dependencies (bool): include the dependencies of each
             spec in the nodes
@@ -1193,7 +1193,7 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
     to a given push URL.
 
     Args:
-        specs (list of Specs): installed specs to be packaged
+        specs (List[spack.spec.Spec]): installed specs to be packaged
         push_url (str): url where to push the binary package
         specs_kwargs (dict): dictionary with two possible boolean keys, "include_root"
             and "include_dependencies", which determine which part of each spec is
@@ -1600,7 +1600,7 @@ def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
     """Install a single concrete spec from a buildcache.
 
     Args:
-        spec (Spec): spec to be installed
+        spec (spack.spec.Spec): spec to be installed
         allow_root (bool): allows the root directory to be present in binaries
             (may affect relocation)
         unsigned (bool): if True allows installing unsigned binaries

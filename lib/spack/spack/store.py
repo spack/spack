@@ -298,9 +298,10 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     The query function must accept a spec as its first argument.
 
     Args:
-        constraints (list of Spec): specs to be matched against installed packages
+        constraints (List[spack.spec.Spec]): specs to be matched against
+            installed packages
         multiple (bool): if True multiple matches per constraint are admitted
-        query_fn (callable): query function to get matching specs. By default
+        query_fn (Callable): query function to get matching specs. By default,
             ``spack.store.db.query``
         **kwargs: keyword arguments forwarded to the query function
 
