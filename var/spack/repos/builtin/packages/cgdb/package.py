@@ -19,7 +19,7 @@ class Cgdb(AutotoolsPackage):
     version('0.7.0', sha256='bf7a9264668db3f9342591b08b2cc3bbb08e235ba2372877b4650b70c6fb5423')
 
     # Required dependency
-    depends_on('gdb')
+    depends_on('gdb', type='run')
     depends_on('ncurses')
     depends_on('readline')
     depends_on('autoconf', type='build', when='@master')
