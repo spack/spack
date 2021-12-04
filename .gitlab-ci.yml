@@ -3,7 +3,7 @@
 workflow:
   rules:
     - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
-    # Branch needs to be the same as $DEPLOYMENT_BRANCH below
+    # Branch needs to be the same as $DEPLOYMENT_DEFAULT_BRANCH below
     - if: '$CI_COMMIT_BRANCH == "merge-upstream"'
 
 # This prepares the environment for the rest of the pipeline.  Could have
@@ -21,7 +21,9 @@ setup_environment:
     # Needed for Intel compilers, which may re-use some libraries from a
     # GCC
     BASE_GCC_VERSION: "9.4.0"
-    DEPLOYMENT_BRANCH: "merge-upstream"
+    # Used in GitLab `rules`, and `git clone`s
+    DEPLOYMENT_DEFAULT_BRANCH: "merge-upstream"
+    DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
     DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
     # This date should increment for new deployments — about once a year
@@ -46,6 +48,8 @@ setup_environment:
         DEPLOYMENT_BRANCH: "$CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
         DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
         DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
+        # Somewhat awkward, but "$DEPLOYMENT_ROOT/modules" is already used.
+        MODULE_ROOT: "$DEPLOYMENT_ROOT/config/modules"
       when: always
     - when: always
   script:
@@ -82,6 +86,11 @@ atomic_build:
     strategy: depend
   variables:
     PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+    # For feedback stuff, will be empty if not in a PR
+    GITHUB_PULL_REQUEST_ID: $CI_EXTERNAL_PULL_REQUEST_IID
+    GITHUB_REPOSITORY: $CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY
+    GITHUB_API_USER_OVERRIDE: $GITHUB_API_USER_FOR_GITLAB_LOG_UPLOAD
+    GITHUB_API_KEY_OVERRIDE: $GITHUB_API_KEY_FOR_GITLAB_LOG_UPLOAD
   resource_group: BlueBrain.GPFS.$CI_EXTERNAL_PULL_REQUEST_IID
 
 clean_merged_prs:

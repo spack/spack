@@ -4,9 +4,16 @@
 # GitLab CI environmental variables.
 
 chain() {
+    # expected arguments:
+    # * stage name
+    # * (optional) prefix to use with upstream stage
     local what=$1
     local suffix=${2:+_}${2:-}
-    local where=${2:-$DEPLOYMENT_ROOT}${2:+$DEPLOYMENT_UPSTREAM}
+    local default=
+    local where=$DEPLOYMENT_ROOT
+    if [[ -n "${2:-}" ]]; then
+        where=$DEPLOYMENT_UPSTREAM
+    fi
     cat << EOF
   $what$suffix:
     install_tree: $where/stage_$what

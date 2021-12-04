@@ -1,0 +1,27 @@
+diff --git a/scripts/STATGUI.py b/scripts/STATGUI.py
+index 2b287a9..5c6e813 100644
+--- a/scripts/STATGUI.py
++++ b/scripts/STATGUI.py
+@@ -29,7 +29,8 @@ import STAThelper
+ from STAThelper import var_spec_to_string, get_task_list, get_proctab, HAVE_PYGMENTS, exec_and_exit
+ if HAVE_PYGMENTS:
+     import pygments
+-    import pango
++    import gi
++    from gi.repository import Pango as pango
+     from pygments.lexers import CLexer
+     from pygments.lexers import CppLexer
+     from pygments.lexers import FortranLexer
+@@ -1940,9 +1941,9 @@ host[1-10,12,15-20];otherhost[30]
+             if HAVE_PYGMENTS:
+                 text_view_buffer.create_tag("monospace", family="monospace")
+                 pygments.highlight(dysect_session_file.read(), CppLexer(), STATviewFormatter())
+-                text_view_buffer.create_tag('bold_tag', weight=pango.WEIGHT_BOLD)
+-                text_view_buffer.create_tag('italics_tag', style=pango.STYLE_ITALIC)
+-                text_view_buffer.create_tag('underline_tag', underline=pango.UNDERLINE_SINGLE)
++                text_view_buffer.create_tag('bold_tag', weight=pango.Weight.BOLD)
++                text_view_buffer.create_tag('italics_tag', style=pango.Style.ITALIC)
++                text_view_buffer.create_tag('underline_tag', underline=pango.Underline.SINGLE)
+                 lines = STAThelper.pygments_lines
+                 iterator = text_view_buffer.get_iter_at_offset(0)
+                 width = len(str(len(lines)))

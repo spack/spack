@@ -136,13 +136,17 @@ setup_spack:
         module_roots:
           tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
       EOF
+    # Create an empty database if not present yet (ensures this can be used
+    # as an "upstream" later)
+    - |
+      if [[ ! -f "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db/index.json" ]]; then
+          mkdir -p "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db"
+          echo '{"database":{"installs":{},"version":"6"}}' >  "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db/index.json"
+      fi
     # Hook up software from other stages if needed (also for PRs)
     - configure-upstreams > "spack_config/upstreams.yaml"
     # Sourcing should happen after upstreams to add upstream modules to the path
     - source "$DEPLOYMENT_ROOT/spack/share/spack/setup-env.sh"
-    # Verify the above
-    - spack config blame config
-    - spack config blame upstreams
     - echo "$MODULEPATH"|sed 's/:/\n/g'
     # Set up a mirror for proprietary software for the external stage; only
     # populate it once per pipeline, all other stages will receive the same
@@ -189,6 +193,7 @@ setup_spack:
     # Allow to cross-check what the CI sees
     - spack config blame config
     - spack config blame packages
+    - spack config blame upstreams
     # Activate if checksums fail
     # - spack clean -a
     # Concretize and pre-fetch, afterwards build the environment
@@ -367,9 +372,24 @@ update_config:
           root: \${HOME}/spack_install
           projections:
             all: install_\${COMPILERNAME}-\${COMPILERVER}-\${TARGET}/\${PACKAGE}-\${VERSION}-\${HASH:6}
+        source_cache: \$user_cache_path/sources
       EOF
+
+link_configuration:
+  needs: [update_config]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMEN_DEFAULT_BRANCH'
+  script:
     # Link configuration into global deployment directory
     - ln -sf "$DEPLOYMENT_ROOT/config" "$DEPLOYMENT_BASE"
+
+github_feedback:
+  needs: [update_config]
+  rules:
+    - if: $GITHUB_PULL_REQUEST_ID
+  script:
+    - export PATH="${DEPLOYMENT_ROOT}/spack/deploy/bin:${PATH}"
+    - give-github-feedback
 
 check_modules:
   needs: [update_config]
