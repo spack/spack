@@ -2666,16 +2666,18 @@ def test_process(pkg, kwargs):
                     # grab the function for each method so we can call
                     # it with the package
                     test_fn = spec_pkg.__class__.test
-                    if not isinstance(test_fn, types.FunctionType):
+                    functypes = (types.FunctionType, functools.partial)
+                    if not isinstance(test_fn, functypes):
                         test_fn = test_fn.__func__
 
                     # Skip any test methods consisting solely of 'pass'
                     # since they do not contribute to package testing.
-                    source = (inspect.getsource(test_fn)).splitlines()[1:]
-                    lines = (ln.strip() for ln in source)
-                    statements = [ln for ln in lines if not ln.startswith('#')]
-                    if len(statements) > 0 and statements[0] == 'pass':
-                        continue
+                    if isinstance(test_fn, types.FunctionType):
+                        source = (inspect.getsource(test_fn)).splitlines()[1:]
+                        lines = (ln.strip() for ln in source)
+                        sttmts = [ln for ln in lines if not ln.startswith('#')]
+                        if len(sttmts) > 0 and sttmts[0] == 'pass':
+                            continue
 
                     # Run the tests
                     ran_actual_test_function = True

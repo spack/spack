@@ -127,6 +127,10 @@ class SpecMultiMethod(object):
            package's spec.  If none is found, call the default
            or if there is none, then raise a NoSuchMethodError.
         """
+        if not package_self and args[0]:
+            package_self = args[0]
+            args = args[1:]
+
         spec_method = self._get_method_by_spec(package_self.spec)
         if spec_method:
             return spec_method(package_self, *args, **kwargs)

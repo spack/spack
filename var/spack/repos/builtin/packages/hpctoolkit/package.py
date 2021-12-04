@@ -230,6 +230,7 @@ class Hpctoolkit(AutotoolsPackage):
         if self.spec.satisfies('@master'):
             self.cache_extra_test_sources(['tests'])
 
+    @when('@master')
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
         if self.spec.satisfies('@master'):
