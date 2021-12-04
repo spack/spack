@@ -53,5 +53,5 @@ class Librsvg(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            '--enable-gtk-doc=' + 'yes' if spec.variants['doc'].value else 'no'
+            '--enable-gtk-doc=' + ('yes' if self.spec.variants['doc'].value else 'no')
         ]

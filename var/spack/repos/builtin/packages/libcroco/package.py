@@ -24,7 +24,7 @@ class Libcroco(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            '--enable-gtk-doc=' + 'yes' if spec.variants['doc'].value else 'no'
+            '--enable-gtk-doc=' + ('yes' if self.spec.variants['doc'].value else 'no')
         ]
         # macOS ld does not support this flag
         # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
