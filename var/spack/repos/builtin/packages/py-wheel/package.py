@@ -6,11 +6,12 @@
 from spack import *
 
 
-class PyWheel(PythonPackage):
+class PyWheel(Package):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    pypi = "wheel/wheel-0.34.2.tar.gz"
+    url = "https://files.pythonhosted.org/packages/source/w/wheel/wheel-0.34.2.tar.gz"
+    list_url = "https://pypi.org/simple/wheel/"
 
     version('0.37.0', sha256='e2ef7239991699e3355d54f8e968a21bb940a1dbf34a4d226741e64462516fad')
     version('0.36.2', sha256='e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e')
@@ -26,6 +27,59 @@ class PyWheel(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', when='@0.34:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@0.30:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
-    depends_on('py-setuptools@40.9.0:', when='@0.34.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm@3.4:', when='@0.34.0', type='build')
+    depends_on('py-pip', type='build')
+
+    # This bootstrapping procedure is similar to the one used by Nix:
+    # https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/python-modules/bootstrapped-pip/default.nix
+    # Also see further discussion in:
+    # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
+
+    # Latest version, should be updated from time to time
+    resource(
+        name='setuptools',
+        url='https://pypi.io/packages/source/s/setuptools/setuptools-59.4.0.tar.gz',
+        sha256='b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d',
+        placement='setuptools',
+        when='^python@3.6:',
+    )
+    # Latest version that supports Python 3.5
+    resource(
+        name='setuptools',
+        url='https://pypi.io/packages/source/s/setuptools/setuptools-50.3.2.zip',
+        sha256='ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c',
+        placement='setuptools',
+        when='^python@3.5',
+    )
+    # Latest version that supports Python 2.7
+    resource(
+        name='setuptools',
+        url='https://pypi.io/packages/source/s/setuptools/setuptools-44.1.1.zip',
+        sha256='c67aa55db532a0dadc4d2e20ba9961cbd3ccc84d544e9029699822542b5a476b',
+        placement='setuptools',
+        when='^python@2.7',
+    )
+    # Latest version that supports Python 3.4
+    resource(
+        name='setuptools',
+        url='https://pypi.io/packages/source/s/setuptools/setuptools-43.0.0.zip',
+        sha256='db45ebb4a4b3b95ff0aca3ce5fe1e820ce17be393caf8902c78aa36240e8c378',
+        placement='setuptools',
+        when='^python@3.4',
+    )
+
+    conflicts(
+        '^python@:2.6,3.0:3.3',
+        msg='An older version of setuptools is required to bootstrap '
+        'this package, use a newer Python or contact @adamjstewart to fix this'
+    )
+
+    def setup_build_environment(self, env):
+        # Use pip to bootstrap itself
+        env.prepend_path('PYTHONPATH', 'src')
+
+        # Setuptools is required to build wheel from source
+        env.prepend_path('PYTHONPATH', join_path(self.stage.source_path, 'setuptools'))
+
+    def install(self, spec, prefix):
+        pip('install', '--no-deps', '--prefix', prefix, '--ignore-installed',
+            '--no-build-isolation', '--no-index', '--no-warn-script-location', '.')
