@@ -26,8 +26,7 @@ class Libcroco(AutotoolsPackage):
         args = [
             '--enable-gtk-doc=' + 'yes' if spec.variants['doc'].value else 'no'
         ]
-        if sys.platform == 'darwin':
-            # macOS ld does not support this flag
-            # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
-            args.append('--disable-Bsymbolic')
+        # macOS ld does not support this flag
+        # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
+        args.append('--disable-Bsymbolic')
         return args
