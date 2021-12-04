@@ -126,7 +126,7 @@ def get_rpaths_byte_string_and_offset(f):
             raise ElfParsingError("Malformed program header")
         p_type, = unpack_from(t_word, buffer=prog_header, offset=0)
 
-        # Find PT_LOAD to get the
+        # For PT_LOAD entries: Save the offsets and virtual addrs of the loaded ELF segments
         if p_type == 0x1:
             p_offset_load, p_vaddr_load, = unpack_from(
                 t_off_addr, buffer=prog_header, offset=p_offset_offset)
