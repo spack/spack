@@ -17,6 +17,7 @@ class PyChardet(PythonPackage):
     version('3.0.2', sha256='4f7832e7c583348a9eddd927ee8514b3bf717c061f57b21dbe7697211454d9bb')
     version('2.3.0', sha256='e53e38b3a4afe6d1132de62b7400a4ac363452dc5dfcf8d88e8e0cce663c68aa')
 
+    depends_on('python@2.7:2.8,3.5:', when='@4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pytest-runner', type='build', when='@3.0.2')
-    depends_on('python@2.7:2.8,3.5:', when='@4:', type=('build', 'run'))
+    depends_on('py-wheel', type='build')
