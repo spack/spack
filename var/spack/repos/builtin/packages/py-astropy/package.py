@@ -62,7 +62,7 @@ class PyAstropy(PythonPackage):
     # System dependencies
     depends_on('erfa')
     depends_on('wcslib')
-    depends_on('cfitsio@:3')
+    depends_on('cfitsio')
     depends_on('expat')
 
     def patch(self):
