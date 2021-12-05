@@ -15,4 +15,4 @@ class Dlib(CMakePackage):
     version('master', branch='master')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+features2d+flann+highgui+imgproc+imgcodecs')
+    depends_on('opencv+calib3d+features2d+highgui+imgproc+imgcodecs')
