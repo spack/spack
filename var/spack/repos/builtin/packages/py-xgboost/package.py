@@ -54,10 +54,6 @@ class PyXgboost(PythonPackage):
     conflicts('+dask', when='@:0')
     conflicts('+plotting', when='@:0')
 
-    # `--use-system-libxgboost` is only valid for the 'install' phase, but we want to
-    # skip building of the C++ library and rely on an external dependency
-    phases = ['install']
-
     @when('@:0.90')
     def patch(self):
         # Fix OpenMP support on macOS
@@ -79,12 +75,5 @@ class PyXgboost(PythonPackage):
                     os.path.join('xgboost', 'libpath.py'), string=True)
 
     @when('@1.3:')
-    def install_args(self, spec, prefix):
-        args = super(PyXgboost, self).install_args(spec, prefix)
-        args.append('--use-system-libxgboost')
-        return args
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)
+    def install_options(self, spec, prefix):
+        return ['--use-system-libxgboost']

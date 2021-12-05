@@ -57,7 +57,7 @@ class Reditools(PythonPackage):
     patch('setup.py.patch')
     patch('batch_sort.patch', when='^python@3:')
 
-    @run_before('build')
+    @run_before('install')
     def p2_to_p3(self):
         if '^python@3:' in self.spec:
             # clean up space/tab mixing

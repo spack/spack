@@ -31,6 +31,6 @@ class Gatetools(PythonPackage):
     depends_on('gate+rtk', type='run')
 
     # The readme.md file is not in the distribution, so fake it.
-    @run_before('build')
+    @run_before('install')
     def readme(self):
         touch('readme.md')
