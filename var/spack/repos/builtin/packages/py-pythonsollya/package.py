@@ -24,7 +24,7 @@ class PyPythonsollya(PythonPackage):
     depends_on('py-bigfloat', type=('build', 'run'))
     depends_on('mpfi', type=('build', 'link'))
 
-    @run_before('build')
+    @run_before('install')
     def patch(self):
         filter_file('PYTHON ?= python2',
                     'PYTHON ?= ' + self.spec['python'].command.path,

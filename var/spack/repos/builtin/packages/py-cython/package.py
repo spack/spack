@@ -44,9 +44,3 @@ class PyCython(PythonPackage):
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def build_test(self):
-        # Warning: full suite of unit tests takes a very long time
-        python('runtests.py', '-j', str(make_jobs))

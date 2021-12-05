@@ -164,7 +164,7 @@ class PyNumpy(PythonPackage):
 
         return (flags, None, None)
 
-    @run_before('build')
+    @run_before('install')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
         # https://github.com/numpy/numpy/blob/master/site.cfg.example

@@ -28,7 +28,7 @@ class PyDpGpCluster(PythonPackage):
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
 
-    @run_before('build')
+    @run_before('install')
     def remove_cython_output(self):
         for f in glob('DP_GP/*.c'):
             unlink(f)
