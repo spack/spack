@@ -18,7 +18,7 @@ class PyTensorflowDatasets(PythonPackage):
         sha256="3e95a61dec1fdb7b05dabc0dbed1b531e13d6c6fd362411423d0a775e5e9b960",
     )
 
-    depends_on("python@3:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-attrs@18.1.0:", type=("build", "run"))
