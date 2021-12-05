@@ -75,9 +75,6 @@ class PyWheel(Package):
     )
 
     def setup_build_environment(self, env):
-        # Use pip to bootstrap itself
-        env.prepend_path('PYTHONPATH', 'src')
-
         # Setuptools is required to build wheel from source
         env.prepend_path('PYTHONPATH', join_path(self.stage.source_path, 'setuptools'))
 
