@@ -24,7 +24,7 @@ class PyTensorflowMetadata(PythonPackage):
         sha256="f0ec8aaf62fd772ef908efe4ee5ea3bc0d67dcbf10ae118415b7b206a1d61745",
     )
 
-    depends_on("bazel", type="build")
+    depends_on("bazel@0.24.1:", type="build")
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-absl-py@0.9:0.12", type=("build", "run"))
