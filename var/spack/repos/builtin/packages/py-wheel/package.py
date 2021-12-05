@@ -24,6 +24,7 @@ class PyWheel(Package):
     version('0.29.0', sha256='1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648')
     version('0.26.0', sha256='eaad353805c180a47545a256e6508835b65a8e830ba1093ed8162f19a50a530c')
 
+    extends('python')
     depends_on('python@2.7:2.8,3.5:', when='@0.34:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@0.30:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
