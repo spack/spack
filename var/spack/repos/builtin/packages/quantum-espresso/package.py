@@ -57,10 +57,10 @@ class QuantumEspresso(CMakePackage):
         depends_on('libxc@5.1.2:', when='+libxc')
 
         # TODO
-        #variant(
-        #    'gpu', default='none', description='Builds with GPU support',
-        #    values=('nvidia', 'none'), multi=False
-        #)
+        # variant(
+        #     'gpu', default='none', description='Builds with GPU support',
+        #     values=('nvidia', 'none'), multi=False
+        # )
 
     variant('openmp', default=False, description='Enables openMP support')
     # Need OpenMP threaded FFTW and BLAS libraries when configured
