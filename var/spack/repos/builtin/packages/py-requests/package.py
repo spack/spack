@@ -29,7 +29,6 @@ class PyRequests(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.6:', type=('build', 'run'), when='@2.26.0:')
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
 
     depends_on('py-chardet@3.0.2:4', type=('build', 'run'), when='@2.25.1: ^python@2:2')
     depends_on('py-chardet@3.0.2:3', type=('build', 'run'), when='@2.23.0:2.25.0')

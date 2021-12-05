@@ -17,4 +17,3 @@ class PyCharsetNormalizer(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')

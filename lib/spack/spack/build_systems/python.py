@@ -41,6 +41,10 @@ class PythonPackage(PackageBase):
 
     extends('python')
     depends_on('py-pip', type='build')
+    # FIXME: technically wheel is only needed when building from source, not when
+    # installing a downloaded wheel, but I don't want to add wheel as a dep to every
+    # package manually
+    depends_on('py-wheel', type='build')
 
     py_namespace = None
 

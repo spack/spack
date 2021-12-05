@@ -24,4 +24,3 @@ class PyIdna(PythonPackage):
     depends_on('python@2.7:2,3.4:', when='@2.8:2', type=('build', 'run'))
     depends_on('python@2.6:', when='@:2.7', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'link'))
-    depends_on('py-wheel', type='build')
