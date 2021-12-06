@@ -70,6 +70,8 @@ class Conduit(CMakePackage):
 
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
     variant("hdf5_compat", default=True,
             description="Build Conduit with HDF5 1.8.x (compatibility mode)")
@@ -121,6 +123,9 @@ class Conduit(CMakePackage):
     depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+    # we need to hand this to conduit so it can properly 
+    # handle downstream linking of zlib reqed by hdf5
+    depends_on("zlib", when="+hdf5")
 
     ###############
     # Silo
@@ -474,6 +479,10 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             if "+fortran" in spec:
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                             mpifc_path))
@@ -514,6 +523,7 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
