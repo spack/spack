@@ -12,7 +12,7 @@ class Xdmf3(CMakePackage):
        codes and tools.
     """
 
-    homepage = "http://xdmf.org"
+    homepage = "https://xdmf.org"
     git      = "https://gitlab.kitware.com/xdmf/xdmf.git"
 
     # There is no official release of XDMF and development has largely ceased,

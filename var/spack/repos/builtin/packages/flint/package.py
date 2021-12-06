@@ -9,8 +9,8 @@ from spack import *
 class Flint(Package):
     """FLINT (Fast Library for Number Theory)."""
 
-    homepage = "http://www.flintlib.org"
-    url      = "http://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
+    homepage = "https://www.flintlib.org"
+    url      = "https://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
     git      = "https://github.com/wbhart/flint2.git"
 
     version('develop', branch='trunk')

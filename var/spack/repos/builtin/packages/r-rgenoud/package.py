@@ -9,7 +9,7 @@ from spack import *
 class RRgenoud(RPackage):
     """A genetic algorithm plus derivative optimizer."""
 
-    homepage = "http://sekhon.berkeley.edu/rgenoud/"
+    homepage = "https://sekhon.berkeley.edu/rgenoud/"
     url      = "https://cloud.r-project.org/src/contrib/rgenoud_5.8-1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgenoud"
 

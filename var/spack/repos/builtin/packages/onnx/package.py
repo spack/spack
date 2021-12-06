@@ -18,6 +18,8 @@ class Onnx(CMakePackage):
     git      = "https://github.com/onnx/onnx.git"
 
     version('master', branch='master')
+    version('1.10.1', sha256='cb2fe3e0c9bba128a5790a565d81be30f4b5571eaca5418fb19df8d2d0f11ce2')
+    version('1.10.0', sha256='705a27ee076713b8c755911913c9ffa8f96b95fc3a8568ed0b8e1dd954d67147')
     version('1.9.0', sha256='61d459a5f30604cabec352574119a6685dfd43bfa757cfbff52be9471d5b8ea0')
     version('1.8.0_2020-11-03', commit='54c38e6eaf557b844e70cebc00f39ced3321e9ad')  # py-torch@1.8:1.9
     version('1.7.0_2020-05-31', commit='a82c6a7010e2e332d8f74ad5b0c726fd47c85376')  # py-torch@1.6:1.7
@@ -36,3 +38,8 @@ class Onnx(CMakePackage):
     depends_on('protobuf')
 
     generator = 'Ninja'
+
+    def cmake_args(self):
+        # Try to get ONNX to use the same version of python as the spec is using
+        args = ['-DPY_VERSION={0}'.format(self.spec['python'].version.up_to(2))]
+        return args

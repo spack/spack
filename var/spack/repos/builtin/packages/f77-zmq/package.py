@@ -11,7 +11,7 @@ from spack import *
 class F77Zmq(MakefilePackage):
     """Fortran binding for the ZeroMQ communication library"""
 
-    homepage = "http://zguide.zeromq.org/"
+    homepage = "https://zguide.zeromq.org/"
     url      = "https://github.com/zeromq/f77_zmq/archive/4.3.1.tar.gz"
 
     maintainers = ['scemama']

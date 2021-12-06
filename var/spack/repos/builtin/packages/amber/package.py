@@ -16,13 +16,13 @@ class Amber(Package, CudaPackage):
        A manual download is required for Ambers. Spack will search your current
        directory for the download files. Alternatively, add the files to a mirror
        so that Spack can find them. For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html
+       https://spack.readthedocs.io/en/latest/mirrors.html
 
        Note: Only certain versions of ambertools are compatible with amber.
        Only the latter version of ambertools for each amber version is supported.
        """
 
-    homepage = "http://ambermd.org/"
+    homepage = "https://ambermd.org/"
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     manual_download = True
 
@@ -101,10 +101,10 @@ class Amber(Package, CudaPackage):
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
     # Patch to add ppc64le in config.guess
-    patch('ppc64le.patch', when='@18: target=ppc64le')
+    patch('ppc64le.patch', when='@18: target=ppc64le:')
 
     # Patch to add aarch64 in config.guess
-    patch('aarch64.patch', when='@18: target=aarch64')
+    patch('aarch64.patch', when='@18: target=aarch64:')
 
     # Workaround to modify the AmberTools script when using the NVIDIA
     # compilers

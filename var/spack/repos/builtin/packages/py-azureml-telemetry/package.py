@@ -16,15 +16,15 @@ class PyAzuremlTelemetry(Package):
     version('1.8.0',  sha256='de657efe9773bea0de76c432cbab34501ac28606fe1b380d6883562ebda3d804', expand=False)
 
     extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
+    depends_on('python@3.5:3', type=('build', 'run'))
     depends_on('py-pip', type='build')
     depends_on('py-applicationinsights', type=('build', 'run'))
 
-    depends_on('py-azureml-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
 
-    depends_on('py-azureml-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
 
-    depends_on('py-azureml-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
 
     def install(self, spec, prefix):
         pip = which('pip')

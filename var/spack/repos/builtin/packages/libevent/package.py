@@ -16,7 +16,7 @@ class Libevent(AutotoolsPackage):
 
     homepage = "https://libevent.org"
     url      = "https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz"
-    list_url = "http://libevent.org/old-releases.html"
+    list_url = "https://libevent.org/old-releases.html"
 
     version('2.1.12', sha256='92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb')
     version('2.1.11', sha256='a65bac6202ea8c5609fd5c7e480e6d25de467ea1917c08290c521752f147283d')
@@ -37,7 +37,7 @@ class Libevent(AutotoolsPackage):
     variant('openssl', default=True,
             description="Build with encryption enabled at the libevent level.")
     # Versions before 2.1 do not build with OpenSSL 1.1
-    depends_on('openssl@:1.0', when='@:2.0.99+openssl')
+    depends_on('openssl@:1.0', when='@:2.0+openssl')
     depends_on('openssl', when='+openssl')
 
     def url_for_version(self, version):

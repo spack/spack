@@ -45,9 +45,9 @@ class Eccodes(CMakePackage):
 
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
-    depends_on('openjpeg@1.5.0:1.5.999,2.1.0:2.3.999', when='jp2k=openjpeg')
+    depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
     # Additional constraint for older versions.
-    depends_on('openjpeg@:2.1.999', when='@:2.16 jp2k=openjpeg')
+    depends_on('openjpeg@:2.1', when='@:2.16 jp2k=openjpeg')
     depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
     depends_on('libaec', when='+aec')
@@ -56,7 +56,7 @@ class Eccodes(CMakePackage):
     # The interface is available only for Python 2.
     # Python 3 interface is available as a separate packages:
     # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on('python@2.6:2.999', when='+python',
+    depends_on('python@2.6:2', when='+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')

@@ -24,9 +24,9 @@ class PyPygobject(PythonPackage):
     depends_on('pkgconfig', type='build')
     depends_on("libffi")
     depends_on('glib')
-    depends_on('python@2:2.99', when='@2:2.99', type=('build', 'run'))
+    depends_on('python@2.0:2', when='@2.0:2', type=('build', 'run'))
     depends_on('py-pycairo', type=('build', 'run'), when='@3:')
-    depends_on('py-py2cairo', type=('build', 'run'), when='@2:2.99')
+    depends_on('py-py2cairo', type=('build', 'run'), when='@2.0:2')
     depends_on('gobject-introspection')
     depends_on('gtkplus', when='@3:')
 
@@ -47,11 +47,11 @@ class PyPygobject(PythonPackage):
         return url + '/%s/pygobject-%s.tar.xz' % (version.up_to(2), version)
 
     # pygobject version 2 requires an autotools build
-    @when('@2:2.99')
+    @when('@2.0:2')
     def build(self, spec, prefix):
         configure('--prefix=%s' % spec.prefix)
 
-    @when('@2:2.99')
+    @when('@2.0:2')
     def install(self, spec, prefix):
         make('install', parallel=False)
 

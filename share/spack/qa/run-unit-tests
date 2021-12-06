@@ -49,6 +49,8 @@ fi
 
 $coverage_run $(which spack) unit-test -x --verbose
 
+bash "$QA_DIR/test-env-cfg.sh"
+
 # Delete the symlink going from ./lib/spack/docs/_spack_root back to
 # the initial directory, since it causes ELOOP errors with codecov/actions@2
 if [[ "$COVERAGE" == "true" ]]; then

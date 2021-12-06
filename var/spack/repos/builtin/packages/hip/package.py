@@ -20,6 +20,7 @@ class Hip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     version('master', branch='master')
+    version('4.3.1', sha256='955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f')
     version('4.3.0', sha256='293b5025b5e153f2f25e465a2e0006a2b4606db7b7ec2ae449f8a4c0b52d491b')
     version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
     version('4.1.0', sha256='e21c10b62868ece7aa3c8413ec0921245612d16d86d81fe61797bf9a64bc37eb')
@@ -30,12 +31,14 @@ class Hip(CMakePackage):
     version('3.7.0', sha256='757b392c3beb29beea27640832fbad86681dbd585284c19a4c2053891673babd')
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
     depends_on('mesa18~llvm@18.3:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
@@ -63,20 +66,20 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
-    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0')
+    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
 
     # Tests are broken when using cmake 3.21
-    with when('^cmake@3.21:'):
+    with when('^cmake@3.21.0:'):
         patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
         patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
         patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
 
-    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0')
+    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0:')
 
     def get_paths(self):
         if self.spec.external:

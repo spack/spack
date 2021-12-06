@@ -9,8 +9,8 @@ from spack import *
 
 class Clhep(CMakePackage):
     """CLHEP is a C++ Class Library for High Energy Physics. """
-    homepage = "http://proj-clhep.web.cern.ch/proj-clhep/"
-    url      = "http://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.1.3.tgz"
+    homepage = "https://proj-clhep.web.cern.ch/proj-clhep/"
+    url      = "https://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.1.3.tgz"
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 

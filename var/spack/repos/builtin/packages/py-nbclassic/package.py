@@ -16,5 +16,5 @@ class PyNbclassic(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-jupyter-server@1.8:1.999', type=('build', 'run'))
-    depends_on('py-notebook@:6.999', type=('build', 'run'))
+    depends_on('py-jupyter-server@1.8:1', type=('build', 'run'))
+    depends_on('py-notebook@:6', type=('build', 'run'))

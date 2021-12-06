@@ -1,0 +1,20 @@
+diff --git a/build/gen_def.py b/build/gen_def.py
+index a2222d0..926b813 100755
+--- a/build/gen_def.py
++++ b/build/gen_def.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # gen_def.py :  Generate the .DEF file for Windows builds
+ #
+diff --git a/build/check.py b/build/check.py
+index 2dacb4c..c44eb5a 100755
+--- a/build/check.py
++++ b/build/check.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # check.py :  Run all the test cases.
+ #

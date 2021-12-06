@@ -16,7 +16,7 @@ class Xz(AutotoolsPackage, SourceforgePackage):
 
     homepage = "https://tukaani.org/xz/"
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
-    list_url = "http://tukaani.org/xz/old.html"
+    list_url = "https://tukaani.org/xz/old.html"
 
     executables = [r'^xz$']
 

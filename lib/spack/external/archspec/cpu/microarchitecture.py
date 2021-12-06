@@ -173,6 +173,12 @@ class Microarchitecture(object):
 
         return roots.pop()
 
+    @property
+    def generic(self):
+        """Returns the best generic architecture that is compatible with self"""
+        generics = [x for x in [self] + self.ancestors if x.vendor == "generic"]
+        return max(generics, key=lambda x: len(x.ancestors))
+
     def to_dict(self, return_list_of_items=False):
         """Returns a dictionary representation of this object.
 

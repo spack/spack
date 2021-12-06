@@ -23,3 +23,10 @@ class PyPythonsollya(PythonPackage):
     depends_on('sollya', type=('build', 'link'))
     depends_on('py-bigfloat', type=('build', 'run'))
     depends_on('mpfi', type=('build', 'link'))
+
+    @run_before('build')
+    def patch(self):
+        filter_file('PYTHON ?= python2',
+                    'PYTHON ?= ' + self.spec['python'].command.path,
+                    'GNUmakefile',
+                    string=True)

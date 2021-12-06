@@ -12,8 +12,8 @@ class Megadock(MakefilePackage, CudaPackage):
     """an ultra-high-performance protein-protein docking for
        heterogeneous supercomputers"""
 
-    homepage = "http://www.bi.cs.titech.ac.jp/megadock/"
-    url      = "http://www.bi.cs.titech.ac.jp/megadock/archives/megadock-4.0.3.tgz"
+    homepage = "https://www.bi.cs.titech.ac.jp/megadock/"
+    url      = "https://www.bi.cs.titech.ac.jp/megadock/archives/megadock-4.0.3.tgz"
 
     version('4.0.3', sha256='c1409a411555f4f7b4eeeda81caf622d8a28259a599ea1d2181069c55f257664')
 

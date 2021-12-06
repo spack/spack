@@ -9,7 +9,7 @@ from spack import *
 class Tophat(AutotoolsPackage):
     """Spliced read mapper for RNA-Seq."""
 
-    homepage = "http://ccb.jhu.edu/software/tophat/index.shtml"
+    homepage = "https://ccb.jhu.edu/software/tophat/index.shtml"
     url      = "https://github.com/infphilo/tophat/archive/v2.1.1.tar.gz"
 
     version('2.1.2', sha256='15016b82255dad085d4ee7d970e50f0e53a280d466335553d47790d8344ff4b1')

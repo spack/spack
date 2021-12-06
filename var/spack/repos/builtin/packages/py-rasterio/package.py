@@ -28,7 +28,7 @@ class PyRasterio(PythonPackage):
     version('1.0a12', sha256='47d460326e04c64590ff56952271a184a6307f814efc34fb319c12e690585f3c')
 
     depends_on('python@3.6:3.9', type=('build', 'link', 'run'), when='@1.2:')
-    depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1.999')
+    depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1')
     depends_on('python@2.7:2.8,3.5:3.7', type=('build', 'link', 'run'), when='@:1.0')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type='build', when='@master')
@@ -42,6 +42,6 @@ class PyRasterio(PythonPackage):
     depends_on('py-click-plugins', type=('build', 'run'))
     depends_on('py-enum34', type='run', when='^python@:3.3')
     depends_on('gdal@2.3:3.2', when='@1.2.0:')
-    depends_on('gdal@1.11:3.2', when='@1.1.0:1.1.999')
-    depends_on('gdal@1.11:3.0', when='@1.0.25:1.0.999')
+    depends_on('gdal@1.11:3.2', when='@1.1.0:1.1')
+    depends_on('gdal@1.11:3.0', when='@1.0.25:1.0')
     depends_on('gdal@1.11:2', when='@:1.0.24')

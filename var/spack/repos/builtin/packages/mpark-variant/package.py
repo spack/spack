@@ -14,6 +14,8 @@ class MparkVariant(CMakePackage):
     git      = "https://github.com/mpark/variant.git"
     maintainers = ['ax3l']
 
+    tags = ['e4s']
+
     version('1.4.0', sha256='8f6b28ab3640b5d76d5b6664dda7257a4405ce59179220431b8fd196c79b2ecb')
     version('1.3.0', sha256='d0f7e41f818fcc839797a8017e76b8b66b323651c304cff641a83a56ae9943c6')
 

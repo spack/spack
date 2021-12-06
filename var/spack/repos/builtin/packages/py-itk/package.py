@@ -89,18 +89,17 @@ class PyItk(Package):
     extends('python')
     depends_on('py-pip', type='build')
 
-    depends_on('python@3.5.0:3.5.999', when='@5.1.1-cp35', type=('build', 'run'))
-    depends_on('python@3.6.0:3.6.999', when='@5.1.1-cp36,5.1.2-cp36', type=('build', 'run'))
-    depends_on('python@3.7.0:3.7.999', when='@5.1.1-cp37,5.1.2-cp37', type=('build', 'run'))
-    depends_on('python@3.8.0:3.8.999', when='@5.1.1-cp38,5.1.2-cp38', type=('build', 'run'))
-    depends_on('python@3.9.0:3.9.999', when='@5.1.2-cp39', type=('build', 'run'))
+    depends_on('python@3.5.0:3.5', when='@5.1.1-cp35', type=('build', 'run'))
+    depends_on('python@3.6.0:3.6', when='@5.1.1-cp36,5.1.2-cp36', type=('build', 'run'))
+    depends_on('python@3.7.0:3.7', when='@5.1.1-cp37,5.1.2-cp37', type=('build', 'run'))
+    depends_on('python@3.8.0:3.8', when='@5.1.1-cp38,5.1.2-cp38', type=('build', 'run'))
+    depends_on('python@3.9.0:3.9', when='@5.1.2-cp39', type=('build', 'run'))
 
-    depends_on('itk@5.1.1', when='@5.1.1-cp35:5.1.1-cp39', type='run')
-    depends_on('itk@5.1.2', when='@5.1.2-cp35:5.1.2-cp39', type='run')
+    depends_on('py-setuptools', type='run')
 
     for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
                  if str(x.family) != 'x86_64']):
-        conflicts('target={0}:'.format(t), msg='py-itk is available x86_64 only')
+        conflicts('target={0}:'.format(t), msg='py-itk is available for x86_64 only')
 
     def install(self, spec, prefix):
         pip = which('pip')

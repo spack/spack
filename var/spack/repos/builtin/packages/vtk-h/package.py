@@ -68,7 +68,7 @@ class VtkH(Package, CudaPackage):
     variant("contourtree", default=False, description="Enable contour tree support")
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")

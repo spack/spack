@@ -80,3 +80,9 @@ def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
     # of a custom __getattr__ implementation
     nms = spack.repo.SpackNamespace('spack.pkg.builtin.mock')
     assert hasattr(nms, attr_name) == exists
+
+
+@pytest.mark.regression('24552')
+def test_all_package_names_is_cached_correctly():
+    assert 'mpi' in spack.repo.all_package_names(include_virtuals=True)
+    assert 'mpi' not in spack.repo.all_package_names(include_virtuals=False)

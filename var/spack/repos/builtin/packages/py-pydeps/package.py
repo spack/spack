@@ -13,6 +13,6 @@ class PyPydeps(PythonPackage):
     version('1.7.1', sha256='7eeb8d0ec2713befe81dd0d15eac540e843b1daae13613df1c572528552d6340')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-stdlib-list', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))

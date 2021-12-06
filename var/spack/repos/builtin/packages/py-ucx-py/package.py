@@ -17,7 +17,7 @@ class PyUcxPy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-cython@0.29.14:2.999.999', type='build')
+    depends_on('py-cython@0.29.14:2', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
     depends_on('py-pynvml', type=('build', 'run'))

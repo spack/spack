@@ -12,7 +12,7 @@ class RQuantmod(RPackage):
     Specify, build, trade, and analyse quantitative financial trading
     strategies."""
 
-    homepage = "http://www.quantmod.com/"
+    homepage = "https://www.quantmod.com/"
     url      = "https://cloud.r-project.org/src/contrib/quantmod_0.4-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quantmod"
 

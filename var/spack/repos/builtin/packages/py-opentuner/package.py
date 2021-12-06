@@ -14,6 +14,7 @@ class PyOpentuner(PythonPackage):
 
     maintainers = ['matthiasdiener']
 
+    version('0.8.7', commit='070c5ce')
     version('0.8.2', commit='8e720a2')
     version('0.8.0', commit='4cb9135')
 

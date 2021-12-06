@@ -40,11 +40,11 @@ class GaussianView(Package):
         description='Use gaussian-src instead of gaussian (prebuilt binary)'
     )
 
-    depends_on('gaussian@16-B.01', type='run', when='@:6.0.99')
+    depends_on('gaussian@16-B.01', type='run', when='@:6.0')
     depends_on('gaussian@16-C.01', type='run', when='~gaussian-src@6.1:')
     depends_on('gaussian-src@16-C.01', type='run', when='+gaussian-src@6.1:')
 
-    conflicts('+gaussian-src', when='@:6.0.99')
+    conflicts('+gaussian-src', when='@:6.0')
 
     depends_on('libx11', type=('run', 'link'))
     depends_on('libxext', type=('run', 'link'))
@@ -101,7 +101,7 @@ files as documented here:
     https://spack.readthedocs.io/en/latest/build_settings.html#package-permissions"""
                  .format(perm_script_path))
 
-    @when('@:6.0.99')
+    @when('@:6.0')
     def setup_run_environment(self, env):
         env.set('GV_DIR', self.prefix)
 

@@ -20,6 +20,7 @@ class LlvmAmdgpu(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
     version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
     version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
     version('4.1.0', sha256='244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae')
@@ -30,11 +31,11 @@ class LlvmAmdgpu(CMakePackage):
     version('3.7.0', sha256='3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b')
     version('3.5.0', sha256='4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
 
-    depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
+    depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
     depends_on('python', type='build')
     depends_on('z3', type='link')
@@ -60,6 +61,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('4.3.1',  'a7291813168e500bfa8aaa5d1dccf5250764ddfe27535def01b51eb5021d4592'),
         ('4.3.0',  '055a67e63da6491c84cd45865500043553fb33c44d538313dd87040a6f3826f2'),
         ('4.2.0',  '34a2ac39b9bb7cfa8175cbab05d30e7f3c06aaffce99eed5f79c616d0f910f5f'),
         ('4.1.0',  'f5f5aa6bfbd83ff80a968fa332f80220256447c4ccb71c36f1fbd2b4a8e9fc1b'),

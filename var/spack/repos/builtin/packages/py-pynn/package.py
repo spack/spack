@@ -11,7 +11,7 @@ class PyPynn(PythonPackage):
         network models
     """
 
-    homepage = "http://neuralensemble.org/PyNN/"
+    homepage = "https://neuralensemble.org/PyNN/"
     pypi = "PyNN/PyNN-0.8.3.tar.gz"
     git      = "https://github.com/NeuralEnsemble/PyNN.git"
 

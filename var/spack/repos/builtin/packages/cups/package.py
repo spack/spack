@@ -19,6 +19,7 @@ class Cups(AutotoolsPackage):
     version('2.2.3', sha256='66701fe15838f2c892052c913bde1ba106bbee2e0a953c955a62ecacce76885f')
 
     depends_on('gnutls')
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         args = ['--enable-gnutls', '--with-components=core']

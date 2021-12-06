@@ -2,10 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import re
 
-from spack.architecture import OperatingSystem
+from ._operating_system import OperatingSystem
 
 
 class LinuxDistro(OperatingSystem):
@@ -19,10 +18,8 @@ class LinuxDistro(OperatingSystem):
     def __init__(self):
         try:
             # This will throw an error if imported on a non-Linux platform.
-            from external.distro import linux_distribution
-            distname, version, _ = linux_distribution(
-                full_distribution_name=False)
-            distname, version = str(distname), str(version)
+            import external.distro
+            distname, version = external.distro.id(), external.distro.version()
         except ImportError:
             distname, version = 'unknown', ''
 

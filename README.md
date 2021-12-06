@@ -4,6 +4,7 @@
 [![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
+[![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
@@ -26,7 +27,7 @@ for examples and highlights.
 To install spack and your first package, make sure you have Python.
 Then:
 
-    $ git clone https://github.com/spack/spack.git
+    $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
     $ cd spack/bin
     $ ./spack install zlib
 
@@ -123,6 +124,9 @@ If you are referencing Spack in a publication, please cite the following paper:
    Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
    [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
+
+On GitHub, you can copy this citation in APA or BibTeX format via the "Cite this repository"
+button. Or, see the comments in `CITATION.cff` for the raw BibTeX.
 
 License
 ----------------

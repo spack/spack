@@ -19,5 +19,5 @@ class PyPythonCertifiWin32(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-wrapt@1.10.4:', type=('build', 'run'))
-    depends_on('py-wincertstore', type=('build', 'run'), when='^python@:3.3.999')
+    depends_on('py-wincertstore', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-certifi', type=('build', 'run'))

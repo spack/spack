@@ -66,7 +66,7 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     # SAGA-GIS requires projects.h from proj
     depends_on('proj')
     # https://sourceforge.net/p/saga-gis/bugs/271/
-    depends_on('proj@:5', when='@:7.2.999')
+    depends_on('proj@:5', when='@:7.2')
 
     # Saga-Gis depends on legacy opencv API removed in opencv 4.x
     depends_on('opencv@:3', when='+opencv')
@@ -78,8 +78,8 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     # write support for grib2 is available since 2.3.0 (https://gdal.org/drivers/raster/grib.html)
     depends_on('gdal@2.3:+grib+hdf5+netcdf')
 
-    depends_on('gdal@2.3:2.4+grib+hdf5+netcdf', when='@:7.2.999')
-    depends_on('libgeotiff@:1.4', when='@:7.2.999')
+    depends_on('gdal@2.3:2.4+grib+hdf5+netcdf', when='@:7.2')
+    depends_on('libgeotiff@:1.4', when='@:7.2')
 
     # FIXME Saga-Gis uses a wrong include path
     # depends_on('qhull', when='~triangle')

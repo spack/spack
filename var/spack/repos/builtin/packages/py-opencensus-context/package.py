@@ -14,7 +14,7 @@ class PyOpencensusContext(Package):
 
     extends('python')
     depends_on('py-pip', type='build')
-    depends_on('py-contextvars', when='^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-contextvars', when='^python@3.6.0:3.6', type=('build', 'run'))
 
     def install(self, spec, prefix):
         pip = which('pip')

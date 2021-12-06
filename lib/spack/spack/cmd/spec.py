@@ -28,7 +28,8 @@ for further documentation regarding the spec syntax, see:
     spack help --spec
 """
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status'])
+        subparser, ['long', 'very_long', 'install_status', 'reuse']
+    )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
         const='yaml', help='print concrete spec as YAML')
@@ -64,7 +65,7 @@ def spec(parser, args):
     name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
     fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
     install_status_fn = spack.spec.Spec.install_status
-    kwargs = {
+    tree_kwargs = {
         'cover': args.cover,
         'format': name_fmt + fmt,
         'hashlen': None if args.very_long else 7,
@@ -81,11 +82,15 @@ def spec(parser, args):
     if not args.specs:
         tty.die("spack spec requires at least one spec")
 
+    concretize_kwargs = {
+        'reuse': args.reuse
+    }
+
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
         if args.format:
             if spec.name in spack.repo.path or spec.virtual:
-                spec.concretize()
+                spec.concretize(**concretize_kwargs)
 
             # The user can specify the hash type to use
             hash_type = getattr(ht, args.hash_type)
@@ -98,13 +103,13 @@ def spec(parser, args):
             continue
 
         with tree_context():
-            kwargs['hashes'] = False  # Always False for input spec
+            tree_kwargs['hashes'] = False  # Always False for input spec
             print("Input spec")
             print("--------------------------------")
-            print(spec.tree(**kwargs))
+            print(spec.tree(**tree_kwargs))
 
-            kwargs['hashes'] = args.long or args.very_long
+            tree_kwargs['hashes'] = args.long or args.very_long
             print("Concretized")
             print("--------------------------------")
-            spec.concretize()
-            print(spec.tree(**kwargs))
+            spec.concretize(**concretize_kwargs)
+            print(spec.tree(**tree_kwargs))

@@ -14,7 +14,7 @@ class RDt(RPackage):
     library has been included in this R package. The package name 'DT' is an
     abbreviation of 'DataTables'."""
 
-    homepage = "http://rstudio.github.io/DT"
+    homepage = "https://rstudio.github.io/DT"
     url      = "https://cloud.r-project.org/src/contrib/DT_0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/DT"
 

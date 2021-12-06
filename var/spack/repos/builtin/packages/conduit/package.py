@@ -33,9 +33,10 @@ class Conduit(CMakePackage):
     scientific data in C++, C, Fortran, and Python. It is used for data
     coupling between packages in-core, serialization, and I/O tasks."""
 
-    homepage = "http://software.llnl.gov/conduit"
+    homepage = "https://software.llnl.gov/conduit"
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
+    tags     = ['radiuss', 'e4s']
 
     version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
@@ -117,10 +118,13 @@ class Conduit(CMakePackage):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8.999~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8.999~shared~cxx", when="+hdf5+hdf5_compat~shared")
+    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
+    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+    # we need to hand this to conduit so it can properly
+    # handle downstream linking of zlib reqed by hdf5
+    depends_on("zlib", when="+hdf5")
 
     ###############
     # Silo
@@ -166,6 +170,11 @@ class Conduit(CMakePackage):
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
     patch('fj_flags.patch', when='%fj')
+
+    # Add missing include for numeric_limits
+    # https://github.com/LLNL/conduit/pull/773
+    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
+          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
 
     ###################################
     # build phases used by this package
@@ -514,6 +523,7 @@ class Conduit(CMakePackage):
 
         if "+hdf5" in spec:
             cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 

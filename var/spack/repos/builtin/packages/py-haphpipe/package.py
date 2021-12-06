@@ -19,7 +19,7 @@ class PyHaphpipe(PythonPackage):
 
     # Deps. taken from
     # https://github.com/bioconda/bioconda-recipes/blob/master/recipes/haphpipe/meta.yaml
-    # http://bioconda.github.io/recipes/haphpipe/README.html
+    # https://bioconda.github.io/recipes/haphpipe/README.html
     # https://github.com/gwcbi/haphpipe/blob/master/environment.yml
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))

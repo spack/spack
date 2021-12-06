@@ -7,7 +7,7 @@ from spack import *
 
 
 class Ssht(CMakePackage):
-    """ssht: Spin spherical harmonic transforms
+    """ssht: Spin spherical harmonic transforms.
 
     The SSHT code provides functionality to perform fast and exact
     spin spherical harmonic transforms based on the sampling theorem
@@ -21,6 +21,7 @@ class Ssht(CMakePackage):
 
     maintainers = ['eschnett']
 
+    version('1.5.1', sha256='f0b6fb6a1de40354fcf4eafe09b953c96a72ba9c533a42e290802e93cd14170c')
     version('1.5.0', sha256='ff42103463c973a11da84b757d2a6661679c8a60745e44f0ccf697f88593083a')
     version('1.4.0', sha256='b33f1b763a240df773a1900139aad6f6b5c676bb2b64a8c1062077fd95c08769')
     version('1.3.7', sha256='947c11b104734acb124171ff5115d14279b4d09bc297ac989204633919df422e')
