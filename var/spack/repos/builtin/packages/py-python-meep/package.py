@@ -31,12 +31,7 @@ class PyPythonMeep(PythonPackage):
     # or else it can't handle newer C++ compilers and flags.
     depends_on('swig@1.3.39:3.0.2')
 
-    phases = ['clean', 'build_ext', 'install', 'bdist']
-
-    def setup_file(self):
-        return 'setup-mpi.py' if '+mpi' in self.spec else 'setup.py'
-
-    def common_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
             os.path.join(
@@ -63,12 +58,3 @@ class PyPythonMeep(PythonPackage):
         # meep_common.i:89: Error: Unable to find 'meep.hpp'
 
         return [include_flags, library_flags]
-
-    def clean_args(self, spec, prefix):
-        return ['--all']
-
-    def build_ext_args(self, spec, prefix):
-        return self.common_args(spec, prefix)
-
-    def bdist_args(self, spec, prefix):
-        return self.common_args(spec, prefix)

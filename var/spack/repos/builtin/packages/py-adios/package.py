@@ -52,13 +52,6 @@ class PyAdios(PythonPackage):
     phases = ['build_clib', 'install']
     build_directory = 'wrappers/numpy'
 
-    def setup_file(self):
-        """Returns the name of the setup file to use."""
-        if '+mpi' in self.spec:
-            return 'setup_mpi.py'
-        else:
-            return 'setup.py'
-
     def build_clib(self, spec, prefix):
         # calls: make CYTHON=y [MPI=y] python
         args = ['CYTHON=y']
