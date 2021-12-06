@@ -62,6 +62,24 @@ def test_log_python_output_without_echo(capfd, tmpdir):
         assert capfd.readouterr()[0] == ''
 
 
+def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
+    with tmpdir.as_cwd():
+        with log_output('foo.txt'):
+            sys.stdout.buffer.write(b'\xc3\x28\n')
+
+        # python2 and 3 treat invalid UTF-8 differently
+        if sys.version_info.major == 2:
+            expected = b'\xc3(\n'
+        else:
+            expected = b'<line lost: output was not encoded as UTF-8>\n'
+        with open('foo.txt', 'rb') as f:
+            written = f.read()
+            assert written == expected
+
+        # nothing on stdout or stderr
+        assert capfd.readouterr()[0] == ''
+
+
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
         # echo two lines
@@ -429,10 +447,6 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
     (mock_shell_v_v, nullcontext),
     (mock_shell_v_v_no_termios, no_termios),
 ])
-@pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where this fails often"
-)
 def test_foreground_background_output(
         test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""

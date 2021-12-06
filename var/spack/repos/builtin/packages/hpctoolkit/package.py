@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -19,6 +21,8 @@ class Hpctoolkit(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     tags = ['e4s']
+
+    test_requires_compiler = True
 
     version('develop', branch='develop')
     version('master',  branch='master')
@@ -202,3 +206,36 @@ class Hpctoolkit(AutotoolsPackage):
         if '+viewer' in spec:
             env.prepend_path('PATH', spec['hpcviewer'].prefix.bin)
             env.prepend_path('MANPATH', spec['hpcviewer'].prefix.share.man)
+
+    # Build tests (spack install --run-tests).  Disable the default
+    # spack tests and run autotools 'make check', but only from the
+    # tests directory.
+    build_time_test_callbacks = []
+    install_time_test_callbacks = []
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        if self.spec.satisfies('@master'):
+            with working_dir('tests'):
+                make('check')
+        else:
+            tty.warn('spack test for hpctoolkit requires branch master')
+
+    # Post-Install tests (spack test run).  These are the same tests
+    # but with a different Makefile that works outside the build
+    # directory.
+    @run_after('install')
+    def copy_test_files(self):
+        if self.spec.satisfies('@master'):
+            self.cache_extra_test_sources(['tests'])
+
+    def test(self):
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
+        if self.spec.satisfies('@master'):
+            with working_dir(test_dir):
+                make('-f', 'Makefile.spack', 'all')
+                self.run_test('./run-sort', status=[0], installed=False,
+                              purpose='selection sort unit test')
+        else:
+            tty.warn('spack test for hpctoolkit requires branch master')

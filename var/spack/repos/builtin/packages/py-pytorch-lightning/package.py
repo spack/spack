@@ -12,7 +12,7 @@ class PyPytorchLightning(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/pytorch-lightning"
     pypi     = "pytorch-lightning/pytorch-lightning-1.2.10.tar.gz"
 
-    version('1.5.0', sha256='5bc28022f749d6a7644027ca0428bc162c9ab401cdea78b264d14f5018430f3b')
+    version('1.5.3', sha256='a206169a0c4356366a7edadb5ebd2f38e9a611ff78265ce93b767662682f5620')
     version('1.4.1', sha256='1d1128aeb5d0e523d2204c4d9399d65c4e5f41ff0370e96d694a823af5e8e6f3')
     version('1.4.0', sha256='6529cf064f9dc323c94f3ce84b56ee1a05db1b0ab17db77c4d15aa36e34da81f')
     version('1.3.8', sha256='60b0a3e464d394864dae4c8d251afa7aa453644a19bb7672f5ee400343cdf7b0')
@@ -22,9 +22,6 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.17.2:', when='@1.3:', type=('build', 'run'))
     depends_on('py-numpy@1.16.6:', when='@:1.2', type=('build', 'run'))
-    # TODO: add patch and remove +distributed once the following issue is resolved:
-    # https://github.com/PyTorchLightning/pytorch-lightning/issues/10348
-    depends_on('py-torch@1.6:+distributed', when='@1.5.0', type=('build', 'run'))
     depends_on('py-torch@1.6:', when='@1.4:', type=('build', 'run'))
     depends_on('py-torch@1.4:', when='@:1.3', type=('build', 'run'))
     depends_on('py-future@0.17.1:', type=('build', 'run'))

@@ -28,6 +28,7 @@ class RBrms(RPackage):
     homepage = "https://github.com/paul-buerkner/brms"
     cran     = "brms"
 
+    version('2.16.3', sha256='68302b10b5264f72d163d01c17792c002306cf37f0ee778dcec4c7e118f923e1')
     version('2.16.1', sha256='749efbd9fb061fe207cf2e729c1387d9a8538b922f12ceec4e82a9f8dd9c1bc4')
     version('2.15.0', sha256='c11701d1d8758590b74bb845b568b736e4455a81b114c7dfde0b27b7bd1bcc2f')
 
@@ -42,7 +43,7 @@ class RBrms(RPackage):
     depends_on('r-rstantools@2.1.1:', type=('build', 'run'))
     depends_on('r-bayesplot@1.5.0:', type=('build', 'run'))
     depends_on('r-shinystan@2.4.0:', type=('build', 'run'))
-    depends_on('r-projpred@2.0.0:', type=('build', 'run'))
+    depends_on('r-projpred@2.0.0:', when='@:2.16.1', type=('build', 'run'))
     depends_on('r-bridgesampling@0.3-0:', type=('build', 'run'))
     depends_on('r-glue@1.3.0:', type=('build', 'run'))
     depends_on('r-future@1.19.0:', type=('build', 'run'))
