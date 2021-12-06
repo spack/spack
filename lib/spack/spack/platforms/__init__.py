@@ -32,7 +32,7 @@ real_host = _host
 #: context manager.
 host = _host
 
-wrapper_ext = _wrapper_extension()
+wrapper_ext = _wrapper_extension
 
 
 class _PickleableCallable(object):

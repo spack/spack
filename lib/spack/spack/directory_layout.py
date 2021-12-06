@@ -88,7 +88,7 @@ class DirectoryLayout(object):
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
         self.manifest_file_name  = 'install_manifest.json'
-        self.compiler_info = "compilers"
+        self.compiler_env        = "env"
 
     @property
     def hidden_file_regexes(self):
@@ -214,11 +214,11 @@ class DirectoryLayout(object):
     def env_metadata_path(self, spec):
         return os.path.join(self.metadata_path(spec), "install_environment.json")
 
+    def compiler_metadata_path(self, spec):
+        return os.path.join(self.metadata_path(spec), self.compiler_env)
+
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
-
-    def compiler_info_path(self, spec):
-        return os.path.join(self.metadata_path(spec), self.compiler_info)
 
     def create_install_directory(self, spec):
         _check_concrete(spec)
@@ -234,7 +234,7 @@ class DirectoryLayout(object):
         perms = get_package_dir_permissions(spec)
 
         fs.mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
-        fs.mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+        fs.mkdirp(self.compiler_metadata_path(spec), mode=perms, group=group)  # in prefix
 
         self.write_spec(spec, self.spec_file_path(spec))
 

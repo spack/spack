@@ -1058,7 +1058,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if os.path.exists(old_filename):
             return old_filename
         else:
-            return os.path.join(self.stage.path, _spack_build_envfile)
+            return os.path.join(self.stage.env_path, _spack_build_envfile)
 
     @property
     def env_mods_path(self):
@@ -1066,12 +1066,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Return the build environment modifications file path associated with
         staging.
         """
-        return os.path.join(self.stage.path, _spack_build_envmodsfile)
+        return os.path.join(self.stage.env_path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
         """Return the install metadata directory."""
         return spack.store.layout.metadata_path(self.spec)
+
+    @property
+    def compiler_metadata_dir(self):
+        """Return the install compiler metadata directory"""
+        return spack.store.layout.compiler_metadata_path(self.spec)
 
     @property
     def install_env_path(self):
@@ -1084,7 +1089,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if os.path.exists(old_filename):
             return old_filename
         else:
-            return os.path.join(self.metadata_dir, _spack_build_envfile)
+            return os.path.join(self.compiler_metadata_dir, _spack_build_envfile)
 
     @property
     def log_path(self):
@@ -1121,7 +1126,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def configure_args_path(self):
         """Return the configure args file path associated with staging."""
-        return os.path.join(self.stage.path, _spack_configure_argsfile)
+        return os.path.join(self.stage.env_path, _spack_configure_argsfile)
 
     @property
     def times_log_path(self):

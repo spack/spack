@@ -243,6 +243,52 @@ def clean_environment():
     return env
 
 
+def instantiate_compiler_env(pkg):
+    """
+    Generate per spec compiler wrapper
+
+    Affix wrapper to spec stage
+    """
+    # local scope alias path join
+    join = os.path.join
+
+    # establish compiler env and metadata directories
+    wrapper_root = spack.paths.build_env_path.replace('/','\\')
+    metadata_root = pkg.compiler_metadata_dir
+    stage_metadata_root = join(pkg.stage.path, "env")
+    compiler_env = os.path.dirname(pkg.compiler.link_paths['cc'].replace('/','\\'))
+    compiler_env_root = join(wrapper_root, compiler_env)
+
+    # Get wrapper extension, name and compiler specific metadata routes
+    wrapper_ext = spack.platforms.wrapper_ext()
+    compiler_name = os.path.basename(compiler_env)
+    metadata_compiler_root = join(metadata_root, compiler_name)
+    stage_metadata_compiler = join(stage_metadata_root, compiler_name)
+    for d in (metadata_compiler_root, stage_metadata_compiler):
+        if not os.path.isdir(d):
+            os.makedirs(d)
+
+    # setup wrapper files to create pkg local compiler env
+    get_wrapper = lambda x: [join(x,f) for f in os.listdir(x) if os.path.isfile(join(x,f))]
+    compiler_wrapper_files = get_wrapper(compiler_env_root)
+    root_wrapper_files = get_wrapper(wrapper_root)
+
+    # helper to write wrapper files
+    def write_wrapper(files, pth):
+        for f in files:
+            f_name = os.path.basename(f)+wrapper_ext
+            install(f, join(pth, f_name))
+
+    # install pkg local wrapper files into stage and install dirs
+    write_wrapper(root_wrapper_files, metadata_root)
+    write_wrapper(root_wrapper_files, stage_metadata_root)
+    write_wrapper(compiler_wrapper_files, metadata_compiler_root)
+    write_wrapper(compiler_wrapper_files, stage_metadata_compiler)
+
+    # install local env loader
+    # write_wrapper()
+
+
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
@@ -463,6 +509,9 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
 
+    # Let the wrapper know Spack is driving the build
+    env.set('SPACK_RUN','TRUE')
+
 
 def determine_number_of_jobs(
         parallel=False, command_line=None, config_default=None, max_cpus=None):
@@ -533,6 +582,11 @@ def _set_variables_for_single_module(pkg, module):
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
 
+
+    ####
+    ####
+    ####
+    ####
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
     m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
@@ -774,6 +828,10 @@ def setup_package(pkg, dirty, context='build'):
             "'context' must be one of ['build', 'test'] - got: {0}"
             .format(context))
 
+    ####
+    ####
+    ####
+    ####
     set_module_variables_for_package(pkg)
 
     # Keep track of env changes from packages separately, since we want to
@@ -781,6 +839,10 @@ def setup_package(pkg, dirty, context='build'):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
+    ####
+    ####
+    ####
+    ####
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
@@ -788,9 +850,17 @@ def setup_package(pkg, dirty, context='build'):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
+    ####
+    ####
+    ####
+    ####
     env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
+    ####
+    ####
+    ####
+    ####
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
@@ -1023,7 +1093,9 @@ def get_cmake_prefix_path(pkg):
         x.prefix for x in ordered_build_link_deps)
     return build_link_prefixes
 
-
+###############
+################
+###############
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 
@@ -1090,7 +1162,9 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
-
+########
+########    - primary entrypoint
+########
 def start_build_process(pkg, function, kwargs):
     """Create a child process to do part of a spack build.
 
@@ -1141,7 +1215,6 @@ def start_build_process(pkg, function, kwargs):
                                                                       'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
-
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,

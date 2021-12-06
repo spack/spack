@@ -408,6 +408,11 @@ class Stage(object):
         """Returns the well-known source directory path."""
         return os.path.join(self.path, _source_path_subdir)
 
+    @property
+    def env_path(self):
+        """Returns the path of the stage env path."""
+        return os.path.join(self.path, 'env')
+
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
 
@@ -746,6 +751,10 @@ class StageComposite(pattern.Composite):
     @property
     def path(self):
         return self[0].path
+
+    @property
+    def env_path(self):
+        return self[0].env_path
 
     @property
     def archive_file(self):

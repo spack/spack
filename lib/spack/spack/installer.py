@@ -56,7 +56,11 @@ import spack.paths
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.util.environment import EnvironmentModifications, dump_environment
+from spack.build_environment import instantiate_compiler_env
+from spack.util.environment import (
+    EnvironmentModifications,
+    dump_environment
+)
 from spack.util.executable import which
 from spack.util.timer import Timer
 
@@ -152,20 +156,6 @@ def _handle_external_and_upstream(pkg, explicit):
         return True
 
     return False
-
-
-def _instantiate_compiler_wrapper(pkg):
-    """
-    Generate per spec compiler wrapper
-
-    Affix wrapper to spec stage
-    """
-    wrapper_root = spack.paths.build_env_path
-    wrapper_file = pkg.compiler.link_paths['cc']
-    wrapper_ext = spack.platforms.wrapper_ext
-    wrapper = os.path.join(wrapper_root, wrapper_file)
-    wrapper_dest = os.path.join(pkg.stage.source_path, "..", "cc")
-    fs.copy(wrapper, wrapper_dest + wrapper_ext)
 
 
 def _do_fake_install(pkg):
@@ -578,6 +568,10 @@ def log(pkg):
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
+
+    # Archive the compiler-build env
+    wrapper_env_dir = spack.store.layout.compiler_metadata_path(pkg.spec)
+    fs.install_tree(pkg.stage.env_path, wrapper_env_dir)
 
     # Finally, archive files that are specific to each package
     with fs.working_dir(pkg.stage.path):
@@ -1364,7 +1358,7 @@ class PackageInstaller(object):
                 os.chmod(pkg.spec.prefix, perms)
 
             # Ensure the metadata path exists as well
-            fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
+            fs.mkdirp(spack.store.layout.compiler_metadata_path(pkg.spec), mode=perms)
 
         # Always write host environment - we assume this can change
         spack.store.layout.write_host_environment(pkg.spec)
@@ -1866,9 +1860,8 @@ class BuildProcessInstaller(object):
         with fs.working_dir(pkg.stage.source_path):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
-
-            # Copy compiler wrapper to stage and (establish requisite env variables)
-            _instantiate_compiler_wrapper(pkg)
+            # Copy compiler wrapper to stage
+            instantiate_compiler_env(pkg)
 
             # Save just the changes to the environment.  This file can be
             # safely installed, since it does not contain secret variables.
