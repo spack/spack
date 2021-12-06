@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Hiop(CMakePackage, CudaPackage):
+class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     """HiOp is an optimization solver for solving certain mathematical
     optimization problems expressed as nonlinear programming problems.
     HiOp is a lightweight HPC solver that leverages application"s existing
@@ -18,6 +18,8 @@ class Hiop(CMakePackage, CudaPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
+    version('0.5.2', commit='662ad76dee1f501f648a8bec9a490cb5881789e9')
     version('0.5.1', commit='6789bbb55824e68e428c2df1009d647af81f9cf1')
     version('0.5.0', commit='a39da8025037c7c8ae2eb31234eb80cc73bec2af')
     version('0.4.6', commit='b72d163d52c9225c3196ceb2baebdc7cf09a69de')
@@ -60,15 +62,24 @@ class Hiop(CMakePackage, CudaPackage):
 
     depends_on('mpi', when='+mpi')
 
-    depends_on('magma', when='+cuda')
+    depends_on('magma+cuda', when='+cuda')
+    depends_on('magma+rocm', when='+rocm')
     depends_on('magma@2.5.4:', when='@0.4:+cuda')
     depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
+    depends_on('magma@2.5.4:', when='@0.4:+rocm')
+    depends_on('magma@2.6.1:', when='@0.4.6:+rocm')
 
     depends_on('raja+openmp', when='+raja')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
     depends_on('raja+cuda', when='+raja+cuda')
+    depends_on('raja+rocm', when='+raja+rocm')
     depends_on('umpire', when='+raja')
     depends_on('umpire+cuda~shared', when='+raja+cuda')
+    depends_on('umpire+rocm', when='+raja+rocm')
+    depends_on('umpire@6.0.0:', when='@0.5.0:+raja')
+    depends_on('hip', when='+rocm')
+    depends_on('hipblas', when='+rocm')
+    depends_on('hipsparse', when='+rocm')
 
     depends_on('suite-sparse', when='+kron')
 
@@ -87,6 +98,10 @@ class Hiop(CMakePackage, CudaPackage):
         args = []
         spec = self.spec
 
+        if spec.satisfies('+rocm') or spec.satisfies('+cuda'):
+            args.append('-DHIOP_USE_GPU=ON')
+            args.append('-DHIOP_USE_MAGMA=ON')
+
         args.extend([
             self.define('HIOP_BUILD_STATIC', True),
             self.define('LAPACK_FOUND', True),
@@ -95,9 +110,8 @@ class Hiop(CMakePackage, CudaPackage):
             self.define_from_variant('HIOP_BUILD_SHARED', 'shared'),
             self.define_from_variant('HIOP_USE_MPI', 'mpi'),
             self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'),
-            self.define_from_variant('HIOP_USE_GPU', 'cuda'),
             self.define_from_variant('HIOP_USE_CUDA', 'cuda'),
-            self.define_from_variant('HIOP_USE_MAGMA', 'cuda'),
+            self.define_from_variant('HIOP_USE_HIP', 'rocm'),
             self.define_from_variant('HIOP_USE_RAJA', 'raja'),
             self.define_from_variant('HIOP_USE_UMPIRE', 'raja'),
             self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'),
