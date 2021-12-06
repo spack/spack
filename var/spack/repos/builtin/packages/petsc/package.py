@@ -617,9 +617,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             make('ex50', parallel=False)
             for feature, featureopt in testdict.items():
                 if not feature or feature in spec:
+                    purpose_str = 'test: run ex50 example with {0}'.format(feature)
                     self.run_test(runexe,
-                                  options=[runopt + testexe + featureopt],
-                                  purpose='test: run ex50 example with {0}'.format(feature),
+                                  options=runopt + testexe + featureopt,
+                                  purpose=purpose_str,
                                   work_dir=w_dir)
             if '+cuda' in spec:
                 make('ex7', parallel=False)
@@ -627,9 +628,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                            '-sub_pc_factor_mat_solver_type', 'cusparse',
                            '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
                            '-use_gpu_aware_mpi', '0']
+                purpose_str = 'test: run ex7 example with +cuda'
                 self.run_test(runexe,
-                              options=[runopt + testexe],
-                              purpose='test: run ex50 example with {0}'.format(feature),
+                              options=runopt + testexe,
+                              purpose=purpose_str,
                               work_dir=w_dir)
             make('clean', parallel=False)
 
@@ -646,8 +648,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
                            '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
                            '-snes_monitor']
+                purpose_str = 'run ex3k example with +kokkos'
                 self.run_test(runexe,
-                              options=[runopt + testexe],
-                              purpose='test: run ex3k example with +kokkos',
+                              options=runopt + testexe,
+                              purpose=purpose_str,
                               work_dir=w_dir)
             make('clean', parallel=False)
