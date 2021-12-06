@@ -139,10 +139,7 @@ class Rocblas(CMakePackage):
             self.define('Tensile_COMPILER', 'hipcc'),
             self.define('Tensile_LOGIC', 'asm_full'),
             self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
-            self.define(
-                'BUILD_WITH_TENSILE_HOST',
-                'ON' if '@3.7.0:' in self.spec else 'OFF'
-            )
+            self.define('BUILD_WITH_TENSILE_HOST', '@3.7.0:' in self.spec)
         ]
         if self.run_tests:
             args.append(self.define('LINK_BLIS', 'OFF'))
