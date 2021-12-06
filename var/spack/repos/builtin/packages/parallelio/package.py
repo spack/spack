@@ -36,7 +36,7 @@ class Parallelio(CMakePackage):
 
     def cmake_args(self):
         define = self.define
-        define_from_veriant = self.define_from_variant
+        define_from_variant = self.define_from_variant
         spec = self.spec
         env['CC'] = spec['mpi'].mpicc
         env['FC'] = spec['mpi'].mpifc
