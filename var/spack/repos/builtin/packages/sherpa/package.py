@@ -66,6 +66,7 @@ class Sherpa(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('texinfo',  type='build')
     depends_on('sqlite')
 
     depends_on('mpi',       when='+mpi')
@@ -97,7 +98,6 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-binreloc')
         args.append('--enable-static')
         args.append('--enable-hepevtsize=200000')
-        args.append('--disable-manual')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         args.extend(self.enable_or_disable('mpi'))
         if self.spec.satisfies('+python'):
