@@ -14,8 +14,8 @@ class RCrayon(RPackage):
     'chalk' 'JavaScript' project."""
 
     homepage = "https://github.com/r-lib/crayon#readme"
-    url      = "https://cloud.r-project.org/src/contrib/crayon_1.3.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/crayon"
+    cran = "crayon"
 
+    version('1.4.1', sha256='08b6e42e748d096960b2f32b7ffe690c25742e29fe14c19d1834cd6ff43029c7')
     version('1.3.4', sha256='fc6e9bf990e9532c4fcf1a3d2ce22d8cf12d25a95e4779adfa17713ed836fa68')
     version('1.3.2', sha256='9a6b75d63c05fe64baf222f1921330ceb727924bcc5fc2753ff0528d42555e68')

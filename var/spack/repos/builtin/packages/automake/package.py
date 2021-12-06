@@ -8,7 +8,7 @@ import re
 class Automake(AutotoolsPackage, GNUMirrorPackage):
     """Automake -- make file builder part of autotools"""
 
-    homepage = 'http://www.gnu.org/software/automake/'
+    homepage = 'https://www.gnu.org/software/automake/'
     gnu_mirror_path = 'automake/automake-1.15.tar.gz'
 
     version('1.16.3', sha256='ce010788b51f64511a1e9bb2a1ec626037c6d0e7ede32c1c103611b9d3cba65f')

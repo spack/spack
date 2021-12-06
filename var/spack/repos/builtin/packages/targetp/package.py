@@ -15,9 +15,9 @@ class Targetp(Package):
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
        For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html"""
+       https://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.cbs.dtu.dk/services/TargetP/"
+    homepage = "https://www.cbs.dtu.dk/services/TargetP/"
     url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 

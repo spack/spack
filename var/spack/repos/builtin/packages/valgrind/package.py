@@ -19,7 +19,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     Valgrind is Open Source / Free Software, and is freely available
     under the GNU General Public License, version 2.
     """
-    homepage = "http://valgrind.org/"
+    homepage = "https://valgrind.org/"
     sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
 

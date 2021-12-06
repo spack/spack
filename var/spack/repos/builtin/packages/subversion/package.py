@@ -44,7 +44,7 @@ class Subversion(AutotoolsPackage):
     # Installation has race cases.
     parallel = False
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
     def configure_args(self):
         spec = self.spec
         args = [

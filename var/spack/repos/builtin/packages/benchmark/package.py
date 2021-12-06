@@ -10,12 +10,13 @@ class Benchmark(CMakePackage):
     """A microbenchmark support library"""
 
     homepage = "https://github.com/google/benchmark"
-    url      = "https://github.com/google/benchmark/archive/v1.5.5.tar.gz"
+    url      = "https://github.com/google/benchmark/archive/v1.6.0.tar.gz"
     git      = "https://github.com/google/benchmark.git"
 
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
     version('develop', branch='master')
+    version('1.6.0', sha256='1f71c72ce08d2c1310011ea6436b31e39ccab8c2db94186d26657d41747c85d6')
     version('1.5.5', sha256='3bff5f237c317ddfd8d5a9b96b3eede7c0802e799db520d38ce756a2a46a18a0')
     version('1.5.4', sha256='e3adf8c98bb38a198822725c0fc6c0ae4711f16fbbf6aeb311d5ad11e5a081b5')
     version('1.5.0', sha256='3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a')

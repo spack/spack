@@ -19,6 +19,10 @@ class IntelOneapiVtune(IntelOneApiPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/vtune-profiler.html'
 
     if platform.system() == 'Linux':
+        version('2021.7.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18086/l_oneapi_vtune_p_2021.7.1.492_offline.sh',
+                sha256='4cf17078ae6e09f26f70bd9d0b726af234cc30c342ae4a8fda69941b40139b26',
+                expand=False)
         version('2021.6.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18012/l_oneapi_vtune_p_2021.6.0.411_offline.sh',
                 sha256='6b1df7da713337aa665bcc6ff23e4a006695b5bfaf71dffd305cbadca2e5560c',

@@ -335,7 +335,7 @@ merged YAML from all configuration files, use ``spack config get repos``:
    - ~/myrepo
    - $spack/var/spack/repos/builtin
 
-mNote that, unlike ``spack repo list``, this does not include the
+Note that, unlike ``spack repo list``, this does not include the
 namespace, which is read from each repo's ``repo.yaml``.
 
 ^^^^^^^^^^^^^^^^^^^^^

@@ -12,8 +12,10 @@ class File(AutotoolsPackage):
     """The file command is "a file type guesser", that is, a command-line
     tool that tells you in words what kind of data a file contains"""
 
-    homepage = "http://www.darwinsys.com/file/"
+    homepage = "https://www.darwinsys.com/file/"
     url      = "https://astron.com/pub/file/file-5.37.tar.gz"
+
+    maintainers = ['sethrj']
 
     version('5.40', sha256='167321f43c148a553f68a0ea7f579821ef3b11c27b8cbe158e4df897e4a5dd57')
     version('5.39', sha256='f05d286a76d9556243d0cb05814929c2ecf3a5ba07963f8f70bfaaa70517fad1')
@@ -22,8 +24,25 @@ class File(AutotoolsPackage):
 
     executables = ['^file$']
 
+    variant('static', default=True, description='Also build static libraries')
+
+    depends_on('bzip2')
+    depends_on('xz')
+    depends_on('zlib')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'file-(\S+)', output)
         return match.group(1) if match else None
+
+    def configure_args(self):
+        args = [
+            "--disable-dependency-tracking",
+            "--enable-fsect-man5",
+            "--enable-zlib",
+            "--enable-bzlib",
+            "--enable-xzlib",
+        ]
+        args += self.enable_or_disable('static')
+        return args

@@ -14,7 +14,9 @@ from spack.main import SpackCommand
 
 dependencies = SpackCommand('dependencies')
 
-mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
+mpis = [
+    'low-priority-provider', 'mpich', 'mpich2', 'multi-provider-mpi', 'zmpi'
+]
 mpi_deps = ['fake']
 
 

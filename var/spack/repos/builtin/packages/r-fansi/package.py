@@ -11,9 +11,9 @@ class RFansi(RPackage):
        for the effects of ANSI text formatting control sequences."""
 
     homepage = "https://cloud.r-project.org/package=fansi"
-    url      = "https://cloud.r-project.org/src/contrib/fansi_0.4.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/fansi"
+    cran = "fansi"
 
+    version('0.5.0', sha256='9d1bf8c316969c163abd3dd41cc1425b2671df9471fe806bf8783794a19ca54f')
     version('0.4.1', sha256='3c69eec803a3827e5227f9cf084976eeb738b22c7eb7665bb5faa251bce41e09')
     version('0.4.0', sha256='e104e9d01c7ff8a847f6b332ef544c0ef912859f9c6a514fe2e6f3b34fcfc209')
     version('0.3.0', sha256='dd6401d5c91ff4c45d752cceddd5379d1ae39a8a1196f236b0bc0ec6d691b88c')

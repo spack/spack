@@ -16,7 +16,7 @@ class RNmf(RPackage):
     the main interface function provides an easy way of performing parallel
     computations on multicore machines."""
 
-    homepage = "http://renozao.github.io/NMF"
+    homepage = "https://renozao.github.io/NMF"
     url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 

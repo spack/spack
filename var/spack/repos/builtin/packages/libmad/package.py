@@ -21,7 +21,7 @@ class Libmad(AutotoolsPackage):
     depends_on('m4', type='build')
 
     # Patch orignally from here, adapted to create missing files:
-    # http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libmad.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/multimedia/libmad.html
     patch('libmad-0.15.1b.patch')
 
     force_autoreconf = True

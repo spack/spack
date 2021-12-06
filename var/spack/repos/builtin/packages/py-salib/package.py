@@ -9,7 +9,7 @@ from spack import *
 class PySalib(PythonPackage):
     """Python implementations of commonly used sensitivity analysis methods."""
 
-    homepage = "http://salib.readthedocs.org"
+    homepage = "https://salib.readthedocs.org"
     pypi     = "SALib/SALib-1.4.0.1.tar.gz"
 
     maintainers = ['schmitts']

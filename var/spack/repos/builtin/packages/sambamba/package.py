@@ -9,7 +9,7 @@ from spack import *
 class Sambamba(Package):
     """Sambamba: process your BAM data faster (bioinformatics)"""
 
-    homepage = "http://lomereiter.github.io/sambamba/"
+    homepage = "https://lomereiter.github.io/sambamba/"
     git      = "https://github.com/lomereiter/sambamba.git"
 
     version('0.6.6', tag='v0.6.6', submodules=True)

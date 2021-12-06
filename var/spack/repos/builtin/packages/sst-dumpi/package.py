@@ -25,7 +25,7 @@ class SstDumpi(AutotoolsPackage):
     maintainers = ['sknigh', 'jpkenny', 'calewis']
 
     version('master', branch='master')
-    version('7.1.0', sha256='628eb3f7c2d0975461d45065f91c723d3abac756fa36af93c09f4fed195794bf')
+    version('7.1.0', sha256='37cd9e8279e7a1c342a4357b75bb8a34b0fa76a4f372d4ecdef9168bdf50a465')
     version('6.1.0', sha256='d4f6afcff5ba67fcc3a29f461afbb59855053840f5f320552a77b4e14c687bb6')
 
     depends_on('autoconf@1.68:', type='build')

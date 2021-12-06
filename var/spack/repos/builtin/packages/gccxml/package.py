@@ -10,7 +10,7 @@ class Gccxml(CMakePackage):
     """gccxml dumps an XML description of C++ source code using an extension of
     the GCC C++ compiler."""
 
-    homepage = "http://gccxml.github.io"
+    homepage = "https://gccxml.github.io"
     git      = "https://github.com/gccxml/gccxml.git"
 
     version('develop', branch='master')

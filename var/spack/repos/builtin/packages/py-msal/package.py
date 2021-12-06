@@ -17,5 +17,5 @@ class PyMsal(PythonPackage):
     version('1.0.0', sha256='ecbe3f5ac77facad16abf08eb9d8562af3bc7184be5d4d90c9ef4db5bde26340')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-requests@2.0.0:2.999', type=('build', 'run'))
-    depends_on('py-pyjwt@1.0.0:1.999+crypto', type=('build', 'run'))
+    depends_on('py-requests@2.0.0:2', type=('build', 'run'))
+    depends_on('py-pyjwt@1.0.0:1+crypto', type=('build', 'run'))

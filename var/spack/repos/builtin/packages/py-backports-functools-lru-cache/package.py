@@ -21,4 +21,4 @@ class PyBackportsFunctoolsLruCache(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm@1.15.0:', type='build')
-    depends_on('python@2.6.0:3.3.99',        type=('build', 'run'))
+    depends_on('python@2.6.0:3.3',        type=('build', 'run'))

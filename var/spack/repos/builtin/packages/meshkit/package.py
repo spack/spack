@@ -13,8 +13,8 @@ class Meshkit(AutotoolsPackage):
        meshing algorithms for use in real meshing problems, along with
        other tools commonly needed to support mesh generation"""
 
-    homepage = "http://sigma.mcs.anl.gov/meshkit-library"
-    url = "http://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
+    homepage = "https://sigma.mcs.anl.gov/meshkit-library"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
 
     version('1.5.0',       sha256='6a4c119af191e24ef40644acb7cfbe967af0678ac3412f38a943fb28d661cac7')
 

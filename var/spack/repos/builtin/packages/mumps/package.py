@@ -360,7 +360,7 @@ class Mumps(Package):
 
     @property
     def libs(self):
-        component_libs = ['*mumps*', 'pord']
+        component_libs = ['*mumps', 'mumps_common', 'pord']
         return find_libraries(['lib' + comp for comp in component_libs],
                               root=self.prefix.lib,
                               shared=('+shared' in self.spec),

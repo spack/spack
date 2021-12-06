@@ -695,20 +695,23 @@ example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
-Spack versions may also be arbitrary non-numeric strings; any string
-here will suffice; for example, ``@develop``, ``@master``, ``@local``.
-Versions are compared as follows. First, a version string is split into
-multiple fields based on delimiters such as ``.``, ``-`` etc. Then
-matching fields are compared using the rules below:
+Spack versions may also be arbitrary non-numeric strings, for example
+``@develop``, ``@master``, ``@local``.
 
-#. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > main > master > head > trunk``.
+The order on versions is defined as follows. A version string is split
+into a list of components based on delimiters such as ``.``, ``-`` etc. 
+Lists are then ordered lexicographically, where components are ordered
+as follows:
 
-#. Numbers are all less than the chosen develop-like strings above,
-   and are sorted numerically.
+#. The following special strings are considered larger than any other
+   numeric or non-numeric version component, and satisfy the following
+   order between themselves: ``develop > main > master > head > trunk``.
 
-#. All other non-numeric versions are less than numeric versions, and
-   are sorted alphabetically.
+#. Numbers are ordered numerically, are less than special strings, and
+   larger than other non-numeric components.
+
+#. All other non-numeric components are less than numeric components,
+   and are ordered alphabetically.
 
 The logic behind this sort order is two-fold:
 
@@ -729,7 +732,7 @@ Version selection
 When concretizing, many versions might match a user-supplied spec.
 For example, the spec ``python`` matches all available versions of the
 package ``python``.  Similarly, ``python@3:`` matches all versions of
-Python3.  Given a set of versions that match a spec, Spack
+Python 3 and above.  Given a set of versions that match a spec, Spack
 concretization uses the following priorities to decide which one to
 use:
 
@@ -1419,6 +1422,60 @@ other similar operations:
             ).with_default('auto').with_non_feature_values('auto'),
         )
 
+^^^^^^^^^^^^^^^^^^^^
+Conditional Variants
+^^^^^^^^^^^^^^^^^^^^
+
+The variant directive accepts a ``when`` clause. The variant will only
+be present on specs that otherwise satisfy the spec listed as the
+``when`` clause. For example, the following class has a variant
+``bar`` when it is at version 2.0 or higher.
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@2.0:', description='help message')
+
+The ``when`` clause follows the same syntax and accepts the same
+values as the ``when`` argument of
+:py:func:`spack.directives.depends_on`
+
+^^^^^^^^^^^^^^^^^^^
+Overriding Variants
+^^^^^^^^^^^^^^^^^^^
+
+Packages may override variants for several reasons, most often to
+change the default from a variant defined in a parent class or to
+change the conditions under which a variant is present on the spec.
+
+When a variant is defined multiple times, whether in the same package
+file or in a subclass and a superclass, the last definition is used
+for all attributes **except** for the ``when`` clauses. The ``when``
+clauses are accumulated through all invocations, and the variant is
+present on the spec if any of the accumulated conditions are
+satisfied.
+
+For example, consider the following package:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@1.0', description='help1')
+       variant('bar', default=True, when='platform=darwin', description='help2')
+       ...
+
+This package ``foo`` has a variant ``bar`` when the spec satisfies
+either ``@1.0`` or ``platform=darwin``, but not for other platforms at
+other versions. The default for this variant, when it is present, is
+always ``True``, regardless of which condition of the variant is
+satisfied. This allows packages to override variants in packages or
+build system classes from which they inherit, by modifying the variant
+values without modifying the ``when`` clause. It also allows a package
+to implement ``or`` semantics for a variant ``when`` clause by
+duplicating the variant definition.
+
 ------------------------------------
 Resources (expanding extra tarballs)
 ------------------------------------
@@ -2063,7 +2120,7 @@ Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
-most can be built with a range of version. For example, if you are
+most can be built with a range of versions. For example, if you are
 writing a package for a legacy Python module that only works with Python
 2.4 through 2.6, this would look like:
 
@@ -2072,9 +2129,9 @@ writing a package for a legacy Python module that only works with Python
    depends_on('python@2.4:2.6')
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4`` and up to and including ``2.6``. If you
-want to specify that a package works with any version of Python 3, this
-would look like:
+greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
+you want to specify that a package works with any version of Python 3 (or
+higher), this would look like:
 
 .. code-block:: python
 
@@ -2085,29 +2142,30 @@ requires Python 2, you can similarly leave out the lower bound:
 
 .. code-block:: python
 
-   depends_on('python@:2.9')
+   depends_on('python@:2')
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
-``@:3`` means "up to and including 3".
+``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.6? You might be
+What if a package can only be built with Python 2.7? You might be
 inclined to use:
 
 .. code-block:: python
 
-   depends_on('python@2.6')
+   depends_on('python@2.7')
 
 However, this would be wrong. Spack assumes that all version constraints
-are absolute, so it would try to install Python at exactly ``2.6``. The
-correct way to specify this would be:
+are exact, so it would try to install Python not at ``2.7.18``, but
+exactly at ``2.7``, which is a non-existent version. The correct way to
+specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.6.0:2.6.999')
+   depends_on('python@2.7.0:2.7')
 
-A spec can contain multiple version ranges separated by commas.
-For example, if you need Boost 1.59.0 or newer, but there are known
-issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+A spec can contain a version list of ranges and individual versions
+separated by commas. For example, if you need Boost 1.59.0 or newer,
+but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
@@ -2824,7 +2882,7 @@ is equivalent to:
 
    depends_on('elpa+openmp', when='+openmp+elpa')
 
-Constraints from nested context managers are also added together, but they are rarely
+Constraints from nested context managers are also combined together, but they are rarely
 needed or recommended.
 
 .. _install-method:

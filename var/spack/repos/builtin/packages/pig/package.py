@@ -14,8 +14,8 @@ class Pig(Package):
     transforms data.
     """
 
-    homepage = "http://archive.apache.org"
-    url      = "http://archive.apache.org/dist/hadoop/pig/stable/pig-0.7.0.tar.gz"
+    homepage = "https://archive.apache.org"
+    url      = "https://archive.apache.org/dist/hadoop/pig/stable/pig-0.7.0.tar.gz"
 
     version('0.7.0', sha256='fa7211fb339f547f679a3dd90055f1ddc45d5754d88463e4cc39c380ddf8b02a')
 

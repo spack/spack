@@ -25,7 +25,7 @@ class PyBasemap(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy@1.2.1:', type=('build', 'run'))
     depends_on('py-matplotlib@1.0.0:3.0.0,3.0.2:', type=('build', 'run'))
-    depends_on('py-pyproj@1.9.3:1.99', type=('build', 'run'), when='@:1.2.0')
+    depends_on('py-pyproj@1.9.3:1', type=('build', 'run'), when='@:1.2.0')
     # 1.2.1 is PROJ6 compatible
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=939022
     depends_on('py-pyproj@1.9.3:', type=('build', 'run'), when='@1.2.1:')

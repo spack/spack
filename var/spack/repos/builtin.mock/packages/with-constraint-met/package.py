@@ -17,4 +17,7 @@ class WithConstraintMet(Package):
 
     with when('@1.0'):
         depends_on('b')
-        conflicts('%gcc')
+        conflicts('%gcc', when='+foo')
+
+    with when('@0.14: ^b@:4.0'):
+        depends_on('c', when='@:15 ^b@3.8:')

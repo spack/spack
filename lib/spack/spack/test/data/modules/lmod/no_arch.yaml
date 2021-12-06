@@ -1,0 +1,6 @@
+enable:
+  - lmod
+arch_folder: false
+lmod:
+  core_compilers:
+    - 'clang@3.3'

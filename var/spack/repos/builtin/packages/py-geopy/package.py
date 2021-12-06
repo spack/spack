@@ -18,4 +18,4 @@ class PyGeopy(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-geographiclib@1.49:1.999', type=('build', 'run'))
+    depends_on('py-geographiclib@1.49:1', type=('build', 'run'))

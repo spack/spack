@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import operator
 import os
 import os.path
 import pstats
@@ -26,21 +27,24 @@ from six import StringIO
 import archspec.cpu
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
 
 import spack
-import spack.architecture
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.modules
 import spack.paths
+import spack.platforms
 import spack.repo
+import spack.spec
 import spack.store
 import spack.util.debug
+import spack.util.environment
 import spack.util.executable as exe
 import spack.util.path
 from spack.error import SpackError
@@ -184,6 +188,10 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         if chars:
             usage = '[-%s] %s' % (chars, usage)
         return usage.strip()
+
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=operator.attrgetter('option_strings'))
+        super(SpackHelpFormatter, self).add_arguments(actions)
 
 
 class SpackArgumentParser(argparse.ArgumentParser):
@@ -476,14 +484,16 @@ def setup_main_options(args):
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
+        spack.util.environment.tracing_enabled = True
 
     if args.timestamp:
         tty.set_timestamp(True)
 
     # override lock configuration if passed on command line
     if args.locks is not None:
-        spack.util.lock.check_lock_safety(spack.paths.prefix)
-        spack.config.set('config:locks', False, scope='command_line')
+        if args.locks is False:
+            spack.util.lock.check_lock_safety(spack.paths.prefix)
+        spack.config.set('config:locks', args.locks, scope='command_line')
 
     if args.mock:
         rp = spack.repo.RepoPath(spack.paths.mock_packages_path)
@@ -644,6 +654,23 @@ def _profile_wrapper(command, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
+@llnl.util.lang.memoized
+def _compatible_sys_types():
+    """Return a list of all the platform-os-target tuples compatible
+    with the current host.
+    """
+    host_platform = spack.platforms.host()
+    host_os = str(host_platform.operating_system('default_os'))
+    host_target = archspec.cpu.host()
+    compatible_targets = [host_target] + host_target.ancestors
+
+    compatible_archs = [
+        str(spack.spec.ArchSpec((str(host_platform), host_os, str(target))))
+        for target in compatible_targets
+    ]
+    return compatible_archs
+
+
 def print_setup_info(*info):
     """Print basic information needed by setup-env.[c]sh.
 
@@ -653,7 +680,6 @@ def print_setup_info(*info):
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
-
     """
     shell = 'csh' if 'csh' in info else 'sh'
 
@@ -666,9 +692,8 @@ def print_setup_info(*info):
             tty.die('shell must be sh or csh')
 
     # print sys type
-    shell_set('_sp_sys_type', spack.architecture.sys_type())
-    shell_set('_sp_compatible_sys_types',
-              ':'.join(spack.architecture.compatible_sys_types()))
+    shell_set('_sp_sys_type', str(spack.spec.ArchSpec.default_arch()))
+    shell_set('_sp_compatible_sys_types', ':'.join(_compatible_sys_types()))
     # print roots for all module systems
     module_to_roots = {
         'tcl': list(),
@@ -708,13 +733,30 @@ def print_setup_info(*info):
             shell_set('_sp_module_prefix', 'not_installed')
 
 
-def main(argv=None):
-    """This is the entry point for the Spack command.
+def _main(argv=None):
+    """Logic for the main entry point for the Spack command.
+
+    ``main()`` calls ``_main()`` and catches any errors that emerge.
+
+    ``_main()`` handles:
+
+    1. Parsing arguments;
+    2. Setting up configuration; and
+    3. Finding and executing a Spack command.
 
     Args:
         argv (list or None): command line arguments, NOT including
-            the executable name. If None, parses from sys.argv.
+            the executable name. If None, parses from ``sys.argv``.
+
     """
+    # ------------------------------------------------------------------------
+    # main() is tricky to get right, so be careful where you put things.
+    #
+    # Things in this first part of `main()` should *not* require any
+    # configuration. This doesn't include much -- setting up th parser,
+    # restoring some key environment variables, very simple CLI options, etc.
+    # ------------------------------------------------------------------------
+
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
     # avoid loading all the modules from spack.cmd when we don't need
@@ -737,20 +779,6 @@ def main(argv=None):
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
 
-    # make spack.config aware of any command line configuration scopes
-    if args.config_scopes:
-        spack.config.command_line_scopes = args.config_scopes
-
-    # activate an environment if one was specified on the command line
-    if not args.no_env:
-        env = spack.cmd.find_environment(args)
-        if env:
-            ev.activate(env, args.use_env_repo, add_view=False)
-
-    if args.print_shell_vars:
-        print_setup_info(*args.print_shell_vars.split(','))
-        return 0
-
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
     if no_args:
@@ -765,36 +793,93 @@ def main(argv=None):
     elif args.help:
         sys.stdout.write(parser.format_help(level=args.help))
         return 0
-    elif not args.command:
+
+    # ------------------------------------------------------------------------
+    # This part of the `main()` sets up Spack's configuration.
+    #
+    # We set command line options (like --debug), then command line config
+    # scopes, then environment configuration here.
+    # ------------------------------------------------------------------------
+
+    # ensure options on spack command come before everything
+    setup_main_options(args)
+
+    # make spack.config aware of any command line configuration scopes
+    if args.config_scopes:
+        spack.config.command_line_scopes = args.config_scopes
+
+    # activate an environment if one was specified on the command line
+    env_format_error = None
+    if not args.no_env:
+        try:
+            env = spack.cmd.find_environment(args)
+            if env:
+                ev.activate(env, args.use_env_repo)
+        except spack.config.ConfigFormatError as e:
+            # print the context but delay this exception so that commands like
+            # `spack config edit` can still work with a bad environment.
+            e.print_context()
+            env_format_error = e
+
+    # ------------------------------------------------------------------------
+    # Things that require configuration should go below here
+    # ------------------------------------------------------------------------
+    if args.print_shell_vars:
+        print_setup_info(*args.print_shell_vars.split(','))
+        return 0
+
+    # At this point we've considered all the options to spack itself, so we
+    # need a command or we're done.
+    if not args.command:
         parser.print_help()
         return 1
 
+    # Try to load the particular command the caller asked for.
+    cmd_name = args.command[0]
+    cmd_name = aliases.get(cmd_name, cmd_name)
+
+    command = parser.add_command(cmd_name)
+
+    # Re-parse with the proper sub-parser added.
+    args, unknown = parser.parse_known_args()
+
+    # Now that we know what command this is and what its args are, determine
+    # whether we can continue with a bad environment and raise if not.
+    if env_format_error:
+        subcommand = getattr(args, "config_command", None)
+        if (cmd_name, subcommand) != ("config", "edit"):
+            raise env_format_error
+
+    # many operations will fail without a working directory.
+    set_working_dir()
+
+    # now we can actually execute the command.
+    if args.spack_profile or args.sorted_profile:
+        _profile_wrapper(command, parser, args, unknown)
+    elif args.pdb:
+        import pdb
+        pdb.runctx('_invoke_command(command, parser, args, unknown)',
+                   globals(), locals())
+        return 0
+    else:
+        return _invoke_command(command, parser, args, unknown)
+
+
+def main(argv=None):
+    """This is the entry point for the Spack command.
+
+    ``main()`` itself is just an error handler -- it handles errors for
+    everything in Spack that makes it to the top level.
+
+    The logic is all in ``_main()``.
+
+    Args:
+        argv (list or None): command line arguments, NOT including
+            the executable name. If None, parses from sys.argv.
+
+    """
     try:
-        # ensure options on spack command come before everything
-        setup_main_options(args)
-
-        # Try to load the particular command the caller asked for.
-        cmd_name = args.command[0]
-        cmd_name = aliases.get(cmd_name, cmd_name)
-
-        command = parser.add_command(cmd_name)
-
-        # Re-parse with the proper sub-parser added.
-        args, unknown = parser.parse_known_args()
-
-        # many operations will fail without a working directory.
-        set_working_dir()
-
-        # now we can actually execute the command.
-        if args.spack_profile or args.sorted_profile:
-            _profile_wrapper(command, parser, args, unknown)
-        elif args.pdb:
-            import pdb
-            pdb.runctx('_invoke_command(command, parser, args, unknown)',
-                       globals(), locals())
-            return 0
-        else:
-            return _invoke_command(command, parser, args, unknown)
+        return _main(argv)
 
     except SpackError as e:
         tty.debug(e)

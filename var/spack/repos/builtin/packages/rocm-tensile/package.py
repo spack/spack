@@ -16,6 +16,7 @@ class RocmTensile(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.1', sha256='6fce0ac22051a454fe984283766eb473dc50752cd30bad05acb3dbde6ef4f8b1')
     version('4.3.0', sha256='911c0cdb0146d43a2a59170e6a803f414a2b68df7d9ff369ab784d11a08d7264')
     version('4.2.0', sha256='198e357a14a79366b27b1097856d4821996bc36163be0cd2668910b253721060')
     version('4.1.0', sha256='92b8ee13dfc11a67d5136227ee985622685790fd3f0f0e1ec6db411d4e9a3419')
@@ -26,18 +27,22 @@ class RocmTensile(CMakePackage):
     version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d')
     version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257')
 
-    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
+    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx000', 'gfx900',
+                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack-',
+                            'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030')
 
-    variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+    variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('openmp', default=True, description='Enable OpenMP')
-
+    conflicts('tensile_architecture=gfx906', when='@4.0.1:')
+    conflicts('tensile_architecture=gfx908', when='@4.0.1:')
     depends_on('cmake@3:', type='build')
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
     depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-cmake@' + ver, type='build',  when='@' + ver)
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('comgr@' + ver,                     when='@' + ver)
@@ -48,7 +53,7 @@ class RocmTensile(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'
@@ -60,8 +65,20 @@ class RocmTensile(CMakePackage):
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
-    def cmake_args(self):
+    def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants['tensile_architecture'].value
+        if arch[0] == 'all':
+            if self.spec.satisfies('@:4.0.0'):
+                arch_value = self.tensile_architecture[1:4]
+            elif self.spec.satisfies('@4.1.0:4.2.0'):
+                arch_value = self.tensile_architecture[3:6]
+            elif self.spec.satisfies('@4.3.0:'):
+                arch_value = self.tensile_architecture[3:]
+            return arch_value
+        else:
+            return arch
+
+    def cmake_args(self):
         args = [
             self.define('amd_comgr_DIR', self.spec['comgr'].prefix),
             self.define('Tensile_COMPILER', 'hipcc'),
@@ -78,12 +95,10 @@ class RocmTensile(CMakePackage):
         if '@3.7.0:' in self.spec:
             args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
 
-        if self.spec.satisfies('@4.1.0:'):
-            if arch == 'gfx906' or arch == 'gfx908':
-                arch = arch + ':xnack-'
-        args.append(self.define('Tensile_ARCHITECTURE', arch))
+        args.append(self.define('Tensile_ARCHITECTURE',
+                    self.get_gpulist_for_tensile_support()))
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

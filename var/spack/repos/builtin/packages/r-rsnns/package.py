@@ -18,7 +18,7 @@ class RRsnns(RPackage):
     high-level interface, so that the most common neural network topologies
     and learning algorithms integrate seamlessly into R."""
 
-    homepage = "http://sci2s.ugr.es/dicits/software/RSNNS"
+    homepage = "https://sci2s.ugr.es/dicits/software/RSNNS"
     url      = "https://cloud.r-project.org/src/contrib/RSNNS_0.4-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RSNNS"
 

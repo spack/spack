@@ -28,7 +28,7 @@ class Attr(AutotoolsPackage):
         args.append('--disable-static')
         return args
 
-    # Ref. http://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
+    # Ref. https://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
     def install(self, spec, prefix):
         if self.version >= Version('2.4.48'):
             make('install')

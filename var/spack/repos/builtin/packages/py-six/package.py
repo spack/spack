@@ -11,6 +11,7 @@ class PySix(PythonPackage):
 
     pypi = "six/six-1.11.0.tar.gz"
 
+    version('1.16.0', sha256='1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926')
     version('1.15.0', sha256='30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259')
     version('1.14.0', sha256='236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a')
     version('1.12.0', sha256='d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73')

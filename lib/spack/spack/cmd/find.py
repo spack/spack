@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import copy
-import os
 import sys
 
 import llnl.util.lang
@@ -18,9 +17,7 @@ import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
-import spack.user_environment as uenv
 from spack.database import InstallStatuses
-from spack.util.string import plural
 
 description = "list and search installed packages"
 section = "basic"
@@ -241,8 +238,7 @@ def _find(parser, args):
         results = [x for x in results if x.name in packages_with_tags]
 
     if args.loaded:
-        hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
-        results = [x for x in results if x.dag_hash() in hashes]
+        results = spack.cmd.filter_loaded_specs(results)
 
     # Display the result
     if args.json:
@@ -251,7 +247,10 @@ def _find(parser, args):
         if not args.format:
             if env:
                 display_env(env, args, decorator)
+
         if sys.stdout.isatty() and args.groups:
-            tty.msg("%s" % plural(len(results), 'installed package'))
+            pkg_type = "loaded" if args.loaded else "installed"
+            spack.cmd.print_how_many_pkgs(results, pkg_type)
+
         cmd.display_specs(
             results, args, decorator=decorator, all_headers=True)

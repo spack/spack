@@ -18,7 +18,7 @@ class PyMotmetrics(PythonPackage):
     depends_on('py-pandas@0.23.1:', type=('build', 'run'))
     depends_on('py-scipy@0.19.0:', type=('build', 'run'))
     depends_on('py-xmltodict@0.12.0:', type=('build', 'run'))
-    depends_on('py-enum34', when='^python@:2.999', type=('build', 'run'))
+    depends_on('py-enum34', when='^python@:2', type=('build', 'run'))
     depends_on('py-flake8', type=('build', 'run'))
     depends_on('py-flake8-import-order', type=('build', 'run'))
     depends_on('py-pytest', type=('build', 'run'))
