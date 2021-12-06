@@ -25,7 +25,7 @@ class RColorspace(RPackage):
     scientific paper: Zeileis et al. (2020, Journal of Statistical Software,
     <doi:10.18637/jss.v096.i01>)."""
 
-    homepage = "https://cloud.r-project.org/package=colorspace"
+    homepage = "https://colorspace.R-Forge.R-project.org"
     cran = "colorspace"
 
     version('2.0-2', sha256='b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a')
