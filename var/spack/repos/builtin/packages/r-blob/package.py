@@ -14,7 +14,7 @@ class RBlob(RPackage):
     package provides the blob object, a list of raw vectors, suitable
     for use as a column in data frame."""
 
-    homepage = "https://cloud.r-project.org/package=blob"
+    homepage = "https://blob.tidyverse.org"
     cran = "blob"
 
     version('1.2.2', sha256='4976053c65994c769a4c22b4553bea0bd9c623b3b991dbaf023d2a164770c7fa')
