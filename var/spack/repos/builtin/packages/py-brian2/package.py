@@ -31,6 +31,3 @@ class PyBrian2(PythonPackage):
     depends_on('py-jinja2@2.7:', type=('build', 'run'))
     depends_on('py-setuptools@21:', type=('build', 'run'))
     depends_on('py-setuptools@24.2:', type=('build', 'run'), when='@2.4:')
-
-    def build_args(self, spec, prefix):
-        return ['--with-cython']

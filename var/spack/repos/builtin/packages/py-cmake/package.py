@@ -20,8 +20,3 @@ class PyCmake(PythonPackage):
     depends_on('cmake@3.21.4', type=('build', 'link', 'run'), when='@3.21.4')
     depends_on('cmake@3.18.0', type=('build', 'link', 'run'), when='@3.18.0')
     depends_on('py-scikit-build', type='build')
-
-    def build_args(self, spec, prefix):
-        args = []
-        args.append('-DBUILD_CMAKE_FROM_SOURCE=OFF')
-        return args

@@ -41,15 +41,3 @@ class PyTomopy(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-pywavelets', type=('build', 'run'))
     depends_on('py-dxchange', type=('build', 'run'))
-
-    @when('@1.10:')
-    def build_args(self, spec, prefix):
-        args = ['--enable-arch']
-        if 'avx512' in self.spec.target:
-            args.append('--enable-avx512')
-
-        # PTL is a git submodule, we only fetch it's source by git-submodule on master:
-        if self.version != Version('master'):
-            args.append('--disable-tasking')
-
-        return args

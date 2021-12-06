@@ -27,7 +27,7 @@ class PyLightgbm(PythonPackage):
 
     depends_on('mpi', when='+mpi')
 
-    def install_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
 
         if spec.satisfies('+mpi'):

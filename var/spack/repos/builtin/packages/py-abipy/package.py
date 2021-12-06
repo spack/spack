@@ -48,11 +48,3 @@ class PyAbipy(PythonPackage):
     depends_on('py-ipython',  type=('build', 'run'), when='+ipython')
     depends_on('py-jupyter',  type=('build', 'run'), when='+ipython')
     depends_on('py-nbformat', type=('build', 'run'), when='+ipython')
-
-    def build_args(self, spec, prefix):
-        args = []
-
-        if '+ipython' in spec:
-            args.append('--with-ipython')
-
-        return args

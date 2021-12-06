@@ -80,6 +80,3 @@ class PyPyside(PythonPackage):
                     "'Programming Language :: Python :: 3.4',\r\n        "
                     "'Programming Language :: Python :: 3.5'",
                     "setup.py")
-
-    def build_args(self, spec, prefix):
-        return ['--jobs={0}'.format(make_jobs)]

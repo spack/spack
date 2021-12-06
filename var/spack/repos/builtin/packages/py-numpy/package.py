@@ -341,20 +341,6 @@ class PyNumpy(PythonPackage):
 
         env.set('NPY_LAPACK_ORDER', lapack)
 
-    def build_args(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # https://numpy.org/devdocs/user/building.html#parallel-builds
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
-
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def install_test(self):
