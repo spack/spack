@@ -12,7 +12,7 @@ class RXlconnect(RPackage):
     Provides comprehensive functionality to read, write and format Excel
     data."""
 
-    homepage = "http://miraisolutions.wordpress.com/"
+    homepage = "https://miraisolutions.wordpress.com/"
     url      = "https://cloud.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/XLConnect"
 
@@ -29,4 +29,4 @@ class RXlconnect(RPackage):
     depends_on('r-xlconnectjars@0.2-14', when='@0.2-14', type=('build', 'run'))
     depends_on('r-xlconnectjars@0.2-15', when='@0.2-15', type=('build', 'run'))
     depends_on('java@6:')
-    depends_on('java@8:11.999', when='@1.0.1:')
+    depends_on('java@8:11', when='@1.0.1:')

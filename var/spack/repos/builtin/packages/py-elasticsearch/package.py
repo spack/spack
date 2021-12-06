@@ -18,9 +18,9 @@ class PyElasticsearch(PythonPackage):
     version('2.3.0', sha256='be3080a2bf32dff0a9f9fcc1c087515a25a357645673a976d25ef77166134d81')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-urllib3@1.8:1.999', type=('build', 'run'))
+    depends_on('py-urllib3@1.8:1', type=('build', 'run'))
     # tests_require
-    # depends_on('py-requests@1.0.0:2.9.999', type=('build', 'run'))
+    # depends_on('py-requests@1.0.0:2.9', type=('build', 'run'))
     # depends_on('py-nose', type=('build', 'run'))
     # depends_on('py-coverage', type=('build', 'run'))
     # depends_on('py-mock', type=('build', 'run'))

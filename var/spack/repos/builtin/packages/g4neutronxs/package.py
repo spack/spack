@@ -11,7 +11,7 @@ class G4neutronxs(Package):
     """Geant4 data for evaluated neutron cross-sections on natural composition
        of elements"""
     homepage = "https://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NEUTRONXS.1.4.tar.gz"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4NEUTRONXS.1.4.tar.gz"
 
     tags = ['hep']
 

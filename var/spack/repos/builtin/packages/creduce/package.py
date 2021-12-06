@@ -22,7 +22,7 @@ class Creduce(CMakePackage):
 
     depends_on('flex')
     depends_on('libxml2')
-    depends_on('llvm@8.0.0', when='@:2.10.999')
+    depends_on('llvm@8.0.0', when='@:2.10')
     depends_on('perl')
     depends_on('perl-exporter-lite')
     depends_on('perl-file-which')

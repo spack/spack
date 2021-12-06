@@ -8,7 +8,7 @@ class Kinesis(MavenPackage):
     """The Amazon Kinesis Client Library for Java (Amazon KCL) enables Java
     developers to easily consume and process data from Amazon Kinesis."""
 
-    homepage = "http://aws.amazon.com/kinesis"
+    homepage = "https://aws.amazon.com/kinesis"
     url      = "https://github.com/awslabs/amazon-kinesis-client/archive/v2.2.10.tar.gz"
 
     version('2.2.10', sha256='ab1fa33466d07c41d0bbf0d1c7d2380d6f5d2957dea040ca5fe911be83bfe9f9')

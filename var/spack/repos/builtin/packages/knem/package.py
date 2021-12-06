@@ -10,7 +10,7 @@ class Knem(AutotoolsPackage):
     """KNEM is a Linux kernel module enabling high-performance intra-node MPI
     communication for large messages."""
 
-    homepage = "http://knem.gforge.inria.fr"
+    homepage = "https://knem.gforge.inria.fr"
     url = "https://gitlab.inria.fr/knem/knem/uploads/4a43e3eb860cda2bbd5bf5c7c04a24b6/knem-1.1.4.tar.gz"
     list_url = "https://knem.gitlabpages.inria.fr/download"
     git = "https://gitlab.inria.fr/knem/knem.git"

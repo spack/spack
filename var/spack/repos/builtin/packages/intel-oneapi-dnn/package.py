@@ -17,6 +17,10 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onednn.html'
 
     if platform.system() == 'Linux':
+        version('2021.4.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18221/l_onednn_p_2021.4.0.467_offline.sh',
+                sha256='30cc601467f6a94b3d7e14f4639faf0b12fdf6d98df148b07acdb4dfdfb971db',
+                expand=False)
         version('2021.3.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17923/l_onednn_p_2021.3.0.344_offline.sh',
                 sha256='1521f6cbffcf9ce0c7b5dfcf1a2546a4a0c8d8abc99f3011709039aaa9e0859a',

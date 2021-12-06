@@ -28,6 +28,7 @@ class RBrms(RPackage):
     homepage = "https://github.com/paul-buerkner/brms"
     cran     = "brms"
 
+    version('2.16.1', sha256='749efbd9fb061fe207cf2e729c1387d9a8538b922f12ceec4e82a9f8dd9c1bc4')
     version('2.15.0', sha256='c11701d1d8758590b74bb845b568b736e4455a81b114c7dfde0b27b7bd1bcc2f')
 
     depends_on('r@3.5.0:', type=('build', 'run'))
@@ -35,6 +36,7 @@ class RBrms(RPackage):
     depends_on('r-rstan@2.19.2:', type=('build', 'run'))
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-loo@2.3.1:', type=('build', 'run'))
+    depends_on('r-posterior@1.0.0:', when='@2.16:', type=('build', 'run'))
     depends_on('r-matrix@1.1.1:', type=('build', 'run'))
     depends_on('r-mgcv@1.8-13:', type=('build', 'run'))
     depends_on('r-rstantools@2.1.1:', type=('build', 'run'))

@@ -49,6 +49,19 @@ $ tox
   congratulations :)
 ```
 
+## Citing Archspec
+
+If you are referencing `archspec` in a publication, please cite the following
+paper:
+
+ * Massimiliano Culpo, Gregory Becker, Carlos Eduardo Arango Gutierrez, Kenneth
+   Hoste, and Todd Gamblin.
+   [**`archspec`: A library for detecting, labeling, and reasoning about
+   microarchitectures**](https://tgamblin.github.io/pubs/archspec-canopie-hpc-2020.pdf).
+   In *2nd International Workshop on Containers and New Orchestration Paradigms
+   for Isolated Environments in HPC (CANOPIE-HPC'20)*, Online Event, November
+   12, 2020.
+
 ## License
 
 Archspec is distributed under the terms of both the MIT license and the

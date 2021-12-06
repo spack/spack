@@ -31,7 +31,7 @@ class PyTensorflowProbability(Package):
     depends_on('py-decorator', type=('build', 'run'))
 
     depends_on('py-tensorflow@1.14:', type=('build', 'run'), when='@0.8.0')
-    depends_on('py-gast@0.2:0.2.999', type=('build', 'run'), when='@0.8.0')
+    depends_on('py-gast@0.2.0:0.2', type=('build', 'run'), when='@0.8.0')
     depends_on('py-cloudpickle@1.1.1', type=('build', 'run'), when='@0.8.0')
 
     depends_on('py-tensorflow@2.4:', type=('build', 'run'), when='@0.12.0:')

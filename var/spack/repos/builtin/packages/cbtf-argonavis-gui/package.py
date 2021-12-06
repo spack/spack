@@ -12,7 +12,7 @@ class CbtfArgonavisGui(QMakePackage):
     """CBTF Argo Navis GUI project contains the GUI that views OpenSpeedShop
        performance information by loading in the Sqlite database files.
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
     version('develop', branch='master')

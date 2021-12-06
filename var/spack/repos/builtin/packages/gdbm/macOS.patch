@@ -1,0 +1,14 @@
+--- a/src/gdbmshell.c	2021-09-02 07:39:55.000000000 -0500
++++ b/src/gdbmshell.c	2021-09-06 20:30:20.000000000 -0500
+@@ -1010,7 +1010,11 @@
+       fprintf (fp, "%s: ", snapname);
+       fprintf (fp, "%03o %s ", st.st_mode & 0777,
+ 	       decode_mode (st.st_mode, buf));
++#if defined(__APPLE__)
++      fprintf (fp, "%ld.%09ld", st.st_mtimespec.tv_sec, st.st_mtimespec.tv_nsec);
++#else
+       fprintf (fp, "%ld.%09ld", st.st_mtim.tv_sec, st.st_mtim.tv_nsec);
++#endif
+       if (S_ISREG (st.st_mode))
+ 	{
+ 	  GDBM_FILE dbf;

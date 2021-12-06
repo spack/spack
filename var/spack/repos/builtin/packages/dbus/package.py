@@ -28,6 +28,8 @@ class Dbus(Package):
     version('1.8.2', sha256='5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08')
 
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml@4.4', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('expat')
     depends_on('glib')
     depends_on('libsm')

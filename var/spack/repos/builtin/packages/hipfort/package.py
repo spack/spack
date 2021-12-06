@@ -15,6 +15,7 @@ class Hipfort(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='279a35edbc0c22fa930a4355e663a86adf4d0316c5b1b6b9ccc6ee5c19c8c2e4')
     version('4.3.0', sha256='fd0ffdafdc17ac42c7dae3f89991651f15affdef9b2354da05c7493d09d8974e')
     version('4.2.0', sha256='b411cb32bf87927eba4c5573b412c56d75d15165e2f1c8ac5ac18e624ed3a4b4')
     version('4.1.0', sha256='2d335ae068d0cbb480575de7d3ea4868362af32cb195f911ee1aeced499f3974')
@@ -23,12 +24,12 @@ class Hipfort(CMakePackage):
     version('3.9.0', sha256='a3c4e125a9b56820446a65bd76b8caa196fddb0e0723eb513f0bcde9abd6a0c0')
     version('3.8.0', sha256='0132e9949f758dd8b8a462d133b3316101440cd503aa6c53bea9e34e61bbb3cc')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0']:
+                '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
@@ -38,7 +39,7 @@ class Hipfort(CMakePackage):
     def cmake_args(self):
         args = []
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

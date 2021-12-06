@@ -13,7 +13,7 @@ class RUuid(RPackage):
     Tools for generating and handling of UUIDs (Universally Unique
     Identifiers)."""
 
-    homepage = "http://www.rforge.net/uuid"
+    homepage = "https://www.rforge.net/uuid"
     url      = "https://cloud.r-project.org/src/contrib/uuid_0.1-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/uuid"
 

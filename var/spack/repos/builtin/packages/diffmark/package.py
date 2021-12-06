@@ -18,4 +18,5 @@ class Diffmark(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libxml2')

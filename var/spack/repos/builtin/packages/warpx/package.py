@@ -21,9 +21,13 @@ class Warpx(CMakePackage):
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
+    tags = ['e4s']
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
+    version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
+    version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
     version('21.08', sha256='6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86')
     version('21.07', sha256='a8740316d813c365715f7471201499905798b50bd94950d33f1bd91478d49561')
     version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
@@ -76,23 +80,29 @@ class Warpx(CMakePackage):
     #       automatically
     depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
-    depends_on('blaspp', when='+psatd dims=rz')
-    depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3: +openmp', when='+psatd compute=omp')
-    depends_on('fftw +mpi', when='+psatd +mpi compute=omp')
-    depends_on('lapackpp', when='+psatd dims=rz')
-    depends_on('mpi', when='+mpi')
-    depends_on('openpmd-api@0.13.1:', when='+openpmd')
-    depends_on('openpmd-api ~mpi', when='+openpmd ~mpi')
-    depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='+psatd compute=omp')
-    depends_on('rocfft', when='+psatd compute=hip')
-    depends_on('rocprim', when='compute=hip')
-    depends_on('rocrand', when='compute=hip')
     depends_on('llvm-openmp', when='%apple-clang compute=omp')
+    depends_on('mpi', when='+mpi')
+    with when('+psatd dims=rz'):
+        depends_on('lapackpp')
+        depends_on('blaspp')
+        depends_on('blaspp +cuda', when='compute=cuda')
+    with when('+psatd compute=omp'):
+        depends_on('fftw@3: +openmp')
+        depends_on('fftw ~mpi', when='~mpi')
+        depends_on('fftw +mpi', when='+mpi')
+        depends_on('pkgconfig', type='build')
+    with when('+openpmd'):
+        depends_on('openpmd-api@0.13.1:')
+        depends_on('openpmd-api@0.14.2:', when='@21.09:')
+        depends_on('openpmd-api ~mpi', when='~mpi')
+        depends_on('openpmd-api +mpi', when='+mpi')
+    with when('compute=hip'):
+        depends_on('rocfft', when='+psatd')
+        depends_on('rocprim')
+        depends_on('rocrand')
 
     conflicts('~qed +qedtablegen',
               msg='WarpX PICSAR QED table generation needs +qed')

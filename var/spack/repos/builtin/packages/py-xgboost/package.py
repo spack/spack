@@ -29,8 +29,8 @@ class PyXgboost(PythonPackage):
     for ver in ['1.3.3']:
         depends_on('xgboost@' + ver, when='@' + ver)
 
-    depends_on('cmake@3.12:', when='@1.0:1.2.999', type='build')
-    depends_on('llvm-openmp', when='@:1.2.999 %apple-clang')
+    depends_on('cmake@3.12:', when='@1.0:1.2', type='build')
+    depends_on('llvm-openmp', when='@:1.2 %apple-clang')
     depends_on('python@3.6:', when='@1.2:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.0:', type=('build', 'run'))
     depends_on('python@3.4:',   type=('build', 'run'))
@@ -49,10 +49,10 @@ class PyXgboost(PythonPackage):
     depends_on('py-graphviz',   when='+plotting', type=('build', 'run'))
     depends_on('py-matplotlib', when='+plotting', type=('build', 'run'))
 
-    conflicts('+pandas', when='@:0.999')
-    conflicts('+scikit-learn', when='@:0.999')
-    conflicts('+dask', when='@:0.999')
-    conflicts('+plotting', when='@:0.999')
+    conflicts('+pandas', when='@:0')
+    conflicts('+scikit-learn', when='@:0')
+    conflicts('+dask', when='@:0')
+    conflicts('+plotting', when='@:0')
 
     # `--use-system-libxgboost` is only valid for the 'install' phase, but we want to
     # skip building of the C++ library and rely on an external dependency

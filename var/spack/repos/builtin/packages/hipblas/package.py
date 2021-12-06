@@ -14,6 +14,9 @@ class Hipblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-4.3.0.tar.gz"
 
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+
+    version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')
     version('4.3.0', sha256='0631e21c588794ea1c8413ef8ff293606bcf7a52c0c3ff88da824f103395a76a')
     version('4.2.0', sha256='c7ce7f69c7596b5a54e666fb1373ef41d1f896dd29260a691e2eadfa863e2b1a')
     version('4.1.0', sha256='876efe80a4109ad53d290d2921b3fb425b4cb857b32920819f10dcd4deee4ef8')
@@ -24,10 +27,20 @@ class Hipblas(CMakePackage):
     version('3.7.0', sha256='9840a493ab4838c86696ceb33ce07c34b5f59f62db4f88cb3af62b69d84f8729')
     version('3.5.0', sha256='d451da80beb048767da71a090afceed2e111d01b3e95a7044deada5054d6e7b1')
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('netlib-lapack@3.7.1:', type='test')
+    depends_on('boost@1.64.0: cxxstd=14', type='test')
+
+    patch('link-clients-blas.patch', when='@4.3.0:')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
+        self.run_test(exe)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
@@ -39,7 +52,7 @@ class Hipblas(CMakePackage):
             # Make sure find_package(HIP) finds the module.
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
-            self.define('BUILD_CLIENTS_TESTS', 'OFF')
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests)
         ]
 
         # hipblas actually prefers CUDA over AMD GPUs when you have it
@@ -49,7 +62,7 @@ class Hipblas(CMakePackage):
         else:
             args.append(self.define('USE_CUDA', 'OFF'))
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

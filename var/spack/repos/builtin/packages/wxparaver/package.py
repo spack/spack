@@ -36,7 +36,7 @@ class Wxparaver(AutotoolsPackage):
 
         args.append('--with-boost=%s' % spec['boost'].prefix)
         args.append('--with-wx-config=%s/wx-config' % spec['wxwidgets'].prefix.bin)
-        if spec['wxwidgets'].satisfies('@:2.999'):
+        if spec['wxwidgets'].satisfies('@:2'):
             args.append('--with-wxpropgrid=%s' % spec['wxpropgrid'].prefix)
 
         return args

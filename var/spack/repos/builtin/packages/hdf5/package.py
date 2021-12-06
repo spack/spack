@@ -24,6 +24,8 @@ class Hdf5(CMakePackage):
     maintainers = ['lrknox', 'brtnfld', 'byrnHDF', 'ChristopherHogan', 'epourmal',
                    'gheber', 'hyoklee', 'lkurz', 'soumagne']
 
+    tags = ['e4s']
+
     test_requires_compiler = True
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
@@ -91,13 +93,13 @@ class Hdf5(CMakePackage):
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     depends_on('pkgconfig', type='run')
 
-    conflicts('api=v114', when='@1.6:1.12.99',
+    conflicts('api=v114', when='@1.6:1.12',
               msg='v114 is not compatible with this release')
-    conflicts('api=v112', when='@1.6:1.10.99',
+    conflicts('api=v112', when='@1.6:1.10',
               msg='v112 is not compatible with this release')
-    conflicts('api=v110', when='@1.6:1.8.99',
+    conflicts('api=v110', when='@1.6:1.8',
               msg='v110 is not compatible with this release')
-    conflicts('api=v18', when='@1.6:1.6.99',
+    conflicts('api=v18', when='@1.6.0:1.6',
               msg='v18 is not compatible with this release')
 
     # The Java wrappers and associated libhdf5_java library
@@ -172,6 +174,13 @@ class Hdf5(CMakePackage):
             'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
             'fortran/src/H5Fff_F03.f90',
             string=True, ignore_absent=True)
+        if self.run_tests:
+            # hdf5 has ~2200 CPU-intensive tests, some of them have races:
+            # Often, these loop endless(at least on one Xeon and one EPYC).
+            # testphdf5 fails indeterministic. This fixes finishing the tests
+            filter_file('REMOVE_ITEM H5P_TESTS',
+                        'REMOVE_ITEM H5P_TESTS t_bigio t_shapesame testphdf5',
+                        'testpar/CMakeTests.cmake')
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.
@@ -185,33 +194,33 @@ class Hdf5(CMakePackage):
         return url.format(version.up_to(2), version)
 
     def flag_handler(self, name, flags):
+        spec = self.spec
         cmake_flags = []
 
         if name == "cflags":
-            if self.spec.satisfies('%gcc') \
-                    or self.spec.satisfies('%clang'):
+            if spec.compiler.name in ['gcc', 'clang', 'apple-clang']:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
                 # Note that this flag will cause an error if building %nvhpc.
-            if self.spec.satisfies('@:1.8.12~shared'):
+            if spec.satisfies('@:1.8.12~shared'):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
         elif name == 'cxxflags':
-            if self.spec.satisfies('@:1.8.12+cxx~shared'):
+            if spec.satisfies('@:1.8.12+cxx~shared'):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if self.spec.satisfies('%cce+fortran'):
+            if spec.satisfies('%cce+fortran'):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files
                 # with lowercase names.
                 cmake_flags.append('-ef')
-            if self.spec.satisfies('@:1.8.12+fortran~shared'):
+            if spec.satisfies('@:1.8.12+fortran~shared'):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":
-            if '+fortran %fj' in self.spec:
+            if '+fortran %fj' in spec:
                 cmake_flags.extend(['-lfj90i', '-lfj90f',
                                     '-lfjsrcinfo', '-lelf'])
 
@@ -393,9 +402,9 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies('@1.8.22:1.8.999,'
-                               '1.10.6:1.10.999,'
-                               '1.12.0:1.12.999,'
+        if self.spec.satisfies('@1.8.22:1.8,'
+                               '1.10.6:1.10,'
+                               '1.12.0:1.12,'
                                'develop:'
                                '+fortran+mpi'):
             with working_dir(self.prefix.bin):

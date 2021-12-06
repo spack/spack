@@ -9,7 +9,7 @@ from spack import *
 class Fastqvalidator(MakefilePackage):
     """The fastQValidator validates the format of fastq files."""
 
-    homepage = "http://genome.sph.umich.edu/wiki/FastQValidator"
+    homepage = "https://genome.sph.umich.edu/wiki/FastQValidator"
     git      = "https://github.com/statgen/fastQValidator.git"
 
     version('2017-01-10', commit='6d619a34749e9d33c34ef0d3e0e87324ca77f320')

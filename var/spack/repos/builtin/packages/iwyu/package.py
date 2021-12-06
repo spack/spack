@@ -25,12 +25,12 @@ class Iwyu(CMakePackage):
 
     patch('iwyu-013-cmake.patch', when='@0.13:0.14')
 
-    depends_on('llvm+clang@12.0:12.999', when='@0.16')
-    depends_on('llvm+clang@11.0:11.999', when='@0.15')
-    depends_on('llvm+clang@10.0:10.999', when='@0.14')
-    depends_on('llvm+clang@9.0:9.999', when='@0.13')
-    depends_on('llvm+clang@8.0:8.999', when='@0.12')
-    depends_on('llvm+clang@7.0:7.999', when='@0.11')
+    depends_on('llvm+clang@12.0:12', when='@0.16')
+    depends_on('llvm+clang@11.0:11', when='@0.15')
+    depends_on('llvm+clang@10.0:10', when='@0.14')
+    depends_on('llvm+clang@9.0:9', when='@0.13')
+    depends_on('llvm+clang@8.0:8', when='@0.12')
+    depends_on('llvm+clang@7.0:7', when='@0.11')
 
     # Non-X86 CPU use all_targets variants because iwyu use X86AsmParser
     depends_on('llvm+all_targets', when='target=aarch64:')

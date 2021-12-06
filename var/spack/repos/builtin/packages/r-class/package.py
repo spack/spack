@@ -12,7 +12,7 @@ class RClass(RPackage):
     Various functions for classification, including k-nearest neighbour,
     Learning Vector Quantization and Self-Organizing Maps."""
 
-    homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
+    homepage = "https://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cloud.r-project.org/src/contrib/class_7.3-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/class"
 

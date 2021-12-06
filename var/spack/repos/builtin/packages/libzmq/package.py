@@ -14,6 +14,7 @@ class Libzmq(AutotoolsPackage):
     git      = "https://github.com/zeromq/libzmq.git"
 
     version('master', branch='master')
+    version('4.3.4', sha256='c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5')
     version('4.3.3', sha256='9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2')
     version('4.3.2', sha256='ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763')
     version('4.3.1', sha256='bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb')
@@ -40,6 +41,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml', type='build')
+    depends_on('docbook-xsl', type='build')
 
     depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
     depends_on('libbsd', type='link', when='@4.3.3: platform=cray')

@@ -26,6 +26,7 @@ class Scons(PythonPackage):
     depends_on('py-setuptools', when='@3.0.2:', type=('build', 'run'))
 
     patch('fjcompiler.patch', when='%fj')
+    patch('py3-hashbang.patch', when='^python@3:')
 
     # Prevent passing --single-version-externally-managed to
     # setup.py, which it does not support.

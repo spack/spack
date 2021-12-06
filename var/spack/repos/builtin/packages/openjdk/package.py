@@ -17,6 +17,23 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '17.0.0_35': {
+        'Linux-x86_64': ('6f1335d9a7855159f982dac557420397be9aa85f3f7bc84e111d25871c02c0c7', 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17%2B35/OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz'),
+        'Linux-aarch64': ('e08e6d8c84da28a2c49ccd511f8835c329fbdd8e4faff662c58fa24cca74021d', 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17%2B35/OpenJDK17-jdk_aarch64_linux_hotspot_17_35.tar.gz'),
+        'Linux-ppc64le': ('2e58f76fd332b73f323e47c73d0a81b76739debab067e7a32ed6abd73fd64c57', 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17%2B35/OpenJDK17-jdk_ppc64le_linux_hotspot_17_35.tar.gz'),
+        'Darwin-x86_64': ('e9de8b1b62780fe99270a5b30f0645d7a91eded60438bcf836a05fa7b93c182f', 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17%2B35/OpenJDK17-jdk_x64_mac_hotspot_17_35.tar.gz'),
+        'Darwin-aarch64': ('910bb88543211c63298e5b49f7144ac4463f1d903926e94a89bfbf10163bbba1', 'https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17%2B35/OpenJDK17-jdk_aarch64_mac_hotspot_17_35.tar.gz')
+    },
+    '16.0.2': {
+        'Linux-x86_64': ('6c714ded7d881ca54970ec949e283f43d673a142fda1de79b646ddd619da9c0c', 'https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz'),
+        'Linux-aarch64': ('1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe', 'https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz'),
+    },
+    '11.0.12_7': {
+        'Linux-x86_64': ('8770f600fc3b89bf331213c7aa21f8eedd9ca5d96036d1cd48cb2748a3dbefd2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz'),
+        'Linux-aarch64': ('105bdc12fcd54c551e8e8ac96bc82412467244c32063689c41cee29ceb7452a2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz'),
+        'Linux-ppc64le': ('234a9bafe029ea6cab5d46f9617b5d016a29faa187a42081d0e066f23647b7e5', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.12_7.tar.gz'),
+        'Darwin-x86_64': ('13d056ee9a57bf2d5b3af4504c8f8cf7a246c4dff78f96b70dd05dad98075855', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_mac_hotspot_11.0.12_7.tar.gz')
+    },
     '11.0.9.1_1': {
         'Linux-ppc64le': ('d94b6b46a14ab0974b1c1b89661741126d8cf8a0068b471b8f5fa286a71636b1', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.9.1_1.tar.gz')},
     '11.0.8_10': {
@@ -48,17 +65,21 @@ class Openjdk(Package):
     """The free and opensource java implementation"""
 
     homepage = "https://jdk.java.net"
+    preferred_version = "11.0.12_7"
 
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1])
+            is_preferred = preferred_version == ver
+            version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
-    provides('java@11', when='@11.0:11.99')
-    provides('java@10', when='@10.0:10.99')
-    provides('java@9', when='@9.0:9.99')
-    provides('java@8', when='@1.8.0:1.8.999')
+    provides('java@17', when='@17.0:17')
+    provides('java@16', when='@16.0:16')
+    provides('java@11', when='@11.0:11')
+    provides('java@10', when='@10.0:10')
+    provides('java@9', when='@9.0:9')
+    provides('java@8', when='@1.8.0:1.8')
 
     conflicts('target=ppc64:', msg='openjdk is not available for ppc64 (big endian)')
 

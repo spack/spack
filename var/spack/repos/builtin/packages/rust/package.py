@@ -67,7 +67,8 @@ class Rust(Package):
     depends_on('cmake@3.4.3:', type='build')
     depends_on('ninja', when='@1.48.0:', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('openssl')
+    # TODO: openssl@3.x should be supported in later versions
+    depends_on('openssl@:1')
     depends_on('libssh2')
     depends_on('libgit2')
 

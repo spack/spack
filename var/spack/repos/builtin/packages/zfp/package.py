@@ -21,6 +21,7 @@ class Zfp(CMakePackage, CudaPackage):
     url         = 'https://github.com/LLNL/zfp/releases/download/0.5.5/zfp-0.5.5.tar.gz'
     git         = 'https://github.com/LLNL/zfp.git'
     maintainers = ['lindstro', 'GarrettDMorrison']
+    tags        = ['radiuss', 'e4s']
 
     # Versions
     version('develop', branch='develop')

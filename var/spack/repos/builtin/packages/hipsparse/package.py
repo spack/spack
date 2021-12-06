@@ -16,6 +16,7 @@ class Hipsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.3.1', sha256='e5757b5213b880237ae0f24616088f79c449c2955cf2133642dbbc9c655f4691')
     version('4.3.0', sha256='194fbd589ce34471f3255f71ea5fca2d27bee47a464558a86d0713b4d26237ea')
     version('4.2.0', sha256='cdedf3766c10200d3ebabe86cbb9c0fe6504e4b3317dccca289327d7c189bb3f')
     version('4.1.0', sha256='66710c390489922f0bd1ac38fd8c32fcfb5b7760b92c2d282f7d1abf214742ee')
@@ -26,16 +27,19 @@ class Hipsparse(CMakePackage):
     version('3.7.0', sha256='a2f02d8fc6ad9a561f06dacde54ecafd30563c5c95f93819a5694e5b650dad7f')
     version('3.5.0', sha256='fa16b2a307a5d9716066c2876febcbc1cef855bf0c96d235d2d8f2206a0fb69d')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
     depends_on('git', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocsparse@' + ver,                when='@' + ver)
 
-    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
+    for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
+                '4.3.0', '4.3.1']:
         depends_on('rocprim@' + ver, when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
@@ -50,7 +54,7 @@ class Hipsparse(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
         ]
 
-        if self.spec.satisfies('^cmake@3.21:'):
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
         return args

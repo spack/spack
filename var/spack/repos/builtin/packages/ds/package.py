@@ -12,7 +12,7 @@ class Ds(AutotoolsPackage):
     """SAOImage DS9 is an astronomical imaging and data visualization
        application."""
 
-    homepage = "http://ds9.si.edu/"
+    homepage = "https://ds9.si.edu/"
     url      = "http://ds9.si.edu/download/source/ds9.8.0.tar.gz"
 
     version('9.8.0', sha256='f3bdb46c1653997202f98c6f76632a4eb444707f4b64c14f8b96863d9c890304')

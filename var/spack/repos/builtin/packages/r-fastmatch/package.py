@@ -12,7 +12,7 @@ class RFastmatch(RPackage):
        function on first match against a table, but extremely fast on any
        subsequent lookup as it keeps the hash table in memory."""
 
-    homepage = "http://www.rforge.net/fastmatch"
+    homepage = "https://www.rforge.net/fastmatch"
     url      = "https://cloud.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fastmatch"
 

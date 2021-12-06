@@ -9,7 +9,7 @@ from spack import *
 class OpaPsm2(MakefilePackage):
     """ Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
-    homepage = "http://github.com/cornelisnetworks/opa-psm2"
+    homepage = "https://github.com/cornelisnetworks/opa-psm2"
     url      = "https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
     version('11.2.185', sha256='8c0446e989feb4a3822791e4a3687060916f7c4612d1e8e493879be66f10db09')

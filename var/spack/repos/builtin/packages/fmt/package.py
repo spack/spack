@@ -35,14 +35,15 @@ class Fmt(CMakePackage):
             values=('98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building')
-    variant('pic', default=True, description='Enable generation of position-independent code')
+    variant('shared', default=False, description='Build shared library')
+    variant('pic', default=True, description='Build position-independent code')
 
     depends_on('cmake@3.1.0:', type='build')
 
     # Supported compilers/standards are detailed here:
     # http://fmtlib.net/latest/index.html#portability
-    conflicts('%gcc@:4.3.999', when='@5:')
-    conflicts('%llvm@:2.8.999', when='@5:')
+    conflicts('%gcc@:4.3', when='@5:')
+    conflicts('%llvm@:2.8', when='@5:')
     # 5 and above require C++11
     conflicts('cxxstd=98', when='@5:')
     # 5.0.0 enables C++14 auto return types in C++11 mode
@@ -62,6 +63,9 @@ class Fmt(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        if self.spec.satisfies('+shared'):
+            args.append('-DBUILD_SHARED_LIBS=ON')
 
         if '+pic' in spec:
             args.extend([
