@@ -1,10 +1,13 @@
+variables:
+  # Used in GitLab rules
+  DEPLOYMENT_DEFAULT_BRANCH: "merge-upstream"
+
 # FIXME revisit whenever GitLab gets their act together and makes it easier
 # to avoid doubled pipelines…
 workflow:
   rules:
     - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
-    # Branch needs to be the same as $DEPLOYMENT_DEFAULT_BRANCH below
-    - if: '$CI_COMMIT_BRANCH == "merge-upstream"'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
 
 # This prepares the environment for the rest of the pipeline.  Could have
 # been a simple function in a CI environment with a proper DSL ¯\_(ツ)_/¯
@@ -21,8 +24,7 @@ setup_environment:
     # Needed for Intel compilers, which may re-use some libraries from a
     # GCC
     BASE_GCC_VERSION: "9.4.0"
-    # Used in GitLab `rules`, and `git clone`s
-    DEPLOYMENT_DEFAULT_BRANCH: "merge-upstream"
+    # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
     DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
@@ -85,6 +87,7 @@ atomic_build:
     include: deploy/gitlab-ci.yml
     strategy: depend
   variables:
+    # Used to store artifacts in the right directory, grab dotenv
     PARENT_PIPELINE_ID: $CI_PIPELINE_ID
     # For feedback stuff, will be empty if not in a PR
     GITHUB_PULL_REQUEST_ID: $CI_EXTERNAL_PULL_REQUEST_IID

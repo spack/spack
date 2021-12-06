@@ -9,12 +9,13 @@ spack:
         filter:
           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
       whitelist:
-        - 'gcc'
-        - 'pgi'
-        - 'intel-parallel-studio'
-        - 'llvm'
-        - 'intel'
-        - 'nvhpc'
+        - binutils
+        - gcc
+        - pgi
+        - intel-parallel-studio
+        - llvm
+        - intel
+        - nvhpc
   packages:
     all:
       compiler: [gcc@4.8.5]

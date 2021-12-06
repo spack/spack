@@ -9,10 +9,14 @@ packages:
     externals:
     - spec: automake@1.13.4
       prefix: /usr
+  binutils:
+    version: [2.37]
+    # Merged GCC / LLVM requirements
+    variants: +gas+gold+ld+plugins~libiberty
   boost:
     variants: +pic
   cmake:
-    version: [3.15.7]
+    version: [3.21.4]
   curl:
     version: [7.29.0]
     externals:
@@ -22,6 +26,8 @@ packages:
     variants: +slurm
   eigen:
     variants: ~fftw~gmp~metis~mpfr~scotch
+  gcc:
+    variants: +binutils
   gmsh:
     variants: ~mmg~fltk
   hadoop:

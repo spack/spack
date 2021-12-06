@@ -57,6 +57,7 @@ setup_spack:
       artifacts: true
   stage: setup
   script:
+    - printenv
     - pwd
     - set -x
     - echo "Cloning/updating spack repository"
@@ -378,7 +379,7 @@ update_config:
 link_configuration:
   needs: [update_config]
   rules:
-    - if: '$CI_COMMIT_BRANCH == $DEPLOYMEN_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
   script:
     # Link configuration into global deployment directory
     - ln -sf "$DEPLOYMENT_ROOT/config" "$DEPLOYMENT_BASE"
