@@ -31,7 +31,7 @@ class Dray(Package, CudaPackage):
     git      = "https://github.com/LLNL/devil_ray.git"
     url      = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
 
-    maintainers = ['mclarsen', 'cyrush']
+    maintainers = ['cyrush']
 
     version('develop',  branch='develop', submodules='True')
     version('0.1.7',  sha256='11ea794c1a24d7ed0d76bad7209d62bafc033ec40a2ea3a00e68fe598c6aa46d')
