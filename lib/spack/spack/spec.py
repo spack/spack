@@ -2627,9 +2627,11 @@ class Spec(object):
                          if spec.package.provides(name)]
             name = providers[0]
 
-        assert name in answer
+        # Packages are keyed by process space and name
+        key = ('0', name)  # only root process space when concretizing a single spec
+        assert key in answer
 
-        concretized = answer[name]
+        concretized = answer[key]
         self._dup(concretized)
         self._mark_concrete()
 
