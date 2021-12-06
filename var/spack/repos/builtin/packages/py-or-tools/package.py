@@ -50,5 +50,5 @@ class PyOrTools(CMakePackage):
         with working_dir(self.build_directory):
             make("install")
         with working_dir(join_path(self.build_directory, 'python')):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)

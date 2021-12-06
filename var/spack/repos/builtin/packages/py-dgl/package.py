@@ -93,7 +93,7 @@ class PyDgl(CMakePackage):
 
     def install(self, spec, prefix):
         with working_dir('python'):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
 
         # Work around installation bug: https://github.com/dmlc/dgl/issues/1379

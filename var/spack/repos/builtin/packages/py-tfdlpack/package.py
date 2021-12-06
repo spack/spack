@@ -37,7 +37,7 @@ class PyTfdlpack(CMakePackage, PythonPackage):
 
     def install(self, spec, prefix):
         with working_dir('python'):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
 
     def setup_run_environment(self, env):

@@ -166,5 +166,5 @@ class Fenics(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                args = std_pip_args + ['--prefix=' + self.prefix]
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
                 pip(*args)

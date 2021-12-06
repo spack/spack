@@ -212,5 +212,5 @@ class Sgpp(SConsPackage):
     @run_after('install')
     def python_install(self):
         if '+python' in self.spec:
-            args = std_pip_args + ['--prefix=' + self.prefix]
+            args = std_pip_args + ['--prefix=' + self.prefix, '.']
             pip(*args)

@@ -134,7 +134,7 @@ class Mxnet(CMakePackage, CudaPackage):
     def install_python(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                args = std_pip_args + ['--prefix=' + prefix]
+                args = std_pip_args + ['--prefix=' + prefix, '.']
                 pip(*args)
 
     def test(self):

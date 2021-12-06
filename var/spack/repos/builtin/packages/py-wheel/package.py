@@ -79,5 +79,5 @@ class PyWheel(Package):
         env.prepend_path('PYTHONPATH', join_path(self.stage.source_path, 'setuptools'))
 
     def install(self, spec, prefix):
-        args = std_pip_args + ['--prefix=' + prefix]
+        args = std_pip_args + ['--prefix=' + prefix, '.']
         pip(*args)

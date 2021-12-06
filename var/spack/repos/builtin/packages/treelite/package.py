@@ -44,5 +44,5 @@ class Treelite(CMakePackage):
     def python_install(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                args = std_pip_args + ['--prefix=' + self.prefix]
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
                 pip(*args)

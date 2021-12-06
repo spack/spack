@@ -76,6 +76,6 @@ class PyTensorflowEstimator(Package):
         buildpath = join_path(self.stage.source_path, 'spack-build')
         build_pip_package('--src', buildpath)
         with working_dir(buildpath):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
         remove_linked_tree(self.tmp_path)

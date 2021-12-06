@@ -80,7 +80,7 @@ class PyTensorflowProbability(Package):
         with working_dir(join_path('bazel-bin',
                                    'pip_pkg.runfiles',
                                    'tensorflow_probability')):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
 
         remove_linked_tree(self.tmp_path)

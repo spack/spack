@@ -87,7 +87,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
         if '+python' in self.spec:
             with working_dir('python'):
-                args = std_pip_args + ['--prefix=' + prefix]
+                args = std_pip_args + ['--prefix=' + prefix, '.']
                 pip(*args)
 
         if '+tests' not in self.spec:

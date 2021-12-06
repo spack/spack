@@ -104,7 +104,7 @@ class PyPip(Package):
         )
 
     def install(self, spec, prefix):
-        args = ['-m', 'pip'] + std_pip_args + ['--prefix=' + prefix]
+        args = ['-m', 'pip'] + std_pip_args + ['--prefix=' + prefix, '.']
         python(*args)
 
     @property

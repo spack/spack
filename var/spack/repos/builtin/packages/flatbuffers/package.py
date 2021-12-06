@@ -51,7 +51,7 @@ class Flatbuffers(CMakePackage):
         if '+python' in self.spec:
             pydir = join_path(self.stage.source_path, 'python')
             with working_dir(pydir):
-                args = std_pip_args + ['--prefix=' + self.prefix]
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
                 pip(*args)
 
     def cmake_args(self):

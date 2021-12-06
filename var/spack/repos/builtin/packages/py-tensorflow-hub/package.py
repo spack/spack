@@ -70,7 +70,7 @@ class PyTensorflowHub(Package):
                      join_path(insttmp_path, 'tensorflow_hub'))
 
         with working_dir(insttmp_path):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
 
         remove_linked_tree(tmp_path)

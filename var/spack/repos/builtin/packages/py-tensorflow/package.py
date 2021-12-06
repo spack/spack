@@ -789,7 +789,7 @@ def protobuf_deps():
         tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
         remove_linked_tree(tmp_path)
 

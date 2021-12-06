@@ -58,5 +58,5 @@ class Gurobi(Package):
     @run_after('install')
     def gurobipy(self):
         with working_dir('linux64'):
-            args = std_pip_args + ['--prefix=' + self.prefix]
+            args = std_pip_args + ['--prefix=' + self.prefix, '.']
             pip(*args)

@@ -104,6 +104,6 @@ class PyTensorboard(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build'):
-            args = std_pip_args + ['--prefix=' + prefix]
+            args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
         remove_linked_tree(self.tmp_path)
