@@ -95,7 +95,7 @@ class Nnpack(CMakePackage):
     def generate_peachpy(self):
         # https://github.com/Maratyszcza/NNPACK/issues/203
         with working_dir(join_path(self.stage.source_path, 'deps', 'peachpy')):
-            setup_py('generate')
+            python('-s', 'setup.py', 'generate')
 
     def cmake_args(self):
         return [

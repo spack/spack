@@ -28,6 +28,8 @@ class PyTensorboardPluginWit(Package):
     # Bazel 3.7+ does not work
     # https://github.com/PAIR-code/what-if-tool/issues/140
     depends_on('bazel@0.26.1:3.6', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
@@ -83,6 +85,6 @@ class PyTensorboardPluginWit(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build/release'):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix]
+            pip(*args)
         remove_linked_tree(self.tmp_path)

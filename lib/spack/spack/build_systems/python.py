@@ -48,6 +48,35 @@ class PythonPackage(PackageBase):
 
     py_namespace = None
 
+    @staticmethod
+    def _std_args(cls):
+        return [
+            # Verbose
+            '-vvv',
+            # Disable prompting for input
+            '--no-input',
+            # Disable the cache
+            '--no-cache-dir',
+            # Don't check to see if pip is up-to-date
+            '--disable-pip-version-check',
+            # Don't warn about deprecated Python
+            '--no-python-version-warning',
+            # Install packages
+            'install',
+            # Don't install package dependencies
+            '--no-deps',
+            # Overwrite existing packages
+            '--ignore-installed',
+            # Use env vars like PYTHONPATH
+            '--no-build-isolation',
+            # Don't warn that prefix.bin is not in PATH
+            '--no-warn-script-location',
+            # Ignore the PyPI package index
+            '--no-index',
+            # Install source code in the current directory
+            '.'
+        ]
+
     @property
     def homepage(self):
         if self.pypi:
@@ -135,35 +164,8 @@ class PythonPackage(PackageBase):
 
     def install(self, spec, prefix):
         """Install everything from build directory."""
-        args = [
-            # Verbose
-            '-vvv',
-            # Disable prompting for input
-            '--no-input',
-            # Disable the cache
-            '--no-cache-dir',
-            # Don't check to see if pip is up-to-date
-            '--disable-pip-version-check',
-            # Don't warn about deprecated Python
-            '--no-python-version-warning',
-            # Install packages
-            'install',
-            # Don't install package dependencies
-            '--no-deps',
-            # Installation prefix
-            '--prefix',
-            prefix,
-            # Overwrite existing packages
-            '--ignore-installed',
-            # Use env vars like PYTHONPATH
-            '--no-build-isolation',
-            # Don't warn that prefix.bin is not in PATH
-            '--no-warn-script-location',
-            # Ignore the PyPI package index
-            '--no-index',
-            # Install source code in the current directory
-            '.'
-        ]
+
+        args = PythonPackage._std_args(self) + ['--prefix=' + prefix]
 
         for option in self.install_options(spec, prefix):
             args.append('--install-option=' + option)

@@ -38,7 +38,3 @@ class Phyluce(PythonPackage):
     depends_on('trimal', type='run')
     depends_on('trinity', type='run')
     depends_on('velvet', type='run')
-
-    def install(self, spec, prefix):
-        python = which('python')
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))

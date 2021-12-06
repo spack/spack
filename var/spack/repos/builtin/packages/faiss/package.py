@@ -33,6 +33,8 @@ class Faiss(AutotoolsPackage, CudaPackage):
     conflicts('+tests', when='~python', msg='+tests must be accompanied by +python')
 
     depends_on('python@3.7:',   when='+python', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depedns_on('py-wheel', when='+python', type='build')
     depends_on('py-numpy',      when='+python', type=('build', 'run'))
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
@@ -85,8 +87,8 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--prefix=' + prefix,
-                         '--single-version-externally-managed', '--root=/')
+                args = std_pip_args + ['--prefix=' + prefix]
+                pip(*args)
 
         if '+tests' not in self.spec:
             return

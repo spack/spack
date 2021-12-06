@@ -393,8 +393,3 @@ class PyTorch(PythonPackage, CudaPackage):
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

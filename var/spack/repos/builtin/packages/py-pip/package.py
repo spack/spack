@@ -104,9 +104,8 @@ class PyPip(Package):
         )
 
     def install(self, spec, prefix):
-        python('-m', 'pip', 'install', '--no-deps', '--prefix', prefix,
-               '--ignore-installed', '--no-build-isolation', '--no-index',
-               '--no-warn-script-location', '.')
+        args = ['-m', 'pip'] + std_pip_args + ['--prefix=' + prefix]
+        python(*args)
 
     @property
     def command(self):

@@ -28,12 +28,6 @@ class Scons(PythonPackage):
     patch('fjcompiler.patch', when='%fj')
     patch('py3-hashbang.patch', when='^python@3:')
 
-    # Prevent passing --single-version-externally-managed to
-    # setup.py, which it does not support.
-    @when('@3.0.2:')
-    def install_args(self, spec, prefix):
-        return ['--prefix={0}'.format(prefix), '--root=/']
-
     def setup_run_environment(self, env):
         env.prepend_path('PYTHONPATH', self.prefix.lib.scons)
 
