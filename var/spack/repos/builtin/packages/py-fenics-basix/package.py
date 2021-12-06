@@ -32,6 +32,4 @@ class PyFenicsBasix(PythonPackage):
     depends_on("xtensor@0.23.10:", type="build")
     depends_on("py-pybind11@2.6.2:", type="build")
 
-    phases = ['build_ext', 'build', 'install']
-
     build_directory = 'python'

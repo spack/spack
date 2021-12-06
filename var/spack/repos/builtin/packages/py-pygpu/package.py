@@ -34,13 +34,3 @@ class PyPygpu(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mako', type=('build', 'run'))
     depends_on('check')
-
-    phases = ['build_ext', 'install']
-
-    def build_ext_args(self, spec, prefix):
-
-        _ = self.spec['libgpuarray'].prefix
-        include_flags = '-I{0}'.format(os.path.join(_, 'include'))
-        library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
-
-        return [include_flags, library_flags]

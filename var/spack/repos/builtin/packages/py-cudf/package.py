@@ -36,8 +36,7 @@ class PyCudf(PythonPackage):
     for v in ('@0.15.0',):
         depends_on('libcudf' + v, when=v)
 
-    phases = ['cmake', 'build_ext', 'install']
-
+    @run_before('install')
     def cmake(self, spec, prefix):
         cmake = which('cmake')
 

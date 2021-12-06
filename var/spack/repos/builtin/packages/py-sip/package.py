@@ -60,6 +60,10 @@ class PySip(PythonPackage):
 
             python('configure.py', *args)
 
+    @when('@5:')
+    def build(self, spec, prefix):
+        pass
+
     @when('@:4')
     def build(self, spec, prefix):
         make()

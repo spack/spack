@@ -55,8 +55,7 @@ class PyIpykernel(PythonPackage):
     depends_on('py-matplotlib-inline@0.1.0:0.1', when='@6:', type=('build', 'run'))
     depends_on('py-appnope', when='platform=darwin', type=('build', 'run'))
 
-    phases = ['build', 'install', 'install_data']
-
+    @run_after('install')
     def install_data(self, spec, prefix):
         """ install the Jupyter kernel spec """
         self.spec['python'].command(

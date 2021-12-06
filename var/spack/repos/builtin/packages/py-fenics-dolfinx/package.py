@@ -49,6 +49,4 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-cffi", type="run")
     depends_on("py-numpy", type="run")
 
-    phases = ['build_ext', 'build', 'install']
-
     build_directory = 'python'
