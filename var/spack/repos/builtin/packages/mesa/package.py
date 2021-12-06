@@ -64,17 +64,17 @@ class Mesa(MesonPackage):
     # needing to check which llvm targets were built (ptx or amdgpu, etc.)
 
     # Back ends
-    variant('opengl', default=True, description="Enable full OpenGL support.")
+    variant('gl', default=True, description="Enable full OpenGL support.")
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl ~glvnd')
+    provides('gl@4.5',  when='+gl ~glvnd')
     provides('glx@1.4', when='+glx ~glvnd')
     provides('egl@1.5', when='+egl ~glvnd')
 
-    provides('libglvnd-be-gl', when='+opengl +glvnd')
-    provides('libglvnd-be-glx', when='+opengl +glvnd +glx')
-    provides('libglvnd-be-egl', when='+opengl +glvnd +egl')
+    provides('libglvnd-be-gl', when='+gl +glvnd')
+    provides('libglvnd-be-glx', when='+gl +glvnd +glx')
+    provides('libglvnd-be-egl', when='+gl +glvnd +egl')
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
@@ -117,13 +117,13 @@ class Mesa(MesonPackage):
 
     # Require at least 1 back-end
     # TODO: Add vulkan to this conflict once made available
-    conflicts('~opengl ~opengles')
+    conflicts('~gl ~opengles')
 
     # OpenGL ES requires OpenGL
-    conflicts('~opengl +opengles')
+    conflicts('~gl +opengles')
 
     # EGL and OpenGL are in separate libraries. libglvnd is needed to combine the two
-    conflicts('+egl +opengl ~glvnd')
+    conflicts('+egl +gl ~glvnd')
 
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
@@ -194,7 +194,7 @@ class Mesa(MesonPackage):
             args.extend(
                 ['-Degl=disabled', '-Dgbm=disabled'])
 
-        args.append(opt_bool('+opengl' in spec, 'opengl'))
+        args.append(opt_bool('+gl' in spec, 'opengl'))
         args.append(opt_enable('+opengles' in spec, 'gles1'))
         args.append(opt_enable('+opengles' in spec, 'gles2'))
 
@@ -241,7 +241,7 @@ class Mesa(MesonPackage):
 
         return args
 
-    # NOTE: Each of the following *libs properties return empty lists if
+    # NOTE: Each of the following OpenGL*libs properties return empty lists if
     # +glvnd, because there are no mesa libraries to be linked against.  When
     # acting as a glvnd dispatch target, libglvnd will find mesa's shared
     # objects via environment variables, dynamically load them, and dispatch
@@ -262,7 +262,7 @@ class Mesa(MesonPackage):
             if '+egl' in spec:
                 libs_to_seek.add('libEGL')
 
-            if '+opengl' in spec:
+            if '+gl' in spec:
                 libs_to_seek.add('libGL')
 
             if '+opengles' in spec:

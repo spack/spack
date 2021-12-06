@@ -1018,29 +1018,7 @@ OpenGL calls are dispatched dynamically at run time to the hardware graphics
 implementation.  This dynamic dispatch is performed using `libglvnd
 <https://gitlab.freedesktop.org/glvnd/libglvnd>`.  In this mode, the graphics
 library (e.g.: opengl) must be built to work with libglvnd.  Applications then
-link against libglvnd instead of the underlying implementation.  Environment
-variables set at run time govern the process by which libglvnd loads the
-underlying implementation and dispatches calls to it.  See `this
-<https://github.com/NVIDIA/libglvnd/issues/177#issuecomment-496562769>` comment
-for details on loading a specific GLX implementation and `this
-<https://github.com/NVIDIA/libglvnd/blob/master/src/EGL/icd_enumeration.md>`
-page for information about EGL ICD enumeration.
-
-This codependency between libglvnd and the underlying implementation is modeled
-in Spack with two packages for libglvnd: libglvnd, which provides libglvnd
-proper; and libglvnd-fe, a bundle package that depends on libglvnd and an
-implementation.  Implementations that work through libglvnd are no longer
-providers for graphics virtual dependencies, like "gl" or "glx", but instead
-provide libglvnd versions of these dependencies ("libglvnd-be-gl",
-"libglvnd-be-glx", etc.).  The libglvnd-fe package depends on these
-"libglvnd-be-..." virtual packages, which provide the actual implementation.
-It also depends on libglvnd, itself, and exposes its libraries to downstream
-applications.  For correct operation, the Spack package for the underlying
-implementation has to set the runtime environment to ensure that it is loaded
-when an application linked against libglvnd runs.  This last detail is
-important for users who want to set up an external OpenGL implementation that
-requires libglvnd to work.  This setup requires modifying the ``packages``
-configuration so that the necessary environment variables are set.
+link against libglvnd instead of the underlying implementation.
 
 .. code-block:: yaml
 
@@ -1064,7 +1042,10 @@ configuration so that the necessary environment variables are set.
 The `glx` and `egl` variables in the `extra_attributes` field are used to set
 environment variables for the OpenGL implementation. `glx_driver_name` and
 '/path/to/egl/vendor' should be changed from the placeholders to the OpenGL
-implementation's values before attempting to use an OpenGL implementation. 
+implementation's values before attempting to use an OpenGL implementation.
+To determine 'glx_driver_name`, run 'glxinfo | grep -i "opengl vendor string"'.
+To determine '/path/to/egl/vendor', find the 'glvnd/egl_vendor.d' directory. The
+vendor will be inside this directory.
 
 One final detail about the above example is that it avoids setting the true
 root of the external OpenGL implementation, instead opting to set it to a path

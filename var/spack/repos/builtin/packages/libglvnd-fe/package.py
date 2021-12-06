@@ -14,7 +14,18 @@ class LibglvndFe(BundlePackage):
     vendors to coexist on the same filesystem, and determines which vendor to
     dispatch each API call to at runtime.
     Both GLX and EGL are supported, in any combination with OpenGL and OpenGL
-    ES."""
+    ES.
+
+    The codependency between libglvnd and the underlying implementation is modeled
+    in Spack with two packages for libglvnd: libglvnd, which provides libglvnd
+    proper; and libglvnd-fe, a bundle package that depends on libglvnd and an
+    implementation.  Implementations that work through libglvnd are no longer
+    providers for graphics virtual dependencies, like "gl" or "glx", but instead
+    provide libglvnd versions of these dependencies ("libglvnd-be-gl",
+    "libglvnd-be-glx", etc.).  The libglvnd-fe package depends on these
+    "libglvnd-be-..." virtual packages, which provide the actual implementation.
+    It also depends on libglvnd, itself, and exposes its libraries to downstream
+    applications."""
 
     homepage = "https://gitlab.freedesktop.org/glvnd/libglvnd"
 
