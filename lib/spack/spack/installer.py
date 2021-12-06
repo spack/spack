@@ -56,7 +56,6 @@ import spack.paths
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.build_environment import instantiate_compiler_env
 from spack.util.environment import (
     EnvironmentModifications,
     dump_environment
@@ -1861,7 +1860,7 @@ class BuildProcessInstaller(object):
             # Save the build environment in a file before building.
             dump_environment(pkg.env_path)
             # Copy compiler wrapper to stage
-            instantiate_compiler_env(pkg)
+            spack.build_environment.instantiate_compiler_env(pkg)
 
             # Save just the changes to the environment.  This file can be
             # safely installed, since it does not contain secret variables.

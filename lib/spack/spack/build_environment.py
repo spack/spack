@@ -107,6 +107,24 @@ SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 
 
+# TODO: Add config, build, install args etc
+COMPILER_LOAD_FILE = """
+#!/bin/sh
+source spack-build-env.txt
+CC='{}'; export CC
+CXX='{}'; export CXX
+FC='{}'; export FC
+F77='{}'; export F77
+SPACK_ENV_PATH='{}'; export SPACK_ENV_PATH
+PATH='$SPACK_ENV_PATH{}$PATH'; export PATH
+"""
+
+COMPILER_UNLOAD = """
+#!/bin/sh
+source spack-build-env-mods.txt
+exit 0
+"""
+
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
@@ -285,8 +303,37 @@ def instantiate_compiler_env(pkg):
     write_wrapper(compiler_wrapper_files, metadata_compiler_root)
     write_wrapper(compiler_wrapper_files, stage_metadata_compiler)
 
+    env_paths = []
+    compiler_specific = os.path.join(
+        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+    for item in [spack.paths.build_env_path, compiler_specific]:
+        env_paths.append(item)
+        ci = os.path.join(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            env_paths.append(ci)
+
     # install local env loader
-    # write_wrapper()
+    # setup loader script vars
+    cc       =  lambda x: join(x,pkg.compiler.link_paths['cc'])
+    cxx      =  lambda x: join(x,pkg.compiler.link_paths['cxx'])
+    fc       =  lambda x: join(x,pkg.compiler.link_paths['fc'])
+    f77      =  lambda x: join(x,pkg.compiler.link_paths['f77'])
+    env_path =  os.sep.join(env_paths)
+    sep      =  ';'
+
+    build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77)]
+    with open(join(metadata_root, 'setup' + wrapper_ext), 'w+') as f:
+        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(metadata_root), env_path, sep))
+
+    with open(join(stage_metadata_root, 'setup' + wrapper_ext), 'w+') as f:
+        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), env_path, sep))
+
+    # install local env unloader
+    with open(join(metadata_root, 'unload' + wrapper_ext), 'w+') as f:
+        f.write(COMPILER_UNLOAD)
+
+    with open(join(stage_metadata_root, 'unload' + wrapper_ext), 'w+') as f:
+        f.write(COMPILER_UNLOAD)
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -307,13 +354,14 @@ def set_compiler_environment_variables(pkg, env):
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
-    # Set SPACK compiler variables so that our wrapper knows what to call
+    # Set SPACK compiler variables so that our wrapper knows what to call 'C:\\Program Files\\Git\\bin\\sh.exe'
+    import posixpath
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
-        env.set('CC', os.path.join(link_dir, compiler.link_paths['cc']))
+        env.set('CC', "'C:\\Program Files\\Git\\bin\\sh.exe' {}".format(posixpath.join(link_dir, compiler.link_paths['cc'])))
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
-        env.set('CXX', os.path.join(link_dir, compiler.link_paths['cxx']))
+        env.set('CXX', "'C:\\Program Files\\Git\\bin\\sh.exe' {}".format(posixpath.join(link_dir, compiler.link_paths['cxx'])))
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
         env.set('F77', os.path.join(link_dir, compiler.link_paths['f77']))
@@ -509,8 +557,9 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
 
-    # Let the wrapper know Spack is driving the build
-    env.set('SPACK_RUN','TRUE')
+    # Set proper path ext to allow Windows to execute extensionless wrapper
+    # files
+    env.prepend_path('PATHEXT', '.sh')
 
 
 def determine_number_of_jobs(
