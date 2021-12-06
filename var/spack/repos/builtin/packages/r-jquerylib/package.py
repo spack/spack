@@ -9,7 +9,6 @@ from spack import *
 class RJquerylib(RPackage):
     """Obtain 'jQuery' as an HTML Dependency Object."""
 
-    homepage = "https://CRAN.R-project.org/package=jquerylib"
     cran = "jquerylib"
 
     version('0.1.4', sha256='f0bcc11dcde3a6ff180277e45c24642d3da3c8690900e38f44495efbc9064411')
