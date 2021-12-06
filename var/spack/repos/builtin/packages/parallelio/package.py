@@ -36,6 +36,7 @@ class Parallelio(CMakePackage):
 
     def cmake_args(self):
         define = self.define
+        define_from_veriant = self.define_from_variant
         spec = self.spec
         env['CC'] = spec['mpi'].mpicc
         env['FC'] = spec['mpi'].mpifc
@@ -52,6 +53,6 @@ class Parallelio(CMakePackage):
                 define('PnetCDF_Fortran_PATH', spec['parallel-netcdf'].prefix),
             ])
         args.extend([
-            self.define_from_variant('PIO_ENABLE_TIMING', 'timing'),
+            define_from_variant('PIO_ENABLE_TIMING', 'timing'),
         ])
         return args
