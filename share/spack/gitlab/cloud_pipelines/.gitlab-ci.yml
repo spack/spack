@@ -350,4 +350,4 @@ python-develop-build:
     strategy: depend
   needs:
     - artifacts: True
-      job: python-pr-build
+      job: python-develop-generate
