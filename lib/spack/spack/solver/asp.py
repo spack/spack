@@ -101,6 +101,9 @@ DeclaredVersion = collections.namedtuple(
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
 
+#: High fixed priority offset for criteria that supersede all build criteria
+high_fixed_priority_offset = 300
+
 #: Priority offset for "build" criteria (regular criterio shifted to
 #: higher priority for specs we have to build)
 build_priority_offset = 200
@@ -115,6 +118,7 @@ def build_criteria_names(costs, tuples):
     priorities_names = []
 
     num_fixed = 0
+    num_high_fixed = 0
     for pred, args in tuples:
         if pred != "opt_criterion":
             continue
@@ -131,29 +135,34 @@ def build_criteria_names(costs, tuples):
         if priority < fixed_priority_offset:
             build_priority = priority + build_priority_offset
             priorities_names.append((build_priority, name))
+        elif priority >= high_fixed_priority_offset:
+            num_high_fixed += 1
         else:
             num_fixed += 1
 
     # sort the criteria by priority
     priorities_names = sorted(priorities_names, reverse=True)
-
     assert len(priorities_names) == len(costs), "Wrong number of optimization criteria!"
 
     # split list into three parts: build criteria, fixed criteria, non-build criteria
     num_criteria = len(priorities_names)
-    num_build = (num_criteria - num_fixed) // 2
+    num_build = (num_criteria - num_fixed - num_high_fixed) // 2
 
-    build = priorities_names[:num_build]
-    fixed = priorities_names[num_build:num_build + num_fixed]
-    installed = priorities_names[num_build + num_fixed:]
+    high_fixed = priorities_names[:num_high_fixed]
+    build = priorities_names[num_high_fixed:num_high_fixed + num_build]
+    fixed = priorities_names[num_high_fixed + num_build:num_high_fixed + num_build + num_fixed]
+    installed = priorities_names[num_high_fixed + num_build + num_fixed:]
 
     # mapping from priority to index in cost list
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
     # make a list that has each name with its build and non-build priority
-    criteria = [
+    criteria = [(p - high_fixed_priority_offset + 2 * num_build, None, name)
+                 for p, name in high_fixed]
+    criteria += [
         (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
     ]
+
     for (i, name), (b, _) in zip(installed, build):
         criteria.append((indices[i], indices[b], name))
 

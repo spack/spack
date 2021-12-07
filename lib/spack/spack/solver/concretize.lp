@@ -855,7 +855,7 @@ impose(PSID, Hash) :- hash(PSID, Package, Hash).
 build(PSID, Package)
  :- not hash(PSID, Package, _),
     node(PSID, Package),
-    not handled_by_another_root(PSID, Package).
+    not handled_by_another_process_space(PSID, Package).
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
@@ -869,7 +869,8 @@ build(PSID, Package)
 % topmost-priority criterion to reuse what is installed.
 %
 % The priority ranges are:
-%   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
+%   300+        Unshifted priorities that supersede build nodes.
+%   200 - 299   Shifted priorities for build nodes; correspond to priorities 0 - 99.
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
 %   0   -  99   Priorities for non-built nodes.
 build_priority(PSID, Package, 200)
@@ -901,9 +902,19 @@ prefer_satisfier(ID1, ID2, Package)
  :- roots_equivalent_for_package(ID1, ID2, Package),
     ID1 < ID2.
 
-handled_by_another_root(PSID, Package)
+handled_by_another_process_space(PSID, Package)
  :- node(PSID, Package),
     prefer_satisfier(_, PSID, Package).
+
+% Only want to penalize the optimization for duplicates
+% Don't penalize for the first instance of a given package.
+% Arbitrarily choosing the "lowest" PSID to not penalize
+duplicate(PSID, Package)
+ :- node(PSID, Package),
+    node(OtherPSID, Package),
+    PSID != OtherPSID,
+    not roots_equivalent_for_package(PSID, OtherPSID, Package),
+    PSID > OtherPSID.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
@@ -912,6 +923,11 @@ handled_by_another_root(PSID, Package)
 %   1. an opt_criterion(ID, Name) fact that describes the criterion, and
 %   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
 %      is displayed (clingo doesn't display sums over empty sets by default)
+
+% Try to minimize the number of nodes of a given package
+opt_criterion(300, "agreement of nodes across process spaces").
+#minimize { 0@300: #true }.
+#minimize { 1@300,Package,PSID : duplicate(PSID, Package) }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
