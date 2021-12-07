@@ -308,6 +308,10 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     Return:
         List of matching specs
     """
+    # Normalize input to list of specs
+    if isinstance(constraints, six.string_types):
+        constraints = [spack.spec.Spec(constraints)]
+
     matching_specs, errors = [], []
     query_fn = query_fn or spack.store.db.query
     for spec in constraints:
