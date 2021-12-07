@@ -33,6 +33,6 @@ class Libdrm(AutotoolsPackage):
             # Needed to fix build for spack/spack#1740, but breaks newer
             # builds/compilers
             args.append('LIBS=-lrt')
-        if self.spec.satisfies('%gcc@10.0.0:') or self.spec.satisfies('%clang@12.0.0'):
+        if self.spec.satisfies('%gcc@10.0.0:') or self.spec.satisfies('%clang@12.0.0:'):
             args.append('CFLAGS=-fcommon')
         return args
