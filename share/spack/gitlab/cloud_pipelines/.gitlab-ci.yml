@@ -336,7 +336,7 @@ python-pr-build:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: python-pr-generate
-    strategy: depends
+    strategy: depend
   needs:
     - artifacts: True
       job: python-pr-generate
