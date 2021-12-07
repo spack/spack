@@ -800,7 +800,6 @@ node_flag_inherited(PSID, Dependency, FlagType, Flag)
 node_flag_set(PSID, Package) :- node_flag_set(PSID, Package, _, _).
 
 % remember where flags came from
-% TODO: I don't think we use node_flag_source
 node_flag_source(PSID, Package, Package) :- node_flag_set(PSID, Package).
 node_flag_source(PSID, Dependency, Q)
  :- node_flag_source(PSID, Package, Q),
@@ -832,7 +831,6 @@ node_flag(PSID, Package, FlagType, Flag)
  :- node_flag_inherited(PSID, Package, FlagType, Flag).
 
 % if no node flags are set for a type, there are no flags.
-% TODO: I don't think this is used anywhere
 no_flags(PSID, Package, FlagType)
  :- not node_flag(PSID, Package, FlagType, _), node(PSID, Package), flag_type(FlagType).
 
