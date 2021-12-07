@@ -757,8 +757,6 @@ compiler_mismatch(PSID, Package, Dependency)
   :- depends_on(PSID, Package, Dependency),
      not compiler_match(PSID, Package, Dependency).
 
-% TODO: node_compiler_set is not used
-%#defined node_compiler_set/2.
 #defined node_compiler_version_set/4.
 #defined compiler_supports_os/3.
 #defined allow_compiler/2.
