@@ -291,7 +291,7 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     At least one spec per constraint must match, otherwise the function
     will error with an appropriate message.
 
-    By default this function queries the current store, but a custom query
+    By default, this function queries the current store, but a custom query
     function can be passed to hit any other source of concretized specs
     (e.g. a binary cache).
 
@@ -344,14 +344,13 @@ def specfile_matches(filename, **kwargs):
     """Same as find but reads the query from a spec file.
 
     Args:
-        filename (str): YAML or JSON file from from which to read the query.
+        filename (str): YAML or JSON file from which to read the query.
         **kwargs: keyword arguments forwarded to "find"
 
     Return:
         List of matches
     """
-    s = spack.spec.Spec.from_specfile(filename)
-    query = ['/{0}'.format(s.dag_hash())]
+    query = [spack.spec.Spec.from_specfile(filename)]
     return spack.store.find(query, **kwargs)
 
 

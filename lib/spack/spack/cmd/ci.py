@@ -557,8 +557,8 @@ def ci_rebuild(args):
         # per-PR mirror, if this is a PR pipeline
         if buildcache_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
-                sign_binaries)
+                env, job_spec_yaml_path, buildcache_mirror_url, sign_binaries
+            )
 
             if cdash_build_id:
                 tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
@@ -572,8 +572,8 @@ def ci_rebuild(args):
         # prefix is set)
         if pipeline_mirror_url:
             spack_ci.push_mirror_contents(
-                env, job_spec, job_spec_yaml_path, pipeline_mirror_url,
-                sign_binaries)
+                env, job_spec_yaml_path, pipeline_mirror_url, sign_binaries
+            )
 
             if cdash_build_id:
                 tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(

@@ -970,8 +970,7 @@ spack:
             install_cmd('--keep-stage', json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
-            ci.push_mirror_contents(
-                env, concrete_spec, json_path, mirror_url, True)
+            ci.push_mirror_contents(env, json_path, mirror_url, True)
 
             ci.write_cdashid_to_mirror('42', concrete_spec, mirror_url)
 
@@ -1070,7 +1069,7 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
 
     # Input doesn't matter, as wwe are faking exceptional output
     url = 'fakejunk'
-    ci.push_mirror_contents(None, None, None, url, None)
+    ci.push_mirror_contents(None, None, url, None)
 
     captured = capsys.readouterr()
     std_out = captured[0]
