@@ -105,6 +105,4 @@ class Hicops(CMakePackage):
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxx_std')
         ]
 
-        cmake(*args)
-        make()
-        make('install')
+        return args
