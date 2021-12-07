@@ -19,4 +19,5 @@ class PyFlitCore(PythonPackage):
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
+    depends_on('py-toml', type='run')
     depends_on('py-tomli', type='run')

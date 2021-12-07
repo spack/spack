@@ -170,7 +170,7 @@ class PythonPackage(PackageBase):
         for option in self.global_options(spec, prefix):
             args.append('--global-option=' + option)
 
-        if self.stage.archive_file.endswith('.whl'):
+        if self.stage.archive_file and self.stage.archive_file.endswith('.whl'):
             args.append(self.stage.archive_file)
         else:
             args.append('.')
