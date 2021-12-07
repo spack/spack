@@ -48,7 +48,7 @@ spack:
     - flatbuffers+python
     - gatetools
     - gdal+python
-    - gdl+python
+    # - gdl+python  # does not support Python 3
     - geant4+python
     - gengeo
     - gnuradio
@@ -390,7 +390,7 @@ spack:
     - py-chronyk
     - py-ci-info
     - py-cinema-lib
-    - py-cinemasci
+    # - py-cinemasci  # TODO: unknown concretization issues
     - py-citeproc-py
     - py-clean-text
     - py-cleo
@@ -696,7 +696,7 @@ spack:
     - py-gsi
     - py-gsutil
     - py-guidata
-    - py-guiqwt
+    # - py-guiqwt  # TODO: unknown concretization issues
     - py-gym
     - py-h11
     - py-h2
@@ -777,7 +777,7 @@ spack:
     - py-ipython-cluster-helper
     - py-ipython-genutils
     # - py-ipyvtk-simple  # Depends on py-ipycanvas and py-ipyevents
-    - py-ipywidgets
+    # - py-ipywidgets # TODO: unknown concretization issues
     - py-irpf90
     - py-iso8601
     - py-isodate
@@ -809,7 +809,7 @@ spack:
     - py-jsonref
     - py-jsonschema
     - py-junit-xml
-    - py-jupyter
+    # - py-jupyter  # TODO: unknown concretization issues
     - py-jupyter-client
     - py-jupyter-console
     - py-jupyter-core
@@ -1262,7 +1262,7 @@ spack:
     - py-pyrad
     - py-pyrect
     - py-pyro4
-    - py-pyrosar
+    # - py-pyrosar  # depends on py-spatialist
     - py-pyrsistent
     - py-pysam
     - py-pyscaf
@@ -1516,7 +1516,7 @@ spack:
     - py-spacy-models-en-core-web-sm
     - py-spacy-models-en-vectors-web-lg
     - py-sparse
-    - py-spatialist
+    # - py-spatialist  # depends on a bunch of jupyter packages with broken concretization
     - py-spatialite
     - py-spdlog
     - py-spectra
@@ -1789,7 +1789,7 @@ spack:
     - timemory+python
     - tskit
     - tulip
-    - uqtk+python
+    - uqtk+pyuqtk
     - verrou
     - vigra+python
     - vtk+python
