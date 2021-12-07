@@ -2,7 +2,7 @@ FROM opensuse/leap:15.3
 MAINTAINER Christian Goll <cgoll@suse.com>
 
 ENV DOCKERFILE_BASE=opensuse          \
-    DOCKERFILE_DISTRO=opensuse_leap   \
+    DOCKERFILE_DISTRO=leap   \
     DOCKERFILE_DISTRO_VERSION=15.3    \
     SPACK_ROOT=/opt/spack      \
     DEBIAN_FRONTEND=noninteractive    \
