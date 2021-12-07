@@ -608,7 +608,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         """Run stand alone test: ex7"""
 
         make('ex7', parallel=False)
-        testexe = ['ex7' , '-mat_type', 'aijcusparse',
+        testexe = ['ex7', '-mat_type', 'aijcusparse',
                    '-sub_pc_factor_mat_solver_type', 'cusparse',
                    '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
                    '-use_gpu_aware_mpi', '0']
@@ -619,7 +619,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                       work_dir=w_dir)
         make('clean', parallel=False)
 
-    def  run_ex3k_test(self, runexe, runopt, w_dir):
+    def run_ex3k_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex3k"""
 
         with working_dir(w_dir):
