@@ -11,93 +11,93 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   specs:
-    - adios2
-    - akantu
+    - adios2+python
+    - akantu+python
     - alps
-    - ambari
-    - antlr
-    - arbor
-    - ascent
+    # - ambari  # does not support Python 3, deps do not support Python 2
+    - antlr+python
+    # - arbor+python  # does not support old version of GCC on VM
+    - ascent+python
     - aws-parallelcluster
     - awscli
     - bart
-    - bohrium
+    - bohrium+python
     - bumpversion
     - busco
-    - caffe
+    - caffe+python
     - callflow
     - candle-benchmarks
-    - cantera
-    - catalyst
+    - cantera+python
+    - catalyst+python3
     - cget
-    - clingo
-    - clingo-bootstrap
-    - cmor
+    - clingo+python
+    - clingo-bootstrap+python
+    - cmor+python
     - codar-cheetah
-    - conduit
-    - cosmomc
+    - conduit+python
+    - cosmomc+python
     - cram
     - dd4hep
     - dsqss
     - easybuild
-    - eccodes
-    - elemental
+    - eccodes+python
+    - elemental+python
     - falcon
-    - fenics
-    - flann
-    - flatbuffers
+    - fenics+python
+    - flann+python
+    - flatbuffers+python
     - gatetools
-    - gdal
-    - gdl
-    - geant4
+    - gdal+python
+    - gdl+python
+    - geant4+python
     - gengeo
     - gnuradio
-    - grib-api
+    # - grib-api  # deprecated in favor of eccodes
     - gurobi
-    - heffte
-    - helics
-    - henson
-    - hoomd-blue
+    - heffte+python
+    - helics+python
+    - henson+python
+    # - hoomd-blue  # does not support new version of GCC on VM
     - httpie
-    - ibm-databroker
+    - ibm-databroker+python
     - ibmisc
     - jube
     - kicad
-    - lbann
+    - lbann+python
     - lhapdf
     - libbytesize
-    - libcap-ng
-    - libxml2
-    - libxslt
-    - llvm
-    - llvm-doe
-    - magics
-    - mapserver
+    - libcap-ng+python
+    - libxml2+python
+    - libxslt+python
+    - llvm+python
+    - llvm-doe+python
+    - magics+python
+    - mapserver+python
     - memsurfer
     - mercurial
     - meson
-    - mgis
+    - mgis+python
     - minimap2
-    - mxnet
-    - nest
-    - nlopt
+    - mxnet+python
+    - nest+python
+    - nlopt+python
     - nrm
     - ont-albacore
-    - openbabel
-    - opencv
-    - openfst
-    - openimageio
+    - openbabel+python
+    - opencv+python3
+    - openfst+python
+    - openimageio+python
     - openmm
-    - openpmd-api
-    - openturns
-    - openvdb
-    - openwsman
+    - openpmd-api+python
+    - openturns+python
+    - openvdb+python
+    - openwsman+python
     - pacifica-cli
-    - pagmo
-    - paraview
+    - pagmo+python
+    - paraview+python3
     - phyluce
-    - piranha
-    - pism
+    - piranha+python
+    - pism+python
     - py-3to2
     - py-4suite-xml
     - py-abcpy
@@ -145,7 +145,7 @@ spack:
     - py-appnope
     - py-apptools
     - py-apscheduler
-    - py-arcgis
+    # - py-arcgis  # TODO: concretization issues
     - py-archspec
     - py-argcomplete
     - py-argh
@@ -443,7 +443,7 @@ spack:
     - py-cppy
     - py-crashtest
     - py-crcmod
-    - py-crispresso
+    # - py-crispresso  # no Python 3 support
     - py-crossmap
     - py-cryolobm
     - py-cryptography
@@ -577,7 +577,7 @@ spack:
     - py-fava
     - py-fenics-basix
     - py-fenics-dijitso
-    - py-fenics-dolfinx
+    # - py-fenics-dolfinx  # TODO: concretization issue
     - py-fenics-ffc
     - py-fenics-ffcx
     - py-fenics-fiat
@@ -638,7 +638,7 @@ spack:
     - py-gee-asset-manager
     - py-geeadd
     - py-geeup
-    - py-gemini
+    # - py-gemini  # TODO: unknown concretization issues
     - py-genders
     - py-geneimpacts
     - py-genshi
@@ -705,7 +705,7 @@ spack:
     - py-h5py
     - py-h5sh
     - py-hacking
-    - py-haphpipe
+    # - py-haphpipe  # TODO: unknown concretization issues
     - py-hatchet
     - py-hdbscan
     - py-hdfs
@@ -753,7 +753,7 @@ spack:
     - py-imgaug
     - py-iminuit
     - py-immutables
-    - py-importlib
+    # - py-importlib  # Only for Python 2.6 or 3.0 and older, no such versions in Spack
     - py-importlib-metadata
     - py-importlib-resources
     - py-incremental
@@ -769,14 +769,14 @@ spack:
     - py-iocapture
     - py-ipaddress
     - py-ipdb
-    - py-ipycanvas
-    - py-ipyevents
+    # - py-ipycanvas  # TODO: unknown concretization issues
+    # - py-ipyevents  # TODO: unknown concretization issues
     - py-ipykernel
     - py-ipyparallel
     - py-ipython
     - py-ipython-cluster-helper
     - py-ipython-genutils
-    - py-ipyvtk-simple
+    # - py-ipyvtk-simple  # Depends on py-ipycanvas and py-ipyevents
     - py-ipywidgets
     - py-irpf90
     - py-iso8601
@@ -820,7 +820,7 @@ spack:
     - py-jupyterlab
     - py-jupyterlab-pygments
     - py-jupyterlab-server
-    - py-jupyterlab-widgets
+    # - py-jupyterlab-widgets  # TODO: unknown concretization issues
     - py-jupytext
     - py-keras
     - py-keras-applications
@@ -910,7 +910,7 @@ spack:
     - py-minrpc
     - py-misopy
     - py-mistune
-    - py-mixedhtseq
+    # - py-mixedhtseq  # No Python 3 support
     - py-mlperf-logging
     - py-mlxtend
     - py-mmcv
@@ -1076,7 +1076,7 @@ spack:
     - py-pickle5
     - py-pickleshare
     - py-picmistandard
-    - py-picrust
+    # - py-picrust  # No Python 3 support
     - py-picrust2
     - py-pid
     - py-pika
@@ -1207,7 +1207,7 @@ spack:
     - py-pygpu
     - py-pygraphviz
     - py-pygresql
-    - py-pygtk
+    # - py-pygtk  # TODO: unknown concretization issues
     - py-pygtrie
     - py-pyh5md
     - py-pyheadtail
@@ -1489,7 +1489,7 @@ spack:
     - py-shortuuid
     - py-shroud
     - py-shtab
-    - py-sierrapy
+    # - py-sierrapy  # none of these dep versions exist in Spack...
     - py-simplegeneric
     - py-simplejson
     - py-simplekml
@@ -1612,7 +1612,7 @@ spack:
     - py-tifffile
     - py-timm
     - py-tinyarray
-    - py-tokenizers
+    # - py-tokenizers  # nightly or dev build of rust required, but not in rust package
     - py-toml
     - py-tomli
     - py-tomlkit
@@ -1641,7 +1641,7 @@ spack:
     - py-traitlets
     - py-traits
     - py-traitsui
-    - py-transformers
+    # - py-transformers  # depends on py-tokenizers
     - py-transforms3d
     - py-treehash
     - py-triangle
@@ -1765,38 +1765,38 @@ spack:
     - py-zope-event
     - py-zope-interface
     - py-zxcvbn
-    - pythia8
-    - qscintilla
+    - pythia8+python
+    - qscintilla+python
     - rdkit
     - reditools
     - redland-bindings
-    - reprimand
-    - saga-gis
+    - reprimand+python
+    - saga-gis+python
     - scons
-    - sensei
-    - sgpp
-    - simsipm
+    - sensei+python
+    - sgpp+python
+    - simsipm+python
     - simulationio
-    - sirius
+    - sirius+python
     - snakemake
-    - sollve
+    - sollve+python
     - sumo
-    - sz
+    - sz+python
     - talloc
-    - tasmanian
-    - tfel
-    - thrift
-    - timemory
+    - tasmanian+python
+    - tfel+python_bindings
+    - thrift+python
+    - timemory+python
     - tskit
     - tulip
-    - uqtk
+    - uqtk+python
     - verrou
-    - vigra
-    - vtk
+    - vigra+python
+    - vtk+python
     - xcfun
-    - xrootd
+    - xrootd+python
     - xtensor-python
-    - z3
+    - z3+python
 
   mirrors: { "mirror": "s3://spack-binaries-develop/python" }
 
@@ -1811,7 +1811,10 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
-    mappings: []
+    mappings:
+      - match: ['@:']
+        runner-attributes:
+          tags: ["spack", "public", "large", "x86_64"]
 
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
@@ -1823,7 +1826,7 @@ spack:
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:
-    build-group: New PR testing workflow
+    build-group: Python Packages
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure

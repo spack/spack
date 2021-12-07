@@ -336,7 +336,10 @@ python-pr-build:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: python-pr-generate
-    strategy: depend
+    strategy: depends
+  needs:
+    - artifacts: True
+      job: python-pr-generate
 
 python-develop-build:
   extends: [ ".python", ".develop-build" ]
@@ -345,3 +348,6 @@ python-develop-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: python-develop-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: python-pr-build
