@@ -26,7 +26,7 @@ class PyPythonLdap(PythonPackage):
     depends_on('py-pyasn1@0.3.7:', type=('build', 'run'))
     depends_on('py-pyasn1-modules@0.1.5:', type=('build', 'run'))
     depends_on('cyrus-sasl', type='link', when='^openldap+sasl')
-    
+
     def patch(self):
         if self.spec.satisfies('^openldap~sasl'):
             filter_file('HAVE_SASL ', '', 'setup.cfg')
