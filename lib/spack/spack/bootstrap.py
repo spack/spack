@@ -278,17 +278,20 @@ class _BuildcacheBootstrapper(object):
             with spack.config.override(
                     'compilers', [{'compiler': compiler_entry}]
             ):
-                spec_str = '/' + pkg_hash
-                parser = argparse.ArgumentParser()
-                spack.cmd.buildcache.setup_parser(parser)
-                install_args = [
-                    'install',
-                    '--sha256', pkg_sha256,
-                    '--only-root',
-                    '-a', '-u', '-o', '-f', spec_str
-                ]
-                args = parser.parse_args(install_args)
-                spack.cmd.buildcache.installtarball(args)
+                # Prevent attempts to bootstrap a compiler when bootstrapping packages
+                # like clingo in case config:install_missing_compilers is set to true
+                with spack.concretize.enable_compiler_existence_check():
+                    spec_str = '/' + pkg_hash
+                    parser = argparse.ArgumentParser()
+                    spack.cmd.buildcache.setup_parser(parser)
+                    install_args = [
+                        'install',
+                        '--sha256', pkg_sha256,
+                        '--only-root',
+                        '-a', '-u', '-o', '-f', spec_str
+                    ]
+                    args = parser.parse_args(install_args)
+                    spack.cmd.buildcache.installtarball(args)
 
     def _install_and_test(
             self, abstract_spec, bincache_platform, bincache_data, test_fn
