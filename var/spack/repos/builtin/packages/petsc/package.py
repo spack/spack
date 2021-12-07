@@ -576,8 +576,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(join_path('src', 'ksp', 'ksp', 'tutorials'))
-        self.cache_extra_test_sources(join_path('src', 'snes', 'tutorials'))
+        self.cache_extra_test_sources([
+            join_path('src', 'ksp', 'ksp', 'tutorials'),
+            join_path('src', 'snes', 'tutorials')
+        ])
 
     def run_ex30_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex30"""
