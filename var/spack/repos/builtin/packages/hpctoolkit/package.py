@@ -233,10 +233,7 @@ class Hpctoolkit(AutotoolsPackage):
     @when('@master')
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
-        if self.spec.satisfies('@master'):
-            with working_dir(test_dir):
-                make('-f', 'Makefile.spack', 'all')
-                self.run_test('./run-sort', status=[0], installed=False,
-                              purpose='selection sort unit test')
-        else:
-            tty.warn('spack test for hpctoolkit requires branch master')
+        with working_dir(test_dir):
+            make('-f', 'Makefile.spack', 'all')
+            self.run_test('./run-sort', status=[0], installed=False,
+                          purpose='selection sort unit test')
