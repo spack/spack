@@ -128,13 +128,16 @@ class SpecMultiMethod(object):
 
            Raises a NoSuchMethodError if there is no default.
         """
-        spec_method = self.get_first_matching_method(package_self, args[0])
+        pkg_arg = args[0] if len(args) > 0 else None
+        spec_method = self.get_first_matching_method(package_self, pkg_arg)
         if spec_method:
             # If the package isn't being provided directly, it will be the
             # first argument.
             if not package_self:
-                pkg = args[0]
-                args = args[1:]
+                pkg = pkg_arg
+                args = args[1:] if len(args) > 1 else set()
+            else:
+                pkg = package_self
             return spec_method(pkg, *args, **kwargs)
 
     def get_first_matching_method(self, package_self, pkg_arg):
