@@ -579,27 +579,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources(join_path('src', 'ksp', 'ksp', 'tutorials'))
         self.cache_extra_test_sources(join_path('src', 'snes', 'tutorials'))
 
-    def test(self):
-        # solve Poisson equation in 2D to make sure nothing is broken:
-        spec = self.spec
-        env['PETSC_DIR'] = self.prefix
-        env['PETSC_ARCH'] = ''
-        if ('+mpi' in spec):
-            runexe = Executable(join_path(spec['mpi'].prefix.bin,
-                                          'mpiexec')).command
-            runopt = ['-n', '4']
-        else:
-            runexe = Executable(join_path(self.prefix,
-                                          'lib', 'petsc', 'bin',
-                                          'petsc-mpiexec.uni')).command
-            runopt = ['-n', '1']
-
-        w_dir = join_path(self.test_suite.current_test_cache_dir,
-                          'src', 'ksp', 'ksp', 'tutorials')
-
-        if not os.path.exists(w_dir):
-            print('Skipping petsc test: KSP tutorial example is missing')
-            return
+    def run_ex30_test(self, runexe, runopt, w_dir):
+        """Run stand alone test: ex30"""
 
         with working_dir(w_dir):
             testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
@@ -616,34 +597,33 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             }
             make('ex50', parallel=False)
             for feature, featureopt in testdict.items():
-                if not feature or feature in spec:
+                if not feature or feature in self.spec:
                     purpose_str = 'test: run ex50 example with {0}'.format(feature)
                     self.run_test(runexe,
                                   options=runopt + testexe + featureopt,
                                   purpose=purpose_str,
                                   work_dir=w_dir)
-            if '+cuda' in spec:
-                make('ex7', parallel=False)
-                testexe = ['ex7', '-mat_type', 'aijcusparse',
-                           '-sub_pc_factor_mat_solver_type', 'cusparse',
-                           '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
-                           '-use_gpu_aware_mpi', '0']
-                purpose_str = 'test: run ex7 example with +cuda'
-                self.run_test(runexe,
-                              options=runopt + testexe,
-                              purpose=purpose_str,
-                              work_dir=w_dir)
-            make('clean', parallel=False)
 
-        w_dir = join_path(self.test_suite.current_test_cache_dir,
-                          'src', 'snes', 'tutorials')
+    def run_ex7_test(self, runexe, runopt, w_dir):
+        """Run stand alone test: ex7"""
 
-        if not os.path.exists(w_dir):
-            print('Skipping petsc test: SNES tutorial example is missing')
-            return
+        make('ex7', parallel=False)
+        testexe = ['ex7' , '-mat_type', 'aijcusparse',
+                   '-sub_pc_factor_mat_solver_type', 'cusparse',
+                   '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
+                   '-use_gpu_aware_mpi', '0']
+        purpose_str = 'test: run ex7 example with +cuda'
+        self.run_test(runexe,
+                      options=runopt + testexe,
+                      purpose=purpose_str,
+                      work_dir=w_dir)
+        make('clean', parallel=False)
+
+    def  run_ex3k_test(self, runexe, runopt, w_dir):
+        """Run stand alone test: ex3k"""
 
         with working_dir(w_dir):
-            if '+kokkos' in spec:
+            if '+kokkos' in self.spec:
                 make('ex3k', parallel=False)
                 testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
                            '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
@@ -654,3 +634,36 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                               purpose=purpose_str,
                               work_dir=w_dir)
             make('clean', parallel=False)
+
+    def test(self):
+        # solve Poisson equation in 2D to make sure nothing is broken:
+        env['PETSC_DIR'] = self.prefix
+        env['PETSC_ARCH'] = ''
+        if ('+mpi' in self.spec):
+            runexe = Executable(join_path(self.spec['mpi'].prefix.bin,
+                                          'mpiexec')).command
+            runopt = ['-n', '4']
+        else:
+            runexe = Executable(join_path(self.prefix,
+                                          'lib', 'petsc', 'bin',
+                                          'petsc-mpiexec.uni')).command
+            runopt = ['-n', '1']
+
+        w_dir = join_path(self.test_suite.current_test_cache_dir,
+                          'src', 'ksp', 'ksp', 'tutorials')
+
+        if os.path.exists(w_dir):
+            self.run_ex30_test(runexe, runopt, w_dir)
+
+            if '+cuda' in self.spec:
+                self.run_ex7_test(runexe, runopt, w_dir)
+        else:
+            print('Skipping petsc test: KSP tutorial example is missing')
+
+        w_dir = join_path(self.test_suite.current_test_cache_dir,
+                          'src', 'snes', 'tutorials')
+
+        if os.path.exists(w_dir):
+            self.run_ex3k_test(runexe, runopt, w_dir)
+        else:
+            print('Skipping petsc test: SNES tutorial example is missing')
