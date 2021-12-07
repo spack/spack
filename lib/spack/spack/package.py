@@ -56,6 +56,7 @@ import spack.util.web
 from spack.filesystem_view import YamlFilesystemView
 from spack.install_test import TestFailure, TestSuite
 from spack.installer import InstallError, PackageInstaller
+from spack.multimethod import SpecMultiMethod
 from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
@@ -2608,6 +2609,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fn()
 
 
+def empty_function(pkg, func):
+    """Returns True if pkg's func is defined as 'pass'; False otherwise."""
+    function = func
+    if isinstance(func, functools.partial):
+        method_self = func.func.__self__
+        if isinstance(method_self, SpecMultiMethod):
+            function = method_self.get_first_matching_method(pkg, None)
+
+    source = (inspect.getsource(function)).splitlines()[1:]
+    lines = (ln.strip() for ln in source)
+    sttmts = [ln for ln in lines if not ln.startswith('#')]
+    return len(sttmts) > 0 and sttmts[0] == 'pass'
+
+
 def test_process(pkg, kwargs):
     with tty.log.log_output(pkg.test_log_file) as logger:
         with logger.force_echo():
@@ -2670,14 +2685,10 @@ def test_process(pkg, kwargs):
                     if not isinstance(test_fn, functypes):
                         test_fn = test_fn.__func__
 
-                    # Skip any test methods consisting solely of 'pass'
-                    # since they do not contribute to package testing.
-                    if isinstance(test_fn, types.FunctionType):
-                        source = (inspect.getsource(test_fn)).splitlines()[1:]
-                        lines = (ln.strip() for ln in source)
-                        sttmts = [ln for ln in lines if not ln.startswith('#')]
-                        if len(sttmts) > 0 and sttmts[0] == 'pass':
-                            continue
+                    # Skip any "empty" test methods since they do not
+                    # contribute to package testing.
+                    if empty_function(pkg, test_fn):
+                        continue
 
                     # Run the tests
                     ran_actual_test_function = True

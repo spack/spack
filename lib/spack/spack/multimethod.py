@@ -123,37 +123,52 @@ class SpecMultiMethod(object):
         return self.default or None
 
     def __call__(self, package_self, *args, **kwargs):
+        """Execute the first method with a spec that matches the
+           package's spec or, if none, the default.
+
+           Raises a NoSuchMethodError if there is no default.
+        """
+        spec_method = self.get_first_matching_method(package_self, args[0])
+        if spec_method:
+            # If the package isn't being provided directly, it will be the
+            # first argument.
+            if not package_self:
+                pkg = args[0]
+                args = args[1:]
+            return spec_method(pkg, *args, **kwargs)
+
+    def get_first_matching_method(self, package_self, pkg_arg):
         """Find the first method with a spec that matches the
            package's spec.  If none is found, call the default
            or if there is none, then raise a NoSuchMethodError.
         """
-        if not package_self and args[0]:
-            package_self = args[0]
-            args = args[1:]
+        # Allow for cases where __func__ is such that package_self is
+        # None and the package is passed as the first entry in args
+        # (e.g., stand-alone package testing).
+        pkg = package_self if package_self else pkg_arg
 
-        spec_method = self._get_method_by_spec(package_self.spec)
+        spec_method = self._get_method_by_spec(pkg.spec)
         if spec_method:
-            return spec_method(package_self, *args, **kwargs)
-        # Unwrap the MRO of `package_self by hand. Note that we can't
+            return spec_method
+
+        # Unwrap the MRO of `pkg` by hand. Note that we can't
         # use `super()` here, because using `super()` recursively
-        # requires us to know the class of `package_self`, as well as
+        # requires us to know the class of `pkg`, as well as
         # its superclasses for successive calls. We don't have that
         # information within `SpecMultiMethod`, because it is not
         # associated with the package class.
-        for cls in inspect.getmro(package_self.__class__)[1:]:
+        for cls in inspect.getmro(pkg.__class__)[1:]:
             superself = cls.__dict__.get(self.__name__, None)
             if isinstance(superself, SpecMultiMethod):
                 # Check parent multimethod for method for spec.
-                superself_method = superself._get_method_by_spec(
-                    package_self.spec
-                )
+                superself_method = superself._get_method_by_spec(pkg.spec)
                 if superself_method:
-                    return superself_method(package_self, *args, **kwargs)
+                    return superself_method
             elif superself:
-                return superself(package_self, *args, **kwargs)
+                return superself
 
         raise NoSuchMethodError(
-            type(package_self), self.__name__, package_self.spec,
+            type(pkg), self.__name__, pkg.spec,
             [m[0] for m in self.method_list]
         )
 
