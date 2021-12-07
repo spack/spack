@@ -581,8 +581,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             join_path('src', 'snes', 'tutorials')
         ])
 
-    def run_ex30_test(self, runexe, runopt, w_dir):
-        """Run stand alone test: ex30"""
+    def run_ex50_test(self, runexe, runopt, w_dir):
+        """Run stand alone test: ex50"""
 
         with working_dir(w_dir):
             testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
