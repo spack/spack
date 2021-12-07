@@ -630,8 +630,7 @@ class Environment(object):
 
         for name, entry in self.dev_specs.items():
             dev_path = entry['path']
-            expanded_path = os.path.normpath(os.path.join(
-                init_file_dir, entry['path']))
+            expanded_path = spack.util.path.canonicalize_path(entry['path'])
 
             # Skip if the expanded path is the same (e.g. when absolute)
             if dev_path == expanded_path:

@@ -38,6 +38,7 @@ import spack.repo
 import spack.spec
 import spack.target
 import spack.tengine
+import spack.util.path
 import spack.variant as vt
 from spack.config import config
 from spack.package_prefs import PackagePrefs, is_spec_buildable, spec_externals
@@ -89,7 +90,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
+        path = spack.util.path.canonicalize_path(dev_info['path'])
 
         if 'dev_path' in spec.variants:
             assert spec.variants['dev_path'].value == path
