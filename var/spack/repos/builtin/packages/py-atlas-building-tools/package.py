@@ -11,6 +11,7 @@ class PyAtlasBuildingTools(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/atlas-building-tools"
     git      = "git@bbpgitlab.epfl.ch:nse/atlas-building-tools.git"
 
+    version('0.1.8', tag='atlas-building-tools-v0.1.8')
     version('0.1.7', tag='atlas-building-tools-v0.1.7')
     version('0.1.6', tag='atlas-building-tools-v0.1.6')
     version('0.1.5', tag='atlas-building-tools-v0.1.5')
