@@ -55,6 +55,9 @@ class Abinit(AutotoolsPackage):
             values=('safe', 'standard', 'aggressive'),
             description='Select the optimization flavor to use.')
 
+    variant('install-tests', default=False,
+            description='Install test cases')
+
     # Add dependencies
     depends_on('atompaw')
     depends_on('blas')
@@ -276,3 +279,9 @@ class Abinit(AutotoolsPackage):
         #       requires Python with numpy, pyyaml, pandas
         if '~mpi' in self.spec:
             make('tests_in')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+install-tests' in spec:
+            install_tree('tests', spec.prefix.tests)
+
