@@ -284,4 +284,3 @@ class Abinit(AutotoolsPackage):
         make('install')
         if '+install-tests' in spec:
             install_tree('tests', spec.prefix.tests)
-
