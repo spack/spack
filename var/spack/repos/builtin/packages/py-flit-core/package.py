@@ -17,7 +17,8 @@ class PyFlitCore(PythonPackage):
     version('3.3.0', sha256='b1404accffd6504b5f24eeca9ec5d3c877f828d16825348ba81515fa084bd5f0')
     version('3.2.0', sha256='ff87f25c5dbc24ef30ea334074e35030e4885e4c5de3bf4e21f15746f6d99431')
 
+    # Dependencies listed in flit_core/build_thyself.py
+    depends_on('python@3.6:', when='@3.4:', type=('build', 'run'))
     depends_on('python@3.4:', type=('build', 'run'))
-    depends_on('py-wheel', type='build')
-    depends_on('py-toml', type='run')
-    depends_on('py-tomli', type='run')
+    depends_on('py-tomli', when='@3.4:', type=('build', 'run'))
+    depends_on('py-toml', when='@:3.3', type=('build', 'run'))
