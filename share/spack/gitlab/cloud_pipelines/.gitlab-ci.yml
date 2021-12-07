@@ -316,3 +316,32 @@ tutorial-develop-build:
   needs:
     - artifacts: True
       job: tutorial-develop-generate
+
+########################################
+# Python
+########################################
+.python:
+  variables:
+    SPACK_CI_STACK_NAME: python
+
+python-pr-generate:
+  extends: [ ".python", ".pr-generate"]
+
+python-develop-generate:
+  extends: [ ".python", ".develop-generate"]
+
+python-pr-build:
+  extends: [ ".python", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: python-pr-generate
+    strategy: depend
+
+python-develop-build:
+  extends: [ ".python", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: python-develop-generate
+    strategy: depend
