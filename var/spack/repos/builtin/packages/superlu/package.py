@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 
 class Superlu(CMakePackage):
     """SuperLU is a general purpose library for the direct solution of large,
@@ -171,7 +173,8 @@ class Superlu(CMakePackage):
         config_args = self._generate_make_hdr_for_test()
 
         # Write configuration options to make.inc file
-        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
+        make_file_inc = join_path(self.test_suite.current_test_cache_dir,
+                                  self.make_hdr_file)
         with open(make_file_inc, 'w') as inc:
             for option in config_args:
                 inc.write('{0}\n'.format(option))
@@ -181,9 +184,17 @@ class Superlu(CMakePackage):
             args.append('HEADER=' + self.prefix.include)
         args.append('superlu')
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             self.examples_src_dir)
+
+        if not os.path.exists(test_dir):
+            print('Skipping superlu test')
+            return
+
         with working_dir(test_dir, create=False):
             make(*args, parallel=False)
-            self.run_test('./superlu', purpose='Smoke test for superlu',
+            self.run_test('./superlu',
+                          options=['-I{0}'.format(join_path(self.prefix, 'include'))],
+                          purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')
