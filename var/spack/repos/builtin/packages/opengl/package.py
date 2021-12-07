@@ -14,7 +14,7 @@ class Opengl(Package):
 
     homepage = "https://www.opengl.org/"
 
-    version('4.5', sha256='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+    version('4.5')
 
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable GLX API.")
@@ -93,22 +93,24 @@ class Opengl(Package):
         spec = self.spec
         libs_to_seek = set()
 
-        if '+glvnd' in spec:
-            return LibraryList(())
+        tty.debug("Previously found libraries may no longer be found." +
+                  " Refer to OpenGL section of documentation for more information")
 
-        if '+glx' in spec:
-            libs_to_seek.add('libGL')
+        if '~glvnd' in spec:
+            if '+glx' in spec:
+                libs_to_seek.add('libGL')
 
-        if '+egl' in spec:
-            libs_to_seek.add('libEGL')
+            if '+egl' in spec:
+                libs_to_seek.add('libEGL')
 
-        if '+opengl' in spec:
-            libs_to_seek.add('libGL')
+            if '+opengl' in spec:
+                libs_to_seek.add('libGL')
 
         if libs_to_seek:
             return find_libraries(list(libs_to_seek),
                                   root=self.spec.prefix,
                                   recursive=True)
+        return LibraryList(())
 
     @property
     def glx_libs(self):

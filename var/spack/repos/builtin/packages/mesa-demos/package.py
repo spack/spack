@@ -31,9 +31,12 @@ class MesaDemos(AutotoolsPackage):
     depends_on('m4',        type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('gl')
+    depends_on('gl', when='+glx')
     depends_on('glx', when='+glx')
+
+    depends_on('gl', when='+egl')
     depends_on('egl', when='+egl')
+
     depends_on('libx11',  when='+glx')
     depends_on('libxext', when='+glx')
     depends_on('osmesa', when='+osmesa')
@@ -41,6 +44,9 @@ class MesaDemos(AutotoolsPackage):
     depends_on('mesa-glu')
     depends_on('freeglut')
     depends_on('glew@1.5.4:')
+
+    # Require at least 1 front-end
+    conflicts('~egl ~glx ~osmesa')
 
     def configure_args(self):
         spec = self.spec
