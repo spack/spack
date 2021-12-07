@@ -12,6 +12,7 @@ class PyIpycanvas(PythonPackage):
     homepage = "https://github.com/martinRenou/ipycanvas"
     pypi     = "ipycanvas/ipycanvas-0.9.0.tar.gz"
 
+    version('0.10.2', sha256='a02c494834cb3c60509801172e7429beae837b3cb6c61d3becf8b586c5a66004')
     version('0.9.0', sha256='f29e56b93fe765ceace0676c3e75d44e02a3ff6c806f3b7e5b869279f470cc43')
 
     depends_on('python@3.5:', type=('build', 'run'))

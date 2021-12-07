@@ -145,7 +145,7 @@ spack:
     - py-appnope
     - py-apptools
     - py-apscheduler
-    # - py-arcgis  # TODO: concretization issues
+    - py-arcgis
     - py-archspec
     - py-argcomplete
     - py-argh
@@ -390,7 +390,7 @@ spack:
     - py-chronyk
     - py-ci-info
     - py-cinema-lib
-    # - py-cinemasci  # TODO: unknown concretization issues
+    - py-cinemasci
     - py-citeproc-py
     - py-clean-text
     - py-cleo
@@ -577,7 +577,7 @@ spack:
     - py-fava
     - py-fenics-basix
     - py-fenics-dijitso
-    # - py-fenics-dolfinx  # TODO: concretization issue
+    - py-fenics-dolfinx
     - py-fenics-ffc
     - py-fenics-ffcx
     - py-fenics-fiat
@@ -769,15 +769,15 @@ spack:
     - py-iocapture
     - py-ipaddress
     - py-ipdb
-    # - py-ipycanvas  # TODO: unknown concretization issues
-    # - py-ipyevents  # TODO: unknown concretization issues
+    - py-ipycanvas
+    - py-ipyevents
     - py-ipykernel
     - py-ipyparallel
     - py-ipython
     - py-ipython-cluster-helper
     - py-ipython-genutils
-    # - py-ipyvtk-simple  # Depends on py-ipycanvas and py-ipyevents
-    # - py-ipywidgets # TODO: unknown concretization issues
+    - py-ipyvtk-simple
+    - py-ipywidgets
     - py-irpf90
     - py-iso8601
     - py-isodate
@@ -809,7 +809,7 @@ spack:
     - py-jsonref
     - py-jsonschema
     - py-junit-xml
-    # - py-jupyter  # TODO: unknown concretization issues
+    - py-jupyter
     - py-jupyter-client
     - py-jupyter-console
     - py-jupyter-core
@@ -820,7 +820,7 @@ spack:
     - py-jupyterlab
     - py-jupyterlab-pygments
     - py-jupyterlab-server
-    # - py-jupyterlab-widgets  # TODO: unknown concretization issues
+    - py-jupyterlab-widgets
     - py-jupytext
     - py-keras
     - py-keras-applications
@@ -1262,7 +1262,7 @@ spack:
     - py-pyrad
     - py-pyrect
     - py-pyro4
-    # - py-pyrosar  # depends on py-spatialist
+    - py-pyrosar
     - py-pyrsistent
     - py-pysam
     - py-pyscaf
@@ -1516,7 +1516,7 @@ spack:
     - py-spacy-models-en-core-web-sm
     - py-spacy-models-en-vectors-web-lg
     - py-sparse
-    # - py-spatialist  # depends on a bunch of jupyter packages with broken concretization
+    - py-spatialist
     - py-spatialite
     - py-spdlog
     - py-spectra
