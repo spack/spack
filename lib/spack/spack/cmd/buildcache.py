@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import tempfile
+import warnings
 
 import llnl.util.tty as tty
 
@@ -505,7 +506,10 @@ def copy_fn(args):
     '--base-dir', to some other mirror, specified as '--destination-url'.
     The specific buildcache entry to be copied from one location to the
     other is identified using the '--spec-file' argument."""
-    # TODO: This sub-command should go away once #11117 is merged
+    # TODO: Remove after v0.18.0 release
+    msg = ('"spack buildcache copy" is deprecated and will be removed from '
+           'Spack starting in v0.19.0')
+    warnings.warn(msg)
 
     if not args.spec_file:
         tty.msg('No spec yaml provided, exiting.')
