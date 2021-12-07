@@ -56,7 +56,7 @@ class PyIpykernel(PythonPackage):
     depends_on('py-appnope', when='platform=darwin', type=('build', 'run'))
 
     @run_after('install')
-    def install_data(self, spec, prefix):
+    def install_data(self):
         """ install the Jupyter kernel spec """
         self.spec['python'].command(
-            '-m', 'ipykernel', 'install', '--prefix=' + prefix)
+            '-m', 'ipykernel', 'install', '--prefix=' + self.prefix)
