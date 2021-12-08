@@ -336,8 +336,8 @@ class Legion(CMakePackage):
             maxfields = maxfields << 1
         options.append('-DLegion_MAX_FIELDS=%d' % maxfields)
 
-        #This disables Legion's CMake build system's logic for targeting the native
-        #CPU architecture in favor of Spack-provided compiler flags
+        # This disables Legion's CMake build system's logic for targeting the native
+        # CPU architecture in favor of Spack-provided compiler flags
         options.append('-DBUILD_MARCH:STRING=')
         return options
 
