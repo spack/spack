@@ -577,7 +577,7 @@ spack:
     - py-fava
     - py-fenics-basix
     - py-fenics-dijitso
-    - py-fenics-dolfinx
+    # - py-fenics-dolfinx  # TODO: unknown concretization issues
     - py-fenics-ffc
     - py-fenics-ffcx
     - py-fenics-fiat
