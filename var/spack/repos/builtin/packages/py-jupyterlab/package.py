@@ -30,7 +30,8 @@ class PyJupyterlab(PythonPackage):
     depends_on('py-jupyter-packaging11', when='@3.0.15:', type='build')
     depends_on('py-jupyter-packaging7', when='@3.0.0:3.0.14', type='build')
     # depends_on('py-jupyter-packaging@0.9:0', when='@3.0.15:', type='build')
-    # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14', type=('build', 'run'))
+    # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14',
+    #            type=('build', 'run'))
     # dependency on py-jinja2@2.1 seems to be a migration issue from the switch
     # to setup.cfg in 3.0.15, leave it a 2.10
     depends_on('py-jinja2@2.10:', type=('build', 'run'))
