@@ -22,6 +22,7 @@ class Pcre(AutotoolsPackage):
     version('8.39', sha256='b858099f82483031ee02092711689e7245586ada49e534a06e678b8ea9549e8b')
     version('8.38', sha256='b9e02d36e23024d6c02a2e5b25204b3a4fa6ade43e0a5f869f254f49535079df')
 
+    maintainers = ['drkennetz']
     patch('intel.patch', when='@8.38')
 
     variant('jit', default=False,
