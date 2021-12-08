@@ -31,4 +31,10 @@ class RHdf5r(RPackage):
     depends_on('hdf5@1.8.13:+hl')
     depends_on('pkgconfig', type='build')
 
+    # The configure script in the package uses the hdf5 h5cc compiler wrapper
+    # in the PATH to configure hdf5. That works fine if hdf5 was built with
+    # autotools but the hdf5 package in Spack is built with cmake. The compiler
+    # wrapper built with cmake does not support the '-show' or '-showconfig'
+    # flags. The following patch replaces those commands in the configure
+    # script with pkg-config commands.
     patch('configure.patch')
