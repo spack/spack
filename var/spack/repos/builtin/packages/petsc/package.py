@@ -609,33 +609,31 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def run_ex7_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex7 with cuda"""
 
-        make('ex7', parallel=False)
-        testexe = ['ex7', '-mat_type', 'aijcusparse',
-                   '-sub_pc_factor_mat_solver_type', 'cusparse',
-                   '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
-                   '-use_gpu_aware_mpi', '0']
-        purpose_str = 'test: run ex7 example with +cuda'
-        self.run_test(runexe,
-                      options=runopt + testexe,
-                      purpose=purpose_str,
-                      work_dir=w_dir)
-        make('clean', parallel=False)
+        with working_dir(w_dir):
+            make('ex7', parallel=False)
+            testexe = ['ex7', '-mat_type', 'aijcusparse',
+                       '-sub_pc_factor_mat_solver_type', 'cusparse',
+                       '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
+                       '-use_gpu_aware_mpi', '0']
+            purpose_str = 'test: run ex7 example with +cuda'
+            self.run_test(runexe,
+                          options=runopt + testexe,
+                          purpose=purpose_str,
+                          work_dir=w_dir)
 
     def run_ex3k_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex3k with kokkos"""
 
         with working_dir(w_dir):
-            if '+kokkos' in self.spec:
-                make('ex3k', parallel=False)
-                testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
-                           '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
-                           '-snes_monitor']
-                purpose_str = 'run ex3k example with +kokkos'
-                self.run_test(runexe,
-                              options=runopt + testexe,
-                              purpose=purpose_str,
-                              work_dir=w_dir)
-            make('clean', parallel=False)
+            make('ex3k', parallel=False)
+            testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
+                       '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
+                       '-snes_monitor']
+            purpose_str = 'run ex3k example with +kokkos'
+            self.run_test(runexe,
+                          options=runopt + testexe,
+                          purpose=purpose_str,
+                          work_dir=w_dir)
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
@@ -668,6 +666,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                           'src', 'snes', 'tutorials')
 
         if os.path.exists(w_dir):
-            self.run_ex3k_test(runexe, runopt, w_dir)
+            if '+kokkos' in self.spec:
+                self.run_ex3k_test(runexe, runopt, w_dir)
         else:
             print('Skipping petsc test: SNES tutorial example is missing')
