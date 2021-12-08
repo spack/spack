@@ -133,11 +133,11 @@ class SpecMultiMethod(object):
         if spec_method:
             # If the package isn't being provided directly, it will be the
             # first argument.
-            if not package_self:
+            if package_self:
+                pkg = package_self
+            else:
                 pkg = pkg_arg
                 args = args[1:] if len(args) > 1 else set()
-            else:
-                pkg = package_self
             return spec_method(pkg, *args, **kwargs)
 
     def get_first_matching_method(self, package_self, pkg_arg):

@@ -4612,12 +4612,22 @@ the test method.
 You can also use the ``@when`` directive to constrain ``test`` methods
 based on the installed spec so that only the relevant tests are performed.
 
+.. note::
+
+   Ordering of ``test`` methods with ``@when`` directives in the package
+   is important as Spack will choose the first one that matches the spec.
+
+   If you want to re-use checks across multiple such methods, you should
+   write a separate check method that can be called by each of the relevant
+   ``test`` methods.
+
 .. code-block:: python
 
    class MyConstrainedPackage(Package):
        ...
        version('main', branch='main')
        version('1.0.0', tag='v1.0.0')
+       version('0.11.0', tag='v0.11.0')
        ...
 
        @when('@main')
@@ -4627,7 +4637,16 @@ based on the installed spec so that only the relevant tests are performed.
 
        @when('@1.0.0 %gcc')
        def test(self):
-           # TODO: Add quick checks for version 1.0.0 installed with gcc
+           # TODO: Add quick checks for version 1.0.0 installed with gcc.
+           #
+           # Note: These will be the only checks performed for 1.0.0 +gcc
+           #   and ONLY because this method appears in the package BEFORE
+           #   the one with @when('@0.11.0').
+           pass
+
+       @when('@0.11.0:')
+       def test(self):
+           # TODO: Add quick checks of installed software for version 0.11.0 on
            pass
 
 .. note::
