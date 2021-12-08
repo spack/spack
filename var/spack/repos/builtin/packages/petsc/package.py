@@ -622,7 +622,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         make('clean', parallel=False)
 
     def run_ex3k_test(self, runexe, runopt, w_dir):
-        """Run stand alone test: ex3k"""
+        """Run stand alone test: ex3k with kokkos"""
 
         with working_dir(w_dir):
             if '+kokkos' in self.spec:
