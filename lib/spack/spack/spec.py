@@ -4358,7 +4358,27 @@ class Spec(object):
         """
         assert self.concrete
         assert other.concrete
-        assert other.name in self
+
+        virtuals_to_replace = [v for v in other.package.virtuals_provided
+                               if v in self]
+        if virtuals_to_replace:
+            deps_to_replace = [self[v] for v in virtuals_to_replace]
+        else:
+            # sanity check and error raise here for other.name not in self
+            deps_to_replace = [self[other.name]]
+
+        for d in deps_to_replace:
+            if not all(v in other.package.virtuals_provided or v not in self
+                       for v in d.package.virtuals_provided):
+                # There was something provided by the original that we don't
+                # get from its replacement.
+                raise Exception
+            for n in d.traverse(root=False):
+                if not all(any(v in other_n.package.virtuals_provided
+                               for other_n in other.traverse(root=False)
+                           ) or v not in self
+                           for v in n.package.virtuals_provided):
+                    raise Exception
 
         # Multiple unique specs with the same name will collide, so the
         # _dependents of these specs should not be trusted.
@@ -4367,19 +4387,33 @@ class Spec(object):
         # Keep all cached hashes because we will invalidate the ones that need
         # invalidating later, and we don't want to invalidate unnecessarily
 
+        def from_self(name, transitive):
+            if transitive:
+                if name in other:
+                    return False
+                if any(v in other for v in self[name].package.virtuals_provided):
+                    return False
+                return True
+            else:
+                if name == other.name:
+                    return False
+                if any(v in other.package.virtuals_provided
+                       for v in self[name].package.virtuals_provided):
+                    return False
+                return True
+
+        self_nodes = dict((s.name, s.copy(deps=False, caches=True))
+                           for s in self.traverse(root=True)
+                           if from_self(s.name, transitive))
+
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                              for s in self.traverse(root=True)
-                              if s.name not in other)
             other_nodes = dict((s.name, s.copy(deps=False, caches=True))
                                for s in other.traverse(root=True))
         else:
-            # If we're not doing a transitive splice, then we only want the
-            # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                              for s in self.traverse(root=True)
-                              if s.name != other.name)
-            other_nodes = {other.name: other.copy(deps=False, caches=True)}
+            # NOTE: Does not fully validate providers; loader races possible
+            other_nodes = dict((s.name, s.copy(deps=False, caches=True))
+                                for s in other.traverse(root=True)
+                                if s is other or s.name not in self)
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
