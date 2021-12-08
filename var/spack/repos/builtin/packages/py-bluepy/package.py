@@ -13,6 +13,7 @@ class PyBluepy(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:nse/bluepy.git"
 
     version('develop')
+    version('2.4.3', tag='bluepy-v2.4.3')
     version('2.4.2', tag='bluepy-v2.4.2')
 
     depends_on('py-setuptools', type=('build', 'run'))
