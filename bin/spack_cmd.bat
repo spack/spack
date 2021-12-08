@@ -15,8 +15,12 @@ popd
 
 :: Check if Python is on the PATH
 if not defined python_pf_ver (
-(for /f "delims=" %%F in ('where python.exe') do (set python_pf_ver=%%F) ) 2> NUL
+(for /f "delims=" %%F in ('where python.exe') do (
+                                                    set python_pf_ver=%%F
+                                                    goto :found_python
+                                                  ) ) 2> NUL
 )
+:found_python
 if not defined python_pf_ver (
     :: If not, look for Python from the Spack installer
     :get_builtin
