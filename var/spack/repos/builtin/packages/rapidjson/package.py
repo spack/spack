@@ -12,6 +12,9 @@ class Rapidjson(CMakePackage):
     homepage = "https://rapidjson.org"
     url      = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
 
+    version('00dbcf2',
+            git = 'https://github.com/Tencent/rapidjson.git',
+            commit = '00dbcf2')
     version('1.1.0', sha256='bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e')
     version('1.0.2', sha256='c3711ed2b3c76a5565ee9f0128bb4ec6753dbcc23450b713842df8f236d08666')
     version('1.0.1', sha256='a9003ad5c6384896ed4fd1f4a42af108e88e1b582261766df32d717ba744ee73')
@@ -19,7 +22,7 @@ class Rapidjson(CMakePackage):
 
     # released versions compile with -Werror and fail with gcc-7
     # branch-fall-through warnings
-    patch('0001-turn-off-Werror.patch')
+    patch('0001-turn-off-Werror.patch', when='@1.0.0:1.1.0')
 
     patch('arm.patch', when='@1.1.0 target=aarch64: %gcc@:5.9')
 
