@@ -39,7 +39,7 @@ if not defined python_pf_ver (
     :: Python is already on the path
     set py_exe=!python_pf_ver!
     (for /F "tokens=* USEBACKQ" %%F in (
-        `!py_exe! --version`) do (set "output=%%F")) 2>NUL
+        `"!py_exe!" --version`) do (set "output=%%F")) 2>NUL
     if not "!output:Microsoft Store=!"=="!output!" goto :get_builtin
     goto :exitpoint
 )
