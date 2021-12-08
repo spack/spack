@@ -2110,10 +2110,7 @@ class BinaryCacheQuery(object):
         """
         self.all_architectures = all_architectures
 
-        try:
-            specs = update_cache_and_get_specs()
-        except FetchCacheError as e:
-            tty.error(e)
+        specs = update_cache_and_get_specs()
 
         if not self.all_architectures:
             arch = spack.spec.Spec.default_arch()
