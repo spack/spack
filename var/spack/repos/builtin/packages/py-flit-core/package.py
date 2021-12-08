@@ -20,5 +20,5 @@ class PyFlitCore(PythonPackage):
     # Dependencies listed in flit_core/build_thyself.py
     depends_on('python@3.6:', when='@3.4:', type=('build', 'run'))
     depends_on('python@3.4:', type=('build', 'run'))
-    depends_on('py-tomli', when='@3.4:', type=('build', 'run'))
-    depends_on('py-toml', when='@:3.3', type=('build', 'run'))
+    depends_on('py-tomli', when='@3.4:', type='run')
+    depends_on('py-toml', when='@:3.3', type='run')

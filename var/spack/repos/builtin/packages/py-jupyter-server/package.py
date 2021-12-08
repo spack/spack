@@ -52,9 +52,9 @@ class PyJupyterServer(PythonPackage):
     version('1.6.1', sha256='242ddd0b644f10e030f917019b47c381e0f2d2b950164af45cbd791d572198ac')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    # FIXME: this should actually be 0.9:0, but this causes a bug in the concretizer:
-    # https://github.com/spack/spack/issues/27835
-    depends_on('py-jupyter-packaging@0.9:1', when='@1.6.2:', type='build')
+    # TODO: replace this after concretizer learns how to concretize separate build deps
+    depends_on('py-jupyter-packaging11', when='@1.6.2:', type='build')
+    # depends_on('py-jupyter-packaging@0.9:0', when='@1.6.2:', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-tornado@6.1:', type=('build', 'run'))
