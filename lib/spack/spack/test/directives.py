@@ -54,7 +54,7 @@ def test_constraints_from_context_are_merged(mock_packages):
 
 
 @pytest.mark.regression('27754')
-def test_extends_spec(mock_packages):
+def test_extends_spec(config, mock_packages):
     extender = spack.spec.Spec('extends-spec').concretized()
     extendee = spack.spec.Spec('extendee').concretized()
 
