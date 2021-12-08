@@ -607,7 +607,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                                   work_dir=w_dir)
 
     def run_ex7_test(self, runexe, runopt, w_dir):
-        """Run stand alone test: ex7"""
+        """Run stand alone test: ex7 with cuda"""
 
         make('ex7', parallel=False)
         testexe = ['ex7', '-mat_type', 'aijcusparse',
