@@ -439,7 +439,7 @@ class Stage(object):
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
             mirror_urls = []
-            for mirror in spack.mirror.MirrorCollection().values():
+            for mirror in spack.mirror.MirrorCollection.from_config().values():
                 for rel_path in self.mirror_paths:
                     mirror_urls.append(
                         url_util.join(mirror.fetch_url, rel_path))

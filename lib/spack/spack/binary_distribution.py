@@ -263,7 +263,7 @@ class BinaryCacheIndex(object):
         on disk under ``_index_cache_root``). """
         self._init_local_index_cache()
 
-        mirrors = spack.mirror.MirrorCollection()
+        mirrors = spack.mirror.MirrorCollection.from_config()
         configured_mirror_urls = [m.fetch_url for m in mirrors.values()]
         items_to_remove = []
         spec_cache_clear_needed = False
@@ -1088,7 +1088,7 @@ def download_tarball(spec, preferred_mirrors=None):
         Path to the downloaded tarball, or ``None`` if the tarball could not
         be downloaded from any configured mirrors.
     """
-    if not spack.mirror.MirrorCollection():
+    if not spack.mirror.MirrorCollection.from_config():
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
 
@@ -1101,7 +1101,7 @@ def download_tarball(spec, preferred_mirrors=None):
             urls_to_try.append(url_util.join(
                 preferred_url, _build_cache_relative_path, tarball))
 
-    for mirror in spack.mirror.MirrorCollection().values():
+    for mirror in spack.mirror.MirrorCollection.from_config().values():
         if not preferred_mirrors or mirror.fetch_url not in preferred_mirrors:
             urls_to_try.append(url_util.join(
                 mirror.fetch_url, _build_cache_relative_path, tarball))
@@ -1523,7 +1523,7 @@ def clear_spec_cache():
 def get_keys(install=False, trust=False, force=False, mirrors=None):
     """Get pgp public keys available on mirror with suffix .pub
     """
-    mirror_collection = (mirrors or spack.mirror.MirrorCollection())
+    mirror_collection = (mirrors or spack.mirror.MirrorCollection.from_config())
 
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " +
@@ -1792,7 +1792,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
 
 
 def download_buildcache_entry(file_descriptions, mirror_url=None):
-    if not mirror_url and not spack.mirror.MirrorCollection():
+    if not mirror_url and not spack.mirror.MirrorCollection.from_config():
         tty.die("Please provide or add a spack mirror to allow " +
                 "download of buildcache entries.")
 
@@ -1801,7 +1801,7 @@ def download_buildcache_entry(file_descriptions, mirror_url=None):
             mirror_url, _build_cache_relative_path)
         return _download_buildcache_entry(mirror_root, file_descriptions)
 
-    for mirror in spack.mirror.MirrorCollection().values():
+    for mirror in spack.mirror.MirrorCollection.from_config().values():
         mirror_root = os.path.join(
             mirror.fetch_url,
             _build_cache_relative_path)

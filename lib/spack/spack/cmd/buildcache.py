@@ -392,7 +392,7 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                 " to install")
     specs = set()
 
-    mirror = spack.mirror.MirrorCollection().lookup(output_location)
+    mirror = spack.mirror.MirrorCollection.from_config().lookup(output_location)
     outdir = url_util.format(mirror.push_url)
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
@@ -803,7 +803,8 @@ def buildcache_sync(args):
         source_location = 'file://' + source_location
     elif args.src_mirror_name:
         source_location = args.src_mirror_name
-        result = spack.mirror.MirrorCollection().lookup(source_location)
+        result = (
+            spack.mirror.MirrorCollection.from_config().lookup(source_location))
         if result.name == "<unnamed>":
             raise ValueError(
                 'no configured mirror named "{name}"'.format(
@@ -815,7 +816,8 @@ def buildcache_sync(args):
             raise ValueError(
                 '"{url}" is not a valid URL'.format(url=source_location))
 
-    src_mirror = spack.mirror.MirrorCollection().lookup(source_location)
+    src_mirror = (
+        spack.mirror.MirrorCollection.from_config().lookup(source_location))
     src_mirror_url = url_util.format(src_mirror.fetch_url)
 
     # Figure out the destination mirror
@@ -830,7 +832,8 @@ def buildcache_sync(args):
         dest_location = 'file://' + dest_location
     elif args.dest_mirror_name:
         dest_location = args.dest_mirror_name
-        result = spack.mirror.MirrorCollection().lookup(dest_location)
+        result = (
+            spack.mirror.MirrorCollection.from_config().lookup(dest_location))
         if result.name == "<unnamed>":
             raise ValueError(
                 'no configured mirror named "{name}"'.format(
@@ -842,7 +845,8 @@ def buildcache_sync(args):
             raise ValueError(
                 '"{url}" is not a valid URL'.format(url=dest_location))
 
-    dest_mirror = spack.mirror.MirrorCollection().lookup(dest_location)
+    dest_mirror = (
+        spack.mirror.MirrorCollection.from_config().lookup(dest_location))
     dest_mirror_url = url_util.format(dest_mirror.fetch_url)
 
     # Get the active environment
@@ -901,7 +905,7 @@ def buildcache_sync(args):
 
 
 def update_index(mirror_url, update_keys=False):
-    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    mirror = spack.mirror.MirrorCollection.from_config().lookup(mirror_url)
     outdir = url_util.format(mirror.push_url)
 
     bindist.generate_package_index(

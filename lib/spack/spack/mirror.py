@@ -122,12 +122,14 @@ class Mirror(object):
             # Ensure that the mirror lookup does not mistake it for a named
             # mirror.
             location = 'file://' + location
-            result = spack.mirror.MirrorCollection().lookup(location)
+            result = (
+                spack.mirror.MirrorCollection.from_config().lookup(location))
 
         elif mirror_name:
             # User meant to provide the name of a preconfigured mirror.
             # Ensure that the mirror lookup actually returns a named mirror.
-            result = spack.mirror.MirrorCollection().lookup(mirror_name)
+            result = (
+                spack.mirror.MirrorCollection.from_config().lookup(mirror_name))
             if result.name == "<unnamed>":
                 raise ValueError(
                     'no configured mirror named "{name}"'.format(
@@ -141,7 +143,8 @@ class Mirror(object):
                 raise ValueError(
                     '"{url}" is not a valid URL'.format(url=mirror_url))
 
-            result = spack.mirror.MirrorCollection().lookup(mirror_url)
+            result = (
+                spack.mirror.MirrorCollection.from_config().lookup(mirror_url))
 
         else:
             # User did not provide any mirror specifications.
@@ -218,18 +221,23 @@ class Mirror(object):
 class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
-    def __init__(self, mirrors=None, scope=None):
+    def __init__(self, mirrors=None):
+        if mirrors is None:
+            mirrors = ()
+
         self._mirrors = OrderedDict(
-            (name, Mirror.from_dict(mirror, name))
-            for name, mirror in (
-                mirrors.items() if mirrors is not None else
-                spack.config.get('mirrors', scope=scope).items()))
+                (name, Mirror.from_dict(mirror, name))
+                for name, mirror in OrderedDict(mirrors).items())
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(True), stream)
 
     def to_yaml(self, stream=None):
         return syaml.dump(self.to_dict(True), stream)
+
+    @staticmethod
+    def from_config(scope=None):
+        return MirrorCollection(spack.config.get('mirrors', scope=scope))
 
     # TODO: this isn't called anywhere
     @staticmethod
