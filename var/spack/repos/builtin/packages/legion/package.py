@@ -198,9 +198,6 @@ class Legion(CMakePackage):
     variant('max_fields', values=int, default=512,
             description="Maximum number of fields allowed in a logical region.")
 
-    variant('native', default=False,
-            description="Enable native/host processor optimizaton target.")
-
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
@@ -339,10 +336,8 @@ class Legion(CMakePackage):
             maxfields = maxfields << 1
         options.append('-DLegion_MAX_FIELDS=%d' % maxfields)
 
-        if '+native' in spec:
-            # default is off.
-            options.append('-DBUILD_MARCH:STRING=native')
-
+        options.append('-DBUILD_MARCH:STRING={0}'.format(self.spec.architecture.target))
+        
         return options
 
     @run_after('install')
