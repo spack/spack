@@ -660,7 +660,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir)
         else:
-            print('Skipping petsc test: KSP tutorial example is missing')
+            print('Skipping petsc tests: KSP tutorial examples are missing')
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
