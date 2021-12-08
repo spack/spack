@@ -65,6 +65,7 @@ class Wrf(Package):
     url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
+    version('4.3.1', sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
@@ -109,6 +110,7 @@ class Wrf(Package):
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
     patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
+    patch("patches/3.9/fujitsu.patch", when="@3.9.1.1 %fj")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -123,20 +125,27 @@ class Wrf(Package):
     patch("patches/4.0/tirpc_detect.patch", when="@4.0")
     patch("patches/4.0/add_aarch64.patch", when="@4.0")
 
-    patch("patches/4.2/arch.Config.pl.patch", when="@4.2")
+    patch("patches/4.2/arch.Config.pl.patch", when="@4.2:")
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
-    patch("patches/4.2/arch.conf_tokens.patch", when="@4.2")
+    patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
-    patch("patches/4.2/configure.patch", when="@4.2")
-    patch("patches/4.2/external.io_netcdf.makefile.patch", when="@4.2")
-    patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2")
+    patch("patches/4.2/configure.patch", when="@4.2:")
+    patch("patches/4.2/external.io_netcdf.makefile.patch", when="@4.2:")
+    patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch",
+            sha256="d685a77c82d770f2af4e66711effa0cb115e2bc6e601de4cb92f15b138c6c85b", when="@4.2 %fj")
+    patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
+
+    patch("patches/4.3/Makefile.patch", when="@4.3:")
+    patch("patches/4.3/arch.postamble.patch", when="@4.3:")
+    patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -308,7 +317,7 @@ class Wrf(Package):
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc", "aocc"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build."
                 % self.spec.compiler.name
@@ -381,6 +390,7 @@ class Wrf(Package):
             error=str
         )
 
+        print(result_buf);
         if "Executables successfully built" in result_buf:
             return True
 
