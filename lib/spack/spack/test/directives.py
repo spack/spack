@@ -51,3 +51,12 @@ def test_constraints_from_context_are_merged(mock_packages):
 
     assert pkg_cls.dependencies
     assert spack.spec.Spec('@0.14:15 ^b@3.8:4.0') in pkg_cls.dependencies['c']
+
+
+@pytest.mark.regression('27754')
+def test_extends_spec(mock_packages):
+    extender = spack.spec.Spec('extends-spec').concretized()
+    extendee = spack.spec.Spec('extendee').concretized()
+
+    assert extender.dependencies
+    assert extender.package.extends(extendee)
