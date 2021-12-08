@@ -214,6 +214,7 @@ def test_test_list_all(mock_packages):
         "py-extension2",
         "test-error",
         "test-fail",
+        "test-whens",
     ])
 
 
