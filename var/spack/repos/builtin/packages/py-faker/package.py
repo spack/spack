@@ -22,4 +22,4 @@ class PyFaker(PythonPackage):
     depends_on('py-setuptools',                  type='build')
     depends_on('py-python-dateutil@2.4:',        type=('build', 'run'))
     depends_on('py-text-unidecode@1.3',          type=('build', 'run'))
-    depends_on('py-typing-extensions@3.10.0.2:', type=('build', 'run'), when=' +python@:3.8')
+    depends_on('py-typing-extensions@3.10.0.2:', type=('build', 'run'), when='^python@:3.8')
