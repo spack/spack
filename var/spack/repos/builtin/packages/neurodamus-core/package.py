@@ -73,7 +73,7 @@ class NeurodamusCore(SimModel):
     depends_on('zlib')  # for hdf5
 
     resource(name='common',
-             git='ssh://bbpcode.epfl.ch/sim/models/common',
+             git='git@bbpgitlab.epfl.ch:hpc/sim/models/common.git',
              when='+common',
              destination='resources')
 
