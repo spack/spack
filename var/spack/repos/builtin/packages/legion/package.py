@@ -336,7 +336,7 @@ class Legion(CMakePackage):
             maxfields = maxfields << 1
         options.append('-DLegion_MAX_FIELDS=%d' % maxfields)
 
-        options.append('-DBUILD_MARCH:STRING={0}'.format(self.spec.architecture.target))
+        options.append('-DBUILD_MARCH:STRING=')
         return options
 
     @run_after('install')
