@@ -6,6 +6,8 @@
 import re
 import sys
 
+import llnl.util.tty as tty
+
 
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
