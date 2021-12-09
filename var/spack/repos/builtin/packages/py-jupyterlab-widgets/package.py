@@ -10,9 +10,11 @@ class PyJupyterlabWidgets(PythonPackage):
     """A JupyterLab extension."""
 
     homepage = "https://github.com/jupyter-widgets/ipywidgets"
-    pypi     = "jupyterlab_widgets/jupyterlab_widgets-1.0.2.tar.gz"
+    # Source is also available, but I'm having issues getting it to build:
+    # https://github.com/jupyter-widgets/ipywidgets/issues/3324
+    url = "https://files.pythonhosted.org/packages/py3/j/jupyterlab_widgets/jupyterlab_widgets-1.0.2-py3-none-any.whl"
 
-    version('1.0.2', sha256='7885092b2b96bf189c3a705cc3c412a4472ec5e8382d0b47219a66cccae73cfa')
+    version('1.0.2', sha256='f5d9efface8ec62941173ba1cffb2edd0ecddc801c11ae2931e30b50492eb8f7', extract=False)
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools@40.8.0:', type='build')

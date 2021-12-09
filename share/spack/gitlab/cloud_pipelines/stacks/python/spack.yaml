@@ -109,7 +109,7 @@ spack:
     - py-adal
     - py-adb-enhanced
     - py-addict
-    - py-adios
+    # - py-adios  # deprecated
     - py-advancedhtmlparser
     - py-aenum
     - py-affine
@@ -576,7 +576,7 @@ spack:
     - py-fastrlock
     - py-faststructure
     - py-fava
-    - py-fenics-basix
+    # - py-fenics-basix  # fenics-basix has build issues
     - py-fenics-dijitso
     # - py-fenics-dolfinx  # TODO: unknown concretization issues
     - py-fenics-ffc
@@ -1020,7 +1020,7 @@ spack:
     - py-opentuner
     - py-opppy
     - py-opt-einsum
-    - py-or-tools
+    # - py-or-tools  # scipoptsuite requires manual download
     - py-ordered-set
     - py-ordereddict
     - py-os-service-types
@@ -1268,7 +1268,7 @@ spack:
     # - py-pysam
     # - py-pyscaf
     # - py-pyscf
-    # - py-pyscipopt
+    # # - py-pyscipopt  # scipoptsuite requires manual download
     # - py-pyscreeze
     # - py-pyserial
     # - py-pyshp

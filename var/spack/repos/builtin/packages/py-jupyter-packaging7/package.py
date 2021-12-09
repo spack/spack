@@ -21,4 +21,3 @@ class PyJupyterPackaging7(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-packaging', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('npm', type='run')

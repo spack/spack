@@ -24,4 +24,3 @@ class PyJupyterPackaging11(PythonPackage):
     depends_on('py-setuptools@46.4:', type=('build', 'run'))
     depends_on('py-wheel', type=('build', 'run'))
     depends_on('py-deprecation', type=('build', 'run'))
-    depends_on('npm', type='run')
