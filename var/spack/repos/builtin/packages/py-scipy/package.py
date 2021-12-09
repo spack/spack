@@ -73,7 +73,7 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.16.5:1.22+blas+lapack', when='@1.6.2:', type=('build', 'link', 'run'))
     depends_on('py-cython@0.29.18:2', when='@1.7:', type='build')
     depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
-    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:', type=('build', 'link'))
+    depends_on('py-pythran@0.9.12:0.10.0', when='@1.7.2:', type=('build', 'link'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
