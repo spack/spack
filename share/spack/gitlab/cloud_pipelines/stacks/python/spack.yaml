@@ -1816,6 +1816,7 @@ spack:
     mappings:
       - match: ['@:']
         runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64"]
 
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
@@ -1824,7 +1825,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/spack/python-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:
