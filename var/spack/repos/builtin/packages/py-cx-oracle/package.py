@@ -15,6 +15,6 @@ class PyCxOracle(PythonPackage):
     version('8.3.0', sha256='3b2d215af4441463c97ea469b9cc307460739f89fdfa8ea222ea3518f1a424d9')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('oracle-instant-client', type=('build', 'link', 'run'))
+    depends_on('oracle-instant-client', type='run')
     depends_on('py-setuptools@40.6.0:', type='build')
     depends_on('py-wheel', type='build')
