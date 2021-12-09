@@ -243,6 +243,7 @@ class Openmpi(AutotoolsPackage):
             description="Build support for the Singularity container")
     variant('lustre', default=False,
             description="Lustre filesystem library support")
+    variant('romio', default=True, description='Enable ROMIO support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -729,6 +730,9 @@ class Openmpi(AutotoolsPackage):
                     '--disable-java',
                     '--disable-mpi-java'
                 ])
+
+        if '~romio' in spec:
+            config_args.append('--disable-io-romio')
 
         # SQLite3 support
         if spec.satisfies('@1.7.3:1'):
