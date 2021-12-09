@@ -750,7 +750,8 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
     concretization_kwargs = {
         'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
+        'reuse': kwargs.get('reuse', False),
+        'allow_split': kwargs.get('allow_split', False),
     }
     result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
     result.raise_if_unsat()
@@ -784,6 +785,10 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
             f.write(template.render(specs=[str(s) for s in split_specs]))
 
         return spack.repo.Repo(repo_path)
+
+    if kwargs.get('allow_split', False):
+        # This feature cannot be implemented in the old concretizer
+        raise Exception
 
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
     concretization_repository = make_concretization_repository(abstract_specs)

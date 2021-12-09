@@ -12,16 +12,22 @@
 %-----------------------------------------------------------------------------
 
 % each node must have a single version
-:- not 1 { version(PSID, Package, _) } 1, node(PSID, Package).
+:- not 1 { version(PSID, Package, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one version").
 
 % each node must have a single platform, os and target
-:- not 1 { node_platform(PSID, Package, _) } 1, node(PSID, Package), error("A node must have exactly one platform").
-:- not 1 { node_os(PSID, Package, _) } 1, node(PSID, Package).
-:- not 1 { node_target(PSID, Package, _) } 1, node(PSID, Package).
+:- not 1 { node_platform(PSID, Package, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one platform").
+:- not 1 { node_os(PSID, Package, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one os").
+:- not 1 { node_target(PSID, Package, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one target").
 
 % each node has a single compiler associated with it
-:- not 1 { node_compiler(PSID, Package, _) } 1, node(PSID, Package).
-:- not 1 { node_compiler_version(PSID, Package, _, _) } 1, node(PSID, Package).
+:- not 1 { node_compiler(PSID, Package, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one compiler").
+:- not 1 { node_compiler_version(PSID, Package, _, _) } 1, node(PSID, Package),
+   error("Every node must have exactly one compiler_version").
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -850,10 +856,16 @@ no_flags(PSID, Package, FlagType)
 impose(PSID, Hash) :- hash(PSID, Package, Hash).
 
 % if we haven't selected a hash for a package, we'll be building it
+% don't count it if it's a duplicate of another node
+% (arbitrarily, we are choosing the lower-numbered PSID as the one to count)
 build(PSID, Package)
  :- not hash(PSID, Package, _),
+    node(PSID, Package).
+
+build_representative(PSID, Package)
+ :- not hash(PSID, Package, _),
     node(PSID, Package),
-    not handled_by_another_process_space(PSID, Package).
+    not roots_equivalent_for_package(_, PSID, Package).
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
@@ -889,30 +901,33 @@ build_priority(PSID, Package, 0)
 roots_equivalent_for_package(PSID1, PSID2, Package)
  :- node(PSID1, Package);
     node(PSID2, Package);
-    attr(Name, PSID1, Package) : attr(Name, PSID2, Package);
-    attr(Name, PSID1, Package, A1) : attr(Name, PSID2, Package, A1);
-    attr(Name, PSID1, Package, A1, A2) : attr(Name, PSID2, Package, A1, A2);
-    attr(Name, PSID2, Package) : attr(Name, PSID1, Package);
-    attr(Name, PSID2, Package, A1) : attr(Name, PSID1, Package, A1);
-    attr(Name, PSID2, Package, A1, A2) : attr(Name, PSID1, Package, A1, A2).
+    attr(Name, PSID1, Package) : attr(Name, PSID2, Package), equality_attr(Name);
+    attr(Name, PSID1, Package, A1) : attr(Name, PSID2, Package, A1), equality_attr(Name);
+    attr(Name, PSID1, Package, A1, A2) : attr(Name, PSID2, Package, A1, A2), equality_attr(Name);
+    attr(Name, PSID2, Package) : attr(Name, PSID1, Package), equality_attr(Name);
+    attr(Name, PSID2, Package, A1) : attr(Name, PSID1, Package, A1), equality_attr(Name);
+    attr(Name, PSID2, Package, A1, A2) : attr(Name, PSID1, Package, A1, A2), equality_attr(Name);
+    PSID1 < PSID2.
 
-prefer_satisfier(ID1, ID2, Package)
- :- roots_equivalent_for_package(ID1, ID2, Package),
-    ID1 < ID2.
+roots_different_for_package(PSID1, PSID2, Package)
+ :- node(PSID1, Package), node(PSID2, Package),
+    not roots_equivalent_for_package(PSID1, PSID2, Package),
+    PSID1 < PSID2.
 
-handled_by_another_process_space(PSID, Package)
- :- node(PSID, Package),
-    prefer_satisfier(_, PSID, Package).
-
-% Only want to penalize the optimization for duplicates
-% Don't penalize for the first instance of a given package.
-% Arbitrarily choosing the "lowest" PSID to not penalize
-duplicate(PSID, Package)
- :- node(PSID, Package),
-    node(OtherPSID, Package),
-    PSID != OtherPSID,
-    not roots_equivalent_for_package(PSID, OtherPSID, Package),
-    PSID > OtherPSID.
+equality_attr("hash").
+equality_attr("depends_on").
+equality_attr("version").
+equality_attr("variant_value").
+equality_attr("node_platform").
+equality_attr("node_os").
+equality_attr("node_target").
+equality_attr("node_compiler").
+equality_attr("node_compiler_version").
+equality_attr("node_flag").
+equality_attr("node_flag_compiler_default").
+equality_attr("node_flag_source").
+equality_attr("no_flags").
+equality_attr("external_spec_selected").
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
@@ -924,13 +939,13 @@ duplicate(PSID, Package)
 
 % Try to minimize the number of nodes of a given package
 opt_criterion(300, "agreement of nodes across process spaces").
-#minimize { 0@300: #true }.
-#minimize { 1@300,Package,PSID : duplicate(PSID, Package) }.
+#maximize { 0@300: #true }.
+#maximize { 1@300,Package,PSID1,PSID2 : roots_equivalent_for_package(PSID1, PSID2, Package) }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 0@100: #true }.
-#minimize { 1@100,Package,PSID : build(PSID, Package), optimize_for_reuse() }.
+#minimize { 1@100,Package,PSID : build_representative(PSID, Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used

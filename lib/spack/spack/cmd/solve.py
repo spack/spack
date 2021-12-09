@@ -105,7 +105,7 @@ def solve(parser, args):
     # dump generated ASP program
     result = asp.solve(
         specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        reuse=args.reuse,
+        reuse=args.reuse, allow_split=True
     )
     if 'solutions' not in dump:
         return

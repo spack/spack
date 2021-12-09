@@ -1111,6 +1111,9 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
+        if self.concretization == 'together_where_possible':
+            return self._concretize_together(tests=tests, reuse=reuse, allow_split=True)
+
         if self.concretization == 'together':
             return self._concretize_together(tests=tests, reuse=reuse)
 
@@ -1120,7 +1123,7 @@ class Environment(object):
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self, tests=False, reuse=False):
+    def _concretize_together(self, tests=False, reuse=False, allow_split=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1141,7 +1144,7 @@ class Environment(object):
             if count > 1:
                 duplicates.append(name)
 
-        if duplicates:
+        if duplicates and not allow_split:
             msg = ('environment that are configured to concretize specs'
                    ' together cannot contain more than one spec for each'
                    ' package [{0}]'.format(', '.join(duplicates)))
@@ -1153,7 +1156,7 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs, tests=tests, reuse=reuse
+            *self.user_specs, tests=tests, reuse=reuse, allow_split=allow_split
         )
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
