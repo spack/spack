@@ -168,7 +168,8 @@ class Warpx(CMakePackage):
             self.install_test_root if post_install else self.stage.source_path,
             self.examples_src_dir)
         dims = self.spec.variants['dims'].value
-        inputs_nD = {'1': 'inputs_1d', '2': 'inputs_2d', '3': 'inputs_3d', 'rz': 'inputs_2d_rz'}
+        inputs_nD = {'1': 'inputs_1d', '2': 'inputs_2d', '3': 'inputs_3d',
+                     'rz': 'inputs_2d_rz'}
         inputs = join_path(examples_dir, inputs_nD[dims])
 
         cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
