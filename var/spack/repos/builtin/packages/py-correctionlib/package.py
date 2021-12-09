@@ -21,7 +21,7 @@ class PyCorrectionlib(PythonPackage):
     depends_on('py-setuptools@42:', type='build')
     depends_on('py-setuptools-scm@3.4:+toml', type='build')
     depends_on('py-scikit-build', type='build')
-    depends_on('cmake', type='build')
+    depends_on('py-cmake@3.11:', type='build')
     depends_on('ninja', type='build')
     depends_on('py-numpy@1.13.3:', type=('build', 'run'))
     depends_on('py-typing', type=('build', 'run'), when='^python@:3.4')
