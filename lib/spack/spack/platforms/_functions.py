@@ -23,13 +23,6 @@ def _host():
     return None
 
 
-def _wrapper_extension():
-    if str(_host()) == 'windows':
-        return ".sh"
-    else:
-        return ""
-
-
 @llnl.util.lang.memoized
 def cls_by_name(name):
     """Return a platform class that corresponds to the given name or None

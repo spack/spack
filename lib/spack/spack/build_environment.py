@@ -278,7 +278,6 @@ def instantiate_compiler_env(pkg):
     compiler_env_root = join(wrapper_root, compiler_env)
 
     # Get wrapper extension, name and compiler specific metadata routes
-    wrapper_ext = spack.platforms.wrapper_ext()
     compiler_name = os.path.basename(compiler_env)
     metadata_compiler_root = join(metadata_root, compiler_name)
     stage_metadata_compiler = join(stage_metadata_root, compiler_name)
@@ -294,7 +293,7 @@ def instantiate_compiler_env(pkg):
     # helper to write wrapper files
     def write_wrapper(files, pth):
         for f in files:
-            f_name = os.path.basename(f)+wrapper_ext
+            f_name = os.path.basename(f)
             install(f, join(pth, f_name))
 
     # install pkg local wrapper files into stage and install dirs
@@ -322,17 +321,17 @@ def instantiate_compiler_env(pkg):
     sep      =  ';'
 
     build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77)]
-    with open(join(metadata_root, 'setup' + wrapper_ext), 'w+') as f:
+    with open(join(metadata_root, 'load'), 'w+') as f:
         f.write(COMPILER_LOAD_FILE.format(*build_wrapper(metadata_root), env_path, sep))
 
-    with open(join(stage_metadata_root, 'setup' + wrapper_ext), 'w+') as f:
+    with open(join(stage_metadata_root, 'load'), 'w+') as f:
         f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), env_path, sep))
 
     # install local env unloader
-    with open(join(metadata_root, 'unload' + wrapper_ext), 'w+') as f:
+    with open(join(metadata_root, 'unload'), 'w+') as f:
         f.write(COMPILER_UNLOAD)
 
-    with open(join(stage_metadata_root, 'unload' + wrapper_ext), 'w+') as f:
+    with open(join(stage_metadata_root, 'unload'), 'w+') as f:
         f.write(COMPILER_UNLOAD)
 
 
@@ -354,7 +353,7 @@ def set_compiler_environment_variables(pkg, env):
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
-    # Set SPACK compiler variables so that our wrapper knows what to call 'C:\\Program Files\\Git\\bin\\sh.exe'
+    # Set SPACK compiler variables so that our wrapper knows what to call
     import posixpath
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
@@ -369,6 +368,7 @@ def set_compiler_environment_variables(pkg, env):
         env.set('SPACK_FC',  compiler.fc)
         env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
 
+    env.set('MSYS_NO_PATHCONV', 1)
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
