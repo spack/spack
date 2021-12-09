@@ -50,8 +50,6 @@ packages:
     externals:
     - spec: libtool@2.4.2
       prefix: /usr
-  llvm:
-    variants: +link_dylib
   m4:
     version: [1.4.16]
     externals:
