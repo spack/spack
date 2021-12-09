@@ -1,0 +1,19 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyCxOracle(PythonPackage):
+    """Python interface to Oracle"""
+
+    homepage = "https://oracle.github.io/python-cx_Oracle"
+    pypi     = "cx_Oracle/cx_Oracle-8.3.0.tar.gz"
+
+    version('8.3.0', sha256='3b2d215af4441463c97ea469b9cc307460739f89fdfa8ea222ea3518f1a424d9')
+
+    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('oracle-instant-client', type=('build', 'link', 'run'))
+    depends_on('py-setuptools', type='build')
