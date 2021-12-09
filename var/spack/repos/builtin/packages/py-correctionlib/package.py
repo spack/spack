@@ -18,8 +18,8 @@ class PyCorrectionlib(PythonPackage):
             description='Includes select conversion routines for common types')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-setuptools@42:', type='build')
+    depends_on('py-setuptools-scm@3.4:+toml', type='build')
     depends_on('py-scikit-build', type='build')
     depends_on('cmake', type='build')
     depends_on('ninja', type='build')
