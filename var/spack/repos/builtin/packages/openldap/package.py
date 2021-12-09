@@ -35,6 +35,7 @@ class Openldap(AutotoolsPackage):
     variant('static', default=False, description='Build static libraries')
     variant('shared', default=True, description='Build shared libraries')
     variant('dynamic', default=True, description='Enable linking built binaries with dynamic libs')
+    conflicts('~static', when='~shared')
 
     depends_on('icu4c', when='+icu')
     depends_on('gnutls', when='~client_only tls=gnutls')
