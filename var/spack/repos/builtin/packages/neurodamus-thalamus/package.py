@@ -31,3 +31,11 @@ class NeurodamusThalamus(NeurodamusModel):
     version('0.3', tag='0.3-1', submodules=True, get_full_repo=False)
     version('0.2', tag='0.2', submodules=True, get_full_repo=False)
     version('0.1', tag='0.1', submodules=True, get_full_repo=False)
+
+    resource(
+        name="neocortex",
+        git="git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git",
+        tag="1.6",
+        when="@1.6:",
+        destination="deps"
+    )
