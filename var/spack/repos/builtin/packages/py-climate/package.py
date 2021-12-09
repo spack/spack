@@ -23,4 +23,5 @@ class PyClimate(PythonPackage):
     # copied from py-azureml-core
     def install(self, spec, prefix):
         pip = which('pip')
-        pip('install', '--no-deps', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        pip('install', '--no-deps', self.stage.archive_file, 
+            '--prefix={0}'.format(prefix))
