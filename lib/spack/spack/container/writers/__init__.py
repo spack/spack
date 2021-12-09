@@ -189,7 +189,7 @@ class PathContext(tengine.Context):
 
         # If we don't have a monitor group, cut out early.
         if not monitor:
-            return Monitor(False, None, None, None, None, None)
+            return Monitor(False, None, None, None, None)
 
         return Monitor(
             enabled=True,
