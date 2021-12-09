@@ -186,7 +186,7 @@ def test_cdash_output_test_error(
         report_dir = tmpdir.join("cdash_reports")
         print(tmpdir.listdir())
         assert report_dir in tmpdir.listdir()
-        report_file = report_dir.join("test-error_Test.xml")
+        report_file = report_dir.join("test-error_Testing.xml")
         assert report_file in report_dir.listdir()
         content = report_file.open().read()
         assert "FAILED: Command exited with status 1" in content
@@ -205,7 +205,7 @@ def test_cdash_upload_clean_test(
         spack_test("run", "--log-file=cdash_reports", "--log-format=cdash", "printing-package")
         report_dir = tmpdir.join("cdash_reports")
         assert report_dir in tmpdir.listdir()
-        report_file = report_dir.join("printing-package_Test.xml")
+        report_file = report_dir.join("printing-package_Testing.xml")
         assert report_file in report_dir.listdir()
         content = report_file.open().read()
         assert "</Test>" in content

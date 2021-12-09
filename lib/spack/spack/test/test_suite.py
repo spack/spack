@@ -7,12 +7,39 @@ import sys
 
 import pytest
 
-import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.install_test
 import spack.spec
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
+
+
+def _true(*args, **kwargs):
+    """Generic monkeypatch function that always returns True."""
+    return True
+
+
+@pytest.fixture
+def ensure_debug(monkeypatch):
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
+
+    yield
+
+    tty.set_debug(current_debug_level)
+
+
+def ensure_results(filename, expected):
+    assert os.path.exists(filename)
+    with open(filename, "r") as fd:
+        lines = fd.readlines()
+        have = False
+        for line in lines:
+            if expected in line:
+                have = True
+                break
+        assert have
 
 
 def test_test_log_pathname(mock_packages, config):
@@ -61,31 +88,15 @@ def test_write_test_result(mock_packages, mock_test_stage):
         assert spec.name in msg
 
 
-def test_do_test(mock_packages, install_mockery, mock_test_stage):
-    """Perform a stand-alone test with files to copy."""
+def test_test_uninstalled(mock_packages, install_mockery, mock_test_stage):
+    """Attempt to perform stand-alone test for uninstalled package."""
     spec = spack.spec.Spec("trivial-smoke-test").concretized()
-    test_name = "test_do_test"
-    test_filename = "test_file.in"
+    test_suite = spack.install_test.TestSuite([spec])
 
-    pkg = spec.package
-    pkg.create_extra_test_source()
+    test_suite()
 
-    test_suite = spack.install_test.TestSuite([spec], test_name)
-    test_suite.current_test_spec = spec
-    test_suite.current_base_spec = spec
-    test_suite.ensure_stage()
-
-    # Save off target paths for current spec since test suite processing
-    # assumes testing multiple specs.
-    cached_filename = fs.join_path(test_suite.current_test_cache_dir, pkg.test_source_filename)
-    data_filename = fs.join_path(test_suite.current_test_data_dir, test_filename)
-
-    # Run the test, making sure to retain the test stage directory
-    # so we can ensure the files were copied.
-    test_suite(remove_directory=False)
-
-    assert os.path.exists(cached_filename)
-    assert os.path.exists(data_filename)
+    ensure_results(test_suite.results_file, "SKIPPED")
+    ensure_results(test_suite.log_file_for_spec(spec), "Skipped not installed")
 
 
 @pytest.mark.parametrize(
@@ -95,27 +106,21 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
         ({"externals": True}, "NO-TESTS", "No tests"),
     ],
 )
-def test_test_external(mock_packages, install_mockery, mock_test_stage, arguments, status, msg):
-    def ensure_results(filename, expected):
-        assert os.path.exists(filename)
-        with open(filename, "r") as fd:
-            lines = fd.readlines()
-            have = False
-            for line in lines:
-                if expected in line:
-                    have = True
-                    break
-            assert have
-
+def test_test_external(
+    mock_packages, install_mockery, mock_test_stage, monkeypatch, arguments, status, msg
+):
     name = "trivial-smoke-test"
     spec = spack.spec.Spec(name).concretized()
     spec.external_path = "/path/to/external/{0}".format(name)
+
+    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
 
     test_suite = spack.install_test.TestSuite([spec])
     test_suite(**arguments)
 
     ensure_results(test_suite.results_file, status)
-    ensure_results(test_suite.log_file_for_spec(spec), msg)
+    if arguments:
+        ensure_results(test_suite.log_file_for_spec(spec), msg)
 
 
 def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
@@ -152,21 +157,15 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
-def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
+def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
+
     spec = spack.spec.Spec("simple-standalone-test").concretized()
+    monkeypatch.setattr(spack.spec.Spec, "installed", _true)
     test_suite = spack.install_test.TestSuite([spec])
+    test_suite()
 
-    test_suite(verbose=True)
-    passed, msg = False, False
-    with open(test_suite.log_file_for_spec(spec), "r") as fd:
-        for line in fd:
-            if "simple stand-alone test" in line:
-                msg = True
-            elif "PASSED" in line:
-                passed = True
-
-    assert msg
-    assert passed
+    ensure_results(test_suite.results_file, "PASSED")
+    ensure_results(test_suite.log_file_for_spec(spec), "simple stand-alone")
 
 
 def test_get_test_suite():

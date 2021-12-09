@@ -176,6 +176,33 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
         ci.download_and_extract_artifacts(url, working_dir)
 
 
+def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, config, mock_packages, monkeypatch, capfd):
+    """The copy will fail because the spec is not concrete so does not have
+    a package."""
+    log_dir = tmpdir.join("log_dir")
+    s = spec.Spec("printing-package").concretized()
+
+    ci.copy_stage_logs_to_artifacts(s, log_dir)
+    _, err = capfd.readouterr()
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
+
+
+def test_ci_copy_test_logs_to_artifacts_fail(tmpdir, capfd):
+    log_dir = tmpdir.join("log_dir")
+
+    ci.copy_test_logs_to_artifacts("no-such-dir", log_dir)
+    _, err = capfd.readouterr()
+    assert "Cannot copy test logs" in err
+
+    stage_dir = tmpdir.join("stage_dir").strpath
+    os.makedirs(stage_dir)
+    ci.copy_test_logs_to_artifacts(stage_dir, log_dir)
+    _, err = capfd.readouterr()
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
+
+
 def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypatch):
     c1, c2 = last_two_git_commits
     repro_dir = os.path.join(tmpdir.strpath, "repro")
@@ -467,3 +494,154 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
     affected_specs = spack.ci.get_spec_filter_list(e, ["zlib"])
     hdf5_specs = [s for s in affected_specs if s.name == "hdf5"]
     assert len(hdf5_specs) == 2
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+)
+def test_ci_process_command(tmpdir):
+    repro_dir = tmpdir.join("repro_dir").strpath
+    os.makedirs(repro_dir)
+    result = ci.process_command("help", [], repro_dir)
+
+    assert os.path.exists(fs.join_path(repro_dir, "help.sh"))
+    assert not result
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+)
+def test_ci_process_command_fail(tmpdir, monkeypatch):
+    import subprocess
+
+    err = "subprocess wait exception"
+
+    def _fail(self, args):
+        raise RuntimeError(err)
+
+    monkeypatch.setattr(subprocess.Popen, "__init__", _fail)
+
+    repro_dir = tmpdir.join("repro_dir").strpath
+    os.makedirs(repro_dir)
+
+    with pytest.raises(RuntimeError, match=err):
+        ci.process_command("help", [], repro_dir)
+
+
+def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
+    # Monkeypatching ci method tested elsewhere to reduce number of methods
+    # that would need to be patched here.
+    monkeypatch.setattr(spack.ci, "push_mirror_contents", lambda a, b, c, d: None)
+
+    args = {
+        "env": None,
+        "buildcache_mirror_url": "file://fake-url",
+        "pipeline_mirror_url": "file://fake-url",
+    }
+    ci.create_buildcache(**args)
+
+
+def test_ci_run_standalone_tests_missing_requirements(
+    tmpdir, working_env, config, mock_packages, capfd
+):
+    """This test case checks for failing prerequisite checks."""
+    ci.run_standalone_tests()
+    err = capfd.readouterr()[1]
+    assert "Job spec is required" in err
+
+    args = {"job_spec": spec.Spec("printing-package").concretized()}
+    ci.run_standalone_tests(**args)
+    err = capfd.readouterr()[1]
+    assert "Reproduction directory is required" in err
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+)
+def test_ci_run_standalone_tests_not_installed_junit(
+    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+):
+    log_file = tmpdir.join("junit.xml").strpath
+    args = {
+        "log_file": log_file,
+        "job_spec": spec.Spec("printing-package").concretized(),
+        "repro_dir": tmpdir.join("repro_dir").strpath,
+        "fail_fast": True,
+    }
+    os.makedirs(args["repro_dir"])
+
+    ci.run_standalone_tests(**args)
+    err = capfd.readouterr()[1]
+    assert "No installed packages" in err
+    assert os.path.getsize(log_file) > 0
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+)
+def test_ci_run_standalone_tests_not_installed_cdash(
+    tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
+):
+    """Test run_standalone_tests with cdash and related options."""
+    log_file = tmpdir.join("junit.xml").strpath
+    args = {
+        "log_file": log_file,
+        "job_spec": spec.Spec("printing-package").concretized(),
+        "repro_dir": tmpdir.join("repro_dir").strpath,
+    }
+    os.makedirs(args["repro_dir"])
+
+    # Cover when CDash handler provided (with the log file as well)
+    ci_cdash = {
+        "url": "file://fake",
+        "build-group": "fake-group",
+        "project": "ci-unit-testing",
+        "site": "fake-site",
+    }
+    os.environ["SPACK_CDASH_BUILD_NAME"] = "ci-test-build"
+    os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
+    os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
+    handler = ci.CDashHandler(ci_cdash)
+    args["cdash"] = handler
+    ci.run_standalone_tests(**args)
+    out = capfd.readouterr()[0]
+    # CDash *and* log file output means log file ignored
+    assert "xml option is ignored" in out
+    assert "0 passed of 0" in out
+
+    # copy test results (though none)
+    artifacts_dir = tmpdir.join("artifacts")
+    fs.mkdirp(artifacts_dir.strpath)
+    handler.copy_test_results(tmpdir.strpath, artifacts_dir.strpath)
+    err = capfd.readouterr()[1]
+    assert "Unable to copy files" in err
+    assert "No such file or directory" in err
+
+
+def test_ci_skipped_report(tmpdir, mock_packages, config):
+    """Test explicit skipping of report as well as CI's 'package' arg."""
+    pkg = "trivial-smoke-test"
+    spec = spack.spec.Spec(pkg).concretized()
+    ci_cdash = {
+        "url": "file://fake",
+        "build-group": "fake-group",
+        "project": "ci-unit-testing",
+        "site": "fake-site",
+    }
+    os.environ["SPACK_CDASH_BUILD_NAME"] = "fake-test-build"
+    os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
+    os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
+    handler = ci.CDashHandler(ci_cdash)
+    reason = "Testing skip"
+    handler.report_skipped(spec, tmpdir.strpath, reason=reason)
+
+    report = fs.join_path(tmpdir, "{0}_Testing.xml".format(pkg))
+    expected = "Skipped {0} package".format(pkg)
+    with open(report, "r") as f:
+        have = [0, 0]
+        for line in f:
+            if expected in line:
+                have[0] += 1
+            elif reason in line:
+                have[1] += 1
+        assert all(count == 1 for count in have)

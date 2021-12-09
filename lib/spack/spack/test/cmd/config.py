@@ -78,7 +78,7 @@ repos:
     )
 
 
-def test_config_edit():
+def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope("compilers")

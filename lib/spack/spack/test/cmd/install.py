@@ -49,11 +49,12 @@ def test_install_package_and_dependency(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
 
+    log = "test"
     with tmpdir.as_cwd():
-        install("--log-format=junit", "--log-file=test.xml", "libdwarf")
+        install("--log-format=junit", "--log-file={0}".format(log), "libdwarf")
 
     files = tmpdir.listdir()
-    filename = tmpdir.join("test.xml")
+    filename = tmpdir.join("{0}.xml".format(log))
     assert filename in files
 
     content = filename.open().read()
