@@ -39,7 +39,7 @@ class Dust(Package):
         assert "Dust " in output
 
     def test(self):
-        """Run this smoke tests when requested explicitly"""
+        """Run this smoke test when requested explicitly"""
 
         dustpath = join_path(self.spec["dust"].prefix.bin, "dust")
         options = ["--version"]
