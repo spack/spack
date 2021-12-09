@@ -11,7 +11,7 @@ class PyPicmistandard(PythonPackage):
 
     homepage = "https://picmi-standard.github.io"
     git      = "https://github.com/picmi-standard/picmi.git"
-    pypi     = 'picmistandard/picmistandard-0.0.17.tar.gz'
+    pypi     = 'picmistandard/picmistandard-0.0.18.tar.gz'
 
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
