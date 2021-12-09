@@ -18,7 +18,7 @@ class PyWarpx(PythonPackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.04.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.12.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
@@ -50,7 +50,8 @@ class PyWarpx(PythonPackage):
     depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
     depends_on('py-periodictable@1.5:1', type=('build', 'run'))
-    depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
+    depends_on('py-picmistandard@0.0.14', type=('build', 'run'), when='@21.03:21.11')
+    depends_on('py-picmistandard@0.0.16', type=('build', 'run'), when='@21.12')
     depends_on('py-setuptools@38.6:', type='build')
     depends_on('py-wheel', type='build')
     depends_on('warpx +lib ~mpi +shared', type=('build', 'link'), when='~mpi')
