@@ -183,7 +183,7 @@ class PathContext(tengine.Context):
     def monitor(self):
         """Enable using spack monitor during build."""
         Monitor = collections.namedtuple('Monitor', [
-            'enabled', 'host', 'disable_auth', 'prefix', 'keep_going', 'tags'
+            'enabled', 'host', 'prefix', 'keep_going', 'tags'
         ])
         monitor = self.config.get("monitor")
 
@@ -195,7 +195,6 @@ class PathContext(tengine.Context):
             enabled=True,
             host=monitor.get('host'),
             prefix=monitor.get('prefix'),
-            disable_auth=monitor.get("disable_auth"),
             keep_going=monitor.get("keep_going"),
             tags=monitor.get('tags')
         )

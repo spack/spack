@@ -38,8 +38,7 @@ import spack.util.spack_yaml as syaml
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None,
-               save_local=False):
+def get_client(host, prefix="ms1", allow_fail=False, tags=None, save_local=False):
     """
     Get a monitor client for a particular host and prefix.
 
@@ -57,8 +56,8 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=No
     cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
                              tags=tags, save_local=save_local)
 
-    # If we don't disable auth, environment credentials are required
-    if not disable_auth and not save_local:
+    # Auth is always required unless we are saving locally
+    if not save_local:
         cli.require_auth()
 
     # We will exit early if the monitoring service is not running, but
@@ -92,9 +91,6 @@ def get_monitor_group(subparser):
     monitor_group.add_argument(
         '--monitor-save-local', action='store_true', dest='monitor_save_local',
         default=False, help="save monitor results to .spack instead of server.")
-    monitor_group.add_argument(
-        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
-        default=False, help="the monitoring server does not require auth.")
     monitor_group.add_argument(
         '--monitor-tags', dest='monitor_tags', default=None,
         help="One or more (comma separated) tags for a build.")
