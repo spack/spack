@@ -557,9 +557,10 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
-    @pytest.mark.skipif(spack.config.get('config:concretizer') == 'original',
-                        reason="Specific to new concretizer")
     def test_conflicts_new_concretizer_debug(self, conflict_spec, mutable_config):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Testing debug statements specific to new concretizer')
+
         spack.config.set('config:debug', True)
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError) as e:
