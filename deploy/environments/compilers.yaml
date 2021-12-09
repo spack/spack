@@ -22,6 +22,7 @@ spack:
     intel-parallel-studio:
       variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
   specs:
+    - binutils
     - gcc@9.4.0
     - gcc@11.2.0
     - intel@20.0.2
