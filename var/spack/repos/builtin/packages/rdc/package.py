@@ -22,7 +22,7 @@ class Rdc(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-{0}.tar.gz"
         return url.format(version)
  	
-    version('master', branch='master')     
+    #version('master', branch='master')     
     version('4.5.0', sha256='e9bc53d068e9a4fdccff587e34c7fe0880f003a18652cd48c29faf031dd2c98f')
     version('4.3.1', sha256='aae028aae61eb0f4dd30708c4bbb8c5c57a426f10dae9b967b81500fb106d981')
     version('4.3.0', sha256='d3dda2022ec1f8c7de4de64696009125a903fcb2f82c38b3ac07e4ab35bf9190')
