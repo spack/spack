@@ -78,6 +78,34 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
+  ubuntu-clingo-binaries-and-patchelf:
+    runs-on: ubuntu-latest
+    container: "ubuntu:latest"
+    steps:
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -y && apt-get upgrade -y
+          apt-get install -y \
+              bzip2 curl file g++ gcc gfortran git gnupg2 gzip \
+              make patch unzip xz-utils python3 python3-dev tree
+      - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      - name: Setup repo and non-root user
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd -m spack-test
+          chown -R spack-test .
+      - name: Bootstrap clingo
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack -d solve zlib
+          tree ~/.spack/bootstrap/store/
+
+
   opensuse-clingo-sources:
     runs-on: ubuntu-latest
     container: "opensuse/leap:latest"

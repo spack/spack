@@ -109,6 +109,7 @@ class Dyninst(CMakePackage):
             '-DElfUtils_ROOT_DIR=%s'  % spec['elf'].prefix,
             '-DLibIberty_ROOT_DIR=%s' % spec['libiberty'].prefix,
             '-DTBB_ROOT_DIR=%s'       % spec['tbb'].prefix,
+            self.define('LibIberty_LIBRARIES', spec['libiberty'].libs)
         ]
 
         if '+openmp' in spec:

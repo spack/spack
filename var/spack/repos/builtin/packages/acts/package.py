@@ -219,9 +219,10 @@ class Acts(CMakePackage, CudaPackage):
         log_failure_threshold = spec.variants['log_failure_threshold'].value
         args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
 
-        cuda_arch = spec.variants['cuda_arch'].value
-        if cuda_arch != 'none':
-            args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+        if '+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch != 'none':
+                args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
         if 'root' in spec:
             cxxstd = spec['root'].variants['cxxstd'].value

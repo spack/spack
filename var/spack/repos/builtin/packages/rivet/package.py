@@ -168,7 +168,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.variants['hepmc'].value == '2':
             args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
         else:
-            args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]
+            args += ['--with-hepmc3=' + self.spec['hepmc3'].prefix]
 
         if self.spec.satisfies('@:1'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]

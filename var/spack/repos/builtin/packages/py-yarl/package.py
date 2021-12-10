@@ -19,7 +19,7 @@ class PyYarl(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-multidict@4.0:', type=('build', 'run'))
     depends_on('py-idna@2.0:', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='@1.7.2:')
+    depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='@1.7.2: ^python@:3.7')
 
     @run_before('build')
     def fix_cython(self):

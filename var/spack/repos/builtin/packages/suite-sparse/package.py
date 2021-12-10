@@ -190,10 +190,12 @@ class SuiteSparse(Package):
             'CCOLAMD',
             'COLAMD',
             'CHOLMOD',
+            'CXSparse',
             'LDL',
             'KLU',
             'UMFPACK',
-            'RBio'
+            'RBio',
+            'SPQR'
         ]
         if spec.satisfies('+cuda'):
             targets.extend([
