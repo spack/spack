@@ -101,7 +101,8 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             '--enable-overwrite',
             '--without-ada',
             '--enable-pc-files',
-            '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
+            '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix),
+            '--disable-overwrite'
         ]
 
         nwide_opts = ['--disable-widec',
@@ -148,14 +149,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         with working_dir('build_ncursesw'):
             make('install')
 
-        # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-        headers = glob.glob(os.path.join(prefix.include, '*'))
-        for p_dir in ['ncurses', 'ncursesw']:
-            path = os.path.join(prefix.include, p_dir)
-            if not os.path.exists(path):
-                os.makedirs(path)
-            for header in headers:
-                install(header, path)
+        # fix for packages that use "#include <ncurses.h>" (use wide by default)
+        headers = glob.glob(os.path.join(prefix.include, 'ncursesw', '*.h'))
+        for header in headers:
+            h = os.path.basename(header)
+            os.symlink(os.path.join('ncursesw', h), os.path.join(prefix.include, h))
 
     @property
     def libs(self):

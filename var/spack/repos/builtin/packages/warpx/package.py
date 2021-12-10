@@ -25,6 +25,7 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('21.12', sha256='847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1')
     version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
     version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
@@ -110,6 +111,11 @@ class Warpx(CMakePackage):
               msg='WarpX spectral solvers are not yet tested with SYCL '
                   '(use "warpx ~psatd")')
 
+    # The symbolic aliases for our +lib target were missing in the install
+    # location
+    # https://github.com/ECP-WarpX/WarpX/pull/2626
+    patch('2626.patch', when='@21.12')
+
     def cmake_args(self):
         spec = self.spec
 
@@ -134,6 +140,9 @@ class Warpx(CMakePackage):
             self.define_from_variant('WarpX_QED', 'qed'),
             self.define_from_variant('WarpX_QED_TABLE_GEN', 'qedtablegen'),
         ]
+
+        with when('+openpmd'):
+            args.append('-DWarpX_openpmd_internal=OFF')
 
         return args
 
