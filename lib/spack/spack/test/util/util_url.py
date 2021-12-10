@@ -37,10 +37,12 @@ def test_url_parse():
 
     parsed = url_util.parse('file://path/to/resource')
     assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
+    if sys.platform != 'win32':
+        assert(parsed.netloc == '')
+
     expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
     if sys.platform == "win32":
-        expected = expected.replace('\\', '/')
+        expected = expected.replace('\\', '/')[2:]
     assert(parsed.path == expected)
 
     parsed = url_util.parse('https://path/to/resource')
@@ -51,24 +53,23 @@ def test_url_parse():
     spack_root = spack.paths.spack_root
     parsed = url_util.parse('$spack')
     assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
+    if sys.platform != 'win32':
+        assert(parsed.netloc == '')
 
     if sys.platform == "win32":
-        spack_root = spack_root.replace('\\', '/')
+        spack_root = spack_root.replace('\\', '/')[2:]
 
     assert(parsed.path == spack_root)
 
-    parsed = url_util.parse('/a/b/c/$spack')
-    assert(parsed.scheme == 'file')
-    assert(parsed.netloc == '')
-    expected = os.path.abspath(os.path.join(
-        '/', 'a', 'b', 'c', './' + spack_root))
-
-    if sys.platform == "win32":
-        expected = expected.replace('\\', '/')
-        expected = expected[2:]
-
-    assert(parsed.path == expected)
+    # Test that sticking the spack root at the end of a posix path resolves
+    # correctly.
+    if sys.platform != "win32":
+        parsed = url_util.parse('/a/b/c/$spack')
+        assert(parsed.scheme == 'file')
+        assert(parsed.netloc == '')
+        expected = os.path.abspath(os.path.join(
+            '/', 'a', 'b', 'c', './' + spack_root))
+        assert(parsed.path == expected)
 
 
 def test_url_local_file_path():
