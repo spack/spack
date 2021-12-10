@@ -107,12 +107,12 @@ class Mirror(object):
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self._fetch_url)
+            _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
             _display_mirror_entry(
-                max_len, self._name, self._fetch_url, "fetch")
+                max_len, self._name, self.fetch_url, "fetch")
             _display_mirror_entry(
-                max_len, self._name, self._push_url, "push")
+                max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
