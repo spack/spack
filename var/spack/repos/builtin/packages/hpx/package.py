@@ -146,6 +146,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches and one-off conflicts
 
+    # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
+    # C++17. Starting with CUDA 11.3 they compile again.
+    conflicts("asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
+
     # Boost and HIP don't work together in certain versions:
     # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
     # both include a fix.
