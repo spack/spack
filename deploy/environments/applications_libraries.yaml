@@ -58,7 +58,7 @@ spack:
     - py-poisson-recon-pybind
     - py-rtree
     - py-scikit-learn
-    - py-tensorflow@2.4.2
+    - py-tensorflow
     - py-virtualenv
     - python-dev
     - sundials+int64

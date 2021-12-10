@@ -54,7 +54,8 @@ class Coreneuron(CMakePackage):
     depends_on('bison', type='build')
     depends_on('cmake@3:', type='build')
     depends_on('flex', type='build')
-    depends_on('python', type='build')
+    # Some of the generated Makefile infrastucture uses Python!
+    depends_on('python', type=('build', 'run'))
 
     depends_on('boost', when='+tests')
     depends_on('cuda', when='+gpu')

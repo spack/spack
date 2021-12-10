@@ -25,11 +25,11 @@ class PyTensorflow(Package):
     }
 
     def url_for_version(self, version):
-        pŷthon = self.spec['python'].version.up_to(2).joined
-        self.versions[version]['sha256'] = self.tensorflow_sha[(str(version), str(pŷthon))]
+        python = self.spec['python'].version.up_to(2).joined
+        self.versions[version]['sha256'] = self.tensorflow_sha[(str(version), str(python))]
         return (
             'https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-{0}-cp{1}-cp{1}-manylinux2010_x86_64.whl'  # noqa: E501
-        ).format(version, pŷthon)
+        ).format(version, python)
 
     # Somewhat determined by trial and error, the above URL stub seems not
     # up to date with PyPI
@@ -52,6 +52,7 @@ class PyTensorflow(Package):
 
     # no versions for Mac OS added
     conflicts('platform=darwin', msg='macOS is not supported')
+    conflicts('^python@3.9:', when='@2.4.2')
 
     def install(self, spec, prefix):
         pip = which('pip')

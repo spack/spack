@@ -19,14 +19,13 @@ class PyTensorflowAddons(Package):
     """
 
     homepage = "https://pypi.org/project/tensorflow-addons/"
-    url = "https://files.pythonhosted.org/packages/bf/57/1f478ae21b8cfefc1a55c764f8fbd6e016528b830b279a908002b9f9b9f5/tensorflow_addons-0.13.0-cp38-cp38-manylinux2010_x86_64.whl"
+    url = "https://files.pythonhosted.org/packages/ac/08/6f02e247aeb0d93d04d8ddc435eb007b76e8991f415cb56ac568748e1530/tensorflow_addons-0.13.0-cp39-cp39-manylinux2010_x86_64.whl"
 
     # The version below just serves to trigger a rebuild!
-    version('0.13.0.20210728', url=url, sha256='ea76eab2abf2e1de3037acca27953b30c010087aabb27d80d860f92e1c66cef8', expand=False)
-    version('0.13.0', sha256='eaa258923bbf48fcd3688177a9e1055f674854437c93ae461b1a166d08e06286', expand=False)
+    version('0.13.0', sha256='845bf0d87985cb4fe7d2011d5b79351e01f216e68910a6fe30ecf23ca135c5ad', expand=False)
     version('0.12.1', url="https://files.pythonhosted.org/packages/08/ac/c5a37833dd71acbb6ccc40847680f2882231acb6dca4c19a2b975f3a358d/tensorflow_addons-0.12.1-cp38-cp38-manylinux2010_x86_64.whl", sha256='288919ec1debf0bc56357fc1db6dccd27389d446b214042cd4de39d7edabdad6', expand=False)
 
-    maintainers = ['pramodk', 'matz-e']
+    maintainers = ['pramodk']
     import_modules = ['tensorflow_addons']
 
     extends('python')

@@ -84,7 +84,7 @@ packages:
     variants: ~fortran
   python:
     variants: +tk
-    version: [3.8.3]
+    version: [3.9.7]
   py-numpy:
     version: [1.19.5]  # thanks, tensorflow!
   py-setuptools:
@@ -93,6 +93,10 @@ packages:
     version: [1.15.0]  # thanks, tensorflow!
   py-tables:
     variants: +lzo     # leads to compile errors otherwise
+  py-tensorflow:
+    version: [2.5.1]   # For Python 3.9 compatibility
+  py-tensorflow-addons:
+    version: [0.13.0]  # Matches tensorflow
   qt:
     version: [5.14.2]
     variants: ~ssl~sql~tools

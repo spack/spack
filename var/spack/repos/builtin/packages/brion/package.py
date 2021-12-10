@@ -53,6 +53,10 @@ class Brion(CMakePackage):
     depends_on('mvdtool')
     depends_on('glm@:0.9.9.5')
 
+    patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brion/pull/334.patch',
+          sha256='1cdc1baad8cf60e32eec1a5aaed8d298738ecf8586e2a2376301af4d09280e35',
+          when='@3.3.4 ^python@3.9:')
+
     def patch(self):
         if self.spec.version == Version('3.1.0'):
             filter_file(r'-py36', r'36 -py36',
