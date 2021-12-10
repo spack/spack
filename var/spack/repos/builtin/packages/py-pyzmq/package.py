@@ -47,6 +47,8 @@ class PyPyzmq(PythonPackage):
             'C_INCLUDE_PATH', self.spec['libzmq'].headers.directories[0])
         env.prepend_path(
             'LIBRARY_PATH', self.spec['libzmq'].libs.directories[0])
+        env.prepend_path(
+            'ZMQ_PREFIX', self.spec['libzmq'].prefix)
 
     # Needed for `spack test run py-pyzmq`
     setup_run_environment = setup_build_environment
