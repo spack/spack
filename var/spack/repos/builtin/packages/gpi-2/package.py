@@ -71,7 +71,7 @@ class Gpi2(AutotoolsPackage):
     conflicts('schedulers=slurm', when='@:1.3.3', msg='Slurm is not supported')
 
     def set_specific_cflags(self, spec):
-        if spec.satisfies('@:1.4.0%gcc@10.1.0:'):
+        if spec.satisfies('@1.4.0%gcc@10.1.0:'):
             environ['CFLAGS'] = '-fcommon'
 
     # GPI-2 without autotools
