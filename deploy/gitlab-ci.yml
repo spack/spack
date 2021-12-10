@@ -365,15 +365,15 @@ update_config:
           modules:
             tcl: $DEPLOYMENT_ROOT/modules/applications
       EOF
-    # Projections need to match between upstream and local stuff!
-    - |
       cat <<EOF > "$DEPLOYMENT_ROOT/config/config.yaml"
       config:
         install_tree:
-          root: \${HOME}/spack_install
-          projections:
-            all: install_\${COMPILERNAME}-\${COMPILERVER}-\${TARGET}/\${PACKAGE}-\${VERSION}-\${HASH:6}
+          root: ~/spack_install
+        module_roots:
+          tcl: ~/spack_install/modules_tcl
         source_cache: \$user_cache_path/sources
+        environments:
+          root: ~/spack_install/environments
       EOF
 
 link_configuration:

@@ -86,8 +86,12 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    import spack.environment as ev  # break circular
-    env = ev.active_environment()
+    env = None
+    try:
+        import spack.environment as ev  # break circular
+        env = ev.active_environment()
+    except AttributeError:  # if called from spack.environment
+        pass
     if env:
         replacements.update({'env': env.path})
     else:

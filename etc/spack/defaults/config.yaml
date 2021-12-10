@@ -78,6 +78,12 @@ config:
   misc_cache: $user_cache_path/cache
 
 
+  # Setting for environments, can be overridden by their configuration
+  environments:
+    root: $spack/var/spack/environments
+    concretization: separately
+
+
   # Timeout in seconds used for downloading sources etc. This only applies
   # to the connection phase and can be increased for slow connections or
   # servers. 0 means no timeout.

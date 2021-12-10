@@ -13,6 +13,7 @@ class Synapsetool(CMakePackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/synapse-tool"
     url      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
     git      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
+    generator = "Ninja"
 
     version('develop', submodules=True)
     version('0.6.3', tag='v0.6.3', submodules=True)
@@ -35,8 +36,10 @@ class Synapsetool(CMakePackage):
     variant('shared', default=True, description="Build shared library")
     variant('python', default=False, description="Enable syntool Python package")
 
-    depends_on('boost@1.55:')
     depends_on('cmake@3.0:', type='build')
+    depends_on('ninja', type='build')
+
+    depends_on('boost@1.55:')
     depends_on('mpi',    when='+mpi')
     depends_on('python', when='+python', type=('build', 'run'))
     depends_on('hdf5+mpi', when='+mpi')
