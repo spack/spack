@@ -19,4 +19,6 @@ class PyQuantities(PythonPackage):
     conflicts('^py-numpy@1.13:', when='@:0.11')
 
     depends_on('python@2.6.0:')
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.4.0:', type=('build', 'run'))

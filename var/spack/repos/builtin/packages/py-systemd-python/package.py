@@ -13,3 +13,6 @@ class PySystemdPython(PythonPackage):
     pypi = "systemd-python/systemd-python-234.tar.gz"
 
     version('234', sha256='fd0e44bf70eadae45aadc292cb0a7eb5b0b6372cd1b391228047d33895db83e7')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

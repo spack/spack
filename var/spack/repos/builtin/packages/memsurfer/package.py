@@ -24,6 +24,7 @@ class Memsurfer(PythonPackage):
 
     extends('python')
     depends_on('python@3.7:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
 
     depends_on('cmake@3.14:', type='build')
     depends_on('swig@3.0.12', type='build')

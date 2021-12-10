@@ -18,6 +18,8 @@ class PyPythonMeep(PythonPackage):
     variant('mpi', default=True, description='Enable MPI support')
 
     depends_on('python@2.6:2.7', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))

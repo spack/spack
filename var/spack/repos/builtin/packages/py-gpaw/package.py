@@ -30,6 +30,7 @@ class PyGpaw(PythonPackage):
     depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
     depends_on('python@3.5:', type=('build', 'run'), when='@19.8.1:')
     depends_on('python@3.6:', type=('build', 'run'), when='@20.10.0:')
+    depends_on('py-setuptools', type='build')
     depends_on('py-ase@3.13.0:', type=('build', 'run'), when='@1.3.0')
     depends_on('py-ase@3.18.0:', type=('build', 'run'), when='@19.8.1')
     depends_on('py-ase@3.19.0:', type=('build', 'run'), when='@20.1.0')

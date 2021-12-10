@@ -19,6 +19,8 @@ class PyNbformat(PythonPackage):
 
     depends_on('python@3.5:', when='@5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', when='@:4', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets@4.1:', type=('build', 'run'))
     depends_on('py-jsonschema@2.4.0:2.4,2.5.1:', type=('build', 'run'))

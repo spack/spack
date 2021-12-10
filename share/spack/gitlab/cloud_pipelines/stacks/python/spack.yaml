@@ -1081,7 +1081,7 @@ spack:
     # - py-picrust2
     # - py-pid
     # - py-pika
-    # - py-pil
+    # # - py-pil  # No Python 3 support
     # - py-pillow
     # - py-pillow-simd
     # - py-pint
@@ -1608,7 +1608,7 @@ spack:
     # - py-tfdlpack
     # - py-theano
     # - py-thinc
-    # - py-thirdorder
+    # # - py-thirdorder  # deprecated, download fails
     # - py-threadpoolctl
     # - py-tifffile
     # - py-timm

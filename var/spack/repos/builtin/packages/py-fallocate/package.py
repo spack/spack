@@ -14,3 +14,6 @@ class PyFallocate(PythonPackage):
     pypi = "fallocate/fallocate-1.6.4.tar.gz"
 
     version('1.6.4', sha256='85ebeb2786761fbe80d88c52590a610bd3425fc89e188c208a3f261a5bd6acb3')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

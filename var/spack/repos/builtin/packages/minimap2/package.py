@@ -20,6 +20,7 @@ class Minimap2(PythonPackage):
 
     conflicts('target=aarch64:', when='@:2.10')
     depends_on('zlib', type='link')
+    depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
     @run_after('install')

@@ -22,6 +22,7 @@ class PyPyscf(PythonPackage):
     # dependencies
     depends_on('cmake@2.8:', type='build')
     depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-scipy@0.12:', type=('build', 'run'))
     depends_on('py-h5py@2.3.0:', type=('build', 'run'))

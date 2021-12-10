@@ -20,6 +20,8 @@ class PyDpGpCluster(PythonPackage):
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-gpy@0.8.8:0.9.9', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))

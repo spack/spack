@@ -14,6 +14,8 @@ class PyBrian(PythonPackage):
 
     version('1.4.3', sha256='c881dcfcd1a21990f9cb3cca76cdd868111cfd9e227ef5c1b13bb372d2efeaa4')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-matplotlib@0.90.1:', type=('build', 'run'))
     depends_on('py-numpy@1.4.1:',       type=('build', 'run'))
     depends_on('py-scipy@0.7.0:',       type=('build', 'run'))

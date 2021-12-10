@@ -19,5 +19,7 @@ class PyRios(PythonPackage):
 
     version('1.4.10', sha256='7f11b54eb1f2ec551d7fc01c039b60bf2c67f0c2fc5b2946f8d986d6a9bc7063')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('gdal+python', type=('build', 'run'))

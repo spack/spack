@@ -20,5 +20,6 @@ class PyBiopandas(PythonPackage):
     version('0.2.5', branch="v0.2.5")
 
     depends_on('python@3.5:',       type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-pandas@0.24.2:', type=('build', 'run'))
     depends_on('py-numpy@1.16.2:',  type=('build', 'run'))

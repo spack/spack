@@ -19,6 +19,7 @@ class PyYtopt(PythonPackage):
     version('0.0.1', sha256='3ca616922c8e76e73f695a5ddea5dd91b0103eada726185f008343cc5cbd7744')
 
     depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-scikit-learn@0.23.1', type=('build', 'run'))
     depends_on('py-dh-scikit-optimize', type=('build', 'run'))
     depends_on('py-configspace', type=('build', 'run'))

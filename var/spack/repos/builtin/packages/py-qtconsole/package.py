@@ -20,6 +20,7 @@ class PyQtconsole(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:',    type=('build', 'run'))
     depends_on('python@3.6:',            type=('build', 'run'), when='@5.2.0:')
+    depends_on('py-setuptools', type='build')
     depends_on('py-ipykernel@4.1:',      type=('build', 'run'))
     depends_on('py-jupyter-client@4.1:', type=('build', 'run'))
     depends_on('py-jupyter-core',        type=('build', 'run'))

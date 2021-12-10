@@ -20,3 +20,5 @@ class PyResultsfile(PythonPackage):
 
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@1.0:1')
     depends_on('python@3:', type=('build', 'run'), when='@2.0:')
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

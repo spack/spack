@@ -19,6 +19,8 @@ class PyIpywidgets(PythonPackage):
     version('5.2.2', sha256='baf6098f054dd5eacc2934b8ea3bef908b81ca8660d839f1f940255a72c660d2')
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-ipython@4:', type=('build', 'run'))
     depends_on('py-ipython@4:5', type=('build', 'run'), when='^python@:3.2')
     depends_on('py-jupyterlab-widgets@1.0.0:', type=('build', 'run'),

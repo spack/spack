@@ -44,6 +44,8 @@ class PyAdios(PythonPackage):
                    when='@{0} +mpi'.format(v),
                    type=['build', 'link', 'run'])
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=['build', 'run'])
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', type=['run'], when='+mpi')

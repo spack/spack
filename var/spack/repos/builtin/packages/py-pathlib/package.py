@@ -18,6 +18,9 @@ class PyPathlib(PythonPackage):
 
     version('1.0.1', sha256='6940718dfc3eff4258203ad5021090933e5c04707d5ca8cc9e73c94a7894ea9f')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
+
     # This is a backport of the pathlib module from Python 3.4. Since pathlib is now
     # part of the standard library, this module isn't needed in Python 3.4+. Although it
     # can be installed, differences between this implementation and the standard library

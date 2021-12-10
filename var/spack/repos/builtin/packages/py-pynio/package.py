@@ -48,6 +48,8 @@ class PyPynio(PythonPackage):
     # I have left off a few other optional dependencies, as they are not yet
     # in Spack. HDFEOS, HDFEOS5, GRIB. See the pynio setup.py for details.
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
 
     def setup_build_environment(self, env):

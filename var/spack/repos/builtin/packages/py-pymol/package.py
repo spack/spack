@@ -21,6 +21,8 @@ class PyPymol(PythonPackage):
 
     depends_on('python+tkinter@2.7:', type=('build', 'run'), when='@2.3.0:2.4.0')
     depends_on('python+tkinter@3.6:', type=('build', 'run'), when='@2.5.0:')
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('gl')
     depends_on('glew')
     depends_on('libpng')
@@ -38,10 +40,8 @@ class PyPymol(PythonPackage):
     depends_on('libpng', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
 
-    def install_args(self, spec, prefix):
-        args = super(PyPymol, self).install_args(spec, prefix)
-        args.append('--no-launcher')
-        return args
+    def install_options(self, spec, prefix):
+        return ['--no-launcher']
 
     @run_after('install')
     def install_launcher(self):
