@@ -21,7 +21,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     homepage = "https://github.com/llvm-doe-org"
     url = "https://github.com/llvm-doe-org/llvm-project/archive/llvmorg-10.0.0.zip"
     git = "https://github.com/llvm-doe-org/llvm-project"
-    maintainers = ['shintaro-iwasaki']
+    maintainers = ['vlkale']
 
     tags = ['e4s']
 
