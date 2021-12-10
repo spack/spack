@@ -4774,7 +4774,10 @@ class SpecParser(spack.parse.Parser):
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)
             # normalize and absolutize 'dev_path'
-            if 'dev_path' in spec.variants and isinstance(spec.variants['dev_path'], vt.AbstractVariant):
+            if (
+                'dev_path' in spec.variants and
+                isinstance(spec.variants['dev_path'], vt.AbstractVariant)
+            ):
                 path = os.path.abspath(spec.variants['dev_path'].value[0])
                 new_variant = vt.SingleValuedVariant('dev_path', path)
                 spec.variants.substitute(new_variant)
