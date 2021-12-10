@@ -1412,15 +1412,26 @@ def read_cdashid_from_mirror(spec, mirror_url):
     return int(contents)
 
 
-def push_mirror_contents(env, spec, specfile_path, mirror_url, sign_binaries):
+def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
+    """Unchecked version of the public API, for easier mocking"""
+    unsigned = not sign_binaries
+    tty.debug('Creating buildcache ({0})'.format(
+        'unsigned' if unsigned else 'signed'))
+    hashes = env.all_hashes() if env else None
+    matches = spack.store.specfile_matches(specfile_path, hashes=hashes)
+    push_url = spack.mirror.push_url_from_mirror_url(mirror_url)
+    spec_kwargs = {'include_root': True, 'include_dependencies': False}
+    kwargs = {
+        'force': True,
+        'allow_root': True,
+        'unsigned': unsigned
+    }
+    bindist.push(matches, push_url, spec_kwargs, **kwargs)
+
+
+def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
     try:
-        unsigned = not sign_binaries
-        tty.debug('Creating buildcache ({0})'.format(
-            'unsigned' if unsigned else 'signed'))
-        spack.cmd.buildcache._createtarball(
-            env, spec_file=specfile_path, add_deps=False,
-            output_location=mirror_url, force=True, allow_root=True,
-            unsigned=unsigned)
+        _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url)
     except Exception as inst:
         # If the mirror we're pushing to is on S3 and there's some
         # permissions problem, for example, we can't just target

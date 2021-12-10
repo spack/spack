@@ -511,7 +511,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch --sha256 --only-root"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
     else
         _all_packages
     fi

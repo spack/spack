@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from __future__ import print_function
 
-import argparse
 import contextlib
 import fnmatch
 import functools
@@ -255,11 +254,6 @@ class _BuildcacheBootstrapper(object):
         return data
 
     def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
-        # TODO: The local import is due to a circular import error. The
-        # TODO: correct fix for this is a refactor of the API used for
-        # TODO: binary relocation
-        import spack.cmd.buildcache
-
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
         compiler_entry = {
@@ -279,16 +273,18 @@ class _BuildcacheBootstrapper(object):
                     'compilers', [{'compiler': compiler_entry}]
             ):
                 spec_str = '/' + pkg_hash
-                parser = argparse.ArgumentParser()
-                spack.cmd.buildcache.setup_parser(parser)
-                install_args = [
-                    'install',
-                    '--sha256', pkg_sha256,
-                    '--only-root',
-                    '-a', '-u', '-o', '-f', spec_str
-                ]
-                args = parser.parse_args(install_args)
-                spack.cmd.buildcache.installtarball(args)
+                query = spack.binary_distribution.BinaryCacheQuery(
+                    all_architectures=True
+                )
+                matches = spack.store.find([spec_str], multiple=False, query_fn=query)
+                for match in matches:
+                    spack.binary_distribution.install_root_node(
+                        match,
+                        allow_root=True,
+                        unsigned=True,
+                        force=True,
+                        sha256=pkg_sha256
+                    )
 
     def _install_and_test(
             self, abstract_spec, bincache_platform, bincache_data, test_fn
