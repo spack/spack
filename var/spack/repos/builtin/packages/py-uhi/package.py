@@ -18,3 +18,4 @@ class PyUhi(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:',          type='build')
     depends_on('py-typing-extensions@3.7:', type=('build', 'run'), when='^python@:3.7')
+    # depends_on('py-poetry-core@1:', type='build') -- WIP
