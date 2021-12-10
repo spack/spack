@@ -31,7 +31,18 @@ class Openjpeg(CMakePackage):
     version('1.5.2', sha256='3734e95edd0bef6e056815591755efd822228dc3cd866894e00a2c929026b16d')
     version('1.5.1', sha256='6a42fcc23cb179f69a1e94429089e5a5926aee1ffe582a0a6bd91299d297e61a')
 
-    depends_on('zlib')
+    variant('codec', default=True, description='Build the CODEC executables')
+    variant('ownlibs', default=True,
+            description='Use OpenJPEG-provided third-party libraries')
+
+    depends_on('zlib', when='+codec~ownlibs')
+    depends_on('libpng', when='+codec~ownlibs')
+    depends_on('libtiff', when='+codec~ownlibs')
+    depends_on('lcms', when='+codec~ownlibs')
+
+    conflicts('+ownlibs', when='~codec',
+              msg='The third-party libraries are not required '
+                  'when the CODEC executables are disabled')
 
     # The problem with install name of the library on MacOs was fixed starting
     # version 2.1.1: https://github.com/uclouvain/openjpeg/commit/b9a247b559e62e55f5561624cf4a19aee3c8afdc
@@ -56,3 +67,16 @@ class Openjpeg(CMakePackage):
     def libs(self):
         return find_libraries('libopenjp{0}'.format(self.version.up_to(1)),
                               root=self.prefix, recursive=True)
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('BUILD_CODEC', 'codec'),
+            # MJ2 executables are disabled by default and we just make it
+            # explicit. Note that the executables require additional libraries
+            # as in the case '+codec', therefore, we will need to update the
+            # 'depends_on' and 'conflicts' directives when/if we introduce a
+            # variant that enables them.
+            self.define('BUILD_MJ2', False),
+            self.define_from_variant('BUILD_THIRDPARTY', 'ownlibs')
+        ]
+        return args
