@@ -92,6 +92,13 @@ schema = {
                             },
                         },
                     },
+                    'anchors': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {
+                            'type': 'string'
+                        }
+                    },
                     'definitions': {
                         'type': 'array',
                         'default': [],
