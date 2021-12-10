@@ -466,7 +466,8 @@ def extends(spec, type=('build', 'run'), **kwargs):
             return
 
         _depends_on(pkg, spec, when=when, type=type)
-        pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
+        spec_obj = spack.spec.Spec(spec)
+        pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
     return _execute_extends
 
 

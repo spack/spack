@@ -1864,6 +1864,15 @@ class Spec(object):
         return sjson.dump(self.to_dict(hash), stream)
 
     @staticmethod
+    def from_specfile(path):
+        """Construct a spec from aJSON or YAML spec file path"""
+        with open(path, 'r') as fd:
+            file_content = fd.read()
+            if path.endswith('.json'):
+                return Spec.from_json(file_content)
+            return Spec.from_yaml(file_content)
+
+    @staticmethod
     def from_node_dict(node):
         spec = Spec()
         if 'name' in node.keys():
