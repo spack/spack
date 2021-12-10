@@ -15,7 +15,8 @@ class PyHist(PythonPackage):
     version('2.5.2', sha256='0bafb8b956cc041f1b26e8f5663fb8d3b8f7673f56336facb84d8cfdc30ae2cf')
 
     depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@45:', type='build')
+    depends_on('py-setuptools-scm@3.4:+toml', type='build')
     depends_on('py-boost-histogram@1.2.0:1.2', type=('build', 'run'))
     depends_on('py-histoprint@2.2.0:', type=('build', 'run'))
     depends_on('py-numpy@1.14.5:', type=('build', 'run'))
