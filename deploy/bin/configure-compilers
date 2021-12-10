@@ -20,18 +20,18 @@ fi
 # Find the location of *any* GCC, disregarding the environment that's
 # active (-E).  Prefer the hash passed through by earlier stages, if
 # not available fall back to the crude version.
-GCC_DIR=$(spack -E location --install-dir ${BASE_GCC_HASH:-gcc@${BASE_GCC_VERSION}})
+GCC_DIR=$(spack -E location --install-dir ${INTEL_GCC_HASH:-gcc@${INTEL_GCC_VERSION}})
 # Use the Spack configuration to grab the matching module for GCC;
 # requires GCC to be compiler found beforehand.
 GCC_MODULES="$(spack -E config get compilers|sed -n "
-    /^\s*spec: gcc@${BASE_GCC_VERSION}/,/^\s*modules:/ {
+    /^\s*spec: gcc@${INTEL_GCC_VERSION}/,/^\s*modules:/ {
         /^\s*modules:/ {
             s/^\s*modules: \[\(.*\)\]\$/\1/;
             p;
         }
     }")"
-log "...using gcc ${BASE_GCC_VERSION} from ${GCC_DIR}"
-log "...using gcc ${BASE_GCC_VERSION} with module(s) ${GCC_MODULES}"
+log "...using gcc ${INTEL_GCC_VERSION} from ${GCC_DIR}"
+log "...using gcc ${INTEL_GCC_VERSION} with module(s) ${GCC_MODULES}"
 
 while read -r line; do
     sha="${line%% *}"  # Remove everything after and including the first space

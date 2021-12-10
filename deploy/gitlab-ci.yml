@@ -212,8 +212,8 @@ setup_spack:
     - if [[ "${CI_JOB_STAGE}" == "compilers" ]]; then
     # This will be needed by future compiler finds: extract the one base
     # gcc used in the compiler stage.
-    -     export BASE_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$BASE_GCC_VERSION)"
-    -     echo "BASE_GCC_HASH=$BASE_GCC_HASH" >> deployment.env
+    -     export INTEL_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$INTEL_GCC_VERSION)"
+    -     echo "INTEL_GCC_HASH=$INTEL_GCC_HASH" >> deployment.env
     # Make compilers here available to following stages
     -     configure-compilers < specs.txt
     - elif [[ "${CI_JOB_STAGE}" == "externals" ]]; then
@@ -314,6 +314,14 @@ update_config:
     - if grep -q -m1 -l -R '<failure' "$DEPLOYMENT_ARTIFACTS"; then exit 1; fi
     # Will create $DEPLOYMENT_ROOT/modules
     - merge-modules "$DEPLOYMENT_ROOT"
+    # Find the GCC module and set a default version
+    - |
+      gcc_module=$(find "$DEPLOYMENT_ROOT/modules" -wholename "*/gcc/$DEFAULT_GCC_VERSION")
+      cat <<EOF > "${gcc_module%$DEFAULT_GCC_VERSION}/.version"
+      #%Module1.0
+      set ModulesVersion "$DEFAULT_GCC_VERSION"
+      EOF
+
     # Sync modules for the current month
     - mkdir -p "$MODULE_ROOT/$(date +%Y-%m)"
     - rsync -av --delete-after "$DEPLOYMENT_ROOT/modules/" "$MODULE_ROOT/$(date +%Y-%m)"
