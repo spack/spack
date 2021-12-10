@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import contextlib
 import sys
 
 import jinja2
@@ -10,9 +11,11 @@ import pytest
 import archspec.cpu
 
 import llnl.util.lang
+import llnl.util.tty as tty
 
 import spack.compilers
 import spack.concretize
+import spack.config
 import spack.error
 import spack.platforms
 import spack.repo
@@ -21,6 +24,14 @@ from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
+
+
+@contextlib.contextmanager
+def verbose_tty():
+    v = tty.is_verbose()
+    tty.set_verbose(True)
+    yield
+    tty.set_verbose(v)
 
 
 def check_spec(abstract, concrete):
@@ -561,10 +572,10 @@ class TestConcretize(object):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Testing debug statements specific to new concretizer')
 
-        spack.config.set('config:debug', True)
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError) as e:
-            s.concretize()
+            with verbose_tty():
+                s.concretize()
 
         assert "conflict_trigger(" in e.value.message
 

@@ -393,10 +393,11 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        debug = spack.config.get('config:debug', False)
-        conflicts = self.format_cores() if debug else self.format_minimal_cores()
+        conflicts = (self.format_cores() if tty.is_verbose() else
+                     self.format_minimal_cores())
 
-        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts,
+                                                 verbose=tty.is_verbose())
 
     @property
     def specs(self):
@@ -512,10 +513,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # in debug mode, make all facts choices/assumptions
+        # in verbose mode, make all facts choices/assumptions
         # otherwise, only if we're generating cores and assumption=True
-        debug = spack.config.get('config:debug', False)
-        choice = debug or (self.cores and assumption)
+        choice = tty.is_verbose() or (self.cores and assumption)
 
         self.backend.add_rule([atom], [], choice=choice)
         if choice:

@@ -123,7 +123,8 @@ class UnsatisfiableSpecError(SpecError):
     For original concretizer, provide the requirement that was violated when
     raising.
     """
-    def __init__(self, provided, required=None, constraint_type=None, conflicts=None):
+    def __init__(self, provided, required=None, constraint_type=None, conflicts=None,
+                 verbose=False):
         # required is only set by the original concretizer.
         # clingo concretizer handles error messages differently.
         if required is not None:
@@ -134,6 +135,8 @@ class UnsatisfiableSpecError(SpecError):
             indented = ['  %s\n' % conflict for conflict in conflicts]
             conflict_msg = ''.join(indented)
             msg = '%s is unsatisfiable, conflicts are:\n%s' % (provided, conflict_msg)
+            if not verbose:
+                msg += '  concretize with spack -v for more details'
             super(UnsatisfiableSpecError, self).__init__(msg)
         self.provided = provided
         self.required = required
