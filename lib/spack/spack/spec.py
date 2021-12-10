@@ -4384,9 +4384,8 @@ class Spec(object):
                 raise Exception
             for n in d.traverse(root=False):
                 if not all(any(v in other_n.package.virtuals_provided
-                               for other_n in other.traverse(root=False)
-                           ) or v not in self
-                           for v in n.package.virtuals_provided):
+                               for other_n in other.traverse(root=False))
+                           or v not in self for v in n.package.virtuals_provided):
                     raise Exception
 
         # Multiple unique specs with the same name will collide, so the
@@ -4412,8 +4411,8 @@ class Spec(object):
                 return True
 
         self_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                           for s in self.traverse(root=True)
-                           if from_self(s.name, transitive))
+                          for s in self.traverse(root=True)
+                          if from_self(s.name, transitive))
 
         if transitive:
             other_nodes = dict((s.name, s.copy(deps=False, caches=True))
@@ -4421,8 +4420,8 @@ class Spec(object):
         else:
             # NOTE: Does not fully validate providers; loader races possible
             other_nodes = dict((s.name, s.copy(deps=False, caches=True))
-                                for s in other.traverse(root=True)
-                                if s is other or s.name not in self)
+                               for s in other.traverse(root=True)
+                               if s is other or s.name not in self)
 
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
