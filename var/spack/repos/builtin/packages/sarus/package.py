@@ -64,8 +64,17 @@ class Sarus(CMakePackage):
             mkdirp(prefix.var.OCIBundleDir)
             #self.install_runc(spec, prefix)
             #self.install_tini(spec, prefix)
-            if '+configure_installation' in spec:
-                self.configure_installation(spec, prefix)
+            #if '+configure_installation' in spec:
+            #    self.configure_installation(spec, prefix)
+
+    @run_after('install')
+    def build_perms_script(self):
+        #import subprocess
+        #self.configure_installation(spec, prefix)
+        #script_path = prefix + '/configure_installation.sh'
+        #subprocess.check_call(script_path)
+        sudo = which('sudo')
+        sudo(join_path(self.spec.prefix.bin, 'configure_installation.sh'))
 
     #def install_runc(self, spec, prefix):
     #    wget = which('wget')
@@ -81,7 +90,7 @@ class Sarus(CMakePackage):
     #    wget('-O', tini_install_path, tini_url)
     #    set_executable(tini_install_path)
 
-    def configure_installation(selfself, spec, prefix):
-        import subprocess
-        script_path = prefix + '/configure_installation.sh'
-        subprocess.check_call(script_path)
+    #def configure_installation(selfself, spec, prefix):
+    #    import subprocess
+    #    script_path = prefix + '/configure_installation.sh'
+    #    subprocess.check_call(script_path)
