@@ -31,7 +31,7 @@ class Openjpeg(CMakePackage):
     version('1.5.2', sha256='3734e95edd0bef6e056815591755efd822228dc3cd866894e00a2c929026b16d')
     version('1.5.1', sha256='6a42fcc23cb179f69a1e94429089e5a5926aee1ffe582a0a6bd91299d297e61a')
 
-    variant('codec', default=True, description='Build the CODEC executables')
+    variant('codec', default=False, description='Build the CODEC executables')
 
     depends_on('zlib', when='+codec')
     depends_on('libpng', when='+codec')
