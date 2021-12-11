@@ -73,6 +73,6 @@ class Openjpeg(CMakePackage):
             self.define('BUILD_MJ2', False),
             # Note that if the list of dependencies is incomplete, there is
             # still a chance that the bundled third-party libraries get built.
-            self.define_from_variant('BUILD_THIRDPARTY', False)
+            self.define('BUILD_THIRDPARTY', False)
         ]
         return args
