@@ -24,7 +24,8 @@ class PyPicmistandard(PythonPackage):
     version('0.0.14', sha256='8f83b25b281fc0309a0c4f75c7605afd5fa0ef4df3b3ac115069478c119bc8c3')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.15:1', type=('build', 'run'))
+    depends_on('py-scipy@1.5:1', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     @property
