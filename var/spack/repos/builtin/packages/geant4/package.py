@@ -39,6 +39,8 @@ class Geant4(CMakePackage):
             values=_cxxstd_values,
             multi=False,
             description='Use the specified C++ standard when building.')
+    conflicts('cxxstd=11', when='@11.0.0:')
+    conflicts('cxxstd=14', when='@11.0.0:')
 
     variant('threads', default=True, description='Build with multithreading')
     variant('vecgeom', default=False, description='Enable vecgeom support')
@@ -49,8 +51,10 @@ class Geant4(CMakePackage):
     variant('python', default=False, description='Enable Python bindings')
 
     depends_on('cmake@3.5:', type='build')
+    depends_on('cmake@3.15:', type='build', when='@11.0.0:')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
+    depends_on('geant4-data@11.0.0', when='@11.0.0')
     depends_on('geant4-data@10.7.3', when='@10.7.3')
     depends_on('geant4-data@10.7.2', when='@10.7.2')
     depends_on('geant4-data@10.7.1', when='@10.7.1')
@@ -75,6 +79,9 @@ class Geant4(CMakePackage):
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
+        depends_on('clhep@2.4.5.1: cxxstd=' + std,
+                   when='@11.0.0: cxxstd=' + std)
+
         depends_on('clhep@2.4.4.0: cxxstd=' + std,
                    when='@10.7.0: cxxstd=' + std)
 
@@ -85,6 +92,8 @@ class Geant4(CMakePackage):
         depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
+        depends_on('vecgeom@1.1.18:1.1 cxxstd=' + std,
+                   when='@11.0.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.8:1.1 cxxstd=' + std,
                    when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
