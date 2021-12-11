@@ -21,3 +21,6 @@ class PyCmake(PythonPackage):
     depends_on('py-setuptools@42:', type='build')
     depends_on('cmake@3.21.4', type=('build', 'link', 'run'), when='@3.21.4')
     depends_on('cmake@3.18.0', type=('build', 'link', 'run'), when='@3.18.0')
+
+    def install_options(self, spec, prefix):
+        return ['-DBUILD_CMAKE_FROM_SOURCE=OFF']

@@ -42,3 +42,6 @@ class PyShiboken(PythonPackage):
             r'^\s*rpath_cmd\(shiboken_path, srcpath\)',
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
+
+    def install_options(self, spec, prefix):
+        return ['--jobs={0}'.format(make_jobs)]

@@ -24,3 +24,20 @@ class PyScs(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-scipy@0.13.2:', type=('build', 'run'))
+
+    def install_options(self, spec, prefix):
+        args = []
+        if '+cuda' in spec or '+float32' in spec or '+int32' in spec or\
+                '+extra_verbose' in spec or '+blas64' in spec:
+            args = ['--scs']
+        if '+cuda' in spec:
+            args.append('--gpu')
+        if '+float32' in spec:
+            args.append('--float')
+        if '+extra_verbose' in spec:
+            args.append('--extraverbose')
+        if '+int32' in spec:
+            args.append('--int')
+        if '+blas64' in spec:
+            args.append('--blas64')
+        return args

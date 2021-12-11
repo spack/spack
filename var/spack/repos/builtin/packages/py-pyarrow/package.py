@@ -47,3 +47,13 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+orc' + v, when='+orc' + v)
 
     patch('for_aarch64.patch', when='target=aarch64:')
+
+    def install_options(self, spec, prefix):
+        args = []
+        if spec.satisfies('+parquet'):
+            args.append('--with-parquet')
+        if spec.satisfies('+cuda'):
+            args.append('--with-cuda')
+        if spec.satisfies('+orc'):
+            args.append('--with-orc')
+        return args

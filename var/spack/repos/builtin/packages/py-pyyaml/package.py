@@ -47,3 +47,14 @@ class PyPyyaml(PythonPackage):
             else:
                 args.append('--without-libyaml')
         return args
+
+    def install_options(self, spec, prefix):
+        args = []
+
+        if spec.satisfies('@:5 +libyaml'):
+            args.extend([
+                spec['libyaml'].libs.search_flags,
+                spec['libyaml'].headers.include_flags,
+            ])
+
+        return args

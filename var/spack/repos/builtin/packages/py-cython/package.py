@@ -38,9 +38,14 @@ class PyCython(PythonPackage):
     depends_on('python@2.6:2,3.3:', when='@0.23:', type=('build', 'link', 'run'))
     depends_on('python@:2', when='@:0.22', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('gdb@7.2:', type='test')
 
     @property
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        # Warning: full suite of unit tests takes a very long time
+        python('runtests.py', '-j', str(make_jobs))

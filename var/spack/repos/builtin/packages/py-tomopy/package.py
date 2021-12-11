@@ -34,10 +34,21 @@ class PyTomopy(PythonPackage):
     depends_on('py-scikit-image@0.17:',         type=('build', 'run'))
     depends_on('py-numpy+blas',                 type=('build', 'run'))
     depends_on('py-pyfftw',                     type=('build', 'run'), when='@1.0:1.9')
-    depends_on('py-numexpr',                    type=('test'))
-    depends_on('py-scipy',                      type=('build', 'test', 'run'))
+    depends_on('py-scipy',                      type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-pywavelets', type=('build', 'run'))
     depends_on('py-dxchange', type=('build', 'run'))
+
+    @when('@1.10:')
+    def install_options(self, spec, prefix):
+        args = ['--enable-arch']
+        if 'avx512' in self.spec.target:
+            args.append('--enable-avx512')
+
+        # PTL is a git submodule, we only fetch it's source by git-submodule on master:
+        if self.version != Version('master'):
+            args.append('--disable-tasking')
+
+        return args

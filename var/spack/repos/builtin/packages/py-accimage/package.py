@@ -20,6 +20,3 @@ class PyAccimage(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('jpeg')
     depends_on('ipp')
-    depends_on('py-pytest', type='test')
-    depends_on('py-numpy', type='test')
-    depends_on('py-imageio', type='test')

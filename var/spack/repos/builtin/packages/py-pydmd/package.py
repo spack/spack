@@ -38,3 +38,8 @@ class PyPydmd(PythonPackage):
             with working_dir('docs'):
                 make('html')
             install_tree('docs', self.prefix.docs)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        python('test.py')

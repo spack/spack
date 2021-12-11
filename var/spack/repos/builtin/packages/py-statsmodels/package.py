@@ -48,3 +48,11 @@ class PyStatsmodels(PythonPackage):
     depends_on('py-matplotlib@1.3:',   type=('build', 'run'), when='@0.8.0 +plotting')
 
     depends_on('py-pytest', type='test')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        dirs = glob.glob("build/lib*")  # There can be only one...
+        with working_dir(dirs[0]):
+            pytest = which('pytest')
+            pytest('statsmodels')

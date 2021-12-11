@@ -101,6 +101,20 @@ class PyScipy(PythonPackage):
         if platform.mac_ver()[0][0:2] == '11':
             env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
+    def install_options(self, spec, prefix):
+        args = []
+        if spec.satisfies('%fj'):
+            args.extend(['config_fc', '--fcompiler=fujitsu'])
+
+        # Build in parallel
+        # Known problems with Python 3.5+
+        # https://github.com/spack/spack/issues/7927
+        # https://github.com/scipy/scipy/issues/7112
+        if not spec.satisfies('^python@3.5:'):
+            args.extend(['-j', str(make_jobs)])
+
+        return args
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def install_test(self):

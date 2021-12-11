@@ -80,3 +80,6 @@ class PyPyside(PythonPackage):
                     "'Programming Language :: Python :: 3.4',\r\n        "
                     "'Programming Language :: Python :: 3.5'",
                     "setup.py")
+
+    def install_options(self, spec, prefix):
+        return ['--jobs={0}'.format(make_jobs)]
