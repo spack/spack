@@ -263,17 +263,32 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
+    # FIXME: Only add the python and wheel dependencies if you need specific versions
+    # or need to change the dependency type. Generic python and wheel dependencies are
+    # added implicity by the PythonPackage base class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
+    # depends_on('py-wheel@X.Y:', type='build')
+
+    # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
+    # exists, use setuptools.
     # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))"""
+    # depends_on('py-flit-core', type='build')
+    # depends_on('py-poetry-core', type='build')
+    # depends_on('py-jupyter-packaging', type='build')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('py-foo', type=('build', 'run'))"""
 
     body_def = """\
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
+    def global_options(self, spec, prefix):
+        # FIXME: Add options to pass to setup.py
+        # FIXME: If not needed, delete this function
+        args = []
+        return args
+
+    def install_options(self, spec, prefix):
+        # FIXME: Add options to pass to setup.py install
+        # FIXME: If not needed, delete this function
         args = []
         return args"""
 
@@ -298,24 +313,32 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
 
-        # PyPI URLs for wheels are too complicated, ignore them for now
+        # PyPI URLs for wheels:
+        # https://pypi.io/packages/py3/a/azureml_core/azureml_core-1.11.0-py3-none-any.whl
+        # https://pypi.io/packages/py3/d/dotnetcore2/dotnetcore2-2.1.14-py3-none-macosx_10_9_x86_64.whl
+        # https://pypi.io/packages/py3/d/dotnetcore2/dotnetcore2-2.1.14-py3-none-manylinux1_x86_64.whl
+        # https://files.pythonhosted.org/packages/cp35.cp36.cp37.cp38.cp39/s/shiboken2/shiboken2-5.15.2-5.15.2-cp35.cp36.cp37.cp38.cp39-abi3-manylinux1_x86_64.whl
+        # https://files.pythonhosted.org/packages/f4/99/ad2ef1aeeb395ee2319bb981ea08dbbae878d30dd28ebf27e401430ae77a/azureml_core-1.36.0.post2-py3-none-any.whl#sha256=60bcad10b4380d78a8280deb7365de2c2cd66527aacdcb4a173f613876cbe739
 
         match = re.search(
             r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
             url
         )
         if match:
-            if len(match.group(2)) == 1:
-                # Simple PyPI URL
-                url = '/'.join(match.group(3, 4))
-            else:
-                # PyPI URL containing hash
-                # Project name doesn't necessarily match download name, but it
-                # usually does, so this is the best we can do
-                project = parse_name(url)
-                url = '/'.join([project, match.group(4)])
+            # PyPI URLs for wheels are too complicated, ignore them for now
+            # https://www.python.org/dev/peps/pep-0427/#file-name-convention
+            if not match.group(4).endswith('.whl'):
+                if len(match.group(2)) == 1:
+                    # Simple PyPI URL
+                    url = '/'.join(match.group(3, 4))
+                else:
+                    # PyPI URL containing hash
+                    # Project name doesn't necessarily match download name, but it
+                    # usually does, so this is the best we can do
+                    project = parse_name(url)
+                    url = '/'.join([project, match.group(4)])
 
-            self.url_line = '    pypi     = "{url}"'
+                self.url_line = '    pypi     = "{url}"'
         else:
             # Add a reminder about spack preferring PyPI URLs
             self.url_line = '''
@@ -580,6 +603,9 @@ class BuildSystemGuesser:
                 return
             if url.endswith('.gem'):
                 self.build_system = 'ruby'
+                return
+            if url.endswith('.whl') or '.whl#' in url:
+                self.build_system = 'python'
                 return
 
         # A list of clues that give us an idea of the build system a package

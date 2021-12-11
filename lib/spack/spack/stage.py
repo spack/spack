@@ -897,6 +897,10 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     i = 0
     errors = []
     for url, version in zip(urls, versions):
+        # Wheels should not be expanded during staging
+        expand_arg = ''
+        if url.endswith('.whl') or '.whl#' in url:
+            expand_arg = ', expand=False'
         try:
             if fetch_options:
                 url_or_fs = fs.URLFetchStrategy(
@@ -931,8 +935,8 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}sha256='{2}')".format(
-            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+        "    version('{0}', {1}sha256='{2}'{3})".format(
+            v, ' ' * (max_len - len(str(v))), h, expand_arg) for v, h in version_hashes
     ])
 
     num_hash = len(version_hashes)
