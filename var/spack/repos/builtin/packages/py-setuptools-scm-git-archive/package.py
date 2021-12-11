@@ -21,4 +21,4 @@ class PySetuptoolsScmGitArchive(PythonPackage):
         '1.0', sha256='52425f905518247c685fc64c5fdba6e1e74443c8562e141c8de56059be0e31da')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-setuptools-scm', type=('build', 'run'))
