@@ -366,6 +366,19 @@ class Result(object):
             string_list.extend(self.format_core(core))
         return string_list
 
+    def format_cores(self):
+        """List of facts for each core
+
+        Separate cores are separated by an empty line
+        Cores are not minimized
+        """
+        string_list = []
+        for core in self.cores:
+            if string_list:
+                string_list.append('\n')
+            string_list.extend(self.format_core(core))
+        return string_list
+
     def raise_if_unsat(self):
         """
         Raise an appropriate error if the result is unsatisfiable.
@@ -379,7 +392,9 @@ class Result(object):
         constraints = self.abstract_specs
         if len(constraints) == 1:
             constraints = constraints[0]
-        conflicts = self.format_minimal_cores()
+
+        debug = spack.config.get('config:debug', False)
+        conflicts = self.format_cores() if debug else self.format_minimal_cores()
 
         raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
@@ -496,7 +511,12 @@ class PyclingoDriver(object):
         self.out.write("%s.\n" % str(symbol))
 
         atom = self.backend.add_atom(symbol)
-        choice = self.cores and assumption
+
+        # in debug mode, make all facts choices/assumptions
+        # otherwise, only if we're generating cores and assumption=True
+        debug = spack.config.get('config:debug', False)
+        choice = debug or (self.cores and assumption)
+
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)

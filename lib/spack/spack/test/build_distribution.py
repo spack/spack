@@ -22,13 +22,12 @@ def test_build_tarball_overwrite(
         install(str(spec))
 
         # Runs fine the first time, throws the second time
-        spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+        spack.binary_distribution._build_tarball(spec, '.', unsigned=True)
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+            spack.binary_distribution._build_tarball(spec, '.', unsigned=True)
 
         # Should work fine with force=True
-        spack.binary_distribution.build_tarball(
-            spec, '.', force=True, unsigned=True)
+        spack.binary_distribution._build_tarball(spec, '.', force=True, unsigned=True)
 
         # Remove the tarball and try again.
         # This must *also* throw, because of the existing .spec.json file
@@ -38,4 +37,4 @@ def test_build_tarball_overwrite(
             spack.binary_distribution.tarball_name(spec, '.spack')))
 
         with pytest.raises(spack.binary_distribution.NoOverwriteException):
-            spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
+            spack.binary_distribution._build_tarball(spec, '.', unsigned=True)

@@ -146,6 +146,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches and one-off conflicts
 
+    # Boost and HIP don't work together in certain versions:
+    # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
+    # both include a fix.
+    conflicts("boost@:1.77.0", when="@:1.7 +rocm")
+
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')

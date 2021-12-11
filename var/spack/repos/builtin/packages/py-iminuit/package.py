@@ -22,3 +22,4 @@ class PyIminuit(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'), when='@1.3:1.3.6')
     depends_on('py-numpy@1.11.3:', type=('build', 'run'), when='@1.3.7:')
+    depends_on('py-cmake', type='build', when='@2.8.4')
