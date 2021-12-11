@@ -46,7 +46,7 @@ class PyWarpx(PythonPackage):
                    when='@{0}'.format(v),
                    type=['build', 'link'])
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.6:3.9', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
     depends_on('py-mpi4py@2.1.0:', type=('build', 'run'), when='+mpi')
     depends_on('py-periodictable@1.5:1', type=('build', 'run'))
