@@ -20,7 +20,7 @@ index 04092ba962..a549546ab9 100644
      else()
          set(mod_ext "so")
      endif()
-+    if(IS_ABSOLUTE CMAKE_INSTALL_LIBDIR)
++    if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
 +        set(ABS_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
 +    else()
 +        set(ABS_INSTALL_LIB_DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
