@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import tempfile
+
 from spack import *
 
 
@@ -11,8 +13,14 @@ class PyKeras(PythonPackage):
     and more. Runs on Theano or TensorFlow."""
 
     homepage = "https://keras.io"
+    git = "https://github.com/keras-team/keras"
     pypi = "Keras/Keras-1.2.2.tar.gz"
-
+    version('2.7.0',
+            url='https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz',
+            sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
+    version('2.6.0',
+            url='https://github.com/keras-team/keras/archive/refs/tags/v2.6.0.tar.gz',
+            sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
     version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
     version('2.2.3', sha256='694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de')
@@ -50,3 +58,93 @@ class PyKeras(PythonPackage):
     depends_on('py-theano', type=('build', 'run'), when='@:2.2')
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'), when='@:2.2')
+    depends_on('py-tensorflow', type=('build', 'run'), when='@2.5.0:')
+    depends_on('bazel', type='build', when='@2.5.0:')
+    depends_on('protobuf', type='build', when='@2.5.0')
+
+    @when('@2.5.0:')
+    def patch(self):
+        text = '''
+def py_proto_library(
+        name,
+        srcs = [],
+        deps = [],
+        py_libs = [],
+        py_extra_srcs = [],
+        include = None,
+        use_grpc_plugin = False,
+        **kargs):
+
+    outs = [s[:-len(".proto")] + "_pb2.py" for s in srcs]
+
+    native.genrule(
+        name = name + "_protoc_gen",
+        outs = outs,
+        srcs = srcs,
+        cmd = "protoc --python_out=$(GENDIR) -I. $<",
+    )
+
+    native.py_library(
+        name = name,
+        srcs = outs + py_extra_srcs,
+        deps = py_libs + deps,
+        imports = [],
+        **kargs
+    )
+
+'''
+        with open('keras/keras.bzl', mode='a') as f:
+            f.write(text)
+
+        filter_file('load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")',
+                    'load("@org_keras//keras:keras.bzl", "py_proto_library")',
+                    'keras/protobuf/BUILD',
+                    string=True)
+
+    @when('@2.5.0:')
+    def build(self, spec, prefix):
+        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        env['TEST_TMPDIR'] = self.tmp_path
+        env['HOME'] = self.tmp_path
+
+        args = [
+            # Don't allow user or system .bazelrc to override build settings
+            '--nohome_rc',
+            '--nosystem_rc',
+            # Bazel does not work properly on NFS, switch to /tmp
+            '--output_user_root=' + self.tmp_path,
+            'build',
+            # Spack logs don't handle colored output well
+            '--color=no',
+            '--jobs={0}'.format(make_jobs),
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            '--spawn_strategy=local',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
+            # bazel uses system PYTHONPATH instead of spack paths
+            '--action_env', 'PYTHONPATH={0}'.format(env['PYTHONPATH']),
+            '//keras/tools/pip_package:build_pip_package',
+        ]
+
+        bazel(*args)
+
+        build_pip_package = Executable(
+            'bazel-bin/keras/tools/pip_package/build_pip_package')
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        build_pip_package('--src', buildpath)
+
+    @when('@2.5.0:')
+    def install(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        with working_dir(buildpath):
+
+            setup_py('install', '--prefix={0}'.format(prefix),
+                     '--single-version-externally-managed', '--root=/')
+        remove_linked_tree(tmp_path)
