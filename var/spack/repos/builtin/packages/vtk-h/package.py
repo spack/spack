@@ -76,8 +76,9 @@ class VtkH(Package, CudaPackage):
     depends_on("vtk-m~tbb+openmp", when="+openmp")
     depends_on("vtk-m~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m+cuda~tbb~openmp", when="+cuda~openmp")
+    for _arch in CudaPackage.cuda_arch_values:
+        depends_on("vtk-m+cuda~tbb+openmp cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
+        depends_on("vtk-m+cuda~tbb~openmp cuda_arch={0}".format(_arch), when="+cuda~openmp cuda_arch={0}".format(_arch))
 
     depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
     depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")
