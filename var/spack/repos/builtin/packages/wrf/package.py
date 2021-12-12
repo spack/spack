@@ -140,7 +140,7 @@ class Wrf(Package):
     patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
     patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch",
-            sha256="d685a77c82d770f2af4e66711effa0cb115e2bc6e601de4cb92f15b138c6c85b", when="@4.2 %fj")
+          sha256="d685a77c82d770f2af4e66711effa0cb115e2bc6e601de4cb92f15b138c6c85b", when="@4.2 %fj")
     patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
 
     patch("patches/4.3/Makefile.patch", when="@4.3:")
@@ -172,6 +172,11 @@ class Wrf(Package):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     phases = ["configure", "build", "install"]
+
+    def setup_run_environment(self, env):
+        env.set("WRF_HOME", self.prefix)
+        env.append_path("PATH", self.prefix.main)
+        env.append_path("PATH", self.prefix.tools)
 
     def setup_build_environment(self, env):
         env.set("NETCDF", self.spec["netcdf-c"].prefix)
@@ -390,7 +395,7 @@ class Wrf(Package):
             error=str
         )
 
-        print(result_buf);
+        print(result_buf)
         if "Executables successfully built" in result_buf:
             return True
 
