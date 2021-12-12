@@ -38,9 +38,16 @@ class Geant4(CMakePackage):
             default=_cxxstd_values[0],
             values=_cxxstd_values,
             multi=False,
-            description='Use the specified C++ standard when building.')
-    conflicts('cxxstd=11', when='@11.0.0:')
-    conflicts('cxxstd=14', when='@11.0.0:')
+            description='Use the specified C++ standard when building.',
+            when='@10')
+    variant('cxxstd',
+            default=_cxxstd_values[2],
+            values=_cxxstd_values,
+            multi=False,
+            description='Use the specified C++ standard when building.',
+            when='@11')
+    conflicts('cxxstd=11', when='@11:', msg='geant4@11: only supports cxxstd=17')
+    conflicts('cxxstd=14', when='@11:', msg='geant4@11: only supports cxxstd=17')
 
     variant('threads', default=True, description='Build with multithreading')
     variant('vecgeom', default=False, description='Enable vecgeom support')
@@ -89,7 +96,8 @@ class Geant4(CMakePackage):
                    when='@10.3.3:10.6 cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
-        depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
+        depends_on('xerces-c netaccessor=curl cxxstd=' + std,
+                   when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
         depends_on('vecgeom@1.1.18:1.1 cxxstd=' + std,
@@ -132,7 +140,6 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'),
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
@@ -140,6 +147,14 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_GDML=ON',
             '-DXERCESC_ROOT_DIR={0}'.format(spec['xerces-c'].prefix)
         ]
+
+        # Use the correct C++ standard option for the requested version
+        if spec.version >= Version('11.0'):
+            options.append(
+                self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            options.append(
+                self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'))
 
         # Don't install the package cache file as Spack will set
         # up CMAKE_PREFIX_PATH etc for the dependencies
