@@ -255,6 +255,8 @@ def test_has_test_method_fails(capsys):
     assert 'is not a class' in captured
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
                      install_mockery_mutable_config):
     """Ensure output printed from pkgs is captured by output redirection."""
