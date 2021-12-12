@@ -50,9 +50,9 @@ class Geant4(CMakePackage):
     variant('qt', default=False, description='Enable Qt support')
     variant('python', default=False, description='Enable Python bindings')
 
-    depends_on('cmake@3.5:', type='build')
-    depends_on('cmake@3.15:', type='build', when='@11.0.0:')
+    depends_on('cmake@3.16:', type='build', when='@11.0.0:')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
+    depends_on('cmake@3.5:', type='build')
 
     depends_on('geant4-data@11.0.0', when='@11.0.0')
     depends_on('geant4-data@10.7.3', when='@10.7.3')
