@@ -225,12 +225,6 @@ def test_file_is_relocatable_errors(tmpdir):
         assert 'is not an absolute path' in str(exc_info.value)
 
 
-@skip_unless_linux
-def test_search_patchelf(expected_patchelf_path):
-    current = spack.relocate._patchelf()
-    assert current == expected_patchelf_path
-
-
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('patchelf_behavior,expected', [
