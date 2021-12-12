@@ -56,6 +56,7 @@ class Geant4(CMakePackage):
     variant('motif', default=False, description='Optional motif support')
     variant('qt', default=False, description='Enable Qt support')
     variant('python', default=False, description='Enable Python bindings')
+    variant('tbb', default=False, description='Use TBB as a tasking backend', when='@11:')
 
     depends_on('cmake@3.16:', type='build', when='@11.0.0:')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
@@ -77,6 +78,8 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
+
+    depends_on('tbb', when='+tbb')
 
     # Python, with boost requirement dealt with in cxxstd section
     depends_on('python@3:', when='+python')
@@ -164,6 +167,8 @@ class Geant4(CMakePackage):
         # Multithreading
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',
                                                 'threads'))
+        options.append(self.define_from_variant('GEANT4_USE_TBB', 'tbb'))
+
         if '+threads' in spec:
             # Locked at global-dynamic to allow use cases that load the
             # geant4 libs at application runtime
