@@ -283,14 +283,14 @@ class PythonPackageTemplate(PackageTemplate):
     def global_options(self, spec, prefix):
         # FIXME: Add options to pass to setup.py
         # FIXME: If not needed, delete this function
-        args = []
-        return args
+        options = []
+        return options
 
     def install_options(self, spec, prefix):
         # FIXME: Add options to pass to setup.py install
         # FIXME: If not needed, delete this function
-        args = []
-        return args"""
+        options = []
+        return options"""
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
@@ -622,7 +622,8 @@ class BuildSystemGuesser:
             (r'/pom\.xml$',           'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
-            (r'/setup\.py$',          'python'),
+            (r'/pyproject.toml',      'python'),
+            (r'/setup\.(py|cfg)$',    'python'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),

@@ -152,6 +152,12 @@ class PyMatplotlib(PythonPackage):
     depends_on('fontconfig@2.7:', when='+fonts')
     depends_on('pkgconfig', type='build')
 
+    # Testing dependencies
+    # https://matplotlib.org/stable/devel/development_setup.html#additional-dependencies-for-testing
+    depends_on('py-pytest@3.6:', type='test')
+    depends_on('ghostscript@9.0:', type='test')
+    # depends_on('inkscape@:0', type='test')
+
     msg = 'MacOSX backend requires the Cocoa headers included with XCode'
     conflicts('platform=linux', when='backend=macosx', msg=msg)
     conflicts('platform=cray',  when='backend=macosx', msg=msg)
@@ -206,3 +212,9 @@ class PyMatplotlib(PythonPackage):
                 # avoids error where link time opt is used for compile but not link
                 if self.spec.satisfies('%clang') or self.spec.satisfies('%oneapi'):
                     config.write('enable_lto = False\n')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        pytest = which('pytest')
+        pytest()
