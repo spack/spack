@@ -59,6 +59,14 @@ ASTType = None
 parse_files = None
 
 
+#: whether we should write ASP unsat cores quickly in debug mode when the cores
+#: may be very large or take the time (sometimes hours) to minimize them
+minimize_cores = True
+
+#: whether we should include all facts in the unsat cores or only error messages
+full_cores = False
+
+
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
     def getter(node):
@@ -393,11 +401,10 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        # debug cores may be costly to minimize
-        # only minimize them if explicitly requested
-        debug = spack.config.get('config:debug', False)
-        raw_cores = debug and not spack.error.minimize_cores
-        conflicts = self.format_cores() if raw_cores else self.format_minimal_cores()
+        if minimize_cores:
+            conflicts = self.format_minimal_cores()
+        else:
+            conflicts = self.format_cores()
 
         raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
@@ -515,10 +522,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # in debug mode, make all facts choices/assumptions
-        # otherwise, only if we're generating cores and assumption=True
-        debug = spack.config.get('config:debug', False)
-        choice = debug or (self.cores and assumption)
+        # with `--show-cores=full or --show-cores=minimized, make all facts
+        # choices/assumptions, otherwise only if assumption=True
+        choice = self.cores and (full_cores or assumption)
 
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
