@@ -10,12 +10,11 @@ class PyOnnxconverterCommon(PythonPackage):
     """ONNX Converter and Optimization Tools"""
 
     homepage = "https://github.com/microsoft/onnxconverter-common"
-    pypi     = "onnxconverter-common/onnxconverter-common-1.9.0.tar.gz"
+    url      = "https://github.com/microsoft/onnxconverter-common/archive/refs/tags/v1.9.0.tar.gz"
 
-    version('1.9.0', sha256='8e129c3602d1ef7619c5f3d34a53005b997137ea769362f1f8dd1ddab57ed216')
+    version('1.9.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-protobuf',   type=('build', 'run'))
     depends_on('py-onnx',       type=('build', 'run'))
-

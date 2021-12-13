@@ -22,10 +22,3 @@ class PyKeras2onnx(PythonPackage):
     depends_on('py-onnx',       type=('build', 'run'))
     depends_on('py-onnxconverter-common@1.7.0:', type=('build', 'run'))
     depends_on('py-fire',       type=('build', 'run'))
-
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
