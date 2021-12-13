@@ -564,8 +564,8 @@ class Trilinos(CMakePackage, CudaPackage):
             libs = depspec.libs
             try:
                 options.extend([
-                    define(trilinos_name + '_INCLUDE_DIRS', 
-                        depspec.headers.directories),
+                    define(trilinos_name + '_INCLUDE_DIRS',
+                           depspec.headers.directories),
                 ])
             except NoHeadersError:
                 # Handle case were depspec does not have headers
