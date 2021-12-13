@@ -35,15 +35,11 @@ def test_url_parse():
     assert(parsed.netloc == '')
     assert(parsed.path == '/path/to/resource')
 
-    parsed = url_util.parse('file://path/to/resource')
-    assert(parsed.scheme == 'file')
     if sys.platform != 'win32':
-        assert(parsed.netloc == '')
-
-    expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
-    if sys.platform == "win32":
-        expected = expected.replace('\\', '/')[2:]
-    assert(parsed.path == expected)
+        parsed = url_util.parse('file://path/to/resource')
+        assert(parsed.scheme == 'file')
+        expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
+        assert(parsed.path == expected)
 
     parsed = url_util.parse('https://path/to/resource')
     assert(parsed.scheme == 'https')
@@ -57,7 +53,7 @@ def test_url_parse():
         assert(parsed.netloc == '')
 
     if sys.platform == "win32":
-        spack_root = spack_root.replace('\\', '/')[2:]
+        spack_root = spack_root.replace('\\', '/')
 
     assert(parsed.path == spack_root)
 
@@ -81,9 +77,10 @@ def test_url_local_file_path():
     lfp = url_util.local_file_path('file:///a/b/c.txt')
     assert(lfp == '/a/b/c.txt')
 
-    lfp = url_util.local_file_path('file://a/b/c.txt')
-    expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
-    assert(lfp == expected)
+    if sys.platform != "win32":
+        lfp = url_util.local_file_path('file://a/b/c.txt')
+        expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
+        assert(lfp == expected)
 
     lfp = url_util.local_file_path('$spack/a/b/c.txt')
     expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
