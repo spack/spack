@@ -204,8 +204,7 @@ class Geant4(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE=%s' %
                 spec['qt'].prefix.bin.qmake)
 
-        if '+vtk' in spec:
-            options.append('-DGEANT4_USE_VTK=ON')
+        options.append(self.define_from_variant('GEANT4_USE_VTK','vtk'))
 
         # Python
         if spec.version > Version('10.6.1'):
