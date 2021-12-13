@@ -1304,13 +1304,21 @@ spack:
       buildable: false
 """)
     with tmpdir.as_cwd():
-        env('create', 'test', './spack.yaml')
-        test = ev.read('test')
-        assert Spec('libelf') in test.user_specs
-        assert (test.yaml['spack']['packages']['libelf']['externals'][0]['spec']
-                == '$spec')
-        assert (test.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
-                == '$loc')
+        env('create', '-d', '.', './spack.yaml')
+        with ev.Environment('.') as pre:
+            assert Spec('libelf') in pre.user_specs
+            assert (pre.yaml['spack']['packages']['libelf']['externals'][0]['spec']
+                    == '$spec')
+            assert (pre.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
+                    == '$loc')
+            # this calls _update_and_write_manifest but it is not overwriting the
+            # anchors like I see when I try to use this feature
+            pre.write()
+        with ev.Environment('.') as post:
+            assert (post.yaml['spack']['packages']['libelf']['externals'][0]['spec']
+                    == '$spec')
+            assert (post.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
+                    == '$loc')
 
 
 def test_stack_yaml_definitions(tmpdir):
