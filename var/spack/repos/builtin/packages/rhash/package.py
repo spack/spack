@@ -78,3 +78,4 @@ class Rhash(MakefilePackage):
         make('install', 'DESTDIR={0}'.format(prefix))
         make('install-pkg-config', 'DESTDIR={0}'.format(prefix))
         make('install-lib-so-link', 'DESTDIR={0}'.format(prefix))
+        make('install-lib-headers', 'DESTDIR={0}'.format(prefix))
