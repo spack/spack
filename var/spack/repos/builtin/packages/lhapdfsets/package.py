@@ -27,21 +27,22 @@ class Lhapdfsets(BundlePackage):
     # use a dummy executables for spack external support
     executables = [r'^lhapdf$']
 
-    # parse set names from index file
-    all_sets = [_line.split()[1] for _line in open(join_path(os.path.dirname(__file__),
-                                                   'pdfsets.index')).readlines()]
-    default_sets = ["MMHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo"]
 
-    variant('sets', description="Individiual lhapdf sets to install", values=disjoint_sets(('all',), ('default',), all_sets).with_default('default'))
+    variant('sets', description="Individiual lhapdf sets to install", values=('all', 'default'), default='default')
 
     def install(self, spec, prefix):
         mkdirp(self.prefix.share.lhapdfsets)
         lhapdf = which('lhapdf')
         sets = self.spec.variants['sets'].value
         if sets == ('all',):
-            sets = self.all_sets
+
+            all_sets = [_line.split()[1] for _line in open(join_path(os.path.dirname(__file__),
+                                                   'pdfsets.index')).readlines()]
+            sets = all_sets
         elif sets == ('default',):
-            sets = self.default_sets
+            # parse set names from index file
+            default_sets = ["MMHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo"]
+            sets = default_sets
         lhapdf("--pdfdir=" + self.prefix.share.lhapdfsets,
                "install", *sets)
 
