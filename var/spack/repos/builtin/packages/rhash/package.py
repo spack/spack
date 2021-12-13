@@ -26,7 +26,7 @@ class Rhash(MakefilePackage):
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb
 
-    @when('@:1.4.1')
+    @when('@:1.3.5')
     def build(self, spec, prefix):
         # Doesn't build shared libraries by default
         make('PREFIX={0}'.format(prefix))
@@ -36,7 +36,7 @@ class Rhash(MakefilePackage):
         else:
             make('PREFIX={0}'.format(prefix), 'lib-shared')
 
-    @when('@1.4.2:')
+    @when('@1.3.6:')
     def build(self, spec, prefix):
         configure('--prefix=')
         make()
@@ -50,19 +50,19 @@ class Rhash(MakefilePackage):
         # Default implmentation is to run both `make test` and `make check`.
         # `test` passes, but `check` fails, so only run `test`.
         make('test')
-        if self.spec.satisfies('@:1.4.1'):
-            make('test-static-lib')            
+        if self.spec.satisfies('@:1.3.5'):
+            make('test-static-lib')
         else:
             make('test-lib-static')
-            
+
         if not self.spec.satisfies('platform=darwin'):
             make('test-shared')
-            if self.spec.satisfies('@:1.4.1'):
+            if self.spec.satisfies('@:1.3.5'):
                 make('test-shared-lib')
             else:
                 make('test-lib-shared')
 
-    @when('@:1.4.1')
+    @when('@:1.3.5')
     def install(self, spec, prefix):
         # Some things are installed to $(DESTDIR)$(PREFIX) while other things
         # are installed to $DESTDIR/etc.
@@ -76,7 +76,7 @@ class Rhash(MakefilePackage):
             os.symlink(join_path(prefix.lib, 'librhash.so.0'),
                        join_path(prefix.lib, 'librhash.so'))
 
-    @when('@1.4.2:')
+    @when('@1.3.6:')
     def install(self, spec, prefix):
         make('install', 'DESTDIR={0}'.format(prefix))
         make('install-pkg-config', 'DESTDIR={0}'.format(prefix))
