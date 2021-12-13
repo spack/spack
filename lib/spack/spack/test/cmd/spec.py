@@ -16,6 +16,8 @@ pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 
 spec = SpackCommand('spec')
 
+base32_alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
+
 
 def test_spec():
     output = spec('mpileaks')
@@ -77,6 +79,25 @@ def test_spec_json():
     assert 'libdwarf' in mpileaks
     assert 'libelf' in mpileaks
     assert 'mpich' in mpileaks
+
+
+def test_spec_format(database, config):
+    output = spec('--format', '{name}-{^mpi.name}', 'mpileaks')
+    assert output.rstrip('\n') == "mpileaks-mpich"
+
+    output = spec('--format', '{name}-{version}-{compiler.name}-{^mpi.name}',
+                  'mpileaks')
+    assert "installed package" not in output
+    assert output.rstrip('\n') == "mpileaks-2.3-gcc-mpich"
+
+    output = spec('--format', '{name}-{^mpi.name}-{hash:7}',
+                  'mpileaks')
+    output = output.rstrip('\n')
+    assert output[:-7] == "mpileaks-mpich-"
+
+    # hashes are in base32
+    for c in output[-7:]:
+        assert c in base32_alphabet
 
 
 def _parse_types(string):
