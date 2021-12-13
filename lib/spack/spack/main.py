@@ -404,6 +404,10 @@ def make_argument_parser(**kwargs):
         help="write out debug messages "
              "(more d's for more verbosity: -d, -dd, -ddd, etc.)")
     parser.add_argument(
+        '--minimize-cores', action='store_true',
+        help=("minimize concretizer cores when run in debug mode"
+              " (Warning: may take hours for some specs)"))
+    parser.add_argument(
         '--timestamp', action='store_true',
         help="Add a timestamp to tty output")
     parser.add_argument(
@@ -485,6 +489,9 @@ def setup_main_options(args):
         spack.util.debug.register_interrupt_handler()
         spack.config.set('config:debug', True, scope='command_line')
         spack.util.environment.tracing_enabled = True
+
+    if args.minimize_cores:
+        spack.error.minimize_cores = True
 
     if args.timestamp:
         tty.set_timestamp(True)

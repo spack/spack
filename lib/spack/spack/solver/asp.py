@@ -393,8 +393,11 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
+        # debug cores may be costly to minimize
+        # only minimize them if explicitly requested
         debug = spack.config.get('config:debug', False)
-        conflicts = self.format_cores() if debug else self.format_minimal_cores()
+        raw_cores = debug and not spack.error.minimize_cores
+        conflicts = self.format_cores() if raw_cores else self.format_minimal_cores()
 
         raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
 

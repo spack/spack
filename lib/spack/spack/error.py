@@ -14,6 +14,10 @@ import llnl.util.tty as tty
 #: this is module-scoped because it needs to be set very early
 debug = False
 
+#: whether we should write ASP unsat cores quickly in debug mode when the cores
+#: may be very large or take the time (sometimes hours) to minimize them
+minimize_cores = False
+
 
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
@@ -134,7 +138,19 @@ class UnsatisfiableSpecError(SpecError):
             indented = ['  %s\n' % conflict for conflict in conflicts]
             conflict_msg = ''.join(indented)
             msg = '%s is unsatisfiable, conflicts are:\n%s' % (provided, conflict_msg)
+
+            newline_indent = '\n    '
+            if not debug:
+                msg += newline_indent
+                msg += 'To see full clingo unsat cores, re-run with `spack -d`'
+            if not debug or not minimize_cores:
+                msg += newline_indent
+                msg += 'For minimal full cores, re-run with `spack -d --minimize-cores'
+                msg += newline_indent
+                msg += 'Warning: This may take (up to) hours for some specs'
+
             super(UnsatisfiableSpecError, self).__init__(msg)
+
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type
