@@ -1,6 +1,6 @@
---- WRF-3.9.1.1/arch/configure_new.defaults	2021-03-10 10:08:07.885236847 +0530
-+++ WRF-3.9.1.1/arch/configure_new_aocc.defaults	2021-08-12 08:58:35.442165745 +0530
-@@ -1917,6 +1917,50 @@
+--- WRF-3.9.1.1/arch/configure_new.defaults	2017-08-29 01:59:47.000000000 +0530
++++ WRF-3.9.1.1/arch/configure_new_aocc.defaults	2021-12-10 11:55:17.933577191 +0530
+@@ -1917,6 +1917,51 @@
  CC_TOOLS        =      $(SCC) 
  
  #insert new stanza here
@@ -23,22 +23,22 @@
 +RWORDSIZE       =       $(NATIVE_RWORDSIZE)
 +PROMOTION       =
 +ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR -DWRF_USE_CLM
-+LIBMVEC         =       -mllvm -vector-library=LIBMVEC-X86 -mllvm -enable-loop-vectorization-with-conditions -Mstack_arrays
-+AOCCOPT         =       -O3 -m64 -Ofast -ffast-math
++LIBMVEC         =       -fveclib=AMDLIBM -mllvm -enable-loop-vectorization-with-conditions
++AOCCOPT         =       -O3 -m64 -Ofast -ffast-math -Mstack_arrays
 +CFLAGS_LOCAL    =       -w $(AOCCOPT)
 +LDFLAGS_LOCAL   =       -lm -ltirpc -lamdlibm  -ljemalloc -lmvec $(AOCCOPT)
 +CPLUSPLUSLIB    =
 +ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
-+FCOPTIM         =       $(AOCCOPT) -fopenmp
++FCOPTIM         =       $(AOCCOPT) $(OMP)
 +FCREDUCEDOPT    =       -O2 -Ofast -ffast-math
-+FCNOOPT         =       -O0 -DFCNOOPT -fopenmp
++FCNOOPT         =       -O0 -DFCNOOPT $(OMP)
 +FCDEBUG         =       #-g
 +FORMAT_FIXED    =       -Mfixed
 +FORMAT_FREE     =       -Mfreeform
 +FCSUFFIX        =
 +BYTESWAPIO      =       -Mbyteswapio
-+FCBASEOPTS_NO_G =       $(FORMAT_FREE) $(BYTESWAPIO) -fopenmp
-+FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG) -DBASEOPTS -fopenmp
++FCBASEOPTS_NO_G =       $(FORMAT_FREE) $(BYTESWAPIO) $(OMP)
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG) -DBASEOPTS $(OMP) $(AOCCOPT)
 +MODULE_SRCH_FLAG =
 +TRADFLAG        =       -traditional
 +CPP             =       /lib/cpp -P
@@ -48,6 +48,7 @@
 +RANLIB          =       llvm-ranlib
 +RLFLAGS         =
 +CC_TOOLS        =       $(SCC)
++
  
  ###########################################################
  #ARCH    Fujitsu FX10/FX100 Linux x86_64 SPARC64IXfx/SPARC64Xlfx, mpifrtpx and mpifccpx compilers #serial smpar dmpar dm+sm
