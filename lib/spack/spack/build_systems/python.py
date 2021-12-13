@@ -59,8 +59,6 @@ class PythonPackage(PackageBase):
             '--no-cache-dir',
             # Don't check to see if pip is up-to-date
             '--disable-pip-version-check',
-            # Don't warn about deprecated Python
-            '--no-python-version-warning',
             # Install packages
             'install',
             # Don't install package dependencies
