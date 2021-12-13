@@ -34,13 +34,12 @@ class Lhapdfsets(BundlePackage):
         mkdirp(self.prefix.share.lhapdfsets)
         lhapdf = which('lhapdf')
         sets = self.spec.variants['sets'].value
-        if sets == ('all',):
-
+        if sets == 'all':
+            # parse set names from index file
             all_sets = [_line.split()[1] for _line in open(join_path(os.path.dirname(__file__),
                                                    'pdfsets.index')).readlines()]
             sets = all_sets
-        elif sets == ('default',):
-            # parse set names from index file
+        elif sets == 'default':
             default_sets = ["MMHT2014lo68cl", "MMHT2014nlo68cl", "CT14lo", "CT14nlo"]
             sets = default_sets
         lhapdf("--pdfdir=" + self.prefix.share.lhapdfsets,
