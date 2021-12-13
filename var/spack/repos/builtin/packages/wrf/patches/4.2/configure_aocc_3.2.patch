@@ -1,10 +1,10 @@
 --- WRF-4.2/arch/configure.defaults	2020-04-23 22:38:37.000000000 +0530
-+++ WRF-4.2/arch/configure_aocc.defaults	2021-12-10 16:07:57.093159118 +0530
-@@ -1975,6 +1975,56 @@
++++ WRF-4.2/arch/configure_aocc.defaults	2021-12-10 17:04:39.829289741 +0530
+@@ -1975,6 +1975,58 @@
                       $(WRF_SRC_ROOT_DIR)/frame/pack_utils.o
  
  #insert new stanza here
-+##AOCC 3.0
++##AOCC 3.2
 +##############################################################
 +#ARCH    AMD EPYC Linux x86_64 AOCC Compilers #dm+sm
 +#
@@ -25,15 +25,17 @@
 +PROMOTION       =
 +ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR -DWRF_USE_CLM
 +AOCCOPT         =       -mllvm -disable-loop-idiom-memset -mllvm -inline-threshold=3000 \
-+						-mllvm -inlinehint-threshold=10000 -mllvm -vectorize-noncontigous-memory-aggressively \
-+						-mllvm -vectorizer-maximize-bandwidth=true -mllvm -enable-boscc \
-+						-fveclib=AMDLIBM -finline-aggressive -finline-hint-functions -Mstack_arrays -Ofast
++                        -mllvm -inlinehint-threshold=10000 -mllvm -vectorize-noncontigous-memory-aggressively \
++                        -mllvm -vectorizer-maximize-bandwidth=true -mllvm -enable-loop-vectorization-with-conditions \
++                        -mllvm -enable-loop-distribute-adv -mllvm -enable-loop-reversal -mllvm -enable-gather \
++                        -mllvm -legalize-vector-library-calls -mllvm -adce-remove-omp-calls \
++                        -fveclib=AMDLIBM -finline-aggressive -finline-hint-functions -Mstack_arrays -Ofast
 +CFLAGS_LOCAL    =       -w -c -m64 -Ofast -ffast-math
 +LDFLAGS_LOCAL   =       -m64 -Wl,-mllvm -Wl,-vectorize-noncontigous-memory-aggressively \
 +                        -Ofast -Mstack_arrays -fveclib=AMDLIBM -lamdlibm -lm
 +CPLUSPLUSLIB    =
 +ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
-+FCOPTIM         =       -Ofast -ftree-vectorize -funroll-loops -Mbyteswapio -ffast-math -finline-aggressive -finline-hint-functions -Mstack_arrays -Menable-vectorize-pragmas=true
++FCOPTIM         =       -Ofast -ftree-vectorize -funroll-loops -Mbyteswapio -ffast-math -finline-aggressive -finline-hint-functions -Mstack_arrays
 +FCREDUCEDOPT    =       -O3 -ffast-math -Mstack_arrays -DFCREDUCEDOPT
 +FCNOOPT         =       -O0 -ffast-math
 +FCDEBUG         =       #-g
