@@ -138,7 +138,7 @@ class Flecsi(CMakePackage, CudaPackage):
     # Unit tests require flog support
     conflicts('+unit_tests', when='~flog')
     # Disallow conduit=none when using legion as a backend
-    conflicts('legion conduit=none', when='backend=legion')
+    conflicts('^legion conduit=none', when='backend=legion')
     # Due to overhauls of Legion and Gasnet spackages
     #   flecsi@:1.9 can no longer be built with a usable legion
     conflicts('backend=legion', when='@:1.9')
