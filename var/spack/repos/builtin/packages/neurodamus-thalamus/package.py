@@ -37,5 +37,11 @@ class NeurodamusThalamus(NeurodamusModel):
         git="git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git",
         tag="1.6",
         when="@1.6:",
-        destination="deps"
     )
+
+    def setup_common_mods(self, spec, prefix):
+        """Setup common mod files if provided through variant.
+        """
+        super().setup_common_mods(spec, prefix)
+        if spec.satisfies("@1.6:"):
+            force_symlink("../neocortex", "deps/neocortex")
