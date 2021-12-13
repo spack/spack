@@ -71,7 +71,8 @@ class Roms(MakefilePackage):
         """
         Edit Linux-flang.mk makefile to support AOCC compiler
         """
-        fflags = ['-fveclib=AMDLIBM', '-O3', '-ffast-math']
+        fflags = ['-fveclib=AMDLIBM', '-O3', '-ffast-math',
+                  '-funroll-loops', '-Mstack_arrays', '-std=f2008']
         make_aocc = join_path('Compilers',
                               '{0}-{1}.mk'.format(self.arch, lib))
 
