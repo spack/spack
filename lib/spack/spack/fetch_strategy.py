@@ -304,11 +304,10 @@ class URLFetchStrategy(FetchStrategy):
         urls = []
 
         for url in [self.url] + (self.mirrors or []):
-            if url.startswith('file://'):
+            if sys.platform == "win32":
+                url = url.replace("\\", "/")
+            if sys.platform != "win32" and url.startswith('file://'):
                 path = urllib_parse.quote(url[len('file://'):])
-                if sys.platform == "win32":
-                    if not path.startswith("/"):
-                        path = "/" + path
                 url = 'file://' + path
             urls.append(url)
 
@@ -1730,7 +1729,7 @@ class FsCache(object):
 
 
 class FetchError(spack.error.SpackError):
-    """Superclass fo fetcher errors."""
+    """Superclass for fetcher errors."""
 
 
 class NoCacheError(FetchError):

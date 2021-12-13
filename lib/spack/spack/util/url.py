@@ -104,7 +104,6 @@ def parse(url, scheme='file'):
             if is_windows_path:
                 netloc = netloc[0].upper() + ':'
 
-
         path = spack.util.path.canonicalize_path(netloc + path)
         path = re.sub(r'\\', '/', path)
         path = re.sub(r'^/+', '/', path)
