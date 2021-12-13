@@ -4773,10 +4773,11 @@ class SpecParser(spack.parse.Parser):
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)
-            # normalize and absolutize 'dev_path'
+            # normalize and absolutize 'dev_path' if it is not a wildcard
             if (
                 'dev_path' in spec.variants and
-                isinstance(spec.variants['dev_path'], vt.AbstractVariant)
+                isinstance(spec.variants['dev_path'], vt.AbstractVariant) and
+                spec.variants['dev_path'].value[0] != '*'
             ):
                 path = os.path.abspath(spec.variants['dev_path'].value[0])
                 new_variant = vt.SingleValuedVariant('dev_path', path)
