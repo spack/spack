@@ -5,6 +5,7 @@
 
 import os
 
+
 class Rhash(MakefilePackage):
     """RHash is a console utility for computing and verifying hash sums of
     files. It supports CRC32, MD4, MD5, SHA1, SHA256, SHA512, SHA3, Tiger,
@@ -71,7 +72,8 @@ class Rhash(MakefilePackage):
             install('librhash/*.dylib', prefix.lib)
         else:
             make('install-lib-shared', 'DESTDIR={0}'.format(prefix), 'PREFIX=')
-            os.symlink(join_path(prefix.lib, 'librhash.so.0'), join_path(prefix.lib, 'librhash.so'))
+            os.symlink(join_path(prefix.lib, 'librhash.so.0'),
+                       join_path(prefix.lib, 'librhash.so'))
 
     @when('@1.4.2:')
     def install(self, spec, prefix):
