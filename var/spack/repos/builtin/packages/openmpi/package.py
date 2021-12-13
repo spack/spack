@@ -39,10 +39,12 @@ class Openmpi(AutotoolsPackage):
     version('master', branch='master', submodules=True)
 
     # Current
-    version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
+    version('4.1.2', sha256='9b78c7cf7fc32131c5cf43dd2ab9740149d9d87cadb2e2189f02685749a6b527')  # libmpi.so.40.30.2
 
     # Still supported
+    version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
     version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
+    version('4.0.7', sha256='7d3ecc8389161eb721982c855f89c25dca289001577a01a439ae97ce872be997')  # libmpi.so.40.20.7
     version('4.0.6', sha256='94b7b59ae9860f3bd7b5f378a698713e7b957070fdff2c43453b6cbf8edb410c')  # libmpi.so.40.20.6
     version('4.0.5', sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
     version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
@@ -314,6 +316,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('pbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
     depends_on('pmix', when='+pmix')
+    depends_on('libevent', when='+pmix')
 
     depends_on('openssh', type='run')
 
@@ -651,7 +654,8 @@ class Openmpi(AutotoolsPackage):
                     spec['slurm'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmi'))
-            config_args += self.with_or_without('pmix', activation_value='prefix')
+            if spec.satisfies('+pmix'):
+                config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
@@ -707,7 +711,7 @@ class Openmpi(AutotoolsPackage):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # external libevent
-        if spec.satisfies('@4.0.0:'):
+        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
         if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
@@ -1057,7 +1061,7 @@ def is_enabled(text):
 # This code gets all the fabric names from the variants list
 # Idea taken from the AutotoolsPackage source.
 def get_options_from_variant(self, name):
-    values = self.variants[name].values
+    values = self.variants[name][0].values
     if getattr(values, 'feature_values', None):
         values = values.feature_values
     return values

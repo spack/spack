@@ -1864,6 +1864,15 @@ class Spec(object):
         return sjson.dump(self.to_dict(hash), stream)
 
     @staticmethod
+    def from_specfile(path):
+        """Construct a spec from aJSON or YAML spec file path"""
+        with open(path, 'r') as fd:
+            file_content = fd.read()
+            if path.endswith('.json'):
+                return Spec.from_json(file_content)
+            return Spec.from_yaml(file_content)
+
+    @staticmethod
     def from_node_dict(node):
         spec = Spec()
         if 'name' in node.keys():
@@ -2597,7 +2606,7 @@ class Spec(object):
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False):
+    def _new_concretize(self, tests=False, reuse=False):
         import spack.solver.asp
 
         if not self.name:
@@ -2607,11 +2616,8 @@ class Spec(object):
         if self._concrete:
             return
 
-        result = spack.solver.asp.solve([self], tests=tests)
-        if not result.satisfiable:
-            result.print_cores()
-            raise spack.error.UnsatisfiableSpecError(
-                self, "unknown", "Unsatisfiable!")
+        result = spack.solver.asp.solve([self], tests=tests, reuse=reuse)
+        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)
@@ -2628,17 +2634,23 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    def concretize(self, tests=False):
+    def concretize(self, tests=False, reuse=False):
         """Concretize the current spec.
 
         Args:
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         if spack.config.get('config:concretizer') == "clingo":
-            self._new_concretize(tests)
+            self._new_concretize(tests, reuse=reuse)
         else:
+            if reuse:
+                msg = ('maximizing reuse of installed specs is not '
+                       'possible with the original concretizer')
+                raise spack.error.SpecError(msg)
             self._old_concretize(tests)
 
     def _mark_root_concrete(self, value=True):
@@ -2663,7 +2675,7 @@ class Spec(object):
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
 
-    def concretized(self, tests=False):
+    def concretized(self, tests=False, reuse=False):
         """This is a non-destructive version of concretize().
 
         First clones, then returns a concrete version of this package
@@ -2673,9 +2685,11 @@ class Spec(object):
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         clone = self.copy(caches=True)
-        clone.concretize(tests=tests)
+        clone.concretize(tests=tests, reuse=reuse)
         return clone
 
     def flat_dependencies(self, **kwargs):
@@ -3055,6 +3069,10 @@ class Spec(object):
         Raises:
             spack.variant.UnknownVariantError: on the first unknown variant found
         """
+        # concrete variants are always valid
+        if spec.concrete:
+            return
+
         pkg_cls = spec.package_class
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
@@ -3084,7 +3102,7 @@ class Spec(object):
         if not isinstance(values, tuple):
             values = (values,)
 
-        pkg_variant = self.package_class.variants[variant_name]
+        pkg_variant, _ = self.package_class.variants[variant_name]
 
         for value in values:
             if self.variants.get(variant_name):
@@ -3912,7 +3930,7 @@ class Spec(object):
             elif 'version' in parts:
                 col = '@'
 
-            # Finally, write the ouptut
+            # Finally, write the output
             write(sig + morph(spec, str(current)), col)
 
         attribute = ''
@@ -4754,8 +4772,12 @@ class SpecParser(spack.parse.Parser):
         # Generate lookups for git-commit-based versions
         for spec in specs:
             # Cannot do lookups for versions in anonymous specs
-            # Only allow concrete versions using git for now
-            if spec.name and spec.versions.concrete and spec.version.is_commit:
+            # Only allow Version objects to use git for now
+            # Note: VersionRange(x, x) is currently concrete, hence isinstance(...).
+            if (
+                spec.name and spec.versions.concrete and
+                isinstance(spec.version, vn.Version) and spec.version.is_commit
+            ):
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)

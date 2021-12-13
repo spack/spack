@@ -68,6 +68,8 @@ class Bohrium(CMakePackage, CudaPackage):
     conflicts('~node~proxy')
     conflicts('~openmp~opencl~cuda')
 
+    conflicts('+cbridge', when='~python')
+
     #
     # Dependencies
     #
@@ -94,8 +96,13 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('py-numpy', type=("build", "test", "run"), when="+python")
     depends_on('swig', type="build", when="+python")
     depends_on('py-cython', type="build", when="+python")
+    depends_on('py-virtualenv', type="build", when="+python")
+    depends_on('py-pip', type="build", when="+python")
+    depends_on('py-wheel', type="build", when="+python")
 
     depends_on('zlib', when="+proxy")
+
+    depends_on('libsigsegv')
 
     @property
     def config_file(self):
@@ -108,14 +115,11 @@ class Bohrium(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Sanity check
-        cuda_arch = spec.variants['cuda_arch'].value
-        if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
-            # TODO Add cuda_arch support to Bohrium once the basic setup
-            #      via Spack works.
-            raise InstallError(
-                "Bohrium does not support setting the CUDA architecture yet."
-            )
+        # TODO: Use cuda_arch to specify compute capabilities to build.
+        # This package detects the compute capability of the device on the
+        # build host and uses that to set a single compute capability. This is
+        # limiting for generic builds and the ability to run CUDA builds on
+        # different hosts.
 
         args = [
             # Choose a particular python version
@@ -136,7 +140,7 @@ class Bohrium(CMakePackage, CudaPackage):
             #
             # Bridges and interfaces
             "-DBRIDGE_BHXX=ON",
-            "-DBRIDGE_C=" + str("+cbridge" in spec or "+python" in spec),
+            "-DBRIDGE_C=" + str("+cbridge" in spec and "+python" in spec),
             "-DBRIDGE_NPBACKEND=" + str("+python" in spec),
             "-DNO_PYTHON3=ON",  # Only build python version we provide
         ]

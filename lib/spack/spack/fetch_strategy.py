@@ -1407,6 +1407,61 @@ class S3FetchStrategy(URLFetchStrategy):
             raise FailedDownloadError(self.url)
 
 
+@fetcher
+class GCSFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from a GCS bucket."""
+    url_attr = 'gs'
+
+    def __init__(self, *args, **kwargs):
+        try:
+            super(GCSFetchStrategy, self).__init__(*args, **kwargs)
+        except ValueError:
+            if not kwargs.get('url'):
+                raise ValueError(
+                    "GCSFetchStrategy requires a url for fetching.")
+
+    @_needs_stage
+    def fetch(self):
+        import spack.util.web as web_util
+        if self.archive_file:
+            tty.debug('Already downloaded {0}'.format(self.archive_file))
+            return
+
+        parsed_url = url_util.parse(self.url)
+        if parsed_url.scheme != 'gs':
+            raise FetchError(
+                'GCSFetchStrategy can only fetch from gs:// urls.')
+
+        tty.debug('Fetching {0}'.format(self.url))
+
+        basename = os.path.basename(parsed_url.path)
+
+        with working_dir(self.stage.path):
+            import spack.util.s3 as s3_util
+            s3 = s3_util.create_s3_session(self.url,
+                                           connection=s3_util.get_mirror_connection(parsed_url), url_type="fetch")  # noqa: E501
+
+            headers = s3.get_object(Bucket=parsed_url.netloc,
+                                    Key=parsed_url.path.lstrip("/"))
+            stream = headers["Body"]
+
+            with open(basename, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+
+            content_type = web_util.get_header(headers, 'Content-type')
+
+        if content_type == 'text/html':
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
+        if self.stage.save_filename:
+            os.rename(
+                os.path.join(self.stage.path, basename),
+                self.stage.save_filename)
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+
 def stable_target(fetcher):
     """Returns whether the fetcher target is expected to have a stable
        checksum. This is only true if the target is a preexisting archive

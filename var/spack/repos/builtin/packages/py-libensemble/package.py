@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack import *
 
@@ -60,3 +61,28 @@ class PyLibensemble(PythonPackage):
     depends_on('tasmanian+python', type=('build', 'run'), when='+tasmanian')
     depends_on('py-pyyaml', type=('build', 'run'), when='+pyyaml')
     conflicts('~mpi', when='@:0.4.1')
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(join_path('examples', 'calling_scripts',
+                                                'regression_tests'))
+
+    def run_tutorial_tests(self, exe):
+        """Run example stand alone test"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'calling_scripts', 'regression_tests')
+
+        if not os.path.isfile(join_path(test_dir, exe)):
+            print('Skipping {0} test'.format(exe))
+            return
+
+        self.run_test(self.spec['python'].command.path,
+                      options=[exe, '--comms', 'local', '--nworkers', '2'],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+    def test(self):
+        self.run_tutorial_tests('test_uniform_sampling.py')

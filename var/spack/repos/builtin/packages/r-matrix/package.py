@@ -15,9 +15,9 @@ class RMatrix(RPackage):
     using 'LAPACK' and 'SuiteSparse' libraries."""
 
     homepage = "https://matrix.r-forge.r-project.org/"
-    url      = "https://cloud.r-project.org/src/contrib/Matrix_1.2-14.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Matrix"
+    cran = "Matrix"
 
+    version('1.3-4', sha256='ab42179d44545e99bbdf44bb6d04cab051dd2aba552b1f6edd51ed71b55f6c39')
     version('1.3-3', sha256='f77ec8de43ae7bfa19dfdc7e76bfefbb21b3223dbc174423fcde70b44cf36a3b')
     version('1.3-2', sha256='950ba5d91018e711fd2743b3486a50dc47ae9c271389fce587792f0a9aab9531')
     version('1.2-17', sha256='db43e6f0196fd5dfd05a7e88cac193877352c60d771d4ec8772763e645723fcc')
@@ -29,4 +29,5 @@ class RMatrix(RPackage):
     depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@1.2.13:', type=('build', 'run'))
     depends_on('r@3.6.0:', when='@1.3-2:', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@1.3-3:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

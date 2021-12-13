@@ -29,7 +29,7 @@ class Comgr(CMakePackage):
     version('3.7.0', sha256='73e56ec3c63dade24ad351e9340e2f8e127694028c1fb7cec5035376bf098432')
     version('3.5.0', sha256='25c963b46a82d76d55b2302e0e18aac8175362656a465549999ad13d07b689b9')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.

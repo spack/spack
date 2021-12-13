@@ -27,13 +27,17 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin']
 
+    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
+    version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
+    version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
     version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
     version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
     version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393', preferred=True)
+    version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a', preferred=True)
+    version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
     version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
     version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
     version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7')
@@ -45,6 +49,7 @@ class Python(AutotoolsPackage):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.12', sha256='33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46')
     version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
     version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
     version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
@@ -57,6 +62,7 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043')
     version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
     version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
     version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
@@ -793,6 +799,14 @@ for plat_specific in [True, False]:
         # install libraries into a Frameworks directory
         frameworkprefix = self.config_vars['PYTHONFRAMEWORKPREFIX']
 
+        # Get the active Xcode environment's Framework location.
+        macos_developerdir = os.environ.get('DEVELOPER_DIR')
+        if macos_developerdir and os.path.exists(macos_developerdir):
+            macos_developerdir = os.path.join(
+                macos_developerdir, 'Library', 'Frameworks')
+        else:
+            macos_developerdir = ''
+
         if '+shared' in self.spec:
             ldlibrary = self.config_vars['LDLIBRARY']
 
@@ -802,6 +816,9 @@ for plat_specific in [True, False]:
                 return LibraryList(os.path.join(libpl, ldlibrary))
             elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            elif macos_developerdir and \
+                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
+                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))

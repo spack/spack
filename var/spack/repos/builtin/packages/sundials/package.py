@@ -18,7 +18,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/llnl/sundials.git"
     tags = ['radiuss', 'e4s']
 
-    maintainers = ['cswoodward', 'gardner48', 'balos1']
+    maintainers = ['balos1', 'cswoodward', 'gardner48']
 
     # ==========================================================================
     # Versions
@@ -290,6 +290,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             args.extend([
+                '-DCMAKE_C_COMPILER=%s' % (spec['llvm-amdgpu'].prefix + '/bin/clang'),
                 '-DCMAKE_CXX_COMPILER=%s' % spec['hip'].hipcc,
                 '-DENABLE_HIP=ON',
                 '-DHIP_PATH=%s' % spec['hip'].prefix,

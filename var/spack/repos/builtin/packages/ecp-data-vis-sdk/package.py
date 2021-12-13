@@ -6,7 +6,7 @@
 from spack import *
 
 
-class EcpDataVisSdk(BundlePackage):
+class EcpDataVisSdk(BundlePackage, CudaPackage):
     """ECP Data & Vis SDK"""
 
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
@@ -30,6 +30,7 @@ class EcpDataVisSdk(BundlePackage):
     variant('veloc', default=False, description="Enable VeloC")
 
     # Vis
+    variant('sensei', default=False, description="Enable Sensei")
     variant('ascent', default=False, description="Enable Ascent")
     variant('paraview', default=False, description="Enable ParaView")
     variant('sz', default=False, description="Enable SZ")
@@ -40,8 +41,6 @@ class EcpDataVisSdk(BundlePackage):
     variant('cinema', default=False, description="Enable Cinema")
 
     # Outstanding build issues
-    variant('catalyst', default=False, description="Enable Catalyst")
-    conflicts('+catalyst')
     variant('visit', default=False, description="Enable VisIt")
     conflicts('+visit')
 
@@ -67,16 +66,29 @@ class EcpDataVisSdk(BundlePackage):
         if when:
             base_variant = when
 
+        def is_boolean(variant):
+            return '=' not in variant
+
         # Propagate variants to dependecy
         for v_when, v_then in propagate.items():
-            depends_on('{0} +{1}'.format(spec, v_then),
-                       when='{0} +{1}'.format(base_variant, v_when))
-            depends_on('{0} ~{1}'.format(spec, v_then),
-                       when='{0} ~{1}'.format(base_variant, v_when))
+            if is_boolean(v_when):
+                depends_on('{0} +{1}'.format(spec, v_then),
+                           when='{0} +{1}'.format(base_variant, v_when))
+                depends_on('{0} ~{1}'.format(spec, v_then),
+                           when='{0} ~{1}'.format(base_variant, v_when))
+            else:
+                depends_on('{0} {1}'.format(spec, v_then),
+                           when='{0} {1}'.format(base_variant, v_when))
+
+    def exclude_variants(variants, exclude):
+        return [variant for variant in variants if variant not in exclude]
 
     ############################################################
     # Dependencies
     ############################################################
+    cuda_arch_variants = ['cuda_arch={0}'.format(x)
+                          for x in CudaPackage.cuda_arch_values]
+
     dav_sdk_depends_on('adios2+shared+mpi+fortran+python+blosc+sst+ssc+dataman',
                        when='+adios2',
                        propagate=['hdf5', 'sz', 'zfp'])
@@ -92,24 +104,37 @@ class EcpDataVisSdk(BundlePackage):
 
     dav_sdk_depends_on('parallel-netcdf+shared+fortran', when='+pnetcdf')
 
-    dav_sdk_depends_on('unifyfs', when='+unifyfs ', propagate=['hdf5'])
+    dav_sdk_depends_on('unifyfs', when='+unifyfs ')
 
     dav_sdk_depends_on('veloc', when='+veloc')
 
+    # Currenly only develop has necessary patches. Update this after SC21 release
+    propagate_to_sensei = [(v, v) for v in ['adios2', 'ascent', 'hdf5', 'vtkm']]
+    propagate_to_sensei.extend([('paraview', 'catalyst'), ('visit', 'libsim')])
+    dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
+                       propagate=dict(propagate_to_sensei))
+
     dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
                        when='+ascent')
-    dav_sdk_depends_on('catalyst', when='+catalyst')
 
     depends_on('py-cinemasci', when='+cinema')
 
     # +adios2 is not yet enabled in the paraview package
-    dav_sdk_depends_on('paraview+shared+mpi+python3+kits',
-                       when='+paraview',
+    paraview_base_spec = 'paraview +mpi +python3 +kits'
+    # Want +shared when not using cuda
+    dav_sdk_depends_on(paraview_base_spec + '+shared ~cuda',
+                       when='+paraview ~cuda',
                        propagate=['hdf5'])
+    # Can't have +shared when using cuda, propagate cuda_arch_variants
+    dav_sdk_depends_on(paraview_base_spec + '~shared +cuda',
+                       when='+paraview +cuda',
+                       propagate=cuda_arch_variants)
 
     dav_sdk_depends_on('visit', when='+visit')
 
-    dav_sdk_depends_on('vtk-m+shared+mpi+openmp+rendering', when='+vtkm')
+    dav_sdk_depends_on('vtk-m+shared+mpi+openmp+rendering',
+                       when='+vtkm',
+                       propagate=['cuda'] + cuda_arch_variants)
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+fortran+python+random_access',
@@ -117,4 +142,6 @@ class EcpDataVisSdk(BundlePackage):
                        when='+sz',
                        propagate=['hdf5'])
 
-    dav_sdk_depends_on('zfp', when='+zfp')
+    dav_sdk_depends_on('zfp',
+                       when='+zfp',
+                       propagate=['cuda'] + cuda_arch_variants)

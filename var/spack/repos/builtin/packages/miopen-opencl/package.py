@@ -27,7 +27,7 @@ class MiopenOpencl(CMakePackage):
     version('3.7.0', sha256='f6a6ddd8d39bb76b7f7d91e68ade3b45e0201181145658c43b967065a354b103')
     version('3.5.0', sha256='aa362e69c4dce7f5751f0ee04c745735ea5454c8101050e9b92cc60fa3c0fb82')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('boost@1.67.0:1.73.0', type='link')

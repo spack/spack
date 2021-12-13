@@ -24,9 +24,11 @@ class Harminv(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
 
         return [
             '--enable-shared',
-            '--with-blas={0}'.format(spec['blas'].prefix.lib),
-            '--with-lapack={0}'.format(spec['lapack'].prefix.lib),
+            '--with-blas={0}'.format(blas.ld_flags),
+            '--with-lapack={0}'.format(lapack.ld_flags),
         ]

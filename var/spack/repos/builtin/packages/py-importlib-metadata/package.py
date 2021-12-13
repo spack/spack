@@ -12,8 +12,9 @@ class PyImportlibMetadata(PythonPackage):
     homepage = "https://importlib-metadata.readthedocs.io/"
     pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
 
+    version('4.8.2', sha256='75bdec14c397f528724c1bfd9709d660b33a4d2e77387a3358f20b848bb5e5fb')
     version('4.8.1', sha256='f284b3e11256ad1e5d03ab86bb2ccd6f5339688ff17a4d797a0fe7df326f23b1')
-    version('4.6.1', sha256='079ada16b7fc30dfbb5d13399a5113110dab1aa7c2bc62f66af75f0b717c8cac', preferred=True)
+    version('4.6.1', sha256='079ada16b7fc30dfbb5d13399a5113110dab1aa7c2bc62f66af75f0b717c8cac')
     version('3.10.1', sha256='c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1')
     version('3.10.0', sha256='c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a')
     version('2.0.0', sha256='77a540690e24b0305878c37ffd421785a6f7e53c8b5720d211b211de8d0e95da')

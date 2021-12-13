@@ -389,9 +389,8 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
                 dependency_variants = dependency_edge.spec.variants
                 for name, value in dependency_variants.items():
                     try:
-                        dependency_pkg.variants[name].validate_or_raise(
-                            value, pkg=dependency_pkg
-                        )
+                        v, _ = dependency_pkg.variants[name]
+                        v.validate_or_raise(value, pkg=dependency_pkg)
                     except Exception as e:
                         summary = (pkg_name + ": wrong variant used for a "
                                    "dependency in a 'depends_on' directive")
@@ -419,7 +418,8 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     errors = []
     for name, v in constraint.variants.items():
         try:
-            pkg.variants[name].validate_or_raise(v, pkg=pkg)
+            variant, _ = pkg.variants[name]
+            variant.validate_or_raise(v, pkg=pkg)
         except variant_exceptions as e:
             summary = pkg.name + ': wrong variant in "{0}" directive'
             summary = summary.format(directive)

@@ -29,7 +29,7 @@ class Atmi(CMakePackage):
     version('3.7.0', sha256='8df08489a10ee04cea911811393e0e7d91bd437fc1fd81a23a4e7ab924a974f3')
     version('3.5.0', sha256='3fb57d2e583fab82bd0582d0c2bccff059ca91122c18ac49a7770a8bb041a37b')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('rsync')

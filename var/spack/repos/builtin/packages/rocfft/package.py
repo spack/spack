@@ -33,7 +33,7 @@ class Rocfft(CMakePackage):
         'gfx1011', 'gfx1012'
     )
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('amdgpu_target', default='gfx701', multi=True, values=amdgpu_targets)
     variant('amdgpu_target_sram_ecc', default='none', multi=True, values=amdgpu_targets)
 

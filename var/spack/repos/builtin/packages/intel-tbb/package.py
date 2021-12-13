@@ -21,6 +21,8 @@ class IntelTbb(CMakePackage):
     url_prefix = 'https://github.com/oneapi-src/oneTBB/'
     url = url_prefix + 'archive/v2020.1.tar.gz'
 
+    maintainers = ['rscohn2']
+
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 

@@ -88,6 +88,9 @@ class Doxygen(CMakePackage):
     # Workaround for gcc getting stuck in an infinite loop
     patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
 
+    # Some GCC 7.x get stuck in an infinite loop
+    conflicts('%gcc@7.0:7.9', when='@1.9:')
+
     def patch(self):
         if self.spec['iconv'].name == 'libc':
             return

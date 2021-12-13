@@ -22,3 +22,10 @@ class Ip2(CMakePackage):
     version('1.1.2', sha256='73c6beec8fd463ec7ccba3633d8c5d53d385c43d507367efde918c2db0af42ab')
 
     depends_on('sp')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', '8', 'd'):
+            lib = find_libraries('libip2_' + suffix, root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('IP2_LIB' + suffix, lib[0])
+            env.set('IP2_INC' + suffix, join_path(self.prefix, 'include_' + suffix))

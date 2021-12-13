@@ -12,6 +12,7 @@ import llnl.util.tty as tty
 
 import spack.platforms
 import spack.util.executable
+from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 
 
@@ -260,7 +261,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
@@ -647,22 +648,74 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @run_after('install')
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
-           the compiler used to build the executable."""
+           the compiler used to build the executable.
+
+           .. caution::
+
+              The custom spec file by default with *always* pass ``-Wl,-rpath
+              ...`` to the linker, which will cause the linker to *ignore* the
+              value of ``LD_RUN_PATH``, which otherwise would be saved to the
+              binary as the default rpath. See the mitigation below for how to
+              temporarily disable this behavior.
+
+           Structure the specs file so that users can define a custom spec file
+           to suppress the spack-linked rpaths to facilitate rpath adjustment
+           for relocatable binaries. The custom spec file
+           :file:`{norpath}.spec` will have a single
+           line followed by two blanks lines::
+
+               *link_libgcc_rpath:
+
+
+
+           It can be passed to the GCC linker using the argument
+           ``--specs=norpath.spec`` to disable the automatic rpath and restore
+           the behavior of ``LD_RUN_PATH``."""
         if not self.spec_dir:
             tty.warn('Could not install specs for {0}.'.format(
                      self.spec.format('{name}{@version}')))
             return
 
         gcc = self.spec['gcc'].command
-        lines = gcc('-dumpspecs', output=str).strip().split('\n')
+        lines = gcc('-dumpspecs', output=str).splitlines(True)
         specs_file = join_path(self.spec_dir, 'specs')
+
+        # Save a backup
+        with open(specs_file + '.orig', 'w') as out:
+            out.writelines(lines)
+
+        # Find which directories have shared libraries
+        rpath_libdirs = []
+        for dir in ['lib', 'lib64']:
+            libdir = join_path(self.prefix, dir)
+            if glob.glob(join_path(libdir, "*." + dso_suffix)):
+                rpath_libdirs.append(libdir)
+
+        if not rpath_libdirs:
+            # No shared libraries
+            tty.warn('No dynamic libraries found in lib/lib64')
+            return
+
+        # Overwrite the specs file
         with open(specs_file, 'w') as out:
             for line in lines:
-                out.write(line + '\n')
-                if line.startswith('*link:'):
-                    out.write('-rpath {0}:{1} '.format(
-                              self.prefix.lib, self.prefix.lib64))
+                out.write(line)
+                if line.startswith('*link_libgcc:'):
+                    # Insert at start of line following link_libgcc, which gets
+                    # inserted into every call to the linker
+                    out.write('%(link_libgcc_rpath) ')
+
+            # Add easily-overridable rpath string at the end
+            out.write('*link_libgcc_rpath:\n')
+            if 'platform=darwin' in self.spec:
+                # macOS linker requires separate rpath commands
+                out.write(' '.join('-rpath ' + lib for lib in rpath_libdirs))
+            else:
+                # linux linker uses colon-separated rpath
+                out.write('-rpath ' + ':'.join(rpath_libdirs))
+            out.write('\n')
         set_install_permissions(specs_file)
+        tty.info('Wrote new spec file to {0}'.format(specs_file))
 
     def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names

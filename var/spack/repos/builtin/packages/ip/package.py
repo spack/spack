@@ -19,3 +19,10 @@ class Ip(CMakePackage):
     version('3.3.3', sha256='d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633')
 
     depends_on('sp')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', '8', 'd'):
+            lib = find_libraries('libip_4', root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('IP_LIB' + suffix, lib[0])
+            env.set('IP_INC' + suffix, join_path(self.prefix, 'include_' + suffix))
