@@ -148,17 +148,21 @@ def build_criteria_names(costs, tuples):
     num_criteria = len(priorities_names)
     num_build = (num_criteria - num_fixed - num_high_fixed) // 2
 
-    high_fixed = priorities_names[:num_high_fixed]
-    build = priorities_names[num_high_fixed:num_high_fixed + num_build]
-    fixed = priorities_names[num_high_fixed + num_build:num_high_fixed + num_build + num_fixed]
-    installed = priorities_names[num_high_fixed + num_build + num_fixed:]
+    build_start_idx = num_high_fixed
+    fixed_start_idx = num_high_fixed + num_build
+    installed_start_idx = num_high_fixed + num_build + num_fixed
+
+    high_fixed = priorities_names[:build_start_idx]
+    build = priorities_names[build_start_idx:fixed_start_idx]
+    fixed = priorities_names[fixed_start_idx:installed_start_idx]
+    installed = priorities_names[installed_start_idx:]
 
     # mapping from priority to index in cost list
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
     # make a list that has each name with its build and non-build priority
     criteria = [(p - high_fixed_priority_offset + 2 * num_build, None, name)
-                 for p, name in high_fixed]
+                for p, name in high_fixed]
     criteria += [
         (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
     ]
