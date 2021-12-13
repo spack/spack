@@ -146,7 +146,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
     depends_on('dd4hep @1.11:', when='+dd4hep')
-    depends_on('dd4hep @1.11: +geant4', when='+dd4hep +geant4')
+    depends_on('dd4hep @1.11: +ddg4', when='+dd4hep +geant4')
     depends_on('eigen @3.3.7:')
     depends_on('geant4', when='+fatras_geant4')
     depends_on('geant4', when='+geant4')
