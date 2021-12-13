@@ -10,6 +10,7 @@ from spack import *
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
+from spack.error import NoHeadersError
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -561,8 +562,16 @@ class Trilinos(CMakePackage, CudaPackage):
                 return
             depspec = spec[spack_name]
             libs = depspec.libs
+            try:
+                options.extend([
+                    define(trilinos_name + '_INCLUDE_DIRS', 
+                        depspec.headers.directories),
+                ])
+            except NoHeadersError:
+                # Handle case were depspec does not have headers
+                pass
+
             options.extend([
-                define(trilinos_name + '_INCLUDE_DIRS', depspec.headers.directories),
                 define(trilinos_name + '_ROOT', depspec.prefix),
                 define(trilinos_name + '_LIBRARY_NAMES', libs.names),
                 define(trilinos_name + '_LIBRARY_DIRS', libs.directories),
