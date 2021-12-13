@@ -18,6 +18,7 @@ class RVroom(RPackage):
     homepage = "https://github.com/r-lib/vroom"
     cran     = "vroom"
 
+    version('1.5.7', sha256='d087cb148f71c222fc89199d03df2502689149873414a6d89c2f006d3a109fde')
     version('1.5.5', sha256='1d45688c08f162a3300eda532d9e87d144f4bc686769a521bf9a12e3d3b465fe')
 
     depends_on('r@3.1:', type=('build', 'run'))
