@@ -26,11 +26,6 @@ class Rhash(MakefilePackage):
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb
 
-    def configure(self, spec, prefix):
-        set_executable('configure')
-        configure_ = Executable('./configure')
-        configure_('--prefix=')
-
     @when('@:1.4.1')
     def build(self, spec, prefix):
         # Doesn't build shared libraries by default
@@ -43,7 +38,7 @@ class Rhash(MakefilePackage):
 
     @when('@1.4.2:')
     def build(self, spec, prefix):
-        self.configure(spec, prefix)
+        configure('--prefix=')
         make()
 
     def check(self):
