@@ -50,11 +50,17 @@ class Rhash(MakefilePackage):
         # Default implmentation is to run both `make test` and `make check`.
         # `test` passes, but `check` fails, so only run `test`.
         make('test')
-        make('test-static-lib')
-
+        if self.spec.satisfies('@:1.4.1'):
+            make('test-static-lib')            
+        else:
+            make('test-lib-static')
+            
         if not self.spec.satisfies('platform=darwin'):
             make('test-shared')
-            make('test-shared-lib')
+            if self.spec.satisfies('@:1.4.1'):
+                make('test-shared-lib')
+            else:
+                make('test-lib-shared')
 
     @when('@:1.4.1')
     def install(self, spec, prefix):
