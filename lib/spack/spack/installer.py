@@ -1328,8 +1328,7 @@ class PackageInstaller(object):
             pkg (spack.package.Package): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
-            tty.verbose('Creating the installation directory {0}'
-                        .format(pkg.spec.prefix))
+            tty.debug('Creating the installation directory {0}'.format(pkg.spec.prefix))
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
