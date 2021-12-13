@@ -38,14 +38,7 @@ class Geant4(CMakePackage):
             default=_cxxstd_values[0],
             values=_cxxstd_values,
             multi=False,
-            description='Use the specified C++ standard when building.',
-            when='@10')
-    variant('cxxstd',
-            default=_cxxstd_values[2],
-            values=_cxxstd_values,
-            multi=False,
-            description='Use the specified C++ standard when building.',
-            when='@11')
+            description='Use the specified C++ standard when building.')
     conflicts('cxxstd=11', when='@11:', msg='geant4@11: only supports cxxstd=17')
     conflicts('cxxstd=14', when='@11:', msg='geant4@11: only supports cxxstd=17')
 
