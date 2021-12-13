@@ -55,7 +55,7 @@ def test_url_parse():
     if sys.platform == "win32":
         spack_root = spack_root.replace('\\', '/')
 
-    assert(parsed.path == spack_root)
+    assert(parsed.netloc + parsed.path == spack_root)
 
     # Test that sticking the spack root at the end of a posix path resolves
     # correctly.
