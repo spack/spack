@@ -40,8 +40,6 @@ class CbtfKrell(CMakePackage):
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
     variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
@@ -66,10 +64,7 @@ class CbtfKrell(CMakePackage):
     depends_on("dyninst@10.1.0", when='@1.9.3:9999')
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
-
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999', type=('build', 'link', 'run'))
 
     # For Xerces-C
@@ -78,10 +73,6 @@ class CbtfKrell(CMakePackage):
     # For CBTF
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
     depends_on("cbtf@1.9.3:9999", when='@1.9.3:9999', type=('build', 'link', 'run'))
-
-    # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on("cbtf@1.9.3:9999+cti", when='@1.9.3:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
     depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
