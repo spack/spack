@@ -38,7 +38,7 @@ class Atompaw(AutotoolsPackage):
         if self.spec.satisfies('%fj') and name  == 'fflags':
             opt_flag_found = any(f in self.compiler.opt_flags for f in flags)
             if not opt_flag_found:
-                 flags.append('-Kfast')
+                flags.append('-Kfast')
         return (flags, None, None)
 
     def configure_args(self):
@@ -49,4 +49,4 @@ class Atompaw(AutotoolsPackage):
             "--enable-libxc",
             "--with-libxc-incs=-I%s" % spec["libxc"].prefix.include,
             "--with-libxc-libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
-            ]
+        ]
