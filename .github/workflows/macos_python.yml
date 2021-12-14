@@ -27,7 +27,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
     - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
@@ -42,7 +42,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
     - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
@@ -55,7 +55,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
     - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: spack install
       run: |
         . .github/workflows/install_spack.sh
