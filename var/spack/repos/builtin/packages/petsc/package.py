@@ -653,7 +653,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                           'src', 'ksp', 'ksp', 'tutorials')
 
         if os.path.exists(w_dir):
-            self.run_ex30_test(runexe, runopt, w_dir)
+            self.run_ex50_test(runexe, runopt, w_dir)
 
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir)
@@ -668,5 +668,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if os.path.exists(w_dir):
             if '+kokkos' in self.spec:
                 self.run_ex3k_test(runexe, runopt, w_dir)
+            else:
+                print('Skipping petsc test: SNES tutorial example ex3k requires +kokkos')
         else:
             print('Skipping petsc test: SNES tutorial example is missing')
