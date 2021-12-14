@@ -17,5 +17,4 @@ class PyLizard(PythonPackage):
 
     version('1.17.9', sha256='76ee0e631d985bea1dd6521a03c6c2fa9dce5a2248b3d26c49890e9e085b7aed')
 
-    depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
