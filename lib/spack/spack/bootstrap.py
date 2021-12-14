@@ -881,9 +881,13 @@ def _core_requirements():
         'gzip': _missing_executable('gzip', 'compress/decompress code archives'),
         'unzip': _missing_executable('unzip', 'compress/decompress code archives'),
         'bzip2': _missing_executable('bzip2', 'compress/decompress code archives'),
-        'xz': _missing_executable('xz', 'compress/decompress code archives'),
         'git': _missing_executable('git', 'fetch/manage git repositories')
     }
+    if platform.system().lower() == 'linux':
+        _core_system_exes['xz'] = _missing_executable(
+            'xz', 'compress/decompress code archives'
+        )
+
     # Executables that are not bootstrapped yet
     result = [functools.partial(_system_executable, exe, msg)
               for exe, msg in _core_system_exes.items()]
