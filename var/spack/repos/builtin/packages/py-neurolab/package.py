@@ -15,3 +15,4 @@ class PyNeurolab(PythonPackage):
     version('0.3.5', sha256='96ec311988383c63664f3325668f27c30561cf4349e3bc5420665c042a3b9191')
 
     depends_on('py-numpy', type=('build', 'run'))
+    # depends_on('py-setuptools', type='build')
