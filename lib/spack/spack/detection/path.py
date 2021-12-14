@@ -140,12 +140,8 @@ def by_library(packages_to_check, path_hints=None):
                 for pkg in pkgs:
                     pkg_to_found_libs[pkg].add(path)
 
-    print(path_to_lib_name)
-    print(lib_pattern_to_pkgs)
-    print(pkg_to_found_libs)
-
     pkg_to_entries = collections.defaultdict(list)
-    resolved_specs = {}  # spec -> exe found for the spec
+    resolved_specs = {}  # spec -> lib found for the spec
 
     for pkg, libs in pkg_to_found_libs.items():
         if not hasattr(pkg, 'determine_spec_details'):
@@ -279,10 +275,10 @@ def by_executable(packages_to_check, path_hints=None):
                 )
 
             for spec in specs:
-                pkg_prefix = library_prefix(prefix)
+                pkg_prefix = executable_prefix(prefix)
 
                 if not pkg_prefix:
-                    msg = "no lib/ or lib64/ dir found in {0}. Cannot add it as a Spack package"
+                    msg = "no bin/ dir found in {0}. Cannot add it as a Spack package"
                     llnl.util.tty.debug(msg.format(prefix))
                     continue
 
