@@ -775,14 +775,26 @@ class SpackSolverSetup(object):
             ))
 
     def cfg_required_rules(self, pkg):
-        test_rules = {
-            "openmpi": [
-                "@4.0.2+static",  # Example stanza member
-                "@4.0.1~static"
-            ]  # The list of specs is an example of a stanza
-        }
+        experimental_hack_selector = 1
+        if experimental_hack_selector == 1:
+            # The goal here is to say "if we need to build MPI, then it has to
+            # either satisfy @4.0.2+static or @4.0.1~static"
+            test_rules = [
+                ("openmpi",
+                 # This list of specs is an example of a stanza
+                 ["@4.0.2+static",  # Example stanza member
+                  "@4.0.1~static"]
+                )
+            ]
+        elif experimental_hack_selector == 2:
+            # Example of combinatoric constraints, you can mix either compiler
+            # with either version, but it must be one of the 4 combinations
+            test_rules = [
+                ("openmpi", ["%gcc", "%clang"]),
+                ("openmpi", ["@4.0.1", "@4.0.0"])
+            ]
         stanza_id = 0
-        for pkg_name, stanza in test_rules.items():
+        for pkg_name, stanza in test_rules:
             self.gen.fact(
                 fn.required_stanza(pkg_name, stanza_id)
             )
