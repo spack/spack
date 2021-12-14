@@ -41,7 +41,7 @@ class Amdlibm(SConsPackage):
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
 
-    conflicts("%gcc@11.2.0:9.1.0", msg="Supported GCC versions are from 9.2.0 to 11.1.0")
+    conflicts("%gcc@9.1.0:11.2.0", msg="Supported GCC versions are from 9.2.0 to 11.1.0")
 
     def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm """
