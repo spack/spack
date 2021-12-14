@@ -273,6 +273,7 @@ def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
     spack.config.validate(data, spack.schema.env.schema, filename)
+    #return
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
