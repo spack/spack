@@ -414,6 +414,9 @@ node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_v
 % Generalization of prior section
 %-----------------------------------------------------------------------------
 
+% TODO: allow weighting the conditions
+% TODO: for a condition_group, it's probably OK if more than 1 member applies
+
 % If a user wants, they can define a "condition_group": a set of constraints
 % where one of them must be true. A condition corresponds to a full spec
 % which may constrain version, compiler, etc.
