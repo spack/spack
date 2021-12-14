@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import contextlib
 import fnmatch
@@ -10,6 +10,7 @@ import functools
 import json
 import os
 import os.path
+import platform
 import re
 import sys
 import sysconfig
@@ -837,3 +838,149 @@ def ensure_flake8_in_path_or_raise():
     """Ensure that flake8 is in the PATH or raise."""
     executable, root_spec = 'flake8', flake8_root_spec()
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+
+
+def _missing_executable(name, purpose):
+    """Message to be printed if an executable is not found"""
+    msg = 'MISSING: "{0}" executable (required to {1})'
+    return msg.format(name, purpose)
+
+
+def _system_executable(exes, msg):
+    """Query availability of executables to be found on the system"""
+    if isinstance(exes, six.string_types):
+        exes = (exes,)
+    if spack.util.executable.which_string(*exes):
+        return True, None
+    return False, msg
+
+
+def _required_python_module(module, query_spec, msg):
+    """Query availability of required Python modules"""
+    if _python_import(module) or _try_import_from_store(module, query_spec):
+        return True, None
+    return False, msg
+
+
+def _required_executable(exes, query_spec, msg):
+    """Query availability of required executables"""
+    if isinstance(exes, six.string_types):
+        exes = (exes,)
+    if (spack.util.executable.which_string(*exes) or
+            _executables_in_store(exes, query_spec)):
+        return True, None
+    return False, msg
+
+
+def _core_requirements():
+    _core_system_exes = {
+        'make': _missing_executable('make', 'build software from sources'),
+        'patch': _missing_executable('patch', 'patch source code before building'),
+        'bash': _missing_executable('bash',  'use Spack compiler wrapper'),
+        'tar': _missing_executable('tar', 'manage code archives'),
+        'gzip': _missing_executable('gzip', 'compress/decompress code archives'),
+        'unzip': _missing_executable('unzip', 'compress/decompress code archives'),
+        'bzip2': _missing_executable('bzip2', 'compress/decompress code archives'),
+        'xz': _missing_executable('xz', 'compress/decompress code archives'),
+        'git': _missing_executable('git', 'fetch/manage git repositories')
+    }
+    # Executables that are not bootstrapped yet
+    result = [functools.partial(_system_executable, exe, msg)
+              for exe, msg in _core_system_exes.items()]
+    # Python modules
+    result += [
+        functools.partial(
+            _required_python_module, 'clingo', clingo_root_spec(),
+            'MISSING: "clingo" python module (required to concretize specs)'
+        )
+    ]
+    return result
+
+
+def _buildcache_requirements():
+    _buildcache_exes = {
+        'file': _missing_executable('file', 'analyze files for buildcaches'),
+        ('gpg2', 'gpg'): _missing_executable('gpg2', 'sign/verify buildcaches')
+    }
+    if platform.system().lower() == 'darwin':
+        _buildcache_exes['otool'] = _missing_executable('otool', 'relocate binaries')
+
+    # Executables that are not bootstrapped yet
+    result = [functools.partial(_system_executable, exe, msg)
+              for exe, msg in _buildcache_exes.items()]
+
+    if platform.system().lower() == 'linux':
+        result.append(functools.partial(
+            _required_executable, 'patchelf', patchelf_root_spec(),
+            _missing_executable('patchelf', 'relocate binaries')
+        ))
+
+    return result
+
+
+def _optional_requirements():
+    _optional_exes = {
+        'zstd': _missing_executable('zstd', 'compress/decompress code archives'),
+        'svn': _missing_executable('svn', 'manage subversion repositories'),
+        'hg': _missing_executable('hg', 'manage mercurial repositories')
+    }
+    # Executables that are not bootstrapped yet
+    result = [functools.partial(_system_executable, exe, msg)
+              for exe, msg in _optional_exes.items()]
+    return result
+
+
+def _development_requirements():
+    return [
+        functools.partial(
+            _required_executable, 'isort', isort_root_spec(),
+            'MISSING: "isort" executable (required for style checks)'
+        ),
+        functools.partial(
+            _required_executable, 'mypy', mypy_root_spec(),
+            'MISSING: "mypy" executable (required for style checks)'
+        ),
+        functools.partial(
+            _required_executable, 'flake8', flake8_root_spec(),
+            'MISSING: "flake8" executable (required for style checks)'
+        ),
+        functools.partial(
+            _required_executable, 'black', black_root_spec(),
+            'MISSING: "black" executable (required for code formatting)'
+        )
+    ]
+
+
+def status_message(section):
+    """Return a status message to be printed to screen that refers to the
+    section passed as argument.
+
+    Args:
+        section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
+    """
+    ok_token, ko_token = "\U0001F44D", "\U0001F44E"
+
+    msg, test_fns = '', []
+    if section == 'core':
+        msg = "{0} @*{{Core Functionalities}}"
+        test_fns = _core_requirements()
+    elif section == 'buildcache':
+        msg = "{0} @*{{Binary packages}}"
+        test_fns = _buildcache_requirements()
+    elif section == 'optional':
+        msg = "{0} @*{{Optional Features}}"
+        test_fns = _optional_requirements()
+    elif section == 'develop':
+        msg = "{0} @*{{Development Dependencies}}"
+        test_fns = _development_requirements()
+
+    with ensure_bootstrap_configuration():
+        missing_software = False
+        for test_fn in test_fns:
+            ok, err_msg = test_fn()
+            if not ok:
+                missing_software = True
+                msg += "\n  " + err_msg
+        msg += '\n'
+        msg = msg.format(ok_token if not missing_software else ko_token)
+    return msg
