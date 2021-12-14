@@ -18,8 +18,8 @@ class PyGosam(PythonPackage):
 
     version('2.1.1', tag='2.1.1', commit='4b98559212dfcb71f9d983a3a605e4693ac7f83f')
     version('2.0.4', sha256='faf621c70f66d9dffc16ac5cce66258067f39f686d722a4867eeb759fcde4f44',
-            url='https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz')
-    version('2.0.3', tag='v2.0.3', commit='4146ab23a06b7c57c10fb36df60758d34aa58387')
+            url='https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz', deprecated=True)
+    version('2.0.3', tag='v2.0.3', commit='4146ab23a06b7c57c10fb36df60758d34aa58387', deprecated=True)
 
     depends_on('form', type='run')
     depends_on('qgraf', type='run')

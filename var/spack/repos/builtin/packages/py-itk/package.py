@@ -20,7 +20,7 @@ class PyItk(Package):
         version('5.1.1-cp35',
                 url='https://pypi.io/packages/cp35/i/itk/itk-5.1.1-cp35-cp35m-macosx_10_9_x86_64.whl',
                 sha256='e94d08a142b72b7219c828e7ca34788b59612fc10dbb2c65afd4457e9810eed1',
-                expand=False)
+                expand=False, deprecated=True)
         version('5.1.1-cp36',
                 url='https://pypi.io/packages/cp35/i/itk/itk-5.1.1-cp36-cp36m-macosx_10_9_x86_64.whl',
                 sha256='94b3c8d2ceba1685ae7e7f2b3bb88bdcd15dee93d369177eb03f676062f7e06f',
@@ -55,7 +55,7 @@ class PyItk(Package):
         version('5.1.1-cp35',
                 url='https://pypi.io/packages/cp35/i/itk/itk-5.1.1-cp35-cp35m-manylinux1_x86_64.whl',
                 sha256='02ba37cda1f4190ca34133e056f9acd5c0104da64455dc9e0cc6bb3eec47f7a6',
-                expand=False)
+                expand=False, deprecated=True)
         version('5.1.1-cp36',
                 url='https://pypi.io/packages/cp36/i/itk/itk-5.1.1-cp36-cp36m-manylinux1_x86_64.whl',
                 sha256='a7602fe2ee031bf70acf54e1aef6e0e01e9fa821ca1926fc70fe3db9167a50f2',
