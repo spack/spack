@@ -50,10 +50,11 @@ class Meep(AutotoolsPackage):
     depends_on('hdf5~mpi',    when='+hdf5~mpi')
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
     depends_on('gsl',         when='+gsl')
-    depends_on('python',      when='+python')
-    depends_on('py-numpy',    when='+python')
-    depends_on('py-mpi4py',   when='+python+mpi')
-    depends_on('swig',        when='+python')
+    with when('+python'):
+        depends_on('python')
+        depends_on('py-numpy')
+        depends_on('swig')
+        depends_on('py-mpi4py', when='+mpi')
 
     def configure_args(self):
         spec = self.spec
