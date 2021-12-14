@@ -437,17 +437,17 @@ def ci_rebuild(args):
             cdash_build_name, cdash_base_url, cdash_project,
             cdash_site, job_spec_buildgroup)
 
+        cdash_upload_url = '{0}/submit.php?project={1}'.format(
+            cdash_base_url, cdash_project_enc)
+
+        install_args.extend([
+            '--cdash-upload-url', cdash_upload_url,
+            '--cdash-build', cdash_build_name,
+            '--cdash-site', cdash_site,
+            '--cdash-buildstamp', cdash_build_stamp,
+        ])
+
         if cdash_build_id is not None:
-            cdash_upload_url = '{0}/submit.php?project={1}'.format(
-                cdash_base_url, cdash_project_enc)
-
-            install_args.extend([
-                '--cdash-upload-url', cdash_upload_url,
-                '--cdash-build', cdash_build_name,
-                '--cdash-site', cdash_site,
-                '--cdash-buildstamp', cdash_build_stamp,
-            ])
-
             tty.debug('CDash: Relating build with dependency builds')
             spack_ci.relate_cdash_builds(
                 spec_map, cdash_base_url, cdash_build_id, cdash_project,
