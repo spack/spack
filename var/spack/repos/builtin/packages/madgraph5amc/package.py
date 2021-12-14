@@ -90,6 +90,9 @@ class Madgraph5amc(Package):
             make(parallel=False)
 
         with working_dir(join_path('vendor', 'StdHEP')):
+            for m in ['mcfio/arch_mcfio', 'src/stdhep_arch']:
+                arch = FileFilter(m)
+                arch.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
             make(parallel=False)
 
         if '+atlas' in spec:

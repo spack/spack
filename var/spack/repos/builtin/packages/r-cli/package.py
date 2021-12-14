@@ -19,6 +19,7 @@ class RCli(RPackage):
     homepage = "https://github.com/r-lib/cli"
     cran = "cli"
 
+    version('3.1.0', sha256='c70a61830bf706a84c59eb74a809978846cee93742198ab4192742a5df1ace11')
     version('3.0.1', sha256='d89a25b6cd760e157605676e104ce65473a7d8d64c289efdd9640e949968b4fd')
     version('2.2.0', sha256='39a77af61724f8cc1f5117011e17bb2a488cbac61a7c112db078a675d3ac40b8')
     version('2.0.2', sha256='490834e5b80eb036befa0e150996bcab1c4d5d168c3d45209926e52d0d5413b6')
