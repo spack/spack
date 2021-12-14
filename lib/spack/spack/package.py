@@ -183,7 +183,9 @@ class DetectablePackageMeta(object):
         # pulling in filenames with unexpected suffixes, but this allows
         # for example detecting "foo.exe" when the package writer specified
         # that "foo" was a possible executable.
-        if hasattr(cls, 'executables'):
+        # If a package has the executables attribute then it's
+        # assumed to be detectable
+        if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
             @property
             def platform_executables(self):
                 def to_windows_exe(exe):

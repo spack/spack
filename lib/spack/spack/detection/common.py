@@ -114,6 +114,11 @@ def is_executable(file_path):
     return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
 
 
+def is_readable(file_path):
+    """Return True if the path passed as argument is readable"""
+    return os.path.isfile(file_path) and os.access(file_path, os.R_OK)
+
+
 def _convert_to_iterable(single_val_or_multiple):
     x = single_val_or_multiple
     if x is None:
@@ -148,6 +153,30 @@ def executable_prefix(executable_dir):
         return executable_dir
     idx = components.index('bin')
     return os.sep.join(components[:idx])
+
+
+def library_prefix(library_dir):
+    """Given a directory where an library is found, guess the prefix
+    (i.e. the "root" directory of that installation) and return it.
+
+    Args:
+        library_dir: directory where an library is found
+    """
+    # Given a prefix where an library is found, assuming that prefix
+    # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
+    # to get a Spack-compatible prefix
+    assert os.path.isdir(library_dir)
+
+    components = library_dir.split(os.sep)
+    if 'lib64' in components:
+        idx = components.index('lib64')
+        return os.sep.join(components[:idx])
+    elif 'lib' in components:
+        idx = components.index('lib')
+        return os.sep.join(components[:idx])
+    else:
+        return None
+
 
 
 def update_configuration(detected_packages, scope=None, buildable=True):
