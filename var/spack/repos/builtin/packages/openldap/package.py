@@ -94,7 +94,7 @@ class Openldap(AutotoolsPackage):
         if self.spec.satisfies('@2.6.0: tls=gnutls'):
             args += ['--disable-autoca']
 
-        if self.spec.satisfies('@2.5.0:')
+        if self.spec.satisfies('@2.5.0:'):
             args += self.enable_or_disable('wt')
 
         args += self.enable_or_disable('perl')
