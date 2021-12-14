@@ -382,9 +382,9 @@ external_conditions_hold(Package, LocalIndex) :-
 #defined external_spec_condition/4.
 #defined external_spec_condition/5.
 
-%--------------------------
+%-----------------------------------------------------------------------------
 % Config required semantics
-%--------------------------
+%-----------------------------------------------------------------------------
 
 % A package may have an associated "stanza": a set of specs -
 % one of which must be applied (but only one of them), that spec
@@ -409,6 +409,23 @@ node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_v
 % It looks like that is handled by asp._spec_clauses. That function would need
 % to be modified to cover this section though (since unlike there, the
 % constraints are only applied if the associated stanza member is selected).
+
+%-----------------------------------------------------------------------------
+% Generalization of prior section
+%-----------------------------------------------------------------------------
+
+% If a user wants, they can define a "condition_group": a set of constraints
+% where one of them must be true. A condition corresponds to a full spec
+% which may constrain version, compiler, etc.
+%1 { condition(Package, Y) : condition_group_member(Y, X) } :- node(Package), condition_group(Package, X).
+% You can skip defining a condition_group and define a condition directly
+% in asp.py (this is if have a single spec and you definitely want to constrain
+% by it)
+% Note: if the body of the following rule contains "node(Package)", then users
+% can define "condition(Package, Y)" directly and that spec will only constrain
+% the concretization if the package is used
+%version(Package, X) :- node(Package), condition(Package, Y), condition_version_required(Y, X).
+% So on and so forth for compiler, compiler version, virtuals, etc.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
