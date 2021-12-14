@@ -25,6 +25,7 @@ class Amdlibm(SConsPackage):
     # of master branch.
     # To install amdlibm from latest master branch:
     # spack install amdlibm ^amdlibm@master
+    version("3.1", branch="aocl-3.1")
     version("3.0", branch="aocl-3.0")
     version("2.2", commit="4033e022da428125747e118ccd6fdd9cee21c470")
 
@@ -32,6 +33,7 @@ class Amdlibm(SConsPackage):
             description="Building with verbosity")
 
     # Mandatory dependencies
+    depends_on("python@3.6.2", when="%aocc@3.2.0:", type=("build", "run"))
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
     depends_on("mpfr", type=("link"))
@@ -39,25 +41,29 @@ class Amdlibm(SConsPackage):
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
 
-    conflicts("%gcc@:9.1", msg="Minimum required GCC version is 9.2.0")
+    conflicts("%gcc@11.2.0:9.1.0", msg="Supported GCC versions are from 9.2.0 to 11.1.0")
 
     def build_args(self, spec, prefix):
         """Setting build arguments for amdlibm """
         args = ["--prefix={0}".format(prefix)]
 
-        if "%aocc" in spec:
-            args.append("--compiler=aocc")
-
         # we are circumventing the use of
         # Spacks compiler wrappers because
         # SCons wipes out all environment variables.
-        args.append("CC={0}".format(self.compiler.cc))
-        args.append("CXX={0}".format(self.compiler.cxx))
+        if "@:3.0 %aocc" in spec:
+            args.append("--compiler=aocc")
+
+        if "@:3.0 " in spec:
+            args.append("CC={0}".format(self.compiler.cc))
+            args.append("CXX={0}".format(self.compiler.cxx))
+        else:
+            args.append("ALM_CC={0}".format(self.compiler.cc))
+            args.append("ALM_CXX={0}".format(self.compiler.cxx))
 
         if "+verbose" in spec:
-            args.append("verbose=1")
+            args.append("--verbose=1")
         else:
-            args.append("verbose=0")
+            args.append("--verbose=0")
 
         return args
 
