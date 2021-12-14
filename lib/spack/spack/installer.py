@@ -794,7 +794,7 @@ class PackageInstaller(object):
                     .format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg))
 
-            # Attempt to get a write lock to ensure another process does not
+            # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
             # installed
             ltype, lock = self._ensure_locked('read', dep_pkg)
