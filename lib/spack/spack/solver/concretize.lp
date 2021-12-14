@@ -382,6 +382,27 @@ external_conditions_hold(Package, LocalIndex) :-
 #defined external_spec_condition/4.
 #defined external_spec_condition/5.
 
+%--------------------------
+% Config required semantics
+%--------------------------
+
+% A package may have an associated "stanza": a set of specs -
+% one of which must be applied (but only one of them), that spec
+% is represented here with cfg_required(Package, Y), and may apply multiple
+% constraints (version, compiler, or variant settings).
+1 { cfg_required(Package, Y) : stanza_member(Y, X) } :- node(Package), required_stanza(Package, X).
+% asp.py must define required_stanzas
+% For each stanza, asp.py must define stanza_members for that stanza
+% For each stanza_member, asp.py must define cfg_*_required (the set of spec
+% constraints which apply for that stanza member)
+version(Package, X) :- cfg_required(Package, Y), cfg_version_required(Y, X).
+variant_value(Package, Variant, Value) :- cfg_required(Package, Y), cfg_variant_required(Y, Variant, Value).
+node_compiler(Package, X) :- cfg_required(Package, Y), cfg_compiler_required(Y, X).
+node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_version_required(Y, C, V).
+
+% TODO: don't warn if program is missing cfg_version_required
+% #defined cfg_version_required/1.
+
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------

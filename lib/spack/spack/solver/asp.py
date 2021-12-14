@@ -774,6 +774,33 @@ class SpackSolverSetup(object):
                 pkg.name, cspec.name, cspec.version, -i * 100
             ))
 
+    def cfg_required_rules(self, pkg):
+        test_rules = {
+            "openmpi": [
+                "@4.0.2+static",
+                "@4.0.1~static"
+            ]
+        }
+        stanza_id = 0
+        for pkg_name, stanza in test_rules.items():
+            self.gen.fact(
+                fn.required_stanza(pkg_name, stanza_id)
+            )
+            member_id = 0
+            for spec_str in stanza:
+                self.gen.fact(fn.stanza_member(member_id, stanza_id))
+                spec, = spack.cmd.parse_specs(spec_str)
+                if spec.version:
+                    self.gen.fact(
+                        fn.cfg_version_required(member_id, spec.version)
+                    )
+                for name, variant in spec.variants.items():
+                    self.gen.fact(
+                        fn.cfg_variant_required(member_id, name, variant.value)
+                    )
+                member_id += 1
+            stanza_id += 1
+
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
@@ -847,6 +874,8 @@ class SpackSolverSetup(object):
                 fn.pkg_provider_preference(pkg.name, v, p, i)
             )
         )
+
+        self.cfg_required_rules(pkg)
 
     def condition(self, required_spec, imposed_spec=None, name=None):
         """Generate facts for a dependency or virtual provider condition.
