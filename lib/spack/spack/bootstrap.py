@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 import contextlib
 import fnmatch
@@ -963,6 +963,9 @@ def status_message(section):
         section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
     """
     ok_token, ko_token = "\U0001F44D", "\U0001F44E"
+    if sys.version_info[:2] == (2, 7):
+        ok_token = '[PASS]'
+        ko_token = '[FAIL]'
 
     msg, test_fns = '', []
     if section == 'core':
