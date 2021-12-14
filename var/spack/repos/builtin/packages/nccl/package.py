@@ -5,7 +5,6 @@
 
 import re
 
-
 from spack import *
 
 
