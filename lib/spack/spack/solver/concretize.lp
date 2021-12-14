@@ -403,6 +403,13 @@ node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_v
 % TODO: don't warn if program is missing cfg_version_required
 % #defined cfg_version_required/1.
 
+% TODO: if the user provides a constraint on the command line, then it will
+% need to constrain the spec in a similar way (although in that case
+% there is no such thing as a stanza: there is just one spec to constrain by).
+% It looks like that is handled by asp._spec_clauses. That function would need
+% to be modified to cover this section though (since unlike there, the
+% constraints are only applied if the associated stanza member is selected).
+
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
