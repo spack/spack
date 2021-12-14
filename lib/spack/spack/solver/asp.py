@@ -406,7 +406,7 @@ class Result(object):
         else:
             conflicts = self.format_cores()
 
-        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        raise UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -2053,3 +2053,33 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
     return driver.solve(
         setup, specs, dump, models, timers, stats, tests, reuse
     )
+
+
+class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
+    """
+    Subclass for new constructor signature for new concretizer
+    """
+    def __init__(self, provided, conflicts):
+        indented = ['  %s\n' % conflict for conflict in conflicts]
+        conflict_msg = ''.join(indented)
+        issue = 'conflicts' if full_cores else 'errors'
+        msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
+
+        newline_indent = '\n    '
+        if not full_cores:
+            msg += newline_indent + 'To see full clingo unsat cores, '
+            msg += 're-run with `spack --show-cores=full`'
+        if not minimize_cores or not full_cores:
+            # not solver.minimalize_cores and not solver.full_cores impossible
+            msg += newline_indent + 'For full, subset-minimal unsat cores, '
+            msg += 're-run with `spack --show-cores=minimized'
+            msg += newline_indent
+            msg += 'Warning: This may take (up to) hours for some specs'
+
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+
+        self.provided = provided
+
+        # Add attribute expected of the superclass interface
+        self.required = None
+        self.constraint_type = None

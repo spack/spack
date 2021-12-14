@@ -123,33 +123,10 @@ class UnsatisfiableSpecError(SpecError):
     For original concretizer, provide the requirement that was violated when
     raising.
     """
-    def __init__(self, provided, required=None, constraint_type=None, conflicts=None):
-        # required is only set by the original concretizer.
-        # clingo concretizer handles error messages differently.
-        if required is not None:
-            assert not conflicts  # can't mix formats
-            super(UnsatisfiableSpecError, self).__init__(
-                "%s does not satisfy %s" % (provided, required))
-        else:
-            import spack.solver.asp as solver  # avoid circular import
-
-            indented = ['  %s\n' % conflict for conflict in conflicts]
-            conflict_msg = ''.join(indented)
-            issue = 'conflicts' if solver.full_cores else 'errors'
-            msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
-
-            newline_indent = '\n    '
-            if not solver.full_cores:
-                msg += newline_indent + 'To see full clingo unsat cores, '
-                msg += 're-run with `spack --show-cores=full`'
-            if not solver.minimize_cores or not solver.full_cores:
-                # not solver.minimalize_cores and not solver.full_cores impossible
-                msg += newline_indent + 'For full, subset-minimal unsat cores, '
-                msg += 're-run with `spack --show-cores=minimized'
-                msg += newline_indent
-                msg += 'Warning: This may take (up to) hours for some specs'
-
-            super(UnsatisfiableSpecError, self).__init__(msg)
+    def __init__(self, provided, required, constraint_type):
+        # This is only the entrypoint for old concretizer errors
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
 
         self.provided = provided
         self.required = required
