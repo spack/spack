@@ -35,6 +35,7 @@ class Openldap(AutotoolsPackage):
     variant('static', default=False, description='Build static libraries')
     variant('shared', default=True, description='Build shared libraries')
     variant('dynamic', default=True, description='Enable linking built binaries with dynamic libs')
+    variant('wt', default=False, description='Enable WiredTiger backend', when='@2.5.0:')
     conflicts('~static', when='~shared')
 
     depends_on('icu4c', when='+icu')
@@ -92,6 +93,9 @@ class Openldap(AutotoolsPackage):
         args.append('--with-tls=' + self.spec.variants['tls'].value)
         if self.spec.satisfies('@2.6.0: tls=gnutls'):
             args += ['--disable-autoca']
+
+        if self.spec.satisfies('@2.5.0:')
+            args += self.enable_or_disable('wt')
 
         args += self.enable_or_disable('perl')
 
