@@ -35,12 +35,12 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert len(c['a_not_b']) == len(c['b_not_a'])
 
     # ensure that variant diffs are in here the result
-    assert ['variant_value', 'mpileaks debug False'] in c['a_not_b']
-    assert ['variant_value', 'mpileaks debug True'] in c['b_not_a']
+    assert ['variant_value', '0 mpileaks debug False'] in c['a_not_b']
+    assert ['variant_value', '0 mpileaks debug True'] in c['b_not_a']
 
     # ensure that hash diffs are in here the result
-    assert ['hash', 'mpileaks %s' % specA.dag_hash()] in c['a_not_b']
-    assert ['hash', 'mpileaks %s' % specB.dag_hash()] in c['b_not_a']
+    assert ['hash', '0 mpileaks %s' % specA.dag_hash()] in c['a_not_b']
+    assert ['hash', '0 mpileaks %s' % specB.dag_hash()] in c['b_not_a']
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -69,7 +69,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     # spot check attributes in the intersection to ensure they describe the spec
     assert "intersect" in result
-    assert all(["node", dep] in result["intersect"] for dep in (
+    assert all(["node", "0 %s" % dep] in result["intersect"] for dep in (
         "mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich"
     ))
     assert all(
@@ -105,8 +105,8 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
                       "mpileaks/{0}".format(no_debug_hash))
     result = sjson.load(output)
 
-    assert ['hash', 'mpileaks %s' % debug_hash] in result['a_not_b']
-    assert ['variant_value', 'mpileaks debug True'] in result['a_not_b']
+    assert ['hash', '0 mpileaks %s' % debug_hash] in result['a_not_b']
+    assert ['variant_value', '0 mpileaks debug True'] in result['a_not_b']
 
-    assert ['hash', 'mpileaks %s' % no_debug_hash] in result['b_not_a']
-    assert ['variant_value', 'mpileaks debug False'] in result['b_not_a']
+    assert ['hash', '0 mpileaks %s' % no_debug_hash] in result['b_not_a']
+    assert ['variant_value', '0 mpileaks debug False'] in result['b_not_a']
