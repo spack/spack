@@ -18,3 +18,4 @@ class PyQpth(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1:1.99.999')
     depends_on('py-torch')
+    depends_on('py-cvxpy')
