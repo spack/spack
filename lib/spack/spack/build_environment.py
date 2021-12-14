@@ -35,6 +35,7 @@ calls you can make from within the install() function.
 import inspect
 import multiprocessing
 import os
+import posixpath
 import re
 import shutil
 import sys
@@ -80,6 +81,8 @@ from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
 from spack.util.string import plural
+
+is_windows = str(spack.platforms.host()) == 'windows'
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -302,14 +305,23 @@ def instantiate_compiler_env(pkg):
     write_wrapper(compiler_wrapper_files, metadata_compiler_root)
     write_wrapper(compiler_wrapper_files, stage_metadata_compiler)
 
-    env_paths = []
-    compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
-    for item in [spack.paths.build_env_path, compiler_specific]:
-        env_paths.append(item)
-        ci = os.path.join(item, 'case-insensitive')
+    def env_paths(prefix):
+        env_path_list = []
+        compiler_specific = os.path.join(
+            prefix, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack_compiler_specific = os.path.join(
+            spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        env_path_list.extend([prefix, compiler_specific])
+
+        ci = os.path.join(spack_compiler_specific, 'case-insensitive')
         if os.path.isdir(ci):
-            env_paths.append(ci)
+            ci = os.path.join(compiler_specific, 'case-insensitive')
+            env_path_list.append(ci)
+        ci = os.path.join(spack.paths.build_env_path, 'case-insensitive')
+        if os.path.isdir(ci):
+            ci = os.path.join(prefix, 'case-insensitive')
+            env_path_list.append(ci)
+        return env_path_list
 
     # install local env loader
     # setup loader script vars
@@ -317,15 +329,15 @@ def instantiate_compiler_env(pkg):
     cxx      =  lambda x: join(x,pkg.compiler.link_paths['cxx'])
     fc       =  lambda x: join(x,pkg.compiler.link_paths['fc'])
     f77      =  lambda x: join(x,pkg.compiler.link_paths['f77'])
-    env_path =  os.sep.join(env_paths)
     sep      =  ';'
+    env_path =  lambda x: sep.join(env_paths(x))
+    build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77, env_path)]
 
-    build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77)]
     with open(join(metadata_root, 'load'), 'w+') as f:
-        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(metadata_root), env_path, sep))
+        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(metadata_root), sep))
 
     with open(join(stage_metadata_root, 'load'), 'w+') as f:
-        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), env_path, sep))
+        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), sep))
 
     # install local env unloader
     with open(join(metadata_root, 'unload'), 'w+') as f:
@@ -347,28 +359,40 @@ def set_compiler_environment_variables(pkg, env):
     assert all(key in compiler.link_paths for key in (
         'cc', 'cxx', 'f77', 'fc'))
 
+    wrapper_driver = ''
+    # Git Bash requires this to avoid mangling all paths/forward slashes.
+    # Git bash normall performs this posix mangling: https://github.com/msys2/path_convert
+    # If there are inexplicable errors with compilers interpreting
+    # command line arguments as paths on Windows, check here first
+    # as this variable is subject to change as Git Bash updates
+    if is_windows:
+        env.set('MSYS_NO_PATHCONV', 1)
+        wrapper_driver = "'C:\\Program Files\\Git\\bin\\sh.exe'"
+
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor,
     # ttyout, ttyerr, etc.
     link_dir = spack.paths.build_env_path
 
+    join = posixpath.join
+    gen_compiler_str = lambda x: "{} {}".format(wrapper_driver, join(link_dir, x))
+
     # Set SPACK compiler variables so that our wrapper knows what to call
-    import posixpath
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
-        env.set('CC', "'C:\\Program Files\\Git\\bin\\sh.exe' {}".format(posixpath.join(link_dir, compiler.link_paths['cc'])))
+        env.set('CC', gen_compiler_str(compiler.link_paths['cc']))
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
-        env.set('CXX', "'C:\\Program Files\\Git\\bin\\sh.exe' {}".format(posixpath.join(link_dir, compiler.link_paths['cxx'])))
+        env.set('CXX', gen_compiler_str(compiler.link_paths['cxx']))
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
-        env.set('F77', os.path.join(link_dir, compiler.link_paths['f77']))
+        env.set('F77', gen_compiler_str(compiler.link_paths['f77']))
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
-        env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
+        env.set('FC', gen_compiler_str(compiler.link_paths['fc']))
 
-    env.set('MSYS_NO_PATHCONV', 1)
+
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
@@ -559,7 +583,7 @@ def set_wrapper_variables(pkg, env):
 
     # Set proper path ext to allow Windows to execute extensionless wrapper
     # files
-    env.prepend_path('PATHEXT', '.sh')
+    env.prepend_path('PATHEXT', '.SH')
 
 
 def determine_number_of_jobs(
@@ -631,11 +655,6 @@ def _set_variables_for_single_module(pkg, module):
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
 
-
-    ####
-    ####
-    ####
-    ####
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
     m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
@@ -877,10 +896,6 @@ def setup_package(pkg, dirty, context='build'):
             "'context' must be one of ['build', 'test'] - got: {0}"
             .format(context))
 
-    ####
-    ####
-    ####
-    ####
     set_module_variables_for_package(pkg)
 
     # Keep track of env changes from packages separately, since we want to
@@ -888,10 +903,6 @@ def setup_package(pkg, dirty, context='build'):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
-    ####
-    ####
-    ####
-    ####
     # setup compilers for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
@@ -899,17 +910,9 @@ def setup_package(pkg, dirty, context='build'):
         set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
-    ####
-    ####
-    ####
-    ####
     env_mods.extend(modifications_from_dependencies(
         pkg.spec, context, custom_mods_only=False))
 
-    ####
-    ####
-    ####
-    ####
     # architecture specific setup
     platform = spack.platforms.by_name(pkg.spec.architecture.platform)
     target = platform.target(pkg.spec.architecture.target)
@@ -1142,9 +1145,7 @@ def get_cmake_prefix_path(pkg):
         x.prefix for x in ordered_build_link_deps)
     return build_link_prefixes
 
-###############
-################
-###############
+
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 
@@ -1211,9 +1212,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         if input_multiprocess_fd is not None:
             input_multiprocess_fd.close()
 
-########
-########    - primary entrypoint
-########
+
 def start_build_process(pkg, function, kwargs):
     """Create a child process to do part of a spack build.
 
