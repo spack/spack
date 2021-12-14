@@ -777,9 +777,9 @@ class SpackSolverSetup(object):
     def cfg_required_rules(self, pkg):
         test_rules = {
             "openmpi": [
-                "@4.0.2+static",
+                "@4.0.2+static",  # Example stanza member
                 "@4.0.1~static"
-            ]
+            ]  # The list of specs is an example of a stanza
         }
         stanza_id = 0
         for pkg_name, stanza in test_rules.items():
