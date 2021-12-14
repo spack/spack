@@ -746,10 +746,15 @@ class SpackSolverSetup(object):
             trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
             self.gen.fact(fn.conflict_trigger(trigger_id))
 
-            for constraint, _ in constraints:
-                msg = "%s has conflict between %s and %s" % (pkg.name, trigger, constraint)
+            for constraint, msg in constraints:
+                if not msg:
+                    msg = "%s has conflict between %s and %s" % (
+                        pkg.name, trigger, constraint)
                 constraint_id = self.condition(constraint, name=pkg.name)
-                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id, msg), assumption=True)
+                self.gen.fact(
+                    fn.conflict(pkg.name, trigger_id, constraint_id, msg),
+                    assumption=True
+                )
                 self.gen.newline()
 
     def available_compilers(self):
@@ -1150,7 +1155,8 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def _spec_clauses(self, idx, spec, body=False, transitive=True, expand_hashes=False):
+    def _spec_clauses(
+            self, idx, spec, body=False, transitive=True, expand_hashes=False):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
