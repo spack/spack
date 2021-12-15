@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PySpectral(PythonPackage): 
+class PySpectral(PythonPackage):
     """Spectral Python (SPy) is a pure Python module for processing
     hyperspectral image data (imaging spectroscopy data). It has functions for
     reading, displaying, manipulating, and classifying hyperspectral imagery.
