@@ -23,7 +23,7 @@ class Vecmem(CMakePackage):
 
     variant('cuda', default=False, description='Build the vecmem::cuda library')
     variant('hip', default=False, description='Build the vecmem::hip library')
-    variant('sycl', default=False, description='Build the vecmem::sycllibrary')
+    variant('sycl', default=False, description='Build the vecmem::sycl library')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cuda', when='+cuda')
