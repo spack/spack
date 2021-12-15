@@ -12,7 +12,7 @@ class PyOnnxconverterCommon(PythonPackage):
     homepage = "https://github.com/microsoft/onnxconverter-common"
     url      = "https://github.com/microsoft/onnxconverter-common/archive/refs/tags/v1.9.0.tar.gz"
 
-    version('1.9.0', sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+    version('1.9.0', sha256='32315bcc844a8203092f3117a4a092ac6cf03d6a20145477e284f1172557d6f9')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy',      type=('build', 'run'))
