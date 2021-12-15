@@ -42,6 +42,7 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("py-cmake-format", type="build", when="+codechecks")
     depends_on("py-cython")
+    depends_on("py-h5py", type="test")
     depends_on("py-gcovr", when="+coverage", type="build")
     depends_on("py-matplotlib", type=("build", "test"))
     depends_on("py-mpi4py", when="+distmesh")

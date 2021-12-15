@@ -19,6 +19,7 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
 
+    version('4.9.0', sha256='b8ef133c9b66ffe12df1747e72d4acf19f1eb1e9cd95eb0f577cbc4081d9bea3')
     version('4.6.0', sha256='0f2c55e50fb6c478ebc8977f6341c223754cbf3493b7b0d683b4395ae9f2ad1c')
     version('4.5.4', sha256='ccf8c74f43cbe3c371abe79862025d41642b3538a0148f018949494e3b3e2ecd')
     version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
