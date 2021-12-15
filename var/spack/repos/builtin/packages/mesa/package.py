@@ -186,7 +186,7 @@ class Mesa(MesonPackage):
                     native_config.write("llvm-config = '{0}'\n".format(llvm_config))
             args.append('-Dllvm=enabled')
             args.append(opt_enable(
-                '+link_dylib' in spec['llvm'], 'shared-llvm'))
+                '+llvm_dylib' in spec['llvm'], 'shared-llvm'))
         else:
             args.append('-Dllvm=disabled')
 
