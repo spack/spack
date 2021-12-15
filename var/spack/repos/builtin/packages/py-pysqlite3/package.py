@@ -15,7 +15,7 @@ class PyPysqlite3(PythonPackage):
     version('0.4.6', sha256='7ec4d4c477fa96609c1517afbc33bf02747588e528e79c695de95907cea7bf30')
 
     depends_on('py-setuptools', type='build')
-    depends_on('sqlite',        type=('build', 'run'))
+    depends_on('sqlite',        type=('build', 'link', 'run'))
 
     def patch(self):
         filter_file("^include_dirs *=.*",
