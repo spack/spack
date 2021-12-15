@@ -139,9 +139,9 @@ class Acts(CMakePackage, CudaPackage):
     variant('analysis', default=False, description='Build analysis applications in the examples')
 
     # Build dependencies
-    # FIXME: Use spack's autodiff package once there is one
     # FIXME: Use spack's vecmem package once there is one
     # (https://github.com/acts-project/acts/pull/998)
+    depends_on('autodiff @5.11:', when='@1.02: +autodiff')
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
