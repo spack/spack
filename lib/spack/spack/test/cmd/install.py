@@ -1099,3 +1099,14 @@ def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
         add('depb')
         install('--test', 'root')
         assert not os.path.exists(test_dep.prefix)
+
+
+def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
+                           install_mockery, mutable_mock_env_path):
+    env_name = 'empty'
+    env('create', env_name)
+    with ev.read(env_name):
+        out = install(fail_on_error=False)
+
+    assert env_name in out
+    assert 'requires at least one spec' in out

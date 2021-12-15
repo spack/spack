@@ -348,6 +348,10 @@ environment variables:
                     env.write(regenerate=False)
 
             specs = env.all_specs()
+            if not specs:
+                tty.error('`spack install` requires at least one spec.')
+                tty.die('Environment {0} has no specs'.format(env.name))
+
             if not args.log_file and not reporter.filename:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
