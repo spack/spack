@@ -23,7 +23,7 @@ class PyHatchet(PythonPackage):
     version('1.0.0', sha256='efd218bc9152abde0a8006489a2c432742f00283a114c1eeb6d25abc10f5862d')
 
     # https://github.com/hatchet/hatchet/issues/428
-    depends_on('python@2.7:3.8', type=('build', 'run'))
+    depends_on('python@2.7:3.8', when='@:1.3.0', type=('build', 'run'))
     depends_on('python@2.7:', when='@1.3.1:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
