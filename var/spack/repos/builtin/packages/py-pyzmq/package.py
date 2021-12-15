@@ -39,6 +39,24 @@ class PyPyzmq(PythonPackage):
     depends_on('py-py', type=('build', 'run'), when='@:22')
     depends_on('py-cffi', type=('build', 'run'), when='@:22')
 
+    @run_before('install')
+    def setup(self):
+        """Create config file listing dependency information."""
+
+        with open('setup.cfg', 'w') as config:
+            config.write("""\
+[global]
+zmq_prefix = {0}
+
+[build_ext]
+library_dirs = {1}
+include_dirs = {2}
+""".format(
+                self.spec['libzmq'].prefix,
+                self.spec['libzmq'].libs.directories[0],
+                self.spec['libzmq'].headers.directories[0],
+            ))
+
     def setup_build_environment(self, env):
         # Needed for `spack install --test=root py-pyzmq`
         # Fixes import failure for zmq.backend.cffi
