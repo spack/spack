@@ -962,10 +962,7 @@ def status_message(section):
     Args:
         section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
     """
-    ok_token, ko_token = "\U0001F44D", "\U0001F44E"
-    if sys.version_info[:2] == (2, 7):
-        ok_token = '[PASS]'
-        ko_token = '[FAIL]'
+    pass_token, fail_token = '@*g{[PASS]}', '@*r{[FAIL]}'
 
     msg, test_fns = '', []
     if section == 'core':
@@ -989,5 +986,5 @@ def status_message(section):
                 missing_software = True
                 msg += "\n  " + err_msg
         msg += '\n'
-        msg = msg.format(ok_token if not missing_software else ko_token)
+        msg = msg.format(pass_token if not missing_software else fail_token)
     return msg
