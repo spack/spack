@@ -2,14 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import functools
-import os
-
-import llnl.util.filesystem
 
 import spack.cmd.common.arguments
 import spack.cmd.modules
+import spack.config
 
 
 def add_command(parser, command_dict):
@@ -36,17 +33,19 @@ def add_command(parser, command_dict):
 
 def setdefault(module_type, specs, args):
     """Set the default module file, when multiple are present"""
+    # Currently, accepts only a single matching spec
     spack.cmd.modules.one_spec_or_raise(specs)
-    writer = spack.modules.module_types['tcl'](
-        specs[0], args.module_set_name
-    )
-
-    module_folder = os.path.dirname(writer.layout.filename)
-    module_basename = os.path.basename(writer.layout.filename)
-    with llnl.util.filesystem.working_dir(module_folder):
-        if os.path.exists('.version'):
-            os.remove('.version')
-        version_file = os.path.join(module_folder, '.version')
-        with open(version_file, mode='w') as f:
-            f.write('#%Module\n')
-            f.write('set ModulesVersion %s\n' % module_basename)
+    spec = specs[0]
+    data = {
+        'modules': {
+            args.module_set_name: {
+                'tcl': {
+                    'defaults': [str(spec[0])]
+                }
+            }
+        }
+    }
+    scope = spack.config.InternalConfigScope('tcl-setdefault', data)
+    with spack.config.override(scope):
+        writer = spack.modules.module_types['tcl'](spec, args.module_set_name)
+        writer.update_module_defaults()

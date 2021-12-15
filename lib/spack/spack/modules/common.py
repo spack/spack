@@ -906,6 +906,9 @@ class BaseModuleFileWriter(object):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
         # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
