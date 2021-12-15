@@ -27,7 +27,6 @@ class Steps(CMakePackage):
     variant("coverage", default=False, description="Enable code coverage")
     variant("bundle", default=False, description="Use bundled libraries")
     variant("stochtests", default=True, description="Add stochastic tests to ctests")
-    variant("timemory", default=False, description="Add timemory API to instrument time/memory")
     variant("build_type", default="RelWithDebInfo", description="CMake build type",
             values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel",
                     "RelWithDebInfoAndAssert"))
@@ -58,7 +57,6 @@ class Steps(CMakePackage):
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
-    depends_on("timemory", when="+timemory")
     conflicts("+distmesh~mpi",
               msg="steps+distmesh requires +mpi")
 

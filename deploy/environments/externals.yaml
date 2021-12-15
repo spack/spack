@@ -38,6 +38,9 @@ spack:
         - totalview
         - valgrind
         - virtualgl
+        - freeimage
+        - ilmbase
+        - openexr
   packages:
     all:
       providers:
@@ -120,3 +123,7 @@ spack:
     - zlib
     # Viz stuff that complicates specs
     - optix
+    # Viz needs; FreeImage should be axed ASAP
+    - freeimage
+    - ilmbase
+    - openexr

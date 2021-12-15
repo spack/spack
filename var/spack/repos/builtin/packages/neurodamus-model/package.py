@@ -42,9 +42,9 @@ class NeurodamusModel(SimModel):
 
     resource(
         name='common_mods',
-        git='ssh://bbpcode.epfl.ch/sim/models/common',
-        branch='master',
-        destination='ngv'
+        git='git@bbpgitlab.epfl.ch:hpc/sim/models/common.git',
+        tag='2.4',
+        destination='common_latest'
     )
 
     # Note: We dont request link to MPI so that mpicc can do what is best
@@ -82,6 +82,10 @@ class NeurodamusModel(SimModel):
         if spec.variants['common_mods'].value != 'default':
             shutil.move('common', '_common_orig')
             force_symlink(spec.variants['common_mods'].value, 'common')
+        elif spec.satisfies("@1.6:"):
+            # From v1.6 on all models require external common
+            tty.info("Using Latest common")
+            force_symlink("common_latest/common", "common")
 
     def build_model(self, spec, prefix):
         """Build and install the bare model.
@@ -89,7 +93,7 @@ class NeurodamusModel(SimModel):
         # NGV must overwrite other mods, even from the specific
         # models, e.g. ProbAMPANMDA
         if spec.satisfies("+ngv"):
-            copy_all("ngv/common/mod/ngv", "mod")
+            copy_all("common_latest/common/mod/ngv", "mod")
 
         SimModel._build_mods(self, 'mod', dependencies=[])  # No dependencies
         # Dont install intermediate src.

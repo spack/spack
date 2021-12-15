@@ -10,9 +10,9 @@ class PyNeurodamus(PythonPackage):
     """
 
     homepage = "https://bbpteam.epfl.ch/project/spaces/display/BGLIB/Neurodamus"
-    git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-py"
+    git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-py.git"
 
-    version('develop', branch='master')
+    version('develop', branch='main')
     version('2.8.1', commit='6b66cba')
     version('2.8.0',   tag='2.8.0')
     version('2.7.1',   tag='2.7.1')

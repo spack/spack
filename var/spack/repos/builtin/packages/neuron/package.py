@@ -83,7 +83,8 @@ class Neuron(CMakePackage):
     variant("rx3d",       default=True,  description="Enable cython translated 3-d rxd. Depends on pysetup")
     variant("shared",     default=True,  description="Build shared libraries")
     variant("tests",      default=False, description="Enable unit tests")
-    variant("legacy-unit", default=True, description="Enable legacy units")
+    variant("model_tests", default="None", description="Enable detailed model tests included in neuron", multi=True, values=("None", "olfactory", "channel-benchmark"))
+    variant("legacy-unit", default=True,   description="Enable legacy units")
 
     variant("codechecks", default=False,
             description="Perform additional code checks like "
@@ -142,8 +143,9 @@ class Neuron(CMakePackage):
                                                              "+rx3d",
                                                              "+coreneuron",
                                                              "+tests"]]
-        if '+tests' in self.spec:
-            args.append('-DNRN_ENABLE_TESTS_BBP:BOOL=ON')
+        if self.spec.variants['model_tests'].value != ("None",):
+            args.append('-DNRN_ENABLE_MODEL_TESTS=' + ",".join(
+                model for model in self.spec.variants["model_tests"].value))
         if "+mpi" in self.spec:
             args.append("-DNRN_ENABLE_MPI=ON")
             if "~coreneuron" in self.spec:
@@ -165,7 +167,6 @@ class Neuron(CMakePackage):
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
         if "+coreneuron" in self.spec:
             args.append('-DCORENEURON_DIR=' + self.spec["coreneuron"].prefix)
-
         return args
 
     # Create symlink in share/nrn/lib for the python libraries

@@ -12,7 +12,7 @@ class PyVoxcell(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/voxcell"
     git      = "git@bbpgitlab.epfl.ch:nse/voxcell.git"
 
-    version('develop', branch='master')
+    version('develop')
     version('3.0.2', tag='voxcell-v3.0.2')
     version('3.0.0', tag='voxcell-v3.0.0')
     version('2.7.4', tag='voxcell-v2.7.4')
