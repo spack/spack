@@ -651,6 +651,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'ksp', 'ksp', 'tutorials')
+        skip_test = 'Skipping petsc test:'
 
         if os.path.exists(w_dir):
             self.run_ex50_test(runexe, runopt, w_dir)
@@ -658,11 +659,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir)
             else:
-                print('Skipping petsc test: ' \
-                      'KSP tutorial example ex7 requires +cuda')
+                print('{0} KSP tutorial example ex7 requires +cuda'
+                      .format(skip_test))
         else:
-            print('Skipping petsc tests: ' \
-                  'KSP tutorial examples are missing')
+            print('{0} KSP tutorial examples are missing'
+                  .format(skip_test))
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
@@ -671,8 +672,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if '+kokkos' in self.spec:
                 self.run_ex3k_test(runexe, runopt, w_dir)
             else:
-                print('Skipping petsc test: ' \
-                      'SNES tutorial example ex3k requires +kokkos')
+                print('{0} SNES tutorial example ex3k requires +kokkos'
+                      .format(skip_test))
         else:
-            print('Skipping petsc test: ' \
-                  'SNES tutorial example is missing')
+            print('{0} SNES tutorial examples are missing'
+                  .format(skip_test))
