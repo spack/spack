@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
+from spack.error import UnsupportedPlatformError
 
 class Umap(CMakePackage):
     """Umap is a library that provides an mmap()-like interface to a
@@ -27,6 +26,11 @@ class Umap(CMakePackage):
     variant('logging', default=False, description='Build with logging enabled.')
     variant('tests', default=False, description='Build examples/tests.')
     variant('stats', default=False, description='Print internal stats when closing.')
+
+    @run_before("cmake")
+    def platform_check(self):
+        if not self.spec.platform == "linux":
+            raise UnsupportedPlatformError('This package only builds on linux.')
 
     def cmake_args(self):
         args = [
