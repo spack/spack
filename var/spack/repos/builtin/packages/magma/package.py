@@ -128,6 +128,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
                 options.extend(['-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE'])
 
         if '+rocm' in spec:
+            amdgpu_target = spec.variants['amdgpu_target'].value
+            if 0 < len(amdgpu_target) and 'none' != amdgpu_target[0]:
+                options.append(self.define('GPU_TARGET', amdgpu_target))
             options.extend(['-DMAGMA_ENABLE_HIP=ON'])
             options.extend(['-DCMAKE_CXX_COMPILER=hipcc'])
             # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
