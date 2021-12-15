@@ -15,6 +15,9 @@ class Vecmem(CMakePackage):
 
     maintainers = ['wdconinc', 'HadrienG2']
 
+    version('0.8.0', sha256='a13f7178c940d6bf3386e7e8f5eb158e6435882533bffe888d3c9775eeb2f20e')
+    version('0.7.0', sha256='c00266bc80df8f568103f2874ce349fe8f74fb7e361901d562cce41ab7f9b85c')
+    version('0.6.0', sha256='e6c8262844a5ff7f03df7f849a1e7cf1a68214730ac54c35c14333522ff31723')
     version('0.5.0', sha256='b9739e8fcdf27fa9ef509743cd8f8f62f871b53b0a63b93f24ea9865c2b00a3a')
     version('0.4.0', sha256='51dfadc2b97f34530c642abdf86dcb6392e753dd68ef011bac89382dcf8aaad4')
     version('0.3.0', sha256='4e7851ab46fee925800405c5ae18e99b62644d624d3544277a522a06fb812dbf')
