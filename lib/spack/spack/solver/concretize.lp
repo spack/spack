@@ -403,19 +403,23 @@ node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_v
 % TODO: don't warn if program is missing cfg_version_required
 % #defined cfg_version_required/1.
 
+% TODO: allow weighting the conditions; a condition should be preferred if it
+% appears first in a condition_group. Compared to other preference weights
+% this is less important, but presumably the user might want to exert some
+% level of control by ordering the preferences. This will probably involve
+% a #minimize statement like others at the end of this file
+
 % TODO: if the user provides a constraint on the command line, then it will
 % need to constrain the spec in a similar way (although in that case
 % there is no such thing as a stanza: there is just one spec to constrain by).
 % It looks like that is handled by asp._spec_clauses. That function would need
 % to be modified to cover this section though (since unlike there, the
-% constraints are only applied if the associated stanza member is selected).
+% constraints here are only applied if the associated stanza member is
+% selected).
 
 %-----------------------------------------------------------------------------
 % Generalization of prior section
 %-----------------------------------------------------------------------------
-
-% TODO: allow weighting the conditions
-% TODO: for a condition_group, it's probably OK if more than 1 member applies
 
 % If a user wants, they can define a "condition_group": a set of constraints
 % where one of them must be true. A condition corresponds to a full spec
