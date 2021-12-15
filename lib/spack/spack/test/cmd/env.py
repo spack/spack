@@ -1314,6 +1314,7 @@ spack:
                     == '$' + anchors[0])
             assert (pre.yaml['spack']['packages']['libelf']['externals'][0]['prefix']
                     == '$' + anchors[1])
+            assert (pre.yaml['spack']['anchors'][0] == '&' + anchors[0])
             # this calls _update_and_write_manifest but it is not overwriting the
             # anchors like I see when I try to use this feature
             pre.write()
