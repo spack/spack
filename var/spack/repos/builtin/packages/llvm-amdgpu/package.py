@@ -65,6 +65,10 @@ class LlvmAmdgpu(CMakePackage):
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
 
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
+
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
