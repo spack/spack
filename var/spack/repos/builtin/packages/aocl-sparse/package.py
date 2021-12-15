@@ -15,7 +15,7 @@ class AoclSparse(CMakePackage):
     library supports SPMV function with CSR and ELLPACK formats."""
 
     homepage = "https://developer.amd.com/amd-aocl/aocl-sparse/"
-    url = "https://github.com/amd/aocl-sparse/archive/3.1.tar.gz"
+    url = "https://github.com/amd/aocl-sparse/archive/3.0.tar.gz"
     git = "https://github.com/amd/aocl-sparse.git"
 
     maintainers = ['amd-toolchain-support']

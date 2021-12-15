@@ -26,7 +26,7 @@ class Amdfftw(FftwBase):
 
     _name = 'amdfftw'
     homepage = "https://developer.amd.com/amd-aocl/fftw/"
-    url = "https://github.com/amd/amd-fftw/archive/3.1.tar.gz"
+    url = "https://github.com/amd/amd-fftw/archive/3.0.tar.gz"
     git = "https://github.com/amd/amd-fftw.git"
 
     maintainers = ['amd-toolchain-support']
@@ -186,23 +186,8 @@ class Amdfftw(FftwBase):
             options.append('FC={0}'.format(os.path.basename(spack_fc)))
             options.append('F77={0}'.format(os.path.basename(spack_fc)))
 
-        if '+shared' in spec:
-            options.append('--enable-shared')
-        else:
-            options.append('--disable-shared')
-
         if '+debug' in spec:
             options.append('--enable-debug')
-
-        if '+openmp' in spec:
-            options.append('--enable-openmp')
-        else:
-            options.append('--disable-openmp')
-
-        if '+threads' in spec:
-            options.append('--enable-threads')
-        else:
-            options.append('--disable-threads')
 
         if '+mpi' in spec:
             options.append('--enable-mpi')
@@ -211,35 +196,15 @@ class Amdfftw(FftwBase):
             options.append('--disable-mpi')
             options.append('--disable-amd-mpifft')
 
-        if '+amd-fast-planner' in spec:
-            options.append('--enable-amd-fast-planner')
-        else:
-            options.append('--disable-amd-fast-planner')
-
-        if '+amd-top-n-planner' in spec:
-            options.append('--enable-amd-top-n-planner')
-        else:
-            options.append('--disable-amd-top-n-planner')
-
-        if '+amd-mpi-vader-limit' in spec:
-            options.append('--enable-amd-mpi-vader-limit')
-        else:
-            options.append('--disable-amd-mpi-vader-limit')
-
-        if '+static' in spec:
-            options.append('--enable-static')
-        else:
-            options.append('--disable-static')
-
-        if '+amd-trans' in spec:
-            options.append('--enable-amd-trans')
-        else:
-            options.append('--disable-amd-trans')
-
-        if '+amd-app-opt' in spec:
-            options.append('--enable-amd-app-opt')
-        else:
-            options.append('--disable-amd-app-opt')
+        options.extend(self.enable_or_disable('shared'))
+        options.extend(self.enable_or_disable('openmp'))
+        options.extend(self.enable_or_disable('threads'))
+        options.extend(self.enable_or_disable('amd-fast-planner'))
+        options.extend(self.enable_or_disable('amd-top-n-planner'))
+        options.extend(self.enable_or_disable('amd-mpi-vader-limit'))
+        options.extend(self.enable_or_disable('static'))
+        options.extend(self.enable_or_disable('amd-trans'))
+        options.extend(self.enable_or_disable('amd-app-opt'))
 
         if not self.compiler.f77 or not self.compiler.fc:
             options.append('--disable-fortran')

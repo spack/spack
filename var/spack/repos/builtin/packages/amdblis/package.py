@@ -17,7 +17,7 @@ class Amdblis(BlisBase):
 
     _name = 'amdblis'
     homepage = "https://developer.amd.com/amd-aocl/blas-library/"
-    url = "https://github.com/amd/blis/archive/3.1.tar.gz"
+    url = "https://github.com/amd/blis/archive/3.0.tar.gz"
     git = "https://github.com/amd/blis.git"
 
     maintainers = ['amd-toolchain-support']
