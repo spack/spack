@@ -58,6 +58,10 @@ class PyAntspyx(PythonPackage):
     )
 
     def patch(self):
+        # Disable hardcoded parallelism
+        filter_file(r'"-j2"',
+                    '"-j{0}"'.format(spack.config.get('config:build_jobs', 8)),
+                    'setup.py')
         if self.spec.satisfies('@0.2.4'):
             for fn in (
                 'ants/lib/ANTs/Utilities/itkLabeledPointSetFileReader.hxx',
