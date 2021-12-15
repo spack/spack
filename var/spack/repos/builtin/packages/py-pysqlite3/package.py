@@ -19,8 +19,8 @@ class PyPysqlite3(PythonPackage):
 
     def patch(self):
         filter_file("^include_dirs *=.*",
-                    "include_dirs=" + self.spec['sqlite'].prefix.include,
+                    "include_dirs = " + self.spec['sqlite'].headers.directories[0],
                     'setup.cfg')
         filter_file("^library_dirs *=.*",
-                    "library_dirs=" + self.spec['sqlite'].prefix.lib,
+                    "library_dirs = " + self.spec['sqlite'].libs.directories[0],
                     'setup.cfg')
