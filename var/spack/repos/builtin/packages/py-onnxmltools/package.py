@@ -18,4 +18,4 @@ class PyOnnxmltools(PythonPackage):
     depends_on('py-numpy',        type=('build', 'run'))
     depends_on('py-onnx',         type=('build', 'run'))
     depends_on('py-skl2onnx',     type=('build', 'run'))
-    depends_on('onnx-runtime',    type=('build', 'run'))
+    depends_on('py-onnx-runtime', type=('build', 'run'))
