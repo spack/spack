@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyOnnxRuntime(CMakePackage):
+class PyOnnxRuntime(CMakePackage, PythonPackage):
     """ONNX Runtime is a performance-focused complete scoring
     engine for Open Neural Network Exchange (ONNX) models, with
     an open extensible architecture to continually address the
@@ -27,6 +27,7 @@ class PyOnnxRuntime(CMakePackage):
     depends_on('ninja', type='build')
     depends_on('python', type=('build', 'run'))
     depends_on('protobuf')
+    depends_on('py-protobuf', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.16.6:', type=('build', 'run'))
     depends_on('py-wheel', type='build')
@@ -105,53 +106,16 @@ class PyOnnxRuntime(CMakePackage):
 
         return args
 
-    # copied from python build system
-    def python(self, *args, **kwargs):
-        py_exe = self.spec['python'].command
-        py_exe(*args, **kwargs)
-
-    def setup_py(self, *args, **kwargs):
-        with working_dir(self.build_directory):
-            self.python('-s', join_path(self.stage.source_path, 'setup.py'),
-                        '--no-user-cfg', *args, **kwargs)
-
-    def install_args(self, spec, prefix):
-        """Arguments to pass to install."""
-        args = ['--prefix={0}'.format(prefix)]
-        args += ['--single-version-externally-managed']
-
-        # Get all relative paths since we set the root to `prefix`
-        # We query the python with which these will be used for the lib and inc
-        # directories. This ensures we use `lib`/`lib64` as expected by python.
-        python = spec['python'].package.command
-        command_start = 'print(distutils.sysconfig.'
-        commands = ';'.join([
-            'import distutils.sysconfig',
-            command_start + 'get_python_lib(plat_specific=False, prefix=""))',
-            command_start + 'get_python_lib(plat_specific=True, prefix=""))',
-            command_start + 'get_python_inc(plat_specific=True, prefix=""))'])
-        pure_site_packages_dir, plat_site_packages_dir, inc_dir = python(
-            '-c', commands, output=str, error=str).strip().split('\n')
-
-        args += ['--root=%s' % prefix,
-                 '--install-purelib=%s' % pure_site_packages_dir,
-                 '--install-platlib=%s' % plat_site_packages_dir,
-                 '--install-scripts=bin',
-                 '--install-data=',
-                 '--install-headers=%s' % inc_dir
-                 ]
-
-        return args
+    def setup_file(self):
+        return join_path(self.stage.source_path, 'setup.py')
 
     @run_after('build')
     def build_python(self):
         """Build everything needed to install."""
-        self.setup_py('build')
+        with working_dir(self.stage.source_path):
+            PythonPackage.build(self, self.spec, self.prefix)
 
     @run_after('install')
     def install_python(self):
-        spec = self.spec
-        prefix = self.spec.prefix
-        args = self.install_args(spec, prefix)
-
-        self.setup_py('install', *args)
+        with working_dir(self.stage.source_path):
+            PythonPackage.install(self, self.spec, self.prefix)
