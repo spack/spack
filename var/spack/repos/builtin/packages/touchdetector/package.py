@@ -77,7 +77,5 @@ class Touchdetector(CMakePackage):
             '-DUSE_OPENMP:BOOL={0}'.format('+openmp' in self.spec),
             '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
             '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx),
-            # '-DCMAKE_CXX_CPPLINT=clang-format',
-            '-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=/gpfs/bbp.cscs.ch/home/matwolf/spack_install/install_gcc-11.2.0-skylake/iwyu-0.17-wc7wfj/bin/include-what-you-use',
         ]
         return args
