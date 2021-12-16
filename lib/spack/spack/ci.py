@@ -3,39 +3,42 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import base64
-import copy
+import spack.repo
+from spack.error import SpackError
+import tempfile
 import json
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.error import HTTPError, URLError
+import spack.util.url as url_util
+import spack.config as cfg
+import zipfile
+import spack.mirror
+import llnl.util.tty as tty
+import base64
+import datetime
+import spack.util.gpg as gpg_util
+import copy
 import os
 import re
-import shutil
-import stat
-import tempfile
-import zipfile
+import spack.util.spack_yaml as syaml
 
-from six import iteritems
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+import spack.main
+import spack.util.executable as exe
 
+import spack.cmd
+import spack.util.web as web_util
+import spack.environment as ev
+from spack.spec import Spec
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack
-import spack.binary_distribution as bindist
+import stat
+from six import iteritems
 import spack.compilers as compilers
-import spack.config as cfg
-import spack.environment as ev
-import spack.main
-import spack.mirror
+import spack.binary_distribution as bindist
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
 import spack.paths
-import spack.repo
-import spack.util.executable as exe
-import spack.util.gpg as gpg_util
-import spack.util.spack_yaml as syaml
-import spack.util.web as web_util
-from spack.error import SpackError
-from spack.spec import Spec
+import shutil
 
 JOB_RETRY_CONDITIONS = [
     'always',
