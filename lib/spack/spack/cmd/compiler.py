@@ -147,7 +147,7 @@ def compiler_info(args):
 
 def compiler_list(args):
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope),
+    index = index_by(spack.compilers.all_compilers(scope=args.scope, init_config=False),
                      lambda c: (c.spec.name, c.operating_system, c.target))
 
     # For a container, take each element which does not evaluate to false and
