@@ -68,6 +68,11 @@ class Hypre(AutotoolsPackage, CudaPackage):
     variant('unified-memory', default=False, description='Use unified memory')
     variant('fortran', default=True,
             description='Enables fortran bindings')
+    variant('gptune', default=False,
+            description='Add the GPTune hookup code')
+
+    # Patch to add gptune hookup codes
+    patch('ij_gptune.patch', when='+gptune@2.19.0')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -88,6 +93,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
 
     conflicts('+cuda', when='+int64')
     conflicts('+unified-memory', when='~cuda')
+    conflicts('+gptune', when='~mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -228,6 +234,11 @@ class Hypre(AutotoolsPackage, CudaPackage):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+            
+            if '+gptune' in self.spec:
+                make("test")
+                self.run_test('mkdir', options=['-p', self.prefix.bin])
+                self.run_test('cp', options=['test/ij', self.prefix.bin+'/.'])
 
     extra_install_tests = join_path('src', 'examples')
 
@@ -247,6 +258,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
             print('Skipping: HYPRE must be installed with +mpi to run tests')
             return
 
+        print(self._cached_tests_work_dir)
         # Build copied and cached test examples
         self.run_test('make',
                       ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],

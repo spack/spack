@@ -17,8 +17,10 @@ class Gptune(CMakePackage):
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
-    variant('app', default=False, description='Build all HPC application examples')
-    variant('openmpi', default=True, description='MPI spawning-based interface')
+
+    variant('superlu', default=False, description='Build the SuperLU_DIST example')
+    variant('hypre', default=False, description='Build the Hypre example')
+    variant('mpispawn', default=True, description='MPI spawning-based interface')
 
     depends_on('mpi', type=('build', 'link', 'run'))
     depends_on('cmake@3.3:', type='build')
@@ -48,12 +50,13 @@ class Gptune(CMakePackage):
     depends_on('pygmo', type=('build', 'run'))
     depends_on('openturns', type=('build', 'run'))
 
-    depends_on('superlu-dist@develop', when='+app', type=('build', 'run'))
+    depends_on('superlu-dist@develop', when='+superlu', type=('build', 'run'))
+    depends_on('hypre+gptune@2.19.0', when='+hypre', type=('build', 'run'))
 
-    depends_on('openmpi@4:', when='+openmpi', type=('build', 'run'))
-    conflicts('mpich', when='+openmpi')
-    conflicts('spectrum-mpi', when='+openmpi')
-    conflicts('cray-mpich', when='+openmpi')
+    depends_on('openmpi@4:', when='+mpispawn', type=('build', 'run'))
+    conflicts('mpich', when='+mpispawn')
+    conflicts('spectrum-mpi', when='+mpispawn')
+    conflicts('cray-mpich', when='+mpispawn')
 
     def cmake_args(self):
         spec = self.spec
@@ -62,6 +65,7 @@ class Gptune(CMakePackage):
             fc_flags.append('-fallow-argument-mismatch')
 
         args = [
+            '-DGPTUNE_INSTALL_PATH=%s' % site_packages_dir,
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
@@ -81,7 +85,7 @@ class Gptune(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir, self.src_dir])
+        self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
         spec = self.spec
@@ -90,7 +94,7 @@ class Gptune(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              self.examples_src_dir)
 
-        if '+app' in spec:
+        if '+superlu' in spec:
             superludriver = join_path(spec['superlu-dist'].prefix.bin, 'pddrive_spawn')
             op = ['-r', superludriver, '.']
             # copy superlu-dist executables to the correct place
@@ -103,12 +107,16 @@ class Gptune(CMakePackage):
                           work_dir=wd + '/superlu_dist/build')
             self.run_test('cp', options=op, work_dir=wd + '/superlu_dist/build/EXAMPLE')
 
-        wd = self.test_suite.current_test_cache_dir
-        cdir = join_path(self.prefix, 'gptuneclcm')
-        self.run_test('cp', options=['-r', cdir, '.'], work_dir=wd)
-        self.run_test('rm', options=['-rf', 'build'], work_dir=wd)
-        self.run_test('mv', options=['gptuneclcm', 'build'], work_dir=wd)
+        if '+hypre' in spec:
+            hypredriver = join_path(spec['hypre'].prefix.bin, 'ij')
+            op = ['-r', hypredriver, '.']
+            # copy superlu-dist executables to the correct place
+            wd = join_path(test_dir, 'Hypre')
+            self.run_test('rm', options=['-rf', 'hypre'], work_dir=wd)
+            self.run_test('git', options=['clone', 'https://github.com/hypre-space/hypre.git'], work_dir=wd)
+            self.run_test('cp', options=op, work_dir=wd + '/hypre/src/test/')
 
+        wd = self.test_suite.current_test_cache_dir
         with open('{0}/run_env.sh'.format(wd), 'w') as envfile:
             envfile.write('if [[ $NERSC_HOST = "cori" ]]; then\n')
             envfile.write('    export machine=cori\n')
@@ -125,6 +133,8 @@ class Gptune(CMakePackage):
             envfile.write('export GPTUNEROOT=$PWD\n')
             envfile.write('export MPIRUN={0}\n'.format
                           (which(spec['mpi'].prefix.bin + '/mpirun')))
+            envfile.write('export PYTHONPATH={0}:$PYTHONPATH\n'.format
+                          (site_packages_dir + '/gptune'))
             envfile.write('export proc=$(spack arch)\n')
             envfile.write('export mpi={0}\n'.format(spec['mpi'].name))
             envfile.write('export compiler={0}\n'.format(comp_name))
@@ -164,17 +174,25 @@ class Gptune(CMakePackage):
                           'configurations\\\":{\\\"$machine\\\":{\\\"$proc\\\":' +
                           '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}}") \n')
 
-        if '+app' in spec:
-            if '+openmpi' in spec:
-                apps = ['GPTune-Demo', 'SuperLU_DIST', 'SuperLU_DIST_RCI',
-                        'Scalapack-PDGEQRF', 'Scalapack-PDGEQRF_RCI']
-            else:
-                apps = ['SuperLU_DIST_RCI', 'Scalapack-PDGEQRF_RCI']
-        else:
-            if '+openmpi' in spec:
-                apps = ['GPTune-Demo', 'Scalapack-PDGEQRF', 'Scalapack-PDGEQRF_RCI']
-            else:
-                apps = ['Scalapack-PDGEQRF_RCI']
+        # copy the environment configuration files to non-cache directories                  
+        op = ['run_env.sh', site_packages_dir + '/gptune/.']
+        self.run_test('cp', options=op, work_dir=wd)
+        op = ['run_env.sh', self.install_test_root + '/.']
+        self.run_test('cp', options=op, work_dir=wd)
+
+
+
+
+        apps = ['Scalapack-PDGEQRF_RCI']
+        if '+mpispawn' in spec:
+            apps = apps + ['GPTune-Demo', 'Scalapack-PDGEQRF']
+        if '+superlu' in spec:
+            apps = apps + ['SuperLU_DIST_RCI']
+            if '+mpispawn' in spec:
+                apps = apps + ['SuperLU_DIST']
+        if '+hypre' in spec:
+            if '+mpispawn' in spec:
+                apps = apps + ['Hypre']
 
         for app in apps:
             wd = join_path(test_dir, app)
