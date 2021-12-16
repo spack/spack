@@ -37,6 +37,7 @@ class HsakmtRoct(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('numactl')
     depends_on('libdrm', when='@4.5.0:')
+    depends_on('libdrm', when='@master')
 
     @property
     def install_targets(self):

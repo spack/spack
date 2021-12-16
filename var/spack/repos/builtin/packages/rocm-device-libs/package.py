@@ -34,7 +34,10 @@ class RocmDeviceLibs(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('zlib', type='link', when='@3.9.0:')
-    depends_on('texinfo', type='link', when='@3.9.0:')
+    depends_on('zlib', type='link', when='@master')
+    depends_on('texinfo', type='link', when='@3.9.0:') 
+    depends_on('texinfo', type='link', when='@master')
+
 
     # Make sure llvm is not built with rocm-device-libs (that is, it's already
     # built with rocm-device-libs as an external project).

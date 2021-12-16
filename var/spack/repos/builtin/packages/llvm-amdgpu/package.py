@@ -38,6 +38,7 @@ class LlvmAmdgpu(CMakePackage):
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
+    depends_on('cmake@3.13.4:', type='build', when='@master')
     depends_on('python', type='build')
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
@@ -54,6 +55,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
+    patch('fix-spack-detection-4.2.0.patch', when='@master')
 
     conflicts('^cmake@3.19.0')
 
@@ -98,7 +100,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
-        if self.spec.satisfies('@4.3.0:4.5.0'):
+        if self.spec.satisfies('@4.3.0:4.5.0') or self.spec.satisfies('@master'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
@@ -120,7 +122,7 @@ class LlvmAmdgpu(CMakePackage):
 
         args.extend([self.define('LLVM_ENABLE_PROJECTS', ';'.join(llvm_projects))])
 
-        if self.spec.satisfies('@4.5.0:'):
+        if self.spec.satisfies('@4.5.0:') or self.spec.satisfies('@master'):
             args.extend([self.define('PACKAGE_VENDOR', 'AMD')])
 
         # Enable rocm-device-libs as a external project
@@ -152,7 +154,7 @@ class LlvmAmdgpu(CMakePackage):
     def post_install(self):
         # TODO:Enabling LLVM_ENABLE_RUNTIMES for libcxx,libcxxabi did not build.
         # bootstraping the libcxx with the just built clang
-        if self.spec.satisfies('@4.5.0:'):
+        if self.spec.satisfies('@4.5.0:') or self.spec.satisfies('@master'):
             spec = self.spec
             define = CMakePackage.define
             libcxxdir = "build-bootstrapped-libcxx"

@@ -54,6 +54,7 @@ class HsaRocrDev(CMakePackage):
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
     patch('0002-Remove-explicit-RPATH-again.patch', when='@3.7.0:')
+    patch('0002-Remove-explicit-RPATH-again.patch', when='@master')
 
     root_cmakelists_dir = 'src'
 
@@ -66,7 +67,7 @@ class HsaRocrDev(CMakePackage):
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
-        if '@3.7.0:' in spec:
+        if '@3.7.0:' or '@master' in spec:
             args.append(self.define_from_variant('IMAGE_SUPPORT', 'image'))
 
             # device libs is bundled with llvm-amdgpu (default) or standalone
