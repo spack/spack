@@ -32,6 +32,8 @@ class Harfbuzz(AutotoolsPackage):
     conflicts('%intel', when='@2.3.1:',
               msg='harfbuzz-2.3.1 does not build with the Intel compiler')
 
+    # This removed an unused variable that is flagged by clang
+    patch('fix-unused-variable.patch')
     def url_for_version(self, version):
         if version > Version('2.3.1'):
             url = "https://github.com/harfbuzz/harfbuzz/releases/download/{0}/harfbuzz-{0}.tar.xz"
