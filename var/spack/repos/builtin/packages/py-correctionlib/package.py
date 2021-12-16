@@ -12,6 +12,7 @@ class PyCorrectionlib(PythonPackage):
     homepage = "https://github.com/cms-nanoAOD/correctionlib"
     pypi     = "correctionlib/correctionlib-2.0.0.tar.gz"
 
+    version('2.1.0', sha256='edf79644dc1d9d94f12b4b45366331e5da3f1e21d4cbcd3bb8b0d4b1421b0c44')
     version('2.0.0', sha256='e4d240cbdb2633a8955ddcd02d5b9bfb33d7e1a33554d6f7957f2dec56988a67')
 
     variant('convert', default=False,
