@@ -22,7 +22,7 @@ class Grnboost(Package):
 
     depends_on('sbt', type='build')
     depends_on('java', type=('build', 'run'))
-    depends_on('xgboost+jvm-packages', type='run')
+    depends_on('xgboost', type='run')
     depends_on('spark+hadoop', type='run')
 
     def setup_run_environment(self, env):

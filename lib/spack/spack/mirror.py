@@ -644,6 +644,35 @@ def _add_single_spec(spec, mirror, mirror_stats):
         mirror_stats.error()
 
 
+def push_url_from_directory(output_directory):
+    """Given a directory in the local filesystem, return the URL on
+    which to push binary packages.
+    """
+    scheme = url_util.parse(output_directory, scheme='<missing>').scheme
+    if scheme != '<missing>':
+        raise ValueError('expected a local path, but got a URL instead')
+    mirror_url = 'file://' + output_directory
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_name(mirror_name):
+    """Given a mirror name, return the URL on which to push binary packages."""
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_name)
+    if mirror.name == "<unnamed>":
+        raise ValueError('no mirror named "{0}"'.format(mirror_name))
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_url(mirror_url):
+    """Given a mirror URL, return the URL on which to push binary packages."""
+    scheme = url_util.parse(mirror_url, scheme='<missing>').scheme
+    if scheme == '<missing>':
+        raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
+
+
 class MirrorError(spack.error.SpackError):
     """Superclass of all mirror-creation related errors."""
 
