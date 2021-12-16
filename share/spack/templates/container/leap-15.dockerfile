@@ -9,6 +9,7 @@ RUN zypper ref && \
     gcc-c++\
     gcc-fortran\
     make\
+    git\
     gzip\
     patch\
     patchelf\

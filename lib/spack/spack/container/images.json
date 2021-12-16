@@ -28,9 +28,9 @@
         "develop": "latest"
       }
     },
-    "leap:15": {
+    "opensuse/leap:15": {
       "bootstrap": {
-        "template": "container/leap15.dockerfile"
+        "template": "container/leap-15.dockerfile"
       },
       "os_package_manager": "zypper",
       "build": "spack/leap15",
