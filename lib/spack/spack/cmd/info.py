@@ -18,8 +18,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.cmd.test import has_test_method
-from spack.package import preferred_version
+from spack.package import has_test_method, preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -41,6 +40,25 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-a', '--all', action='store_true', default=False,
+        help="output all package information"
+    )
+
+    options = [
+        ('--dependencies', print_dependencies.__doc__),
+        ('--detectable', print_detectable.__doc__),
+        ('--maintainers', print_maintainers.__doc__),
+        ('--phases', print_phases.__doc__),
+        ('--tags', print_tags.__doc__),
+        ('--tests', print_tests.__doc__),
+        ('--variants', print_variants.__doc__),
+        ('--versions', print_versions.__doc__),
+        ('--virtuals', print_virtuals.__doc__),
+    ]
+    for opt, help_comment in options:
+        subparser.add_argument(opt, action='store_true', help=help_comment)
+
     arguments.add_common_arguments(subparser, ['package'])
 
 
@@ -147,27 +165,21 @@ class VariantFormatter(object):
                     yield "    " + self.fmt % t
 
 
-def print_text_info(pkg):
-    """Print out a plain text description of a package."""
+def print_dependencies(pkg):
+    """output any build, link, and run package dependencies"""
 
-    header = section_title(
-        '{0}:   '
-    ).format(pkg.build_system_class) + pkg.name
-    color.cprint(header)
-
-    color.cprint('')
-    color.cprint(section_title('Description:'))
-    if pkg.__doc__:
-        color.cprint(color.cescape(pkg.format_doc(indent=4)))
-    else:
-        color.cprint("    None")
-
-    color.cprint(section_title('Homepage: ') + pkg.homepage)
-
-    if len(pkg.maintainers) > 0:
-        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+    for deptype in ('build', 'link', 'run'):
         color.cprint('')
-        color.cprint(section_title('Maintainers: ') + mnt)
+        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
+        deps = sorted(pkg.dependencies_of_type(deptype))
+        if deps:
+            colify(deps, indent=4)
+        else:
+            color.cprint('    None')
+
+
+def print_detectable(pkg):
+    """output information on external detection"""
 
     color.cprint('')
     color.cprint(section_title('Externally Detectable: '))
@@ -189,63 +201,18 @@ def print_text_info(pkg):
     else:
         color.cprint('    False')
 
-    color.cprint('')
-    color.cprint(section_title("Tags: "))
-    if hasattr(pkg, 'tags'):
-        tags = sorted(pkg.tags)
-        colify(tags, indent=4)
-    else:
-        color.cprint("    None")
 
-    color.cprint('')
-    color.cprint(section_title('Preferred version:  '))
+def print_maintainers(pkg):
+    """output any package maintainers"""
 
-    if not pkg.versions:
-        color.cprint(version('    None'))
+    if len(pkg.maintainers) > 0:
+        mnt = " ".join(['@@' + m for m in pkg.maintainers])
         color.cprint('')
-        color.cprint(section_title('Safe versions:  '))
-        color.cprint(version('    None'))
-        color.cprint('')
-        color.cprint(section_title('Deprecated versions:  '))
-        color.cprint(version('    None'))
-    else:
-        pad = padder(pkg.versions, 4)
+        color.cprint(section_title('Maintainers: ') + mnt)
 
-        preferred = preferred_version(pkg)
-        url = ''
-        if pkg.has_code:
-            url = fs.for_package_version(pkg, preferred)
 
-        line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
-        color.cprint(line)
-
-        safe = []
-        deprecated = []
-        for v in reversed(sorted(pkg.versions)):
-            if pkg.has_code:
-                url = fs.for_package_version(pkg, v)
-            if pkg.versions[v].get('deprecated', False):
-                deprecated.append((v, url))
-            else:
-                safe.append((v, url))
-
-        for title, vers in [('Safe', safe), ('Deprecated', deprecated)]:
-            color.cprint('')
-            color.cprint(section_title('{0} versions:  '.format(title)))
-            if not vers:
-                color.cprint(version('    None'))
-                continue
-
-            for v, url in vers:
-                line = version('    {0}'.format(pad(v))) + color.cescape(url)
-                color.cprint(line)
-
-    color.cprint('')
-    color.cprint(section_title('Variants:'))
-
-    formatter = VariantFormatter(pkg.variants)
-    for line in formatter.lines:
-        color.cprint(color.cescape(line))
+def print_phases(pkg):
+    """output any installation phases"""
 
     if hasattr(pkg, 'phases') and pkg.phases:
         color.cprint('')
@@ -255,32 +222,21 @@ def print_text_info(pkg):
             phase_str += "    {0}".format(phase)
         color.cprint(phase_str)
 
-    for deptype in ('build', 'link', 'run'):
-        color.cprint('')
-        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
-        deps = sorted(pkg.dependencies_of_type(deptype))
-        if deps:
-            colify(deps, indent=4)
-        else:
-            color.cprint('    None')
+
+def print_tags(pkg):
+    """output any package tags"""
 
     color.cprint('')
-    color.cprint(section_title('Virtual Packages: '))
-    if pkg.provided:
-        inverse_map = {}
-        for spec, whens in pkg.provided.items():
-            for when in whens:
-                if when not in inverse_map:
-                    inverse_map[when] = set()
-                inverse_map[when].add(spec)
-        for when, specs in reversed(sorted(inverse_map.items())):
-            line = "    %s provides %s" % (
-                when.colorized(), ', '.join(s.colorized() for s in specs)
-            )
-            print(line)
-
+    color.cprint(section_title("Tags: "))
+    if hasattr(pkg, 'tags'):
+        tags = sorted(pkg.tags)
+        colify(tags, indent=4)
     else:
         color.cprint("    None")
+
+
+def print_tests(pkg):
+    """output relevant build-time and stand-alone tests"""
 
     # Some built-in base packages (e.g., Autotools) define callback (e.g.,
     # check) inherited by descendant packages. These checks may not result
@@ -347,9 +303,119 @@ def print_text_info(pkg):
     else:
         color.cprint('    None')
 
+
+def print_variants(pkg):
+    """output any variants"""
+
     color.cprint('')
+    color.cprint(section_title('Variants:'))
+
+    formatter = VariantFormatter(pkg.variants)
+    for line in formatter.lines:
+        color.cprint(color.cescape(line))
+
+
+def print_versions(pkg):
+    """output any versions"""
+
+    color.cprint('')
+    color.cprint(section_title('Preferred version:  '))
+
+    if not pkg.versions:
+        color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Safe versions:  '))
+        color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Deprecated versions:  '))
+        color.cprint(version('    None'))
+    else:
+        pad = padder(pkg.versions, 4)
+
+        preferred = preferred_version(pkg)
+        url = ''
+        if pkg.has_code:
+            url = fs.for_package_version(pkg, preferred)
+
+        line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
+        color.cprint(line)
+
+        safe = []
+        deprecated = []
+        for v in reversed(sorted(pkg.versions)):
+            if pkg.has_code:
+                url = fs.for_package_version(pkg, v)
+            if pkg.versions[v].get('deprecated', False):
+                deprecated.append((v, url))
+            else:
+                safe.append((v, url))
+
+        for title, vers in [('Safe', safe), ('Deprecated', deprecated)]:
+            color.cprint('')
+            color.cprint(section_title('{0} versions:  '.format(title)))
+            if not vers:
+                color.cprint(version('    None'))
+                continue
+
+            for v, url in vers:
+                line = version('    {0}'.format(pad(v))) + color.cescape(url)
+                color.cprint(line)
+
+
+def print_virtuals(pkg):
+    """output any virtual packages"""
+
+    color.cprint('')
+    color.cprint(section_title('Virtual Packages: '))
+    if pkg.provided:
+        inverse_map = {}
+        for spec, whens in pkg.provided.items():
+            for when in whens:
+                if when not in inverse_map:
+                    inverse_map[when] = set()
+                inverse_map[when].add(spec)
+        for when, specs in reversed(sorted(inverse_map.items())):
+            line = "    %s provides %s" % (
+                when.colorized(), ', '.join(s.colorized() for s in specs)
+            )
+            print(line)
+
+    else:
+        color.cprint("    None")
 
 
 def info(parser, args):
     pkg = spack.repo.get(args.package)
-    print_text_info(pkg)
+
+    # Output core package information
+    header = section_title(
+        '{0}:   '
+    ).format(pkg.build_system_class) + pkg.name
+    color.cprint(header)
+
+    color.cprint('')
+    color.cprint(section_title('Description:'))
+    if pkg.__doc__:
+        color.cprint(color.cescape(pkg.format_doc(indent=4)))
+    else:
+        color.cprint("    None")
+
+    color.cprint(section_title('Homepage: ') + pkg.homepage)
+
+    # Now output optional information in expected order
+    sections = [
+        (args.all or args.maintainers, print_maintainers),
+        (args.all or args.detectable, print_detectable),
+        (args.all or args.tags, print_tags),
+        (args.all or args.versions, print_versions),
+        (args.all or args.variants, print_variants),
+        (args.all or args.phases, print_phases),
+        (args.all or args.dependencies, print_dependencies),
+        (args.all or args.virtuals, print_virtuals),
+        (args.all or args.tests, print_tests),
+    ]
+    for print_it, func in sections:
+        if print_it:
+            func(pkg)
+
+    color.cprint('')

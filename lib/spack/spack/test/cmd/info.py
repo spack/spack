@@ -54,7 +54,7 @@ def test_it_just_runs(pkg):
 
 def test_info_noversion(mock_packages, info_lines, mock_print):
     """Check that a mock package with no versions or variants outputs None."""
-    info('noversion')
+    info('--versions', '--variants', 'noversion')
 
     line_iter = info_lines.__iter__()
     for line in line_iter:
@@ -74,7 +74,7 @@ def test_info_noversion(mock_packages, info_lines, mock_print):
 ])
 @pytest.mark.usefixtures('mock_print')
 def test_is_externally_detectable(pkg_query, expected, parser, info_lines):
-    args = parser.parse_args([pkg_query])
+    args = parser.parse_args(['--detectable', pkg_query])
     spack.cmd.info.info(parser, args)
 
     line_iter = info_lines.__iter__()
@@ -103,7 +103,7 @@ def test_info_fields(pkg_query, parser, info_lines):
         'Tags:'
     )
 
-    args = parser.parse_args([pkg_query])
+    args = parser.parse_args(['--all', pkg_query])
     spack.cmd.info.info(parser, args)
 
     for text in expected_fields:

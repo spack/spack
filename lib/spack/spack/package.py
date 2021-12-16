@@ -83,6 +83,16 @@ _spack_times_log = 'install_times.json'
 _spack_configure_argsfile = 'spack-configure-args.txt'
 
 
+def has_test_method(pkg):
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
+    return (
+        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
+        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    )
+
+
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
