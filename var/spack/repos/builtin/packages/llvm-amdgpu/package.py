@@ -20,7 +20,7 @@ class LlvmAmdgpu(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
-    version('4.5.0', sha256='e33d08c8ae42a3ba394dceb8938263cd14ba45e9603b18f3502c3344814ca296')
+    version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
     version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
     version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
     version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
