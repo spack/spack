@@ -41,6 +41,10 @@ _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
 
+_file_prefix = 'file://'
+if sys.platform == 'win32':
+    _file_prefix += '/'
+
 
 # Mock fetch directories are expected to appear as follows:
 #
@@ -214,7 +218,7 @@ def mock_stage_archive(tmp_build_stage_dir):
         # Create the archive directory and associated file
         archive_dir = tmpdir.join(_archive_base)
         archive = tmpdir.join(_archive_fn)
-        archive_url = 'file://' + str(archive)
+        archive_url = _file_prefix + str(archive)
         archive_dir.ensure(dir=True)
 
         # Create the optional files as requested and make sure expanded
@@ -280,7 +284,7 @@ def mock_expand_resource(tmpdir):
 
     archive_name = 'resource.tar.gz'
     archive = tmpdir.join(archive_name)
-    archive_url = 'file://' + str(archive)
+    archive_url = _file_prefix + str(archive)
 
     filename = 'resource-file.txt'
     test_file = resource_dir.join(filename)
@@ -414,7 +418,7 @@ class TestStage(object):
         property of the stage should refer to the path of that file.
         """
         test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
-            url='file://' + mock_noexpand_resource, expand=False)
+            url=_file_prefix + mock_noexpand_resource, expand=False)
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
             stage.expand_archive()
@@ -430,7 +434,7 @@ class TestStage(object):
 
         resource_dst_name = 'resource-dst-name.sh'
         test_resource_fetcher = spack.fetch_strategy.from_kwargs(
-            url='file://' + mock_noexpand_resource, expand=False)
+            url=_file_prefix + mock_noexpand_resource, expand=False)
         test_resource = Resource(
             'test_resource', test_resource_fetcher, resource_dst_name, None)
         resource_stage = ResourceStage(
