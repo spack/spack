@@ -234,11 +234,10 @@ class Hypre(AutotoolsPackage, CudaPackage):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
-            
             if '+gptune' in self.spec:
                 make("test")
                 self.run_test('mkdir', options=['-p', self.prefix.bin])
-                self.run_test('cp', options=['test/ij', self.prefix.bin+'/.'])
+                self.run_test('cp', options=['test/ij', self.prefix.bin + '/.'])
 
     extra_install_tests = join_path('src', 'examples')
 

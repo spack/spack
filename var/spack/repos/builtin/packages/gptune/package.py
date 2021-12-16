@@ -174,14 +174,11 @@ class Gptune(CMakePackage):
                           'configurations\\\":{\\\"$machine\\\":{\\\"$proc\\\":' +
                           '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}}") \n')
 
-        # copy the environment configuration files to non-cache directories                  
+        # copy the environment configuration files to non-cache directories
         op = ['run_env.sh', site_packages_dir + '/gptune/.']
         self.run_test('cp', options=op, work_dir=wd)
         op = ['run_env.sh', self.install_test_root + '/.']
         self.run_test('cp', options=op, work_dir=wd)
-
-
-
 
         apps = ['Scalapack-PDGEQRF_RCI']
         if '+mpispawn' in spec:
