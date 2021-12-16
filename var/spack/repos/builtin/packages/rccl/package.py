@@ -61,7 +61,9 @@ class Rccl(CMakePackage):
         match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
                           lib)
         if match:
-            ver = '{0}.{1}.{2}'.format(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
         else:
             ver = None
         return ver

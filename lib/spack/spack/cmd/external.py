@@ -92,8 +92,6 @@ def external_find(args):
 
     detected_packages = spack.detection.by_executable(packages_to_check)
     detected_packages.update(spack.detection.by_library(packages_to_check))
-    # maybe this line is
-    # detected_packaes.update(spack.detection.by_library([p for p in packages_to_check if p not in detected_packages]))
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable

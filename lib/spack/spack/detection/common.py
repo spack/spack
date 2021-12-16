@@ -178,7 +178,6 @@ def library_prefix(library_dir):
         return None
 
 
-
 def update_configuration(detected_packages, scope=None, buildable=True):
     """Add the packages passed as arguments to packages.yaml
 

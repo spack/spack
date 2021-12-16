@@ -180,7 +180,8 @@ def by_library(packages_to_check, path_hints=None):
                 pkg_prefix = library_prefix(prefix)
 
                 if not pkg_prefix:
-                    msg = "no lib/ or lib64/ dir found in {0}. Cannot add it as a Spack package"
+                    msg = "no lib/ or lib64/ dir found in {0}. Cannot "
+                    "add it as a Spack package"
                     llnl.util.tty.debug(msg.format(prefix))
                     continue
 
