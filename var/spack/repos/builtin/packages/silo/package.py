@@ -54,7 +54,9 @@ class Silo(AutotoolsPackage):
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
     patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
-    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.11,1.12.1:1.13')
+    # H5EPR_SEMI_COLON.patch should be applied only to silo@4.11 when building
+    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later 1.12 
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:1.12')
 
     conflicts('hdf5@1.10.8:', when="@:4.10.2")
     conflicts('+hzip', when="@4.11-bsd")
