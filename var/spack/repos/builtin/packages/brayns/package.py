@@ -37,18 +37,20 @@ class Brayns(CMakePackage):
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
-    depends_on('git', when='@1.1.1:')
+    depends_on('assimp@5.0.1', when='@1.1.1: +assimp')
+    depends_on('bbptestdata', type='test', when='+test')
     depends_on('brion', when='+brion')
+    depends_on('ffmpeg@4.2.2', when='+net')
+    depends_on('git', when='@1.1.1:')
+    depends_on('glew', when='+viewer')
+    depends_on('glm')
     depends_on('libsonata', when='@1.1.1: +brion')
     depends_on('morphio', when='@1.1.1: +brion')
     depends_on('mvdtool', when='@1.1.1: +brion')
-    depends_on('assimp@5.0.1', when='@1.1.1: +assimp')
     depends_on('opengl', when='+viewer')
-    depends_on('glew', when='+viewer')
     depends_on('ospray', when='+ospray')
-    depends_on('bbptestdata', type='test', when='+test')
-    depends_on('ffmpeg@4.2.2', when='+net')
-    depends_on('glm')
+    depends_on('spdlog')
+
     depends_on('deflect ~deflect-qt', when='@:1.1.0 +deflect')
     depends_on('assimp@4.1.0', when='@:1.1.0 +assimp')
     depends_on('freeimage', when='@:1.1.0')
@@ -67,6 +69,10 @@ class Brayns(CMakePackage):
     patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/938.patch',
           sha256='e1ace3dc7c3dcbea05ea1be90173e0f8ae8401b92b2554114d20b2c6da40eca7',
           when='%gcc@11:')
+
+    patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/950.patch',
+          sha256='5a43ff4e8ad322aefa5e4ec23fb3bc80ca679d2cd30579caa3d84ad7993bcb10',
+          when='@2.0.0%gcc@11:')
 
     def patch(self):
         cmake_common_file = 'CMake/common/CommonCompiler.cmake'
