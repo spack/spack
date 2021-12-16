@@ -22,6 +22,7 @@ class Miopengemm(CMakePackage):
         url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('master', branch='master')
     version('4.5.0', sha256='54ec908109a91f9022b61e63e3a1b9706cdcf133ba6fb3b39a65ca0e79be7747')
     version('4.3.1', sha256='0aee2281d9b8c625e9bda8efff3067237d6155a53f6c720dcb4e3b3ec8bf8d14')
     version('4.3.0', sha256='d32b3b98e695b7db2fd2faa6587a57728d1252d6d649dcb2db3102f98cd5930e')
@@ -41,6 +42,6 @@ class Miopengemm(CMakePackage):
     depends_on('rocm-opencl@3.5.0',              when='@1.1.6')
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-opencl@' + ver,              when='@' + ver)

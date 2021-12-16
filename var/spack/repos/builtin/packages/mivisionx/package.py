@@ -24,6 +24,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('master', branch='master')
     version('4.5.0', sha256='518834893d3fcdb7ecff179b3f3992ca1aacb30b6d95711c74918abb6f80b925')
     version('4.3.1', sha256='d77d63c0f148870dcd2a39a823e94b28adef9e84d2c37dfc3b05db5de4d7af83')
     version('4.3.0', sha256='31f6ab9fb7f40b23d4b24c9a70f809623720943e0492c3d357dd22dcfa50efb2')
@@ -72,11 +73,11 @@ class Mivisionx(CMakePackage):
     depends_on('openssl', when='@4.0.0:')
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0']:
+                '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('rocm-opencl@' + ver,   when='@' + ver)
         depends_on('miopengemm@' + ver,    when='@' + ver)
         depends_on('miopen-opencl@' + ver, when='@' + ver)
-    for ver in ['4.5.0']:
+    for ver in ['4.5.0','master']:
         depends_on('miopen-hip@' + ver,   when='@' + ver)
 
     def cmake_args(self):

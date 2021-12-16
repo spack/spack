@@ -16,6 +16,7 @@ class MiopenHip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.0', sha256='be2f5ce962e15e62d427978422498c0ddf821b91fd40777a1ba915a2794d6fda')
     version('4.3.1', sha256='1fb2fd8b24f984174ec5338a58b7964e128b74dafb101373a41c8ed33955251a')
     version('4.3.0', sha256='034445470cfd44480a1d9854f9fdfe92cfb8efa3f002dee508eb9585e338486d')
@@ -41,7 +42,7 @@ class MiopenHip(CMakePackage):
     patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-clang-ocl@' + ver,           when='@' + ver)

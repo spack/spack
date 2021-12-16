@@ -59,7 +59,7 @@ extras = [
     "ec6cc4a9c24f098496de3206714dafe9a714f06afacfe21d53a4e6344f9cb4c9"
 ]
 
-versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']
+versions = ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0','master']
 versions_dict = dict()
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
 component_hashes = [aomp, devlib, llvm, flang, extras]
@@ -78,6 +78,7 @@ class RocmOpenmpExtras(Package):
     url = tools_url + "/aomp/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+    version('master', branch='amd-master')
     version('4.3.0', sha256=versions_dict['4.3.0']['aomp'])
     version('4.2.0', sha256=versions_dict['4.2.0']['aomp'])
     version('4.1.0', sha256=versions_dict['4.1.0']['aomp'])
@@ -94,7 +95,7 @@ class RocmOpenmpExtras(Package):
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
-    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
+    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0','master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)

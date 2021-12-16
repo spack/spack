@@ -15,6 +15,7 @@ class Hipcub(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.0', sha256='5902fae0485789f1d1cc6b8e81d9f1b39338170d3139844d5edf0d324f9694c9')
     version('4.3.1', sha256='20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a')
     version('4.3.0', sha256='733499a8d55e2d73bf874d43a98ee7425e4325f77e03fb0c80debf36c740cb70')
@@ -33,7 +34,7 @@ class Hipcub(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)

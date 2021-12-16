@@ -17,7 +17,7 @@ class Rccl(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-
+    version('master', branch='master')
     version('4.5.0', sha256='f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e')
     version('4.3.1', sha256='c5db71423dc654e8d2c3111e142e65c89436bc636827d95d41a09a87f44fe246')
     version('4.3.0', sha256='b5231d8c5ab034a583feceebcef68d0cc0b05ec5a683f802fc7747c89f27d5f6')
@@ -34,20 +34,24 @@ class Rccl(CMakePackage):
 
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:4.3.2')
     patch('0002-Fix-numactl-rocm-smi-path-issue.patch', when='@4.5.0:')
+    patch('0002-Fix-numactl-rocm-smi-path-issue.patch', when='@master')
 
     depends_on('cmake@3:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('rocm-cmake@' + ver,   type='build', when='@' + ver)
         depends_on('hip@' + ver,                        when='@' + ver)
         depends_on('comgr@' + ver,                      when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver,               when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0']:
+                '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('numactl@2:', when='@' + ver)
     for ver in ['4.5.0']:
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
+    for ver in ['master']:
+        depends_on('rocm-smi-lib@' + ver, when='@' + ver)
+
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -63,6 +67,6 @@ class Rccl(CMakePackage):
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
-        if self.spec.satisfies('@4.5.0:'):
+        if self.spec.satisfies('@4.5.0:') or self.spec.satisfies('@master') :
             args.append(self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix))
         return args

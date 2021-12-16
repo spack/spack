@@ -15,6 +15,7 @@ class Rocfft(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    version('master', branch='master')
     version('4.5.0', sha256='045c1cf1737db6e7ee332c274dacdb565f99c976ed4cc5626a116878dc80a48c')
     version('4.3.1', sha256='fcdc4d12b93d967b6f992b4045da98433eabf2ee0ba84fc6b6f81e380584fbc9')
     version('4.3.0', sha256='cb5b8f62330bc61b17a3a2fd1500068ee05d48cb51797901dd259dbc84610478')
@@ -40,7 +41,7 @@ class Rocfft(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 

@@ -19,6 +19,7 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
     version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
     version('4.3.0', sha256='f7a918b513c51dd5eadce3f2e091679b2dfe6544a913960ac483567792a06a4c')
@@ -38,6 +39,7 @@ class RocmValidationSuite(CMakePackage):
     patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:4.3.2')
     patch('004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.3.0:4.3.2')
     patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@4.5.0:')
+    patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@master')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
@@ -50,7 +52,7 @@ class RocmValidationSuite(CMakePackage):
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)

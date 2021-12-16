@@ -18,6 +18,7 @@ class RoctracerDev(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.0', sha256='83dcd8987e129b14da0fe74e24ce8d027333f8fedc9247a402d3683765983296')
     version('4.3.1', sha256='88ada5f256a570792d1326a305663e94cf2c3b0cbd99f7e745326923882dafd2')
     version('4.3.0', sha256='c3d9f408df8d4dc0e9c0026217b8c684f68e775da80b215fecb3cd24419ee6d3')
@@ -35,16 +36,17 @@ class RoctracerDev(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('python@:2', type='build', when='@:4.1.0')
     depends_on('python@3:', type='build', when='@4.2.0:')
+    depends_on('python@3:', type='build', when='@master')
     depends_on('py-cppheaderparser', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 
-    for ver in ['4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+    for ver in ['4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('rocprofiler-dev@' + ver, when='@' + ver)
 
     def setup_build_environment(self, build_env):

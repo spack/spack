@@ -44,6 +44,7 @@ class HipRocclr(CMakePackage):
     depends_on('mesa18~llvm@18.3: swr=none', type='link')
     depends_on('libelf', type='link', when="@3.7.0:3.8.0")
     depends_on('numactl', type='link', when="@3.7.0:")
+    depends_on('numactl', type='link', when="@master")
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
@@ -97,7 +98,7 @@ class HipRocclr(CMakePackage):
 
     @property
     def install_targets(self):
-        if self.spec.satisfies('@4.5.0'):
+        if self.spec.satisfies('@4.5.0') or self.spec.satisfies('@master'):
             return []
         return ['install']
 

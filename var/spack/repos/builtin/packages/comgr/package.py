@@ -38,6 +38,7 @@ class Comgr(CMakePackage):
 
     depends_on('cmake@3.2.0:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
+    depends_on('cmake@3.13.4:', type='build', when='@master')
 
     depends_on('zlib', type='link')
     depends_on('z3', type='link')

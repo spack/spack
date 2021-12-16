@@ -15,6 +15,7 @@ class Hipfort(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.0', sha256='48626dfb15bb5dcb044c9e1d4dc4b0654a2cd0abfc69485aa285dc20d7f40d51')
     version('4.3.1', sha256='279a35edbc0c22fa930a4355e663a86adf4d0316c5b1b6b9ccc6ee5c19c8c2e4')
     version('4.3.0', sha256='fd0ffdafdc17ac42c7dae3f89991651f15affdef9b2354da05c7493d09d8974e')
@@ -30,7 +31,7 @@ class Hipfort(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0']:
+                '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 

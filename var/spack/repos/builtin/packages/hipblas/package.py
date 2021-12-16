@@ -15,7 +15,8 @@ class Hipblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-
+    
+    version('master', branch='master')
     version('4.5.0', sha256='187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e')
     version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')
     version('4.3.0', sha256='0631e21c588794ea1c8413ef8ff293606bcf7a52c0c3ff88da824f103395a76a')
@@ -36,13 +37,14 @@ class Hipblas(CMakePackage):
 
     patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
     patch('link-clients-blas-4.5.0.patch', when='@4.5.0:')
+    patch('link-clients-blas-4.5.0.patch', when='@master')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
         self.run_test(exe)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
