@@ -55,7 +55,7 @@ class Rhash(MakefilePackage):
         else:
             make('test-lib-static')
 
-        if not self.spec.satisfies('platform=darwin'):
+        if not self.spec.satisfies('@:1.3.5 platform=darwin'):
             make('test-shared')
             if self.spec.satisfies('@:1.3.5'):
                 make('test-shared-lib')
