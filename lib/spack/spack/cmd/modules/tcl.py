@@ -7,6 +7,7 @@ import functools
 import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
+import spack.modules.tcl
 
 
 def add_command(parser, command_dict):
@@ -40,11 +41,12 @@ def setdefault(module_type, specs, args):
         'modules': {
             args.module_set_name: {
                 'tcl': {
-                    'defaults': [str(spec[0])]
+                    'defaults': [str(spec)]
                 }
             }
         }
     }
+    spack.modules.tcl.configuration_registry = {}
     scope = spack.config.InternalConfigScope('tcl-setdefault', data)
     with spack.config.override(scope):
         writer = spack.modules.module_types['tcl'](spec, args.module_set_name)
