@@ -24,6 +24,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
     version('5.7.0', sha256='8d6dd094feccbb8d6ecc41340ec16a65fabac82ed4415023f6d7c1c2390ea2f3')
     version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
@@ -55,6 +56,15 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     for pkg in sun_solvers:
         variant(pkg, default=True,
                 description='Enable %s solver' % pkg)
+
+    # Language standards
+    variant('cstd', default='99',
+            description='C language standard',
+            values=('90', '99', '11', '17'))
+
+    variant('cxxstd', default='14',
+            description='C++ language standard',
+            values=('99', '11', '14', '17'))
 
     # Real type
     variant(
@@ -236,6 +246,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         # SUNDIALS solvers
         for pkg in self.sun_solvers:
             args.append(self.define_from_variant('BUILD_' + pkg, pkg))
+
+        # language standard
+        cstd = spec.variants['cstd'].value
+        args.append('CMAKE_C_STANDARD=%s' % cstd)
+        cxxstd = spec.variants['cxxstd'].value
+        args.append('CMAKE_CXX_STANDARD=%s' % cxxstd)
 
         # precision
         args.extend([
