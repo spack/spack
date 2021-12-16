@@ -18,8 +18,8 @@ class PyRdt(PythonPackage):
 
     depends_on('python@3.6:',               type=('build', 'run'))
     depends_on('py-setuptools',             type='build')
-    depends_on('py-numpy@1.18.0:1.19.999',  type=('build', 'run'), when='^python@3.6')
-    depends_on('py-numpy@1.20:1.999',       type=('build', 'run'), when='^python@3.7:')
+    depends_on('py-numpy@1.18:1.19',        type=('build', 'run'), when='^python@3.6')
+    depends_on('py-numpy@1.20:1',           type=('build', 'run'), when='^python@3.7:')
     depends_on('py-pandas@1.1.3:1.1.4',     type=('build', 'run'))
-    depends_on('py-scipy@1.5.4:1.999.999',  type=('build', 'run'))
-    depends_on('py-psutil@5.7:5.999',       type=('build', 'run'))
+    depends_on('py-scipy@1.5.4:1',          type=('build', 'run'))
+    depends_on('py-psutil@5.7:5',           type=('build', 'run'))
