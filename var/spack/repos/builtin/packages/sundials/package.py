@@ -75,6 +75,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         multi=False
     )
 
+
     # Index type
     variant('int64', default=False,
             description='Use 64bit integers for indices')
@@ -92,6 +93,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable SYCL vector')
 
     # External libraries
+    variant('caliper',      default=False,
+            description='Enable Caliper instrumentation/profiling')
     variant('hypre',        default=False,
             description='Enable Hypre MPI parallel vector')
     variant('lapack',       default=False,
@@ -133,6 +136,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     variant('monitoring', default=False,
             description='Build with simulation monitoring capabilities')
 
+    # Profiling
+    variant('profiling', default=False,
+            description='Build with profiling capabilities')
+
     # ==========================================================================
     # Conflicts
     # ==========================================================================
@@ -148,6 +155,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+trilinos',      when='@:4.1.0')
     conflicts('+monitoring',    when='@:5.5.0')
     conflicts('+rocm',          when='@:5.6.0')
+    conflicts('+profiling',     when='@:6.0.0')
+    conflicts('+caliper',       when='@:6.0.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -171,6 +180,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # rocm+examples and cstd do not work together in 6.0.0
     conflicts('+rocm+examples', when='@6.0.0')
 
+    # profiling must be on for Caliper support to mean anything
+    conflicts('+caliper', when='~profiling')
+
     # ==========================================================================
     # Dependencies
     # ==========================================================================
@@ -190,13 +202,14 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+rocm', when='+raja +rocm')
 
     # External libraries
+    depends_on('caliper',                 when='+caliper')
     depends_on('lapack',                  when='+lapack')
-    depends_on('suite-sparse',            when='+klu')
-    depends_on('petsc+mpi',               when='+petsc')
     depends_on('hypre+mpi~int64',         when='@5.7.1: +hypre ~int64')
     depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
     depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
     depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('petsc+mpi',               when='+petsc')
+    depends_on('suite-sparse',            when='+klu')
     depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
     depends_on('superlu-dist@6.3.0:',     when='@5.5.0: +superlu-dist')
     depends_on('trilinos+tpetra',         when='+trilinos')
@@ -289,6 +302,16 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         args.extend([
             self.define_from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring')
         ])
+
+        # Profiling
+        args.extend([
+            self.define_from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling')
+        ])
+        if '+profiling+caliper' in spec:
+            args.extend([
+                '-DENABLE_CALIPER=ON',
+                '-DCALIPER_DIR=%s' % spec['caliper'].prefix
+            ])
 
         # parallelism
         args.extend([
