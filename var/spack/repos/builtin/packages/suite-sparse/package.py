@@ -165,7 +165,7 @@ class SuiteSparse(Package):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
-        if 'tbb' in spec:
+        if '+tbb' in spec:
             make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=%s' % spec['tbb'].libs.ld_flags,
