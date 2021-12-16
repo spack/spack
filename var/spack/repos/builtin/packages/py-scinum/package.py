@@ -15,5 +15,5 @@ class PyScinum(PythonPackage):
 
     version('1.2.0', sha256='31802d9b580f3a89c0876f34432851bc4def9cb2844d6f3c8e044480f2dd2f91')
 
-    depends_on('python@2.7:2.7,3:', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
