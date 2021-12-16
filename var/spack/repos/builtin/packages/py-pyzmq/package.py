@@ -27,8 +27,9 @@ class PyPyzmq(PythonPackage):
     version('14.7.0', sha256='77994f80360488e7153e64e5959dc5471531d1648e3a4bff14a714d074a38cc2')
 
     # Python 3.9 build issues
-    depends_on('python@2.7:2.8,3.3:3.8', type=('build', 'run'), when='@18:')
-    depends_on('python@3.6:3.8', type=('build', 'run'), when='@22.3.0:')
+    depends_on('python@3.6:3.8', type=('build', 'run'), when='@22:')
+    depends_on('python@2.7,3.3:3.8', type=('build', 'run'), when='@16:18')
+    depends_on('python@2.6:2.7,3.2:3.8', type=('build', 'run'), when='@:14')
     depends_on('py-cython@0.16:', type='build')
     depends_on('py-cython@0.20:', type='build', when='@18:')
     depends_on('py-cython@0.29:', type='build', when='@22.3.0:')
