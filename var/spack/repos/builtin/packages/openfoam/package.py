@@ -559,7 +559,7 @@ class Openfoam(Package):
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
 
-    @when('@:2106 %aocc@3.2.0')
+    @when('@:2106 %aocc@3.2.0:')
     @run_before('configure')
     def make_amd_rules(self):
         """Due to the change in the linker behavior in AOCC v3.2, it is now
