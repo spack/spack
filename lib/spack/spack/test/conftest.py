@@ -13,6 +13,7 @@ import os
 import os.path
 import re
 import shutil
+import sys
 import tempfile
 import xml.etree.ElementTree
 
@@ -1030,10 +1031,14 @@ def mock_archive(request, tmpdir_factory):
                                      ['url', 'path', 'archive_file',
                                       'expanded_archive_basedir'])
     archive_file = str(tmpdir.join(archive_name))
+    if sys.platform == 'win32':
+        url = ('file:///' + archive_file)
+    else:
+        url = ('file://' + archive_file)
 
     # Return the url
     yield Archive(
-        url=('file://' + archive_file),
+        url=url,
         archive_file=archive_file,
         path=str(repodir),
         expanded_archive_basedir=spack.stage._source_path_subdir)
