@@ -78,7 +78,20 @@ class Rhash(MakefilePackage):
 
     @when('@1.3.6:')
     def install(self, spec, prefix):
-        make('install', 'DESTDIR={0}'.format(prefix))
+        # Intermittent issues during installation, prefix.bin directory already exists
+        make('install', 'DESTDIR={0}'.format(prefix), parallel=False)
         make('install-pkg-config', 'DESTDIR={0}'.format(prefix))
         make('install-lib-so-link', 'DESTDIR={0}'.format(prefix))
         make('install-lib-headers', 'DESTDIR={0}'.format(prefix))
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('@1.3.6: platform=darwin'):
+            # Fix RPATH for <prefix>/bin/rhash
+            old = '/lib/librhash.0.dylib'
+            new = self.prefix.lib.join('librhash.dylib')
+            install_name_tool = Executable('install_name_tool')
+            install_name_tool('-change', old, new, self.prefix.bin.rhash)
+            # Fix RPATH for <prefix>/lib/librhash.dylib
+            fix_darwin_install_name(self.prefix.lib)
