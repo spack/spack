@@ -1157,7 +1157,7 @@ _spack_help() {
 _spack_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -a --all --dependencies --detectable --maintainers --phases --tags --tests --variants --versions --virtuals"
     else
         _all_packages
     fi
