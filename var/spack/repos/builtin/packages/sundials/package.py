@@ -168,6 +168,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # SuperLU_MT interface requires lapack for external blas (before v3.0.0)
     conflicts('+superlu-mt', when='@:2.7.0 ~lapack')
 
+    # rocm+examples and cstd do not work together in 6.0.0
+    conflicts('+rocm+examples', when='@6.0.0')
+
     # ==========================================================================
     # Dependencies
     # ==========================================================================
