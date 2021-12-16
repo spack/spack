@@ -20,7 +20,7 @@ class PyPymol(PythonPackage):
     version('2.3.0', sha256='62aa21fafd1db805c876f89466e47513809f8198395e1f00a5f5cc40d6f40ed0')
 
     depends_on('python+tkinter@2.7:', type=('build', 'run'), when='@2.3.0:2.4.0')
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.5.0:')
+    depends_on('python+tkinter@3.6:', type=('build', 'run'), when='@2.5.0:')
     depends_on('gl')
     depends_on('glew')
     depends_on('libpng')
@@ -30,6 +30,7 @@ class PyPymol(PythonPackage):
     depends_on('msgpack-c@2.1.5:')
     depends_on('netcdf-cxx4')
     depends_on('libxml2')
+    depends_on('py-pmw-patched', type=('build', 'run'))
     depends_on('py-pyqt5', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
 
