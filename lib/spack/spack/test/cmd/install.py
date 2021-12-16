@@ -1109,4 +1109,5 @@ def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
         out = install(fail_on_error=False)
 
     assert env_name in out
-    assert 'requires at least one spec' in out
+    assert 'environment' in out
+    assert 'no specs to install' in out
