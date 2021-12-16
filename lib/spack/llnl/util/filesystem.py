@@ -141,7 +141,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file.
     """
     string = kwargs.get('string', False)
-    backup = kwargs.get('backup', True)
+    backup = kwargs.get('backup', False)
     ignore_absent = kwargs.get('ignore_absent', False)
     stop_at = kwargs.get('stop_at', None)
 
