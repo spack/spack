@@ -84,6 +84,16 @@ _spack_configure_argsfile = 'spack-configure-args.txt'
 
 
 def has_test_method(pkg):
+    """Determine if the package has an associated stand-alone `test` method.
+    The default, empty method provided by PackageBase is not included.
+
+    Args:
+        pkg (str): the package being checked
+
+    Returns:
+        (bool): ``True`` if the package overrides the default method; else
+            ``False``
+    """
     if not inspect.isclass(pkg):
         tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
 
