@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.error import UnsupportedPlatformError
 import os
+
+from spack.error import UnsupportedPlatformError
+
 
 class Umap(CMakePackage):
     """Umap is a library that provides an mmap()-like interface to a
@@ -55,8 +57,16 @@ class Umap(CMakePackage):
         test_out = [r"R[OW] test passed."]
 
         cxx = os.environ['CXX']
-        compile_opts = ['-std=c++11', '-L', lib_path, '-I', include_path, '-lumap', '-o', test_exe, test_src]
+        compile_opts = [
+            '-std=c++11',
+            '-L', lib_path,
+            '-I', include_path,
+            '-lumap',
+            '-o', test_exe,
+            test_src
+        ]
 
-        compiled = self.run_test(cxx, options=compile_opts, expected="", purpose="Compiling test")
+        compiled = self.run_test(cxx, options=compile_opts,
+                                 expected="", purpose="Compiling test")
         if compiled:
             self.run_test(test_exe, expected=test_out)
