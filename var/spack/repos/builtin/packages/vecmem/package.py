@@ -39,8 +39,8 @@ class Vecmem(CMakePackage, CudaPackage):
             self.define('VECMEM_BUILD_TESTING', self.run_tests)
         ]
 
-        if '+cuda' in spec:
-             cuda_arch_list = spec.variants['cuda_arch'].value
+        if '+cuda' in self.spec:
+             cuda_arch_list = self.spec.variants['cuda_arch'].value
              cuda_arch = cuda_arch_list[0]
              if cuda_arch != 'none':
                  args.append('-DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch))
