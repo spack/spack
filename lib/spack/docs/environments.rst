@@ -9,45 +9,75 @@
 Environments
 ============
 
-An environment is used to group together a set of specs for the
-purpose of building, rebuilding and deploying in a coherent fashion.
-Environments provide a number of advantages over the *à la carte*
-approach of building and loading individual Spack modules:
-
-#. Environments separate the steps of (a) choosing what to
-   install, (b) concretizing, and (c) installing.  This allows
-   Environments to remain stable and repeatable, even if Spack packages
-   are upgraded: specs are only re-concretized when the user
-   explicitly asks for it.  It is even possible to reliably
-   transport environments between different computers running
-   different versions of Spack!
-#. Environments allow several specs to be built at once; a more robust
-   solution than ad-hoc scripts making multiple calls to ``spack
-   install``.
-#. An Environment that is built as a whole can be loaded as a whole
-   into the user environment. An Environment can be built to maintain
-   a filesystem view of its packages, and the environment can load
-   that view into the user environment at activation time. Spack can
-   also generate a script to load all modules related to an
-   environment.
-
-Other packaging systems also provide environments that are similar in
-some ways to Spack environments; for example, `Conda environments
-<https://conda.io/docs/user-guide/tasks/manage-environments.html>`_ or
-`Python Virtual Environments
-<https://docs.python.org/3/tutorial/venv.html>`_.  Spack environments
-provide some distinctive features:
+Spack environments allow grouping independent sets of specs to be
+processed together. They provide *virtual environments* similar to
+those supported by other commonly used tools, such as `Python venv
+<https://docs.python.org/3/library/venv.html>`_ and `Conda environments
+<https://conda.io/docs/user-guide/tasks/manage-environments.html>`_.
+However, Spack environments provide some distinctive features:
 
 #. A spec installed "in" an environment is no different from the same
    spec installed anywhere else in Spack.  Environments are assembled
    simply by collecting together a set of specs.
 #. Spack Environments may contain more than one spec of the same
    package.
+#. Multiple environments associated with a Spack instance seamlessly
+   share the installed software.
 
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
-file is named ``spack.lock``
+file is named ``spack.lock``.
+
+.. _environments-advantages:
+
+-------------------
+Uses and Advantages
+-------------------
+
+Environments facilitate software development and deployment in ways
+that can include:
+
+* An Environment is treated as a unit of operation.
+  At the most basic level, environments allow for the separation
+  of the steps for (a) choosing what to install, (b) determining
+  which options apply, and (c) installing the software.
+  All of the options for the specs are determined during concretization.
+* Environments provide stability and repeatability.
+  The separation of steps in the build process allows environments
+  to remain stable and repeatable even if packages are upgraded.
+  Specs are only re-concretized and installed when the user explicitly
+  performs those operations.
+* Environments provide a view of the installed software.
+  An environment can be configured to maintain a filesystem view
+  of its installed software, allowing that view to be loaded into
+  the user environment at activation time.
+* Environments support build reproduction.
+  Environment files can be shared with others to `reproduce builds
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_environments.html#reproducing-builds>`_
+  on the same or other systems.
+* Environments enable building software on air-gapped networks.
+  Environments can be used to create `mirrors
+  <https://spack.readthedocs.io/en/latest/mirrors.html>`_ of
+  software that would otherwise have to be downloaded from the
+  internet.
+* Environments enable reducing the load of recompiling software.
+  Builds of an environment's software can be saved to a `binary cache
+  <https://spack.readthedocs.io/en/latest/binary_caches.html>`_,
+  allowing teams to avoid unnecessarily re-building software on
+  the system.
+* Environments provide the foundation for CI.
+  Spack environments can be configured to generate CI `pipelines
+  <https://spack.readthedocs.io/en/latest/pipelines.html>`_.
+* Environments support common `developer workflows
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_developer_workflows.html#>`_.
+  Teams can use environments to help manage their development of
+  software across multiple packages.
+* Environments can be used to create `container images
+  <https://spack.readthedocs.io/en/latest/containers.html>`_.
+* Environments can be used to manage large software deployments.
+  Software deployments can be configured with `Spack stacks
+  <https://spack-tutorial.readthedocs.io/en/latest/tutorial_stacks.html>`_.
 
 .. _environments-using:
 
