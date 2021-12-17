@@ -46,9 +46,8 @@ class PyTensorboard(Package):
     # py-tensorboard-plugin-wit only builds with versions of bazel older than
     # what is needed for py-tensorboard-2.5 and greater. Work around that for
     # now by using a wheel.
-    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:')
-    depends_on('py-tensorboard-plugin-wit@1.8.0-py3', type=('build', 'run'),
-               when='@2.5.0:')
+    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:2.4')
+    depends_on('py-tensorboard-plugin-wit@1.8.0-py3', type=('build', 'run'), when='@2.5.0:')
 
     depends_on('py-tensorboard-data-server@0.6.0:0.6', type=('build', 'run'), when='@2.5:')
 

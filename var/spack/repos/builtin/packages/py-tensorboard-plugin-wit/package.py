@@ -22,7 +22,6 @@ class PyTensorboardPluginWit(Package):
     maintainers = ['aweits']
 
     version('master', branch='master')
-    version('1.8.0', sha256='1e4de1bbf6ae61c4d27b114ec2e1093bc4765b8c2bbb2cc5d43e2075b08a5fea')
     version('1.8.0-py3',
             expand=False,
             url='https://pypi.io/packages/py3/t/tensorboard_plugin_wit/tensorboard_plugin_wit-1.8.0-py3-none-any.whl',
@@ -34,7 +33,6 @@ class PyTensorboardPluginWit(Package):
     # The constraints below are the only way to have the wheel package not
     # depend on bazel.
     depends_on('bazel@0.26.1:3.6', type='build', when='@1.7.0')
-    depends_on('bazel@0.26.1:3.6', type='build', when='@1.8.0')
 
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
