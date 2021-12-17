@@ -30,4 +30,3 @@ spack:
     - circuit-build
     - placement-algorithm
     - py-region-grower
-    - py-region-grower@0.2.4

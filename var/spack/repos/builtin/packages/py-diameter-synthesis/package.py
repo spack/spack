@@ -9,21 +9,18 @@ from spack import *
 class PyDiameterSynthesis(PythonPackage):
     """Python library to generate synthetic diameters for neurons."""
 
-    homepage = "https://bbpgitlab.epfl.ch/neuromath/diameter-synthesis/"
-    git      = "git@bbpgitlab.epfl.ch:neuromath/diameter-synthesis.git"
+    homepage = "https://github.com/BlueBrain/diameter-synthesis"
+    git      = "https://github.com/BlueBrain/diameter-synthesis.git"
 
-    version('0.2.5', tag='diameter-synthesis-v0.2.5')
-    version('0.2.4', tag='diameter-synthesis-v0.2.4')
+    version('0.2.5', tag='0.2.5')
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-click@7.0:', type='run')
-    depends_on('py-numpy@1.15.0:', type='run')
-    depends_on('py-scipy@0.13:', type='run')
-    depends_on('py-h5py@2.9:', type='run')
-    depends_on('py-matplotlib@2.2:', type='run')
-    depends_on('py-pandas@0.24:', type='run')
-    depends_on('py-neurom@3.0:3.999', type='run', when='@0.2.5:')
-    depends_on('py-neurom@2.1.0:2.99', type='run', when='@:0.2.4')
-    depends_on('py-morphio@2.3.4:', type='run')
-    depends_on('py-jsonschema@3:', type='run')
+    depends_on('py-click@7.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.15.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.13.3:', type=('build', 'run'))
+    depends_on('py-matplotlib@2.2:', type=('build', 'run'))
+    depends_on('py-pandas@0.24:', type=('build', 'run'))
+    depends_on('py-neurom@3.0:3.999', type=('build', 'run'))
+    depends_on('py-morphio@2.3.4:', type=('build', 'run'))
+    depends_on('py-jsonschema@3:', type=('build', 'run'))
