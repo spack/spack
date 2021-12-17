@@ -302,3 +302,19 @@ class VtkH(Package, CudaPackage):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname
+
+    @property
+    def libs(self):
+        spec = self.spec
+        libnames = [
+            "vtkh_rendering_mpi",
+            "vtkh_compositing_mpi",
+            "vtkh_filters_mpi",
+            "vtkh_utils_mpi",
+            "vtkh_lodepng",
+            "vtkh_core_mpi",
+        ]
+        libnames = [("lib" + x) for x in libnames]
+        search_shared = spec.satisfies('+shared')
+        return find_libraries(libnames, spec.prefix, shared=search_shared,
+                              recursive=True)
