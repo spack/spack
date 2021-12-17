@@ -73,7 +73,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         Arguments:
             exe (str): absolute path to the executable being examined
         """
-        versions = [ str(v) for v in cls.versions ]
+        versions = [str(v) for v in cls.versions]
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'icpc \(ICC\)\s+([\d\.]+)', output)
         vers = match.group(1) if match else None
