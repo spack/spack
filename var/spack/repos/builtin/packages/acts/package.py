@@ -228,8 +228,9 @@ class Acts(CMakePackage, CudaPackage):
             cxxstd = spec['root'].variants['cxxstd'].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
-        # FIXME: Once we can use spack's autodiff package, set
-        #        ACTS_USE_SYSTEM_AUTODIFF too.
+        if spec.satisfies('+autodiff'):
+            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+
         if spec.satisfies('@0.33: +json'):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
         elif spec.satisfies('@0.14.0: +json'):
