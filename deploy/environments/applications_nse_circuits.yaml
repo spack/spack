@@ -29,6 +29,5 @@ spack:
     - brainbuilder
     - circuit-build
     - placement-algorithm
-    - placement-algorithm@2.1.4
     - py-region-grower
     - py-region-grower@0.2.4
