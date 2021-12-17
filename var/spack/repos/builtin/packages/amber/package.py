@@ -137,7 +137,8 @@ class Amber(Package, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     # Cuda dependencies
-    depends_on('cuda@:11.0.2', when='@20:+cuda')  # when='AmberTools@21:'
+    # /AmberTools/src/configure2:1329
+    depends_on('cuda@:11.1', when='@20:+cuda')  # when='AmberTools@21:'
     depends_on('cuda@:10.2.89', when='@18+cuda')
     depends_on('cuda@7.5.18', when='@:16+cuda')
 
