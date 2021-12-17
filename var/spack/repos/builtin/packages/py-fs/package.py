@@ -16,7 +16,7 @@ class PyFs(PythonPackage):
     version('0.5.4', sha256='ba2cca8773435a7c86059d57cb4b8ea30fda40f8610941f7822d1ce3ffd36197')
 
     depends_on('py-setuptools@38.3.0:', type='build')
-    depends_on('py-setuptools@:57', type='build', when='@0.5.4')
+    depends_on('py-setuptools@:57', type='build', when='@:0')
     depends_on('py-appdirs@1.4.3:1.4',  type=('build', 'run'))
     depends_on('py-pytz',  type=('build', 'run'))
     depends_on('py-six@1.10:1', type=('build', 'run'))
