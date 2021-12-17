@@ -15,4 +15,4 @@ class PyGenshi(PythonPackage):
     version('0.6.1', sha256='fed947f11dbcb6792bb7161701ec3b9804055ad68c8af0ab4f0f9b25e9a18dbd')
     version('0.6', sha256='32aaf76a03f88efa04143bf80700399e6d84eead818fdd19d763fd76af972a4b')
 
-    depends_on("py-setuptools", type='build')
+    depends_on("py-setuptools@:57", type='build')
