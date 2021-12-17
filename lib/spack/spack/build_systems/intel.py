@@ -26,6 +26,7 @@ from llnl.util.filesystem import (
 
 from spack.build_environment import dso_suffix
 from spack.package import InstallError, PackageBase, run_after
+from spack.spec import Spec
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
@@ -1006,7 +1007,9 @@ class IntelPackage(PackageBase):
             if self.version_yearlike >= ver('2019'):
                 d = ancestor(self.component_lib_dir('mpi'))
                 if '+external-libfabric' in self.spec:
-                    result += self.spec['libfabric'].libs
+                    spec = Spec('libfabric')
+                    spec.concretize()
+                    result += spec['libfabric'].libs
                 else:
                     result += find_libraries(['libfabric'],
                                              os.path.join(d, 'libfabric', 'lib'))
