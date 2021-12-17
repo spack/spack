@@ -13,7 +13,7 @@ class Brainbuilder(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:nse/brainbuilder.git"
 
     version('develop')
-    version('0.16.1', tag='brainbuilder-v0.16.1')
+    version('0.16.2', tag='brainbuilder-v0.16.2')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
@@ -27,7 +27,6 @@ class Brainbuilder(PythonPackage):
     depends_on('py-bluepy@2.1:2.999', type=('build', 'run'))
     depends_on('py-libsonata@0.1.6:', type=('build', 'run'))
     depends_on('py-voxcell@3.0.0:', type=('build', 'run'))
-
     depends_on('py-morphio@3.0.0:3.999', type=('build', 'run'))
 
     depends_on('py-attrs@:19.999', type=('build', 'run'))
