@@ -27,6 +27,30 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
+def get_mirror_s3_connection_info(connection):
+    s3_connection = {}
+
+    s3_connection_is_dict = connection and isinstance(connection, dict)
+    if s3_connection_is_dict:
+        if connection.get("access_token"):
+            s3_connection["aws_session_token"] = connection["access_token"]
+        if connection.get("access_pair"):
+            s3_connection["aws_access_key_id"] = connection["access_pair"][0]
+            s3_connection["aws_secret_access_key"] = connection["access_pair"][1]
+        if connection.get("profile"):
+            s3_connection["profile_name"] = connection["profile"]
+
+    s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
+
+    endpoint_url = os.environ.get('S3_ENDPOINT_URL')
+    if endpoint_url:
+        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
+    elif s3_connection_is_dict and connection.get("endpoint_url"):
+        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])  # noqa: E501
+
+    return (s3_connection, s3_client_args)
+
+
 def create_s3_session(url, connection={}):
     url = url_util.parse(url)
     if url.scheme != 's3':
@@ -40,26 +64,9 @@ def create_s3_session(url, connection={}):
     from boto3 import Session
     from botocore.exceptions import ClientError
 
-    s3_connection = {}
-    s3_connection_is_dict = connection and isinstance(connection, dict)
-    if s3_connection_is_dict:
-        if connection.get("aws_session_token"):
-            s3_connection["aws_session_token"] = connection["access_token"]
-        if connection.get("access_pair"):
-            s3_connection["aws_access_key_id"] = connection["access_pair"][0]
-            s3_connection["aws_secret_access_key"] = connection["access_pair"][1]
-        if connection.get("profile"):
-            s3_connection["profile_name"] = connection["profile"]
+    s3_connection, s3_client_args = get_mirror_s3_connection_info(connection)
 
     session = Session(**s3_connection)
-    s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
-
-    endpoint_url = os.environ.get('S3_ENDPOINT_URL')
-    if endpoint_url:
-        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
-    elif s3_connection_is_dict and connection.get("endpoint_url"):
-        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])  # noqa: E501
-
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
         from botocore import UNSIGNED
