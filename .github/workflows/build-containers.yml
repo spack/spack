@@ -12,6 +12,7 @@ on:
       - develop
     paths:
       - '.github/workflows/build-containers.yml'
+      - 'share/spack/docker/*'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
