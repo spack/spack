@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os
-
 from spack import *
 
 
@@ -18,18 +15,8 @@ class PyFs(PythonPackage):
     version('2.4.14', sha256='9555dc2bc58c58cac03478ac7e9f622d29fe2d20a4384c24c90ab50de2c7b36c')
     version('0.5.4', sha256='ba2cca8773435a7c86059d57cb4b8ea30fda40f8610941f7822d1ce3ffd36197')
 
-    def patch(self):
-        if self.spec.satisfies('@0.5.5:'):
-            return
-
-        # Newer setuptools will complain that '2to3' is not a valid phase
-        filter_file('PY3 =.*', 'PY3 = False', 'setup.py')
-
-        x2to3 = which('2to3')
-        for fn in glob.glob(join_path('fs', '**', '*.py'), recursive=True):
-            x2to3('-n', '-w', '--no-diffs', fn, output=os.devnull, error=os.devnull)
-
     depends_on('py-setuptools@38.3.0:', type='build')
+    depends_on('py-setuptools@:57', type='build', when='@0.5.4')
     depends_on('py-appdirs@1.4.3:1.4',  type=('build', 'run'))
     depends_on('py-pytz',  type=('build', 'run'))
     depends_on('py-six@1.10:1', type=('build', 'run'))
