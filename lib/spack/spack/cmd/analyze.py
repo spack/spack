@@ -110,7 +110,6 @@ def analyze(parser, args, **kwargs):
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
         )
 
     # Run the analysis

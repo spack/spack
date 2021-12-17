@@ -305,7 +305,6 @@ environment variables:
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
             tags=args.monitor_tags,
             save_local=args.monitor_save_local,
         )
@@ -467,7 +466,6 @@ environment variables:
 
         # Update install_args with the monitor args, needed for build task
         kwargs.update({
-            "monitor_disable_auth": args.monitor_disable_auth,
             "monitor_keep_going": args.monitor_keep_going,
             "monitor_host": args.monitor_host,
             "use_monitor": args.use_monitor,
