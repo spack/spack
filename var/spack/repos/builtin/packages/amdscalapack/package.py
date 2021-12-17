@@ -28,14 +28,6 @@ class Amdscalapack(ScalapackBase):
     version('3.0', sha256='6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f')
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 
-    def url_for_version(self, version):
-        if version == Version('3.1'):
-            return "https://github.com/amd/aocl-scalapack/archive/3.1.tar.gz"
-        elif version == Version('3.0'):
-            return "https://github.com/amd/scalapack/archive/3.0.tar.gz"
-        elif version == Version('2.2'):
-            return "https://github.com/amd/scalapack/archive/2.2.tar.gz"
-
     variant(
         'build_type',
         default='Release',
@@ -48,6 +40,14 @@ class Amdscalapack(ScalapackBase):
 
     conflicts('+ilp64', when="@:3.0",
               msg="ILP64 is supported from 3.1 onwards")
+
+    def url_for_version(self, version):
+        if version == Version('3.1'):
+            return "https://github.com/amd/aocl-scalapack/archive/3.1.tar.gz"
+        elif version == Version('3.0'):
+            return "https://github.com/amd/scalapack/archive/3.0.tar.gz"
+        elif version == Version('2.2'):
+            return "https://github.com/amd/scalapack/archive/2.2.tar.gz"
 
     def cmake_args(self):
         """ cmake_args function"""
@@ -62,11 +62,11 @@ class Amdscalapack(ScalapackBase):
             args.extend(['-DUSE_DOTC_WRAPPER:BOOL=%s' % (
                         'ON' if spec.satisfies('%aocc ^amdblis') else 'OFF')])
 
-        if "+ilp64" in spec:
-            args.extend(['-DENABLE_ILP64=ON'])
+        # -DENABLE_ILP64:BOOL=ON
+        args.extend([self.define_from_variant('ENABLE_ILP64', 'ilp64')])
 
-        if "@:3.0" in spec:
-            args.extend(['-DUSE_F2C=ON'])
+        # -DUSE_F2C:BOOL=ON
+        args.extend([self.define('USE_F2C', spec.satisfies('@:3.0'))])
 
         args.extend([
             '-DLAPACK_FOUND=true',

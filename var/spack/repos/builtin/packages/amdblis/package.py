@@ -44,15 +44,15 @@ class Amdblis(BlisBase):
         if spec.satisfies('+ilp64'):
             args.append('--blas-int-size=64')
 
-        """ To enabled Fortran to C calling convention for
+        """ To enable Fortran to C calling convention for
         complex types when compiling with aocc flang"""
-        if "@3.0 %aocc" in self.spec:
+        if self.spec.satisfies("@3.0 %aocc"):
             args.append('CFLAGS={0}'.format("-DAOCL_F2C"))
             args.append('CXXFLAGS={0}'.format("-DAOCL_F2C"))
-        elif "@3.0.1: %aocc" in self.spec:
+        elif self.spec.satisfies("@3.0.1: %aocc"):
             args.append('--complex-return=intel')
 
-        if "@3.1: " in self.spec:
+        if self.spec.satisfies("@3.1:"):
             args.append('--disable-aocl-dynamic')
 
         return args
@@ -62,7 +62,7 @@ class Amdblis(BlisBase):
 
         # "amdzen" - A fat binary or multiarchitecture binary
         # support for 3.1 release onwards
-        if "@3.1: " in self.spec:
+        if self.spec.satisfies("@3.1:"):
             config_args.append("amdzen")
         else:
             config_args.append("auto")

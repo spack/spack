@@ -78,15 +78,19 @@ class Amdfftw(FftwBase):
     conflicts(
         'precision=quad',
         when='@2.2 %aocc',
-        msg='AOCC clang version 2.2 is not supported for quad precision')
+        msg='Quad precision is not supported by AOCC clang version 2.2')
     conflicts(
         '+debug',
         when='@2.2 %aocc',
-        msg='AOCC clang version 2.2 is not supported for debug mode')
+        msg='debug mode is not supported by AOCC clang version 2.2')
     conflicts(
         '%gcc@:7.2',
         when='@2.2:',
         msg='GCC version above 7.2 is required for AMDFFTW')
+    conflicts(
+        '+amd-fast-planner ',
+        when='+mpi',
+        msg='mpi thread is not supported with amd-fast-planner')
     conflicts(
         '+amd-fast-planner',
         when='@2.2',
@@ -94,11 +98,11 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-fast-planner',
         when='precision=quad',
-        msg='amd-fast-planner is not supported for quad precision')
+        msg='Quad precision is not supported with amd-fast-planner')
     conflicts(
         '+amd-fast-planner',
         when='precision=long_double',
-        msg='amd-fast-planner is not supported for long_double precision')
+        msg='long_double precision is not supported with amd-fast-planner')
     conflicts(
         '+amd-top-n-planner',
         when='@:3.0.0',
@@ -106,11 +110,11 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-top-n-planner',
         when='precision=long_double',
-        msg='amd-top-n-planner is not supported for long_double precision')
+        msg='long_double precision is not supported with amd-top-n-planner')
     conflicts(
         '+amd-top-n-planner',
         when='precision=quad',
-        msg='amd-top-n-planner is not supported for quad precision')
+        msg='Quad precision is not supported with amd-top-n-planner')
     conflicts(
         '+amd-top-n-planner',
         when='+amd-fast-planner',
@@ -122,11 +126,11 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-top-n-planner',
         when='+mpi',
-        msg='amd-top-n-planner is not supported for mpi thread')
+        msg='mpi thread is not supported with amd-top-n-planner')
     conflicts(
         '+amd-top-n-planner',
         when='+openmp',
-        msg='amd-top-n-planner is not supported for openmp thread')
+        msg='openmp thread is not supported with amd-top-n-planner')
     conflicts(
         '+amd-mpi-vader-limit',
         when='@:3.0.0',
@@ -134,7 +138,7 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-mpi-vader-limit',
         when='precision=quad',
-        msg='amd-mpi-vader-limit is not supported for quad precision')
+        msg='Quad precision is not supported with amd-mpi-vader-limit')
     conflicts(
         '+amd-trans',
         when='+threads',
@@ -142,19 +146,19 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-trans',
         when='+mpi',
-        msg='amd-trans is not supported for mpi thread')
+        msg='mpi thread is not supported with amd-trans')
     conflicts(
         '+amd-trans',
         when='+openmp',
-        msg='amd-trans is not supported for openmp thread')
+        msg='openmp thread is not supported with amd-trans')
     conflicts(
         '+amd-trans',
         when='precision=long_double',
-        msg='amd-trans is not supported for long_double precision')
+        msg='long_double precision is not supported with amd-trans')
     conflicts(
         '+amd-trans',
         when='precision=quad',
-        msg='amd-trans is not supported for quad precision')
+        msg='Quad precision is not supported with amd-trans')
     conflicts(
         '+amd-app-opt',
         when='@:3.0.1',
@@ -162,15 +166,15 @@ class Amdfftw(FftwBase):
     conflicts(
         '+amd-app-opt',
         when='+mpi',
-        msg='amd-app-opt is not supported for mpi thread')
+        msg='mpi thread is not supported with amd-app-opt')
     conflicts(
         '+amd-app-opt',
         when='precision=long_double',
-        msg='amd-app-opt is not supported for long_double precision')
+        msg='long_double precision is not supported with amd-app-opt')
     conflicts(
         '+amd-app-opt',
         when='precision=quad',
-        msg='amd-trans is not supported for quad precision')
+        msg='Quad precision is not supported with amd-app-opt')
 
     def configure(self, spec, prefix):
         """Configure function"""
