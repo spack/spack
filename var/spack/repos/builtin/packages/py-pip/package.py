@@ -49,31 +49,8 @@ class PyPip(Package):
         args = [os.path.join(whl, 'pip')] + std_pip_args + ['--prefix=' + prefix, whl]
         python(*args)
 
-    @property
-    def command(self):
-        """Returns the pip command, which may vary depending
-        on the version of Python and how it was installed.
-
-        Returns:
-            Executable: the pip command
-        """
-        # We need to be careful here. If the user is using an externally
-        # installed python, several different commands could be located
-        # in the same directory. Be as specific as possible. Search for:
-        #
-        # * pip3.6
-        # * pip3
-        # * pip
-        #
-        # in that order if using python@3.6.5, for example.
-        version = self.spec['python'].version
-        for ver in [version.up_to(2), version.up_to(1), '']:
-            path = os.path.join(self.prefix.bin, 'pip{0}'.format(ver))
-            if os.path.exists(path):
-                return Executable(path)
-        else:
-            msg = 'Unable to locate pip command in {1}'
-            raise RuntimeError(msg.format(self.prefix.bin))
-
     def setup_dependent_package(self, module, dependent_spec):
-        setattr(module, 'pip', self.command)
+        pip = self.spec['python'].command
+        pip.add_default_arg('-m')
+        pip.add_default_arg('pip')
+        setattr(module, 'pip', pip)

@@ -35,4 +35,4 @@ class PyWheel(Package):
         # We get around this by using a pre-built wheel, see:
         # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
         args = std_pip_args + ['--prefix=' + prefix, self.stage.archive_file]
-        python('-m', 'pip', *args)
+        pip(*args)
