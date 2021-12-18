@@ -93,7 +93,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable SYCL vector')
 
     # External libraries
-    variant('caliper',      default=False,
+    variant('caliper',      default=False, when='@6.0.0:',
             description='Enable Caliper instrumentation/profiling')
     variant('hypre',        default=False,
             description='Enable Hypre MPI parallel vector')
@@ -137,7 +137,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Build with simulation monitoring capabilities')
 
     # Profiling
-    variant('profiling', default=False,
+    variant('profiling', default=False, when='@6.0.0:',
             description='Build with profiling capabilities')
 
     # ==========================================================================
@@ -155,8 +155,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+trilinos',      when='@:4.1.0')
     conflicts('+monitoring',    when='@:5.5.0')
     conflicts('+rocm',          when='@:5.6.0')
-    conflicts('+profiling',     when='@:6.0.0')
-    conflicts('+caliper',       when='@:6.0.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
