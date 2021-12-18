@@ -46,8 +46,12 @@ class PyPip(Package):
         # itself, see:
         # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
         whl = self.stage.archive_file
-        args = [os.path.join(whl, 'pip')] + std_pip_args + ['--prefix=' + prefix, whl]
-        python(*args)
+        args = std_pip_args + ['--prefix=' + prefix, whl]
+        try:
+            python(os.path.join(whl, 'pip'), *args)
+        except ProcessError:
+            # May be required if using an external Python where pip is already installed
+            python('-m', 'pip', *args)
 
     @property
     def command(self):
