@@ -66,7 +66,7 @@ class PyCharm4py(PythonPackage):
 
     def install_args(self, spec, prefix):
         # Have the parent class version set prefix
-        args = super().install_args(spec, prefix)
+        args = super(PythonPackage, self).install_args(spec, prefix)
         if '+mpi' in spec:
             args.append('--mpi')
         return args
