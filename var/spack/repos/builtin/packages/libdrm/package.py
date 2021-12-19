@@ -13,6 +13,10 @@ class Libdrm(Package):
     homepage = "https://dri.freedesktop.org/libdrm/"
     list_url = "https://dri.freedesktop.org/libdrm/"
 
+    maintainers = ['wdconinc']
+
+    version('2.4.109', sha256='629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26')
+    version('2.4.108', sha256='a1d7948cbc536763fde14b4beb5e4da7867607966d4cf46301087e8b8fe3d6a0')
     version('2.4.107', sha256='c554cef03b033636a975543eab363cc19081cb464595d3da1ec129f87370f888')
     version('2.4.100', sha256='6a5337c054c0c47bc16607a21efa2b622e08030be4101ef4a241c5eb05b6619b')
     version('2.4.81',  sha256='64036c5e0668fdc2b820dcc0ebab712f44fd2c2147d23dc5a6e003b19f0d3e9f')
