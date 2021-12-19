@@ -38,6 +38,10 @@ PackageName: argparse
 PackageHomePage: https://pypi.python.org/pypi/argparse
 PackageLicenseDeclared: Python-2.0
 
+PackageName: attrs
+PackageHomePage: https://github.com/python-attrs/attrs
+PackageLicenseDeclared: MIT
+
 PackageName: ctest_log_parser
 PackageHomePage: https://github.com/Kitware/CMake
 PackageLicenseDeclared: BSD-3-Clause
