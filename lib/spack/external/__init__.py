@@ -40,6 +40,12 @@ distro
 * Version: 1.6.0 (64946a1e2a9ff529047070657728600e006c99ff)
 * Note: Last version supporting Python 2.7
 
+functools32
+-----------
+* Homepage: https://github.com/MiCHiLU/python-functools32
+* Usage: Needed by jsonschema when using Python 2.7.
+* Version: 3.2.3-2
+
 jinja2
 ------
 

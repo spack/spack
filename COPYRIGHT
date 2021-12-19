@@ -46,8 +46,8 @@ PackageName: distro
 PackageHomePage: https://pypi.python.org/pypi/distro
 PackageLicenseDeclared: Apache-2.0
 
-PackageName: functools
-PackageHomePage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
+PackageName: functools32
+PackageHomePage: https://github.com/MiCHiLU/python-functools32
 PackageLicenseDeclared: Python-2.0
 
 PackageName: jinja2
