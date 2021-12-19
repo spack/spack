@@ -46,7 +46,7 @@ class Votca(CMakePackage):
     depends_on('lammps', type='test')
     depends_on('py-espresso', type='test')
     depends_on('py-pytest', type='test')
-    
+
     def cmake_args(self):
         args = [
             '-DINSTALL_RC_FILES=OFF',
