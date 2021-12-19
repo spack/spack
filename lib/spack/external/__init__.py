@@ -24,6 +24,13 @@ argparse
   vendored copy ever needs to be updated again:
   https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
 
+attrs
+----------------
+
+* Homepage: https://github.com/python-attrs/attrs
+* Usage: Needed by jsonschema.
+* Version: 21.2.0 (83d3cd70f90a3f4d19ee8b508e58d1c58821c0ad)
+
 ctest_log_parser
 ----------------
 
