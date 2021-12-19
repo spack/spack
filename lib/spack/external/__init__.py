@@ -81,6 +81,14 @@ py
 * Note: This packages has been modified:
   * https://github.com/pytest-dev/py/pull/186 was backported
 
+pyrsistent
+----------
+
+* Homepage: http://github.com/tobgu/pyrsistent/
+* Usage: Needed by `jsonschema`
+* Version: 0.16.1 (last version supporting Python 2.7)
+* Note: We only include the parts needed for `jsonschema`.
+
 pytest
 ------
 
