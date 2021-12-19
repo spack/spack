@@ -70,6 +70,10 @@ PackageName: py
 PackageHomePage: https://pypi.python.org/pypi/py
 PackageLicenseDeclared: MIT
 
+PackageName: pyrsistent
+PackageHomePage: http://github.com/tobgu/pyrsistent
+PackageLicenseDeclared: MIT
+
 PackageName: pytest
 PackageHomePage: https://pypi.python.org/pypi/pytest
 PackageLicenseDeclared: MIT
