@@ -391,48 +391,13 @@ external_conditions_hold(Package, LocalIndex) :-
 % is represented here with cfg_required(Package, Y), and may apply multiple
 % constraints (version, compiler, or variant settings).
 1 { cfg_required(Package, Y) : stanza_member(Y, X) } :- node(Package), required_stanza(Package, X).
-% asp.py must define required_stanzas
-% For each stanza, asp.py must define stanza_members for that stanza
-% For each stanza_member, asp.py must define cfg_*_required (the set of spec
-% constraints which apply for that stanza member)
-version(Package, X) :- cfg_required(Package, Y), cfg_version_required(Y, X).
-variant_value(Package, Variant, Value) :- cfg_required(Package, Y), cfg_variant_required(Y, Variant, Value).
-node_compiler(Package, X) :- cfg_required(Package, Y), cfg_compiler_required(Y, X).
-node_compiler_version(Package, C, V) :- cfg_required(Package, Y), cfg_compiler_version_required(Y, C, V).
-
-% TODO: don't warn if program is missing cfg_version_required
-% #defined cfg_version_required/1.
+condition(Y) :- cfg_required(Package, Y).
 
 % TODO: allow weighting the conditions; a condition should be preferred if it
 % appears first in a condition_group. Compared to other preference weights
 % this is less important, but presumably the user might want to exert some
 % level of control by ordering the preferences. This will probably involve
 % a #minimize statement like others at the end of this file
-
-% TODO: if the user provides a constraint on the command line, then it will
-% need to constrain the spec in a similar way (although in that case
-% there is no such thing as a stanza: there is just one spec to constrain by).
-% It looks like that is handled by asp._spec_clauses. That function would need
-% to be modified to cover this section though (since unlike there, the
-% constraints here are only applied if the associated stanza member is
-% selected).
-
-%-----------------------------------------------------------------------------
-% Generalization of prior section
-%-----------------------------------------------------------------------------
-
-% If a user wants, they can define a "condition_group": a set of constraints
-% where one of them must be true. A condition corresponds to a full spec
-% which may constrain version, compiler, etc.
-%1 { condition(Package, Y) : condition_group_member(Y, X) } :- node(Package), condition_group(Package, X).
-% You can skip defining a condition_group and define a condition directly
-% in asp.py (this is if have a single spec and you definitely want to constrain
-% by it)
-% Note: if the body of the following rule contains "node(Package)", then users
-% can define "condition(Package, Y)" directly and that spec will only constrain
-% the concretization if the package is used
-%version(Package, X) :- node(Package), condition(Package, Y), condition_version_required(Y, X).
-% So on and so forth for compiler, compiler version, virtuals, etc.
 
 %-----------------------------------------------------------------------------
 % Variant semantics

@@ -794,29 +794,15 @@ class SpackSolverSetup(object):
                 ("openmpi", ["@4.0.1", "@4.0.0"])
             ]
         stanza_id = 0
+        member_id = 100000
         for pkg_name, stanza in test_rules:
-            self.gen.fact(
-                fn.required_stanza(pkg_name, stanza_id)
-            )
-            member_id = 0
+            self.gen.fact(fn.required_stanza(pkg_name, stanza_id))
             for spec_str in stanza:
-                self.gen.fact(fn.stanza_member(member_id, stanza_id))
                 spec, = spack.cmd.parse_specs(spec_str)
-                if spec.versions.concrete:
-                    self.gen.fact(
-                        fn.cfg_version_required(member_id, spec.version)
-                    )
-                if spec.compiler:
-                    self.gen.fact(
-                        fn.cfg_compiler_required(member_id, spec.compiler.name)
-                    )
-                # TODO: this would also want to handle specifying the compiler
-                # version as well: concretize.lp is set up for that but I would
-                # need to generate the fact here.
-                for name, variant in spec.variants.items():
-                    self.gen.fact(
-                        fn.cfg_variant_required(member_id, name, variant.value)
-                    )
+                if not spec.name:
+                    spec.name = pkg_name
+                self.gen.fact(fn.stanza_member(member_id, stanza_id))
+                self.impose(member_id, spec, name=pkg_name, node=False)
                 member_id += 1
             stanza_id += 1
 
