@@ -390,7 +390,7 @@ external_conditions_hold(Package, LocalIndex) :-
 % one of which must be applied (but only one of them), that spec
 % is represented here with cfg_required(Package, Y), and may apply multiple
 % constraints (version, compiler, or variant settings).
-1 { cfg_required(Package, Y) : stanza_member(Y, X) } :- node(Package), required_stanza(Package, X).
+1 { cfg_required(Package, Y) : stanza_member(Y, X) } 1 :- node(Package), required_stanza(Package, X).
 condition(Y) :- cfg_required(Package, Y).
 
 % TODO: allow weighting the conditions; a condition should be preferred if it
