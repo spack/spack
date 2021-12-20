@@ -592,7 +592,7 @@ class Trilinos(CMakePackage, CudaPackage):
             ('X11', 'x11', 'libx11'),
         ]
         if spec.satisfies('@13.0.2:'):
-            tpl_variant_map.append(('STRUMPACK', 'strumpack'))
+            tpl_variant_map.append(('STRUMPACK', 'strumpack', 'strumpack'))
 
         for tpl_name, var_name, spec_name in tpl_variant_map:
             define_tpl(tpl_name, spec_name, spec.variants[var_name].value)
