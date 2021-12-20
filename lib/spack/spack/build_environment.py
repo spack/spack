@@ -122,12 +122,6 @@ SPACK_ENV_PATH='{}'; export SPACK_ENV_PATH
 PATH='$SPACK_ENV_PATH{}$PATH'; export PATH
 """
 
-COMPILER_UNLOAD = """
-#!/bin/sh
-source spack-build-env-mods.txt
-exit 0
-"""
-
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
@@ -274,10 +268,10 @@ def instantiate_compiler_env(pkg):
     join = os.path.join
 
     # establish compiler env and metadata directories
-    wrapper_root = spack.paths.build_env_path.replace('/','\\')
+    wrapper_root = spack.paths.build_env_path.replace('/', '\\')
     metadata_root = pkg.compiler_metadata_dir
     stage_metadata_root = join(pkg.stage.path, "env")
-    compiler_env = os.path.dirname(pkg.compiler.link_paths['cc'].replace('/','\\'))
+    compiler_env = os.path.dirname(pkg.compiler.link_paths['cc'].replace('/', '\\'))
     compiler_env_root = join(wrapper_root, compiler_env)
 
     # Get wrapper extension, name and compiler specific metadata routes
@@ -289,7 +283,8 @@ def instantiate_compiler_env(pkg):
             os.makedirs(d)
 
     # setup wrapper files to create pkg local compiler env
-    get_wrapper = lambda x: [join(x,f) for f in os.listdir(x) if os.path.isfile(join(x,f))]
+    get_wrapper = lambda x: [join(x, f) for f in os.listdir(x)
+                             if os.path.isfile(join(x, f))]
     compiler_wrapper_files = get_wrapper(compiler_env_root)
     root_wrapper_files = get_wrapper(wrapper_root)
 
@@ -297,7 +292,7 @@ def instantiate_compiler_env(pkg):
     def write_wrapper(files, pth):
         for f in files:
             f_name = os.path.basename(f)
-            install(f, join(pth, f_name))
+            install(f, join(pth, f_name), symlinks=True)
 
     # install pkg local wrapper files into stage and install dirs
     write_wrapper(root_wrapper_files, metadata_root)
@@ -325,12 +320,12 @@ def instantiate_compiler_env(pkg):
 
     # install local env loader
     # setup loader script vars
-    cc       =  lambda x: join(x,pkg.compiler.link_paths['cc'])
-    cxx      =  lambda x: join(x,pkg.compiler.link_paths['cxx'])
-    fc       =  lambda x: join(x,pkg.compiler.link_paths['fc'])
-    f77      =  lambda x: join(x,pkg.compiler.link_paths['f77'])
-    sep      =  ';'
-    env_path =  lambda x: sep.join(env_paths(x))
+    cc       = lambda x: join(x, pkg.compiler.link_paths['cc'])
+    cxx      = lambda x: join(x, pkg.compiler.link_paths['cxx'])
+    fc       = lambda x: join(x, pkg.compiler.link_paths['fc'])
+    f77      = lambda x: join(x, pkg.compiler.link_paths['f77'])
+    sep      = ';'
+    env_path = lambda x: sep.join(env_paths(x))
     build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77, env_path)]
 
     with open(join(metadata_root, 'load'), 'w+') as f:
@@ -338,13 +333,6 @@ def instantiate_compiler_env(pkg):
 
     with open(join(stage_metadata_root, 'load'), 'w+') as f:
         f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), sep))
-
-    # install local env unloader
-    with open(join(metadata_root, 'unload'), 'w+') as f:
-        f.write(COMPILER_UNLOAD)
-
-    with open(join(stage_metadata_root, 'unload'), 'w+') as f:
-        f.write(COMPILER_UNLOAD)
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -391,7 +379,6 @@ def set_compiler_environment_variables(pkg, env):
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
         env.set('FC', gen_compiler_str(compiler.link_paths['fc']))
-
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)

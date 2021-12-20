@@ -381,7 +381,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
-def copy(src, dest, _permissions=False):
+def copy(src, dest, _permissions=False, symlinks=False):
     """Copy the file(s) *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
@@ -392,6 +392,8 @@ def copy(src, dest, _permissions=False):
     Parameters:
         src (str): the file(s) to copy
         dest (str): the destination file or directory
+        symlinks (bool): whether to copy a symbolic link as a link or
+        copy to contents of the link target
         _permissions (bool): for internal use only
 
     Raises:
@@ -418,14 +420,14 @@ def copy(src, dest, _permissions=False):
         if os.path.isdir(dest):
             dst = join_path(dest, os.path.basename(src))
 
-        shutil.copy(src, dst)
+        shutil.copy(src, dst, follow_symlinks=not symlinks)
 
         if _permissions:
             set_install_permissions(dst)
             copy_mode(src, dst)
 
 
-def install(src, dest):
+def install(src, dest, symlinks=False):
     """Install the file(s) *src* to the file or directory *dest*.
 
     Same as :py:func:`copy` with the addition of setting proper
@@ -434,13 +436,16 @@ def install(src, dest):
     Parameters:
         src (str): the file(s) to install
         dest (str): the destination file or directory
+        symlinks (bool): whether to install symlinks
+        as links, or to install the contents of the
+        link target
 
     Raises:
         IOError: if *src* does not match any files or directories
         ValueError: if *src* matches multiple files but *dest* is
             not a directory
     """
-    copy(src, dest, _permissions=True)
+    copy(src, dest, _permissions=True, symlinks=symlinks)
 
 
 def resolve_link_target_relative_to_the_link(link):

@@ -56,10 +56,7 @@ import spack.paths
 import spack.repo
 import spack.store
 import spack.util.executable
-from spack.util.environment import (
-    EnvironmentModifications,
-    dump_environment
-)
+from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
 
@@ -567,10 +564,6 @@ def log(pkg):
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
         fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
-
-    # Archive the compiler-build env
-    wrapper_env_dir = spack.store.layout.compiler_metadata_path(pkg.spec)
-    fs.install_tree(pkg.stage.env_path, wrapper_env_dir)
 
     # Finally, archive files that are specific to each package
     with fs.working_dir(pkg.stage.path):

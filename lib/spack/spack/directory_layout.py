@@ -234,7 +234,7 @@ class DirectoryLayout(object):
         perms = get_package_dir_permissions(spec)
 
         fs.mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
-        fs.mkdirp(self.compiler_metadata_path(spec), mode=perms, group=group)  # in prefix
+        fs.mkdirp(self.compiler_metadata_path(spec), mode=perms, group=group)
 
         self.write_spec(spec, self.spec_file_path(spec))
 
