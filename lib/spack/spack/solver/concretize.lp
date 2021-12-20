@@ -386,14 +386,11 @@ external_conditions_hold(Package, LocalIndex) :-
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-% A package may have an associated "condition_group": a set of specs -
-% at least one of which must be applied. That spec is represented here
-% with cfg_required(Package, Y), and may apply multiple constraints
-% (version, compiler, or variant settings). We depend on asp.py to
-% add statements defining the attributes that are applied for the given
-% condition.
-1 { cfg_required(Package, Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
-condition(Y) :- cfg_required(Package, Y).
+% A package may have an associated "condition_group": a set of specs where
+% at least one must be applied. Each spec in the group is associated
+% with a condition via asp.impose(), and we require that exactly one condition
+% from each condition_group holds.
+1 { condition(Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
 
 % TODO: allow weighting the conditions; a condition should be preferred if it
 % appears first in a condition_group. Compared to other preference weights
