@@ -865,7 +865,7 @@ build(PSID, Package)
 build_representative(PSID, Package)
  :- not hash(PSID, Package, _),
     node(PSID, Package),
-    not roots_equivalent_for_package(_, PSID, Package).
+    not package_equal(_, PSID, Package).
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
@@ -898,7 +898,7 @@ build_priority(PSID, Package, 0)
 % because we only have to build it once
 % We will then minimize within each package
 % for the number of PSIDs that are not handled by another PSID
-roots_equivalent_for_package(PSID1, PSID2, Package)
+package_equal(PSID1, PSID2, Package)
  :- node(PSID1, Package);
     node(PSID2, Package);
     attr(Name, PSID1, Package) : attr(Name, PSID2, Package), equality_attr(Name);
@@ -907,11 +907,12 @@ roots_equivalent_for_package(PSID1, PSID2, Package)
     attr(Name, PSID2, Package) : attr(Name, PSID1, Package), equality_attr(Name);
     attr(Name, PSID2, Package, A1) : attr(Name, PSID1, Package, A1), equality_attr(Name);
     attr(Name, PSID2, Package, A1, A2) : attr(Name, PSID1, Package, A1, A2), equality_attr(Name);
+    package_equal(PSID1, PSID2, Dependency) : depends_on(PSID1, Package, Dependebcy);
     PSID1 < PSID2.
 
-roots_different_for_package(PSID1, PSID2, Package)
+package_not_equal(PSID1, PSID2, Package)
  :- node(PSID1, Package), node(PSID2, Package),
-    not roots_equivalent_for_package(PSID1, PSID2, Package),
+    not package_equal(PSID1, PSID2, Package),
     PSID1 < PSID2.
 
 equality_attr("hash").
@@ -939,8 +940,8 @@ equality_attr("external_spec_selected").
 
 % Try to minimize the number of nodes of a given package
 opt_criterion(300, "agreement of nodes across process spaces").
-#maximize { 0@300: #true }.
-#maximize { 1@300,Package,PSID1,PSID2 : roots_equivalent_for_package(PSID1, PSID2, Package) }.
+#minimize { 0@300: #true }.
+#minimize { 1@300,Package,PSID1,PSID2 : package_not_equal(PSID1, PSID2, Package) }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
