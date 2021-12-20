@@ -33,8 +33,11 @@ if [ module-info mode load ] {
 
 module-whatis   Spack is our software building and deployment toolkit
 
-append-path     PATH ${SPACK_ROOT}/bin
+# FIXME environment-modules 4 has getenv, which is preferred
+set home \$env(HOME)
+
+prepend-path    PATH ${SPACK_ROOT}/bin
 setenv          SPACK_ROOT ${SPACK_ROOT}
 setenv          SPACK_SYSTEM_CONFIG_PATH ${DEPLOYMENT_ROOT}/config
-setenv          SPACK_USER_CACHE_PATH \${HOME}/spack_install
+setenv          SPACK_USER_CACHE_PATH \$home/spack_install
 EOF
