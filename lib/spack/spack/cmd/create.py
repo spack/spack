@@ -257,6 +257,7 @@ class BazelPackageTemplate(PackageTemplate):
         # FIXME: Add logic to build and install here.
         bazel()"""
 
+
 class RacketPackageTemplate(PackageTemplate):
     """Provides approriate overrides for Racket extensions"""
     base_class_name = 'RacketPackage'
@@ -273,11 +274,13 @@ class RacketPackageTemplate(PackageTemplate):
     # depends_on('racket@8.3:', type=('build', 'run'))"""
 
     body_def = """\
-    # FIXME: specify the name of the package, as it should appear to ``raco pkg install``
+    # FIXME: specify the name of the package,
+    # as it should appear to ``raco pkg install``
     name = '{0}'
     # FIXME: set to true if published on pkgs.racket-lang.org
     # pkgs = False
-    # FIXME: specify path to the root directory of the package, if not the base directory
+    # FIXME: specify path to the root directory of the
+    # package, if not the base directory
     # subdirectory = None
     """
 
@@ -289,6 +292,7 @@ class RacketPackageTemplate(PackageTemplate):
             name = 'rkt-{0}'.format(name)
         self.body_def = self.body_def.format(name[4:])
         super(RacketPackageTemplate, self).__init__(name, url, *args, **kwargs)
+
 
 class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""

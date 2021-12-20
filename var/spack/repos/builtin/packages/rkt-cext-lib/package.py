@@ -29,16 +29,14 @@ class RktCextLib(RacketPackage):
     git      = "git@github.com:racket/cext-lib.git"
 
     maintainers = ['elfprince13']
-    
 
-    version('8.3', commit='cc22e2456df881a9008240d70dd9012ef37395f5') #tag = 'v8.3'
+    version('8.3', commit='cc22e2456df881a9008240d70dd9012ef37395f5')  # tag = 'v8.3'
 
-    depends_on('rkt-base@8.3', type=('build','run'), when='@8.3')
-    depends_on('rkt-compiler-lib@8.3', type=('build','run'), when='@8.3')
-    depends_on('rkt-dynext-lib@8.3', type=('build','run'), when='@8.3')
-    depends_on('rkt-scheme-lib@8.3', type=('build','run'), when='@8.3')
+    depends_on('rkt-base@8.3', type=('build', 'run'), when='@8.3')
+    depends_on('rkt-compiler-lib@8.3', type=('build', 'run'), when='@8.3')
+    depends_on('rkt-dynext-lib@8.3', type=('build', 'run'), when='@8.3')
+    depends_on('rkt-scheme-lib@8.3', type=('build', 'run'), when='@8.3')
 
     name = 'cext-lib'
     pkgs = True
     subdirectory = name
-    
