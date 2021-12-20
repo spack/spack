@@ -320,9 +320,10 @@ An alias for ``spack compiler find``.
 ``spack compiler find``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler find`` with the path to
-where the compiler is installed.  For example:
+Lists the compilers currently available to Spack. If you do not see
+a compiler in this list, but you want to use it with Spack, you can
+simply run ``spack compiler find`` with the path to where the
+compiler is installed.  For example:
 
 .. code-block:: console
 

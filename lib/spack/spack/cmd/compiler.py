@@ -146,9 +146,21 @@ def compiler_info(args):
 
 
 def compiler_list(args):
+    compilers = spack.compilers.all_compilers(scope=args.scope, init_config=False)
+
+    # If no compilers are found, prompt to search for compilers.
+    if args.scope is None and len(compilers) == 0 and sys.stdout.isatty():
+        if not tty.get_yes_or_no("No compilers are configured, search for compilers?"):
+            return
+        compilers = spack.compilers.all_compilers(init_config=True)
+
+    if len(compilers) == 0:
+        tty.msg("No compilers available")
+        return
+
+    index = index_by(compilers, lambda c: (c.spec.name, c.operating_system, c.target))
+
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope, init_config=False),
-                     lambda c: (c.spec.name, c.operating_system, c.target))
 
     # For a container, take each element which does not evaluate to false and
     # convert it to a string. For elements which evaluate to False (e.g. None)
