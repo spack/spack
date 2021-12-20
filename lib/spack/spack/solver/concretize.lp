@@ -386,11 +386,13 @@ external_conditions_hold(Package, LocalIndex) :-
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-% A package may have an associated "stanza": a set of specs -
-% one of which must be applied (but only one of them), that spec
-% is represented here with cfg_required(Package, Y), and may apply multiple
-% constraints (version, compiler, or variant settings).
-1 { cfg_required(Package, Y) : stanza_member(Y, X) } 1 :- node(Package), required_stanza(Package, X).
+% A package may have an associated "condition_group": a set of specs -
+% at least one of which must be applied, that spec is represented here
+% with cfg_required(Package, Y), and may apply multiple constraints
+% (version, compiler, or variant settings). We depend on asp.py to
+% add statements defining the attributes that are applied for the given
+% condition.
+1 { cfg_required(Package, Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
 condition(Y) :- cfg_required(Package, Y).
 
 % TODO: allow weighting the conditions; a condition should be preferred if it

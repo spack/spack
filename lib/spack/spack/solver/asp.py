@@ -796,12 +796,12 @@ class SpackSolverSetup(object):
         stanza_id = 0
         member_id = 100000
         for pkg_name, stanza in test_rules:
-            self.gen.fact(fn.required_stanza(pkg_name, stanza_id))
+            self.gen.fact(fn.condition_group(pkg_name, stanza_id))
             for spec_str in stanza:
                 spec, = spack.cmd.parse_specs(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
-                self.gen.fact(fn.stanza_member(member_id, stanza_id))
+                self.gen.fact(fn.condition_group_member(member_id, stanza_id))
                 self.impose(member_id, spec, name=pkg_name, node=False)
                 member_id += 1
             stanza_id += 1
