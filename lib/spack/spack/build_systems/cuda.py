@@ -35,7 +35,8 @@ class CudaPackage(PackageBase):
 
     variant('cuda_arch',
             description='CUDA architecture',
-            values=spack.variant.any_combination_of(*cuda_arch_values))
+            values=spack.variant.any_combination_of(*cuda_arch_values),
+            when='+cuda')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code

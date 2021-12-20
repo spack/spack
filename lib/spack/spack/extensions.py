@@ -5,6 +5,7 @@
 """Service functions and classes to implement the hooks
 for Spack's command extensions.
 """
+import importlib
 import os
 import re
 import sys
@@ -98,9 +99,7 @@ def load_command_extension(command, path):
     ensure_package_creation(extension)
     ensure_package_creation(extension + '.cmd')
 
-    # TODO: Upon removal of support for Python 2.6 substitute the call
-    # TODO: below with importlib.import_module(module_name)
-    module = llnl.util.lang.load_module_from_file(module_name, cmd_path)
+    module = importlib.import_module(module_name)
     sys.modules[module_name] = module
 
     return module

@@ -11,7 +11,7 @@
 import spack.schema.spec
 
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack buildcache specfile schema',
     'type': 'object',
     'additionalProperties': False,

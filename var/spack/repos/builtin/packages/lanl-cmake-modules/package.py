@@ -11,7 +11,7 @@ class LanlCmakeModules(CMakePackage):
     '''
 
     maintainers = ['tuxfan']
-    homepage = 'https://tuxfan.github.io/lanl-cmake-modules'
-    git      = 'https://github.com/tuxfan/lanl-cmake-modules.git'
+    homepage = 'https://lanl.github.io/cmake-modules'
+    git      = 'https://github.com/lanl/cmake-modules.git'
 
     version('develop', branch='develop')

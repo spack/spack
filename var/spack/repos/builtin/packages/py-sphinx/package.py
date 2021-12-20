@@ -12,6 +12,7 @@ class PySphinx(PythonPackage):
     homepage = "https://www.sphinx-doc.org/en/master/"
     pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
 
+    version('4.3.1', sha256='32a5b3e9a1b176cc25ed048557d4d3d01af635e6b76c5bc7a43b0a34447fbd45')
     version('4.1.2', sha256='3092d929cd807926d846018f2ace47ba2f3b671b309c7a89cd3306e80c826b13')
     version('4.1.1', sha256='23c846a1841af998cb736218539bb86d16f5eb95f5760b1966abcd2d584e62b8')
     version('4.0.2', sha256='b5c2ae4120bf00c799ba9b3699bc895816d272d120080fbc967292f29b52b48c')
@@ -57,8 +58,8 @@ class PySphinx(PythonPackage):
     depends_on('py-docutils@0.14:0.17', when='@4:', type=('build', 'run'))
     depends_on('py-docutils@0.12:', when='@:3', type=('build', 'run'))
     depends_on('py-snowballstemmer@1.1:', type=('build', 'run'))
-    depends_on('py-babel@1.3:1,2.1:', type=('build', 'run'))
-    depends_on('py-alabaster@0.7.0:0.7', type=('build', 'run'))
+    depends_on('py-babel@1.3:', type=('build', 'run'))
+    depends_on('py-alabaster@0.7', type=('build', 'run'))
     depends_on('py-imagesize', when='@1.4:', type=('build', 'run'))
     depends_on('py-requests@2.5.0:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
@@ -66,3 +67,4 @@ class PySphinx(PythonPackage):
     depends_on('py-packaging', when='@1.7.4:', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
+    depends_on('py-colorama@0.3.5:', when='platform=windows', type=('build', 'run'))

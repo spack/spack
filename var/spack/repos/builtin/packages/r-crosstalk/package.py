@@ -13,10 +13,10 @@ class RCrosstalk(RPackage):
     other, with Shiny or without (i.e. static .html files). Currently supports
     linked brushing and filtering."""
 
-    homepage = "https://cloud.r-project.org/package=crosstalk"
-    url      = "https://cloud.r-project.org/src/contrib/crosstalk_1.0.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/crosstalk"
+    homepage = "https://rstudio.github.io/crosstalk"
+    cran = "crosstalk"
 
+    version('1.2.0', sha256='4237baab35cd246a8a98fb9cf4ce53b6ddbc31d00742ded4edea0479613d1ea0')
     version('1.1.0.1', sha256='36a70b10bc11826e314c05f9579fd791b9ac3b3a2cfed4d4ca74ce1ad991300e')
     version('1.0.0', sha256='b31eada24cac26f24c9763d9a8cbe0adfd87b264cf57f8725027fe0c7742ca51')
 

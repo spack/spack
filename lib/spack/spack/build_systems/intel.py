@@ -690,6 +690,12 @@ class IntelPackage(PackageBase):
                 '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
+        elif '%clang' in self.spec:
+            clang = Executable(self.compiler.cc)
+            omp_lib_path = clang(
+                '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
+            omp_libs = LibraryList(omp_lib_path.strip())
+
         if len(omp_libs) < 1:
             raise_lib_error('Cannot locate OpenMP libraries:', omp_libnames)
 
@@ -772,7 +778,7 @@ class IntelPackage(PackageBase):
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
                 mkl_threading = 'libmkl_intel_thread'
-            elif '%gcc' in self.spec:
+            elif '%gcc' in self.spec or '%clang' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
             threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):

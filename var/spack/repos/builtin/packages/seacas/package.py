@@ -96,6 +96,7 @@ class Seacas(CMakePackage):
     with when('+metis'):
         depends_on('metis+int64+real64')
         depends_on('parmetis+int64', when='+mpi')
+    depends_on('libx11', when='+x11')
 
     # The Faodel TPL is only supported in seacas@2021-04-05:
     depends_on('faodel@1.2108.1:+mpi', when='+faodel +mpi')
@@ -126,6 +127,8 @@ class Seacas(CMakePackage):
                 '-DTPL_ENABLE_MPI:BOOL=ON',
                 '-DMPI_BASE_DIR:PATH=%s'      % spec['mpi'].prefix,
             ])
+        else:
+            '-DTPL_ENABLE_MPI:BOOL=OFF'
 
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',

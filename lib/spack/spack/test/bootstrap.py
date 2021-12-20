@@ -140,3 +140,13 @@ spack:
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
         assert str(spack.store.root) == '/tmp/store'
+
+
+def test_nested_use_of_context_manager(mutable_config):
+    """Test nested use of the context manager"""
+    user_config = spack.config.config
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.config != user_config
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.config.config != user_config
+    assert spack.config.config == user_config

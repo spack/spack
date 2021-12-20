@@ -29,7 +29,11 @@ from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.maven import MavenPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.octave import OctavePackage
-from spack.build_systems.oneapi import IntelOneApiLibraryPackage, IntelOneApiPackage
+from spack.build_systems.oneapi import (
+    IntelOneApiLibraryPackage,
+    IntelOneApiPackage,
+    IntelOneApiStaticLibraryList,
+)
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.qmake import QMakePackage

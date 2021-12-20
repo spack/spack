@@ -58,6 +58,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on('camp@0.2.2', when='@0.14.0:')
     depends_on('camp@0.1.0', when='@0.12.0:0.13.0')
 
+    depends_on('cmake@:3.20', when='+rocm', type='build')
+
     with when('+rocm @0.12.0:'):
         depends_on('camp+rocm')
         for arch in ROCmPackage.amdgpu_targets:
@@ -126,7 +128,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries = []
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec['blt'].prefix))
-        entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
+        if 'camp' in self.spec:
+            entries.append(cmake_cache_path("camp_DIR", spec['camp'].prefix))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_EXAMPLES", '+examples' in spec))
         if spec.satisfies('@0.14.0:'):

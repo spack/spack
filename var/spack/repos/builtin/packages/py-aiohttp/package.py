@@ -21,7 +21,7 @@ class PyAiohttp(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@3.7:')
     depends_on('py-attrs@17.3.0:', type=('build', 'run'))
     depends_on('py-chardet@2.0:3', type=('build', 'run'))
-    depends_on('py-multidict@4.5:4', type=('build', 'run'))
+    depends_on('py-multidict@4.5:4', type=('build', 'run'), when='@:3.6.2')
     depends_on('py-multidict@4.5:6', type=('build', 'run'), when='@3.6.3:')
     depends_on('py-async-timeout@3.0:3', type=('build', 'run'))
     depends_on('py-yarl@1.0:1', type=('build', 'run'))

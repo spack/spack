@@ -557,6 +557,19 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    def test_conflicts_show_cores(self, conflict_spec, monkeypatch):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Testing debug statements specific to new concretizer')
+
+        monkeypatch.setattr(spack.solver.asp, 'full_cores', True)
+        monkeypatch.setattr(spack.solver.asp, 'minimize_cores', False)
+
+        s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError) as e:
+            s.concretize()
+
+        assert "conflict_trigger(" in e.value.message
+
     def test_conflict_in_all_directives_true(self):
         s = Spec('when-directives-true')
         with pytest.raises(spack.error.SpackError):

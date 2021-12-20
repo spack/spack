@@ -24,9 +24,9 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv var/spack/repos
+      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.5- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -114,7 +114,7 @@ jobs:
               patchelf cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
           # ensure style checks are not skipped in unit tests for python >= 3.6
           # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
@@ -173,7 +173,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -193,37 +193,6 @@ jobs:
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
-  # Test for Python2.6 run on Centos 6
-  centos6:
-    needs: [ validate, style, changes ]
-    runs-on: ubuntu-latest
-    container: spack/github-actions:centos6
-    steps:
-    - name: Run unit tests (full test-suite)
-      # The CentOS 6 container doesn't run with coverage, but
-      # under the same conditions it runs the full test suite
-      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
-      env:
-          HOME: /home/spack-test
-          SPACK_TEST_SOLVER: original
-      run: |
-          whoami && echo $HOME && cd $HOME
-          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
-          git fetch origin "${{ github.ref }}:test-branch"
-          git checkout test-branch
-          bin/spack unit-test -x
-    - name: Run unit tests (only package tests)
-      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
-      env:
-          HOME: /home/spack-test
-          ONLY_PACKAGES: true
-          SPACK_TEST_SOLVER: original
-      run: |
-          whoami && echo $HOME && cd $HOME
-          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
-          git fetch origin "${{ github.ref }}:test-branch"
-          git checkout test-branch
-          bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
 
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
@@ -272,7 +241,7 @@ jobs:
               patchelf kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools codecov coverage[toml] clingo
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml] clingo
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -315,7 +284,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade codecov coverage[toml]
+          pip install --upgrade pytest codecov coverage[toml]
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -345,3 +314,32 @@ jobs:
       with:
         files: ./coverage.xml
         flags: unittests,macos
+
+  # Run audits on all the packages in the built-in repository
+  package-audits:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+    - name: Package audits (with coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      run: |
+          . share/spack/setup-env.sh
+          coverage run $(which spack) audit packages
+          coverage combine
+          coverage xml
+    - name: Package audits (wwithout coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      run: |
+          . share/spack/setup-env.sh
+          $(which spack) audit packages
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        flags: unittests,linux,audits

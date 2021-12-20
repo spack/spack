@@ -13,7 +13,7 @@ from spack import *
 
 
 class Namd(MakefilePackage, CudaPackage):
-    """NAMDis a parallel molecular dynamics code designed for
+    """NAMD is a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
     homepage = "https://www.ks.uiuc.edu/Research/namd/"

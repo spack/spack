@@ -559,6 +559,18 @@ class Openfoam(Package):
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
 
+    @when('@:2106 %aocc@3.2.0:')
+    @run_before('configure')
+    def make_amd_rules(self):
+        """Due to the change in the linker behavior in AOCC v3.2, it is now
+        issuing diagnostic messages for the unreferenced symbols in the
+        shared objects as it may lead to run time failures.
+        """
+        general_rules = 'wmake/rules/General'
+        src = join_path(general_rules, 'Clang')
+        filter_file('clang++', spack_cxx + ' -pthread', join_path(src, 'c++'),
+                    backup=False, string=True)
+
     @when('@1812: %fj')
     @run_before('configure')
     def make_fujitsu_rules(self):
