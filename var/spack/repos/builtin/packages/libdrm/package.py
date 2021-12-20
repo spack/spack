@@ -12,6 +12,7 @@ class Libdrm(Package):
 
     homepage = "https://dri.freedesktop.org/libdrm/"
     url      = "https://dri.freedesktop.org/libdrm/libdrm-2.4.101.tar.xz"
+    list_url = "https://dri.freedesktop.org/libdrm/"
 
     maintainers = ['wdconinc']
 
