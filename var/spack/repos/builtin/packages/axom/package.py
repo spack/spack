@@ -105,15 +105,18 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("kvtree@main", when="+scr")
     depends_on("dtcmp", when="+scr")
 
-    depends_on("raja~openmp", when="+raja~openmp")
-    depends_on("raja+openmp", when="+raja+openmp")
-    depends_on("raja+cuda", when="+raja+cuda")
-
     with when('+umpire'):
         depends_on('umpire@6.0.0:', when='@0.6.0:')
         depends_on('umpire@5:5.0.1', when='@:0.5.0')
         depends_on('umpire +openmp', when='+openmp')
         depends_on('umpire +cuda', when='+cuda')
+
+    with when('+raja'):
+        depends_on('raja@0.14.0:', when='@0.6.0:')
+        depends_on('raja@:0.13.0', when='@:0.5.0')
+        depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+openmp", when="+openmp")
+        depends_on("raja+cuda", when="+cuda")
 
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja cuda_arch={0}'.format(sm_),
