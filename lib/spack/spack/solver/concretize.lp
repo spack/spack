@@ -387,7 +387,7 @@ external_conditions_hold(Package, LocalIndex) :-
 %-----------------------------------------------------------------------------
 
 % A package may have an associated "condition_group": a set of specs -
-% at least one of which must be applied, that spec is represented here
+% at least one of which must be applied. That spec is represented here
 % with cfg_required(Package, Y), and may apply multiple constraints
 % (version, compiler, or variant settings). We depend on asp.py to
 % add statements defining the attributes that are applied for the given
