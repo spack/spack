@@ -24,6 +24,13 @@ argparse
   vendored copy ever needs to be updated again:
   https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
 
+attrs
+----------------
+
+* Homepage: https://github.com/python-attrs/attrs
+* Usage: Needed by jsonschema.
+* Version: 21.2.0 (83d3cd70f90a3f4d19ee8b508e58d1c58821c0ad)
+
 ctest_log_parser
 ----------------
 
@@ -40,6 +47,12 @@ distro
 * Version: 1.6.0 (64946a1e2a9ff529047070657728600e006c99ff)
 * Note: Last version supporting Python 2.7
 
+functools32
+-----------
+* Homepage: https://github.com/MiCHiLU/python-functools32
+* Usage: Needed by jsonschema when using Python 2.7.
+* Version: 3.2.3-2
+
 jinja2
 ------
 
@@ -52,11 +65,8 @@ jsonschema
 
 * Homepage: https://pypi.python.org/pypi/jsonschema
 * Usage: An implementation of JSON Schema for Python.
-* Version: 2.4.0 (last version before functools32 dependency was added)
-* Note: functools32 doesn't support Python 2.6 or 3.0, so jsonschema
-  cannot be upgraded any further until we drop 2.6.
-  Also, jsonschema/validators.py has been modified NOT to try to import
-  requests (see 7a1dd517b8).
+* Version: 3.2.0 (last version before 2.7 and 3.6 support was dropped)
+* Note: We don't include tests or benchmarks; just what Spack needs.
 
 markupsafe
 ----------
@@ -74,6 +84,14 @@ py
 * Version: 1.4.34 (last version supporting Python 2.6)
 * Note: This packages has been modified:
   * https://github.com/pytest-dev/py/pull/186 was backported
+
+pyrsistent
+----------
+
+* Homepage: http://github.com/tobgu/pyrsistent/
+* Usage: Needed by `jsonschema`
+* Version: 0.16.1 (last version supporting Python 2.7)
+* Note: We only include the parts needed for `jsonschema`.
 
 pytest
 ------

@@ -102,8 +102,11 @@ class KokkosKernels(CMakePackage, CudaPackage):
             options.append("-DSpack_WORKAROUND=On")
 
         options.append("-DKokkos_ROOT=%s" % spec["kokkos"].prefix)
-        # Compiler weirdness due to nvcc_wrapper
-        options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
+        if spec.satisfies('^kokkos+rocm'):
+            options.append("-DCMAKE_CXX_COMPILER=%s" % spec['hip'].hipcc)
+        else:
+            # Compiler weirdness due to nvcc_wrapper
+            options.append("-DCMAKE_CXX_COMPILER=%s" % spec["kokkos"].kokkos_cxx)
 
         if self.run_tests:
             options.append("-DKokkosKernels_ENABLE_TESTS=ON")

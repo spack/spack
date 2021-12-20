@@ -221,6 +221,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
+    depends_on('rocsparse', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
+    depends_on('rocblas', when='+rocm')
+    depends_on('rocrand', when='+rocm')
+    depends_on('rocthrust', when='+rocm')
+    depends_on('rocprim', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10')
@@ -321,6 +327,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels', when='+kokkos')
     depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
+    depends_on('kokkos+rocm', when='+kokkos +rocm')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -414,7 +421,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # if not (useinc || uselib): usedir - i.e (False, False)
         for library in (
                 ('cuda', 'cuda', False, False),
-                ('hip', 'hip', False, False),
+                ('hip', 'hip', True, False),
                 'metis',
                 'hypre',
                 'parmetis',
@@ -496,6 +503,22 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
+        if '+rocm' in spec:
+            if not spec.satisfies('amdgpu_target=none'):
+                hip_arch = spec.variants['amdgpu_target'].value
+                options.append('--with-hip-arch={0}'.format(hip_arch[0]))
+            hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
+            hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
+            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_inc = ''
+            hip_lib = ''
+            for pkg in hip_ipkgs:
+                hip_inc += spec[pkg].headers.include_flags + ' '
+            for pkg in hip_lpkgs:
+                hip_lib += spec[pkg].libs.joined() + ' '
+            options.append('HIPPPFLAGS=%s' % hip_inc)
+            options.append('with-hip-lib=%s -L%s -lamdhip64' %
+                           (hip_lib, spec['hip'].prefix.lib))
 
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:3.15'):

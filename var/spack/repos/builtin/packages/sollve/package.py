@@ -133,7 +133,6 @@ class Sollve(CMakePackage):
              revision=372427, destination='projects',
              when='@1.0a2+internal_unwind', placement='libunwind')
 
-    conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
     conflicts('%gcc@:5.0')
