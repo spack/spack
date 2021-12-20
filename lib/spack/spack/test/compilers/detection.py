@@ -184,13 +184,6 @@ def test_intel_version_detection(version_str, expected_version):
         'InstalledDir: /made/up/path',
         '2021.4.0'
     ),
-    (  # ICX/ICPX
-        'Intel(R) oneAPI DPC++/C++ Compiler 2022.0.0 (2022.0.0.20211123)\n'
-        'Target: x86_64-unknown-linux-gnu\n'
-        'Thread model: posix\n'
-        'InstalledDir: /made/up/path',
-        '2022.0.1'
-    ),
     (  # IFX
         'ifx (IFORT) 2021.1.2 Beta 20201214\n'
         'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
@@ -214,7 +207,7 @@ def test_intel_version_detection(version_str, expected_version):
     (  # IFX
         'ifx (IFORT) 2022.0.0 20211123\n'
         'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
-        '2022.0.1'
+        '2022.0.0'
     ),
 ])
 def test_oneapi_version_detection(version_str, expected_version):
