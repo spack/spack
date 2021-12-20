@@ -780,11 +780,7 @@ class SpackSolverSetup(object):
             # The goal here is to say "if we need to build MPI, then it has to
             # either satisfy @4.0.2+static or @4.0.1~static"
             test_rules = [
-                ("openmpi",
-                 # This list of specs is an example of a stanza
-                 ["@4.0.2+static",  # Example stanza member
-                  "@4.0.1~static"]
-                )
+                ("openmpi", ["@4.0.2+static", "@4.0.1~static"])
             ]
         elif experimental_hack_selector == 2:
             # Example of combinatoric constraints, you can mix either compiler
