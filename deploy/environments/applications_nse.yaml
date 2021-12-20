@@ -19,7 +19,6 @@ spack:
         - py-minis-validation
         - py-morphio
         - py-morphology-repair-workflow
-        - py-simwriter
         - py-sonata-network-reduction
         - regiodesics
   packages:
@@ -55,7 +54,5 @@ spack:
     - py-morphio
     - py-morphology-repair-workflow
     - py-morph-tool%gcc ^neuron%intel
-    - py-morph-tool@2.8.0%gcc ^neuron%intel
-    - py-simwriter
     - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
     - regiodesics

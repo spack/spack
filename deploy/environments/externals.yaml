@@ -85,8 +85,7 @@ spack:
     - gdb~python
     - git
     - glew
-    # Fails hard, too
-    # - gmsh+metis~mpi+oce+openmp+shared@4.4.1
+    - gmsh+metis~mpi+oce+openmp+shared
     - graphviz
     - hdf5~mpi@1.10.7
     - help2man

@@ -11,7 +11,7 @@ class Regiodesics(CMakePackage):
     """
 
     homepage = "https://bbpteam.epfl.ch/project/spaces/display/BBPNSE/Computing+neurons+direction+vectors"
-    git = "ssh://bbpcode.epfl.ch/viz/Regiodesics"
+    git = "git@bbpgitlab.epfl.ch:nse/archive/regiodesics.git"
 
     version('0.1.2', tag='0.1.2', submodules=True)
     version('0.1.1', tag='0.1.1', submodules=True)
