@@ -1198,6 +1198,7 @@ class PackageInstaller(object):
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
+            spack.hooks.on_install_failure(task.request.pkg.spec)
             pid = '{0}: '.format(self.pid) if tty.show_pid() else ''
             tty.debug('{0}{1}'.format(pid, str(e)))
             tty.debug('Package stage directory: {0}' .format(pkg.stage.source_path))
@@ -1654,7 +1655,7 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
@@ -1918,6 +1919,9 @@ class BuildProcessInstaller(object):
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
                     spack.hooks.on_phase_error(pkg, phase_name, log_file)
+
+                    # phase error indicates install error
+                    spack.hooks.on_install_failure(pkg.spec)
                     raise
 
                 # We assume loggers share echo True/False
