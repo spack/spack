@@ -11,7 +11,7 @@ class Libdrm(Package):
     on Linux, BSD and other systems supporting the ioctl interface."""
 
     homepage = "https://dri.freedesktop.org/libdrm/"
-    list_url = "https://dri.freedesktop.org/libdrm/"
+    url      = "https://dri.freedesktop.org/libdrm/libdrm-2.4.101.tar.xz"
 
     maintainers = ['wdconinc']
 
