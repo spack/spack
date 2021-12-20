@@ -19,6 +19,7 @@ class Structure(MakefilePackage):
         url = "http://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v{0}/structure_kernel_source.tar.gz"
         return url.format(version)
 
+    @when('%gcc@10:')
     def edit(self, spec, prefix):
         filter_file(r'(CFLAGS =.*$)', '\\1 -fcommon', 'Makefile')
 
