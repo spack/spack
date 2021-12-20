@@ -149,7 +149,7 @@ def compiler_list(args):
     compilers = spack.compilers.all_compilers(scope=args.scope, init_config=False)
 
     # If no compilers are found, prompt to search for compilers.
-    if args.scope is None and len(compilers) == 0 and sys.stdout.isatty():
+    if args.scope is None and len(compilers) == 0 and sys.stdin.isatty():
         if not tty.get_yes_or_no("No compilers available. Search for compilers?"):
             return
         compilers = spack.compilers.all_compilers(init_config=True)
