@@ -271,9 +271,10 @@ Compiler configuration
 ----------------------
 
 Spack has the ability to build packages with multiple compilers and
-compiler versions. Spack searches for compilers on your machine
-automatically the first time it is run. It does this by inspecting
-your ``PATH``.
+compiler versions. Compilers can be made available to Spack by
+specifying them manually in ``compilers.yaml``, or automatically by
+running ``spack compiler find``, but for convenience Spack will
+automatically detect compilers the first time it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -281,7 +282,7 @@ your ``PATH``.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers spack has found by running ``spack
+You can see which compilers are available to Spack by running ``spack
 compilers`` or ``spack compiler list``:
 
 .. code-block:: console
