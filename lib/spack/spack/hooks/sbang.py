@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
-import grp
 import os
 import re
 import shutil
@@ -15,6 +14,7 @@ import tempfile
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.error
 import spack.package_prefs
 import spack.paths
 import spack.spec
@@ -27,6 +27,12 @@ if sys.platform == 'darwin':
     system_shebang_limit = 511
 else:
     system_shebang_limit = 127
+
+#: Groupdb does not exist on Windows, prevent imports
+#: on supported systems
+is_windows = str(spack.platforms.host()) == 'windows'
+if not is_windows:
+    import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
@@ -184,6 +190,10 @@ def install_sbang():
     ``sbang`` here ensures that users can access the script and that
     ``sbang`` itself is in a short path.
     """
+    # Cannot leverage functions involving unix Groupdb, for now, this cannot be used
+    # on Windows. Windows support requires further investigation.
+    if is_windows:
+        raise RuntimeError("Installing 'sbang' unsupported on Windows at this time.")
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
     if os.path.exists(sbang_path) and filecmp.cmp(
