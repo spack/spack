@@ -376,12 +376,12 @@ update_config:
       cat <<EOF > "$DEPLOYMENT_ROOT/config/config.yaml"
       config:
         install_tree:
-          root: ~/spack_install
+          root: \$user_cache_path/software
         module_roots:
-          tcl: ~/spack_install/modules_tcl
+          tcl: \$user_cache_path/modules
         source_cache: \$user_cache_path/sources
         environments:
-          root: ~/spack_install/environments
+          root: \$user_cache_path/environments
       EOF
 
 link_configuration:

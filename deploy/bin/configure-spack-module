@@ -17,10 +17,15 @@ cat <<EOF
 
 if [ module-info mode load ] {
     puts stderr "Welcome to the central Spack installation!\n"
-    puts stderr "Software will be installed into ~/spack_install."
-    puts stderr "To modify this, use\n"
+    puts stderr "Software will be installed into ~/spack_install by default."
+    puts stderr "Modules for installed software are disabled, to enable a specific one, use:\n"
+    puts stderr "\tspack config add modules:tcl:whitelist:package_to_install\n"
+    puts stderr "To modify the software installation directory, use\n"
+    puts stderr "\texport SPACK_USER_CACHE_PATH=\$\{NEW_INSTALL_DIR\}\n"
+    puts stderr "Or modify the Spack configuration with:\n"
+    puts stderr "\tunset SPACK_USER_CACHE_PATH  # Will put cached stuff in ~/.spack\n"
     puts stderr "\tspack config add config:install_tree:root:\$\{NEW_INSTALL_DIR\}\n"
-    puts stderr "To create a modifiable version, use\n"
+    puts stderr "To create a modifiable version of Spack, use\n"
     puts stderr "\tspack clone \$\{NEW_SPACK_DIR\}"
     puts stderr "\tcp \$\{NEW_SPACK_DIR\}/{deploy/config/*.yaml,etc/spack}"
     puts stderr "\t. \$\{NEW_SPACK_DIR\}/share/spack/setup-env.sh\n"
@@ -31,4 +36,5 @@ module-whatis   Spack is our software building and deployment toolkit
 append-path     PATH ${SPACK_ROOT}/bin
 setenv          SPACK_ROOT ${SPACK_ROOT}
 setenv          SPACK_SYSTEM_CONFIG_PATH ${DEPLOYMENT_ROOT}/config
+setenv          SPACK_USER_CACHE_PATH \${HOME}/spack_install
 EOF
