@@ -31,7 +31,8 @@ class Vasp(MakefilePackage):
              when='+vaspsol')
 
     variant('openmp', default=False,
-            description='Enable OPENMP build')
+            description='Enable openmp build')
+
     variant('scalapack', default=False,
             description='Enables build with SCALAPACK')
 
@@ -60,7 +61,10 @@ class Vasp(MakefilePackage):
     def edit(self, spec, prefix):
 
         if '%gcc' in spec:
-            make_include = join_path('arch', 'makefile.include.linux_gnu')
+            if '+openmp' in spec:
+                make_include = join_path('arch', 'makefile.include.linux_gnu_omp')
+            else:
+                make_include = join_path('arch', 'makefile.include.linux_gnu')
         elif '%nvhpc' in spec:
             make_include = join_path('arch', 'makefile.include.linux_pgi')
             filter_file('-pgc++libs', '-c++libs', make_include, string=True)
@@ -105,9 +109,14 @@ class Vasp(MakefilePackage):
                         'FCL = {0}'.format(spec['mpi'].mpifc),
                         make_include, string=True)
         else:
-            make_include = join_path('arch',
-                                     'makefile.include.linux_' +
-                                     spec.compiler.name)
+            if '+openmp' in spec:
+                make_include = join_path('arch',
+                                         'makefile.include.linux_{0}_omp'.
+                                         format(spec.compiler.name))
+            else:
+                make_include = join_path('arch',
+                                         'makefile.include.linux_' +
+                                         spec.compiler.name)
 
         os.rename(make_include, 'makefile.include')
 
