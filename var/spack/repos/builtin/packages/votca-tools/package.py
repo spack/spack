@@ -20,6 +20,7 @@ class VotcaTools(CMakePackage):
     git      = "https://github.com/votca/tools.git"
     maintainers = ['junghans']
 
+    version('stable', branch='stable', deprecated=True)
     version('2021.2', sha256='2cd3175b65924803aff90dce49f60e1dda9015988a453d60358e51f0dbb4292d', deprecated=True)
     version('2021.1', sha256='c2fdf5ab72fc75580fb3623182fa88dd0eed856388bdc862aff42148bb0a16e7', deprecated=True)
     version('2021', sha256='b84f68ba4a8bfae7b06b61e1e078dcbfb3b340c516da3be39ef545152da00ccd', deprecated=True)

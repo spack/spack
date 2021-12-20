@@ -20,6 +20,7 @@ class VotcaXtp(CMakePackage):
     git      = "https://github.com/votca/xtp.git"
     maintainers = ['junghans']
 
+    version('stable', branch='stable', deprecated=True)
     version('2021.2', sha256='a13180cc05a24c441326a2b209e4d1cc6b176f1b8d7aec1aea46b627e230ff8c', deprecated=True)
     version('2021.1', sha256='8ce112fc40676690369133188848dfeb3875d57351286cad4c312057a4dd767b', deprecated=True)
     version('2021', sha256='43bb5a52fec675738f4b5896f0833a1c1090bd7e74f97769697495abf4652e40', deprecated=True)
@@ -34,7 +35,8 @@ class VotcaXtp(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
-              "1.6.3", "1.6.4", "2021", "2021.1", "2021.2"]:
+              "1.6.3", "1.6.4", "2021", "2021.1", "2021.2",
+              "stable"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("libxc", when='@stable,1.5:')

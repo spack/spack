@@ -20,6 +20,7 @@ class VotcaCsgTutorials(CMakePackage):
     git      = "https://github.com/votca/csg-tutorials.git"
     maintainers = ['junghans']
 
+    version('stable', branch='stable', deprecated=True)
     version('2021.2', sha256='156c5ec55a288e3013d393e66a1d2f09ebf4f14056d50d081535004696e7f5ba', deprecated=True)
     version('2021.1', sha256='5ea1e6ca370e6e7845f9195495f5fb8bbd72d601980e123ae7852f491f03949a', deprecated=True)
     version('2021', sha256='2b85c69007bb7d773529020e55fd82fed65651ee21eedccca9a801ab248ece97', deprecated=True)
@@ -34,6 +35,6 @@ class VotcaCsgTutorials(CMakePackage):
     version('1.4',     sha256='27d50acd68a9d8557fef18ec2b0c62841ae91c22275ab9afbd65c35e4dd5f719', deprecated=True)
 
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
-              "1.6.3", "1.6.4", "2021", "2021.1", "2021.2"]:
+              "1.6.3", "1.6.4", "2021", "2021.1", "2021.2", "stable"]:
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")
