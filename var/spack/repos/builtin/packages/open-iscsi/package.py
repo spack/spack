@@ -21,7 +21,7 @@ class OpenIscsi(MakefilePackage):
 
     depends_on('gettext')
     depends_on('uuid')
-    depends_on('util-linux+libmount')
+    depends_on('util-linux')
     depends_on('kmod')
     depends_on('open-isns')
     depends_on('libtool', type='build')

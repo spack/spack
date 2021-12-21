@@ -14,7 +14,7 @@ class RFpcompare(RPackage):
     being aware of these problems, people still use numerical methods
     that fail to account for these and other rounding errors (this pitfall
     is the first to be highlighted in Circle 1 of Burns (2012) 'The R
-    Inferno' <http://www.burns-stat.com/pages/Tutor/R_inferno.pdf>). This
+    Inferno' <https://www.burns-stat.com/pages/Tutor/R_inferno.pdf>). This
     package provides new relational operators useful for performing
     floating point number comparisons with a set tolerance."""
 

@@ -319,7 +319,7 @@ class Openfoam(Package):
     depends_on('fftw-api')
     depends_on('boost')
     # OpenFOAM does not play nice with CGAL 5.X
-    depends_on('cgal@:4.99')
+    depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
@@ -558,6 +558,18 @@ class Openfoam(Package):
         if os.path.exists(controlDict):
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
+
+    @when('@:2106 %aocc@3.2.0:')
+    @run_before('configure')
+    def make_amd_rules(self):
+        """Due to the change in the linker behavior in AOCC v3.2, it is now
+        issuing diagnostic messages for the unreferenced symbols in the
+        shared objects as it may lead to run time failures.
+        """
+        general_rules = 'wmake/rules/General'
+        src = join_path(general_rules, 'Clang')
+        filter_file('clang++', spack_cxx + ' -pthread', join_path(src, 'c++'),
+                    backup=False, string=True)
 
     @when('@1812: %fj')
     @run_before('configure')

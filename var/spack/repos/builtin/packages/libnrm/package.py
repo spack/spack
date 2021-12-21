@@ -14,6 +14,8 @@ class Libnrm(AutotoolsPackage):
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/libnrm-0.1.0.tar.gz"
     version('0.1.0', sha256='f849ada384025fa41251acc2a43aa335e0cb1b9cd1c8ab8b9d1808a036ae551e')
 
+    tags = ['e4s']
+
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

@@ -13,6 +13,9 @@ class Dcmtk(CMakePackage):
     homepage = "https://dicom.offis.de"
     url      = "https://github.com/DCMTK/dcmtk/archive/DCMTK-3.6.3.tar.gz"
 
+    version('3.6.6', sha256='117097da6d50ddbad0e48bb1e6cdc61468e82ba1d32001dd8e2366b445133a8c')
+    version('3.6.5', sha256='37dad355d5513b4de4a86b5b7b0c3e9ec059860d88781b80916bba2a04e6d5b8')
+    version('3.6.4', sha256='e4b1de804a3fef38fe8cb9edd00262c3cbbd114b305511c14479dd888a9337d2')
     version('3.6.3', sha256='57f4f71ee4af9114be6408ff6fcafc441c349e4c2954e17c9c22c8ce0fb065bf')
     version('3.6.2', sha256='e9bf6e8805bbcf8a25274566541798785fd4e73bd046045ef27a0109ab520924')
 

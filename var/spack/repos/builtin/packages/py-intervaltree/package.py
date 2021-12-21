@@ -14,5 +14,5 @@ class PyIntervaltree(PythonPackage):
 
     version('3.0.2', sha256='e8ab75b66077f2e5fb85ac56cb6df834689edb048d38601d53d8867cce3b77d1')
 
-    depends_on('py-sortedcontainers@2:2.999', type=('build', 'run'))
+    depends_on('py-sortedcontainers@2.0:2', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

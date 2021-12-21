@@ -30,10 +30,13 @@ class Gasnet(Package):
 
     maintainers = ['PHHargrove', 'bonachea']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('main',    branch='stable')
     version('master',  branch='master')
 
+    version('2021.9.0',  sha256='1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee')
     version('2021.3.0',  sha256='8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747')
     version('2020.10.0', sha256='ed17baf7fce90499b539857ee37b3eea961aa475cffbde77e4c607a34ece06a0')
     version('2020.3.0',  sha256='019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274')

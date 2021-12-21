@@ -33,7 +33,7 @@ class Miopengemm(CMakePackage):
     version('3.7.0', sha256='392b280ca564b120f6b24ec1fe8782cba08a8a5fb52938e8bc3dc887d3fd08fa')
     version('1.1.6', sha256='9ab04903794c6a59432928eaec92c687d51e2b4fd29630cf227cbc49d56dc69b')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.1.6')

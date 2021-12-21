@@ -25,9 +25,9 @@ class Motioncor2(Package):
             'c75738160ac18d3f27c33677e78e63313d8ec2b023b5a46173428c3fa0451a94',
             url='http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.4.tar.gz')
 
-    depends_on('cuda@8.0:8.99', type='run')
+    depends_on('cuda@8.0:8', type='run')
     # libtiff.so.3 is required
-    depends_on('libtiff@3.0:3.99', type='run')
+    depends_on('libtiff@3.0:3', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

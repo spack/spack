@@ -9,7 +9,7 @@ import sys
 from spack import *
 
 
-class Hypre(Package, CudaPackage):
+class Hypre(AutotoolsPackage, CudaPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -17,12 +17,15 @@ class Hypre(Package, CudaPackage):
     homepage = "https://computing.llnl.gov/project/linear_solvers/software.php"
     url      = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git      = "https://github.com/hypre-space/hypre.git"
+    tags     = ['e4s', 'radiuss']
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.23.0', sha256='8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2')
+    version('2.22.1', sha256='c1e7761b907c2ee0098091b69797e9be977bff8b7fd0479dc20cad42f45c4084')
     version('2.22.0', sha256='2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5')
     version('2.21.0', sha256='e380f914fe7efe22afc44cdf553255410dc8a02a15b2e5ebd279ba88817feaf5')
     version('2.20.0', sha256='5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
@@ -63,6 +66,8 @@ class Hypre(Package, CudaPackage):
     variant('debug', default=False,
             description='Build debug instead of optimized version')
     variant('unified-memory', default=False, description='Use unified memory')
+    variant('fortran', default=True,
+            description='Enables fortran bindings')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -86,17 +91,19 @@ class Hypre(Package, CudaPackage):
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
-    conflicts("+shared@:2.12.99 platform=darwin")
+    conflicts("+shared@:2.12 platform=darwin")
 
     # Conflicts
     # Option added in v2.13.0
-    conflicts('+superlu-dist', when='@:2.12.99')
+    conflicts('+superlu-dist', when='@:2.12')
 
     # Internal SuperLU Option removed in v2.13.0
     conflicts('+internal-superlu', when='@2.13.0:')
 
     # Option added in v2.16.0
-    conflicts('+mixedint', when='@:2.15.99')
+    conflicts('+mixedint', when='@:2.15')
+
+    configure_directory = 'src'
 
     def url_for_version(self, version):
         if version >= Version('2.12.0'):
@@ -106,7 +113,7 @@ class Hypre(Package, CudaPackage):
 
         return url.format(version)
 
-    def _configure_args(self):
+    def configure_args(self):
         spec = self.spec
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
         lapack = spec['lapack'].libs
@@ -120,98 +127,98 @@ class Hypre(Package, CudaPackage):
             '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
 
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             os.environ['CC'] = spec['mpi'].mpicc
             os.environ['CXX'] = spec['mpi'].mpicxx
-            os.environ['F77'] = spec['mpi'].mpif77
+            if '+fortran' in spec:
+                os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
         else:
             configure_args.append('--without-MPI')
 
-        if '+openmp' in self.spec:
-            configure_args.append('--with-openmp')
-        else:
-            configure_args.append('--without-openmp')
+        configure_args.extend(self.with_or_without('openmp'))
 
-        if '+int64' in self.spec:
+        if '+int64' in spec:
             configure_args.append('--enable-bigint')
         else:
             configure_args.append('--disable-bigint')
 
-        if '+mixedint' in self.spec:
-            configure_args.append('--enable-mixedint')
-        else:
-            configure_args.append('--disable-mixedint')
+        configure_args.extend(self.enable_or_disable('mixedint'))
 
-        if '+complex' in self.spec:
-            configure_args.append('--enable-complex')
-        else:
-            configure_args.append('--disable-complex')
+        configure_args.extend(self.enable_or_disable('complex'))
 
-        if '+shared' in self.spec:
+        if '+shared' in spec:
             configure_args.append("--enable-shared")
 
-        if '~internal-superlu' in self.spec:
+        if '~internal-superlu' in spec:
             configure_args.append("--without-superlu")
             # MLI and FEI do not build without superlu on Linux
             configure_args.append("--without-mli")
             configure_args.append("--without-fei")
 
-        if '+superlu-dist' in self.spec:
+        if '+superlu-dist' in spec:
             configure_args.append('--with-dsuperlu-include=%s' %
                                   spec['superlu-dist'].prefix.include)
             configure_args.append('--with-dsuperlu-lib=%s' %
                                   spec['superlu-dist'].libs)
             configure_args.append('--with-dsuperlu')
 
-        if '+debug' in self.spec:
-            configure_args.append("--enable-debug")
-        else:
-            configure_args.append("--disable-debug")
+        configure_args.extend(self.enable_or_disable('debug'))
 
-        if '+cuda' in self.spec:
+        if '+cuda' in spec:
             configure_args.extend([
                 '--with-cuda',
                 '--enable-curand',
-                '--enable-cub'
             ])
+            # New in 2.21.0: replaces --enable-cub
+            if '@2.21.0:' in spec:
+                configure_args.append('--enable-device-memory-pool')
+                configure_args.append('--with-cuda-home={0}'.format(
+                    spec['cuda'].prefix))
+            else:
+                configure_args.append('--enable-cub')
         else:
             configure_args.extend([
                 '--without-cuda',
                 '--disable-curand',
-                '--disable-cub'
             ])
+            if '@:2.20.99' in spec:
+                configure_args.append('--disable-cub')
 
-        if '+unified-memory' in self.spec:
+        if '+unified-memory' in spec:
             configure_args.append('--enable-unified-memory')
+
+        configure_args.extend(self.enable_or_disable('fortran'))
 
         return configure_args
 
     def setup_build_environment(self, env):
-        if '+mpi' in self.spec:
-            env.set('CC', self.spec['mpi'].mpicc)
-            env.set('CXX', self.spec['mpi'].mpicxx)
-            env.set('F77', self.spec['mpi'].mpif77)
+        spec = self.spec
+        if '+mpi' in spec:
+            env.set('CC', spec['mpi'].mpicc)
+            env.set('CXX', spec['mpi'].mpicxx)
+            if '+fortran' in spec:
+                env.set('F77', spec['mpi'].mpif77)
 
-        if '+cuda' in self.spec:
-            env.set('CUDA_HOME', self.spec['cuda'].prefix)
-            env.set('CUDA_PATH', self.spec['cuda'].prefix)
-            cuda_arch = self.spec.variants['cuda_arch'].value
+        if '+cuda' in spec:
+            env.set('CUDA_HOME', spec['cuda'].prefix)
+            env.set('CUDA_PATH', spec['cuda'].prefix)
+            cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch:
                 arch_sorted = list(sorted(cuda_arch, reverse=True))
                 env.set('HYPRE_CUDA_SM', arch_sorted[0])
             # In CUDA builds hypre currently doesn't handle flags correctly
             env.append_flags(
-                'CXXFLAGS', '-O2' if '~debug' in self.spec else '-g')
+                'CXXFLAGS', '-O2' if '~debug' in spec else '-g')
+
+    def build(self, spec, prefix):
+        with working_dir("src"):
+            make()
 
     def install(self, spec, prefix):
-        configure_args = self._configure_args()
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
         with working_dir("src"):
-            configure(*configure_args)
-
-            make()
             if self.run_tests:
                 make("check")
                 make("test")

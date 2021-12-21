@@ -12,7 +12,7 @@ class FenicsDolfinx(CMakePackage):
     homepage = "https://github.com/FEniCS/dolfinx"
     git = "https://github.com/FEniCS/dolfinx.git"
     url = "https://github.com/FEniCS/dolfinx/archive/v0.1.0.tar.gz"
-    maintainers = ["js947", "chrisrichardson", "garth-wells"]
+    maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
 
     version("main", branch="main")
     version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
@@ -22,6 +22,7 @@ class FenicsDolfinx(CMakePackage):
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
+    variant("adios2", default=False, description="adios2 support")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("pkgconfig", type="build")
@@ -36,6 +37,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
+    depends_on("adios2", when="+adios2")
 
     depends_on("py-fenics-ffcx", type=("build", "run"))
     depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
@@ -62,6 +64,8 @@ class FenicsDolfinx(CMakePackage):
                 'ON' if "+parmetis" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_SLEPC=%s" % (
                 'ON' if "+slepc" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_ADIOS2=%s" % (
+                'ON' if "+adios2" in self.spec else 'OFF'),
             "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]

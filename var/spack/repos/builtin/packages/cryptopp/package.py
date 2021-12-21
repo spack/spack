@@ -14,7 +14,7 @@ class Cryptopp(MakefilePackage):
     algorithms (MD5, Panama)."""
 
     homepage = "https://www.cryptopp.com"
-    url      = "http://www.cryptopp.com/cryptopp700.zip"
+    url      = "https://www.cryptopp.com/cryptopp700.zip"
 
     version('7.0.0', sha256='a4bc939910edd3d29fb819a6fc0dfdc293f686fa62326f61c56d72d0a366ceb0')
     version('6.1.0', sha256='21289d2511101a9350c87c8eb1f4982d4a266e8037b19dab79a32cc13ea108c7')

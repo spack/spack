@@ -22,6 +22,8 @@ class Xdriinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('pcre')
 
+    # Uses glXGetProcAddressARB, add OpenGL:
+    depends_on('gl')
     depends_on('glproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

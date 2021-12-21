@@ -21,5 +21,7 @@ class Xfwp(AutotoolsPackage, XorgPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
-    # FIXME: fails with the error message:
+    # Fixes this and a long list of other compilation errors:
     # io.c:1039:7: error: implicit declaration of function 'swab'
+    def setup_build_environment(self, env):
+        env.append_flags('CPPFLAGS', '-D_GNU_SOURCE')

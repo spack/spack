@@ -18,3 +18,7 @@ class Acct(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
+
+    def installcheck(self):
+        """"Runs standard check if all programs support --help but not all do"""
+        pass

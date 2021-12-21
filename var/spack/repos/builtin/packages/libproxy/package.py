@@ -21,4 +21,4 @@ class Libproxy(CMakePackage):
 
     depends_on('zlib')
     depends_on('python', type=('build', 'run'), when='@0.4.16:')
-    depends_on('python@:3.6.99', type=('build', 'run'), when='@:0.4.15')
+    depends_on('python@:3.6', type=('build', 'run'), when='@:0.4.15')

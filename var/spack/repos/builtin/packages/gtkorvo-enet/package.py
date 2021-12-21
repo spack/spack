@@ -10,7 +10,7 @@ class GtkorvoEnet(AutotoolsPackage):
     """ENet reliable UDP networking library.
     This is a downstream branch of lsalzman's ENet.
     This version has expanded the client ID to handle more clients.
-    The original is at http://github.com/lsalzman/enet.
+    The original is at https://github.com/lsalzman/enet.
     """
 
     homepage = "https://www.github.com/GTkorvo/enet"

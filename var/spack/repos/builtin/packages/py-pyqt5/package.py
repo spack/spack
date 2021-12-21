@@ -37,6 +37,8 @@ class PyPyqt5(SIPPackage):
         args = [
             '--pyuic5-interpreter', self.spec['python'].command.path,
             '--sipdir', self.prefix.share.sip.PyQt5,
+            '--designer-plugindir', self.prefix.plugins.designer,
+            '--qml-plugindir', self.prefix.plugins.PyQt5,
             '--stubsdir', join_path(
                 self.prefix,
                 self.spec['python'].package.site_packages_dir,
@@ -46,3 +48,6 @@ class PyPyqt5(SIPPackage):
             args.extend(['--qsci-api',
                          '--qsci-api-destdir', self.prefix.share.qsci])
         return args
+
+    def setup_run_environment(self, env):
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)

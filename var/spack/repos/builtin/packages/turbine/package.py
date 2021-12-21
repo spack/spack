@@ -13,7 +13,7 @@ class Turbine(AutotoolsPackage):
     """Turbine: The Swift/T runtime"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/turbine-1.3.0.tar.gz'
+    url      = 'https://swift-lang.github.io/swift-t-downloads/spack/turbine-1.3.0.tar.gz'
     git      = "https://github.com/swift-lang/swift-t.git"
     configure_directory = 'turbine/code'
 

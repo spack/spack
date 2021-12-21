@@ -48,7 +48,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
     depends_on('hwloc@2.3.0:', when='+rocm')
-    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
+    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10')
     depends_on('hipcub', when='@:0.1,0.6.0: +rocm')
 
     conflicts('~cuda', when='+cuda_rma', msg='CUDA RMA support requires CUDA')
@@ -61,6 +61,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = [
             '-DCMAKE_CXX_STANDARD:STRING=17',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec or '+rccl' in spec),
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
@@ -86,7 +87,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             args.append(
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
 
-        if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10.99'):
+        if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10'):
             args.append(
                 '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix)
 

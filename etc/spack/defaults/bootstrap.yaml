@@ -4,7 +4,7 @@ bootstrap:
   enable: true
   # Root directory for bootstrapping work. The software bootstrapped
   # by Spack is installed in a "store" subfolder of this root directory
-  root: ~/.spack/bootstrap
+  root: $user_cache_path/bootstrap
   # Methods that can be used to bootstrap software. Each method may or
   # may not be able to bootstrap all of the software that Spack needs,
   # depending on its type.

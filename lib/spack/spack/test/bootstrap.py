@@ -5,6 +5,7 @@
 import pytest
 
 import spack.bootstrap
+import spack.compilers
 import spack.environment
 import spack.store
 import spack.util.path
@@ -64,3 +65,88 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.environment.active_environment() is None
     assert spack.environment.active_environment() == active_mock_environment
+
+
+@pytest.mark.regression('25805')
+def test_bootstrap_disables_modulefile_generation(mutable_config):
+    # Be sure to enable both lmod and tcl in modules.yaml
+    spack.config.set('modules:enable', ['tcl', 'lmod'])
+
+    assert 'tcl' in spack.config.get('modules:enable')
+    assert 'lmod' in spack.config.get('modules:enable')
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert 'tcl' not in spack.config.get('modules:enable')
+        assert 'lmod' not in spack.config.get('modules:enable')
+    assert 'tcl' in spack.config.get('modules:enable')
+    assert 'lmod' in spack.config.get('modules:enable')
+
+
+@pytest.mark.regression('25992')
+@pytest.mark.requires_executables('gcc')
+def test_bootstrap_search_for_compilers_with_no_environment(no_compilers_yaml):
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.compilers.all_compiler_specs(init_config=False)
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+
+
+@pytest.mark.regression('25992')
+@pytest.mark.requires_executables('gcc')
+def test_bootstrap_search_for_compilers_with_environment_active(
+        no_compilers_yaml, active_mock_environment
+):
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.compilers.all_compiler_specs(init_config=False)
+    assert not spack.compilers.all_compiler_specs(init_config=False)
+
+
+@pytest.mark.regression('26189')
+def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
+    # Mock the command line scope
+    expected_dir = '/tmp/test'
+    internal_scope = spack.config.InternalConfigScope(
+        name='command_line', data={
+            'config': {
+                'test_stage': expected_dir
+            }
+        }
+    )
+    spack.config.config.push_scope(internal_scope)
+
+    assert spack.config.get('config:test_stage') == expected_dir
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.get('config:test_stage') == expected_dir
+    assert spack.config.get('config:test_stage') == expected_dir
+
+
+@pytest.mark.regression('26548')
+def test_custom_store_in_environment(mutable_config, tmpdir):
+    # Test that the custom store in an environment is taken into account
+    # during bootstrapping
+    spack_yaml = tmpdir.join('spack.yaml')
+    spack_yaml.write("""
+spack:
+  specs:
+  - libelf
+  config:
+    install_tree:
+      root: /tmp/store
+""")
+    with spack.environment.Environment(str(tmpdir)):
+        assert spack.environment.active_environment()
+        assert spack.config.get('config:install_tree:root') == '/tmp/store'
+        # Don't trigger evaluation here
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            pass
+        assert str(spack.store.root) == '/tmp/store'
+
+
+def test_nested_use_of_context_manager(mutable_config):
+    """Test nested use of the context manager"""
+    user_config = spack.config.config
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.config != user_config
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.config.config != user_config
+    assert spack.config.config == user_config

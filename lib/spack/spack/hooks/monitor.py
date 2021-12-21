@@ -41,6 +41,17 @@ def on_install_failure(spec):
     tty.verbose(result.get('message'))
 
 
+def on_install_cancel(spec):
+    """Triggered on cancel of an install
+    """
+    if not spack.monitor.cli:
+        return
+
+    tty.debug("Running on_install_cancel for %s" % spec)
+    result = spack.monitor.cli.cancel_task(spec)
+    tty.verbose(result.get('message'))
+
+
 def on_phase_success(pkg, phase_name, log_file):
     """Triggered on a phase success
     """

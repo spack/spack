@@ -20,6 +20,9 @@ class PyDatalad(PythonPackage):
     homepage = "https://datalad.org/"
     pypi     = "datalad/datalad-0.14.6.tar.gz"
 
+    version('0.15.3', sha256='44f8c5b3960c6d9848aeecd868c82330c49689a21e975597df5b112dc2e5c9f0')
+    version('0.15.2', sha256='1a878cf521270f089ee1f50339e71cfd7eed41e708d895a12d5c483a9b59991b')
+    version('0.15.1', sha256='0a905b3c3419786ae85b61a7aee34b0fc9eecd814f38408f2767ae7122b57a8b')
     version('0.14.6', sha256='149b25a00da133a81be3cbdc041a1985418f0918fa5961ba979e23b5b3c08c63')
 
     variant('downloaders-extra', default=False, description="Enable extra downloaders support")
@@ -55,9 +58,10 @@ class PyDatalad(PythonPackage):
     depends_on('py-msgpack', type=('build', 'run'))
     depends_on('py-requests@1.2:', type=('build', 'run'))
 
-    # puplish
-    depends_on('py-jsmin', type=('build', 'run'))
+    # publish
     depends_on('py-pygithub', type=('build', 'run'))
+    depends_on('py-python-gitlab', type=('build', 'run'), when='@0.14.7:')
+    depends_on('py-jsmin', type=('build', 'run'), when='@:0.14')
 
     # metadata
     depends_on('py-simplejson', type=('build', 'run'))
@@ -67,6 +71,7 @@ class PyDatalad(PythonPackage):
         depends_on('py-requests-ftp', type=('build', 'run'))
 
     with when('+misc'):
+        depends_on('py-argcomplete', type=('build', 'run'), when='@0.14.7:')
         depends_on('py-pyperclip', type=('build', 'run'))
         depends_on('py-python-dateutil', type=('build', 'run'))
 
@@ -91,6 +96,7 @@ class PyDatalad(PythonPackage):
         # downloader-extra
         depends_on('py-requests-ftp', type=('build', 'run'))
         # misc
+        depends_on('py-argcomplete', type=('build', 'run'), when='@0.14.7:')
         depends_on('py-pyperclip', type=('build', 'run'))
         depends_on('py-python-dateutil', type=('build', 'run'))
         # tests
@@ -106,3 +112,10 @@ class PyDatalad(PythonPackage):
         depends_on('py-pillow', type=('build', 'run'))
         # duecredit
         depends_on('py-duecredit', type=('build', 'run'))
+
+    depends_on('py-nose', type=('test'))
+    install_time_test_callbacks = ['test', 'installtest']
+
+    def installtest(self):
+        datalad = Executable(self.prefix.bin.datalad)
+        datalad('wtf')

@@ -28,28 +28,28 @@ class Rose(AutotoolsPackage):
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@4.9.0:4.9.99",
+             when="@0.9.13.0 %gcc@4.9.0:4.9",
              url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
              sha256="fb4b50606bdc681b864bbece46d344d7775780ffe7883aa96305d732c9c04a1c")
 
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@5.0:5.99",
+             when="@0.9.13.0 %gcc@5.0:5",
              url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
              sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb")
 
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@6.0:6.99",
+             when="@0.9.13.0 %gcc@6.0:6",
              url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
              sha256="561cd5a944d0dd01689aa0bea8eccf30fc994cd20c4c05da7943c6f36cec25b5")
 
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@7.0:7.99",
+             when="@0.9.13.0 %gcc@7.0:7",
              url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
              sha256="800a178804e8b5e936942b4eb036cc61e5d5ad43551cb4fd901ec42ba7e7a176")
 

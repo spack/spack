@@ -68,7 +68,7 @@ class VtkH(Package, CudaPackage):
     variant("contourtree", default=False, description="Enable contour tree support")
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
+    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
@@ -76,8 +76,9 @@ class VtkH(Package, CudaPackage):
     depends_on("vtk-m~tbb+openmp", when="+openmp")
     depends_on("vtk-m~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m+cuda~tbb~openmp", when="+cuda~openmp")
+    for _arch in CudaPackage.cuda_arch_values:
+        depends_on("vtk-m+cuda~tbb+openmp cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
+        depends_on("vtk-m+cuda~tbb~openmp cuda_arch={0}".format(_arch), when="+cuda~openmp cuda_arch={0}".format(_arch))
 
     depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
     depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")

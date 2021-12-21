@@ -13,7 +13,7 @@ from spack import *
 
 
 class Namd(MakefilePackage, CudaPackage):
-    """NAMDis a parallel molecular dynamics code designed for
+    """NAMD is a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
     homepage = "https://www.ks.uiuc.edu/Research/namd/"
@@ -44,7 +44,7 @@ class Namd(MakefilePackage, CudaPackage):
     depends_on('charmpp@6.8.2', when="@2.13")
     depends_on('charmpp@6.7.1', when="@2.12")
 
-    depends_on('fftw@:2.99', when="fftw=2")
+    depends_on('fftw@:2', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
 
     depends_on('amdfftw', when="fftw=amdfftw")

@@ -12,12 +12,17 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.12/amrex-21.12.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
+
+    tags = ['ecp', 'e4s']
 
     maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.12', sha256='439f9ebf2b440fc739a7976f3ade188ec3e1de5f51a0b151e6b8dda36fa67278')
+    version('21.11', sha256='2edb72d7cf7e86340fcaceb325368560957bcd952fd34cd501bfdf038e1338a4')
+    version('21.10', sha256='a11954c03b1ec26c26b676460dc5de5195469e813b70fbcea6dfdefeafaf5407')
     version('21.09', sha256='983b41d93bf9417c032080fd2ec7c04d0d2b820e613a076bd07566aa5a8aa4bd')
     version('21.08', sha256='34fb6c72735c74820b27db1138e5bc9fe698ffbd8344aae10a5fbdace479b57f')
     version('21.07', sha256='9630b8c0c7ffbf3f5ea4d973a3fdb40b9b10fec0f8df33b9e24d76d2c1d15771')
@@ -69,23 +74,28 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build particle classes')
     variant('plotfile_tools', default=False,
             description='Build plotfile_tools like fcompare')
-    variant('sundials', default=False,
-            description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
             description='Enable HDF5-based I/O')
     variant('hypre', default=False,
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
+    variant('sundials', default=False,
+            description='Enable SUNDIALS interfaces')
     variant('pic', default=False,
             description='Enable PIC')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
-    depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
+    depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08:20.11 +sundials')
+    depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07: +sundials')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07: +sundials +cuda cuda_arch=%s' % arch)
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07: +sundials +rocm amdgpu_target=%s' % tgt)
     depends_on('cuda@9.0.0:', when='+cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
-    depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
+    depends_on('cmake@3.5:',  type='build', when='@:18.10')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
@@ -104,10 +114,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('%gcc@8.1.0:8.2.0', when='@21.01:21.02')
 
     # Check options compatibility
-    conflicts('+sundials', when='~fortran',
+    conflicts('+sundials', when='@19.08:20.11 ~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
-    conflicts('+sundials', when='@20.12:',
-              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')
+    conflicts('+sundials', when='@20.12:21.06',
+              msg='AMReX 20.12 -- 21.06 does not support SUNDIALS interfaces')
     conflicts('+hdf5', when='@:20.06',
               msg='AMReX HDF5 support needs AMReX newer than version 20.06')
     conflicts('+hypre', when='@:20.06',
@@ -133,7 +143,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
-    conflicts('%rocm@4.2.0:4.2.99', when='+rocm',
+    conflicts('%rocm@4.2.0:4.2', when='+rocm',
               msg='AMReX does not support rocm-4.2 due to a compiler bug')
     conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 
@@ -176,6 +186,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
+            self.define_from_variant('AMReX_SUNDIALS', 'sundials'),
             self.define_from_variant('AMReX_PIC', 'pic'),
         ]
 

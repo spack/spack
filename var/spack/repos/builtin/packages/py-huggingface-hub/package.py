@@ -23,4 +23,4 @@ class PyHuggingfaceHub(PythonPackage):
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-typing-extensions', when='@0.0.10:', type=('build', 'run'))
-    depends_on('py-importlib-metadata', when='^python@:3.7.999', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='^python@:3.7', type=('build', 'run'))

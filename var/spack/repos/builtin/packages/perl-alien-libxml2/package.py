@@ -16,3 +16,4 @@ class PerlAlienLibxml2(PerlPackage):
 
     depends_on('libxml2')
     depends_on('perl-alien-build', type=('build', 'run'))
+    depends_on('pkgconfig',        type=('build'))

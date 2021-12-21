@@ -25,15 +25,17 @@ class RFuture(RPackage):
     to tweak existing code to make use of futures."""
 
     homepage = "https://github.com/HenrikBengtsson/future"
-    url      = "https://cloud.r-project.org/src/contrib/future_1.14.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/future"
+    cran = "future"
 
+    version('1.22.1', sha256='87b24a85caf08e1d809eab28f9258444105cd7788eee2e3e2f21727ba3bbedcd')
     version('1.21.0', sha256='909e6602068eba543a6d2e464b911123cc29efdb600a7000eff0e5624ff0d12d')
     version('1.14.0', sha256='0a535010d97a01b21aaf9d863603e44359335e273019c1e1980bbb5b2917dbcb')
 
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-globals@0.12.4:', type=('build', 'run'))
     depends_on('r-globals@0.13.1:', when='@1.21.0:', type=('build', 'run'))
+    depends_on('r-globals@0.14.0:', when='@1.22.0:', type=('build', 'run'))
     depends_on('r-listenv@0.7.0:', type=('build', 'run'))
     depends_on('r-listenv@0.8.0:', when='@1.21.0:', type=('build', 'run'))
     depends_on('r-parallelly@1.21.0:', when='@1.21.0:', type=('build', 'run'))
+    depends_on('r-parallelly@1.26.1:', when='@1.22.0:', type=('build', 'run'))

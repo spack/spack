@@ -77,9 +77,9 @@ class Adios(AutotoolsPackage):
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
-    depends_on('sz@1.4.11.0:1.4.11.99', when='@1.13.0 +sz')
-    depends_on('sz@1.4.12.3:1.4.12.99', when='@1.13.1: +sz')
-    depends_on('zfp@0.5.1:0.5.99', when='+zfp')
+    depends_on('sz@1.4.11.0:1.4.11', when='@1.13.0 +sz')
+    depends_on('sz@1.4.12.3:1.4.12', when='@1.13.1: +sz')
+    depends_on('zfp@0.5.1:0.5', when='+zfp')
     depends_on('lz4', when='+lz4')
     depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters

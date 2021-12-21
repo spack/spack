@@ -125,12 +125,15 @@ The zip file will not contain a ``setup.py``, but it will contain a
 ``METADATA`` file which contains all the information you need to
 write a ``package.py`` build recipe.
 
+.. _pypi:
+
 ^^^^
 PyPI
 ^^^^
 
-The vast majority of Python packages are hosted on PyPI - The Python
-Package Index. ``pip`` only supports packages hosted on PyPI, making
+The vast majority of Python packages are hosted on PyPI (The Python
+Package Index), which is :ref:`preferred over GitHub <pypi-vs-github>`
+for downloading packages. ``pip`` only supports packages hosted on PyPI, making
 it the only option for developers who want a simple installation.
 Search for "PyPI <package-name>" to find the download page. Note that
 some pages are versioned, and the first result may not be the newest
@@ -217,6 +220,7 @@ try to extract the wheel:
 
    version('1.11.0', sha256='d8c9d24ea90457214d798b0d922489863dad518adde3638e08ef62de28fb183a', expand=False)
 
+.. _pypi-vs-github:
 
 """""""""""""""
 PyPI vs. GitHub
@@ -262,6 +266,9 @@ location, but PyPI is preferred for the following reasons:
    you must contact the developers to determine which is the case.
    PyPI is nice because it makes it physically impossible to
    re-release the same version of a package with a different checksum.
+
+Use the :ref:`pypi attribute <pypi>` to facilitate construction of PyPI package
+references.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
@@ -336,7 +343,7 @@ This would be translated to:
 .. code-block:: python
 
    extends('python')
-   depends_on('python@3.5:3.999', type=('build', 'run'))
+   depends_on('python@3.5:3', type=('build', 'run'))
 
 
 Many ``setup.py`` or ``setup.cfg`` files also contain information like::
@@ -568,7 +575,7 @@ check the ``METADATA`` file for lines like::
 Lines that use ``Requires-Dist`` are similar to ``install_requires``.
 Lines that use ``Provides-Extra`` are similar to ``extra_requires``,
 and you can add a variant for those dependencies. The ``~=1.11.0``
-syntax is equivalent to ``1.11.0:1.11.999``.
+syntax is equivalent to ``1.11.0:1.11``.
 
 """"""""""
 setuptools
@@ -709,7 +716,7 @@ The package may have its own unit or regression tests. Spack can
 run these tests during the installation by adding phase-appropriate
 test methods.
 
-For example, ``py-numpy`` adds the following as a check to run 
+For example, ``py-numpy`` adds the following as a check to run
 after the ``install`` phase:
 
 .. code-block:: python

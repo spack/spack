@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import socket
 
 from spack import *
 
@@ -44,10 +45,11 @@ class Openssh(AutotoolsPackage):
     depends_on('libedit')
     depends_on('ncurses')
     depends_on('zlib')
+    depends_on('py-twisted', type='test')
 
-    # Note: some server apps have "ssh" in the name, so require the exact
-    # command 'ssh'
-    executables = ['^ssh$', '^rsh$']
+    maintainers = ['bernhardkaindl']
+    executables = ['^ssh$', '^scp$', '^sftp$', '^ssh-add$', '^ssh-agent$',
+                   '^ssh-keygen$', '^ssh-keyscan$']
 
     @classmethod
     def determine_version(cls, exe):
@@ -61,3 +63,40 @@ class Openssh(AutotoolsPackage):
         # install step and fail if they cannot do so.
         args = ['--with-privsep-path={0}'.format(self.prefix.var.empty)]
         return args
+
+    def install(self, spec, prefix):
+        """Install generates etc/sshd_config, but it fails in parallel mode"""
+        make('install', parallel=False)
+
+    def setup_build_environment(self, env):
+        """Until spack supports a real implementation of setup_test_environment()"""
+        if self.run_tests:
+            self.setup_test_environment(env)
+
+    def setup_test_environment(self, env):
+        """Configure the regression test suite like Debian's openssh-tests package"""
+        p = self.prefix
+        j = join_path
+        env.set('TEST_SSH_SSH', p.bin.ssh)
+        env.set('TEST_SSH_SCP', p.bin.scp)
+        env.set('TEST_SSH_SFTP', p.bin.sftp)
+        env.set('TEST_SSH_SK_HELPER', j(p.libexec, 'ssh-sk-helper'))
+        env.set('TEST_SSH_SFTPSERVER', j(p.libexec, 'sftp-server'))
+        env.set('TEST_SSH_PKCS11_HELPER', j(p.libexec, 'ssh-pkcs11-helper'))
+        env.set('TEST_SSH_SSHD', p.sbin.sshd)
+        env.set('TEST_SSH_SSHADD', j(p.bin, 'ssh-add'))
+        env.set('TEST_SSH_SSHAGENT', j(p.bin, 'ssh-agent'))
+        env.set('TEST_SSH_SSHKEYGEN', j(p.bin, 'ssh-keygen'))
+        env.set('TEST_SSH_SSHKEYSCAN', j(p.bin, 'ssh-keyscan'))
+        env.set('TEST_SSH_UNSAFE_PERMISSIONS', '1')
+        # Get a free port for the simple tests and skip the complex tests:
+        tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tcp.bind(('', 0))
+        host, port = tcp.getsockname()
+        tcp.close()
+        env.set('TEST_SSH_PORT', port)
+        env.set('SKIP_LTESTS', 'key-options forward-control forwarding '
+                'multiplex addrmatch cfgmatch cfgmatchlisten percent')
+
+    def installcheck(self):
+        make('-e', 'tests', parallel=False)

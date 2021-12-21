@@ -47,7 +47,7 @@ def module(*args):
         module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
 
         # Execute the python command
-        module_cmd += '%s -c "%s";' % (sys.executable, py_cmd)
+        module_cmd += '%s -E -c "%s";' % (sys.executable, py_cmd)
 
         # If LD_LIBRARY_PATH was set after `module`, dump the old value because
         # we have since corrupted it to ensure python would run.

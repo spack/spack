@@ -136,7 +136,7 @@ class Mesa18(AutotoolsPackage):
         if '+llvm' in spec:
             args.append('--enable-llvm')
             args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-            if '+link_dylib' in spec['llvm']:
+            if '+llvm_dylib' in spec['llvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')

@@ -17,12 +17,14 @@ class Hdf5(CMakePackage):
     """
 
     homepage = "https://portal.hdfgroup.org"
-    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz"
+    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.8/src/hdf5-1.10.8.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://github.com/HDFGroup/hdf5.git"
     maintainers = ['lrknox', 'brtnfld', 'byrnHDF', 'ChristopherHogan', 'epourmal',
                    'gheber', 'hyoklee', 'lkurz', 'soumagne']
+
+    tags = ['e4s']
 
     test_requires_compiler = True
 
@@ -33,12 +35,14 @@ class Hdf5(CMakePackage):
     version('develop-1.10', branch='hdf5_1_10')
     version('develop-1.8', branch='hdf5_1_8')
 
+    version('1.13.0', sha256='3049faf900f0c52e09ea4cddfb83af057615f2fc1cc80eb5202dd57b09820115')
     version('1.12.1', sha256='79c66ff67e666665369396e9c90b32e238e501f345afd2234186bfb8331081ca')
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
     # HDF5 1.12 broke API compatibility, so we currently prefer the latest
     # 1.10 release.  packages that want later versions of HDF5 should specify,
     # e.g., depends_on("hdf5@1.12:") to get 1.12 or higher.
-    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
+    version('1.10.8', sha256='d341b80d380dd763753a0ebe22915e11e87aac4e44a084a850646ff934d19c80', preferred=True)
+    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15')
     version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
@@ -91,13 +95,13 @@ class Hdf5(CMakePackage):
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     depends_on('pkgconfig', type='run')
 
-    conflicts('api=v114', when='@1.6:1.12.99',
+    conflicts('api=v114', when='@1.6:1.12',
               msg='v114 is not compatible with this release')
-    conflicts('api=v112', when='@1.6:1.10.99',
+    conflicts('api=v112', when='@1.6:1.10',
               msg='v112 is not compatible with this release')
-    conflicts('api=v110', when='@1.6:1.8.99',
+    conflicts('api=v110', when='@1.6:1.8',
               msg='v110 is not compatible with this release')
-    conflicts('api=v18', when='@1.6:1.6.99',
+    conflicts('api=v18', when='@1.6.0:1.6',
               msg='v18 is not compatible with this release')
 
     # The Java wrappers and associated libhdf5_java library
@@ -172,6 +176,13 @@ class Hdf5(CMakePackage):
             'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
             'fortran/src/H5Fff_F03.f90',
             string=True, ignore_absent=True)
+        if self.run_tests:
+            # hdf5 has ~2200 CPU-intensive tests, some of them have races:
+            # Often, these loop endless(at least on one Xeon and one EPYC).
+            # testphdf5 fails indeterministic. This fixes finishing the tests
+            filter_file('REMOVE_ITEM H5P_TESTS',
+                        'REMOVE_ITEM H5P_TESTS t_bigio t_shapesame testphdf5',
+                        'testpar/CMakeTests.cmake')
 
     # The parallel compiler wrappers (i.e. h5pcc, h5pfc, etc.) reference MPI
     # compiler wrappers and do not need to be changed.
@@ -185,33 +196,33 @@ class Hdf5(CMakePackage):
         return url.format(version.up_to(2), version)
 
     def flag_handler(self, name, flags):
+        spec = self.spec
         cmake_flags = []
 
         if name == "cflags":
-            if self.spec.satisfies('%gcc') \
-                    or self.spec.satisfies('%clang'):
+            if spec.compiler.name in ['gcc', 'clang', 'apple-clang']:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
                 cmake_flags.append("-Wno-implicit-function-declaration")
                 # Note that this flag will cause an error if building %nvhpc.
-            if self.spec.satisfies('@:1.8.12~shared'):
+            if spec.satisfies('@:1.8.12~shared'):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
                 # True and build with PIC flags.
                 cmake_flags.append(self.compiler.cc_pic_flag)
         elif name == 'cxxflags':
-            if self.spec.satisfies('@:1.8.12+cxx~shared'):
+            if spec.satisfies('@:1.8.12+cxx~shared'):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if self.spec.satisfies('%cce+fortran'):
+            if spec.satisfies('%cce+fortran'):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files
                 # with lowercase names.
                 cmake_flags.append('-ef')
-            if self.spec.satisfies('@:1.8.12+fortran~shared'):
+            if spec.satisfies('@:1.8.12+fortran~shared'):
                 cmake_flags.append(self.compiler.fc_pic_flag)
         elif name == "ldlibs":
-            if '+fortran %fj' in self.spec:
+            if '+fortran %fj' in spec:
                 cmake_flags.extend(['-lfj90i', '-lfj90f',
                                     '-lfjsrcinfo', '-lelf'])
 
@@ -393,9 +404,9 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies('@1.8.22:1.8.999,'
-                               '1.10.6:1.10.999,'
-                               '1.12.0:1.12.999,'
+        if self.spec.satisfies('@1.8.22:1.8,'
+                               '1.10.6:1.10,'
+                               '1.12.0:1.12,'
                                'develop:'
                                '+fortran+mpi'):
             with working_dir(self.prefix.bin):

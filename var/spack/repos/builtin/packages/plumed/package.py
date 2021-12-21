@@ -25,6 +25,7 @@ class Plumed(AutotoolsPackage):
     git = 'https://github.com/plumed/plumed2.git'
 
     version('master', branch='master')
+    version('2.7.2', sha256='c9a31e68d6440828cf186ca43c9e11a5e5c7ad1c96b2b66ed5a5a141fc954373')
     version('2.7.1', sha256='cb8b5735d8dd61980fa6441f3dde3f33544240ae4177da0f529fb5abb355cd4a')
     version('2.7.0', sha256='14450ea566c25ac9bf71fd77bb9c0c95e9038462b5739c73a515be82e2011cd6')
     version('2.6.3', preferred=True, sha256='d05b9e4a4c1329fc932d5bdd04f20419be230f98159bdc012a91716461ab4a2f')
@@ -72,7 +73,7 @@ class Plumed(AutotoolsPackage):
     depends_on('lapack')
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
-    depends_on('libmatheval', when='@:2.4.99')
+    depends_on('libmatheval', when='@:2.4')
     depends_on('arrayfire', when='arrayfire=cpu')
     depends_on('arrayfire+cuda', when='arrayfire=cuda')
     depends_on('arrayfire+opencl', when='arrayfire=opencl')
