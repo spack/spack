@@ -6,6 +6,13 @@
 """This module contains the following external, potentially separately
 licensed, packages that are included in Spack:
 
+altgraph
+--------
+
+* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
+* Usage: dependency of macholib
+* Version: 0.16.1
+
 archspec
 --------
 
@@ -68,6 +75,13 @@ jsonschema
 * Version: 3.2.0 (last version before 2.7 and 3.6 support was dropped)
 * Note: We don't include tests or benchmarks; just what Spack needs.
 
+macholib
+--------
+
+* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
+* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
+* Version: 1.12
+
 markupsafe
 ----------
 
@@ -124,18 +138,21 @@ six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.16.0
 
-macholib
---------
 
-* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
-* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
-* Version: 1.12
+spack_astunparse
+----------------
 
-altgraph
---------
-
-* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
-* Usage: dependency of macholib
-* Version: 0.16.1
+* Homepage: https://github.com/simonpercivall/astunparse
+* Usage: Unparsing Python ASTs for package hashes in Spack
+* Version: 1.6.3 (plus modifications)
+* Note: We have modified this library to generate consistent unparsed ASTs
+  regardless of the Python version. It contains the original ``astunparse``
+  library, as well as modifications for consistency. It also contains
+  backports from the ``ast.unparse`` function in Python 3.9 and later, so
+  that it will generate output consistent with the builtin ``ast.unparse``
+  function, in case we ever want to drop astunparse as an external
+  dependency.  Because we have modified the parsing (potentially at the
+  cost of round-trippability of the code), we call this ``spack_astunparse``
+  to avoid confusion with ``astunparse``.
 
 """
