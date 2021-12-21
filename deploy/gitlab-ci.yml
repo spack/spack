@@ -44,9 +44,13 @@ default:
     # Tell Git how to re-write BBP GitLab URLs to use a token instead of SSH
     - export XDG_CONFIG_HOME=${PWD}/local_config
     - mkdir -p "${XDG_CONFIG_HOME}/git"
-    - echo -e "[url \"https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/\"]\n  insteadOf = git@bbpgitlab.epfl.ch:" > "${XDG_CONFIG_HOME}/git/config"
-    # - echo -e "[url \"https://github.com/\"]\n  insteadOf = git@github.com:" >> "${XDG_CONFIG_HOME}/git/config"
-    # - echo -e "[url \"git@github.com:BlueBrain/Ultraliser.git\"]\n  insteadOf = https://github.com/BlueBrain/Ultraliser.git" >> "${XDG_CONFIG_HOME}/git/config"
+    - |
+      cat <<EOF > "${XDG_CONFIG_HOME}/git/config"
+      [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/"]
+        insteadOf = git@bbpgitlab.epfl.ch:
+      [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/hpc/sim/"]
+        insteadOf = ssh://bbpcode.epfl.ch/sim/
+      EOF
     - cat "${XDG_CONFIG_HOME}/git/config"
 
 setup_spack:
