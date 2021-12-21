@@ -1515,10 +1515,8 @@ class Environment(object):
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
-            return
-
-        tty.debug('Processing {0} uninstalled specs'.format(
-            len(specs_to_install)))
+        else:
+            tty.debug('Processing {0} uninstalled specs'.format(len(specs_to_install)))
 
         specs_to_overwrite = self._get_overwrite_specs()
         tty.debug('{0} specs need to be overwritten'.format(
