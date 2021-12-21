@@ -53,11 +53,17 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
+
+        blas_vendor = ''
+        if (spec['blas'].name == 'cray-libsci'):
+            blas_vendor = '-DBLA_VENDOR=all'
+
         return [
             '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             backend_config,
+            blas_vendor,
             '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
         ]
 
