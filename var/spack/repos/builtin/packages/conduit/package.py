@@ -123,7 +123,7 @@ class Conduit(CMakePackage):
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
 
-    # conduit uses a <1.10 api version.
+    # conduit uses a <=1.10 api version.
     depends_on("hdf5@:1.10", when="+hdf5")
 
     # we need to hand this to conduit so it can properly
