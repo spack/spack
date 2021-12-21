@@ -12,9 +12,9 @@ class Reportinglib(CMakePackage):
     """Soma and full compartment report library developed
        by Blue Brain Project, EPFL"""
 
-    homepage = "https://bbpcode.epfl.ch/code/a/sim/reportinglib/bbp"
-    url      = "ssh://bbpcode.epfl.ch/sim/reportinglib/bbp"
-    git      = "ssh://bbpcode.epfl.ch/sim/reportinglib/bbp"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/reportinglib"
+    url      = "git@bbpgitlab.epfl.ch:hpc/reportinglib.git"
+    git      = "git@bbpgitlab.epfl.ch:hpc/reportinglib.git"
 
     version('develop', branch='master')
     version('2.5.6', tag='2.5.6')

@@ -12,8 +12,8 @@ class ModelNeocortex(SimModel):
     The Neocortex neuron mechanisms for (core)Neuron
     """
 
-    homepage = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
-    git      = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
+    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git"
 
     version('develop', branch='master', submodules=True, clean=False)
     version('1.1', tag='1.1', submodules=True, clean=False)

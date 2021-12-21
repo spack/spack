@@ -10,8 +10,8 @@ class Nrnh5(CMakePackage):
 
     """Neuron HDF5 library developed by Blue Brain Project, EPFL"""
 
-    homepage = "https://bbpcode.epfl.ch/sim/nrnh5"
-    url      = "ssh://bbpcode.epfl.ch/sim/nrnh5"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/archive/nrnh5"
+    url      = "git@bbpgitlab.epfl.ch:hpc/archive/nrnh5.git"
 
     version('develop', git=url, preferred=True)
 

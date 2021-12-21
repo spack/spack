@@ -12,8 +12,8 @@ import os
 class Asciitoh5(Package):
     """Neurodamus Library necessary to convert from ASCII to H5"""
 
-    homepage = "ssh://bbpcode.epfl.ch/sim/utils/asciitoh5"
-    git      = "ssh://bbpcode.epfl.ch/sim/utils/asciitoh5"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/asciitoh5"
+    git      = "git@bbpgitlab.epfl.ch:hpc/asciitoh5.git"
 
     version('develop', git=git, branch='master')
     version('1.0', git=git, tag='1.0')

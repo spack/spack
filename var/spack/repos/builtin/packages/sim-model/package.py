@@ -22,7 +22,7 @@ class SimModel(Package):
     ```
     class ModelHippocampus(SimModel):
         homepage = ""
-        git = "ssh://bbpcode.epfl.ch/sim/models/hippocampus"
+        git = "git@bbpgitlab.epfl.ch:hpc/sim/models/hippocampus.git"
         version('develop', branch='master')
     ```
 
