@@ -231,11 +231,14 @@ def _status(args):
     )
     print(llnl.util.tty.color.colorize(header))
     print()
-    for current_section in sections:
-        status_msg = spack.bootstrap.status_message(section=current_section)
-        if status_msg:
-            print(llnl.util.tty.color.colorize(status_msg))
-    print()
+    # Use the context manager here to avoid swapping between user and
+    # bootstrap config many times
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        for current_section in sections:
+            status_msg = spack.bootstrap.status_message(section=current_section)
+            if status_msg:
+                print(llnl.util.tty.color.colorize(status_msg))
+        print()
 
 
 def bootstrap(parser, args):

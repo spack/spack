@@ -895,7 +895,7 @@ def _core_requirements():
     result += [
         functools.partial(
             _required_python_module, 'clingo', clingo_root_spec(),
-            'MISSING: "clingo" python module (required to concretize specs)'
+            _missing('clingo', 'required to concretize specs')
         )
     ]
     return result
@@ -964,23 +964,18 @@ def status_message(section):
     """
     pass_token, fail_token = '@*g{[PASS]}', '@*r{[FAIL]}'
 
-    msg, test_fns = '', []
-    if section == 'core':
-        msg = "{0} @*{{Core Functionalities}}"
-        test_fns = _core_requirements()
-    elif section == 'buildcache':
-        msg = "{0} @*{{Binary packages}}"
-        test_fns = _buildcache_requirements()
-    elif section == 'optional':
-        msg = "{0} @*{{Optional Features}}"
-        test_fns = _optional_requirements()
-    elif section == 'develop':
-        msg = "{0} @*{{Development Dependencies}}"
-        test_fns = _development_requirements()
+    # Contain the header of the section and a list of requirements
+    spack_sections = {
+        'core': ("{0} @*{{Core Functionalities}}", _core_requirements),
+        'buildcache': ("{0} @*{{Binary packages}}", _buildcache_requirements),
+        'optional': ("{0} @*{{Optional Features}}", _optional_requirements),
+        'develop': ("{0} @*{{Development Dependencies}}", _development_requirements)
+    }
+    msg, test_fns = spack_sections[section]
 
     with ensure_bootstrap_configuration():
         missing_software = False
-        for test_fn in test_fns:
+        for test_fn in test_fns():
             ok, err_msg = test_fn()
             if not ok:
                 missing_software = True
