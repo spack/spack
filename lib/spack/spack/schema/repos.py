@@ -22,7 +22,7 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack repository configuration file schema',
     'type': 'object',
     'additionalProperties': False,

@@ -30,7 +30,7 @@ def test_checksum_args(arguments, expected):
 
 
 @pytest.mark.parametrize('arguments,expected', [
-    (['--batch', 'preferred-test'], 'versions of preferred-test'),
+    (['--batch', 'preferred-test'], 'version of preferred-test'),
     (['--latest', 'preferred-test'], 'Found 1 version'),
     (['--preferred', 'preferred-test'], 'Found 1 version'),
 ])
@@ -47,7 +47,7 @@ def test_checksum_interactive(
     monkeypatch.setattr(tty, 'get_number', _get_number)
 
     output = spack_checksum('preferred-test')
-    assert 'versions of preferred-test' in output
+    assert 'version of preferred-test' in output
     assert 'version(' in output
 
 

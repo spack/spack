@@ -25,6 +25,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.5.1', sha256='b2e9810e09c3a47b73ce9cab5a72243a1258f61e7900969097a817232246ce1c')
     version('3.5.0', sha256='38892a254420d95594285077276162a5e9e9c30b6da08bdc2a4d53331ad9a6fa')
     version('3.4.3', sha256='fc4f526dfdb31c9bd6b8ca06bf9fab663ca12f3ec9cdf4496fb44bc680140318')
     version('3.4.2', sha256='d8d994cefdff9aaba45166eb3de4f5211adb4accac85cbf97137e98f26ea0219')

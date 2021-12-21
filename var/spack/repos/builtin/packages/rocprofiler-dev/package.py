@@ -37,6 +37,8 @@ class RocprofilerDev(CMakePackage):
         depends_on('rocminfo@' + ver, when='@' + ver)
         depends_on('roctracer-dev-api@' + ver, when='@' + ver)
 
+    depends_on('numactl', type='link', when='@4.3.1')
+
     # See https://github.com/ROCm-Developer-Tools/rocprofiler/pull/50
     patch('fix-includes.patch')
 

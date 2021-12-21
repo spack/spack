@@ -15,6 +15,7 @@ class Exago(CMakePackage, CudaPackage):
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
+    version('1.2.0', commit='255a214e', submodules=True)
     version('1.1.2', commit='db3bb16e', submodules=True)
     version('1.1.1', commit='0e0a3f27', submodules=True)
     version('1.1.0', commit='dc8dd855', submodules=True)
@@ -30,7 +31,6 @@ class Exago(CMakePackage, CudaPackage):
 
     # Solver options
     variant('hiop', default=False, description='Enable/Disable HiOp')
-    variant('petsc', default=True, description='Enable/Disable PETSc')
     variant('ipopt', default=False, description='Enable/Disable IPOPT')
 
     # Dependencides
@@ -51,7 +51,7 @@ class Exago(CMakePackage, CudaPackage):
     # For some versions of RAJA package, camp cuda variant does not get set
     # correctly, so we must explicitly depend on it even though we don't use
     # camp
-    depends_on('camp+cuda', when='+cuda')
+    depends_on('camp+cuda', when='+raja+cuda')
 
     depends_on('cmake@3.18:', type='build')
 
@@ -64,8 +64,9 @@ class Exago(CMakePackage, CudaPackage):
     depends_on('hiop+mpi', when='+hiop+mpi')
 
     # Require PETSc < 3.15 per ExaGO issue #199
-    depends_on('petsc@3.13:3.14', when='+petsc')
-    depends_on('petsc~mpi', when='+petsc~mpi')
+    depends_on('petsc@3.13:3.14')
+    depends_on('petsc~mpi', when='~mpi')
+
     depends_on('ipopt', when='+ipopt')
 
     flag_handler = build_system_flags
@@ -79,10 +80,10 @@ class Exago(CMakePackage, CudaPackage):
         args.append(self.define_from_variant('EXAGO_ENABLE_MPI', 'mpi'))
         args.append(self.define_from_variant('EXAGO_ENABLE_RAJA', 'raja'))
         args.append(self.define_from_variant('EXAGO_ENABLE_HIOP', 'hiop'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_PETSC', 'petsc'))
         args.append(self.define_from_variant('EXAGO_ENABLE_IPOPT', 'ipopt'))
         args.append(self.define_from_variant('EXAGO_ENABLE_GPU', 'cuda'))
         args.append(self.define_from_variant('EXAGO_ENABLE_CUDA', 'cuda'))
+        args.append("-DPETSC_DIR='{0}'".format(spec['petsc'].prefix))
 
         if '+cuda' in spec:
             cuda_arch_list = spec.variants['cuda_arch'].value
@@ -90,8 +91,5 @@ class Exago(CMakePackage, CudaPackage):
             if cuda_arch != 'none':
                 args.append(
                     "-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
-
-        if '+petsc' in spec:
-            args.append("-DPETSC_DIR='{0}'".format(spec['petsc'].prefix))
 
         return args

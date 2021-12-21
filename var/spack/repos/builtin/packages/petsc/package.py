@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
     version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
     version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
     version('3.15.5', sha256='67dc31f1c1c941a0e45301ed4042628586e92e8c4e9b119695717ae782ef23a3')
@@ -220,6 +221,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
+    depends_on('rocsparse', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
+    depends_on('rocblas', when='+rocm')
+    depends_on('rocrand', when='+rocm')
+    depends_on('rocthrust', when='+rocm')
+    depends_on('rocprim', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10')
@@ -320,6 +327,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels', when='+kokkos')
     depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
+    depends_on('kokkos+rocm', when='+kokkos +rocm')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -413,7 +421,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # if not (useinc || uselib): usedir - i.e (False, False)
         for library in (
                 ('cuda', 'cuda', False, False),
-                ('hip', 'hip', False, False),
+                ('hip', 'hip', True, False),
                 'metis',
                 'hypre',
                 'parmetis',
@@ -495,6 +503,22 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
+        if '+rocm' in spec:
+            if not spec.satisfies('amdgpu_target=none'):
+                hip_arch = spec.variants['amdgpu_target'].value
+                options.append('--with-hip-arch={0}'.format(hip_arch[0]))
+            hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
+            hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
+            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_inc = ''
+            hip_lib = ''
+            for pkg in hip_ipkgs:
+                hip_inc += spec[pkg].headers.include_flags + ' '
+            for pkg in hip_lpkgs:
+                hip_lib += spec[pkg].libs.joined() + ' '
+            options.append('HIPPPFLAGS=%s' % hip_inc)
+            options.append('with-hip-lib=%s -L%s -lamdhip64' %
+                           (hip_lib, spec['hip'].prefix.lib))
 
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:3.15'):

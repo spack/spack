@@ -2943,7 +2943,7 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-+-------------------------=--------------------------------+----------------------------------+
++----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
 | :class:`~spack.package.Package`                          | General base class not           |

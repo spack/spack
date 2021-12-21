@@ -89,6 +89,9 @@ class VtkM(CMakePackage, CudaPackage):
 
     conflicts("+hip", when="+cuda")
 
+    conflicts("+cuda", when="cuda_arch=none",
+              msg="vtk-m +cuda requires that cuda_arch be set")
+
     def cmake_args(self):
         spec = self.spec
         options = []
