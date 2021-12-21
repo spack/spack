@@ -190,10 +190,6 @@ def install_sbang():
     ``sbang`` here ensures that users can access the script and that
     ``sbang`` itself is in a short path.
     """
-    # Cannot leverage functions involving unix Groupdb, for now, this cannot be used
-    # on Windows. Windows support requires further investigation.
-    if is_windows:
-        raise RuntimeError("Installing 'sbang' unsupported on Windows at this time.")
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
     if os.path.exists(sbang_path) and filecmp.cmp(
