@@ -19,6 +19,7 @@ class PyXarray(PythonPackage):
         'xarray.backends', 'xarray.coding'
     ]
 
+    version('0.18.2', sha256='5d2e72a228286fcf60f66e16876bd27629a1a70bf64822c565f16515c4d10284')
     version('0.17.0', sha256='9c2edad2a4e588f9117c666a4249920b9717fb75703b96998cf65fcd4f60551f')
     version('0.16.2', sha256='38e8439d6c91bcd5b7c0fca349daf8e0643ac68850c987262d53526e9d7d01e4')
     version('0.14.0', sha256='a8b93e1b0af27fa7de199a2d36933f1f5acc9854783646b0f1b37fed9b4da091')
@@ -44,11 +45,13 @@ class PyXarray(PythonPackage):
     depends_on('py-pandas@0.19.2:', when='@0.11:0.13',  type=('build', 'run'))
     depends_on('py-pandas@0.24:',   when='@0.14.0',     type=('build', 'run'))
     depends_on('py-pandas@0.25:',   when='@0.15:',      type=('build', 'run'))
+    depends_on('py-pandas@1:',      when='@0.18:',      type=('build', 'run'))
 
     depends_on('py-numpy@1.7:',     when='@0.9.1',      type=('build', 'run'))
     depends_on('py-numpy@1.12:',    when='@0.11:0.13',  type=('build', 'run'))
     depends_on('py-numpy@1.14:',    when='@0.14.0',     type=('build', 'run'))
     depends_on('py-numpy@1.15:',    when='@0.15:',      type=('build', 'run'))
+    depends_on('py-numpy@1.17:',    when='@0.18:',      type=('build', 'run'))
 
     depends_on('py-netcdf4',  when='+io', type=('build', 'run'))
     depends_on('py-h5netcdf', when='+io', type=('build', 'run'))
@@ -59,3 +62,4 @@ class PyXarray(PythonPackage):
     depends_on('py-cftime',   when='+io', type=('build', 'run'))
     depends_on('py-rasterio', when='+io', type=('build', 'run'))
     depends_on('py-cfgrib',   when='+io', type=('build', 'run'))
+    depends_on('py-pooch',    when='+io', type=('build', 'run'))

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class HoomdBlue(CMakePackage):
@@ -17,7 +18,7 @@ class HoomdBlue(CMakePackage):
     to create custom initialization routines, control simulation parameters,
     and perform in situ analysis."""
 
-    homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
+    homepage = "https://glotzerlab.engin.umich.edu/hoomd-blue/"
     git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
     version('develop', submodules=True)

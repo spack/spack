@@ -3,14 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 import llnl.util.tty as tty
 
-import spack.config
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.repo
 
 description = "developer build: build from code in current working directory"
@@ -19,7 +19,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -86,7 +86,7 @@ def dev_build(self, args):
     # Forces the build to run out of the source directory.
     spec.constrain('dev_path=%s' % source_path)
 
-    spec.concretize()
+    spec.concretize(reuse=args.reuse)
     package = spack.repo.get(spec)
 
     if package.installed:

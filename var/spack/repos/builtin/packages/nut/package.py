@@ -24,11 +24,13 @@ class Nut(CMakePackage):
     depends_on('cmake@3.0:', type='build')
     depends_on('random123')
 
+    # The conflict with %nvhpc is inherited from random123,
+    # which is a C++ template library
+    conflicts('%nvhpc')
     conflicts('%intel', when='@serial')
     conflicts('%pgi', when='@serial')
     conflicts('%xl', when='@serial')
     conflicts('%nag', when='@serial')
-
     build_targets = ['VERBOSE=on']
 
     def setup_build_environment(self, env):

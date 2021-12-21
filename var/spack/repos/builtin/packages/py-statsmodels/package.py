@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
+
+from spack import *
 
 
 class PyStatsmodels(PythonPackage):
     """Statistical computations and models for use with SciPy"""
 
-    homepage = "http://www.statsmodels.org"
+    homepage = "https://www.statsmodels.org"
     pypi = "statsmodels/statsmodels-0.8.0.tar.gz"
 
     version('0.12.2', sha256='8ad7a7ae7cdd929095684118e3b05836c0ccb08b6a01fe984159475d174a1b10')
@@ -25,7 +26,7 @@ class PyStatsmodels(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@0.10.1:', type=('build', 'link', 'run'))
     depends_on('python@3.6:',         when='@0.12.1:', type=('build', 'link', 'run'))
 
-    # according to http://www.statsmodels.org/dev/install.html earlier versions
+    # according to https://www.statsmodels.org/dev/install.html earlier versions
     # might work.
     depends_on('py-setuptools@0.6c5:', type='build')
     depends_on('py-cython@0.29:', type='build')

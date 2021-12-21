@@ -14,7 +14,7 @@ class Debugedit(AutotoolsPackage):
     as its own separate project and is maintained by RedHat.
     """
 
-    homepage = "http://www.sourceware.org/debugedit/"
+    homepage = "https://www.sourceware.org/debugedit/"
     git      = "git://sourceware.org/git/debugedit.git"
     url      = "https://sourceware.org/ftp/debugedit/0.2/debugedit-0.2.tar.xz"
 

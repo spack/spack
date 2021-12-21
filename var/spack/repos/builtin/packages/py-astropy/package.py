@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyAstropy(PythonPackage):
@@ -61,7 +62,7 @@ class PyAstropy(PythonPackage):
     # System dependencies
     depends_on('erfa')
     depends_on('wcslib')
-    depends_on('cfitsio')
+    depends_on('cfitsio@:3')
     depends_on('expat')
 
     def patch(self):

@@ -4,20 +4,26 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import pytest
 import shutil
+
+import pytest
 
 import llnl.util.filesystem as fs
 
-from spack.package import InstallError, PackageBase, PackageStillNeededError
 import spack.error
 import spack.patch
 import spack.repo
 import spack.store
-from spack.spec import Spec
 import spack.util.spack_json as sjson
-from spack.package import (_spack_build_envfile, _spack_build_logfile,
-                           _spack_configure_argsfile)
+from spack.package import (
+    InstallError,
+    PackageBase,
+    PackageStillNeededError,
+    _spack_build_envfile,
+    _spack_build_logfile,
+    _spack_configure_argsfile,
+)
+from spack.spec import Spec
 
 
 def find_nothing(*args):
@@ -118,6 +124,31 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
 
     finally:
         pkg.remove_prefix = instance_rm_prefix
+
+
+@pytest.mark.disable_clean_stage_check
+def test_failing_overwrite_install_should_keep_previous_installation(
+    mock_fetch, install_mockery
+):
+    """
+    Make sure that whenever `spack install --overwrite` fails, spack restores
+    the original install prefix instead of cleaning it.
+    """
+    # Do a successful install
+    spec = Spec('canfail').concretized()
+    pkg = spack.repo.get(spec)
+    pkg.succeed = True
+
+    # Do a failing overwrite install
+    pkg.do_install()
+    pkg.succeed = False
+    kwargs = {'overwrite': [spec.dag_hash()]}
+
+    with pytest.raises(Exception):
+        pkg.do_install(**kwargs)
+
+    assert pkg.installed
+    assert os.path.exists(spec.prefix)
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
@@ -325,6 +356,23 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
         spack.package.Package.remove_prefix = remove_prefix
 
 
+def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):
+    """
+    Test that different specs with coinciding install prefixes will fail
+    to install.
+    """
+    projections = {'all': 'all-specs-project-to-this-prefix'}
+    store = spack.store.Store(str(tmpdir), projections=projections)
+    with spack.store.use_store(store):
+        with spack.config.override('config:checksum', False):
+            pkg_a = Spec('libelf@0.8.13').concretized().package
+            pkg_b = Spec('libelf@0.8.12').concretized().package
+            pkg_a.do_install()
+
+            with pytest.raises(InstallError, match="Install prefix collision"):
+                pkg_b.do_install()
+
+
 def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
     pkg = spec.package
@@ -495,6 +543,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     with fs.working_dir(log_dir):
         fs.touch(log_path)
         fs.touch(spec.package.env_path)
+        fs.touch(spec.package.env_mods_path)
         fs.touch(spec.package.configure_args_path)
 
     install_path = os.path.dirname(spec.package.install_log_path)

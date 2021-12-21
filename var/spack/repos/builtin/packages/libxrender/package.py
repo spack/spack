@@ -9,7 +9,7 @@ from spack import *
 class Libxrender(AutotoolsPackage, XorgPackage):
     """libXrender - library for the Render Extension to the X11 protocol."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXrender"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXrender"
     xorg_mirror_path = "lib/libXrender-0.9.10.tar.gz"
 
     version('0.9.10', sha256='770527cce42500790433df84ec3521e8bf095dfe5079454a92236494ab296adf')

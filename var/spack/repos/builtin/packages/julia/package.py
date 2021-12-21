@@ -4,20 +4,25 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
 
-    homepage = "http://julialang.org"
+    homepage = "https://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
-    maintainers = ['glennpj']
+    maintainers = ['glennpj', 'vchuravy']
 
     version('master', branch='master')
+    version('1.7.0', sha256='d40d83944f8e1709de1d6f7544e1a6721e091f70ba06b44c25b89bdba754dfa6', preferred=True)
+    version('1.6.4', sha256='954578b973fdb891c88fa1eedd931129e215ab928ecc416dd0bdf6c70549d2fc')
+    version('1.6.3', sha256='29aad934582fb4c6dd9f9dd558ad649921f43bc7320eab54407fdf6dd3270a33')
+    version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
     version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
     version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')
     version('1.5.4', sha256='dbfb8cd544b223eff70f538da7bb9d5b6f76fd0b00dd2385e6254e74ad4e892f')
@@ -172,6 +177,12 @@ class Julia(Package):
                     target_str = "znver1"
                 if target_str == "zen2":
                     target_str = "znver2"
+                if target_str == "zen3":
+                    if spec.satisfies('@1.7.0:'):
+                        target_str = "znver3"
+                    else:
+                        # The LLVM in @1.6.4 doesn't support znver3.
+                        target_str = "znver2"
                 options += [
                     'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]

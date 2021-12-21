@@ -612,6 +612,7 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
+.. _deprecate:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Deprecating old versions
@@ -694,20 +695,23 @@ example, ``py-sphinx-rtd-theme@0.1.10a0``.  In this case, numbers are
 always considered to be "newer" than letters.  This is for consistency
 with `RPM <https://bugzilla.redhat.com/show_bug.cgi?id=50977>`_.
 
-Spack versions may also be arbitrary non-numeric strings; any string
-here will suffice; for example, ``@develop``, ``@master``, ``@local``.
-Versions are compared as follows. First, a version string is split into
-multiple fields based on delimiters such as ``.``, ``-`` etc. Then
-matching fields are compared using the rules below:
+Spack versions may also be arbitrary non-numeric strings, for example
+``@develop``, ``@master``, ``@local``.
 
-#. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > main > master > head > trunk``.
+The order on versions is defined as follows. A version string is split
+into a list of components based on delimiters such as ``.``, ``-`` etc. 
+Lists are then ordered lexicographically, where components are ordered
+as follows:
 
-#. Numbers are all less than the chosen develop-like strings above,
-   and are sorted numerically.
+#. The following special strings are considered larger than any other
+   numeric or non-numeric version component, and satisfy the following
+   order between themselves: ``develop > main > master > head > trunk``.
 
-#. All other non-numeric versions are less than numeric versions, and
-   are sorted alphabetically.
+#. Numbers are ordered numerically, are less than special strings, and
+   larger than other non-numeric components.
+
+#. All other non-numeric components are less than numeric components,
+   and are ordered alphabetically.
 
 The logic behind this sort order is two-fold:
 
@@ -728,7 +732,7 @@ Version selection
 When concretizing, many versions might match a user-supplied spec.
 For example, the spec ``python`` matches all available versions of the
 package ``python``.  Similarly, ``python@3:`` matches all versions of
-Python3.  Given a set of versions that match a spec, Spack
+Python 3 and above.  Given a set of versions that match a spec, Spack
 concretization uses the following priorities to decide which one to
 use:
 
@@ -1257,7 +1261,7 @@ Variants
 Many software packages can be configured to enable optional
 features, which often come at the expense of additional dependencies or
 longer build times. To be flexible enough and support a wide variety of
-use cases, Spack permits to expose to the end-user the ability to choose
+use cases, Spack allows you to expose to the end-user the ability to choose
 which features should be activated in a package at the time it is installed.
 The mechanism to be employed is the :py:func:`spack.directives.variant` directive.
 
@@ -1417,6 +1421,60 @@ other similar operations:
                 "other process managers"
             ).with_default('auto').with_non_feature_values('auto'),
         )
+
+^^^^^^^^^^^^^^^^^^^^
+Conditional Variants
+^^^^^^^^^^^^^^^^^^^^
+
+The variant directive accepts a ``when`` clause. The variant will only
+be present on specs that otherwise satisfy the spec listed as the
+``when`` clause. For example, the following class has a variant
+``bar`` when it is at version 2.0 or higher.
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@2.0:', description='help message')
+
+The ``when`` clause follows the same syntax and accepts the same
+values as the ``when`` argument of
+:py:func:`spack.directives.depends_on`
+
+^^^^^^^^^^^^^^^^^^^
+Overriding Variants
+^^^^^^^^^^^^^^^^^^^
+
+Packages may override variants for several reasons, most often to
+change the default from a variant defined in a parent class or to
+change the conditions under which a variant is present on the spec.
+
+When a variant is defined multiple times, whether in the same package
+file or in a subclass and a superclass, the last definition is used
+for all attributes **except** for the ``when`` clauses. The ``when``
+clauses are accumulated through all invocations, and the variant is
+present on the spec if any of the accumulated conditions are
+satisfied.
+
+For example, consider the following package:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant('bar', default=False, when='@1.0', description='help1')
+       variant('bar', default=True, when='platform=darwin', description='help2')
+       ...
+
+This package ``foo`` has a variant ``bar`` when the spec satisfies
+either ``@1.0`` or ``platform=darwin``, but not for other platforms at
+other versions. The default for this variant, when it is present, is
+always ``True``, regardless of which condition of the variant is
+satisfied. This allows packages to override variants in packages or
+build system classes from which they inherit, by modifying the variant
+values without modifying the ``when`` clause. It also allows a package
+to implement ``or`` semantics for a variant ``when`` clause by
+duplicating the variant definition.
 
 ------------------------------------
 Resources (expanding extra tarballs)
@@ -2062,7 +2120,7 @@ Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
-most can be built with a range of version. For example, if you are
+most can be built with a range of versions. For example, if you are
 writing a package for a legacy Python module that only works with Python
 2.4 through 2.6, this would look like:
 
@@ -2071,9 +2129,9 @@ writing a package for a legacy Python module that only works with Python
    depends_on('python@2.4:2.6')
 
 Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
-greater than or equal to ``2.4`` and up to and including ``2.6``. If you
-want to specify that a package works with any version of Python 3, this
-would look like:
+greater than or equal to ``2.4`` and up to and including any ``2.6.x``. If
+you want to specify that a package works with any version of Python 3 (or
+higher), this would look like:
 
 .. code-block:: python
 
@@ -2084,29 +2142,30 @@ requires Python 2, you can similarly leave out the lower bound:
 
 .. code-block:: python
 
-   depends_on('python@:2.9')
+   depends_on('python@:2')
 
 Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
-``@:3`` means "up to and including 3".
+``@:3`` means "up to and including any 3.x version".
 
-What if a package can only be built with Python 2.6? You might be
+What if a package can only be built with Python 2.7? You might be
 inclined to use:
 
 .. code-block:: python
 
-   depends_on('python@2.6')
+   depends_on('python@2.7')
 
 However, this would be wrong. Spack assumes that all version constraints
-are absolute, so it would try to install Python at exactly ``2.6``. The
-correct way to specify this would be:
+are exact, so it would try to install Python not at ``2.7.18``, but
+exactly at ``2.7``, which is a non-existent version. The correct way to
+specify this would be:
 
 .. code-block:: python
 
-   depends_on('python@2.6.0:2.6.999')
+   depends_on('python@2.7.0:2.7')
 
-A spec can contain multiple version ranges separated by commas.
-For example, if you need Boost 1.59.0 or newer, but there are known
-issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
+A spec can contain a version list of ranges and individual versions
+separated by commas. For example, if you need Boost 1.59.0 or newer,
+but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
@@ -2775,6 +2834,57 @@ packages be built with MVAPICH and GCC.
 
 See the :ref:`concretization-preferences` section for more details.
 
+
+.. _group_when_spec:
+
+----------------------------
+Common ``when=`` constraints
+----------------------------
+
+In case a package needs many directives to share the whole ``when=``
+argument, or just part of it, Spack allows you to group the common part
+under a context manager:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       with when('+nvptx'):
+           depends_on('cuda')
+           conflicts('@:6', msg='NVPTX only supported in gcc 7 and above')
+           conflicts('languages=ada')
+           conflicts('languages=brig')
+           conflicts('languages=go')
+
+The snippet above is equivalent to the more verbose:
+
+.. code-block:: python
+
+   class Gcc(AutotoolsPackage):
+
+       depends_on('cuda', when='+nvptx')
+       conflicts('@:6', when='+nvptx', msg='NVPTX only supported in gcc 7 and above')
+       conflicts('languages=ada', when='+nvptx')
+       conflicts('languages=brig', when='+nvptx')
+       conflicts('languages=go', when='+nvptx')
+
+Constraints stemming from the context are added to what is explicitly present in the
+``when=`` argument of a directive, so:
+
+.. code-block:: python
+
+   with when('+elpa'):
+       depends_on('elpa+openmp', when='+openmp')
+
+is equivalent to:
+
+.. code-block:: python
+
+   depends_on('elpa+openmp', when='+openmp+elpa')
+
+Constraints from nested context managers are also combined together, but they are rarely
+needed or recommended.
+
 .. _install-method:
 
 ------------------
@@ -2833,52 +2943,52 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-    +-------------------------------+----------------------------------+
-    |        **Base Class**         |           **Purpose**            |
-    +===============================+==================================+
-    | :py:class:`.Package`          | General base class not           |
-    |                               | specialized for any build system |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.MakefilePackage`  | Specialized class for packages   |
-    |                               | built invoking                   |
-    |                               | hand-written Makefiles           |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.AutotoolsPackage` | Specialized class for packages   |
-    |                               | built using GNU Autotools        |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.CMakePackage`     | Specialized class for packages   |
-    |                               | built using CMake                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.CudaPackage`      | A helper class for packages that |
-    |                               | use CUDA                         |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.QMakePackage`     | Specialized class for packages   |
-    |                               | build using QMake                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.ROCmPackage`      | A helper class for packages that |
-    |                               | use ROCm                         |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.SConsPackage`     | Specialized class for packages   |
-    |                               | built using SCons                |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialized class for packages   |
-    |                               | built using Waf                  |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.RPackage`         | Specialized class for            |
-    |                               | :py:class:`.R` extensions        |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.OctavePackage`    | Specialized class for            |
-    |                               | :py:class:`.Octave` packages     |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.PythonPackage`    | Specialized class for            |
-    |                               | :py:class:`.Python` extensions   |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.PerlPackage`      | Specialized class for            |
-    |                               | :py:class:`.Perl` extensions     |
-    +-------------------------------+----------------------------------+
-    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
-    |                               | Intel software                   |
-    +-------------------------------+----------------------------------+
++----------------------------------------------------------+----------------------------------+
+|     **Base Class**                                       |           **Purpose**            |
++==========================================================+==================================+
+| :class:`~spack.package.Package`                          | General base class not           |
+|                                                          | specialized for any build system |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.makefile.MakefilePackage`   | Specialized class for packages   |
+|                                                          | built invoking                   |
+|                                                          | hand-written Makefiles           |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.autotools.AutotoolsPackage` | Specialized class for packages   |
+|                                                          | built using GNU Autotools        |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.cmake.CMakePackage`         | Specialized class for packages   |
+|                                                          | built using CMake                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.cuda.CudaPackage`           | A helper class for packages that |
+|                                                          | use CUDA                         |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.qmake.QMakePackage`         | Specialized class for packages   |
+|                                                          | built using QMake                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.rocm.ROCmPackage`           | A helper class for packages that |
+|                                                          | use ROCm                         |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.scons.SConsPackage`         | Specialized class for packages   |
+|                                                          | built using SCons                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.waf.WafPackage`             | Specialized class for packages   |
+|                                                          | built using Waf                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.r.RPackage`                 | Specialized class for            |
+|                                                          | R extensions                     |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.octave.OctavePackage`       | Specialized class for            |
+|                                                          | Octave packages                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.python.PythonPackage`       | Specialized class for            |
+|                                                          | Python extensions                |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.perl.PerlPackage`           | Specialized class for            |
+|                                                          | Perl extensions                  |
++----------------------------------------------------------+----------------------------------+
+| :class:`~spack.build_systems.intel.IntelPackage`         | Specialized class for licensed   |
+|                                                          | Intel software                   |
++----------------------------------------------------------+----------------------------------+
 
 
 .. note::
@@ -2888,7 +2998,7 @@ The classes that are currently provided by Spack are:
         rare cases where manual intervention is needed we need to stress that a
         package base class depends on the *build system* being used, not the language of the package.
         For example, a Python extension installed with CMake would ``extends('python')`` and
-        subclass from :py:class:`.CMakePackage`.
+        subclass from :class:`~spack.build_systems.cmake.CMakePackage`.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Installation pipeline
@@ -4028,7 +4138,7 @@ prefix **before** ``make install``. Builds like this can falsely report
 success when an error occurs before the installation is complete. Simple
 sanity checks can be used to identify files and or directories that are
 required of a successful installation. Spack checks for the presence of
-the files and directories after ``install()`` runs. 
+the files and directories after ``install()`` runs.
 
 If any of the listed files or directories are missing, then the build will
 fail and the install prefix will be removed. If they all exist, then Spack
@@ -4142,7 +4252,7 @@ need to use two decorators for each phase test method:
 The first decorator tells Spack when in the installation process to
 run your test method installation process; namely *after* the provided
 installation phase. The second decorator tells Spack to only run the
-checks when the ``--test`` option is provided on the command line. 
+checks when the ``--test`` option is provided on the command line.
 
 .. note::
 
@@ -4216,17 +4326,17 @@ tests can be performed days, even weeks, after the software is installed.
 
 Stand-alone tests are checks that should run relatively quickly -- as
 in on the order of at most a few minutes -- and ideally execute all
-aspects of the installed software, or at least key functionality. 
+aspects of the installed software, or at least key functionality.
 
 .. note::
 
     Execution speed is important because these tests are intended
     to quickly assess whether the installed software works on the
     system.
-    
+
     Failing stand-alone tests indicate that there is no reason to
     proceed with more resource-intensive tests.
-    
+
     Passing stand-alone (or smoke) tests can lead to more thorough
     testing, such as extensive unit or regression tests, or tests
     that run at scale. Spack support for more thorough testing is
@@ -4256,7 +4366,7 @@ file such that:
      test_stage: /path/to/stage
 
 The package can access this path **during test processing** using
-`self.test_suite.stage`. 
+`self.test_suite.stage`.
 
 .. note::
 
@@ -4316,9 +4426,9 @@ The signature for ``cache_extra_test_sources`` is:
 
 where ``srcs`` is a string or a list of strings corresponding to
 the paths for the files and or subdirectories, relative to the staged
-source, that are to be copied to the corresponding path relative to
-``self.install_test_root``. All of the contents within each subdirectory
-will be also be copied.
+source, that are to be copied to the corresponding relative test path
+under the prefix. All of the contents within each subdirectory will
+also be copied.
 
 For example, a package method for copying everything in the ``tests``
 subdirectory plus the ``foo.c`` and ``bar.c`` files from ``examples``
@@ -4326,8 +4436,13 @@ can be implemented as shown below.
 
 .. note::
 
-   The ``run_after`` directive ensures associated files are copied
-   **after** the package is installed by the build process.
+   The method name ``copy_test_sources`` here is for illustration
+   purposes. You are free to use a name that is more suited to your
+   package.
+
+   The key to copying the files at build time for stand-alone testing
+   is use of the ``run_after`` directive, which ensures the associated
+   files are copied **after** the provided build stage.
 
 .. code-block:: python
 
@@ -4337,25 +4452,20 @@ can be implemented as shown below.
        @run_after('install')
        def copy_test_sources(self):
            srcs = ['tests',
-                   join_path('examples', 'foo.c'), 
+                   join_path('examples', 'foo.c'),
                    join_path('examples', 'bar.c')]
            self.cache_extra_test_sources(srcs)
 
 In this case, the method copies the associated files from the build
 stage **after** the software is installed to the package's metadata
 directory. The result is the directory and files will be cached in
-paths under ``self.install_test_root`` as follows:
-
-* ``join_path(self.install_test_root, 'tests')`` along with its files
-  and subdirectories
-* ``join_path(self.install_test_root, 'examples', 'foo.c')``
-* ``join_path(self.install_test_root, 'examples', 'bar.c')``
+a special test subdirectory under the installation prefix.
 
 These paths are **automatically copied** to the test stage directory
-where they are available to the package's ``test`` method through the
-``self.test_suite.current_test_cache_dir`` property. In our example,
-the method can access the directory and files using the following
-paths:
+during stand-alone testing. The package's ``test`` method can access
+them using the ``self.test_suite.current_test_cache_dir`` property.
+In our example, the method would use the following paths to reference
+the copy of each entry listed in ``srcs``, respectively:
 
 * ``join_path(self.test_suite.current_test_cache_dir, 'tests')``
 * ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
@@ -4363,9 +4473,8 @@ paths:
 
 .. note::
 
-    Library developers will want to build the associated tests under
-    the ``self.test_suite.current_test_cache_dir`` and against their
-    **installed** libraries before running them.
+    Library developers will want to build the associated tests
+    against their **installed** libraries before running them.
 
 .. note::
 
@@ -4374,11 +4483,6 @@ paths:
     Only you, as the package writer or maintainer, know whether these
     would be appropriate for ensuring the installed software continues
     to work as the underlying system evolves.
-
-.. note::
-
-   You are free to use a method name that is more suitable for
-   your package.
 
 .. _cache_custom_files:
 
@@ -4395,7 +4499,7 @@ Examples include:
 - expected test output
 
 These extra files should be added to the ``test`` subdirectory of the
-package in the Spack repository. 
+package in the Spack repository.
 
 Spack will **automatically copy** the contents of that directory to the
 test staging directory for stand-alone testing. The ``test`` method can
@@ -4420,7 +4524,7 @@ The signature for ``get_escaped_text_output`` is:
 
 where ``filename`` is the path to the file containing the expected output.
 
-The ``filename`` for a :ref:`custom file <cache_custom_files>` can be 
+The ``filename`` for a :ref:`custom file <cache_custom_files>` can be
 accessed and used as illustrated by a simplified version of an ``sqlite``
 package check:
 
@@ -4458,7 +4562,8 @@ can retrieve the expected output from ``examples/foo.out`` using:
 
        def test(self):
            ..
-           filename = join_path(self.install_test_root, 'examples', 'foo.out')
+           filename = join_path(self.test_suite.current_test_cache_dir,
+                                'examples', 'foo.out')
            expected = get_escaped_text_output(filename)
            ..
 
@@ -4540,10 +4645,10 @@ where each argument has the following meaning:
 
   Options are a list of strings to be passed to the executable when
   it runs.
-  
+
   The default is ``[]``, which means no options are provided to the
   executable.
- 
+
 * ``expected`` is an optional list of expected output strings.
 
   Spack requires every string in ``expected`` to be a regex matching
@@ -4554,31 +4659,31 @@ where each argument has the following meaning:
 
   The expected output can be :ref:`read from a file
   <expected_test_output_from_file>`.
-  
+
   The default is ``expected=[]``, so Spack will not check the output.
- 
+
 * ``status`` is the optional expected return code(s).
 
   A list of return codes corresponding to successful execution can
   be provided (e.g., ``status=[0,3,7]``). Support for non-zero return
   codes allows for basic **expected failure** tests as well as different
   return codes across versions of the software.
-  
+
   The default is ``status=[0]``, which corresponds to **successful**
   execution in the sense that the executable does not exit with a
   failure code or raise an exception.
- 
+
 * ``installed`` is used to require ``exe`` to be within the package
   prefix.
-  
+
   If ``True``, then the path for ``exe`` is required to be within the
   package prefix; otherwise, the path is not constrained.
-  
+
   The default is ``False``, so the fully qualified path for ``exe``
   does **not** need to be within the installation directory.
- 
+
 * ``purpose`` is an optional heading describing the the test part.
- 
+
   Output from the test is written to a test log file so this argument
   serves as a searchable heading in text logs to highlight the start
   of the test part. Having a description can be helpful when debugging
@@ -4593,10 +4698,10 @@ where each argument has the following meaning:
 
   The default is ``False``, which means the test executable must be
   present for any installable version of the software.
- 
+
 * ``work_dir`` is the path to the directory from which the executable
   will run.
-  
+
   The default of ``None`` corresponds to the current directory (``'.'``).
 
 """""""""""""""""""""""""""""""""""""""""
@@ -4626,9 +4731,6 @@ directory paths are provided in the table below.
    * - Test Suite Stage Files
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Cached Build-time Files
-     - ``self.install_test_root``
-     - ``join_path(self.install_test_root, 'examples', 'foo.c')``
    * - Staged Cached Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
@@ -4703,7 +4805,7 @@ where only the outputs for the first of each set are shown:
    Copyright (C) 2018 Free Software Foundation, Inc.
    This is free software; see the source for copying conditions.  There is NO
    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-   
+
    PASSED
    ...
    ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
@@ -4864,7 +4966,7 @@ This is already part of the boilerplate for packages created with
 Filtering functions
 ^^^^^^^^^^^^^^^^^^^
 
-:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.filter_file>`
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <llnl.util.filesystem.filter_file>`
   Works like ``sed`` but with Python regular expression syntax.  Takes
   a regular expression, a replacement, and a set of files.  ``repl``
   can be a raw string or a callable function.  If it is a raw string,
@@ -4902,7 +5004,7 @@ Filtering functions
         filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
                     prefix.bin.mpicxx)
 
-:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <llnl.util.filesystem.change_sed_delimiter>`
     Some packages, like TAU, have a build system that can't install
     into directories with, e.g. '@' in the name, because they use
     hard-coded ``sed`` commands in their build.
@@ -4924,14 +5026,14 @@ Filtering functions
 File functions
 ^^^^^^^^^^^^^^
 
-:py:func:`ancestor(dir, n=1) <spack.ancestor>`
+:py:func:`ancestor(dir, n=1) <llnl.util.filesystem.ancestor>`
   Get the n\ :sup:`th` ancestor of the directory ``dir``.
 
-:py:func:`can_access(path) <spack.can_access>`
+:py:func:`can_access(path) <llnl.util.filesystem.can_access>`
   True if we can read and write to the file at ``path``.  Same as
   native python ``os.access(file_name, os.R_OK|os.W_OK)``.
 
-:py:func:`install(src, dest) <spack.install>`
+:py:func:`install(src, dest) <llnl.util.filesystem.install>`
   Install a file to a particular location.  For example, install a
   header into the ``include`` directory under the install ``prefix``:
 
@@ -4939,14 +5041,14 @@ File functions
 
      install('my-header.h', prefix.include)
 
-:py:func:`join_path(*paths) <spack.join_path>`
+:py:func:`join_path(*paths) <llnl.util.filesystem.join_path>`
   An alias for ``os.path.join``. This joins paths using the OS path separator.
 
-:py:func:`mkdirp(*paths) <spack.mkdirp>`
+:py:func:`mkdirp(*paths) <llnl.util.filesystem.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
   directories if they do not exist.
 
-:py:func:`working_dir(dirname, kwargs) <spack.working_dir>`
+:py:func:`working_dir(dirname, kwargs) <llnl.util.filesystem.working_dir>`
   This is a Python `Context Manager
   <https://docs.python.org/2/library/contextlib.html>`_ that makes it
   easier to work with subdirectories in builds.  You use this with the
@@ -4988,7 +5090,7 @@ File functions
      The ``create=True`` keyword argument causes the command to create
      the directory if it does not exist.
 
-:py:func:`touch(path) <spack.touch>`
+:py:func:`touch(path) <llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
 
 .. _make-package-findable:

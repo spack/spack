@@ -13,7 +13,7 @@ class RIgraph(RPackage):
     graphs very well and provides functions for generating random and regular
     graphs, graph visualization, centrality methods and much more."""
 
-    homepage = "http://igraph.org/"
+    homepage = "https://igraph.org/"
     url      = "https://cloud.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/igraph"
 

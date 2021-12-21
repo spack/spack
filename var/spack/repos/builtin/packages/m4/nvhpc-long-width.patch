@@ -1,0 +1,17 @@
+--- a/lib/regex_internal.h
++++ b/lib/regex_internal.h
+@@ -39,6 +39,14 @@
+ #include <intprops.h>
+ #include <verify.h>
+ 
++#ifndef __LONG_WIDTH__
++#if LONG_WIDTH
++#define __LONG_WIDTH__ LONG_WIDTH
++#else
++#define __LONG_WIDTH__ __WORDSIZE
++#endif
++#endif
++
+ #if defined DEBUG && DEBUG != 0
+ # include <assert.h>
+ # define DEBUG_ASSERT(x) assert (x)

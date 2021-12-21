@@ -15,7 +15,7 @@ class RZoo(RPackage):
     index/date/time class and consistency with ts and base R by providing
     methods to extend standard generics."""
 
-    homepage = "http://zoo.r-forge.r-project.org/"
+    homepage = "https://zoo.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/zoo_1.7-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/zoo"
 

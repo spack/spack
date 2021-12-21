@@ -13,64 +13,122 @@ class Pythia8(AutotoolsPackage):
     final state."""
 
     homepage = "http://home.thep.lu.se/Pythia/"
-    url      = "http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz"
+    url      = "https://pythia.org/download/pythia83/pythia8306.tgz"
 
     tags = ['hep']
 
     maintainers = ['ChristianTackeGSI']
 
-    version('8304', sha256='d3897018fb6d545eaf93bf43f32580c984a9bff49259d9dd29dff6edfbe9d9a1')
-    version('8303', sha256='cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e')
-    version('8302', sha256='7372e4cc6f48a074e6b7bc426b040f218ec4a64b0a55e89da6af56933b5f5085')
-    version('8301', sha256='51382768eb9aafb97870dca1909516422297b64ef6a6b94659259b3e4afa7f06')
-    version('8244', sha256='e34880f999daf19cdd893a187123927ba77d1bf851e30f6ea9ec89591f4c92ca')
-    version('8240', sha256='d27495d8ca7707d846f8c026ab695123c7c78c7860f04e2c002e483080418d8d')
-    version('8235', sha256='e82f0d6165a8250a92e6aa62fb53201044d8d853add2fdad6d3719b28f7e8e9d')
-    version('8230', sha256='332fad0ed4f12e6e0cb5755df0ae175329bc16bfaa2ae472d00994ecc99cd78d')
-    version('8212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e')
+    version('8.306', sha256='734803b722b1c1b53c8cf2f0d3c30747c80fc2dde5e0ba141bc9397dad37a8f6')
+    version('8.304', sha256='d3897018fb6d545eaf93bf43f32580c984a9bff49259d9dd29dff6edfbe9d9a1')
+    version('8.303', sha256='cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e')
+    version('8.302', sha256='7372e4cc6f48a074e6b7bc426b040f218ec4a64b0a55e89da6af56933b5f5085')
+    version('8.301', sha256='51382768eb9aafb97870dca1909516422297b64ef6a6b94659259b3e4afa7f06')
+    version('8.244', sha256='e34880f999daf19cdd893a187123927ba77d1bf851e30f6ea9ec89591f4c92ca', deprecated=True)
+    version('8.240', sha256='d27495d8ca7707d846f8c026ab695123c7c78c7860f04e2c002e483080418d8d', deprecated=True)
+    version('8.235', sha256='e82f0d6165a8250a92e6aa62fb53201044d8d853add2fdad6d3719b28f7e8e9d', deprecated=True)
+    version('8.230', sha256='332fad0ed4f12e6e0cb5755df0ae175329bc16bfaa2ae472d00994ecc99cd78d', deprecated=True)
+    version('8.212', sha256='f8fb4341c7e8a8be3347eb26b00329a388ccf925313cfbdba655a08d7fd5a70e', deprecated=True)
 
     variant('shared', default=True, description='Build shared library')
-    variant('hepmc', default=True, description='Build HepMC2 extensions')
-    variant('evtgen', default=False, description='Build EvtGen extensions')
-    variant('root', default=False, description='Build ROOT extensions')
-    variant('fastjet', default=False, description='Build fastjet extensions')
+    variant('hepmc', default=True, description='Export PYTHIA events to the HEPMC format, version 2')
+    variant('hepmc3', default=True, description='Export PYTHIA events to the HEPMC format, version 3')
+    variant('evtgen', default=False, description='Particle decays with the EvtGen decay package')
+    variant('root', default=False, description='Use ROOT trees and histograms with PYTHIA')
+    variant('fastjet', default=False, description='Building of jets using the FastJet package, version 3')
+    variant('lhapdf', default=False, description='Support the use of external PDF sets via LHAPDF')
+    variant('rivet', default=False, description='Support use of RIVET through direct interface')
+    variant('python', default=False, description='Interface to use PYTHIA in Python')
+    variant('madgraph5amc', default=False, description='MadGraph matrix element plugins for parton showers')
+    variant('openmpi', default=False, description='Multi-threading support via OpenMP')
+    variant('mpich', default=False, description='Multi-threading support via MPICH')
+    variant('hdf5', default=False, description='Support the use of HDF5 format')
 
     depends_on('rsync', type='build')
-    depends_on('hepmc@:2.99.99', when="+hepmc")
-    depends_on('root', when="+root")
-    depends_on('evtgen', when="+evtgen")
-    depends_on("fastjet@3.0.0:", when="+fastjet")
+    depends_on('hepmc', when='+hepmc')
+    depends_on('hepmc3', when='+hepmc3')
+    depends_on('root', when='+root')
+    depends_on('evtgen', when='+evtgen')
+    depends_on('fastjet@3.0.0:', when='+fastjet')
+    depends_on('lhapdf@6.2:', when='+lhapdf')
+    depends_on('boost', when='+lhapdf @:8.213')
+    depends_on('rivet', when='+rivet')
+    depends_on('python', when='+python')
+    depends_on('madgraph5amc', when='+madgraph5amc')
+    depends_on('openmpi', when='+openmpi')
+    depends_on('mpich', when='+mpich')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('highfive@2.2', when='+hdf5')
 
-    conflicts("^evtgen+pythia8", when="+evtgen",
-              msg="Building pythia with evtgen bindings and "
-              "evtgen with pythia bindings results in a circular dependency "
-              "that cannot be resolved at the moment! "
-              "Use pythia8+evtgen^evtgen~pythia8")
+    extends('python', when='+python')
+
+    conflicts('^evtgen+pythia8', when='+evtgen',
+              msg='Building pythia with evtgen bindings and '
+              'evtgen with pythia bindings results in a circular dependency '
+              'that cannot be resolved at the moment! '
+              'Use pythia8+evtgen^evtgen~pythia8')
+
+    conflicts('+evtgen', when='~hepmc', msg='+evtgen requires +hepmc')
+    conflicts('+mpich', when='@:8.304', msg='MPICH support was added in 8.304')
+    conflicts('+hdf5', when='@:8.304', msg='HDF5 support was added in 8.304')
+    conflicts('+hdf5', when='~mpich', msg='MPICH is required for reading HDF5 files')
 
     def configure_args(self):
         args = []
 
-        if '+shared' in self.spec:
+        if self.spec.satisfies('@:8.301 +shared'):
+            # Removed in 8.301
             args.append('--enable-shared')
+
         if '+hepmc' in self.spec:
-            args.append('--with-hepmc=%s' % self.spec["hepmc"].prefix)
+            args.append('--with-hepmc2=%s' % self.spec['hepmc'].prefix)
         else:
-            args.append('--without-hepmc')
-        if '+fastjet' in self.spec:
-            args.append('--with-fastjet3=%s' % self.spec["fastjet"].prefix)
+            args.append('--without-hepmc2')
+
+        if '+lhapdf' in self.spec:
+            args.append('--with-lhapdf6=%s' % self.spec['lhapdf'].prefix)
+            if self.spec.satisfies('@:8.213'):
+                args.append('--with-lhapdf6-plugin=LHAPDF6.h')
+                args.append('--with-boost=' + self.spec['boost'].prefix)
+
+        if '+madgraph5amc' in self.spec:
+            args += '--with-mg5mes=' + self.spec['madgraph5amc'].prefix
         else:
-            args.append('--without-fastjet3')
-        if '+evtgen' in self.spec:
-            args.append('--with-evtgen=%s' % self.spec["evtgen"].prefix)
-        else:
-            args.append('--without-evtgen')
-        if '+root' in self.spec:
-            args.append('--with-root=%s' % self.spec["root"].prefix)
-        else:
-            args.append('--without-root')
+            args += '--without-mg5mes'
+
+        args += self.with_or_without('hepmc3', activation_value='prefix')
+        args += self.with_or_without('fastjet3', activation_value='prefix',
+                                     variant='fastjet')
+        args += self.with_or_without('evtgen', activation_value='prefix')
+        args += self.with_or_without('root', activation_value='prefix')
+        args += self.with_or_without('rivet', activation_value='prefix')
+        if self.spec.satisfies('+rivet'):
+            args.append('--with-yoda=' + self.spec['yoda'].prefix)
+
+        args += self.with_or_without('python', activation_value='prefix')
+        args += self.with_or_without('openmp', activation_value='prefix',
+                                     variant='openmpi')
+        args += self.with_or_without('mpich', activation_value='prefix')
+        args += self.with_or_without('hdf5', activation_value='prefix')
+
+        if self.spec.satisfies('+hdf5'):
+            args.append('--with-highfive=' + self.spec['highfive'].prefix)
 
         return args
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def url_for_version(self, version):
+        url = self.url.rsplit('/', 2)[0]
+        dirname = 'pythia' + str(version.joined)[:2]
+        fname = 'pythia' + str(version.joined) + '.tgz'
+
+        return url + '/' + dirname + '/' + fname
+
+    def setup_common_env(self, env):
         env.set('PYTHIA8', self.prefix)
         env.set('PYTHIA8DATA', self.prefix.share.Pythia8.xmldoc)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_common_env(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_common_env(env)

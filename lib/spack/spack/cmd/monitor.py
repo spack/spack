@@ -5,7 +5,6 @@
 
 import spack.monitor
 
-
 description = "interact with a monitor server"
 section = "analysis"
 level = "long"
@@ -28,7 +27,6 @@ def monitor(parser, args, **kwargs):
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth,
         )
 
         # Upload the directory

@@ -13,12 +13,11 @@ import sys
 from llnl.util import filesystem, tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.modules
-import spack.repo
 import spack.modules.common
-
-import spack.cmd.common.arguments as arguments
+import spack.repo
 
 description = "manipulate module files"
 section = "environment"

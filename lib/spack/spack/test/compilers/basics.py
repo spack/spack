@@ -3,23 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test basic behavior of compilers in Spack"""
-import pytest
-
-import sys
 import os
 import shutil
-
+import sys
 from copy import copy
+
+import pytest
 from six import iteritems
 
 import llnl.util.filesystem as fs
 
-import spack.spec
 import spack.compiler
 import spack.compilers as compilers
 import spack.spec
 import spack.util.environment
-
 from spack.compiler import Compiler
 from spack.util.executable import ProcessError
 

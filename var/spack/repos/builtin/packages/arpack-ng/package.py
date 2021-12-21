@@ -128,6 +128,9 @@ class ArpackNg(Package):
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            options.append('-DBUILD_SHARED_LIBS=OFF')
+            options.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true')
 
         cmake('.', *options)
         make()

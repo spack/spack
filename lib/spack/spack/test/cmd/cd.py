@@ -5,7 +5,6 @@
 
 from spack.main import SpackCommand
 
-
 cd = SpackCommand('cd')
 
 

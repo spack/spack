@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -25,6 +25,8 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.3.2', sha256='5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8')
+    version('9.3.1', sha256='a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8')
     version('9.3.0', sha256='aef8c7a87510ce827dfae3bdd4ed7bff82004dc09f96fa7a65b2554f2839b931')
     version('9.2.0', sha256='d05a82fb40f1f1e24407451814b5a6004e39366a44c81208b1ae9d65f3efa43a')
     version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
@@ -139,13 +141,15 @@ class Dealii(CMakePackage, CudaPackage):
                               when='@1.68.0'),
                         ],
                when='+python')
+    # boost@1.77.0 triggers build errors in dealii@9.3.1
+    depends_on('boost@:1.76', when='@:9.3')
     # The std::auto_ptr is removed in the C++ 17 standard.
     # See https://github.com/dealii/dealii/issues/4662
     # and related topics discussed for other software libraries.
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
-    depends_on('bzip2',           when='@:8.99')
+    depends_on('bzip2',           when='@:8')
     depends_on('lapack')
     depends_on('ninja',           type='build')
     depends_on('suite-sparse')
@@ -156,7 +160,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:',       when='+cuda', type='build')
     # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99',    when='@:8.99', type='build')
+    depends_on('cmake@:3.9',    when='@:8', type='build')
     depends_on('mpi',              when='+mpi')
     depends_on('python',           when='@8.5.0:+python')
 
@@ -169,6 +173,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
     depends_on('ginkgo',           when='@9.1:+ginkgo')
+    depends_on('ginkgo@1.4.0:',    when='@9.4:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     # TODO: next line fixes concretization with petsc
@@ -197,7 +202,7 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # TODO: next line fixes concretization with trilinos and adol-c
-    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
+    depends_on('trilinos~exodus',    when='@9.0:+adol-c+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -210,16 +215,11 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('symengine@0.6:', when='@9.2:+symengine')
     depends_on('tbb',            when='+threads')
     # do not require +rol to make concretization of xsdk possible
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',
-               when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre',
-               when='+trilinos+mpi+int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado', when='+trilinos')
+    depends_on('trilinos~hypre', when='+trilinos+int64')
     # TODO: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
-               when='+trilinos+mpi~int64+cuda')
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
-               when='+trilinos+mpi+int64+cuda')
+    depends_on('trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+cuda')
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -301,12 +301,9 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+adol-c', when='^trilinos+chaco',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos SEACAS Chaco.')
-    conflicts('+adol-c', when='^trilinos+netcdf',
+    conflicts('+adol-c', when='^trilinos+exodus',
               msg='Symbol clash between the ADOL-C library and '
                   'Trilinos Netcdf.')
-    conflicts('+adol-c', when='^trilinos+pnetcdf',
-              msg='Symbol clash between the ADOL-C library and '
-                  'Trilinos parallel Netcdf.')
 
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
@@ -353,7 +350,7 @@ class Dealii(CMakePackage, CudaPackage):
             self.define('DEAL_II_ALLOW_BUNDLED', False)
         ])
 
-        if spec.satisfies('@:8.99'):
+        if spec.satisfies('@:8'):
             options.extend([
                 # Cmake may still pick up system's bzip2, fix this:
                 self.define('BZIP2_FOUND', True),
@@ -464,9 +461,14 @@ class Dealii(CMakePackage, CudaPackage):
         ))
 
         # Threading
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_THREADS', 'threads'
-        ))
+        if spec.satisfies('@9.3.0:'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_TBB', 'threads'
+            ))
+        else:
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_THREADS', 'threads'
+            ))
         if '+threads' in spec:
             if (spec.satisfies('^intel-parallel-studio+tbb')):
                 # deal.II/cmake will have hard time picking up TBB from Intel.

@@ -21,9 +21,7 @@ RUN apt-get -yqq update \
         git \
         gnupg2 \
         iproute2 \
-        lmod \
         locales \
-        lua-posix \
         make \
         python3 \
         python3-pip \
@@ -64,10 +62,6 @@ RUN mkdir -p /root/.spack \
 RUN [ -f ~/.profile ]                                               \
  && sed -i 's/mesg n/( tty -s \&\& mesg n || true )/g' ~/.profile \
  || true
-
-# [WORKAROUND]
-# https://bugs.launchpad.net/ubuntu/+source/lua-posix/+bug/1752082
-RUN ln -s posix_c.so /usr/lib/x86_64-linux-gnu/lua/5.2/posix.so
 
 WORKDIR /root
 SHELL ["docker-shell"]

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import re
+
+from spack import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
@@ -91,6 +92,9 @@ class Aomp(Package):
     url = tools_url + "/aomp/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+
+    tags = ['e4s']
+
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
     version('3.8.0', sha256=versions_dict['3.8.0']['aomp'])

@@ -5,14 +5,13 @@
 
 from __future__ import print_function
 
-import spack
 import pytest
 
 from llnl.util.filesystem import mkdirp
 
+import spack
 from spack.util.executable import which
 from spack.version import ver
-
 
 git = which("git")
 git_required_version = '2.17.0'

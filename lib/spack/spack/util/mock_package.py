@@ -2,13 +2,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Infrastructure used by tests for mocking packages and repos."""
+import collections
 
-import ordereddict_backport
-
-import spack.util.naming
 import spack.provider_index
+import spack.util.naming
 from spack.dependency import Dependency
 from spack.spec import Spec
 from spack.version import Version
@@ -149,7 +147,7 @@ class MockPackageMultiRepo(object):
         MockPackage._repo = self
 
         # set up dependencies
-        MockPackage.dependencies = ordereddict_backport.OrderedDict()
+        MockPackage.dependencies = collections.OrderedDict()
         for dep, dtype in zip(dependencies, dependency_types):
             d = Dependency(MockPackage, Spec(dep.name), type=dtype)
             if not conditions or dep.name not in conditions:

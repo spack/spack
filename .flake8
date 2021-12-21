@@ -66,10 +66,6 @@ exclude =
 
 format = spack
 
-# flake8-import-order settings
-application-import-names = llnl,spack
-import-order-style = pycharm
-
 [flake8:local-plugins]
 report =
   spack = flake8_formatter:SpackFormatter

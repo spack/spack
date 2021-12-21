@@ -9,7 +9,7 @@ from spack import *
 class PyPyvcf(PythonPackage):
     """A Variant Call Format reader for Python"""
 
-    homepage = "http://pyvcf.readthedocs.org/en/latest/index.html"
+    homepage = "https://pyvcf.readthedocs.org/en/latest/index.html"
     url      = "https://github.com/jamescasbon/PyVCF/archive/v0.6.0.tar.gz"
 
     version('0.6.0', sha256='a360376d445e27b74db3216f6931a94a4ea99aa4a7f4b4a8347e7f11836698b9')

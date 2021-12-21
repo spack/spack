@@ -9,12 +9,14 @@ include TCL non-hierarchical modules, LUA hierarchical modules, and others.
 
 from __future__ import absolute_import
 
-from .tcl import TclModulefileWriter
+from .common import disable_modules
 from .lmod import LmodModulefileWriter
+from .tcl import TclModulefileWriter
 
 __all__ = [
     'TclModulefileWriter',
-    'LmodModulefileWriter'
+    'LmodModulefileWriter',
+    'disable_modules'
 ]
 
 module_types = {

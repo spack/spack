@@ -41,13 +41,13 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
+
+import llnl.util.tty as tty
 
 from spack import *
 from spack.util.environment import EnvironmentModifications
-import llnl.util.tty as tty
-
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -257,7 +257,7 @@ class Openfoam(Package):
     """
 
     maintainers = ['olesenm']
-    homepage = "http://www.openfoam.com/"
+    homepage = "https://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
     git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2106', sha256='11e41e5b9a253ef592a8f6b79f6aded623b28308192d02cec1327078523b5a37')
     version('2012_210414', sha256='5260aaa79f91aad58a3a305c1a12d0d48b10f12e37cd99a6fa561969b15ea09d')
     version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
     version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
@@ -318,7 +319,7 @@ class Openfoam(Package):
     depends_on('fftw-api')
     depends_on('boost')
     # OpenFOAM does not play nice with CGAL 5.X
-    depends_on('cgal@:4.99')
+    depends_on('cgal@:4')
     # The flex restriction is ONLY to deal with a spec resolution clash
     # introduced by the restriction within scotch!
     depends_on('flex@:2.6.1,2.6.4:')
@@ -557,6 +558,18 @@ class Openfoam(Package):
         if os.path.exists(controlDict):
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
+
+    @when('@:2106 %aocc@3.2.0:')
+    @run_before('configure')
+    def make_amd_rules(self):
+        """Due to the change in the linker behavior in AOCC v3.2, it is now
+        issuing diagnostic messages for the unreferenced symbols in the
+        shared objects as it may lead to run time failures.
+        """
+        general_rules = 'wmake/rules/General'
+        src = join_path(general_rules, 'Clang')
+        filter_file('clang++', spack_cxx + ' -pthread', join_path(src, 'c++'),
+                    backup=False, string=True)
 
     @when('@1812: %fj')
     @run_before('configure')

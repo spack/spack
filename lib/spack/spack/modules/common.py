@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -29,6 +28,7 @@ Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
 import collections
+import contextlib
 import copy
 import datetime
 import inspect
@@ -37,14 +37,16 @@ import re
 from typing import Optional  # novm
 
 import llnl.util.filesystem
-from llnl.util.lang import dedupe
 import llnl.util.tty as tty
-import spack.build_environment as build_environment
-import spack.environment as ev
+from llnl.util.lang import dedupe
+
+import spack.build_environment
+import spack.config
+import spack.environment
 import spack.error
 import spack.paths
-import spack.schema.environment
 import spack.projections as proj
+import spack.schema.environment
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp
@@ -206,6 +208,10 @@ def merge_config_rules(configuration, spec):
 
     verbose = module_specific_configuration.get('verbose', False)
     spec_configuration['verbose'] = verbose
+
+    # module defaults per-package
+    defaults = module_specific_configuration.get('defaults', [])
+    spec_configuration['defaults'] = defaults
 
     return spec_configuration
 
@@ -452,6 +458,11 @@ class BaseConfiguration(object):
         return self.conf.get('template', None)
 
     @property
+    def defaults(self):
+        """Returns the specs configured as defaults or []."""
+        return self.conf.get('defaults', [])
+
+    @property
     def env(self):
         """List of environment modifications that should be done in the
         module.
@@ -609,9 +620,14 @@ class BaseFileLayout(object):
         if self.extension:
             filename = '{0}.{1}'.format(self.use_name, self.extension)
         # Architecture sub-folder
-        arch_folder = str(self.spec.architecture)
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = str(self.spec.architecture)
+            filename = os.path.join(arch_folder, filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), arch_folder, filename)
+        return os.path.join(self.dirname(), filename)
 
 
 class BaseContext(tengine.Context):
@@ -695,9 +711,14 @@ class BaseContext(tengine.Context):
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:
             if use_view is True:
-                use_view = ev.default_view_name
+                use_view = spack.environment.default_view_name
 
-            env = ev.get_env({}, 'post_env_write_hook', required=True)
+            env = spack.environment.active_environment()
+            if not env:
+                raise spack.environment.SpackEnvironmentViewError(
+                    "Module generation with views requires active environment"
+                )
+
             view = env.views[use_view]
 
             spec.prefix = view.get_projection_for_spec(spec)
@@ -711,12 +732,12 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.modifications_from_dependencies(
+            spack.build_environment.modifications_from_dependencies(
                 spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(spec.package)
+        spack.build_environment.set_module_variables_for_package(spec.package)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
@@ -829,9 +850,7 @@ class BaseModuleFileWriter(object):
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.filename}\n'
-            message += 'spec : {0.spec}'
+            message = 'Module file {0.filename} exists and will not be overwritten'
             tty.warn(message.format(self.layout))
             return
 
@@ -886,6 +905,21 @@ class BaseModuleFileWriter(object):
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
+        # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
+        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+            # This spec matches a default, it needs to be symlinked to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
+            default_path = os.path.join(os.path.dirname(self.layout.filename),
+                                        'default')
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename),
+                                       '.tmp_spack_default')
+            os.symlink(self.layout.filename, default_tmp)
+            os.rename(default_tmp, default_path)
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -898,6 +932,19 @@ class BaseModuleFileWriter(object):
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
+
+
+@contextlib.contextmanager
+def disable_modules():
+    """Disable the generation of modulefiles within the context manager."""
+    data = {
+        'modules:': {
+            'enable': []
+        }
+    }
+    disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)
+    with spack.config.override(disable_scope):
+        yield
 
 
 class ModulesError(spack.error.SpackError):

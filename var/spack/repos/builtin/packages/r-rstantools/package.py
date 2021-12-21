@@ -15,7 +15,7 @@ class RRstantools(RPackage):
     'Stan'-based R packages, and vignettes with recommendations for
     developers."""
 
-    homepage = "http://discourse.mc-stan.org/"
+    homepage = "https://discourse.mc-stan.org/"
     url      = "https://cloud.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstantools"
 

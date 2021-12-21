@@ -9,22 +9,11 @@ import sys
 import pytest
 
 import llnl.util.filesystem
+
 import spack.main
 import spack.version
 
 compiler = spack.main.SpackCommand('compiler')
-
-
-@pytest.fixture
-def no_compilers_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
-
-    for scope, local_config in mutable_config.scopes.items():
-        compilers_yaml = os.path.join(
-            local_config.path, scope, 'compilers.yaml'
-        )
-        if os.path.exists(compilers_yaml):
-            os.remove(compilers_yaml)
 
 
 @pytest.fixture

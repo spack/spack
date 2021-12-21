@@ -9,7 +9,7 @@ from spack import *
 class PerlExtutilsPkgconfig(PerlPackage):
     """simplistic interface to pkg-config"""
 
-    homepage = "http://search.cpan.org/~xaoc/ExtUtils-PkgConfig-1.16/lib/ExtUtils/PkgConfig.pm"
+    homepage = "https://metacpan.org/pod/ExtUtils::PkgConfig"
     url      = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz"
 
     version('1.16', sha256='bbeaced995d7d8d10cfc51a3a5a66da41ceb2bc04fedcab50e10e6300e801c6e')

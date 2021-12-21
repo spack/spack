@@ -8,16 +8,20 @@ import platform
 
 import pytest
 
+from llnl.util.filesystem import HeaderList, LibraryList
+
 import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.build_environment import (
+    _static_to_shared_library,
+    determine_number_of_jobs,
+    dso_suffix,
+)
 from spack.paths import build_env_path
-from spack.build_environment import dso_suffix, _static_to_shared_library
-from spack.build_environment import determine_number_of_jobs
-from spack.util.executable import Executable
 from spack.util.environment import EnvironmentModifications
-from llnl.util.filesystem import LibraryList, HeaderList
+from spack.util.executable import Executable
 
 
 @pytest.fixture

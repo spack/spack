@@ -15,7 +15,6 @@ import llnl.util.argparsewriter as aw
 
 import spack.main
 
-
 parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
 

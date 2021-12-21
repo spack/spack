@@ -29,3 +29,7 @@ class Figlet(MakefilePackage):
             install(f, prefix.man6)
 
         install_tree('./fonts', prefix.share.figlet)
+
+    @property
+    def build_targets(self):
+        return ['DEFAULTFONTDIR=' + self.prefix.share.figlet]

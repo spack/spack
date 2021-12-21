@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from os import symlink
+
+from spack import *
 
 
 class Bridger(MakefilePackage, SourceforgePackage):
@@ -18,6 +19,14 @@ class Bridger(MakefilePackage, SourceforgePackage):
 
     depends_on('boost')
     depends_on('perl', type='run')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            # some of the plugins require gnu extensions
+            flags.append('-std=gnu99')
+        if name == 'cxxflags':
+            flags.append('-std=c++03')
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         # bridger depends very much on perl scripts/etc in the source tree

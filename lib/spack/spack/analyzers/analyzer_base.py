@@ -7,13 +7,14 @@
 and (optionally) interact with a Spack Monitor
 """
 
-import spack.monitor
-import spack.hooks
-import llnl.util.tty as tty
-import spack.util.path
-import spack.config
-
 import os
+
+import llnl.util.tty as tty
+
+import spack.config
+import spack.hooks
+import spack.monitor
+import spack.util.path
 
 
 def get_analyzer_dir(spec, analyzer_dir=None):

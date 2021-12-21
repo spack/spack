@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
+
 from six import string_types
 
 import spack.variant
-from spack.spec import Spec
 from spack.error import SpackError
+from spack.spec import Spec
 
 
 def spec_ordering_key(s):

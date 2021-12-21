@@ -27,7 +27,7 @@ class Abinit(AutotoolsPackage):
     programs are provided.
     """
 
-    homepage = 'http://www.abinit.org'
+    homepage = 'https://www.abinit.org/'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
     version('9.4.2', sha256='d40886f5c8b138bb4aa1ca05da23388eb70a682790cfe5020ecce4db1b1a76bc')
@@ -50,6 +50,13 @@ class Abinit(AutotoolsPackage):
             description='Enables the Wannier90 library')
     variant('libxml2', default=False,
             description='Enable libxml2 support, used by multibinit')
+
+    variant('optimization-flavor', default='standard', multi=False,
+            values=('safe', 'standard', 'aggressive'),
+            description='Select the optimization flavor to use.')
+
+    variant('install-tests', default=False,
+            description='Install test cases')
 
     # Add dependencies
     depends_on('atompaw')
@@ -75,7 +82,7 @@ class Abinit(AutotoolsPackage):
     depends_on('libxc@:2', when='@:8')
 
     # libxml2
-    depends_on('libxml2', when='@9:')
+    depends_on('libxml2', when='@9:+libxml2')
 
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
@@ -122,6 +129,8 @@ class Abinit(AutotoolsPackage):
         options += self.with_or_without('libxml2')
 
         oapp = options.append
+        oapp('--with-optim-flavor={0}'
+             .format(self.spec.variants['optimization-flavor'].value))
 
         if '+wannier90' in spec:
             if '@:8' in spec:
@@ -190,48 +199,38 @@ class Abinit(AutotoolsPackage):
 
         oapp('--with-linalg-flavor={0}'.format(linalg_flavor))
 
-        # FFTW3: use sequential from fftw3 or MKL
-        if '@:8' in spec:
+        if '^mkl' in spec:
+            fftflavor = 'dfti'
+        elif '^fftw' in spec:
             if '+openmp' in spec:
                 fftflavor, fftlibs = 'fftw3-threads', '-lfftw3_omp -lfftw3 -lfftw3f'
+            else:
+                fftflavor, fftlibs = 'fftw3', '-lfftw3 -lfftw3f'
+
+        oapp('--with-fft-flavor={0}'.format(fftflavor))
+
+        if '@:8' in spec:
+            if '^mkl' in spec:
+                oapp('--with-fft-incs={0}'.format(spec['fftw-api'].headers.cpp_flags))
+                oapp('--with-fft-libs={0}'.format(spec['fftw-api'].libs.ld_flags))
+            elif '^fftw' in spec:
                 options.extend([
                     '--with-fft-incs={0}'.format(spec['fftw'].headers.cpp_flags),
                     '--with-fft-libs=-L{0} {1}'.format(
                         spec['fftw'].prefix.lib, fftlibs),
                 ])
-            else:
-                oapp('--with-fft-incs={0}'.format(spec['fftw-api'].headers.cpp_flags))
-                if '^mkl' in spec:
-                    fftflavor = 'dfti'
-                    oapp('--with-fft-libs={0}'.format(spec['fftw-api'].libs.ld_flags))
-                elif '^fftw' in spec:
-                    fftflavor, fftlibs = 'fftw3', '-lfftw3 -lfftw3f'
-                    oapp('--with-fft-libs=-L{0} {1}'.format(
-                        spec['fftw-api'].prefix.lib, fftlibs))
         else:
-            if '+openmp' in spec:
-                fftflavor, fftlibs = 'fftw3-threads', '-lfftw3_omp -lfftw3 -lfftw3f'
+            if '^mkl' in spec:
+                options.extend([
+                    'FFT_CPPFLAGS={0}'.format(spec['fftw-api'].headers.cpp_flags),
+                    'FFT_LIBs={0}'.format(spec['fftw-api'].libs.ld_flags),
+                ])
+            elif '^fftw' in spec:
                 options.extend([
                     'FFTW3_CPPFLAGS={0}'.format(spec['fftw'].headers.cpp_flags),
                     'FFTW3_LIBS=-L{0} {1}'.format(
                         spec['fftw'].prefix.lib, fftlibs),
                 ])
-            else:
-                if '^mkl' in spec:
-                    fftflavor = 'dfti'
-                    options.extend([
-                        'FFT_CPPFLAGS={0}'.format(spec['fftw-api'].headers.cpp_flags),
-                        'FFT_LIBs={0}'.format(spec['fftw-api'].libs.ld_flags),
-                    ])
-                elif '^fftw' in spec:
-                    fftflavor, fftlibs = 'fftw3', '-lfftw3 -lfftw3f'
-                    options.extend([
-                        'FFTW3_CPPFLAGS={0}'.format(spec['fftw-api'].headers.cpp_flags),
-                        'FFTW3_LIBS=-L{0} {1}'.format(
-                            spec['fftw-api'].prefix.lib, fftlibs),
-                    ])
-
-        oapp('--with-fft-flavor={0}'.format(fftflavor))
 
         # LibXC library
         libxc = spec['libxc:fortran']
@@ -274,4 +273,14 @@ class Abinit(AutotoolsPackage):
         explicitly activated by user.
         """
         make('check')
-        make('tests_in')
+
+        # the tests directly execute abinit. thus failing with MPI
+        # TODO: run tests in tests/ via the builtin runtests.py
+        #       requires Python with numpy, pyyaml, pandas
+        if '~mpi' in self.spec:
+            make('tests_in')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+install-tests' in spec:
+            install_tree('tests', spec.prefix.tests)

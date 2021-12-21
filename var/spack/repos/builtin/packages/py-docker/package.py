@@ -16,6 +16,6 @@ class PyDocker(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-websocket-client@0.32.0:', type=('build', 'run'))
-    depends_on('py-requests@2.14.2:2.17.999,2.18.1:', type=('build', 'run'))
+    depends_on('py-requests@2.14.2:2.17,2.18.1:', type=('build', 'run'))
     depends_on('py-backports-ssl-match-hostname@3.5:', when='^python@:3.4', type=('build', 'run'))
     depends_on('py-ipaddress@1.0.16:', when='^python@:3.2', type=('build', 'run'))

@@ -43,6 +43,7 @@ packages:
       opencl: [pocl]
       onedal: [intel-oneapi-dal]
       osmesa: [mesa+osmesa, mesa18+osmesa]
+      pbs: [openpbs, torque]
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       rpc: [libtirpc]

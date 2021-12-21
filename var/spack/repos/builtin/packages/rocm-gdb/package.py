@@ -12,10 +12,11 @@ class RocmGdb(AutotoolsPackage):
         based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-
+    version('4.3.1', sha256='995756a24b1e1510647dac1476a3a9a8e3af8e9fd9f4af1d00dd2db28e7a4ef2')
+    version('4.3.0', sha256='8ee0667ab2cd91b2cc41d3a7af046d36a6b4e2007f050265aa65e0aedec83fd7')
     version('4.2.0', sha256='4bc579584a1f8614111e7e44d8aa1c6d5d06be3f5db055aba2cf1abc140122ac')
     version('4.1.0', sha256='28dc806e48695d654d52fb1a634df6d4c1243f00846ae90161e7a5e9f4d88b24')
     version('4.0.0', sha256='b90291b0a8409fe66d8a65d2731dcb87b9f5a22bac9ce3ffbab726eb129ba13d')
@@ -36,7 +37,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on('babeltrace@1.2.4', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 

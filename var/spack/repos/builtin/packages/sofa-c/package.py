@@ -10,7 +10,7 @@ class SofaC(MakefilePackage):
     """Standards of Fundamental Astronomy (SOFA) library for ANSI C."""
 
     homepage = "http://www.iausofa.org/current_C.html"
-    url      = "http://www.iausofa.org/2018_0130_C/sofa_c-20180130.tar.gz"
+    url      = "https://www.iausofa.org/2018_0130_C/sofa_c-20180130.tar.gz"
 
     version('20180130', sha256='de09807198c977e1c58ea1d0c79c40bdafef84f2072eab586a7ac246334796db')
 

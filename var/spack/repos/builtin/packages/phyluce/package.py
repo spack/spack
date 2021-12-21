@@ -31,7 +31,7 @@ class Phyluce(PythonPackage):
     depends_on('mafft', type='run')
     depends_on('muscle', type='run')
     depends_on('picard', type='run')
-    depends_on('raxml+pthreads+sse', type='run')
+    depends_on('raxml+pthreads', type='run')
     depends_on('samtools', type='run')
     depends_on('seqtk', type='run')
     depends_on('spades', type='run')

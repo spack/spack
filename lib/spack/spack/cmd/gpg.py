@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import argparse
+import os
 
 import spack.binary_distribution
 import spack.cmd.common.arguments as arguments

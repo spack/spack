@@ -4,15 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 import pytest
 
+import spack.cmd.install
 import spack.config
 import spack.package
-import spack.cmd.install
-
-from spack.spec import Spec
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
+from spack.spec import Spec
 
 install = SpackCommand('install')
 analyze = SpackCommand('analyze')

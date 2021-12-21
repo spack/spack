@@ -17,6 +17,9 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
     version('1.15', sha256='ccf536620a45458d26ba83887a983b96827001e92a13847b45e4925cc8913178')
     version('1.14', sha256='72b24ded17d687193c3366d0ebe7cde1e6b18f0df8c55438ac95be39e8a30613')
 
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
+
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
     patch('gets.patch', when='@1.14')
@@ -26,6 +29,8 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         args = ['--enable-extra-encodings']
+
+        args += self.enable_or_disable('libs')
 
         # A hack to patch config.guess in the libcharset sub directory
         copy('./build-aux/config.guess',

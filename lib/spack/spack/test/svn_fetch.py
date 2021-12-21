@@ -7,16 +7,15 @@ import os
 
 import pytest
 
-from llnl.util.filesystem import touch, working_dir, mkdirp
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
-import spack.repo
 import spack.config
+import spack.repo
+from spack.fetch_strategy import SvnFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.version import ver
-from spack.fetch_strategy import SvnFetchStrategy
 from spack.util.executable import which
-
+from spack.version import ver
 
 pytestmark = pytest.mark.skipif(
     not which('svn') or not which('svnadmin'),

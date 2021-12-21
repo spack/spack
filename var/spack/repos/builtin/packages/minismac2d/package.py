@@ -13,8 +13,8 @@ class Minismac2d(MakefilePackage):
        turbulence model on a structured body conforming grid.
     """
 
-    homepage = "http://mantevo.org"
-    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
+    homepage = "https://mantevo.org"
+    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
 
     tags = ['proxy-app']
 

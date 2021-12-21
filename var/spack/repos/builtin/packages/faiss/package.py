@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -36,6 +37,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
     depends_on('py-scipy',      when='+tests',  type=('build', 'run'))
 
     depends_on('blas')
+    depends_on('python',                        type='build')
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('swig',          when='+python', type='build')
 

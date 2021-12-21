@@ -11,10 +11,12 @@ class Hipcub(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git      = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.3.1', sha256='20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a')
+    version('4.3.0', sha256='733499a8d55e2d73bf874d43a98ee7425e4325f77e03fb0c80debf36c740cb70')
     version('4.2.0', sha256='56b50e185b7cdf4615d2f56d3a4e86fe76f885e9ad04845f3d0671afcb315c69')
     version('4.1.0', sha256='6d33cc371b9a5ac9c0ab9853bac736f6cea0d2192f4dc9e6d8175d207ee4b4f2')
     version('4.0.0', sha256='656bd6ec547810fd74bcebba41453e6e729f3fdb7346f5564ab71fc0346c3fb5')
@@ -24,24 +26,26 @@ class Hipcub(CMakePackage):
     version('3.7.0', sha256='a2438632ea1606e83a8c0e1a8777aa5fdca66d77d90862642eb0ec2314b4978d')
     version('3.5.0', sha256='1eb2cb5f6e90ed1b7a9ac6dd86f09ec2ea27bceb5a92eeffa9c2123950c53b9d')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-
-    for ver in ['4.1.0', '4.2.0']:
-        depends_on('hip-rocclr@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake)
         ]
+
+        if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
+            args.append(self.define('__skip_rocmclang', 'ON'))
+
+        return args

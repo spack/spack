@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+
 import llnl.util.tty as tty
+
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 

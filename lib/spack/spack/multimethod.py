@@ -24,13 +24,12 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
-
 import functools
 import inspect
 
 from llnl.util.lang import caller_locals
 
-import spack.architecture
+import spack.directives
 import spack.error
 from spack.spec import Spec
 
@@ -156,72 +155,80 @@ class SpecMultiMethod(object):
 
 
 class when(object):
-    """This annotation lets packages declare multiple versions of
-       methods like install() that depend on the package's spec.
-       For example:
-
-       .. code-block:: python
-
-          class SomePackage(Package):
-              ...
-
-              def install(self, prefix):
-                  # Do default install
-
-              @when('target=x86_64:')
-              def install(self, prefix):
-                  # This will be executed instead of the default install if
-                  # the package's target is in the x86_64 family.
-
-              @when('target=ppc64:')
-              def install(self, prefix):
-                  # This will be executed if the package's target is in
-                  # the ppc64 family
-
-       This allows each package to have a default version of install() AND
-       specialized versions for particular platforms.  The version that is
-       called depends on the architecutre of the instantiated package.
-
-       Note that this works for methods other than install, as well.  So,
-       if you only have part of the install that is platform specific, you
-       could do this:
-
-       .. code-block:: python
-
-          class SomePackage(Package):
-              ...
-              # virtual dependence on MPI.
-              # could resolve to mpich, mpich2, OpenMPI
-              depends_on('mpi')
-
-              def setup(self):
-                  # do nothing in the default case
-                  pass
-
-              @when('^openmpi')
-              def setup(self):
-                  # do something special when this is built with OpenMPI for
-                  # its MPI implementations.
-
-
-              def install(self, prefix):
-                  # Do common install stuff
-                  self.setup()
-                  # Do more common install stuff
-
-       Note that the default version of decorated methods must
-       *always* come first.  Otherwise it will override all of the
-       platform-specific versions.  There's not much we can do to get
-       around this because of the way decorators work.
-    """
-
     def __init__(self, condition):
+        """Can be used both as a decorator, for multimethods, or as a context
+        manager to group ``when=`` arguments together.
+
+        Examples are given in the docstrings below.
+
+        Args:
+            condition (str): condition to be met
+        """
         if isinstance(condition, bool):
             self.spec = Spec() if condition else None
         else:
             self.spec = Spec(condition)
 
     def __call__(self, method):
+        """This annotation lets packages declare multiple versions of
+        methods like install() that depend on the package's spec.
+
+        For example:
+
+           .. code-block:: python
+
+              class SomePackage(Package):
+                  ...
+
+                  def install(self, prefix):
+                      # Do default install
+
+                  @when('target=x86_64:')
+                  def install(self, prefix):
+                      # This will be executed instead of the default install if
+                      # the package's target is in the x86_64 family.
+
+                  @when('target=ppc64:')
+                  def install(self, prefix):
+                      # This will be executed if the package's target is in
+                      # the ppc64 family
+
+           This allows each package to have a default version of install() AND
+           specialized versions for particular platforms.  The version that is
+           called depends on the architecutre of the instantiated package.
+
+           Note that this works for methods other than install, as well.  So,
+           if you only have part of the install that is platform specific, you
+           could do this:
+
+           .. code-block:: python
+
+              class SomePackage(Package):
+                  ...
+                  # virtual dependence on MPI.
+                  # could resolve to mpich, mpich2, OpenMPI
+                  depends_on('mpi')
+
+                  def setup(self):
+                      # do nothing in the default case
+                      pass
+
+                  @when('^openmpi')
+                  def setup(self):
+                      # do something special when this is built with OpenMPI for
+                      # its MPI implementations.
+
+
+                  def install(self, prefix):
+                      # Do common install stuff
+                      self.setup()
+                      # Do more common install stuff
+
+           Note that the default version of decorated methods must
+           *always* come first.  Otherwise it will override all of the
+           platform-specific versions.  There's not much we can do to get
+           around this because of the way decorators work.
+        """
         # In Python 2, Get the first definition of the method in the
         # calling scope by looking at the caller's locals. In Python 3,
         # we handle this using MultiMethodMeta.__prepare__.
@@ -237,6 +244,32 @@ class when(object):
             original_method.register(self.spec, method)
 
         return original_method
+
+    def __enter__(self):
+        """Inject the constraint spec into the `when=` argument of directives
+        in the context.
+
+        This context manager allows you to write:
+
+            with when('+nvptx'):
+                conflicts('@:6', msg='NVPTX only supported from gcc 7')
+                conflicts('languages=ada')
+                conflicts('languages=brig')
+
+        instead of writing:
+
+             conflicts('@:6', when='+nvptx', msg='NVPTX only supported from gcc 7')
+             conflicts('languages=ada', when='+nvptx')
+             conflicts('languages=brig', when='+nvptx')
+
+        Context managers can be nested (but this is not recommended for readability)
+        and add their constraint to whatever may be already present in the directive
+        `when=` argument.
+        """
+        spack.directives.DirectiveMeta.push_to_context(str(self.spec))
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        spack.directives.DirectiveMeta.pop_from_context()
 
 
 class MultiMethodError(spack.error.SpackError):

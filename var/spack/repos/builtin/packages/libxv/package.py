@@ -10,7 +10,7 @@ class Libxv(AutotoolsPackage, XorgPackage):
     """libXv - library for the X Video (Xv) extension to the
     X Window System."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXv"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXv"
     xorg_mirror_path = "lib/libXv-1.0.10.tar.gz"
 
     version('1.0.10', sha256='89a664928b625558268de81c633e300948b3752b0593453d7815f8775bab5293')

@@ -18,7 +18,7 @@ class Flann(CMakePackage):
     C, MATLAB and Python.
     """
 
-    homepage = "http://www.cs.ubc.ca/research/flann/"
+    homepage = "https://github.com/mariusmuja/flann"
     url      = "https://github.com/mariusmuja/flann/archive/1.9.1.tar.gz"
 
     version('1.9.1', sha256='b23b5f4e71139faa3bcb39e6bbcc76967fbaf308c4ee9d4f5bfbeceaa76cc5d3')

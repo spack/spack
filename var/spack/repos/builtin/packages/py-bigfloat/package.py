@@ -9,7 +9,7 @@ from spack import *
 class PyBigfloat(PythonPackage):
     """Arbitrary-precision correctly-rounded floating-point arithmetic, via MPFR."""
 
-    homepage = "http://github.com/mdickinson/bigfloat"
+    homepage = "https://github.com/mdickinson/bigfloat"
     pypi     = "bigfloat/bigfloat-0.4.0.tar.gz"
 
     version('0.4.0', sha256='58b96bde872aca5989d13d82eba3acf2aa1b94e22117dd72a16ba5911b0c0cb8')

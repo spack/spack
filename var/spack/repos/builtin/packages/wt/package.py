@@ -11,7 +11,7 @@ class Wt(CMakePackage):
 
     Wt is a C++ library for developing web applications."""
 
-    homepage = "http://www.webtoolkit.eu/wt"
+    homepage = "https://www.webtoolkit.eu/wt"
     url      = "https://github.com/emweb/wt/archive/3.3.7.tar.gz"
     git      = "https://github.com/emweb/wt.git"
 

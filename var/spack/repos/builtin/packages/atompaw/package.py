@@ -15,8 +15,8 @@ class Atompaw(Package):
 
     User's guide: ~/doc/atompaw-usersguide.pdf
     """
-    homepage = "http://users.wfu.edu/natalie/papers/pwpaw/man.html"
-    url = "http://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
+    homepage = "https://users.wfu.edu/natalie/papers/pwpaw/man.html"
+    url = "https://users.wfu.edu/natalie/papers/pwpaw/atompaw-4.0.0.13.tar.gz"
 
     version('4.1.1.0', sha256='b1ee2b53720066655d98523ef337e54850cb1e68b3a2da04ff5a1576d3893891')
     version('4.0.0.13', sha256='cbd73f11f3e9cc3ff2e5f3ec87498aeaf439555903d0b95a72f3b0a021902020')
@@ -28,6 +28,8 @@ class Atompaw(Package):
     # libxc
     depends_on('libxc')
     depends_on('libxc@:2', when='@:4.0')
+
+    patch('atompaw-4.1.1.0-fix-ifort.patch', when='@4.1.1.0:')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]

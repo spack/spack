@@ -17,4 +17,4 @@ class PyPeachpy(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-opcodes@0.3.13:', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-enum34', when='^python@:3.3.999', type=('build', 'run'))
+    depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))

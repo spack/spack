@@ -12,7 +12,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     non-interactive commandline tool, so it may easily be called from scripts,
     cron jobs, terminals without X-Windows support, etc."""
 
-    homepage = "http://www.gnu.org/software/wget/"
+    homepage = "https://www.gnu.org/software/wget/"
     gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
     version('1.21.1', sha256='59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e')

@@ -14,10 +14,10 @@ class RDt(RPackage):
     library has been included in this R package. The package name 'DT' is an
     abbreviation of 'DataTables'."""
 
-    homepage = "http://rstudio.github.io/DT"
-    url      = "https://cloud.r-project.org/src/contrib/DT_0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/DT"
+    homepage = "https://rstudio.github.io/DT"
+    cran = "DT"
 
+    version('0.20', sha256='c66d7f49ec101fdbb91c6d26c06fb1373f9ebdefe29fe99f2ae1a641220aba9f')
     version('0.17', sha256='e3430292421dcc2b6ad5f2deda729f0603da4eb31f86d071833e6e11abf3fb56')
     version('0.13', sha256='79a073fe96980ce150d790ab76133c9e80bd463270c34d149c03934a622d63b5')
     version('0.8', sha256='90195054148806cf31c7db5c41f72d5389c75adc0b1183606a9babd2c6ae8e21')
@@ -33,4 +33,5 @@ class RDt(RPackage):
     depends_on('r-jsonlite@0.9.16:', when='@0.8:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
+    depends_on('r-jquerylib', when='@0.19:', type=('build', 'run'))
     depends_on('r-promises', when='@0.5:', type=('build', 'run'))

@@ -148,6 +148,7 @@ case unload:
     # argument and specs with "-h" in the name.
     if ( " $_sp_spec" =~ "* --sh*" || \
          " $_sp_spec" =~ "* --csh*" || \
+         " $_sp_spec" =~ "* --list*" || \
          " $_sp_spec" =~ "* -h*" || \
          " $_sp_spec" =~ "* --help*") then
         # Args contain --sh, --csh, or -h/--help: just execute.

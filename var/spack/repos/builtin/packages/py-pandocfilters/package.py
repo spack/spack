@@ -12,4 +12,10 @@ class PyPandocfilters(PythonPackage):
     homepage = "https://github.com/jgm/pandocfilters"
     pypi = "pandocfilters/pandocfilters-1.4.2.tar.gz"
 
+    version('1.5.0', sha256='0b679503337d233b4339a817bfc8c50064e2eff681314376a47cb582305a7a38')
     version('1.4.2', sha256='b3dd70e169bb5449e6bc6ff96aea89c5eea8c5f6ab5e207fc2f521a2cf4a0da9')
+
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'), when='@1.5.0:')
+    # Notice: @:1.4 uses distutils and won't build if py-setuptools are present:
+    # error: option --single-version-externally-managed not recognized
+    depends_on('py-setuptools', type='build', when='@1.5.0:')

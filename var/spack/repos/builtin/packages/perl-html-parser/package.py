@@ -9,7 +9,7 @@ from spack import *
 class PerlHtmlParser(PerlPackage):
     """HTML parser class"""
 
-    homepage = "http://search.cpan.org/~gaas/HTML-Parser-3.72/Parser.pm"
+    homepage = "https://metacpan.org/pod/HTML::Parser"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTML-Parser-3.72.tar.gz"
 
     version('3.72', sha256='ec28c7e1d9e67c45eca197077f7cdc41ead1bb4c538c7f02a3296a4bb92f608b')

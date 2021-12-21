@@ -16,7 +16,7 @@ class Yorick(Package):
        most operating systems (*nix systems, MacOS X, Windows).
     """
 
-    homepage = "http://dhmunro.github.io/yorick-doc/"
+    homepage = "https://dhmunro.github.io/yorick-doc/"
     url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
     git      = "https://github.com/dhmunro/yorick.git"
 

@@ -13,7 +13,7 @@ class RGgrepel(RPackage):
     text labels. Labels repel away from each other and away from the data
     points."""
 
-    homepage = "http://github.com/slowkow/ggrepel"
+    homepage = "https://github.com/slowkow/ggrepel"
     url      = "https://cloud.r-project.org/src/contrib/ggrepel_0.6.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggrepel"
 

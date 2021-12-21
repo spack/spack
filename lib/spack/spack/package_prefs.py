@@ -6,11 +6,11 @@ import stat
 
 from six import string_types
 
-import spack.repo
 import spack.error
+import spack.repo
+from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import VersionList
-from spack.config import ConfigError
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,
                       'version': VersionList}
@@ -159,7 +159,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.util.module_cmd import path_from_modules # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])

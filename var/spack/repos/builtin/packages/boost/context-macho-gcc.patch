@@ -1,0 +1,22 @@
+diff --git a/build/Jamfile.v2 b/build/Jamfile.v2
+index eb83bbb..8d8dac8 100644
+--- a/libs/context/build/Jamfile.v2
++++ b/libs/context/build/Jamfile.v2
+@@ -646,6 +646,17 @@ alias asm_sources
+      <toolset>clang
+    ;
+
++alias asm_sources
++   : asm/make_x86_64_sysv_macho_gas.S
++     asm/jump_x86_64_sysv_macho_gas.S
++     asm/ontop_x86_64_sysv_macho_gas.S
++   : <abi>sysv
++     <address-model>64
++     <architecture>x86
++     <binary-format>mach-o
++     <toolset>gcc
++   ;
++
+ alias asm_sources
+    : asm/make_x86_64_sysv_macho_gas.S
+      asm/jump_x86_64_sysv_macho_gas.S

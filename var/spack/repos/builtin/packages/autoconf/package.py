@@ -18,12 +18,24 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
             preferred=True)
     version('2.62', sha256='83aa747e6443def0ebd1882509c53f5a2133f502ddefa21b3de141c433914bdd')
     version('2.59', sha256='9cd05c73c5fcb1f5ccae53dd6cac36bb8cb9c7b3e97ffae5a7c05c72594c88d8')
-    version('2.13', sha256='f0611136bee505811e9ca11ca7ac188ef5323a8e2ef19cffd3edb3cf08fd791e')
 
     # https://savannah.gnu.org/support/?110396
     patch('https://git.savannah.gnu.org/cgit/autoconf.git/patch/?id=05972f49ee632cd98057a3caf82ebfb9574846da',
           sha256='eaa3f69d927a853313a0b06e2117c51adab6377a2278549b05abc5df93643e16',
           when='@2.70')
+    # Apply long-time released and already in-use upstream patches to fix test cases:
+    # tests/foreign.at (Libtool): Be tolerant of 'quote' replacing the older `quote'
+    patch('http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-fix-libtool-test.patch',
+          sha256='7793209b33013dc0f81208718c68440c5aae80e7a1c4b8d336e382525af791a7',
+          when='@2.69')
+    # Fix bin/autoscan.in for current perl releases (reported already in January 2013)
+    patch('http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-perl-5.26.patch',
+          sha256='35c449281546376449766f92d49fc121ca50e330e60fefcfc9be2af3253082c2',
+          when='@2.62:2.69 ^perl@5.17:')
+    # Fix bin/autoheader.in for current perl relases not having "." in @INC:
+    patch('http://mirrors.mit.edu/gentoo-portage/sys-devel/autoconf/files/autoconf-2.69-perl-5.26-2.patch',
+          sha256='a49dd5bac3b62daa0ff688ab4d508d71dbd2f4f8d7e2a02321926346161bf3ee',
+          when='@2.62:2.69 ^perl@5.17:')
 
     # Note: m4 is not a pure build-time dependency of autoconf. m4 is
     # needed when autoconf runs, not only when autoconf is built.
@@ -56,6 +68,14 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
             filter_file('^#! @PERL@ -w',
                         '#! /usr/bin/env perl',
                         patched_file)
+        if self.version == Version('2.62'):
+            # skip help2man for patched autoheader.in and autoscan.in
+            touch('man/autoheader.1')
+            touch('man/autoscan.1')
+
+    # make installcheck would execute the testsuite a 2nd time, skip it
+    def installcheck(self):
+        pass
 
     @run_after('install')
     def filter_sbang(self):

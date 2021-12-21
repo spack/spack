@@ -4,13 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
-import errno
-import os
 import collections
+import errno
+import getpass
+import os
 import shutil
 import stat
-import tempfile
-import getpass
 
 import pytest
 
@@ -19,9 +18,8 @@ from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
 import spack.paths
 import spack.stage
 import spack.util.executable
-
 from spack.resource import Resource
-from spack.stage import Stage, StageComposite, ResourceStage, DIYStage
+from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
@@ -825,29 +823,6 @@ class TestStage(object):
             else:
                 assert os.path.exists(test_path)
                 shutil.rmtree(test_path)
-
-    def test_get_stage_root_in_spack(self, clear_stage_root):
-        """Ensure an instance path is an accessible build stage path."""
-        base = canonicalize_path(os.path.join('$spack', '.spack-test-stage'))
-        mkdirp(base)
-        test_path = tempfile.mkdtemp(dir=base)
-
-        try:
-            with spack.config.override('config:build_stage',  test_path):
-                path = spack.stage.get_stage_root()
-
-                assert 'spack' in path.split(os.path.sep)
-
-                # Make sure cached stage path value was changed appropriately
-                assert spack.stage._stage_root in (
-                    test_path, os.path.join(test_path, getpass.getuser()))
-
-                # Make sure the directory exists
-                assert os.path.isdir(spack.stage._stage_root)
-
-        finally:
-            # Clean up regardless of outcome
-            shutil.rmtree(base)
 
     def test_stage_constructor_no_fetcher(self):
         """Ensure Stage constructor with no URL or fetch strategy fails."""

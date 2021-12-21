@@ -3,15 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import shutil
 import re
+import shutil
+
+from spack import *
 
 
 class Ghostscript(AutotoolsPackage):
     """An interpreter for the PostScript language and for PDF."""
 
-    homepage = "http://ghostscript.com/"
+    homepage = "https://ghostscript.com/"
     url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs926/ghostscript-9.26.tar.gz"
 
     executables = [r'^gs$']
@@ -62,7 +63,7 @@ class Ghostscript(AutotoolsPackage):
         we have to remove these vendored dependencies.
 
         Note that this approach is also recommended by Linux from Scratch:
-        http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
+        https://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
         """
         directories = ['freetype', 'jpeg', 'libpng', 'zlib']
         if self.spec.satisfies('@:9.21'):

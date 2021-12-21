@@ -17,7 +17,7 @@ class RShinystan(RPackage):
     programming language (and has extended functionality for 'Stan' models fit
     using the 'rstan' and 'rstanarm' packages)."""
 
-    homepage = "http://mc-stan.org/"
+    homepage = "https://mc-stan.org/"
     cran     = "shinystan"
 
     version('2.5.0', sha256='45f9c552a31035c5de8658bb9e5d72da7ec1f88fbddb520d15fe701c677154a1')

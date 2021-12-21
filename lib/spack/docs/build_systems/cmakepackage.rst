@@ -130,8 +130,8 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :py:meth:`~.CMakePackage.define` and
-:py:meth:`~.CMakePackage.define_from_variant` helper functions:
+and without the :meth:`~spack.build_systems.cmake.CMakePackage.define` and
+:meth:`~spack.build_systems.cmake.CMakePackage.define_from_variant` helper functions:
 
 .. code-block:: python
 
@@ -144,6 +144,20 @@ and without the :py:meth:`~.CMakePackage.define` and
        ]
 
        return args
+
+Spack supports CMake defines from conditional variants too. Whenever the condition on
+the variant is not met, ``define_from_variant()`` will simply return an empty string,
+and CMake simply ignores the empty command line argument. For example the following
+
+.. code-block:: python
+
+   variant('example', default=True, when='@2.0:')
+
+   def cmake_args(self):
+      return [self.define_from_variant('EXAMPLE', 'example')]
+
+will generate ``'cmake' '-DEXAMPLE=ON' ...`` when `@2.0: +example` is met, but will
+result in ``'cmake' '' ...`` when the spec version is below ``2.0``.
 
 
 ^^^^^^^^^^

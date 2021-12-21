@@ -52,7 +52,7 @@ spec_list_schema = {
 projections_scheme = spack.schema.projections.properties['projections']
 
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack environment file schema',
     'type': 'object',
     'additionalProperties': False,
@@ -125,6 +125,9 @@ schema = {
                                             'link': {
                                                 'type': 'string',
                                                 'pattern': '(roots|all)',
+                                            },
+                                            'link_type': {
+                                                'type': 'string'
                                             },
                                             'select': {
                                                 'type': 'array',

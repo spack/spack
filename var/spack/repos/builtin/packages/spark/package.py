@@ -13,8 +13,8 @@ class Spark(Package):
     for large-scale data processing.
     """
 
-    homepage = "http://spark.apache.org"
-    url = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    homepage = "https://spark.apache.org"
+    url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
 
     variant('hadoop', default=False,
             description='Build with Hadoop')

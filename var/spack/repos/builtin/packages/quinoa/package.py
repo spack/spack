@@ -14,14 +14,14 @@ class Quinoa(CMakePackage):
        systems.
     """
 
-    homepage = "http://quinoacomputing.org"
+    homepage = "https://quinoacomputing.org"
     git      = "https://github.com/quinoacomputing/quinoa.git"
 
     version('develop', branch='master')
 
     depends_on('hdf5+mpi')
     depends_on("charmpp backend=mpi")
-    depends_on("trilinos+exodus")
+    depends_on("trilinos+exodus+mpi")
     depends_on("boost")
     depends_on("hypre~internal-superlu")
     depends_on("random123")

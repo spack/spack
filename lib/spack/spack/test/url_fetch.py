@@ -5,21 +5,22 @@
 
 import collections
 import os
-import pytest
 import sys
 
-from llnl.util.filesystem import working_dir, is_exe
-import llnl.util.tty as tty
+import pytest
 
-import spack.repo
+import llnl.util.tty as tty
+from llnl.util.filesystem import is_exe, working_dir
+
 import spack.config
 import spack.fetch_strategy as fs
-from spack.spec import Spec
-from spack.stage import Stage
-from spack.version import ver
+import spack.repo
 import spack.util.crypto as crypto
 import spack.util.executable
+from spack.spec import Spec
+from spack.stage import Stage
 from spack.util.executable import which
+from spack.version import ver
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -48,20 +49,20 @@ def pkg_factory():
     return factory
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_urlfetchstrategy_sans_url(use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_urlfetchstrategy_sans_url(_fetch_method):
     """Ensure constructor with no URL fails."""
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         with pytest.raises(ValueError):
             with fs.URLFetchStrategy(None):
                 pass
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_urlfetchstrategy_bad_url(tmpdir, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_urlfetchstrategy_bad_url(tmpdir, _fetch_method):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         with pytest.raises(fs.FailedDownloadError):
             fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
             assert fetcher is not None
@@ -74,7 +75,7 @@ def test_urlfetchstrategy_bad_url(tmpdir, use_curl):
 
 def test_fetch_options(tmpdir, mock_archive):
     testpath = str(tmpdir)
-    with spack.config.override('config:use_curl', True):
+    with spack.config.override('config:url_fetch_method', 'curl'):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url,
                                       fetch_options={'cookie': 'True',
                                                      'timeout': 10})
@@ -86,11 +87,11 @@ def test_fetch_options(tmpdir, mock_archive):
             fetcher.fetch()
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_archive_file_errors(tmpdir, mock_archive, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_archive_file_errors(tmpdir, mock_archive, _fetch_method):
     """Ensure FetchStrategy commands may only be used as intended"""
     testpath = str(tmpdir)
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
         assert fetcher is not None
         with pytest.raises(fs.FailedDownloadError):
@@ -111,7 +112,7 @@ def test_archive_file_errors(tmpdir, mock_archive, use_curl):
 
 
 @pytest.mark.parametrize('secure', [True, False])
-@pytest.mark.parametrize('use_curl', [True, False])
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 @pytest.mark.parametrize('mock_archive',
                          [('.tar.gz', 'z'), ('.tgz', 'z'),
                           ('.tar.bz2', 'j'), ('.tbz2', 'j'),
@@ -120,7 +121,7 @@ def test_archive_file_errors(tmpdir, mock_archive, use_curl):
 def test_fetch(
         mock_archive,
         secure,
-        use_curl,
+        _fetch_method,
         checksum_type,
         config,
         mutable_mock_repo
@@ -146,7 +147,7 @@ def test_fetch(
     # Enter the stage directory and check some properties
     with pkg.stage:
         with spack.config.override('config:verify_ssl', secure):
-            with spack.config.override('config:use_curl', use_curl):
+            with spack.config.override('config:url_fetch_method', _fetch_method):
                 pkg.do_stage()
         with working_dir(pkg.stage.source_path):
             assert os.path.exists('configure')
@@ -159,21 +160,29 @@ def test_fetch(
 
 
 @pytest.mark.parametrize('spec,url,digest', [
-    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', 'abc000'),
-    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', 'abc100'),
-    ('url-list-test @3.0', 'foo-3.0.tar.gz', 'abc30'),
-    ('url-list-test @4.5', 'foo-4.5.tar.gz', 'abc45'),
-    ('url-list-test @2.0.0b2', 'foo-2.0.0b2.tar.gz', 'abc200b2'),
-    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', 'abc30a1'),
-    ('url-list-test @4.5-rc5', 'foo-4.5-rc5.tar.gz', 'abc45rc5'),
+    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', '00000000000000000000000000000000'),
+    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', '00000000000000000000000000000100'),
+    ('url-list-test @3.0', 'foo-3.0.tar.gz', '00000000000000000000000000000030'),
+    ('url-list-test @4.5', 'foo-4.5.tar.gz', '00000000000000000000000000000450'),
+    (
+        'url-list-test @2.0.0b2',
+        'foo-2.0.0b2.tar.gz',
+        '000000000000000000000000000200b2'
+    ),
+    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', '000000000000000000000000000030a1'),
+    (
+        'url-list-test @4.5-rc5',
+        'foo-4.5-rc5.tar.gz',
+        '000000000000000000000000000045c5'
+    ),
 ])
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_from_list_url(mock_packages, config, spec, url, digest, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     """
     Test URLs in the url-list-test package, which means they should
     have checksums in the package.
     """
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         specification = Spec(spec).concretized()
         pkg = spack.repo.get(specification)
         fetch_strategy = fs.from_list_url(pkg)
@@ -186,10 +195,10 @@ def test_from_list_url(mock_packages, config, spec, url, digest, use_curl):
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_from_list_url_unspecified(mock_packages, config, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_from_list_url_unspecified(mock_packages, config, _fetch_method):
     """Test non-specific URLs from the url-list-test package."""
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         pkg = spack.repo.get('url-list-test')
 
         spec = Spec('url-list-test @2.0.0').concretized()
@@ -235,7 +244,7 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 
     monkeypatch.setattr(sys.stdout, 'isatty', is_true)
     monkeypatch.setattr(tty, 'msg_enabled', is_true)
-    with spack.config.override('config:use_curl', True):
+    with spack.config.override('config:url_fetch_method', 'curl'):
         fetcher = fs.URLFetchStrategy(mock_archive.url)
         with Stage(fetcher, path=testpath) as stage:
             assert fetcher.archive_file is None
@@ -245,10 +254,10 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
         assert '##### 100' in status
 
 
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_url_extra_fetch(tmpdir, mock_archive, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_url_extra_fetch(tmpdir, mock_archive, _fetch_method):
     """Ensure a fetch after downloading is effectively a no-op."""
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         testpath = str(tmpdir)
         fetcher = fs.URLFetchStrategy(mock_archive.url)
         with Stage(fetcher, path=testpath) as stage:
@@ -266,12 +275,12 @@ def test_url_extra_fetch(tmpdir, mock_archive, use_curl):
      ['https://ftpmirror.gnu.org/autoconf/autoconf-2.62.tar.gz',
       'https://ftp.gnu.org/gnu/autoconf/autoconf-2.62.tar.gz'])
 ])
-@pytest.mark.parametrize('use_curl', [True, False])
-def test_candidate_urls(pkg_factory, url, urls, version, expected, use_curl):
+@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
+def test_candidate_urls(pkg_factory, url, urls, version, expected, _fetch_method):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """
-    with spack.config.override('config:use_curl', use_curl):
+    with spack.config.override('config:url_fetch_method', _fetch_method):
         pkg = pkg_factory(url, urls)
         f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected
@@ -297,7 +306,7 @@ def test_missing_curl(tmpdir, monkeypatch):
 
     testpath = str(tmpdir)
     url = 'http://github.com/spack/spack'
-    with spack.config.override('config:use_curl', True):
+    with spack.config.override('config:url_fetch_method', 'curl'):
         fetcher = fs.URLFetchStrategy(url=url)
         assert fetcher is not None
         with pytest.raises(TypeError, match='object is not callable'):

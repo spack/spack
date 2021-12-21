@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
 
 import spack.store
-import os
+from spack import *
 
 
 class Openspeedshop(CMakePackage):
@@ -32,8 +32,6 @@ class Openspeedshop(CMakePackage):
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
     variant('crayfe', default=False,
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
@@ -89,7 +87,7 @@ class Openspeedshop(CMakePackage):
     depends_on("dyninst@develop", when='@develop')
     depends_on("dyninst@10:", when='@2.4.0:9999')
 
-    depends_on("python@2.7.14:2.7.99", type=('build', 'run'))
+    depends_on("python@2.7.14:2.7", type=('build', 'run'))
 
     depends_on("libxml2")
 
@@ -104,9 +102,6 @@ class Openspeedshop(CMakePackage):
 
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+cti', when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
@@ -130,10 +125,7 @@ class Openspeedshop(CMakePackage):
     depends_on("cbtf-argonavis@1.9.3:9999", when='@2.4.0:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
-
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     patch('arm.patch', when='target=aarch64:')
