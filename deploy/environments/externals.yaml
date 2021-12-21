@@ -64,6 +64,7 @@ spack:
     - llvm@12.0.0 +cuda cuda_arch=70 +omp_tsan +python ^cuda@11.0.2
     - nvhpc@21.2 install_type=network
     - nvhpc@21.9
+    - nvhpc@21.11
     - arm-forge@20.2.0-Redhat-7.0-x86_64
     - bison
     - blender
@@ -75,6 +76,7 @@ spack:
     - cmake@3.15.7
     - cuda@11.0.2
     - cuda@11.4.2
+    - cuda@11.5.1
     - cudnn@8.0.3.33-11.0-linux-x64
     - darshan-runtime
     - darshan-util
