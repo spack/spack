@@ -65,7 +65,8 @@ class Gaudi(CMakePackage):
     depends_on('zlib')
 
     # todo: this should be a test dependency only,
-    depends_on('py-nose', when="@35.0", type=('build', 'run'))
+    depends_on('py-nose', when="@35.0:36.1", type=('build', 'run'))
+    depends_on('py-pytest', when='@36.2:', type=('build', 'run'))
 
     # Adding these dependencies triggers the build of most optional components
     depends_on('cppgsl', when='+optional')
