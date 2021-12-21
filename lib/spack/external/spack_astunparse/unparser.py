@@ -29,12 +29,39 @@ class Unparser:
     output source code for the abstract syntax; original formatting
     is disregarded. """
 
-    def __init__(self, tree, file = sys.stdout):
+    def __init__(self, tree, file = sys.stdout, py_ver_consistent=False):
         """Unparser(tree, file=sys.stdout) -> None.
-         Print the source for tree to file."""
+         Print the source for tree to file.
+
+        Arguments:
+            py_ver_consistent (bool): if True, generate unparsed code that is
+                consistent between Python 2.7 and 3.5-3.10.
+
+        Consistency is achieved by:
+            1. Ensuring there are no spaces between unary operators and
+               their operands.
+            2. Ensuring that *args and **kwargs are always the last arguments,
+               regardless of the python version.
+            3. Always unparsing print as a function.
+            4. Not putting an extra comma after Python 2 class definitions.
+
+        Without these changes, the same source can generate different code for different
+        Python versions, depending on subtle AST differences.
+
+        One place where single source will generate an inconsistent AST is with
+        multi-argument print statements, e.g.::
+
+            print("foo", "bar", "baz")
+
+        In Python 2, this prints a tuple; in Python 3, it is the print function with
+        multiple arguments.  Use ``from __future__ import print_function`` to avoid
+        this inconsistency.
+
+        """
         self.f = file
         self.future_imports = []
         self._indent = 0
+        self._py_ver_consistent = py_ver_consistent
         self.dispatch(tree)
         print("", file=self.f)
         self.f.flush()
@@ -175,7 +202,12 @@ class Unparser:
             self.dispatch(t.locals)
 
     def _Print(self, t):
-        self.fill("print ")
+        # Use print function so that python 2 unparsing is consistent with 3
+        if self._py_ver_consistent:
+            self.fill("print(")
+        else:
+            self.fill("print ")
+
         do_comma = False
         if t.dest:
             self.write(">>")
@@ -187,6 +219,9 @@ class Unparser:
             self.dispatch(e)
         if not t.nl:
             self.write(",")
+
+        if self._py_ver_consistent:
+            self.write(")")
 
     def _Global(self, t):
         self.fill("global ")
@@ -335,9 +370,10 @@ class Unparser:
             self.write(")")
         elif t.bases:
                 self.write("(")
-                for a in t.bases:
+                for a in t.bases[:-1]:
                     self.dispatch(a)
                     self.write(", ")
+                self.dispatch(t.bases[-1])
                 self.write(")")
         self.enter()
         self.dispatch(t.body)
@@ -662,7 +698,8 @@ class Unparser:
     def _UnaryOp(self, t):
         self.write("(")
         self.write(self.unop[t.op.__class__.__name__])
-        self.write(" ")
+        if not self._py_ver_consistent:
+            self.write(" ")
         if six.PY2 and isinstance(t.op, ast.USub) and isinstance(t.operand, ast.Num):
             # If we're applying unary minus to a number, parenthesize the number.
             # This is necessary: -2147483648 is different from -(2147483648) on
@@ -717,14 +754,34 @@ class Unparser:
         self.dispatch(t.func)
         self.write("(")
         comma = False
+
+        # move starred arguments last in Python 3.5+, for consistency w/earlier versions
+        star_and_kwargs = []
+        move_stars_last = sys.version_info[:2] >= (3, 5)
+
         for e in t.args:
-            if comma: self.write(", ")
-            else: comma = True
-            self.dispatch(e)
+            if move_stars_last and isinstance(e, ast.Starred):
+                star_and_kwargs.append(e)
+            else:
+                if comma: self.write(", ")
+                else: comma = True
+                self.dispatch(e)
+
         for e in t.keywords:
-            if comma: self.write(", ")
-            else: comma = True
-            self.dispatch(e)
+            # starting from Python 3.5 this denotes a kwargs part of the invocation
+            if e.arg is None and move_stars_last:
+                star_and_kwargs.append(e)
+            else:
+                if comma: self.write(", ")
+                else: comma = True
+                self.dispatch(e)
+
+        if move_stars_last:
+            for e in star_and_kwargs:
+                if comma: self.write(", ")
+                else: comma = True
+                self.dispatch(e)
+
         if sys.version_info[:2] < (3, 5):
             if t.starargs:
                 if comma: self.write(", ")
@@ -736,6 +793,7 @@ class Unparser:
                 else: comma = True
                 self.write("**")
                 self.dispatch(t.kwargs)
+
         self.write(")")
 
     def _Subscript(self, t):
