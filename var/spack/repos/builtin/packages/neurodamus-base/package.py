@@ -11,8 +11,8 @@ import shutil
 class NeurodamusBase(Package):
     """Library of channels developed by Blue Brain Project, EPFL"""
 
-    homepage = "ssh://bbpcode.epfl.ch/sim/neurodamus/bbp"
-    url      = "ssh://bbpcode.epfl.ch/sim/neurodamus/bbp"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/archive/neurodamus-bbp"
+    url      = "git@bbpgitlab.epfl.ch:hpc/archive/neurodamus-bbp.git"
 
     version('master',      git=url, branch='master')
     version('mousify',     git=url, branch='sandbox/leite/mousify')

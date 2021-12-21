@@ -32,8 +32,6 @@ class Brion(CMakePackage):
     depends_on('ninja', type='build')
     depends_on('doxygen', type='build')
 
-    depends_on('bbptestdata', type=('build', 'test'))
-
     depends_on('python@3.4:', type=('build', 'run'), when='+python')
     depends_on('py-numpy', type=('build', 'run', 'test'), when='+python')
 

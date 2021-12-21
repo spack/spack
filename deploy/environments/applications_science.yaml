@@ -11,7 +11,6 @@ spack:
         - py-bluepyemodel
         - py-bluepyparallel
         - py-efel
-        - py-visual-cortex-analysis
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -37,4 +36,3 @@ spack:
     - py-bluepyemodel
     - py-bluepyparallel
     - py-efel
-    - py-visual-cortex-analysis ^py-h5py~mpi

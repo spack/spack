@@ -38,7 +38,6 @@ class Brayns(CMakePackage):
     depends_on('ninja', type='build')
 
     depends_on('assimp@5.0.1', when='@1.1.1: +assimp')
-    depends_on('bbptestdata', type='test', when='+test')
     depends_on('brion', when='+brion')
     depends_on('ffmpeg@4.2.2', when='+net')
     depends_on('git', when='@1.1.1:')
