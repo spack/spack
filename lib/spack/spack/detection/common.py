@@ -195,10 +195,12 @@ def find_win32_additional_install_paths():
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys
     windows_search_ext.extend([os.environ[key] for key
                               in os.environ.keys() if
-                              add_path()])
+                              add_path(key)])
     windows_search_ext.append("C:\\PrograData\\chocolatey\\bin")
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
-    windows_search_ext.extend(spack.config.get("config:additional_external_search_paths"))
+    windows_search_ext.extend(
+        spack.config.get("config:additional_external_search_paths", default=[])
+    )
 
     return windows_search_ext
 
