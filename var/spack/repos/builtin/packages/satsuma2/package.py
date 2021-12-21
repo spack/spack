@@ -19,6 +19,8 @@ class Satsuma2(CMakePackage):
     version('2021-03-04', commit='37c5f386819614cd3ce96016b423ddc4df1d86ec')
     version('2016-11-22', commit='da694aeecf352e344b790bea4a7aaa529f5b69e6')
 
+    maintainers = ['snehring']
+
     def patch(self):
         filter_file('(^#include <unistd.h>$)', '\\1\n#include <memory>',
                     'analysis/SatsumaSynteny2.cc')
