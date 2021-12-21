@@ -840,9 +840,9 @@ def ensure_flake8_in_path_or_raise():
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
 
 
-def _missing_executable(name, purpose):
+def _missing(name, purpose):
     """Message to be printed if an executable is not found"""
-    msg = 'MISSING: "{0}" executable (required to {1})'
+    msg = 'MISSING "{0}": {1}'
     return msg.format(name, purpose)
 
 
@@ -874,18 +874,18 @@ def _required_executable(exes, query_spec, msg):
 
 def _core_requirements():
     _core_system_exes = {
-        'make': _missing_executable('make', 'build software from sources'),
-        'patch': _missing_executable('patch', 'patch source code before building'),
-        'bash': _missing_executable('bash',  'use Spack compiler wrapper'),
-        'tar': _missing_executable('tar', 'manage code archives'),
-        'gzip': _missing_executable('gzip', 'compress/decompress code archives'),
-        'unzip': _missing_executable('unzip', 'compress/decompress code archives'),
-        'bzip2': _missing_executable('bzip2', 'compress/decompress code archives'),
-        'git': _missing_executable('git', 'fetch/manage git repositories')
+        'make': _missing('make', 'required to build software from sources'),
+        'patch': _missing('patch', 'required to patch source code before building'),
+        'bash': _missing('bash', 'required for Spack compiler wrapper'),
+        'tar': _missing('tar', 'required to manage code archives'),
+        'gzip': _missing('gzip', 'required to compress/decompress code archives'),
+        'unzip': _missing('unzip', 'required to compress/decompress code archives'),
+        'bzip2': _missing('bzip2', 'required to compress/decompress code archives'),
+        'git': _missing('git', 'required to fetch/manage git repositories')
     }
     if platform.system().lower() == 'linux':
-        _core_system_exes['xz'] = _missing_executable(
-            'xz', 'compress/decompress code archives'
+        _core_system_exes['xz'] = _missing(
+            'xz', 'required to compress/decompress code archives'
         )
 
     # Executables that are not bootstrapped yet
@@ -903,11 +903,11 @@ def _core_requirements():
 
 def _buildcache_requirements():
     _buildcache_exes = {
-        'file': _missing_executable('file', 'analyze files for buildcaches'),
-        ('gpg2', 'gpg'): _missing_executable('gpg2', 'sign/verify buildcaches')
+        'file': _missing('file', 'required to analyze files for buildcaches'),
+        ('gpg2', 'gpg'): _missing('gpg2', 'required to sign/verify buildcaches')
     }
     if platform.system().lower() == 'darwin':
-        _buildcache_exes['otool'] = _missing_executable('otool', 'relocate binaries')
+        _buildcache_exes['otool'] = _missing('otool', 'required to relocate binaries')
 
     # Executables that are not bootstrapped yet
     result = [functools.partial(_system_executable, exe, msg)
@@ -916,7 +916,7 @@ def _buildcache_requirements():
     if platform.system().lower() == 'linux':
         result.append(functools.partial(
             _required_executable, 'patchelf', patchelf_root_spec(),
-            _missing_executable('patchelf', 'relocate binaries')
+            _missing('patchelf', 'required to relocate binaries')
         ))
 
     return result
@@ -924,9 +924,9 @@ def _buildcache_requirements():
 
 def _optional_requirements():
     _optional_exes = {
-        'zstd': _missing_executable('zstd', 'compress/decompress code archives'),
-        'svn': _missing_executable('svn', 'manage subversion repositories'),
-        'hg': _missing_executable('hg', 'manage mercurial repositories')
+        'zstd': _missing('zstd', 'required to compress/decompress code archives'),
+        'svn': _missing('svn', 'required to manage subversion repositories'),
+        'hg': _missing('hg', 'required to manage mercurial repositories')
     }
     # Executables that are not bootstrapped yet
     result = [functools.partial(_system_executable, exe, msg)
@@ -938,19 +938,19 @@ def _development_requirements():
     return [
         functools.partial(
             _required_executable, 'isort', isort_root_spec(),
-            'MISSING: "isort" executable (required for style checks)'
+            _missing('isort', 'required for style checks')
         ),
         functools.partial(
             _required_executable, 'mypy', mypy_root_spec(),
-            'MISSING: "mypy" executable (required for style checks)'
+            _missing('mypy', 'required for style checks')
         ),
         functools.partial(
             _required_executable, 'flake8', flake8_root_spec(),
-            'MISSING: "flake8" executable (required for style checks)'
+            _missing('flake8', 'required for style checks')
         ),
         functools.partial(
             _required_executable, 'black', black_root_spec(),
-            'MISSING: "black" executable (required for code formatting)'
+            _missing('black', 'required for code formatting')
         )
     ]
 
