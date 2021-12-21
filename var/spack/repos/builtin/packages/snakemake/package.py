@@ -18,7 +18,6 @@ class Snakemake(PythonPackage):
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-wrapt', type=('build', 'run'))
-    #newer versions
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-configargparse', type=('build', 'run'))
     depends_on('py-appdirs', type=('build', 'run'))
