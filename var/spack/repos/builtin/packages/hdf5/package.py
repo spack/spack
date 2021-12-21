@@ -382,7 +382,7 @@ class Hdf5(CMakePackage):
                                         spec['mpi'].mpifc))
 
         # work-around for https://github.com/HDFGroup/hdf5/issues/1320
-        if spec.satisfies('@1.10.8') and sys.platform != 'windows':
+        if spec.satisfies('@1.10.8,1.13.0'):
             args.append(self.define('HDF5_INSTALL_CMAKE_DIR',
                                     'share/cmake/hdf5'))
 
