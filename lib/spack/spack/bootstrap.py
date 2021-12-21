@@ -846,8 +846,8 @@ def _missing(name, purpose):
     return msg.format(name, purpose)
 
 
-def _system_executable(exes, msg):
-    """Query availability of executables to be found on the system"""
+def _required_system_executable(exes, msg):
+    """Search for an executable is the system path only."""
     if isinstance(exes, six.string_types):
         exes = (exes,)
     if spack.util.executable.which_string(*exes):
@@ -856,14 +856,16 @@ def _system_executable(exes, msg):
 
 
 def _required_python_module(module, query_spec, msg):
-    """Query availability of required Python modules"""
+    """Check if a Python module is available in the current interpreter or
+    if it can be loaded from the bootstrap store
+    """
     if _python_import(module) or _try_import_from_store(module, query_spec):
         return True, None
     return False, msg
 
 
 def _required_executable(exes, query_spec, msg):
-    """Query availability of required executables"""
+    """Search for an executable in the system path or in the bootstrap store."""
     if isinstance(exes, six.string_types):
         exes = (exes,)
     if (spack.util.executable.which_string(*exes) or
@@ -889,7 +891,7 @@ def _core_requirements():
         )
 
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_system_executable, exe, msg)
+    result = [functools.partial(_required_system_executable, exe, msg)
               for exe, msg in _core_system_exes.items()]
     # Python modules
     result += [
@@ -910,7 +912,7 @@ def _buildcache_requirements():
         _buildcache_exes['otool'] = _missing('otool', 'required to relocate binaries')
 
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_system_executable, exe, msg)
+    result = [functools.partial(_required_system_executable, exe, msg)
               for exe, msg in _buildcache_exes.items()]
 
     if platform.system().lower() == 'linux':
@@ -929,7 +931,7 @@ def _optional_requirements():
         'hg': _missing('hg', 'required to manage mercurial repositories')
     }
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_system_executable, exe, msg)
+    result = [functools.partial(_required_system_executable, exe, msg)
               for exe, msg in _optional_exes.items()]
     return result
 
