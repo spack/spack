@@ -52,7 +52,7 @@ class Npb(MakefilePackage):
         'W',            # Workstation size
         'A', 'B', 'C',  # standard test problems
                         # ~4X size increase going from one class to the next
-        'D', 'E',       # large test problems
+        'D', 'E', 'F'   # large test problems
                         # ~16X size increase from each of the previous classes
     )
 
@@ -117,6 +117,7 @@ class Npb(MakefilePackage):
         if 'implementation=mpi' in spec:
             definitions = {
                 # Parallel Fortran
+                'MPIFC':      spec['mpi'].mpifc,
                 'MPIF77':     spec['mpi'].mpif77,
                 'FLINK':      spec['mpi'].mpif77,
                 'FMPI_LIB':   spec['mpi'].libs.ld_flags,
@@ -138,6 +139,7 @@ class Npb(MakefilePackage):
         elif 'implementation=openmp' in spec:
             definitions = {
                 # Parallel Fortran
+                'FC':         spack_fc,
                 'F77':        spack_f77,
                 'FLINK':      spack_f77,
                 'F_LIB':      '',
@@ -189,15 +191,18 @@ class Npb(MakefilePackage):
             with open('config/suite.def', 'w') as suite_def:
                 for name in names:
                     for classname in classes:
-                        # Classes C, D and E are not available for DT
-                        if name == 'dt' and classname in ('C', 'D', 'E'):
+                        # Classes C, D, E  and F are not available for DT
+                        if name == 'dt' and classname in ('C', 'D', 'E', 'F'):
                             continue
 
-                        # Class E is not available for IS
-                        if name == 'is' and classname == 'E':
-                            continue
+                        # Class E, F is not available for IS at @3.3.1
+                        # Class F is not available for IS at @3.4.1
+                        if name == 'is' and classname in ('E','F') and spec.satisfies('@3.3.1') :
+                             continue
+                        elif name == 'is' and classname in ('F') and spec.satisfies('@3.4.1:'):
+                             continue
 
-                        if 'implementation=mpi' in spec:
+                        if 'implementation=mpi' in spec and spec.satisfies('@3.3.1'):
                             for nproc in nprocs:
                                 suite_def.write('{0}\t{1}\t{2}\n'.format(
                                     name, classname, nproc))
