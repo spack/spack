@@ -891,15 +891,13 @@ def _core_requirements():
         )
 
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_required_system_executable, exe, msg)
+    result = [_required_system_executable(exe, msg)
               for exe, msg in _core_system_exes.items()]
     # Python modules
-    result += [
-        functools.partial(
-            _required_python_module, 'clingo', clingo_root_spec(),
-            _missing('clingo', 'required to concretize specs')
-        )
-    ]
+    result.append(_required_python_module(
+        'clingo', clingo_root_spec(),
+        _missing('clingo', 'required to concretize specs')
+    ))
     return result
 
 
@@ -912,12 +910,12 @@ def _buildcache_requirements():
         _buildcache_exes['otool'] = _missing('otool', 'required to relocate binaries')
 
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_required_system_executable, exe, msg)
+    result = [_required_system_executable(exe, msg)
               for exe, msg in _buildcache_exes.items()]
 
     if platform.system().lower() == 'linux':
-        result.append(functools.partial(
-            _required_executable, 'patchelf', patchelf_root_spec(),
+        result.append(_required_executable(
+            'patchelf', patchelf_root_spec(),
             _missing('patchelf', 'required to relocate binaries')
         ))
 
@@ -931,29 +929,21 @@ def _optional_requirements():
         'hg': _missing('hg', 'required to manage mercurial repositories')
     }
     # Executables that are not bootstrapped yet
-    result = [functools.partial(_required_system_executable, exe, msg)
+    result = [_required_system_executable(exe, msg)
               for exe, msg in _optional_exes.items()]
     return result
 
 
 def _development_requirements():
     return [
-        functools.partial(
-            _required_executable, 'isort', isort_root_spec(),
-            _missing('isort', 'required for style checks')
-        ),
-        functools.partial(
-            _required_executable, 'mypy', mypy_root_spec(),
-            _missing('mypy', 'required for style checks')
-        ),
-        functools.partial(
-            _required_executable, 'flake8', flake8_root_spec(),
-            _missing('flake8', 'required for style checks')
-        ),
-        functools.partial(
-            _required_executable, 'black', black_root_spec(),
-            _missing('black', 'required for code formatting')
-        )
+        _required_executable('isort', isort_root_spec(),
+                             _missing('isort', 'required for style checks')),
+        _required_executable('mypy', mypy_root_spec(),
+                             _missing('mypy', 'required for style checks')),
+        _required_executable('flake8', flake8_root_spec(),
+                             _missing('flake8', 'required for style checks')),
+        _required_executable('black', black_root_spec(),
+                             _missing('black', 'required for code formatting'))
     ]
 
 
@@ -973,13 +963,12 @@ def status_message(section):
         'optional': ("{0} @*{{Optional Features}}", _optional_requirements),
         'develop': ("{0} @*{{Development Dependencies}}", _development_requirements)
     }
-    msg, test_fns = spack_sections[section]
+    msg, required_software = spack_sections[section]
 
     with ensure_bootstrap_configuration():
         missing_software = False
-        for test_fn in test_fns():
-            ok, err_msg = test_fn()
-            if not ok:
+        for found, err_msg in required_software():
+            if not found:
                 missing_software = True
                 msg += "\n  " + err_msg
         msg += '\n'
