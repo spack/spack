@@ -111,7 +111,7 @@ setup_spack:
 .spack_stage:
   extends: .spack_basic_job
   needs: [setup_spack]
-  resource_group: BlueBrain.GPFS.build.$CI_EXTERNAL_PULL_REQUEST_IID
+  resource_group: BlueBrain.GPFS.build.$GITHUB_PULL_REQUEST_ID
   variables:
     bb5_ntasks: 1
   before_script:

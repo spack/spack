@@ -23,11 +23,11 @@ if [ module-info mode load ] {
     puts stderr "To modify the software installation directory, use\n"
     puts stderr "\texport SPACK_USER_CACHE_PATH=\$\{NEW_INSTALL_DIR\}\n"
     puts stderr "Or modify the Spack configuration with:\n"
-    puts stderr "\tunset SPACK_USER_CACHE_PATH  # Will put cached stuff in ~/.spack\n"
+    puts stderr "\tunset SPACK_USER_CACHE_PATH  # Will put cached stuff in ~/.spack"
     puts stderr "\tspack config add config:install_tree:root:\$\{NEW_INSTALL_DIR\}\n"
     puts stderr "To create a modifiable version of Spack, use\n"
     puts stderr "\tspack clone \$\{NEW_SPACK_DIR\}"
-    puts stderr "\tcp \$\{NEW_SPACK_DIR\}/{deploy/config/*.yaml,etc/spack}"
+    puts stderr "\tcp \$\{NEW_SPACK_DIR\}/{deploy/configs/*.yaml,etc/spack}"
     puts stderr "\t. \$\{NEW_SPACK_DIR\}/share/spack/setup-env.sh\n"
 }
 

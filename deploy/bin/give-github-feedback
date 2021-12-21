@@ -67,7 +67,7 @@ def github_api_post(url, payload, **kwargs):
 COMMENT_TEST_TEMPLATE = f"""
 To test your PR, use the following on BlueBrain5:
 ```shell
-unset MODULE_PATH
+unset MODULEPATH
 . {DEPLOYMENT_ROOT}/config/modules.sh
 module load unstable
 ```
