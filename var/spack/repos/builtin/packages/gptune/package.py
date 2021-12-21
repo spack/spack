@@ -96,7 +96,8 @@ class Gptune(CMakePackage):
                              self.examples_src_dir)
 
         if '+superlu' in spec:
-            superludriver = join_path(spec['superlu-dist'].prefix.lib, 'EXAMPLE/pddrive_spawn')
+            superludriver = join_path(spec['superlu-dist'].prefix.lib,
+                                      'EXAMPLE/pddrive_spawn')
             op = ['-r', superludriver, '.']
             # copy superlu-dist executables to the correct place
             wd = join_path(test_dir, 'SuperLU_DIST')
