@@ -65,7 +65,8 @@ class Wrf(Package):
     url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
-    version('4.3.1', sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
+    version("4.3.2", sha256='2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec')
+    version("4.3.1", sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
