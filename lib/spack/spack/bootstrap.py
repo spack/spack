@@ -840,10 +840,12 @@ def ensure_flake8_in_path_or_raise():
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
 
 
-def _missing(name, purpose):
+def _missing(name, purpose, system_only=True):
     """Message to be printed if an executable is not found"""
-    msg = 'MISSING "{0}": {1}'
-    return msg.format(name, purpose)
+    msg = '[{2}] MISSING "{0}": {1}'
+    if not system_only:
+        return msg.format(name, purpose, '@*y{{B}}')
+    return msg.format(name, purpose, '@*y{{-}}')
 
 
 def _required_system_executable(exes, msg):
@@ -896,7 +898,7 @@ def _core_requirements():
     # Python modules
     result.append(_required_python_module(
         'clingo', clingo_root_spec(),
-        _missing('clingo', 'required to concretize specs')
+        _missing('clingo', 'required to concretize specs', False)
     ))
     return result
 
@@ -904,7 +906,7 @@ def _core_requirements():
 def _buildcache_requirements():
     _buildcache_exes = {
         'file': _missing('file', 'required to analyze files for buildcaches'),
-        ('gpg2', 'gpg'): _missing('gpg2', 'required to sign/verify buildcaches')
+        ('gpg2', 'gpg'): _missing('gpg2', 'required to sign/verify buildcaches', False)
     }
     if platform.system().lower() == 'darwin':
         _buildcache_exes['otool'] = _missing('otool', 'required to relocate binaries')
@@ -916,7 +918,7 @@ def _buildcache_requirements():
     if platform.system().lower() == 'linux':
         result.append(_required_executable(
             'patchelf', patchelf_root_spec(),
-            _missing('patchelf', 'required to relocate binaries')
+            _missing('patchelf', 'required to relocate binaries', False)
         ))
 
     return result
@@ -937,13 +939,13 @@ def _optional_requirements():
 def _development_requirements():
     return [
         _required_executable('isort', isort_root_spec(),
-                             _missing('isort', 'required for style checks')),
+                             _missing('isort', 'required for style checks', False)),
         _required_executable('mypy', mypy_root_spec(),
-                             _missing('mypy', 'required for style checks')),
+                             _missing('mypy', 'required for style checks', False)),
         _required_executable('flake8', flake8_root_spec(),
-                             _missing('flake8', 'required for style checks')),
+                             _missing('flake8', 'required for style checks', False)),
         _required_executable('black', black_root_spec(),
-                             _missing('black', 'required for code formatting'))
+                             _missing('black', 'required for code formatting', False))
     ]
 
 
