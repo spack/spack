@@ -864,7 +864,10 @@ build(PSID, Package)
 
 build_representative(PSID, Package)
  :- not hash(PSID, Package, _),
-    node(PSID, Package),
+    representative(PSID, Package).
+
+representative(PSID, Package)
+ :- node(PSID, Package),
     not package_equal(_, PSID, Package).
 
 % Minimizing builds is tricky. We want a minimizing criterion
@@ -939,9 +942,11 @@ equality_attr("external_spec_selected").
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
 % Try to minimize the number of nodes of a given package
-opt_criterion(300, "agreement of nodes across process spaces").
-#minimize { 0@300: #true }.
-#minimize { 1@300,Package,PSID1,PSID2 : package_not_equal(PSID1, PSID2, Package) }.
+% asp.py will generate statements of the following form for each literal "package"
+% indexed in an arbitrary but deterministic order.
+%opt_criterion(300+index, "number of non-identical package nodes").
+%#minimize { 0@300+index: #true }.
+%#minimize { 1@300+index,PSID1,PSID2 : package_not_equal(PSID1, PSID2, "package") }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").

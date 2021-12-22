@@ -10,6 +10,7 @@ import itertools
 import os
 import pprint
 import sys
+import tempfile
 import types
 import warnings
 
@@ -161,7 +162,7 @@ def build_criteria_names(costs, tuples):
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
     # make a list that has each name with its build and non-build priority
-    criteria = [(p - high_fixed_priority_offset + 2 * num_build, None, name)
+    criteria = [(high_fixed_priority_offset - p + num_high_fixed - 1, None, name)
                 for p, name in high_fixed]
     criteria += [
         (p - fixed_priority_offset + num_build, None, name) for p, name in fixed
@@ -568,6 +569,30 @@ class PyclingoDriver(object):
         with self.control.backend() as backend:
             self.backend = backend
             solver_setup.setup(self, specs, tests=tests, reuse=reuse)
+
+            template_opt = 'opt_criterion({0}, "number of non-identical {1} nodes").'
+            template_null = '#minimize {{ 0@{0} : #true}}.'
+            template_real = ('#minimize {{ 1@{0},PSID1,PSID2 : '
+                             'package_not_equal(PSID1, PSID2, "{1}"), '
+                             'node(PSID1, "{1}"), node(PSID2, "{1}") }}.')
+            strings = []
+            for i, pkg in enumerate(sorted(set(solver_setup.possible_pkgs))):
+                priority = high_fixed_priority_offset + i
+                strings.extend([
+                    template_opt.format(priority, pkg),
+                    template_null.format(priority),
+                    template_real.format(priority, pkg)
+                ])
+            self.h1("Per-package minimization of unique nodes")
+            self.out.write('\n'.join(strings))
+            self.newline()
+
+            tmpdir = tempfile.mkdtemp()
+            tmpfile = os.path.join(tmpdir, 'tmp.lp')
+            with open(tmpfile, 'w') as f:
+                f.write('\n'.join(strings))
+            self.control.load(tmpfile)
+
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -585,6 +610,7 @@ class PyclingoDriver(object):
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
                                     self.fact(fn.error(arg.string), assumption=True)
 
+            self.h1("Error messages")
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
 
@@ -669,6 +695,7 @@ class SpackSolverSetup(object):
         self.possible_versions = {}
         self.deprecated_versions = {}
 
+        self.possible_pkgs = None
         self.possible_virtuals = None
         self.possible_compilers = []
         self.possible_oses = set()
@@ -1711,7 +1738,7 @@ class SpackSolverSetup(object):
         self.possible_virtuals = set(
             x.name for x in specs if x.virtual
         )
-        possible = spack.package.possible_dependencies(
+        self.possible_pkgs = spack.package.possible_dependencies(
             *specs,
             virtuals=self.possible_virtuals,
             deptype=spack.dependency.all_deptypes
@@ -1720,11 +1747,11 @@ class SpackSolverSetup(object):
         # Fail if we already know an unreachable node is requested
         for spec in specs:
             missing_deps = [d for d in spec.traverse()
-                            if d.name not in possible and not d.virtual]
+                            if d.name not in self.possible_pkgs and not d.virtual]
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        pkgs = set(possible)
+        pkgs = set(self.possible_pkgs)
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -1734,16 +1761,16 @@ class SpackSolverSetup(object):
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible, specs)
+        self.build_version_dict(self.possible_pkgs, specs)
 
         self.gen.h1("Concrete input spec definitions")
-        self.define_concrete_input_specs(specs, possible)
+        self.define_concrete_input_specs(specs, self.possible_pkgs)
 
         if reuse:
             self.gen.h1("Installed packages")
             self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
-            self.define_installed_packages(specs, possible)
+            self.define_installed_packages(specs, self.possible_pkgs)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
