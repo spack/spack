@@ -74,7 +74,13 @@ class Libint(AutotoolsPackage):
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
     def autoreconf(self, spec, prefix):
-        which('bash')('autogen.sh')
+        if self.spec.satisfies("@:1.1.6"):
+            libtoolize()
+            aclocal('-I', 'lib/autoconf')
+            autoconf()
+        else:
+            # autogen.sh file will be available from v2 and above
+            which('bash')('autogen.sh')
 
         if '@2.6.0:' in spec:
             # skip tarball creation and removal of dir with generated code
@@ -103,9 +109,14 @@ class Libint(AutotoolsPackage):
     def configure_args(self):
 
         config_args = [
-            '--enable-shared',
-            '--with-boost={0}'.format(self.spec['boost'].prefix)
+            '--enable-shared'
         ]
+
+        if self.spec.satisfies("@2.0.0:"):
+            # --with-boost option available only form version 2 and above
+            config_args.extend([
+                '--with-boost={0}'.format(self.spec['boost'].prefix)
+                ])
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
