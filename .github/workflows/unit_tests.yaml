@@ -97,7 +97,14 @@ jobs:
     strategy:
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
-        concretizer: ['original', 'clingo']
+        concretizer: ['clingo']
+        include:
+        - python-version: 2.7
+          concretizer: original
+        - python-version: 3.6
+          concretizer: original
+        - python-version: 3.9
+          concretizer: original
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
