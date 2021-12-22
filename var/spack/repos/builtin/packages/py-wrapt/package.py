@@ -20,4 +20,4 @@ class PyWrapt(PythonPackage):
 
     depends_on('python@2.7:2,3.5:', when='@1.13.1:', type=('build', 'run'))
     depends_on('python@2.7:2,3.3:', when='@1.13:', type=('build', 'run'))
-    depends_on('py-setuptools@38.3:', when='@1.13:', type='build')
+    depends_on('py-setuptools@38.3:', type='build')
