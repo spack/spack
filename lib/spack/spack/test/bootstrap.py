@@ -156,7 +156,9 @@ def test_nested_use_of_context_manager(mutable_config):
     (None, False),
     ('/foo/bin', True)
 ])
-def test_status_function_find_files(mutable_config, monkeypatch, path_ev, expected_missing):
+def test_status_function_find_files(
+        mutable_config, monkeypatch, path_ev, expected_missing
+):
     if spack.config.get('config:concretizer') == 'original':
         pytest.skip('Skip the test for the original concretizer')
 
