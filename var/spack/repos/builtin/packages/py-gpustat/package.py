@@ -10,6 +10,7 @@ class PyGpustat(PythonPackage):
     homepage = "https://github.com/wookayin/gpustat"
     pypi = "gpustat/gpustat-0.6.0.tar.gz"
 
+    version('1.0.0b1', sha256='a25c460c5751180265814f457249ba5100baf7a055b23ad762a4e3ab3f6496dd')
     version('0.6.0', sha256='f69135080b2668b662822633312c2180002c10111597af9631bb02e042755b6c')
 
     depends_on('py-setuptools', type='build')
