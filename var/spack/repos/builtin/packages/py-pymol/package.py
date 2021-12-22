@@ -32,6 +32,10 @@ class PyPymol(PythonPackage):
     depends_on('libxml2')
     depends_on('py-pmw-patched', type=('build', 'run'))
     depends_on('py-pyqt5', type=('build', 'run'))
+    depends_on('py-pmw', type=('build', 'run'))
+    depends_on('libmmtf-cpp', type=('build', 'run', 'link'))
+    depends_on('msgpack-c', type=('build', 'run'))
+    depends_on('libpng', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
 
     def install_args(self, spec, prefix):

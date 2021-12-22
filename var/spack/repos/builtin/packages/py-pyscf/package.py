@@ -29,7 +29,6 @@ class PyPyscf(PythonPackage):
     depends_on('libcint+coulomb_erf+f12')
     depends_on('libxc')
     depends_on('xcfun')
-    depends_on('xcfun@2.0.0a2', when='@:1.7.4')
 
     def setup_build_environment(self, env):
         # Tell PSCF where supporting libraries are located."
