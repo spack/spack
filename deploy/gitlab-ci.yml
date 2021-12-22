@@ -36,7 +36,7 @@ default:
     bb5_duration: "24:00:00"
     # We will need these resources for parallel building
     bb5_constraint: cpu
-    bb5_cpus_per_task: 8
+    bb5_cpus_per_task: 72
     bb5_ntasks: 1
     # We will do this ourselves, will be on GPFS
     GIT_STRATEGY: none
@@ -363,30 +363,7 @@ update_config:
     - configure-spack-module > "$MODULE_ROOT/_meta/.spack"
     - mv "$MODULE_ROOT/_meta/"{.,}spack
     # Create the configuration
-    - mkdir -p "$DEPLOYMENT_ROOT/config"
-    - |
-      cat <<EOF > "$DEPLOYMENT_ROOT/config/modules.sh"
-      export MODULEPATH="\${MODULEPATH:-}\${MODULEPATH:+:}${MODULE_ROOT}/_meta"
-      EOF
-    - cp spack_config/{compilers,mirrors,packages}.yaml "$DEPLOYMENT_ROOT/config"
-    - |
-      cat <<EOF > "$DEPLOYMENT_ROOT/config/upstreams.yaml"
-      upstreams:
-        applications:
-          install_tree: $DEPLOYMENT_ROOT/stage_applications
-          modules:
-            tcl: $DEPLOYMENT_ROOT/modules/applications
-      EOF
-      cat <<EOF > "$DEPLOYMENT_ROOT/config/config.yaml"
-      config:
-        install_tree:
-          root: \$user_cache_path/software
-        module_roots:
-          tcl: \$user_cache_path/modules
-        source_cache: \$user_cache_path/sources
-        environments:
-          root: \$user_cache_path/environments
-      EOF
+    - configure-spack-config spack_config "$DEPLOYMENT_ROOT/config"
 
 link_configuration:
   needs: [update_config]

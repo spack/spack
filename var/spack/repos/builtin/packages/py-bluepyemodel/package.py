@@ -12,6 +12,7 @@ class PyBluepyemodel(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/cells/bluepyemodel"
     git      = "git@bbpgitlab.epfl.ch:cells/bluepyemodel.git"
 
+    version('0.0.8.2021-12-22', tag='BluePyEModel-v0.0.8')
     version('0.0.8', tag='BluePyEModel-v0.0.8')
 
     depends_on('py-setuptools', type='build')
@@ -40,3 +41,6 @@ class PyBluepyemodel(PythonPackage):
     depends_on('py-bluepyparallel@0.0.3:', type=('build', 'run'))
     depends_on('py-bglibpy@4.4:', type=('build', 'run'))
     depends_on('py-seaborn@0.11:', type=('build', 'run'))
+
+    def patch(self):
+        filter_file(r'psycopg2-binary', 'psycopg2', 'setup.py')

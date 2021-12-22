@@ -33,16 +33,16 @@ def get_origin_info(remote):
     try:
         branch = git(
             '--git-dir=%s' % git_dir,
-            '--work-dir=%s' % spack.paths.prefix,
             'symbolic-ref', '--short', 'HEAD',
             output=str)
     except ProcessError:
         branch = 'develop'
         tty.warn('No branch found; using default branch: %s' % branch)
-    if remote == 'origin' and \
-       branch not in ('master', 'develop'):
-        branch = 'develop'
-        tty.warn('Unknown branch found; using default branch: %s' % branch)
+    # BlueBrain: disable the below to be able to work from PRs
+    # if remote == 'origin' and \
+    #    branch not in ('master', 'develop'):
+    #     branch = 'develop'
+    #     tty.warn('Unknown branch found; using default branch: %s' % branch)
     try:
         origin_url = git(
             '--git-dir=%s' % git_dir,
