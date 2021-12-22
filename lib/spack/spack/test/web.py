@@ -246,6 +246,29 @@ class MockS3Client(object):
         raise self.ClientError
 
 
+def test_gather_s3_information(monkeypatch, capfd):
+    mock_connection_data = {"access_token": "AAAAAAA",
+                            "profile": "SPacKDeV",
+                            "access_pair": ("SPA", "CK"),
+                            "endpoint_url": "https://127.0.0.1:8888"}
+
+    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mock_connection_data)  # noqa: E501
+
+    # Session args are used to create the S3 Session object
+    assert "aws_session_token" in session_args
+    assert session_args.get("aws_session_token") == "AAAAAAA"
+    assert "aws_access_key_id" in session_args
+    assert session_args.get("aws_access_key_id") == "SPA"
+    assert "aws_secret_access_key" in session_args
+    assert session_args.get("aws_secret_access_key") == "CK"
+    assert "profile_name" in session_args
+    assert session_args.get("profile_name") == "SPacKDeV"
+
+    # In addition to the session object, use the client_args to create the s3
+    # Client object
+    assert "endpoint_url" in client_args
+
+
 def test_remove_s3_url(monkeypatch, capfd):
     fake_s3_url = 's3://my-bucket/subdirectory/mirror'
 
