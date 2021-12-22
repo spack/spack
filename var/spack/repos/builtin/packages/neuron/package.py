@@ -143,6 +143,7 @@ class Neuron(CMakePackage):
                                                              "+rx3d",
                                                              "+coreneuron",
                                                              "+tests"]]
+        compilation_flags = []
         if self.spec.variants['model_tests'].value != ("None",):
             args.append('-DNRN_ENABLE_MODEL_TESTS=' + ",".join(
                 model for model in self.spec.variants["model_tests"].value))
@@ -156,8 +157,8 @@ class Neuron(CMakePackage):
             args.append("-DPYTHON_EXECUTABLE:FILEPATH="
                         + self.spec["python"].command.path)
         if "+debug" in self.spec:
-            args.append("-DCMAKE_C_FLAGS=-g -O0")
-            args.append("-DCMAKE_CXX_FLAGS=-g -O0")
+            compilation_flags += ['-g', '-O0']
+            # Remove default flags (RelWithDebInfo etc.)
             args.append("-DCMAKE_BUILD_TYPE=Custom")
         if "+mod-compatibility" in self.spec:
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
@@ -167,6 +168,13 @@ class Neuron(CMakePackage):
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
         if "+coreneuron" in self.spec:
             args.append('-DCORENEURON_DIR=' + self.spec["coreneuron"].prefix)
+        # NVHPC 21.11 detects ABM support and defines __ABM__, which breaks
+        # Random123 compilation
+        if self.spec.satisfies('%nvhpc@21.11'):
+            compilation_flags.append('-mno-abm')
+        compilation_flags = ' '.join(compilation_flags)
+        args.append("-DCMAKE_C_FLAGS=" + compilation_flags)
+        args.append("-DCMAKE_CXX_FLAGS=" + compilation_flags)
         return args
 
     # Create symlink in share/nrn/lib for the python libraries

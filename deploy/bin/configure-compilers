@@ -21,17 +21,19 @@ fi
 # active (-E).  Prefer the hash passed through by earlier stages, if
 # not available fall back to the crude version.
 GCC_DIR=$(spack -E location --install-dir ${INTEL_GCC_HASH:-gcc@${INTEL_GCC_VERSION}})
+NVHPC_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFAULT_GCC_VERSION}})
+log "...got NVHPC_GCC_DIR=${NVHPC_GCC_DIR}"
 # Use the Spack configuration to grab the matching module for GCC;
 # requires GCC to be compiler found beforehand.
 GCC_MODULES="$(spack -E config get compilers|sed -n "
-    /^\s*spec: gcc@${INTEL_GCC_VERSION}/,/^\s*modules:/ {
+    /^\s*spec: gcc@${DEFAULT_GCC_VERSION}/,/^\s*modules:/ {
         /^\s*modules:/ {
             s/^\s*modules: \[\(.*\)\]\$/\1/;
             p;
         }
     }")"
-log "...using gcc ${INTEL_GCC_VERSION} from ${GCC_DIR}"
-log "...using gcc ${INTEL_GCC_VERSION} with module(s) ${GCC_MODULES}"
+log "...using gcc ${INTEL_GCC_VERSION} from ${GCC_DIR} for Intel"
+log "...using gcc ${DEFAULT_GCC_VERSION} from ${NVHPC_GCC_DIR} for NVHPC with module(s) ${GCC_MODULES}"
 
 while read -r line; do
     sha="${line%% *}"  # Remove everything after and including the first space
@@ -97,7 +99,13 @@ while read -r line; do
         # standard library from the deployed version of GCC.
         NVHPC_DIR=$(dirname $(which makelocalrc))
         NVHPC_TMPDIR=$(mktemp -d -p .)
-        makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x
+        # Try and avoid autoloaded dependencies of other compilers (looking
+        # at you, LLVM) polluting the localrc of the NVIDIA compilers
+        (
+            module purge
+            ${cmd}
+            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${NVHPC_GCC_DIR}/bin/gcc -gpp ${NVHPC_GCC_DIR}/bin/g++ -g77 ${NVHPC_GCC_DIR}/bin/gfortran -x
+        )
         # olupton 2021-10-15: is this still needed? Not sure.
         echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${NVHPC_TMPDIR}/localrc"
         log "NVIDIA localrc template"

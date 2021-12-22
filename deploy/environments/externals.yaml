@@ -63,6 +63,7 @@ spack:
     - llvm@11.1.0
     - nvhpc@21.2 install_type=network
     - nvhpc@21.9
+    - nvhpc@21.11
     - arm-forge
     - bison
     - blender
@@ -74,6 +75,7 @@ spack:
     - cmake
     - cuda@11.0.2
     - cuda@11.4.2
+    - cuda@11.5.1
     - cudnn@8.0.3.33-11.0
     - darshan-runtime
     - darshan-util

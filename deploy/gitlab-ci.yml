@@ -216,7 +216,9 @@ setup_spack:
     - if [[ "${CI_JOB_STAGE}" == "compilers" ]]; then
     # This will be needed by future compiler finds: extract the one base
     # gcc used in the compiler stage.
+    -     export DEFAULT_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$DEFAULT_GCC_VERSION)"
     -     export INTEL_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$INTEL_GCC_VERSION)"
+    -     echo "DEFAULT_GCC_HASH=$DEFAULT_GCC_HASH" >> deployment.env
     -     echo "INTEL_GCC_HASH=$INTEL_GCC_HASH" >> deployment.env
     # Make compilers here available to following stages
     -     configure-compilers < specs.txt
