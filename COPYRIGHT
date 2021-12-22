@@ -42,6 +42,10 @@ PackageName: argparse
 PackageHomePage: https://pypi.python.org/pypi/argparse
 PackageLicenseDeclared: Python-2.0
 
+PackageName: astunparse
+PackageHomePage: https://github.com/simonpercivall/astunparse
+PackageLicenseDeclared: Python-2.0
+
 PackageName: attrs
 PackageHomePage: https://github.com/python-attrs/attrs
 PackageLicenseDeclared: MIT
@@ -101,7 +105,3 @@ PackageLicenseDeclared: Apache-2.0 OR MIT
 PackageName: six
 PackageHomePage: https://pypi.python.org/pypi/six
 PackageLicenseDeclared: MIT
-
-PackageName: spack_astunparse
-PackageHomePage: https://github.com/simonpercivall/astunparse
-PackageLicenseDeclared: Python-2.0
