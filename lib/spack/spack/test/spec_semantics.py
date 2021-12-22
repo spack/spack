@@ -995,8 +995,6 @@ class TestSpecSematics(object):
     def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        # TODO: Test being able to splice in different provider for a virtual.
-        # Example: mvapich for mpich.
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
         spec.concretize()
@@ -1170,6 +1168,18 @@ class TestSpecSematics(object):
         s = Spec('mpileaks')
         s._add_dependency(d, ())
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
+
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_swap_names(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-a')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+        # Check for splice a
+        # Make sure that the correct dependency for splice-z came in for
+        # intransitive and transitive
+        # Use variants on z to make the dependencies different.
 
 
 @pytest.mark.regression('3887')

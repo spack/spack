@@ -4368,13 +4368,15 @@ class Spec(object):
         assert self.concrete
         assert other.concrete
 
-        virtuals_to_replace = [v for v in other.package.virtuals_provided
+        virtuals_to_replace = [v.name for v in other.package.virtuals_provided
                                if v in self]
         if virtuals_to_replace:
-            deps_to_replace = [self[v] for v in virtuals_to_replace]
+            deps_to_replace = dict((self[v], other) for v in virtuals_to_replace)
+            # deps_to_replace = [self[v] for v in virtuals_to_replace]
         else:
-            # sanity check and error raise here for other.name not in self
-            deps_to_replace = [self[other.name]]
+            # TODO: sanity check and error raise here for other.name not in self
+            deps_to_replace = {self[other.name], other}
+            # deps_to_replace = [self[other.name]]
 
         for d in deps_to_replace:
             if not all(v in other.package.virtuals_provided or v not in self
@@ -4429,8 +4431,10 @@ class Spec(object):
         for name in nodes:
             if name in self_nodes:
                 dependencies = self[name]._dependencies
-                for dep in dependencies:
-                    nodes[name]._add_dependency(nodes[dep],
+                for dep, dspec in dependencies.items():
+                    dep_name = deps_to_replace.get(dspec.spec, dspec.spec).name
+                    print(deps_to_replace)
+                    nodes[name]._add_dependency(nodes[dep_name],
                                                 dependencies[dep].deptypes)
                 if any(dep not in self_nodes for dep in dependencies):
                     nodes[name].build_spec = self[name].build_spec
