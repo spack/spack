@@ -31,6 +31,22 @@ argparse
   vendored copy ever needs to be updated again:
   https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
 
+astunparse
+----------------
+
+* Homepage: https://github.com/simonpercivall/astunparse
+* Usage: Unparsing Python ASTs for package hashes in Spack
+* Version: 1.6.3 (plus modifications)
+* Note: This is in ``spack.util.unparse`` because it's very heavily
+  modified, and we want to track coverage for it.
+  Specifically, we have modified this library to generate consistent unparsed ASTs
+  regardless of the Python version. It is based on:
+    1. The original ``astunparse`` library;
+    2. Modifications for consistency;
+    3. Backports from the ``ast.unparse`` function in Python 3.9 and later
+  The unparsing is now mostly consistent with upstream ``ast.unparse``, so if
+  we ever require Python 3.9 or higher, we can drop this external package.
+
 attrs
 ----------------
 
@@ -137,22 +153,5 @@ six
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.16.0
-
-
-spack_astunparse
-----------------
-
-* Homepage: https://github.com/simonpercivall/astunparse
-* Usage: Unparsing Python ASTs for package hashes in Spack
-* Version: 1.6.3 (plus modifications)
-* Note: We have modified this library to generate consistent unparsed ASTs
-  regardless of the Python version. It contains the original ``astunparse``
-  library, as well as modifications for consistency. It also contains
-  backports from the ``ast.unparse`` function in Python 3.9 and later, so
-  that it will generate output consistent with the builtin ``ast.unparse``
-  function, in case we ever want to drop astunparse as an external
-  dependency.  Because we have modified the parsing (potentially at the
-  cost of round-trippability of the code), we call this ``spack_astunparse``
-  to avoid confusion with ``astunparse``.
 
 """
