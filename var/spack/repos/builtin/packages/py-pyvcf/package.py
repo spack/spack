@@ -17,6 +17,6 @@ class PyPyvcf(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
-    depends_on('py-coutner', when='^python@:2.6', type=('build', 'run'))
+    depends_on('py-counter', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-unittest2', when='^python@:2.6', type=('build', 'run'))
