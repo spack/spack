@@ -45,9 +45,19 @@ class Lapackpp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+
+        blas_vendor = ''
+        cxx_flags = ' '
+        if (spec['blas'].name == 'cray-libsci'):
+            blas_vendor = '-DBLA_VENDOR=CRAY'
+        if (spec.satisfies('%cce')):
+            cxx_flags = '-DCMAKE_CXX_FLAGS=-DLAPACK_FORTRAN_ADD_'
+
         return [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
+            blas_vendor,
+            cxx_flags,
             '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
         ]
 
