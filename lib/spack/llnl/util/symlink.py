@@ -9,6 +9,8 @@ import tempfile
 from os.path import exists, join
 from sys import platform as _platform
 
+from win32file import *
+
 is_windows = _platform == 'win32'
 
 __win32_can_symlink__ = None
@@ -34,6 +36,20 @@ def symlink(real_path, link_path):
 def islink(path):
     return os.path.islink(path) or _win32_is_junction(path)
 
+
+def readlink(path):
+    if islink(path):
+        return os.readlink(path) or read_win32_junction(path)
+
+# read_win32_(junction|reparse_point) implementations adapted from
+# the (older) DOTNET implementation of same found here:
+# https://www.codeproject.com/Articles/21202/Reparse-Points-in-Vista
+def read_win32_junction(path):
+    pass
+
+
+def read_win32_reparse_point(path):
+    pass
 
 # '_win32' functions based on
 # https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py

@@ -21,7 +21,7 @@ import six
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, readlink, symlink
 
 from spack.util.executable import Executable
 
@@ -420,7 +420,10 @@ def copy(src, dest, _permissions=False, symlinks=False):
         if os.path.isdir(dest):
             dst = join_path(dest, os.path.basename(src))
 
-        shutil.copy(src, dst, follow_symlinks=not symlinks)
+        if symlinks and islink(src):
+            symlink(readlink(src), dst)
+        else:
+            shutil.copy(src, dst)
 
         if _permissions:
             set_install_permissions(dst)

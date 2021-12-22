@@ -134,7 +134,8 @@ def dump_environment(path, environment=None):
     use_env = environment or os.environ
     hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
 
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.dirname(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
     with os.fdopen(fd, 'w') as env_file:
         for var, val in sorted(use_env.items()):
