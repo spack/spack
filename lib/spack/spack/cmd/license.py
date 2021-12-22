@@ -34,8 +34,8 @@ licensed_files = [
     r'^bin/spack$',
     r'^bin/spack-python$',
 
-    # all of spack core
-    r'^lib/spack/spack/.*\.py$',
+    # all of spack core except unparse
+    r'^lib/spack/spack/(?!util/unparse).*\.py$',
     r'^lib/spack/spack/.*\.sh$',
     r'^lib/spack/spack/.*\.lp$',
     r'^lib/spack/llnl/.*\.py$',

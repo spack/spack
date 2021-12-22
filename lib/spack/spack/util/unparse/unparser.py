@@ -1,11 +1,12 @@
+# Copyright (c) 2014-2021, Simon Percivall and Spack Project Developers.
+#
+# SPDX-License-Identifier: Python-2.0
+
 "Usage: unparse.py <path to source file>"
 from __future__ import print_function, unicode_literals
 
 import ast
-import os
 import sys
-import tokenize
-
 from contextlib import contextmanager
 
 import six
@@ -22,6 +23,34 @@ def nullcontext():
 # We unparse those infinities to INFSTR.
 INFSTR = "1e" + repr(sys.float_info.max_10_exp + 1)
 
+
+class _Precedence:
+    """Precedence table that originated from python grammar."""
+
+    TUPLE = 0
+    YIELD = 1     # 'yield', 'yield from'
+    TEST = 2      # 'if'-'else', 'lambda'
+    OR = 3        # 'or'
+    AND = 4       # 'and'
+    NOT = 5       # 'not'
+    CMP = 6       # '<', '>', '==', '>=', '<=', '!=', 'in', 'not in', 'is', 'is not'
+    EXPR = 7
+    BOR = EXPR    # '|'
+    BXOR = 8      # '^'
+    BAND = 9      # '&'
+    SHIFT = 10    # '<<', '>>'
+    ARITH = 11    # '+', '-'
+    TERM = 12     # '*', '@', '/', '%', '//'
+    FACTOR = 13   # unary '+', '-', '~'
+    POWER = 14    # '**'
+    AWAIT = 15    # 'await'
+    ATOM = 16
+
+
+def pnext(precedence):
+    return min(precedence + 1, _Precedence.ATOM)
+
+
 def interleave(inter, f, seq):
     """Call f on each item in seq, calling inter() in between.
     """
@@ -35,29 +64,28 @@ def interleave(inter, f, seq):
             inter()
             f(x)
 
+
 class Unparser:
     """Methods in this class recursively traverse an AST and
     output source code for the abstract syntax; original formatting
     is disregarded. """
 
-    def __init__(self, tree, file = sys.stdout, py_ver_consistent=False):
-        """Unparser(tree, file=sys.stdout) -> None.
-         Print the source for tree to file.
+    def __init__(self, py_ver_consistent=False):
+        """Traverse an AST and generate its source.
 
         Arguments:
             py_ver_consistent (bool): if True, generate unparsed code that is
                 consistent between Python 2.7 and 3.5-3.10.
 
         Consistency is achieved by:
-            1. Ensuring there are no spaces between unary operators and
-               their operands.
-            2. Ensuring that *args and **kwargs are always the last arguments,
-               regardless of the python version.
-            3. Always unparsing print as a function.
-            4. Not putting an extra comma after Python 2 class definitions.
+            1. Ensuring that *args and **kwargs are always the last arguments,
+               regardless of the python version, because Python 2's AST does not
+               have sufficient information to reconstruct star-arg order.
+            2. Always unparsing print as a function.
 
-        Without these changes, the same source can generate different code for different
-        Python versions, depending on subtle AST differences.
+        Without these changes, the same source can generate different code for Python 2
+        and Python 3, depending on subtle AST differences.  The first of these two
+        causes this module to behave differently from Python 3.8+'s `ast.unparse()`
 
         One place where single source will generate an inconsistent AST is with
         multi-argument print statements, e.g.::
@@ -69,17 +97,20 @@ class Unparser:
         this inconsistency.
 
         """
-        self.f = file
         self.future_imports = []
         self._indent = 0
         self._py_ver_consistent = py_ver_consistent
+        self._precedences = {}
+
+    def visit(self, tree, output_file):
+        """Traverse tree and write source code to output_file."""
+        self.f = output_file
         self.dispatch(tree)
-        print("", file=self.f)
         self.f.flush()
 
-    def fill(self, text = ""):
+    def fill(self, text=""):
         "Indent a piece of text, according to the current indentation level"
-        self.f.write("\n"+"    "*self._indent + text)
+        self.f.write("\n" + "    " * self._indent + text)
 
     def write(self, text):
         "Append a piece of text to the current line."
@@ -117,22 +148,32 @@ class Unparser:
         else:
             return nullcontext()
 
+    def require_parens(self, precedence, t):
+        """Shortcut to adding precedence related parens"""
+        return self.delimit_if("(", ")", self.get_precedence(t) > precedence)
+
+    def get_precedence(self, t):
+        return self._precedences.get(t, _Precedence.TEST)
+
+    def set_precedence(self, precedence, *nodes):
+        for t in nodes:
+            self._precedences[t] = precedence
+
     def dispatch(self, tree):
         "Dispatcher function, dispatching tree type T to method _T."
         if isinstance(tree, list):
             for t in tree:
                 self.dispatch(t)
             return
-        meth = getattr(self, "_"+tree.__class__.__name__)
+        meth = getattr(self, "_" + tree.__class__.__name__)
         meth(tree)
 
-
-    ############### Unparsing methods ######################
-    # There should be one method per concrete grammar type #
-    # Constructors should be grouped by sum type. Ideally, #
-    # this would follow the order in the grammar, but      #
-    # currently doesn't.                                   #
-    ########################################################
+    #
+    # Unparsing methods
+    #
+    # There should be one method per concrete grammar type Constructors
+    # should be # grouped by sum type. Ideally, this would follow the order
+    # in the grammar, but currently doesn't.
 
     def _Module(self, tree):
         for stmt in tree.body:
@@ -148,10 +189,12 @@ class Unparser:
     # stmt
     def _Expr(self, tree):
         self.fill()
+        self.set_precedence(_Precedence.YIELD, tree.value)
         self.dispatch(tree.value)
 
     def _NamedExpr(self, tree):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.TUPLE, tree):
+            self.set_precedence(_Precedence.ATOM, tree.target, tree.value)
             self.dispatch(tree.target)
             self.write(" := ")
             self.dispatch(tree.value)
@@ -182,13 +225,13 @@ class Unparser:
     def _AugAssign(self, t):
         self.fill()
         self.dispatch(t.target)
-        self.write(" "+self.binop[t.op.__class__.__name__]+"= ")
+        self.write(" " + self.binop[t.op.__class__.__name__] + "= ")
         self.dispatch(t.value)
 
     def _AnnAssign(self, t):
         self.fill()
         with self.delimit_if(
-                "(", ")", not node.simple and isinstance(t.target, ast.Name)):
+                "(", ")", not t.simple and isinstance(t.target, ast.Name)):
             self.dispatch(t.target)
         self.write(": ")
         self.dispatch(t.annotation)
@@ -245,8 +288,10 @@ class Unparser:
             self.dispatch(t.dest)
             do_comma = True
         for e in t.values:
-            if do_comma:self.write(", ")
-            else:do_comma=True
+            if do_comma:
+                self.write(", ")
+            else:
+                do_comma = True
             self.dispatch(e)
         if not t.nl:
             self.write(",")
@@ -263,24 +308,27 @@ class Unparser:
         interleave(lambda: self.write(", "), self.write, t.names)
 
     def _Await(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.AWAIT, t):
             self.write("await")
             if t.value:
                 self.write(" ")
+                self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
     def _Yield(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.YIELD, t):
             self.write("yield")
             if t.value:
                 self.write(" ")
+                self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
     def _YieldFrom(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.YIELD, t):
             self.write("yield from")
             if t.value:
                 self.write(" ")
+                self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
     def _Raise(self, t):
@@ -364,27 +412,35 @@ class Unparser:
         for deco in t.decorator_list:
             self.fill("@")
             self.dispatch(deco)
-        self.fill("class "+t.name)
+        self.fill("class " + t.name)
         if six.PY3:
             with self.delimit("(", ")"):
                 comma = False
                 for e in t.bases:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.dispatch(e)
                 for e in t.keywords:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.dispatch(e)
                 if sys.version_info[:2] < (3, 5):
                     if t.starargs:
-                        if comma: self.write(", ")
-                        else: comma = True
+                        if comma:
+                            self.write(", ")
+                        else:
+                            comma = True
                         self.write("*")
                         self.dispatch(t.starargs)
                     if t.kwargs:
-                        if comma: self.write(", ")
-                        else: comma = True
+                        if comma:
+                            self.write(", ")
+                        else:
+                            comma = True
                         self.write("**")
                         self.dispatch(t.kwargs)
         elif t.bases:
@@ -497,7 +553,7 @@ class Unparser:
                 self.write(repr(tree.s))
             elif isinstance(tree.s, str):
                 self.write("b" + repr(tree.s))
-            elif isinstance(tree.s, unicode):
+            elif isinstance(tree.s, unicode):  # noqa
                 self.write(repr(tree.s).lstrip("u"))
             else:
                 assert False, "shouldn't get here"
@@ -545,9 +601,13 @@ class Unparser:
 
     def _fstring_FormattedValue(self, t, write):
         write("{")
+
         expr = StringIO()
-        Unparser(t.value, expr)
+        unparser = type(self)(py_ver_consistent=self.py_ver_consistent)
+        unparser.set_precedence(pnext(_Precedence.TEST), t.value)
+        unparser.visit(t.value, expr)
         expr = expr.getvalue().rstrip("\n")
+
         if expr.startswith("{"):
             write(" ")  # Separate pair of opening brackets as "{ {"
         write(expr)
@@ -588,7 +648,7 @@ class Unparser:
                     self.write(",")
                 else:
                     interleave(lambda: self.write(", "), self._write_constant, value)
-        elif value is Ellipsis: # instead of `...` for Py2 compatibility
+        elif value is Ellipsis:  # instead of `...` for Py2 compatibility
             self.write("...")
         else:
             if t.kind == "u":
@@ -601,7 +661,7 @@ class Unparser:
             self.write(repr_n.replace("inf", INFSTR))
         else:
             # Parenthesize negative numbers, to avoid turning (-1)**2 into -1**2.
-            with self.delimit_if("(", ")", repr_n.startswith("-")):
+            with self.require_parens(pnext(_Precedence.FACTOR), t):
                 if "inf" in repr_n and repr_n.endswith("*j"):
                     repr_n = repr_n.replace("*j", "j")
                 # Substitute overflowing decimal literal for AST infinities.
@@ -642,23 +702,27 @@ class Unparser:
             self.write(" async for ")
         else:
             self.write(" for ")
+        self.set_precedence(_Precedence.TUPLE, t.target)
         self.dispatch(t.target)
         self.write(" in ")
+        self.set_precedence(pnext(_Precedence.TEST), t.iter, *t.ifs)
         self.dispatch(t.iter)
         for if_clause in t.ifs:
             self.write(" if ")
             self.dispatch(if_clause)
 
     def _IfExp(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.TEST, t):
+            self.set_precedence(pnext(_Precedence.TEST), t.body, t.test)
             self.dispatch(t.body)
             self.write(" if ")
             self.dispatch(t.test)
             self.write(" else ")
+            self.set_precedence(_Precedence.TEST, t.orelse)
             self.dispatch(t.orelse)
 
     def _Set(self, t):
-        assert(t.elts) # should be at least one element
+        assert(t.elts)  # should be at least one element
         with self.delimit("{", "}"):
             interleave(lambda: self.write(", "), self.dispatch, t.elts)
 
@@ -674,6 +738,7 @@ class Unparser:
                 # for dictionary unpacking operator in dicts {**{'y': 2}}
                 # see PEP 448 for details
                 self.write("**")
+                self.set_precedence(_Precedence.EXPR, v)
                 self.dispatch(v)
             else:
                 write_key_value_pair(k, v)
@@ -690,13 +755,33 @@ class Unparser:
             else:
                 interleave(lambda: self.write(", "), self.dispatch, t.elts)
 
-    unop = {"Invert":"~", "Not": "not", "UAdd":"+", "USub":"-"}
+    unop = {
+        "Invert": "~",
+        "Not": "not",
+        "UAdd": "+",
+        "USub": "-"
+    }
+
+    unop_precedence = {
+        "~": _Precedence.FACTOR,
+        "not": _Precedence.NOT,
+        "+": _Precedence.FACTOR,
+        "-": _Precedence.FACTOR,
+    }
+
     def _UnaryOp(self, t):
-        with self.delimit("(", ")"):
-            self.write(self.unop[t.op.__class__.__name__])
-            if not self._py_ver_consistent:
+        operator = self.unop[t.op.__class__.__name__]
+        operator_precedence = self.unop_precedence[operator]
+        with self.require_parens(operator_precedence, t):
+            self.write(operator)
+            # factor prefixes (+, -, ~) shouldn't be separated
+            # from the value they belong, (e.g: +1 instead of + 1)
+            if operator_precedence != _Precedence.FACTOR:
                 self.write(" ")
-            if six.PY2 and isinstance(t.op, ast.USub) and isinstance(t.operand, ast.Num):
+            self.set_precedence(operator_precedence, t.operand)
+
+            if (six.PY2 and
+                isinstance(t.op, ast.USub) and isinstance(t.operand, ast.Num)):
                 # If we're applying unary minus to a number, parenthesize the number.
                 # This is necessary: -2147483648 is different from -(2147483648) on
                 # a 32-bit machine (the first is an int, the second a long), and
@@ -707,41 +792,117 @@ class Unparser:
             else:
                 self.dispatch(t.operand)
 
-    binop = { "Add":"+", "Sub":"-", "Mult":"*", "MatMult":"@", "Div":"/", "Mod":"%",
-                    "LShift":"<<", "RShift":">>", "BitOr":"|", "BitXor":"^", "BitAnd":"&",
-                    "FloorDiv":"//", "Pow": "**"}
+    binop = {
+        "Add": "+",
+        "Sub": "-",
+        "Mult": "*",
+        "MatMult": "@",
+        "Div": "/",
+        "Mod": "%",
+        "LShift": "<<",
+        "RShift": ">>",
+        "BitOr": "|",
+        "BitXor": "^",
+        "BitAnd": "&",
+        "FloorDiv": "//",
+        "Pow":  "**",
+    }
+
+    binop_precedence = {
+        "+": _Precedence.ARITH,
+        "-": _Precedence.ARITH,
+        "*": _Precedence.TERM,
+        "@": _Precedence.TERM,
+        "/": _Precedence.TERM,
+        "%": _Precedence.TERM,
+        "<<": _Precedence.SHIFT,
+        ">>": _Precedence.SHIFT,
+        "|": _Precedence.BOR,
+        "^": _Precedence.BXOR,
+        "&": _Precedence.BAND,
+        "//": _Precedence.TERM,
+        "**": _Precedence.POWER,
+    }
+
+    binop_rassoc = frozenset(("**",))
+
     def _BinOp(self, t):
-        with self.delimit("(", ")"):
+        operator = self.binop[t.op.__class__.__name__]
+        operator_precedence = self.binop_precedence[operator]
+        with self.require_parens(operator_precedence, t):
+            if operator in self.binop_rassoc:
+                left_precedence = pnext(operator_precedence)
+                right_precedence = operator_precedence
+            else:
+                left_precedence = operator_precedence
+                right_precedence = pnext(operator_precedence)
+
+            self.set_precedence(left_precedence, t.left)
             self.dispatch(t.left)
-            self.write(" " + self.binop[t.op.__class__.__name__] + " ")
+            self.write(" %s " % operator)
+            self.set_precedence(right_precedence, t.right)
             self.dispatch(t.right)
 
-    cmpops = {"Eq":"==", "NotEq":"!=", "Lt":"<", "LtE":"<=", "Gt":">", "GtE":">=",
-                        "Is":"is", "IsNot":"is not", "In":"in", "NotIn":"not in"}
+    cmpops = {
+        "Eq": "==",
+        "NotEq": "!=",
+        "Lt": "<",
+        "LtE": "<=",
+        "Gt": ">",
+        "GtE": ">=",
+        "Is": "is",
+        "IsNot": "is not",
+        "In": "in",
+        "NotIn": "not in",
+    }
+
     def _Compare(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.CMP, t):
+            self.set_precedence(pnext(_Precedence.CMP), t.left, *t.comparators)
             self.dispatch(t.left)
             for o, e in zip(t.ops, t.comparators):
                 self.write(" " + self.cmpops[o.__class__.__name__] + " ")
                 self.dispatch(e)
 
-    boolops = {ast.And: 'and', ast.Or: 'or'}
-    def _BoolOp(self, t):
-        with self.delimit("(", ")"):
-            s = " %s " % self.boolops[t.op.__class__]
-            interleave(lambda: self.write(s), self.dispatch, t.values)
+    boolops = {
+        "And": "and",
+        "Or": "or",
+    }
 
-    def _Attribute(self,t):
+    boolop_precedence = {
+        "and": _Precedence.AND,
+        "or": _Precedence.OR,
+    }
+
+    def _BoolOp(self, t):
+        operator = self.boolops[t.op.__class__.__name__]
+
+        # use a dict instead of nonlocal for Python 2 compatibility
+        op = {"precedence": self.boolop_precedence[operator]}
+
+        def increasing_level_dispatch(t):
+            op["precedence"] = pnext(op["precedence"])
+            self.set_precedence(op["precedence"], t)
+            self.dispatch(t)
+
+        with self.require_parens(op["precedence"], t):
+            s = " %s " % operator
+            interleave(lambda: self.write(s), increasing_level_dispatch, t.values)
+
+    def _Attribute(self, t):
+        self.set_precedence(_Precedence.ATOM, t.value)
         self.dispatch(t.value)
         # Special case: 3.__abs__() is a syntax error, so if t.value
         # is an integer literal then we need to either parenthesize
         # it or add an extra space to get 3 .__abs__().
-        if isinstance(t.value, getattr(ast, 'Constant', getattr(ast, 'Num', None))) and isinstance(t.value.n, int):
+        if (isinstance(t.value, getattr(ast, 'Constant', getattr(ast, 'Num', None))) and
+            isinstance(t.value.n, int)):
             self.write(" ")
         self.write(".")
         self.write(t.attr)
 
     def _Call(self, t):
+        self.set_precedence(_Precedence.ATOM, t.func)
         self.dispatch(t.func)
         with self.delimit("(", ")"):
             comma = False
@@ -754,8 +915,10 @@ class Unparser:
                 if move_stars_last and isinstance(e, ast.Starred):
                     star_and_kwargs.append(e)
                 else:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.dispatch(e)
 
             for e in t.keywords:
@@ -763,35 +926,45 @@ class Unparser:
                 if e.arg is None and move_stars_last:
                     star_and_kwargs.append(e)
                 else:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.dispatch(e)
 
             if move_stars_last:
                 for e in star_and_kwargs:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.dispatch(e)
 
             if sys.version_info[:2] < (3, 5):
                 if t.starargs:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.write("*")
                     self.dispatch(t.starargs)
                 if t.kwargs:
-                    if comma: self.write(", ")
-                    else: comma = True
+                    if comma:
+                        self.write(", ")
+                    else:
+                        comma = True
                     self.write("**")
                     self.dispatch(t.kwargs)
 
     def _Subscript(self, t):
+        self.set_precedence(_Precedence.ATOM, t.value)
         self.dispatch(t.value)
         with self.delimit("[", "]"):
             self.dispatch(t.slice)
 
     def _Starred(self, t):
         self.write("*")
+        self.set_precedence(_Precedence.EXPR, t.value)
         self.dispatch(t.value)
 
     # slice
@@ -799,6 +972,7 @@ class Unparser:
         self.write("...")
 
     def _Index(self, t):
+        self.set_precedence(_Precedence.TUPLE, t.value)
         self.dispatch(t.value)
 
     def _Slice(self, t):
@@ -829,8 +1003,10 @@ class Unparser:
         defaults = [None] * (len(all_args) - len(t.defaults)) + t.defaults
         for index, elements in enumerate(zip(all_args, defaults), 1):
             a, d = elements
-            if first:first = False
-            else: self.write(", ")
+            if first:
+                first = False
+            else:
+                self.write(", ")
             self.dispatch(a)
             if d:
                 self.write("=")
@@ -840,8 +1016,10 @@ class Unparser:
 
         # varargs, or bare '*' if no varargs but keyword-only arguments present
         if t.vararg or getattr(t, "kwonlyargs", False):
-            if first:first = False
-            else: self.write(", ")
+            if first:
+                first = False
+            else:
+                self.write(", ")
             self.write("*")
             if t.vararg:
                 if hasattr(t.vararg, 'arg'):
@@ -858,8 +1036,10 @@ class Unparser:
         # keyword-only arguments
         if getattr(t, "kwonlyargs", False):
             for a, d in zip(t.kwonlyargs, t.kw_defaults):
-                if first:first = False
-                else: self.write(", ")
+                if first:
+                    first = False
+                else:
+                    self.write(", ")
                 self.dispatch(a),
                 if d:
                     self.write("=")
@@ -867,15 +1047,17 @@ class Unparser:
 
         # kwargs
         if t.kwarg:
-            if first:first = False
-            else: self.write(", ")
+            if first:
+                first = False
+            else:
+                self.write(", ")
             if hasattr(t.kwarg, 'arg'):
-                self.write("**"+t.kwarg.arg)
+                self.write("**" + t.kwarg.arg)
                 if t.kwarg.annotation:
                     self.write(": ")
                     self.dispatch(t.kwarg.annotation)
             else:
-                self.write("**"+t.kwarg)
+                self.write("**" + t.kwarg)
                 if getattr(t, 'kwargannotation', None):
                     self.write(": ")
                     self.dispatch(t.kwargannotation)
@@ -890,62 +1072,20 @@ class Unparser:
         self.dispatch(t.value)
 
     def _Lambda(self, t):
-        with self.delimit("(", ")"):
+        with self.require_parens(_Precedence.TEST, t):
             self.write("lambda ")
             self.dispatch(t.args)
             self.write(": ")
+            self.set_precedence(_Precedence.TEST, t.body)
             self.dispatch(t.body)
 
     def _alias(self, t):
         self.write(t.name)
         if t.asname:
-            self.write(" as "+t.asname)
+            self.write(" as " + t.asname)
 
     def _withitem(self, t):
         self.dispatch(t.context_expr)
         if t.optional_vars:
             self.write(" as ")
             self.dispatch(t.optional_vars)
-
-def roundtrip(filename, output=sys.stdout):
-    if six.PY3:
-        with open(filename, "rb") as pyfile:
-            encoding = tokenize.detect_encoding(pyfile.readline)[0]
-        with open(filename, "r", encoding=encoding) as pyfile:
-            source = pyfile.read()
-    else:
-        with open(filename, "r") as pyfile:
-            source = pyfile.read()
-    tree = compile(source, filename, "exec", ast.PyCF_ONLY_AST, dont_inherit=True)
-    Unparser(tree, output)
-
-
-
-def testdir(a):
-    try:
-        names = [n for n in os.listdir(a) if n.endswith('.py')]
-    except OSError:
-        print("Directory not readable: %s" % a, file=sys.stderr)
-    else:
-        for n in names:
-            fullname = os.path.join(a, n)
-            if os.path.isfile(fullname):
-                output = StringIO()
-                print('Testing %s' % fullname)
-                try:
-                    roundtrip(fullname, output)
-                except Exception as e:
-                    print('  Failed to compile, exception is %s' % repr(e))
-            elif os.path.isdir(fullname):
-                testdir(fullname)
-
-def main(args):
-    if args[0] == '--testdir':
-        for a in args[1:]:
-            testdir(a)
-    else:
-        for a in args:
-            roundtrip(a)
-
-if __name__=='__main__':
-    main(sys.argv[1:])
