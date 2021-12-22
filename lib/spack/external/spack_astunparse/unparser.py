@@ -1,11 +1,21 @@
 "Usage: unparse.py <path to source file>"
 from __future__ import print_function, unicode_literals
-import six
-import sys
+
 import ast
 import os
+import sys
 import tokenize
+
+from contextlib import contextmanager
+
+import six
 from six import StringIO
+
+
+# TODO: if we require Python 3.7, use its `nullcontext()`
+def nullcontext():
+    yield
+
 
 # Large float and imaginary literals get turned into infinities in the AST.
 # We unparse those infinities to INFSTR.
@@ -74,14 +84,22 @@ class Unparser:
         "Append a piece of text to the current line."
         self.f.write(six.text_type(text))
 
-    def enter(self):
-        "Print ':', and increase the indentation."
-        self.write(":")
-        self._indent += 1
+    class _Block:
+        """A context manager for preparing the source for blocks. It adds
+        the character ':', increases the indentation on enter and decreases
+        the indentation on exit."""
+        def __init__(self, unparser):
+            self.unparser = unparser
 
-    def leave(self):
-        "Decrease the indentation level."
-        self._indent -= 1
+        def __enter__(self):
+            self.unparser.write(":")
+            self.unparser._indent += 1
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.unparser._indent -= 1
+
+    def block(self):
+        return self._Block(self)
 
     def dispatch(self, tree):
         "Dispatcher function, dispatching tree type T to method _T."
@@ -279,35 +297,30 @@ class Unparser:
 
     def _Try(self, t):
         self.fill("try")
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
         for ex in t.handlers:
             self.dispatch(ex)
         if t.orelse:
             self.fill("else")
-            self.enter()
-            self.dispatch(t.orelse)
-            self.leave()
+            with self.block():
+                self.dispatch(t.orelse)
         if t.finalbody:
             self.fill("finally")
-            self.enter()
-            self.dispatch(t.finalbody)
-            self.leave()
+            with self.block():
+                self.dispatch(t.finalbody)
 
     def _TryExcept(self, t):
         self.fill("try")
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
 
         for ex in t.handlers:
             self.dispatch(ex)
         if t.orelse:
             self.fill("else")
-            self.enter()
-            self.dispatch(t.orelse)
-            self.leave()
+            with self.block():
+                self.dispatch(t.orelse)
 
     def _TryFinally(self, t):
         if len(t.body) == 1 and isinstance(t.body[0], ast.TryExcept):
@@ -315,14 +328,12 @@ class Unparser:
             self.dispatch(t.body)
         else:
             self.fill("try")
-            self.enter()
-            self.dispatch(t.body)
-            self.leave()
+            with self.block():
+                self.dispatch(t.body)
 
         self.fill("finally")
-        self.enter()
-        self.dispatch(t.finalbody)
-        self.leave()
+        with self.block():
+            self.dispatch(t.finalbody)
 
     def _ExceptHandler(self, t):
         self.fill("except")
@@ -335,9 +346,8 @@ class Unparser:
                 self.write(t.name)
             else:
                 self.dispatch(t.name)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
 
     def _ClassDef(self, t):
         self.write("\n")
@@ -375,9 +385,8 @@ class Unparser:
                     self.write(", ")
                 self.dispatch(t.bases[-1])
                 self.write(")")
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
 
     def _FunctionDef(self, t):
         self.__FunctionDef_helper(t, "def")
@@ -397,9 +406,8 @@ class Unparser:
         if getattr(t, "returns", False):
             self.write(" -> ")
             self.dispatch(t.returns)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
 
     def _For(self, t):
         self.__For_helper("for ", t)
@@ -412,48 +420,41 @@ class Unparser:
         self.dispatch(t.target)
         self.write(" in ")
         self.dispatch(t.iter)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
         if t.orelse:
             self.fill("else")
-            self.enter()
-            self.dispatch(t.orelse)
-            self.leave()
+            with self.block():
+                self.dispatch(t.orelse)
 
     def _If(self, t):
         self.fill("if ")
         self.dispatch(t.test)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
         # collapse nested ifs into equivalent elifs.
         while (t.orelse and len(t.orelse) == 1 and
                isinstance(t.orelse[0], ast.If)):
             t = t.orelse[0]
             self.fill("elif ")
             self.dispatch(t.test)
-            self.enter()
-            self.dispatch(t.body)
-            self.leave()
+            with self.block():
+                self.dispatch(t.body)
         # final else
         if t.orelse:
             self.fill("else")
-            self.enter()
-            self.dispatch(t.orelse)
-            self.leave()
+            with self.block():
+                self.dispatch(t.orelse)
 
     def _While(self, t):
         self.fill("while ")
         self.dispatch(t.test)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
         if t.orelse:
             self.fill("else")
-            self.enter()
-            self.dispatch(t.orelse)
-            self.leave()
+            with self.block():
+                self.dispatch(t.orelse)
 
     def _generic_With(self, t, async_=False):
         self.fill("async with " if async_ else "with ")
@@ -464,9 +465,8 @@ class Unparser:
             if t.optional_vars:
                 self.write(" as ")
                 self.dispatch(t.optional_vars)
-        self.enter()
-        self.dispatch(t.body)
-        self.leave()
+        with self.block():
+            self.dispatch(t.body)
 
     def _With(self, t):
         self._generic_With(t)
