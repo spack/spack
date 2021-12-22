@@ -66,6 +66,8 @@ class ClingoBootstrap(Clingo):
             if '+static_libstdcpp' in self.spec:
                 # This is either linux or cray
                 opts = '-static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL'
+        elif 'platform=windows' in self.spec:
+            pass
         else:
             msg = 'unexpected compiler for spec "{0}"'.format(self.spec)
             raise RuntimeError(msg)
