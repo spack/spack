@@ -150,3 +150,18 @@ def test_nested_use_of_context_manager(mutable_config):
         with spack.bootstrap.ensure_bootstrap_configuration():
             assert spack.config.config != user_config
     assert spack.config.config == user_config
+
+
+@pytest.mark.parametrize('path_ev,expected_missing', [
+    (None, False),
+    ('/foo/bin', True)
+])
+def test_status_function_find_files(mutable_config, monkeypatch, path_ev, expected_missing):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip('Skip the test for the original concretizer')
+
+    if path_ev is not None:
+        monkeypatch.setenv('PATH', path_ev)
+
+    _, missing = spack.bootstrap.status_message('core')
+    assert missing is expected_missing
