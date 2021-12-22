@@ -197,7 +197,7 @@ class Npb(MakefilePackage):
 
                         # Class E, F is not available for IS at @3.3.1
                         # Class F is not available for IS at @3.4.1
-                        if name == 'is' 
+                        if name == 'is':
                             if classname == 'E':
                                 if spec.satisfies('@3.3.1'):
                                     continue
