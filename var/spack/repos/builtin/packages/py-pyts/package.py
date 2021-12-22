@@ -18,7 +18,7 @@ class PyPyts(PythonPackage):
 
     version('0.12.0', sha256='af85e09a14334cbe384318de6ca4379e9a30bf5bbd1aaf3a1c4a94872e9765b1')
 
-    depends_on('python@3.7:3.9',            type=('build', 'run'))
+    depends_on('python@3.7:',               type=('build', 'run'))
     depends_on('py-setuptools',             type='build')
     depends_on('py-numpy@1.17.5:',          type=('build', 'run'))
     depends_on('py-scipy@1.3.0:',           type=('build', 'run'))
