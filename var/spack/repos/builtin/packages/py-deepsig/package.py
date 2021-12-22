@@ -12,7 +12,6 @@ class PyDeepsig(PythonPackage):
     homepage = "https://github.com/Kaleidophon/deep-significance"
     url      = "https://github.com/Kaleidophon/deep-significance/archive/refs/tags/v1.2.0.tar.gz"
     git      = "https://github.com/Kaleidophon/deep-significance.git"
-    #pypi     = "deepsig/deepsig-1.2.0.tar.gz"
 
     version('1.2.0', sha256='e9abfb33aad03dbf6b5351fa35f813f7a041edc0ef64c16ce537a65911903306')
 
