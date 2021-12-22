@@ -116,7 +116,7 @@ class Libint(AutotoolsPackage):
             # --with-boost option available only form version 2 and above
             config_args.extend([
                 '--with-boost={0}'.format(self.spec['boost'].prefix)
-                ])
+            ])
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
