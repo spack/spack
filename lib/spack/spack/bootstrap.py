@@ -951,7 +951,8 @@ def _development_requirements():
 
 def status_message(section):
     """Return a status message to be printed to screen that refers to the
-    section passed as argument.
+    section passed as argument and a bool which is True if there are missing
+    dependencies.
 
     Args:
         section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
@@ -975,4 +976,4 @@ def status_message(section):
                 msg += "\n  " + err_msg
         msg += '\n'
         msg = msg.format(pass_token if not missing_software else fail_token)
-    return msg
+    return msg, missing_software
