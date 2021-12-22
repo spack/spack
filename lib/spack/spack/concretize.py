@@ -751,7 +751,7 @@ def _concretize_specs_together_new(*abstract_specs, **kwargs):
     concretization_kwargs = {
         'tests': kwargs.get('tests', False),
         'reuse': kwargs.get('reuse', False),
-        'allow_split': kwargs.get('allow_split', False),
+        'multi_root': kwargs.get('multi_root', False),
     }
     result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
     result.raise_if_unsat()
@@ -786,7 +786,7 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
 
         return spack.repo.Repo(repo_path)
 
-    if kwargs.get('allow_split', False):
+    if kwargs.get('multi_root', False):
         # This feature cannot be implemented in the old concretizer
         raise Exception
 

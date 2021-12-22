@@ -299,8 +299,8 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, specs, asp=None, allow_split=False):
-        self.allow_split = allow_split
+    def __init__(self, specs, asp=None, multi_root=False):
+        self.multi_root = multi_root
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
@@ -440,7 +440,7 @@ class Result(object):
         for idx, input_spec in enumerate(self.abstract_specs):
             # If everything has to fit in one process space, then only use
             # process space 0
-            if not self.allow_split:
+            if not self.multi_root:
                 idx = 0
             key = (str(idx), input_spec.name)
             if input_spec.virtual:
@@ -550,7 +550,7 @@ class PyclingoDriver(object):
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False, reuse=False,
-            allow_split=False
+            multi_root=False
     ):
         # Spec_list must always be treated in order so PSIDs match up
         timer = spack.util.timer.Timer()
@@ -565,7 +565,7 @@ class PyclingoDriver(object):
 
         # set up the problem -- this generates facts and rules
         self.assumptions = []
-        self.allow_split = allow_split
+        self.multi_root = multi_root
         with self.control.backend() as backend:
             self.backend = backend
             solver_setup.setup(self, specs, tests=tests, reuse=reuse)
@@ -625,7 +625,7 @@ class PyclingoDriver(object):
         timer.phase("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result(specs, allow_split=allow_split)
+        result = Result(specs, multi_root=multi_root)
         models = []  # stable models if things go well
         cores = []   # unsatisfiable cores if they do not
 
@@ -1142,7 +1142,7 @@ class SpackSolverSetup(object):
 
         preferred = preferred_targets[0]
 
-        if self.gen.allow_split:
+        if self.gen.multi_root:
             for idx in range(len(self.specs)):
                 self.gen.fact(fn.package_target_weight(
                     idx, str(preferred.architecture.target), pkg_name, -30))
@@ -1485,7 +1485,7 @@ class SpackSolverSetup(object):
         for idx, spec in enumerate(specs):
             # If we aren't allowing node splits, then we only need a single
             # process space, use 0
-            if not self.gen.allow_split:
+            if not self.gen.multi_root:
                 idx = 0
 
             if not spec.architecture or not spec.architecture.target:
@@ -1807,7 +1807,7 @@ class SpackSolverSetup(object):
         for idx, spec in enumerate(specs):
             # If we can't split nodes across process spaces, then they all
             # go to process space 0
-            if not self.gen.allow_split:
+            if not self.gen.multi_root:
                 idx = 0
 
             self.gen.h2('Spec: %s' % str(spec))
@@ -2118,7 +2118,7 @@ def _develop_specs_from_env(spec, env):
 # These are handwritten parts for the Spack ASP model.
 #
 def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
-          reuse=False, allow_split=False):
+          reuse=False, multi_root=False):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -2139,7 +2139,7 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
 
     setup = SpackSolverSetup()
     return driver.solve(
-        setup, specs, dump, models, timers, stats, tests, reuse, allow_split
+        setup, specs, dump, models, timers, stats, tests, reuse, multi_root
     )
 
 
