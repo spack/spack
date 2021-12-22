@@ -794,10 +794,10 @@ class PackageInstaller(object):
                     .format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg))
 
-            # Attempt to get a write lock to ensure another process does not
+            # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
             # installed
-            ltype, lock = self._ensure_locked('write', dep_pkg)
+            ltype, lock = self._ensure_locked('read', dep_pkg)
             if lock is None:
                 msg = '{0} is write locked by another process'.format(dep_id)
                 raise InstallError(err.format(request.pkg_id, msg))
@@ -816,6 +816,8 @@ class PackageInstaller(object):
                 tty.debug('Flagging {0} as installed per the database'
                           .format(dep_id))
                 self._flag_installed(dep_pkg)
+            else:
+                lock.release_read()
 
     def _prepare_for_install(self, task):
         """
@@ -1027,7 +1029,7 @@ class PackageInstaller(object):
         except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
             tty.debug(err.format(op, desc, pkg_id, exc.__class__.__name__,
                                  str(exc)))
-            lock = None
+            return (lock_type, None)
 
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             tty.error(err.format(op, desc, pkg_id, exc.__class__.__name__,
@@ -1627,6 +1629,7 @@ class PackageInstaller(object):
             # established by the other process -- failed, installed, or
             # uninstalled -- on the next pass.
             if ltype == 'read':
+                lock.release_read()
                 self._requeue_task(task)
                 continue
 
