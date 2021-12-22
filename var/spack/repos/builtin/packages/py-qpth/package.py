@@ -9,7 +9,7 @@ from spack import *
 class PyQpth(PythonPackage):
     """A fast and differentiable QP solver for PyTorch"""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/locuslab/qpth"
     pypi     = "qpth/qpth-0.0.15.tar.gz"
 
     version('0.0.15', sha256='99d8ec5a35877c18543875a7d5b7fc9af1fa9a4d4b0888011c1ecf42ad9d521c')
