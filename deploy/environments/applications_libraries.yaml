@@ -5,6 +5,7 @@ spack:
     tcl:
       whitelist:
         - boost
+        - caliper
         - gmsh
         - hdf5+mpi
         - highfive+mpi
