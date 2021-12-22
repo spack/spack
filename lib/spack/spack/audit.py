@@ -428,17 +428,20 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
             )
 
         for s in dependencies_to_check:
+            dependency_pkg = None
             try:
-                assert any(v.satisfies(s.versions) for v in list(s.package.versions))
-            except AssertionError:
+                dependency_pkg = spack.repo.get(s.name)
+                assert any(
+                    v.satisfies(s.versions) for v in list(dependency_pkg.versions)
+                )
+            except Exception:
                 summary = ("{0}: dependency on {1} cannot be satisfied "
                            "by known versions of {1.name}").format(pkg_name, s)
-                details = [
-                    'happening in ' + filename,
-                    'known versions of {0.name} are {1}'.format(s, ', '.join(
-                        [str(x) for x in s.package.versions]
+                details = ['happening in ' + filename]
+                if dependency_pkg is not None:
+                    details.append('known versions of {0.name} are {1}'.format(
+                        s, ', '.join([str(x) for x in dependency_pkg.versions])
                     ))
-                ]
                 errors.append(error_cls(summary=summary, details=details))
 
     return errors
