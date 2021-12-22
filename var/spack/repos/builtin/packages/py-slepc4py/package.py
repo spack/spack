@@ -46,7 +46,6 @@ class PySlepc4py(PythonPackage):
     depends_on('py-petsc4py@3.9.0:3.9', when='@3.9.0:3.9', type=('build', 'run'))
     depends_on('py-petsc4py@3.8.0:3.8', when='@3.8.0:3.8', type=('build', 'run'))
     depends_on('py-petsc4py@3.7.0:3.7', when='@3.7.0:3.7', type=('build', 'run'))
-    depends_on('py-petsc4py@3.6.0:3.6', when='@3.6.0:3.6', type=('build', 'run'))
 
     depends_on('slepc')
     depends_on('slepc@3.16.0:3.16', when='@3.16.0:3.16')
@@ -58,7 +57,6 @@ class PySlepc4py(PythonPackage):
     depends_on('slepc@3.9.0:3.9', when='@3.9.0:3.9')
     depends_on('slepc@3.8.0:3.8', when='@3.8.0:3.8')
     depends_on('slepc@3.7.0:3.7', when='@3.7.0:3.7')
-    depends_on('slepc@3.6.0:3.6', when='@3.6.0:3.6')
 
     @property
     def build_directory(self):

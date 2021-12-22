@@ -14,6 +14,7 @@ class PyUrllib3(PythonPackage):
     pypi = "urllib3/urllib3-1.25.6.tar.gz"
 
     version('1.26.6', sha256='f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f')
+    version('1.25.9', sha256='3018294ebefce6572a474f0604c2021e33b3fd8006ecd11d62107a5d2a963527')
     version('1.25.6', sha256='9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86')
     version('1.25.3', sha256='dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232')
     version('1.24.3', sha256='2393a695cd12afedd0dcb26fe5d50d0cf248e5a66f75dbd89a3d4eb333a61af4')
