@@ -1172,14 +1172,12 @@ class TestSpecSematics(object):
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_swap_names(self, transitive):
         spec = Spec('splice-t')
-        dep = Spec('splice-a')
+        dep = Spec('splice-a+foo')
         spec.concretize()
         dep.concretize()
         out = spec.splice(dep, transitive)
-        # Check for splice a
-        # Make sure that the correct dependency for splice-z came in for
-        # intransitive and transitive
-        # Use variants on z to make the dependencies different.
+        assert dep.name in out
+        assert transitive == ('+foo' in str(out['splice-z']))
 
 
 @pytest.mark.regression('3887')

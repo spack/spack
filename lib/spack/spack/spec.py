@@ -4433,7 +4433,6 @@ class Spec(object):
                 dependencies = self[name]._dependencies
                 for dep, dspec in dependencies.items():
                     dep_name = deps_to_replace.get(dspec.spec, dspec.spec).name
-                    print(deps_to_replace)
                     nodes[name]._add_dependency(nodes[dep_name],
                                                 dependencies[dep].deptypes)
                 if any(dep not in self_nodes for dep in dependencies):
