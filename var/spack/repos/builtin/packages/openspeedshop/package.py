@@ -55,14 +55,8 @@ class Openspeedshop(CMakePackage):
     variant('mvapich2', default=False,
             description="Build mpi collector for mvapich2\
                          MPI when variant is enabled.")
-    variant('mvapich', default=False,
-            description="Build mpi collector for mvapich\
-                         MPI when variant is enabled.")
     variant('mpich2', default=False,
             description="Build mpi collector for mpich2\
-                         MPI when variant is enabled.")
-    variant('mpich', default=False,
-            description="Build mpi collector for mpich\
                          MPI when variant is enabled.")
 
     depends_on("cmake@3.0.2:", type='build')
@@ -103,17 +97,11 @@ class Openspeedshop(CMakePackage):
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
-
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpich2', when='@2.4.0:9999+mpich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpt', when='@2.4.0:9999+mpt', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mvapich', when='@2.4.0:9999+mvapich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mvapich2', when='@2.4.0:9999+mvapich2', type=('build', 'link', 'run'))
