@@ -15,12 +15,20 @@ import spack.util.naming
 
 
 class RemoveDocstrings(ast.NodeTransformer):
-    """Transformer that removes docstrings from a Python AST."""
+    """Transformer that removes docstrings from a Python AST.
+
+    This removes *all* strings that aren't on the RHS of an assignment statement from
+    the body of functions, classes, and modules -- even if they're not directly after
+    the declaration.
+
+    """
     def remove_docstring(self, node):
+        def unused_string(node):
+            """Criteria for unassigned body strings."""
+            return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
+
         if node.body:
-            if isinstance(node.body[0], ast.Expr) and \
-               isinstance(node.body[0].value, ast.Str):
-                node.body.pop(0)
+            node.body = [child for child in node.body if not unused_string(child)]
 
         self.generic_visit(node)
         return node
