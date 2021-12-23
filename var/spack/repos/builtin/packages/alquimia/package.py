@@ -32,7 +32,6 @@ class Alquimia(CMakePackage):
     depends_on('pflotran@xsdk-0.5.0', when='@xsdk-0.5.0')
     depends_on('pflotran@xsdk-0.4.0', when='@xsdk-0.4.0')
     depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
-    depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
     depends_on('petsc@3.10.0:3.10', when='@xsdk-0.4.0')
     depends_on('petsc@3.8.0:3.8', when='@xsdk-0.3.0')
