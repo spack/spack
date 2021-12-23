@@ -305,26 +305,57 @@ class Unparser:
     def _Print(self, t):
         # Use print function so that python 2 unparsing is consistent with 3
         if self._py_ver_consistent:
-            self.fill("print(")
+            self.fill("print")
+            with self.delimit("(", ")"):
+                values = t.values
+
+                # Can't tell print(foo, bar, baz) and print((foo, bar, baz)) apart in
+                # python 2 and 3, so treat them the same to make hashes consistent.
+                # Single-tuple print are rare and unlikely to affect package hashes,
+                # esp. as they likely print to stdout.
+                if len(values) == 1 and isinstance(values[0], ast.Tuple):
+                    values = t.values[0].elts
+
+                do_comma = False
+                for e in values:
+                    if do_comma:
+                        self.write(", ")
+                    else:
+                        do_comma = True
+                    self.dispatch(e)
+
+                if not t.nl:
+                    if do_comma:
+                        self.write(", ")
+                    else:
+                        do_comma = True
+                    self.write("end=''")
+
+                if t.dest:
+                    if do_comma:
+                        self.write(", ")
+                    else:
+                        do_comma = True
+                    self.write("file=")
+                    self.dispatch(t.dest)
+
         else:
+            # unparse Python 2 print statements
             self.fill("print ")
 
-        do_comma = False
-        if t.dest:
-            self.write(">>")
-            self.dispatch(t.dest)
-            do_comma = True
-        for e in t.values:
-            if do_comma:
-                self.write(", ")
-            else:
+            do_comma = False
+            if t.dest:
+                self.write(">>")
+                self.dispatch(t.dest)
                 do_comma = True
-            self.dispatch(e)
-        if not t.nl:
-            self.write(",")
-
-        if self._py_ver_consistent:
-            self.write(")")
+            for e in t.values:
+                if do_comma:
+                    self.write(", ")
+                else:
+                    do_comma = True
+                self.dispatch(e)
+            if not t.nl:
+                self.write(",")
 
     def _Global(self, t):
         self.fill("global ")
@@ -934,6 +965,15 @@ class Unparser:
 
     def _Call(self, t):
         self.set_precedence(_Precedence.ATOM, t.func)
+
+        args = t.args
+        if self._py_ver_consistent:
+            # make print(a, b, c) and print((a, b, c)) equivalent, since you can't
+            # tell them apart between Python 2 and 3. See _Print() for more details.
+            if getattr(t.func, "id", None) == "print":
+                if len(t.args) == 1 and isinstance(t.args[0], ast.Tuple):
+                    args = t.args[0].elts
+
         self.dispatch(t.func)
         with self.delimit("(", ")"):
             comma = False
@@ -942,7 +982,7 @@ class Unparser:
             star_and_kwargs = []
             move_stars_last = sys.version_info[:2] >= (3, 5)
 
-            for e in t.args:
+            for e in args:
                 if move_stars_last and isinstance(e, ast.Starred):
                     star_and_kwargs.append(e)
                 else:
