@@ -150,3 +150,133 @@ def test_remove_directives():
 
     for name in spack.directives.directive_names:
         assert name not in unparsed
+
+
+many_multimethods = """\
+class Pkg:
+    def foo(self):
+        print("ONE")
+
+    @when("@1.0")
+    def foo(self):
+        print("TWO")
+
+    @when("@2.0")
+    @when(sys.platform == "darwin")
+    def foo(self):
+        print("THREE")
+
+    @when("@3.0")
+    def foo(self):
+        print("FOUR")
+
+    # this one should always stay
+    @run_after("install")
+    def some_function(self):
+        print("FIVE")
+"""
+
+
+def test_multimethod_resolution(tmpdir):
+    when_pkg = tmpdir.join("pkg.py")
+    with when_pkg.open("w") as f:
+        f.write(many_multimethods)
+
+    # all are false but the default
+    filtered = ph.canonical_source("pkg@4.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" not in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
+
+    # we know first @when overrides default and others are false
+    filtered = ph.canonical_source("pkg@1.0", str(when_pkg))
+    assert "ONE" not in filtered
+    assert "TWO" in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
+
+    # we know last @when overrides default and others are false
+    filtered = ph.canonical_source("pkg@3.0", str(when_pkg))
+    assert "ONE" not in filtered
+    assert "TWO" not in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" in filtered
+    assert "FIVE" in filtered
+
+    # we don't know if default or THREE will win, include both
+    filtered = ph.canonical_source("pkg@2.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" not in filtered
+    assert "THREE" in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
+
+
+more_dynamic_multimethods = """\
+class Pkg:
+    @when(sys.platform == "darwin")
+    def foo(self):
+        print("ONE")
+
+    @when("@1.0")
+    def foo(self):
+        print("TWO")
+
+    # this one isn't dynamic, but an int fails the Spec parse,
+    # so it's kept because it has to be evaluated at runtime.
+    @when("@2.0")
+    @when(1)
+    def foo(self):
+        print("THREE")
+
+    @when("@3.0")
+    def foo(self):
+        print("FOUR")
+
+    # this one should always stay
+    @run_after("install")
+    def some_function(self):
+        print("FIVE")
+"""
+
+
+def test_more_dynamic_multimethod_resolution(tmpdir):
+    when_pkg = tmpdir.join("pkg.py")
+    with when_pkg.open("w") as f:
+        f.write(more_dynamic_multimethods)
+
+    # we know the first one is the only one that can win.
+    filtered = ph.canonical_source("pkg@4.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" not in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
+
+    # now we have to include ONE and TWO because ONE may win dynamically.
+    filtered = ph.canonical_source("pkg@1.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
+
+    # we know FOUR is true and TWO and THREE are false, but ONE may
+    # still win dynamically.
+    filtered = ph.canonical_source("pkg@3.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" not in filtered
+    assert "THREE" not in filtered
+    assert "FOUR" in filtered
+    assert "FIVE" in filtered
+
+    # TWO and FOUR can't be satisfied, but ONE or THREE could win
+    filtered = ph.canonical_source("pkg@2.0", str(when_pkg))
+    assert "ONE" in filtered
+    assert "TWO" not in filtered
+    assert "THREE" in filtered
+    assert "FOUR" not in filtered
+    assert "FIVE" in filtered
