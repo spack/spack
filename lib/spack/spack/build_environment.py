@@ -349,7 +349,7 @@ def set_compiler_environment_variables(pkg, env):
 
     wrapper_driver = ''
     # Git Bash requires this to avoid mangling all paths/forward slashes.
-    # Git bash normall performs this posix mangling: https://github.com/msys2/path_convert
+    # Git bash normally performs this posix mangling: https://github.com/msys2/path_convert
     # If there are inexplicable errors with compilers interpreting
     # command line arguments as paths on Windows, check here first
     # as this variable is subject to change as Git Bash updates
