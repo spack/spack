@@ -257,7 +257,7 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cuda@:10.2', when='+cuda @:2.3')
     depends_on('cuda@:11.1', when='+cuda @2.4.0:2.4')
-    depends_on('cuda@:11.2', when='+cuda @2.5.0:')
+    depends_on('cuda@:11.4', when='+cuda @2.5:')
     depends_on('cudnn', when='+cuda')
     # depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
