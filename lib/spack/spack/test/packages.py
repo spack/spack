@@ -13,13 +13,7 @@ import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
 from spack.util.naming import mod_to_class
-from spack.util.package_hash import package_content
 from spack.version import VersionChecksumError
-
-
-def _generate_content_strip_name(spec):
-    content = package_content(spec)
-    return content.replace(spec.package.__class__.__name__, '')
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -57,51 +51,6 @@ class TestPackage(object):
         assert 'PmgrCollective' == mod_to_class('pmgr-collective')
         assert 'Pmgrcollective' == mod_to_class('PmgrCollective')
         assert '_3db' == mod_to_class('3db')
-
-    def test_content_hash_all_same_but_patch_contents(self):
-        spec1 = Spec("hash-test1@1.1").concretized()
-        spec2 = Spec("hash-test2@1.1").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) != \
-            spec2.package.content_hash(content=content2)
-
-    def test_content_hash_different_variants(self):
-        spec1 = Spec("hash-test1@1.2 +variantx").concretized()
-        spec2 = Spec("hash-test2@1.2 ~variantx").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) == \
-            spec2.package.content_hash(content=content2)
-
-    def test_content_hash_cannot_get_details_from_ast(self):
-        """Packages hash-test1 and hash-test3 would be considered the same
-           except that hash-test3 conditionally executes a phase based on
-           a "when" directive that Spack cannot evaluate by examining the
-           AST. This test ensures that Spack can compute a content hash
-           for hash-test3. If Spack cannot determine when a phase applies,
-           it adds it by default, so the test also ensures that the hashes
-           differ where Spack includes a phase on account of AST-examination
-           failure.
-        """
-        spec3 = Spec("hash-test1@1.7").concretized()
-        spec4 = Spec("hash-test3@1.7").concretized()
-        content3 = _generate_content_strip_name(spec3)
-        content4 = _generate_content_strip_name(spec4)
-        assert(spec3.package.content_hash(content=content3) !=
-               spec4.package.content_hash(content=content4))
-
-    def test_all_same_but_archive_hash(self):
-        spec1 = Spec("hash-test1@1.3").concretized()
-        spec2 = Spec("hash-test2@1.3").concretized()
-        content1 = _generate_content_strip_name(spec1)
-        content2 = _generate_content_strip_name(spec2)
-        assert spec1.package.content_hash(content=content1) != \
-            spec2.package.content_hash(content=content2)
-
-    def test_parse_dynamic_function_call(self):
-        spec = Spec("hash-test4").concretized()
-        spec.package.content_hash()
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
