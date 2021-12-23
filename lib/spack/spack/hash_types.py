@@ -8,6 +8,7 @@
 import spack.dependency as dp
 
 hashes = []
+hash_dict = {}
 
 
 class SpecHashDescriptor(object):
@@ -25,6 +26,7 @@ class SpecHashDescriptor(object):
         self.package_hash = package_hash
         self.name = name
         hashes.append(self)
+        hash_dict[name] = self
         # Allow spec hashes to have an alternate computation method
         self.override = override
 

@@ -211,12 +211,12 @@ class InstallRecord(object):
         else:
             return InstallStatuses.MISSING in installed
 
-    def to_dict(self, include_fields=default_install_record_fields):
+    def to_dict(self, include_fields=default_install_record_fields, hash=ht.dag_hash):
         rec_dict = {}
 
         for field_name in include_fields:
             if field_name == 'spec':
-                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
+                rec_dict.update({'spec': self.spec.node_dict_with_hashes(hash)})
             elif field_name == 'deprecated_for' and self.deprecated_for:
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
@@ -370,6 +370,16 @@ class Database(object):
         self.package_lock_timeout = (
             spack.config.get('config:package_lock_timeout') or
             _pkg_lock_timeout)
+
+        # get key type of the database
+        self.hash_type = spack.config.get('config:hash_type', 'hash')
+        if self.hash_type not in ht.hash_dict:
+            raise AssertionError("Invalid hash Type %s: Please "
+                                 "select one of %s" %
+                                 (self.hash_type, ','.join([tmp_ht.name
+                                  for tmp_ht in ht.hashes])))
+        self._hash = ht.hash_dict[self.hash_type]
+
         tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
                   str(self.db_lock_timeout)))
         timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
@@ -509,7 +519,7 @@ class Database(object):
         if prefix not in self._prefix_failures:
             mark = lk.Lock(
                 self.prefix_fail_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                start=spec.get_hash_bit_prefix(bit_length(sys.maxsize), self._hash),
                 length=1,
                 default_timeout=self.package_lock_timeout, desc=spec.name)
 
@@ -547,7 +557,7 @@ class Database(object):
         """Return True if a process has a failure lock on the spec."""
         check = lk.Lock(
             self.prefix_fail_path,
-            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            start=spec.get_hash_bit_prefix(bit_length(sys.maxsize), self._hash),
             length=1,
             default_timeout=self.package_lock_timeout, desc=spec.name)
 
@@ -577,7 +587,7 @@ class Database(object):
         if prefix not in self._prefix_locks:
             self._prefix_locks[prefix] = lk.Lock(
                 self.prefix_lock_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                start=spec.get_hash_bit_prefix(bit_length(sys.maxsize), self._hash),
                 length=1,
                 default_timeout=timeout, desc=spec.name)
         elif timeout != self._prefix_locks[prefix].default_timeout:
@@ -626,7 +636,8 @@ class Database(object):
         This function does not do any locking or transactions.
         """
         # map from per-spec hash code to installation record.
-        installs = dict((k, v.to_dict(include_fields=self._record_fields))
+        installs = dict((k, v.to_dict(include_fields=self._record_fields,
+                        hash=self._hash))
                         for k, v in self._data.items())
 
         # database includes installation list and version.
@@ -634,11 +645,15 @@ class Database(object):
         # NOTE: this DB version does not handle multiple installs of
         # the same spec well.  If there are 2 identical specs with
         # different paths, it can't differentiate.
+        # NOTE: We store the key-type used by the db. When using
+        # full-hash as a key type there should always be a single entry
+        # for each installation.
         # TODO: fix this before we support multiple install locations.
         database = {
             'database': {
                 'installs': installs,
-                'version': str(_db_version)
+                'version': str(_db_version),
+                'hash_type': self._hash.name
             }
         }
 
@@ -689,7 +704,7 @@ class Database(object):
                 return True, db._data[hash_key]
         return False, None
 
-    def _assign_dependencies(self, hash_key, installs, data):
+    def _assign_dependencies(self, hash_key, db_hash_type, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
@@ -699,8 +714,20 @@ class Database(object):
             spec_node_dict = spec_node_dict[spec.name]
         if 'dependencies' in spec_node_dict:
             yaml_deps = spec_node_dict['dependencies']
-            for dname, dhash, dtypes, _ in spack.spec.Spec.read_yaml_dep_specs(
+            for dname, dhash, dtypes, hash_type in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
+                # NOTE: This part needs refinement. The dep-hash of spec is
+                # independent of the db hash type. So, it may be valid to
+                # have different hash types at this point.
+                if hash_type != db_hash_type:
+                    msg = ("Dependency hash type miss match."
+                           " db hash type is %s and dependency"
+                           " hash is %s" % (hash_type, db_hash_type))
+                    if self._fail_when_missing_deps:
+                        raise MissingDependenciesError(msg)
+                    tty.warn(msg)
+                    continue
+
                 # It is important that we always check upstream installations
                 # in the same order, and that we always check the local
                 # installation first: if a downstream Spack installs a package
@@ -753,6 +780,17 @@ class Database(object):
 
         installs = db['installs']
 
+        # Legacy db-format does not provide the key-type entry
+        # of the db. So, in such a db the key type is of
+        # (dag)-hash-type
+        db_hash_type = db.get('hash_type', 'hash')
+        if db_hash_type not in ht.hash_dict:
+            raise AssertionError("Invalid hash Type %s:"
+                                 " Please select one of %s" %
+                                 (self.hash_type, ','.join([tmp_ht.name
+                                  for tmp_ht in ht.hashes])))
+        db_ht = ht.hash_dict[db_hash_type]
+
         # TODO: better version checking semantics.
         version = Version(db['version'])
         if version > _db_version:
@@ -769,7 +807,7 @@ class Database(object):
 
                 self.reindex(spack.store.layout)
                 installs = dict(
-                    (k, v.to_dict(include_fields=self._record_fields))
+                    (k, v.to_dict(include_fields=self._record_fields, hash=self._hash))
                     for k, v in self._data.items()
                 )
 
@@ -794,7 +832,7 @@ class Database(object):
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
-                spec = self._read_spec_from_dict(hash_key, installs)
+                spec = self._read_spec_from_dict(hash_key, installs, hash=db_ht)
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -810,7 +848,7 @@ class Database(object):
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
-                self._assign_dependencies(hash_key, installs, data)
+                self._assign_dependencies(hash_key, db_ht.name, installs, data)
             except MissingDependenciesError:
                 raise
             except Exception as e:
@@ -823,6 +861,18 @@ class Database(object):
         # cached prematurely.
         for hash_key, rec in data.items():
             rec.spec._mark_root_concrete()
+
+        # NOTE: This is a shallow transformation of the db-keys from
+        # one key value type to another. It does not modify the
+        # spec installation paths.
+        if self._hash != db_ht:
+            tmp_data = {}
+            tty.debug('Transforming DB key type {0}'
+                      'to key type {1}'.format(db_ht.name,
+                                               self._hash.name))
+            for key, val in data.items():
+                tmp_data[val.spec._cached_hash(self._hash)] = val
+            data = tmp_data
 
         self._data = data
         self._installed_prefixes = installed_prefixes
@@ -971,7 +1021,7 @@ class Database(object):
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
             for dep in rec.spec.dependencies(_tracked_deps):
-                dep_key = dep.dag_hash()
+                dep_key = dep._cached_hash(self._hash)
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
 
@@ -980,7 +1030,7 @@ class Database(object):
                 counts[rec.deprecated_for] += 1
 
         for rec in self._data.values():
-            key = rec.spec.dag_hash()
+            key = rec.spec._cached_hash(self._hash)
             expected = counts[key]
             found = rec.ref_count
             if not expected == found:
@@ -1079,7 +1129,7 @@ class Database(object):
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
-        key = spec.dag_hash()
+        key = spec._cached_hash(self._hash)
         upstream, record = self.query_by_spec_hash(key)
         if upstream:
             return
@@ -1088,7 +1138,7 @@ class Database(object):
         installation_time = installation_time or _now()
 
         for dep in spec.dependencies(_tracked_deps):
-            dkey = dep.dag_hash()
+            dkey = dep._cached_hash(self._hash)
             if dkey not in self._data:
                 extra_args = {
                     'explicit': False,
@@ -1128,7 +1178,7 @@ class Database(object):
             for name, dep in six.iteritems(
                     spec.dependencies_dict(_tracked_deps)
             ):
-                dkey = dep.spec.dag_hash()
+                dkey = dep.spec._cached_hash(self._hash)
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
                 if not upstream:
@@ -1137,8 +1187,15 @@ class Database(object):
             # Mark concrete once everything is built, and preserve
             # the original hash of concrete specs.
             new_spec._mark_concrete()
-            new_spec._hash = key
-            new_spec._full_hash = spec._full_hash
+            if self._hash.name == 'hash':
+                new_spec._hash = key
+            else:
+                new_spec._hash = spec._hash
+
+            if self._hash.name == 'full_hash':
+                new_spec._full_hash = key
+            else:
+                new_spec._full_hash = spec._full_hash
 
         else:
             # If it is already there, mark it as installed and update
@@ -1162,12 +1219,12 @@ class Database(object):
 
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
-        key = spec.dag_hash()
+        key = spec._cached_hash(self._hash)
         upstream, record = self.query_by_spec_hash(key)
         if not record:
             match = self.query_one(spec, **kwargs)
             if match:
-                return match.dag_hash()
+                return match._cached_hash(self._hash)
             raise KeyError("No such spec in database! %s" % spec)
         return key
 
@@ -1178,7 +1235,7 @@ class Database(object):
         return record
 
     def _decrement_ref_count(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(self._hash)
 
         if key not in self._data:
             # TODO: print something here?  DB is corrupt, but
@@ -1195,7 +1252,7 @@ class Database(object):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(self._hash)
 
         if key not in self._data:
             return
@@ -1266,8 +1323,9 @@ class Database(object):
     def specs_deprecated_by(self, spec):
         """Return all specs deprecated in favor of the given spec"""
         with self.read_transaction():
+            # TODO: Discuss how we should handle deprecated.
             return [rec.spec for rec in self._data.values()
-                    if rec.deprecated_for == spec.dag_hash()]
+                    if rec.deprecated_for == spec._cached_hash(self._hash)]
 
     def _deprecate(self, spec, deprecator):
         spec_key = self._get_matching_spec_key(spec)
@@ -1320,13 +1378,13 @@ class Database(object):
                 to_add = spec.dependencies(deptype=deptype)
 
             for relative in to_add:
-                hash_key = relative.dag_hash()
+                hash_key = relative._cached_hash(self._hash)
                 upstream, record = self.query_by_spec_hash(hash_key)
                 if not record:
                     reltype = ('Dependent' if direction == 'parents'
                                else 'Dependency')
                     msg = ("Inconsistent state! %s %s of %s not in DB"
-                           % (reltype, hash_key, spec.dag_hash()))
+                           % (reltype, hash_key, spec._cached_hash(self._hash)))
                     if self._fail_when_missing_deps:
                         raise MissingDependenciesError(msg)
                     tty.warn(msg)
@@ -1365,10 +1423,10 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(self, db_hash, default=None, installed=any):
         # hash is a full hash and is in the data somewhere
-        if dag_hash in self._data:
-            rec = self._data[dag_hash]
+        if db_hash in self._data:
+            rec = self._data[db_hash]
             if rec.install_type_matches(installed):
                 return [rec.spec]
             else:
@@ -1377,7 +1435,7 @@ class Database(object):
         # check if hash is a prefix of some installed (or previously
         # installed) spec.
         matches = [record.spec for h, record in self._data.items()
-                   if h.startswith(dag_hash) and
+                   if h.startswith(db_hash) and
                    record.install_type_matches(installed)]
         if matches:
             return matches
@@ -1389,8 +1447,8 @@ class Database(object):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
+            db_hash (str): hash (or hash prefix) to look up
+            default (object or None): default value to return if db_hash is
                 not in the DB (default: None)
             installed (bool or InstallStatus or typing.Iterable or None):
                 if ``True``, includes only installed
@@ -1411,12 +1469,12 @@ class Database(object):
         with self.read_transaction():
             return self._get_by_hash_local(*args, **kwargs)
 
-    def get_by_hash(self, dag_hash, default=None, installed=any):
-        """Look up a spec by DAG hash, or by a DAG hash prefix.
+    def get_by_hash(self, db_hash, default=None, installed=any):
+        """Look up a spec by DB hash, or by a DB hash prefix.
 
         Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
+            db_hash (str): hash (or hash prefix) to look up
+            default (object or None): default value to return if db_hash is
                 not in the DB (default: None)
             installed (bool or InstallStatus or typing.Iterable or None):
                 if ``True``, includes only installed specs in the search; if ``False``
@@ -1435,13 +1493,13 @@ class Database(object):
         """
 
         spec = self.get_by_hash_local(
-            dag_hash, default=default, installed=installed)
+            db_hash, default=default, installed=installed)
         if spec is not None:
             return spec
 
         for upstream_db in self.upstream_dbs:
             spec = upstream_db._get_by_hash_local(
-                dag_hash, default=default, installed=installed)
+                db_hash, default=default, installed=installed)
             if spec is not None:
                 return spec
 
@@ -1456,6 +1514,7 @@ class Database(object):
             start_date=None,
             end_date=None,
             hashes=None,
+            hash_type=None,
             in_buildcache=any,
     ):
         """Run a query on the database."""
@@ -1468,7 +1527,7 @@ class Database(object):
         # Just look up concrete specs with hashes; no fancy search.
         if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
             # TODO: handling of hashes restriction is not particularly elegant.
-            hash_key = query_spec.dag_hash()
+            hash_key = query_spec._cached_hash(self._hash)
             if (hash_key in self._data and
                     (not hashes or hash_key in hashes)):
                 return [self._data[hash_key].spec]
@@ -1480,9 +1539,11 @@ class Database(object):
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
+        if hash_type is None:
+            hash_type = self._hash
 
         for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
+            if hashes is not None and rec.spec._cached_hash(hash_type) not in hashes:
                 continue
 
             if not rec.install_type_matches(installed):
@@ -1557,7 +1618,7 @@ class Database(object):
         return concrete_specs[0] if concrete_specs else None
 
     def missing(self, spec):
-        key = spec.dag_hash()
+        key = spec._cached_hash(self._hash)
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
 
@@ -1582,7 +1643,7 @@ class Database(object):
                     # recycle `visited` across calls to avoid
                     # redundantly traversing
                     for spec in rec.spec.traverse(visited=visited):
-                        needed.add(spec.dag_hash())
+                        needed.add(spec._cached_hash(self._hash))
 
             unused = [rec.spec for key, rec in self._data.items()
                       if key not in needed and rec.installed]

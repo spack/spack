@@ -1587,6 +1587,10 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
+    def get_hash_bit_prefix(self, bits, hash=ht.dag_hash):
+        """Get the first <bits> bits of the 'hash' as an integer type."""
+        return spack.util.hash.base32_prefix_bits(self._cached_hash(hash), bits)
+
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
 
@@ -4189,6 +4193,20 @@ class Spec(object):
                     out.write(fmt % transform(self, spack.store.root))
                 elif named_str == 'PREFIX':
                     out.write(fmt % transform(self, self.prefix))
+                elif named_str.startswith('HASH_TYPE'):
+                    if named_str.startswith('HASH_TYPE:'):
+                        _, hashlen = named_str.split(':')
+                        hashlen = int(hashlen)
+                    else:
+                        hashlen = None
+                    hash_type = spack.config.get('config:hash_type', 'hash')
+                    if hash_type not in ht.hash_dict:
+                        avail_hashes = ','.join([tmp_ht.name for tmp_ht in ht.hashes])
+                        msg = ("Invalid Type {0} choices are: {1}".format(hash_type,
+                                                                          avail_hashes))
+                        raise AssertionError(msg)
+                    hash_val = self._cached_hash(ht.hash_dict[hash_type], hashlen)
+                    out.write(fmt % hash_val)
                 elif named_str.startswith('HASH'):
                     if named_str.startswith('HASH:'):
                         _, hashlen = named_str.split(':')

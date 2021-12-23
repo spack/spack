@@ -15,6 +15,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.error
+import spack.hash_types as ht
 import spack.package
 import spack.repo
 import spack.store
@@ -86,7 +87,8 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
         matching = spack.store.db.query_local(spec, hashes=hashes,
-                                              installed=install_query)
+                                              installed=install_query,
+                                              hash_type=ht.dag_hash)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -225,7 +227,8 @@ def do_uninstall(env, specs, force):
         is_ready = lambda x: True
 
     while packages:
-        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
+        ready = [x for x in packages
+                 if is_ready(x.spec._cached_hash(spack.store.db._hash))]
         if not ready:
             msg = 'unexpected error [cannot proceed uninstalling specs with' \
                   ' remaining dependents {0}]'

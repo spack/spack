@@ -19,7 +19,7 @@ config:
   install_tree:
     root: $spack/opt/spack
     projections:
-      all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+      all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH_TYPE}"
     # install_tree can include an optional padded length (int or boolean)
     # default is False (do not pad)
     # if padded_length is True, Spack will pad as close to the system max path
@@ -172,6 +172,11 @@ config:
   # therefore generally be left untouched.
   db_lock_timeout: 3
 
+  # What type of hash should the db use as a key to store entries. The value
+  # also controls the installation path directory in the case of using the
+  # value 'HASH_TYPE' in the projections. The type 'hash' uses the 'dag_hash'
+  # value. This is the default/legacy mechanism. 
+  hash_type: 'hash'
 
   # How long to wait when attempting to modify a package (e.g. to install it).
   # This value should typically be 'null' (never time out) unless the Spack

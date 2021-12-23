@@ -48,6 +48,7 @@ from llnl.util.tty.log import log_output
 import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
+import spack.hash_types as ht
 import spack.hooks
 import spack.monitor
 import spack.package
@@ -624,7 +625,18 @@ def package_id(pkg):
         raise ValueError("Cannot provide a unique, readable id when "
                          "the spec is not concretized.")
 
-    return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
+    # NOTE: Accessing the config on every
+    # request and perform the checks is a
+    # sub-optimal implementation.
+    hash_type = spack.config.get('config:hash_type', 'hash')
+    if hash_type not in ht.hash_dict:
+        raise AssertionError("Invalid hash Type %s: Please select one of %s" %
+                             (hash_type, ','.join([tmp_ht.name for
+                                                  tmp_ht in ht.hashes])))
+    pkg_id_hash = ht.hash_dict[hash_type]
+
+    return "{0}-{1}-{2}".format(pkg.name, pkg.version,
+                                pkg.spec._cached_hash(pkg_id_hash))
 
 
 class TermTitle(object):
