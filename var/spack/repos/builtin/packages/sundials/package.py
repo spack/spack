@@ -75,7 +75,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         multi=False
     )
 
-
     # Index type
     variant('int64', default=False,
             description='Use 64bit integers for indices')
