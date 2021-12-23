@@ -66,7 +66,7 @@ class RemoveDirectives(ast.NodeTransformer):
         return (isinstance(node, ast.Expr) and
                 node.value and isinstance(node.value, ast.Call) and
                 isinstance(node.value.func, ast.Name) and
-                node.value.func.id in spack.directives.__all__)
+                node.value.func.id in spack.directives.directive_names)
 
     def is_spack_attr(self, node):
         return (isinstance(node, ast.Assign) and

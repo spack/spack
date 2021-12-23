@@ -5,6 +5,7 @@
 
 import ast
 
+import spack.directives
 import spack.paths
 import spack.util.package_hash as ph
 from spack.spec import Spec
@@ -123,3 +124,29 @@ def test_remove_docstrings():
     assert "SEVEN" in unparsed
     assert "NINE" in unparsed
     assert "TWELVE" in unparsed
+
+
+many_directives = """\
+
+class HasManyDirectives:
+{directives}
+
+    def foo():
+        # just a method to get in the way
+        pass
+
+{directives}
+""".format(directives="\n".join(
+    "    %s()" % name for name in spack.directives.directive_names
+))
+
+
+def test_remove_directives():
+    """Ensure all directives are removed from packages before hashing."""
+    tree = ast.parse(many_directives)
+    spec = Spec("has-many-directives")
+    tree = ph.RemoveDirectives(spec).visit(tree)
+    unparsed = unparse(tree)
+
+    for name in spack.directives.directive_names:
+        assert name not in unparsed
