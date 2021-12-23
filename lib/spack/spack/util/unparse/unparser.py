@@ -65,6 +65,22 @@ def interleave(inter, f, seq):
             f(x)
 
 
+def is_simple_tuple(slice_value):
+    # when unparsing a non-empty tuple, the parantheses can be safely
+    # omitted if there aren't any elements that explicitly requires
+    # parantheses (such as starred expressions).
+    return (
+        isinstance(slice_value, ast.Tuple)
+        and slice_value.elts
+        and (
+            # Python 2 doesn't allow starred elements in tuples like Python 3
+            six.PY2 or not any(
+                isinstance(elt, ast.Starred) for elt in slice_value.elts
+            )
+        )
+    )
+
+
 class Unparser:
     """Methods in this class recursively traverse an AST and
     output source code for the abstract syntax; original formatting
@@ -102,6 +118,16 @@ class Unparser:
         self._indent = 0
         self._py_ver_consistent = py_ver_consistent
         self._precedences = {}
+
+    def items_view(self, traverser, items):
+        """Traverse and separate the given *items* with a comma and append it to
+        the buffer. If *items* is a single item sequence, a trailing comma
+        will be added."""
+        if len(items) == 1:
+            traverser(items[0])
+            self.write(",")
+        else:
+            interleave(lambda: self.write(", "), traverser, items)
 
     def visit(self, tree, output_file):
         """Traverse tree and write source code to output_file."""
@@ -657,11 +683,7 @@ class Unparser:
         value = t.value
         if isinstance(value, tuple):
             with self.delimit("(", ")"):
-                if len(value) == 1:
-                    self._write_constant(value[0])
-                    self.write(",")
-                else:
-                    interleave(lambda: self.write(", "), self._write_constant, value)
+                self.items_view(self._write_constant, value)
         elif value is Ellipsis:  # instead of `...` for Py2 compatibility
             self.write("...")
         else:
@@ -762,12 +784,7 @@ class Unparser:
 
     def _Tuple(self, t):
         with self.delimit("(", ")"):
-            if len(t.elts) == 1:
-                elt = t.elts[0]
-                self.dispatch(elt)
-                self.write(",")
-            else:
-                interleave(lambda: self.write(", "), self.dispatch, t.elts)
+            self.items_view(self.dispatch, t.elts)
 
     unop = {
         "Invert": "~",
@@ -974,7 +991,10 @@ class Unparser:
         self.set_precedence(_Precedence.ATOM, t.value)
         self.dispatch(t.value)
         with self.delimit("[", "]"):
-            self.dispatch(t.slice)
+            if is_simple_tuple(t.slice):
+                self.items_view(self.dispatch, t.slice.elts)
+            else:
+                self.dispatch(t.slice)
 
     def _Starred(self, t):
         self.write("*")
@@ -985,9 +1005,14 @@ class Unparser:
     def _Ellipsis(self, t):
         self.write("...")
 
+    # used in Python <= 3.8 -- see _Subscript for 3.9+
     def _Index(self, t):
-        self.set_precedence(_Precedence.TUPLE, t.value)
-        self.dispatch(t.value)
+        if is_simple_tuple(t.value):
+            self.set_precedence(_Precedence.ATOM, t.value)
+            self.items_view(self.dispatch, t.value.elts)
+        else:
+            self.set_precedence(_Precedence.TUPLE, t.value)
+            self.dispatch(t.value)
 
     def _Slice(self, t):
         if t.lower:
