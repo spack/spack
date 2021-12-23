@@ -3,48 +3,26 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-fastcore
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-fastcore
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
 class PyFastcore(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Python is a powerful, dynamic language. Rather than bake
+    everything into the language, it lets the programmer
+    customize it to make it work for them. fastcore uses this
+    flexibility to add to Python features inspired by other
+    languages we've loved, like multiple dispatch from Julia,
+    mixins from Ruby, and currying, binding, and more from
+    Haskell. It also adds some "missing features" and clean up
+    some rough edges in the Python standard library, such as
+    simplifying parallel processing, and bringing ideas from
+    NumPy over to Python's list type."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/fastai/fastcore/tree/master/"
     pypi     = "fastcore/fastcore-1.3.27.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('1.3.27', sha256='0161f538d5b913932869a46bb90e98193eee79b8798b566272a394f7ef957243')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-pip', type='build')
+    depends_on('py-packaging', type='build')
