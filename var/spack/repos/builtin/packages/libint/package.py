@@ -113,7 +113,7 @@ class Libint(AutotoolsPackage):
         ]
 
         if self.spec.satisfies("@2.0.0:"):
-            # --with-boost option available only form version 2 and above
+            # --with-boost option available only from version 2 and above
             config_args.extend([
                 '--with-boost={0}'.format(self.spec['boost'].prefix)
             ])

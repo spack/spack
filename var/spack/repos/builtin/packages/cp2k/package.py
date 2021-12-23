@@ -490,7 +490,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                             ('libelpa{elpa_suffix}.a'
                                 .format(elpa_suffix=elpa_suffix))))
             else:
-                libs.append(join_path(elpa.prefix.lib,
+                libs.append(join_path(elpa.libs.directories[0],
                             ('libelpa{elpa_suffix}.{dso_suffix}'
                                 .format(elpa_suffix=elpa_suffix,
                                         dso_suffix=dso_suffix))))
