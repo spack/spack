@@ -17,17 +17,43 @@ from spack.util.unparse import unparse
 datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 
-def test_hash(tmpdir, mock_packages, config):
+def compare_sans_name(eq, spec1, spec2):
+    content1 = ph.canonical_source(spec1)
+    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content2 = ph.canonical_source(spec2)
+    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    if eq:
+        assert content1 == content2
+    else:
+        assert content1 != content2
+
+
+def compare_hash_sans_name(eq, spec1, spec2):
+    content1 = ph.canonical_source(spec1)
+    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    hash1 = spec1.package.content_hash(content=content1)
+
+    content2 = ph.canonical_source(spec2)
+    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    hash2 = spec2.package.content_hash(content=content2)
+
+    if eq:
+        assert hash1 == hash2
+    else:
+        assert hash1 != hash2
+
+
+def test_hash(mock_packages, config):
     ph.package_hash("hash-test1@1.2")
 
 
-def test_different_variants(tmpdir, mock_packages, config):
+def test_different_variants(mock_packages, config):
     spec1 = Spec("hash-test1@1.2 +variantx")
     spec2 = Spec("hash-test1@1.2 +varianty")
     assert ph.package_hash(spec1) == ph.package_hash(spec2)
 
 
-def test_all_same_but_name(tmpdir, mock_packages, config):
+def test_all_same_but_name(mock_packages, config):
     spec1 = Spec("hash-test1@1.2")
     spec2 = Spec("hash-test2@1.2")
     compare_sans_name(True, spec1, spec2)
@@ -37,7 +63,7 @@ def test_all_same_but_name(tmpdir, mock_packages, config):
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_archive_hash(tmpdir, mock_packages, config):
+def test_all_same_but_archive_hash(mock_packages, config):
     """
     Archive hash is not intended to be reflected in Package hash.
     """
@@ -46,33 +72,60 @@ def test_all_same_but_archive_hash(tmpdir, mock_packages, config):
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_patch_contents(tmpdir, mock_packages, config):
+def test_all_same_but_patch_contents(mock_packages, config):
     spec1 = Spec("hash-test1@1.1")
     spec2 = Spec("hash-test2@1.1")
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_patches_to_apply(tmpdir, mock_packages, config):
+def test_all_same_but_patches_to_apply(mock_packages, config):
     spec1 = Spec("hash-test1@1.4")
     spec2 = Spec("hash-test2@1.4")
     compare_sans_name(True, spec1, spec2)
 
 
-def test_all_same_but_install(tmpdir, mock_packages, config):
+def test_all_same_but_install(mock_packages, config):
     spec1 = Spec("hash-test1@1.5")
     spec2 = Spec("hash-test2@1.5")
     compare_sans_name(False, spec1, spec2)
 
 
-def compare_sans_name(eq, spec1, spec2):
-    content1 = ph.package_content(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, '')
-    content2 = ph.package_content(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, '')
-    if eq:
-        assert content1 == content2
-    else:
-        assert content1 != content2
+def test_content_hash_all_same_but_patch_contents(mock_packages, config):
+    spec1 = Spec("hash-test1@1.1").concretized()
+    spec2 = Spec("hash-test2@1.1").concretized()
+    compare_hash_sans_name(False, spec1, spec2)
+
+
+def test_content_hash_different_variants(mock_packages, config):
+    spec1 = Spec("hash-test1@1.2 +variantx").concretized()
+    spec2 = Spec("hash-test2@1.2 ~variantx").concretized()
+    compare_hash_sans_name(True, spec1, spec2)
+
+
+def test_content_hash_cannot_get_details_from_ast(mock_packages, config):
+    """Packages hash-test1 and hash-test3 would be considered the same
+       except that hash-test3 conditionally executes a phase based on
+       a "when" directive that Spack cannot evaluate by examining the
+       AST. This test ensures that Spack can compute a content hash
+       for hash-test3. If Spack cannot determine when a phase applies,
+       it adds it by default, so the test also ensures that the hashes
+       differ where Spack includes a phase on account of AST-examination
+       failure.
+    """
+    spec3 = Spec("hash-test1@1.7").concretized()
+    spec4 = Spec("hash-test3@1.7").concretized()
+    compare_hash_sans_name(False, spec3, spec4)
+
+
+def test_content_hash_all_same_but_archive_hash(mock_packages, config):
+    spec1 = Spec("hash-test1@1.3").concretized()
+    spec2 = Spec("hash-test2@1.3").concretized()
+    compare_hash_sans_name(False, spec1, spec2)
+
+
+def test_content_hash_parse_dynamic_function_call(mock_packages, config):
+    spec = Spec("hash-test4").concretized()
+    spec.package.content_hash()
 
 
 many_strings = '''\
@@ -184,8 +237,9 @@ def test_package_hash_consistency(package_spec, expected_hash):
     """
     spec = Spec(package_spec)
     filename = os.path.join(datadir, "%s.txt" % spec.name)
-    print(ph.canonical_source(spec, filename))
-    h = ph.canonical_source_hash(spec, filename)
+    with open(filename) as f:
+        source = f.read()
+    h = ph.package_hash(spec, source=source)
     assert expected_hash == h
 
 
@@ -214,13 +268,9 @@ class Pkg:
 """
 
 
-def test_multimethod_resolution(tmpdir):
-    when_pkg = tmpdir.join("pkg.py")
-    with when_pkg.open("w") as f:
-        f.write(many_multimethods)
-
+def test_multimethod_resolution():
     # all are false but the default
-    filtered = ph.canonical_source("pkg@4.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@4.0", source=many_multimethods)
     assert "ONE" in filtered
     assert "TWO" not in filtered
     assert "THREE" not in filtered
@@ -228,7 +278,7 @@ def test_multimethod_resolution(tmpdir):
     assert "FIVE" in filtered
 
     # we know first @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@1.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@1.0", source=many_multimethods)
     assert "ONE" not in filtered
     assert "TWO" in filtered
     assert "THREE" not in filtered
@@ -236,7 +286,7 @@ def test_multimethod_resolution(tmpdir):
     assert "FIVE" in filtered
 
     # we know last @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@3.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@3.0", source=many_multimethods)
     assert "ONE" not in filtered
     assert "TWO" not in filtered
     assert "THREE" not in filtered
@@ -244,7 +294,7 @@ def test_multimethod_resolution(tmpdir):
     assert "FIVE" in filtered
 
     # we don't know if default or THREE will win, include both
-    filtered = ph.canonical_source("pkg@2.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@2.0", source=many_multimethods)
     assert "ONE" in filtered
     assert "TWO" not in filtered
     assert "THREE" in filtered
@@ -280,13 +330,9 @@ class Pkg:
 """
 
 
-def test_more_dynamic_multimethod_resolution(tmpdir):
-    when_pkg = tmpdir.join("pkg.py")
-    with when_pkg.open("w") as f:
-        f.write(more_dynamic_multimethods)
-
+def test_more_dynamic_multimethod_resolution():
     # we know the first one is the only one that can win.
-    filtered = ph.canonical_source("pkg@4.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@4.0", source=more_dynamic_multimethods)
     assert "ONE" in filtered
     assert "TWO" not in filtered
     assert "THREE" not in filtered
@@ -294,7 +340,7 @@ def test_more_dynamic_multimethod_resolution(tmpdir):
     assert "FIVE" in filtered
 
     # now we have to include ONE and TWO because ONE may win dynamically.
-    filtered = ph.canonical_source("pkg@1.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@1.0", source=more_dynamic_multimethods)
     assert "ONE" in filtered
     assert "TWO" in filtered
     assert "THREE" not in filtered
@@ -303,7 +349,7 @@ def test_more_dynamic_multimethod_resolution(tmpdir):
 
     # we know FOUR is true and TWO and THREE are false, but ONE may
     # still win dynamically.
-    filtered = ph.canonical_source("pkg@3.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@3.0", source=more_dynamic_multimethods)
     assert "ONE" in filtered
     assert "TWO" not in filtered
     assert "THREE" not in filtered
@@ -311,7 +357,7 @@ def test_more_dynamic_multimethod_resolution(tmpdir):
     assert "FIVE" in filtered
 
     # TWO and FOUR can't be satisfied, but ONE or THREE could win
-    filtered = ph.canonical_source("pkg@2.0", str(when_pkg))
+    filtered = ph.canonical_source("pkg@2.0", source=more_dynamic_multimethods)
     assert "ONE" in filtered
     assert "TWO" not in filtered
     assert "THREE" in filtered

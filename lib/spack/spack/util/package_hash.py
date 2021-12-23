@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import ast
-import hashlib
 
 import spack.directives
 import spack.error
@@ -217,45 +216,62 @@ class ResolveMultiMethods(ast.NodeTransformer):
         return func
 
 
-def package_content(spec):
-    return ast.dump(package_ast(spec))
+def canonical_source(spec, filter_multimethods=True, source=None):
+    """Get canonical source for a spec's package.py by unparsing its AST.
 
-
-def canonical_source(spec, filename=None, filter_multimethods=True):
+    Arguments:
+        filter_multimethods (bool): By default, filter multimethods out of the
+            AST if they are known statically to be unused. Supply False to disable.
+        source (str): Optionally provide a string to read python code from.
+    """
     return unparse(
-        package_ast(spec, filename, filter_multimethods),
+        package_ast(spec, filter_multimethods, source=source),
         py_ver_consistent=True,
     )
 
 
-def canonical_source_hash(spec, filename=None):
-    source = canonical_source(spec, filename)
+def package_hash(spec, source=None):
+    """Get a hash of a package's canonical source code.
+
+    This function is used to determine whether a spec needs a rebuild when a
+    package's source code changes.
+
+    Arguments:
+        source (str): Optionally provide a string to read python code from.
+
+    """
+    source = canonical_source(spec, filter_multimethods=True, source=source)
     return spack.util.hash.b32_hash(source)
 
 
-def package_hash(spec, content=None):
-    if content is None:
-        content = package_content(spec)
-    return hashlib.sha256(content.encode('utf-8')).digest().lower()
+def package_ast(spec, filter_multimethods=True, source=None):
+    """Get the AST for the ``package.py`` file corresponding to ``spec``.
 
-
-def package_ast(spec, filename=None, filter_multimethods=True):
+    Arguments:
+        filter_multimethods (bool): By default, filter multimethods out of the
+            AST if they are known statically to be unused. Supply False to disable.
+        source (str): Optionally provide a string to read python code from.
+    """
     spec = spack.spec.Spec(spec)
 
-    if not filename:
+    if source is None:
         filename = spack.repo.path.filename_for_package_name(spec.name)
+        with open(filename) as f:
+            source = f.read()
 
-    with open(filename) as f:
-        text = f.read()
-        root = ast.parse(text)
+    # create an AST
+    root = ast.parse(source)
 
+    # remove docstrings and directives from the package AST
     root = RemoveDocstrings().visit(root)
-
-    RemoveDirectives(spec).visit(root)
+    root = RemoveDirectives(spec).visit(root)
 
     if filter_multimethods:
+        # visit nodes and build up a dictionary of methods (no need to assign)
         tagger = TagMultiMethods(spec)
         tagger.visit(root)
+
+        # transform AST using tagged methods
         root = ResolveMultiMethods(tagger.methods).visit(root)
 
     return root
