@@ -13,6 +13,8 @@ class Neovim(CMakePackage):
     git = "https://github.com/neovim/neovim.git"
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
 
+    maintainers = ['albestro']
+
     version('master', branch='master')
     version('stable', tag='stable')
     version('0.6.0', sha256='2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c')
