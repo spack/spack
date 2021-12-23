@@ -214,7 +214,7 @@ def test_remove_directives():
     ("amdfftw",      "nfrk76xyu6wxs4xb4nyichm3om3kb7yp"),
     ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
     ("llvm",         "ngact4ds3xwgsbn5bruxpfs6f4u4juba"),
-    # has @when("@4.1.0")
+    # has @when("@4.1.0") and raw unicode literals
     ("mfem",         "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
     ("mfem@4.0.0",   "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
     ("mfem@4.1.0",   "2j655nix3oe57iwvs2mlgx2mresk7czl"),
@@ -222,6 +222,8 @@ def test_remove_directives():
     ("py-torch",     "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
     ("py-torch@1.0", "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
     ("py-torch@1.6", "5nwndnknxdfs5or5nrl4pecvw46xc5i2"),
+    # has a print with multiple arguments
+    ("legion",       "ba4tleyb3g5mdhhsje6t6jyitqj3yfpz"),
 ])
 def test_package_hash_consistency(package_spec, expected_hash):
     """Ensure that that package hash is consistent python version to version.
