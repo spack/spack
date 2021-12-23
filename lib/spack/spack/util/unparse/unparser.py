@@ -82,6 +82,7 @@ class Unparser:
                regardless of the python version, because Python 2's AST does not
                have sufficient information to reconstruct star-arg order.
             2. Always unparsing print as a function.
+            3. Unparsing Python3 unicode literals the way Python 2 would.
 
         Without these changes, the same source can generate different code for Python 2
         and Python 3, depending on subtle AST differences.  The first of these two
@@ -544,7 +545,13 @@ class Unparser:
 
     def _Str(self, tree):
         if six.PY3:
-            self.write(repr(tree.s))
+            # Python 3.5, 3.6, and 3.7 can't tell if something was written as a
+            # unicode constant. Try to make that consistent with 'u' for '\u- literals
+            if self._py_ver_consistent and repr(tree.s).startswith("'\\u"):
+                self.write("u")
+            self._write_constant(tree.s)
+        elif self._py_ver_consistent:
+            self.write(repr(tree.s))  # just do a python 2 repr for consistency
         else:
             # if from __future__ import unicode_literals is in effect,
             # then we want to output string literals using a 'b' prefix
@@ -603,7 +610,7 @@ class Unparser:
         write("{")
 
         expr = StringIO()
-        unparser = type(self)(py_ver_consistent=self.py_ver_consistent)
+        unparser = type(self)(py_ver_consistent=self._py_ver_consistent)
         unparser.set_precedence(pnext(_Precedence.TEST), t.value)
         unparser.visit(t.value, expr)
         expr = expr.getvalue().rstrip("\n")
@@ -636,6 +643,13 @@ class Unparser:
         if isinstance(value, (float, complex)):
             # Substitute overflowing decimal literal for AST infinities.
             self.write(repr(value).replace("inf", INFSTR))
+        elif isinstance(value, str) and self._py_ver_consistent:
+            # emulate a python 2 repr with raw unicode escapes
+            # see _Str for python 2 counterpart
+            raw = repr(value.encode("raw_unicode_escape")).lstrip('b')
+            if raw.startswith(r"'\\u"):
+                raw = "'\\" + raw[3:]
+            self.write(raw)
         else:
             self.write(repr(value))
 
