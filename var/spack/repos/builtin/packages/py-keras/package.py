@@ -21,6 +21,7 @@ class PyKeras(PythonPackage):
     version('2.6.0',
             url='https://github.com/keras-team/keras/archive/refs/tags/v2.6.0.tar.gz',
             sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
+    version('2.5.0', commit='9c266106163390f173625c4e7b1ccb03ae145ffc')
     version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
     version('2.2.3', sha256='694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de')
@@ -58,41 +59,17 @@ class PyKeras(PythonPackage):
     depends_on('py-theano', type=('build', 'run'), when='@:2.2')
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'), when='@:2.2')
-    depends_on('py-tensorflow', type=('build', 'run'), when='@2.5.0:')
+    depends_on('py-tensorflow@2.5.0:2.5', type=('build', 'run'), when='@2.5.0:2.5')
+    depends_on('py-tensorflow@2.6.0:2.6', type=('build', 'run'), when='@2.6.0:2.6')
+    depends_on('py-tensorflow@2.7.0:2.7', type=('build', 'run'), when='@2.7.0:2.7')
     depends_on('bazel', type='build', when='@2.5.0:')
-    depends_on('protobuf', type='build', when='@2.5.0')
+    depends_on('protobuf', type='build', when='@2.5.0:')
 
     @when('@2.5.0:')
     def patch(self):
-        text = '''
-def py_proto_library(
-        name,
-        srcs = [],
-        deps = [],
-        py_libs = [],
-        py_extra_srcs = [],
-        include = None,
-        use_grpc_plugin = False,
-        **kargs):
-
-    outs = [s[:-len(".proto")] + "_pb2.py" for s in srcs]
-
-    native.genrule(
-        name = name + "_protoc_gen",
-        outs = outs,
-        srcs = srcs,
-        cmd = "protoc --python_out=$(GENDIR) -I. $<",
-    )
-
-    native.py_library(
-        name = name,
-        srcs = outs + py_extra_srcs,
-        deps = py_libs + deps,
-        imports = [],
-        **kargs
-    )
-
-'''
+        infile = join_path(self.package_dir, 'protobuf_build.patch')
+        with open(infile, 'r') as source_file:
+            text = source_file.read()
         with open('keras/keras.bzl', mode='a') as f:
             f.write(text)
 
