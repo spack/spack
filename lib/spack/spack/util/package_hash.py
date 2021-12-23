@@ -96,7 +96,22 @@ class TagMultiMethods(ast.NodeVisitor):
                 try:
                     # evaluate spec condition for any when's
                     cond = dec.args[0].s
-                    conditions.append(self.spec.satisfies(cond, strict=True))
+
+                    # Boolean literals come through like this
+                    if isinstance(cond, bool):
+                        conditions.append(cond)
+                        continue
+
+                    # otherwise try to make a spec
+                    try:
+                        cond_spec = spack.spec.Spec(cond)
+                    except Exception:
+                        # Spec parsing failed -- we don't know what this is.
+                        conditions.append(None)
+                    else:
+                        # Check statically whether spec satisfies the condition
+                        conditions.append(self.spec.satisfies(cond_spec, strict=True))
+
                 except AttributeError:
                     # In this case the condition for the 'when' decorator is
                     # not a string literal (for example it may be a Python
