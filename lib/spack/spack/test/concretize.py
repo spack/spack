@@ -1668,3 +1668,29 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = Spec('c').concretized()
         assert s.namespace == 'builtin.mock'
+
+    @pytest.mark.parametrize('specs,expected', [
+        (['libelf', 'libelf@0.8.10'], 1),
+        (['libdwarf%gcc', 'libelf%clang'], 2),
+        (['libdwarf%gcc', 'libdwarf%clang'], 4),
+        (['libdwarf^libelf@0.8.12', 'libdwarf^libelf@0.8.13'], 4),
+        (['hdf5', 'zmpi'], 3),
+        (['hdf5', 'mpich'], 2),
+        (['hdf5^zmpi', 'mpich'], 4),
+        (['mpi', 'zmpi'], 2),
+        (['mpi', 'mpich'], 1)
+    ])
+    def test_best_effort_coconcretize(mock_packages, specs, expected):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = set()
+        for result in solver.solve_in_rounds(specs):
+            for s in result.specs:
+                concrete_specs.update(s.traverse())
+
+        assert len(concrete_specs) == expected
