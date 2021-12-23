@@ -84,7 +84,7 @@ class Openspeedshop(CMakePackage):
     # For boost
     depends_on("boost@1.70.0:")
 
-    depends_on("dyninst@develop", when='@develop')
+    depends_on("dyninst@master", when='@develop')
     depends_on("dyninst@10:", when='@2.4.0:9999')
 
     depends_on("python@2.7.14:2.7", type=('build', 'run'))
