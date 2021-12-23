@@ -415,7 +415,7 @@ class Unparser:
             self.dispatch(deco)
         self.fill("class " + t.name)
         if six.PY3:
-            with self.delimit("(", ")"):
+            with self.delimit_if("(", ")", condition=t.bases or t.keywords):
                 comma = False
                 for e in t.bases:
                     if comma:
