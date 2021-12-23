@@ -32,7 +32,7 @@ class PyFastai(PythonPackage):
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-fastprogress@0.2.4:', type=('build', 'run'))
-    depends_on('py-pillow@6.0.1:', type=('build', 'run'))
+    depends_on('pil@6.0.1:', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-spacy@:3.999', type=('build', 'run'))
