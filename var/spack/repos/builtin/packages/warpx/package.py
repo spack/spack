@@ -93,9 +93,14 @@ class Warpx(CMakePackage):
         depends_on('blaspp')
         depends_on('blaspp +cuda', when='compute=cuda')
     with when('+psatd compute=omp'):
-        depends_on('fftw@3: +openmp')
-        depends_on('fftw ~mpi', when='~mpi')
-        depends_on('fftw +mpi', when='+mpi')
+        # FFTW: general API, implemented by various packages
+        depends_on('fftw-api@3 +openmp')
+        depends_on('fftw-api ~mpi', when='~mpi')
+        depends_on('fftw-api +mpi', when='+mpi')
+        # FFTW: specific variants for implementations
+        depends_on('fftw@3: +openmp', when='^fftw')
+        depends_on('fftw ~mpi', when='~mpi ^fftw')
+        depends_on('fftw +mpi', when='+mpi ^fftw')
         depends_on('pkgconfig', type='build')
     with when('+openpmd'):
         depends_on('openpmd-api@0.13.1:')
