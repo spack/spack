@@ -4,12 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import ast
+import os
+
+import pytest
 
 import spack.directives
 import spack.paths
 import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
+
+datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 
 def test_hash(tmpdir, mock_packages, config):
@@ -150,6 +155,38 @@ def test_remove_directives():
 
     for name in spack.directives.directive_names:
         assert name not in unparsed
+
+
+@pytest.mark.parametrize("package_spec,expected_hash", [
+    ("amdfftw",      "nfrk76xyu6wxs4xb4nyichm3om3kb7yp"),
+    ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
+    ("llvm",         "ngact4ds3xwgsbn5bruxpfs6f4u4juba"),
+    # has @when("@4.1.0")
+    ("mfem",         "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
+    ("mfem@4.0.0",   "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
+    ("mfem@4.1.0",   "2j655nix3oe57iwvs2mlgx2mresk7czl"),
+    # has @when("@1.5.0:")
+    ("py-torch",     "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
+    ("py-torch@1.0", "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
+    ("py-torch@1.6", "5nwndnknxdfs5or5nrl4pecvw46xc5i2"),
+])
+def test_package_hash_consistency(package_spec, expected_hash):
+    """Ensure that that package hash is consistent python version to version.
+
+    We assume these tests run across all supported Python versions in CI, and we ensure
+    consistency with recorded hashes for some well known inputs.
+
+    If this fails, then something about the way the python AST works has likely changed.
+    If Spack is running in a new python version, we might need to modify the unparser to
+    handle it. If not, then something has become inconsistent about the way we unparse
+    Python code across versions.
+
+    """
+    spec = Spec(package_spec)
+    filename = os.path.join(datadir, "%s.txt" % spec.name)
+    print(ph.canonical_source(spec, filename))
+    h = ph.canonical_source_hash(spec, filename)
+    assert expected_hash == h
 
 
 many_multimethods = """\
