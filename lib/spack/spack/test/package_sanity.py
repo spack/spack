@@ -20,6 +20,7 @@ import spack.paths
 import spack.repo
 import spack.util.crypto as crypto
 import spack.util.executable as executable
+import spack.util.package_hash as ph
 import spack.variant
 
 
@@ -54,6 +55,21 @@ def test_packages_are_pickleable():
         for name in failed_to_pickle:
             pkg = spack.repo.get(name)
             pickle.dumps(pkg)
+
+
+def test_packages_are_unparseable():
+    failed_to_unparse = list()
+    for name in spack.repo.all_package_names():
+        try:
+            ph.canonical_source(name, filter_multimethods=False)
+        except Exception:
+            failed_to_unparse.append(name)
+
+    if failed_to_unparse:
+        tty.msg('The following packages failed to unparse: ' +
+                ', '.join(failed_to_unparse))
+
+    assert len(failed_to_unparse) == 0
 
 
 def test_repo_getpkg_names_and_classes():
