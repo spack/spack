@@ -221,8 +221,11 @@ def package_content(spec):
     return ast.dump(package_ast(spec))
 
 
-def canonical_source(spec, filename=None):
-    return unparse(package_ast(spec, filename=filename), py_ver_consistent=True)
+def canonical_source(spec, filename=None, filter_multimethods=True):
+    return unparse(
+        package_ast(spec, filename, filter_multimethods),
+        py_ver_consistent=True,
+    )
 
 
 def canonical_source_hash(spec, filename=None):
@@ -236,7 +239,7 @@ def package_hash(spec, content=None):
     return hashlib.sha256(content.encode('utf-8')).digest().lower()
 
 
-def package_ast(spec, filename=None):
+def package_ast(spec, filename=None, filter_multimethods=True):
     spec = spack.spec.Spec(spec)
 
     if not filename:
@@ -250,10 +253,11 @@ def package_ast(spec, filename=None):
 
     RemoveDirectives(spec).visit(root)
 
-    tagger = TagMultiMethods(spec)
-    tagger.visit(root)
+    if filter_multimethods:
+        tagger = TagMultiMethods(spec)
+        tagger.visit(root)
+        root = ResolveMultiMethods(tagger.methods).visit(root)
 
-    root = ResolveMultiMethods(tagger.methods).visit(root)
     return root
 
 

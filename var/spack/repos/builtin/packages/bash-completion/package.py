@@ -39,7 +39,10 @@ class BashCompletion(AutotoolsPackage):
         print('include the following lines in your ~/.bash_profile :')
         print('')
         print('# Use bash-completion, if available')
-        print('[[ $PS1 && -f %s/share/bash-completion/bash_completion ]] && \ ' % prefix)  # NOQA: ignore=E501
+        print(
+            '[[ $PS1 && -f %s/share/bash-completion/bash_completion ]] && \\'
+            % prefix
+        )
         print('    . %s/share/bash-completion/bash_completion' % prefix)
         print('')
         print('=====================================================')
