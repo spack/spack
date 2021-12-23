@@ -75,7 +75,6 @@ class Vasp(MakefilePackage):
                         spec['qd'].prefix.include, make_include)
             filter_file('/opt/pgi/qd-2.3.17/install/lib',
                         spec['qd'].prefix.lib, make_include)
-            filter_file('^SCALAPACK[ ]{0,}=.*$', 'SCALAPACK ?=', make_include)
         elif '%aocc' in spec:
             if '+openmp' in spec:
                 copy(
@@ -98,8 +97,6 @@ class Vasp(MakefilePackage):
                         'CFLAGS_LIB = -O3', make_include)
             filter_file('^FFLAGS_LIB[ ]{0,}=.*$',
                         'FFLAGS_LIB = -O2', make_include)
-            filter_file('^SCALAPACK[ ]{0,}=.*$',
-                        'SCALAPACK ?=', make_include)
             filter_file('^OFLAG[ ]{0,}=.*$',
                         'OFLAG = -O3', make_include)
             filter_file('^FC[ ]{0,}=.*$',
@@ -135,7 +132,7 @@ class Vasp(MakefilePackage):
         filter_file('^FFTW[ ]{0,}?=.*$', 'FFTW ?=', 'makefile.include')
         filter_file('^MPI_INC[ ]{0,}=.*$', 'MPI_INC ?=', 'makefile.include')
         filter_file('-DscaLAPACK.*$\n', '', 'makefile.include')
-        filter_file('^SCALAPACK.*$', '', 'makefile.include')
+        filter_file('^SCALAPACK[ ]{0,}=.*$', '', 'makefile.include')
 
         if '+cuda' in spec:
             filter_file('^OBJECTS_GPU[ ]{0,}=.*$',
