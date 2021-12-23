@@ -442,10 +442,12 @@ class Result(object):
             # process space 0
             if not self.multi_root:
                 idx = 0
+
             key = (str(idx), input_spec.name)
             if input_spec.virtual:
-                providers = [spec.name for spec in answer.values()
-                             if spec.package.provides(input_spec.name)]
+                providers = [spec.name for key, spec in answer.items()
+                             if spec.package.provides(input_spec.name) and
+                             str(idx) == key[0]]
                 key = (str(idx), providers[0])
 
             self._concrete_specs.append(answer[key])
@@ -491,6 +493,18 @@ def bootstrap_clingo():
     except ImportError:
         # older versions of clingo have this one namespace up
         from clingo import parse_files
+
+
+template_pkg_opt = 'opt_criterion({0}, "number of non-identical {1} nodes").'
+template_pkg_null = '#minimize {{ 0@{0} : #true}}.'
+template_pkg_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
+                        'package_not_equal(PSID1, PSID2, "{1}"), '
+                        'node(PSID1, "{1}"), node(PSID2, "{1}") }}.')
+
+template_virtual_opt = 'opt_criterion({0}, "number of non-identical {1} providers").'
+template_virtual_null = '#minimize {{ 0@{0} : #true}}.'
+template_virtual_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
+                            'virtual_not_equal(PSID1, PSID2, "{1}")}}.')
 
 
 class PyclingoDriver(object):
@@ -570,18 +584,21 @@ class PyclingoDriver(object):
             self.backend = backend
             solver_setup.setup(self, specs, tests=tests, reuse=reuse)
 
-            template_opt = 'opt_criterion({0}, "number of non-identical {1} nodes").'
-            template_null = '#minimize {{ 0@{0} : #true}}.'
-            template_real = ('#minimize {{ 1@{0},PSID1,PSID2 : '
-                             'package_not_equal(PSID1, PSID2, "{1}"), '
-                             'node(PSID1, "{1}"), node(PSID2, "{1}") }}.')
             strings = []
             for i, pkg in enumerate(sorted(set(solver_setup.possible_pkgs))):
                 priority = high_fixed_priority_offset + i
                 strings.extend([
-                    template_opt.format(priority, pkg),
-                    template_null.format(priority),
-                    template_real.format(priority, pkg)
+                    template_pkg_opt.format(priority, pkg),
+                    template_pkg_null.format(priority),
+                    template_pkg_present.format(priority, pkg)
+                ])
+            virtual_offset = len(set(solver_setup.possible_pkgs))
+            for i, virt in enumerate(sorted(set(solver_setup.possible_virtuals))):
+                priority = high_fixed_priority_offset + i + virtual_offset
+                strings.extend([
+                    template_virtual_opt.format(priority, virt),
+                    template_virtual_null.format(priority),
+                    template_virtual_present.format(priority, virt)
                 ])
             self.h1("Per-package minimization of unique nodes")
             self.out.write('\n'.join(strings))

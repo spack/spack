@@ -918,6 +918,15 @@ package_not_equal(PSID1, PSID2, Package)
     not package_equal(PSID1, PSID2, Package),
     PSID1 < PSID2.
 
+% Do not tie this to whether the virtual node exists
+% because we want `mpi` and `mpich` to co-concretize
+virtual_not_equal(PSID1, PSID2, Virtual)
+ :- node(PSID1, Provider1), node(PSID2, Provider2),
+    possible_provider(Provider1, Virtual),
+    possible_provider(Provider2, Virtual),
+    PSID1 < PSID2,
+    Provider1 != Provider2.
+
 equality_attr("hash").
 equality_attr("depends_on").
 equality_attr("version").
@@ -947,6 +956,10 @@ equality_attr("external_spec_selected").
 %opt_criterion(300+index, "number of non-identical package nodes").
 %#minimize { 0@300+index: #true }.
 %#minimize { 1@300+index,PSID1,PSID2 : package_not_equal(PSID1, PSID2, "package") }.
+% asp.py will generate statements of a similar form for each literal "virtual"
+%opt_criterion(300+index, "number of virtual providers")
+%#minimize { 0@300+index, #true }.
+%#minimize { 1@300+index,PSID1,PSID2 : virtual_not_equal(PSID1, PSID2, "virtual") }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
