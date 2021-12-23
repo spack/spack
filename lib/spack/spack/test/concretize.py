@@ -1375,3 +1375,25 @@ class TestConcretize(object):
 
         s = spack.spec.Spec('sticky-variant %clang').concretized()
         assert s.satisfies('%clang') and s.satisfies('~allow-gcc')
+
+    @pytest.mark.parametrize('specs,expected', [
+        (['libelf', 'libelf@0.8.10'], 1),
+        (['libdwarf%gcc', 'libelf%clang'], 2),
+        (['libdwarf%gcc', 'libdwarf%clang'], 3),
+        (['libdwarf^libelf@0.8.12', 'libdwarf^libelf@0.8.13'], 4),
+        (['hdf5', 'zmpi'], 3),
+        (['hdf5', 'mpich'], 2),
+        (['hdf5^zmpi', 'mpich'], 4),
+        (['mpi', 'zmpi'], 2),
+        (['mpi', 'mpich'], 1)
+    ])
+    def test_best_effort_coconcretize(mock_packages, specs, expected):
+        import spack.solver.asp
+        specs = [spack.spec.Spec(s) for s in specs]
+        result = spack.solver.asp.solve(specs, reuse=False, multi_root=True)
+
+        concrete_specs = set()
+        for s in result.specs:
+            concrete_specs.update(s.traverse())
+
+        assert len(concrete_specs) == expected
