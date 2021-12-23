@@ -60,8 +60,6 @@ def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
         MyAnalyzer(spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Fails on windows (LockUpgradeError)")
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
