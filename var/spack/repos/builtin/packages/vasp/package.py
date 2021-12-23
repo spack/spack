@@ -132,7 +132,7 @@ class Vasp(MakefilePackage):
         filter_file('^FFTW[ ]{0,}?=.*$', 'FFTW ?=', 'makefile.include')
         filter_file('^MPI_INC[ ]{0,}=.*$', 'MPI_INC ?=', 'makefile.include')
         filter_file('-DscaLAPACK.*$\n', '', 'makefile.include')
-        filter_file('^SCALAPACK[ ]{0,}=.*$', '', 'makefile.include')
+        filter_file('^SCALAPACK[ ]{0,}=.*$', 'SCALAPACK ?=', 'makefile.include')
 
         if '+cuda' in spec:
             filter_file('^OBJECTS_GPU[ ]{0,}=.*$',
