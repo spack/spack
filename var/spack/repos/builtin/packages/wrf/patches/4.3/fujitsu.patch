@@ -8,35 +8,3 @@
 +         IF (DY.LE.1.D-50) THEN
              PRINT *,'IN FIND_RC0.F DY IS',DY
              PRINT *,I,DX,Y,DY,DEXP(DRC),DRC,XAFRC,X1MAFRC,DMODE,DSTDV, &
-                     CMODE,CSTDV
-@@ -6203,7 +6203,7 @@
-             ENDIF
-             QCLsh = QCLS1*ESH*VTQSH*NH1D*(SASR2*GSM3+SASR1*2.*GH2*GSM2+&
-                     GH3*GSM1)
--            NCLsh = NCLS1*ESH*VTNSH*NH1D*(SASR2*GS3*+SASR1*2.*GH2*GS2+ &
-+            NCLsh = NCLS1*ESH*VTNSH*NH1D*(SASR2*GS3 +SASR1*2.*GH2*GS2+ &
-                     GH3)
-             QCLsh = MIN(QCLsh,QS1D*iDT)
-             NCLsh = MIN(NCLsh,NS1D*iDT)
-@@ -6220,7 +6220,7 @@
-             ENDIF
-             IF (AH1D.GE.ASMALL) THEN
-                AhCLsh = (MVDX**2.-MVDH**2.)*NCLS1*ESH*VTASH*NH1D*(     &
--                        SASR2*GS3*+SASR1*2.*GH2*GS2+GH3)
-+                        SASR2*GS3 +SASR1*2.*GH2*GS2+GH3)
-             ENDIF
-          ENDIF
-          IF (QS1D.GE.QSMALL.AND.MVDS.GE.2.E-4) THEN
---- spack-src/phys/module_sf_noahmplsm.F.org	2021-11-04 09:33:50.000000000 +0900
-+++ spack-src/phys/module_sf_noahmplsm.F	2021-11-04 09:42:00.000000000 +0900
-@@ -7919,8 +7919,8 @@
-       SMCAVL = 0.0
-       SMCLIM = 0.0
-       ! estimate available water and field capacity for the root zone
--      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*-1*ZSOIL(1)              ! current soil water (m) 
--      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*-1*ZSOIL(1) ! available water (m)
-+      SMCAVL = (SH2O(1)-parameters%SMCWLT(1))*(-1)*ZSOIL(1)              ! current soil water (m) 
-+      SMCLIM = (parameters%SMCREF(1)-parameters%SMCWLT(1))*(-1)*ZSOIL(1) ! available water (m)
-       DO K = 2, parameters%NROOT
-          SMCAVL = SMCAVL + (SH2O(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))
-          SMCLIM = SMCLIM + (parameters%SMCREF(K)-parameters%SMCWLT(K))*(ZSOIL(K-1) - ZSOIL(K))

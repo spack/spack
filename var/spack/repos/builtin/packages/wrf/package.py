@@ -140,6 +140,7 @@ class Wrf(Package):
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+    # Various syntax fixes found by FPT tool
     patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch",
           sha256="d685a77c82d770f2af4e66711effa0cb115e2bc6e601de4cb92f15b138c6c85b", when="@4.2 %fj")
     patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
@@ -147,6 +148,11 @@ class Wrf(Package):
     patch("patches/4.3/Makefile.patch", when="@4.3:")
     patch("patches/4.3/arch.postamble.patch", when="@4.3:")
     patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
+    # Syntax errors in physics routines
+    patch("https://github.com/wrf-model/WRF/commit/7c6fd575b7a8fe5715b07b38db160e606c302956.patch",
+          sha256="bc24b6c8a073837404dbd33b0a4402843bd4771441dd766899d9274583db683f", when="@4.3.1")
+    patch("https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch",
+          sha256="d3fe347fd57c0f989744113c0bc8faf98bab2dd4e88867efa4b154c2b4265636", when="@4.3.1")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
