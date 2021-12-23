@@ -434,8 +434,12 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="enable disable reset root list trust untrust"
+        SPACK_COMPREPLY="status enable disable reset root list trust untrust"
     fi
+}
+
+_spack_bootstrap_status() {
+    SPACK_COMPREPLY="-h --help --optional --dev"
 }
 
 _spack_bootstrap_enable() {
