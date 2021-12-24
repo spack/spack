@@ -19,7 +19,7 @@ class PyMarkdown(PythonPackage):
 
     version('3.3.4', sha256='31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49')
     version('3.1.1', sha256='2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a')
-    version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81')
+    version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81', deprecated=True)
     version('2.6.7', sha256='daebf24846efa7ff269cfde8c41a48bb2303920c7b2c7c5e04fa82e6282d05c0', deprecated=True)
     version('2.6.6', sha256='9a292bb40d6d29abac8024887bcfc1159d7a32dc1d6f1f6e8d6d8e293666c504', deprecated=True)
     version('2.6.5', sha256='8d94cf6273606f76753fcb1324623792b3738c7612c2b180c85cc5e88642e560', deprecated=True)
