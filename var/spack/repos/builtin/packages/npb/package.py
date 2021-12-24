@@ -33,7 +33,7 @@ class Npb(MakefilePackage):
 
     version('3.3.1', sha256='4a8ea679b1df69f583c544c47198b3c26a50ec2bb6f8f69aef66c04c9a747d2d')
     version('3.4.1', sha256='f3a43467da6e84a829ea869156d3ea86c17932136bb413a4b6dab23018a28881')
-    
+
     # Valid Benchmark Names
     valid_names = (
         'is',  # Integer Sort, random memory access
