@@ -245,6 +245,7 @@ class Root(CMakePackage):
     depends_on('davix @0.7.1:', when='+davix')
     depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
+    depends_on('fcgi',      when='+http')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
@@ -292,10 +293,6 @@ class Root(CMakePackage):
 
     # ROOT <6.14 was incompatible with Python 3.7+
     conflicts('^python@3.7:', when='@:6.13 +python')
-
-    # See README.md
-    conflicts('+http',
-              msg='HTTP server currently unsupported due to dependency issues')
 
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
