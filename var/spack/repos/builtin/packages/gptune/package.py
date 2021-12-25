@@ -88,6 +88,9 @@ class Gptune(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
+    def setup_run_environment(self, env):
+        env.set('GPTUNE_INSTALL_PATH', site_packages_dir)
+
     def test(self):
         spec = self.spec
         comp_name = self.compiler.name
