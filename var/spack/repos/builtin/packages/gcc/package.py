@@ -292,7 +292,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
 
-    # this patch removes cylades support from gcc-5 and allows gg-5 to be built
+    # this patch removes cylades support from gcc-5 and allows gcc-5 to be built
     # with newer glibc versions.
     patch('glibc-2.31-libsanitizer-3-gcc-5.patch', when='@5.3.0:5.5.0')
 
