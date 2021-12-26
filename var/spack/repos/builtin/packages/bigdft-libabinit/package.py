@@ -55,12 +55,7 @@ class BigdftLibabinit(AutotoolsPackage):
         spec = self.spec
         prefix = self.prefix
 
-        fcflags = []
-        cflags = []
-
         args = [
-            "FCFLAGS=%s" % " ".join(fcflags),
-            "CFLAGS=%s" % " ".join(cflags),
             "--with-libxc-libs=%s %s" % (spec['libxc'].libs.ld_flags,
                                          spec['libxc'].libs.ld_flags + "f90"),
             "--with-libxc-incs=%s"    % spec['libxc'].headers.include_flags,
