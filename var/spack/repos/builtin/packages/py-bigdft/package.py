@@ -23,20 +23,21 @@ class PyBigdft(PythonPackage):
     depends_on('py-numpy')
     depends_on('py-setuptools')
 
-    depends_on('bigdft-futile@develop', when='@develop')
-    for version in ['1.9.0', '1.9.1']:
+    for version in ['1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-futile@{0}'.format(version), type='run', when='@{0}'.format(version))
 
     phases = ['build', 'install']
 
+    build_directory = "PyBigDFT"
+
     def build(self, spec, prefix):
         python = which('python')
 
-        with working_dir('PyBigDFT'):
+        with working_dir(self.build_directory):
             python('setup.py', 'build')
 
     def install(self, spec, prefix):
         python = which('python')
 
-        with working_dir('PyBigDFT'):
+        with working_dir(self.build_directory):
             python('setup.py', 'install', '--prefix=%s' % prefix)

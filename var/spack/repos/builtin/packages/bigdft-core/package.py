@@ -14,6 +14,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
+    version('develop', branch='devel')
     version('1.9.1',   sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
     version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
     version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
@@ -38,11 +39,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     depends_on('scalapack',                when='+scalapack')
     depends_on('openbabel',                when='+openbabel')
 
-    depends_on('bigdft-futile@develop',    when='@develop')
-    depends_on('bigdft-chess@develop',     when='@develop')
-    depends_on('bigdft-psolver@develop',   when='@develop')
-    depends_on('bigdft-libabinit@develop', when='@develop')
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-chess@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-psolver@{0}'.format(version), when='@{0}'.format(version))
@@ -55,31 +52,27 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
-        with working_dir('bigdft'):
+        with working_dir(self.build_directory):
             autoreconf('-fi')
 
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
-        linalg = []
-        fcflags = []
-        cflags = []
-
         python_version = spec['python'].version.up_to(2)
         pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
                            'python{0}'.format(python_version))
 
+        openmp_flag = []
         if '+openmp' in spec:
-            fcflags.append(self.compiler.openmp_flag)
+            openmp_flag.append(self.compiler.openmp_flag)
 
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
-        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
-            "FCFLAGS=%s"               % " ".join(fcflags),
-            "CFLAGS=%s"                % " ".join(cflags),
+            "FCFLAGS=%s"               % " ".join(openmp_flag),
             "--with-ext-linalg=%s"     % " ".join(linalg),
             "--with-pyyaml-path=%s"    % pyyaml,
             "--with-futile-libs=%s"    % spec['bigdft-futile'].prefix.lib,

@@ -43,27 +43,24 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
-        with working_dir('futile'):
+        with working_dir(self.build_directory):
             autoreconf('-fi')
 
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
-        fcflags = []
-        cflags = []
-
         python_version = spec['python'].version.up_to(2)
         pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
                            'python{0}'.format(python_version))
 
+        openmp_flag = []
         if '+openmp' in spec:
-            fcflags.append(self.compiler.openmp_flag)
+            openmp_flag.append(self.compiler.openmp_flag)
 
         linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
         args = [
-            "FCFLAGS=%s"            % " ".join(fcflags),
-            "CFLAGS=%s"             % " ".join(cflags),
+            "FCFLAGS=%s"            % " ".join(openmp_flag),
             "--with-ext-linalg=%s"  % " ".join(linalg),
             "--with-yaml-path=%s"   % spec['libyaml'].prefix,
             "--with-pyyaml-path=%s" % pyyaml,

@@ -14,33 +14,26 @@ class BigdftSuite(Package):
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
-    version('1.9.1', sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
-    version('1.9.0', sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
-    version('1.8.3', sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
-    version('1.8.2', sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
-    version('1.8.1', sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
+    version('develop', branch='devel')
+    version('1.9.1',   sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
+    version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
+    version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
+    version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
+    version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
     depends_on('python@:2.8', type=('run'), when="@:1.8.3")
     depends_on('python@3.0:', type=('run'), when="@1.9.0:")
 
-    depends_on('bigdft-futile@develop',    when='@develop')
-    depends_on('bigdft-atlab@develop',     when='@develop')
-    depends_on('bigdft-psolver@develop',   when='@develop')
-    depends_on('bigdft-libabinit@develop', when='@develop')
-    depends_on('bigdft-chess@develop',     when='@develop')
-    depends_on('py-bigdft@develop',        when='@develop')
-    depends_on('bigdft-core@develop',      when='@develop')
-    depends_on('bigdft-spred@develop',     when='@develop')
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-psolver@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-libabinit@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-chess@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-core@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-spred@{0}'.format(version), when='@{0}'.format(version))
-    for version in ['1.8.3', '1.9.0', '1.9.1']:
+    for version in ['1.8.3', '1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-atlab@{0}'.format(version), when='@{0}'.format(version))
-    for version in ['1.9.0', '1.9.1']:
+    for version in ['1.9.0', '1.9.1', 'develop']:
         depends_on('py-bigdft@{0}'.format(version), when='@{0}'.format(version))
 
     phases = ['install']

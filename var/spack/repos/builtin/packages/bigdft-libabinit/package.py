@@ -32,8 +32,7 @@ class BigdftLibabinit(AutotoolsPackage):
     depends_on('libxc@:2.2.2', when='@:1.9.1')
     depends_on('libxc@:4.3.4', when='@develop')
 
-    depends_on('bigdft-futile@develop', when='@develop')
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
 
     patch('m_libpaw_mpi.F90.patch', when='@:1.8.2')
@@ -45,7 +44,7 @@ class BigdftLibabinit(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
-        with working_dir('libABINIT'):
+        with working_dir(self.build_directory):
             if spec.satisfies('@:1.8.2'):
                 autoreconf('-i')
             else:

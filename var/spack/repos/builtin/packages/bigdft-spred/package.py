@@ -34,10 +34,7 @@ class BigdftSpred(AutotoolsPackage):
     depends_on('mpi',                    when='+mpi')
     depends_on('scalapack',              when='+scalapack')
 
-    depends_on('bigdft-futile@develop',    when='@develop')
-    depends_on('bigdft-psolver@develop',   when='@develop')
-    depends_on('bigdft-core@develop', when='@develop')
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', 'develop']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-psolver@{0}'.format(version), when='@{0}'.format(version))
         depends_on('bigdft-core@{0}'.format(version), when='@{0}'.format(version))
@@ -49,31 +46,27 @@ class BigdftSpred(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
-        with working_dir('spred'):
+        with working_dir(self.build_directory):
             autoreconf('-fi')
 
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
 
-        linalg = []
-        fcflags = []
-        cflags = []
-
         python_version = spec['python'].version.up_to(2)
         pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
                            'python{0}'.format(python_version))
 
+        openmp_flag = []
         if '+openmp' in spec:
-            fcflags.append(self.compiler.openmp_flag)
+            openmp_flag.append(self.compiler.openmp_flag)
 
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
-        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
-            "FCFLAGS=%s"             % " ".join(fcflags),
-            "CFLAGS=%s"              % " ".join(cflags),
+            "FCFLAGS=%s"             % " ".join(openmp_flag),
             "--with-ext-linalg=%s"   % " ".join(linalg),
             "--with-pyyaml-path=%s"  % pyyaml,
             "--with-futile-libs=%s"  % spec['bigdft-futile'].prefix.lib,
