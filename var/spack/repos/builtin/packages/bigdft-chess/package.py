@@ -44,7 +44,6 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
     for version in ['1.8.3', '1.9.0', '1.9.1']:
         depends_on('bigdft-atlab@{0}'.format(version), when='@{0}'.format(version))
-    
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
