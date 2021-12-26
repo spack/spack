@@ -23,8 +23,9 @@ class PyBigdft(PythonPackage):
     depends_on('py-numpy')
     depends_on('py-setuptools')
 
-    depends_on('bigdft-futile@1.9.1', type='run', when='@1.9.1')
-    depends_on('bigdft-futile@1.9.0', type='run', when='@1.9.0')
+    depends_on('bigdft-futile@develop', when='@develop')
+    for version in ['1.9.0', '1.9.1']:
+        depends_on('bigdft-futile@{0}'.format(version), type='run', when='@{0}'.format(version))
 
     phases = ['build', 'install']
 

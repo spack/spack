@@ -34,19 +34,17 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     depends_on('lapack')
     depends_on('py-pyyaml')
     depends_on('mpi',                   when='+mpi')
-    depends_on('bigdft-futile@develop', when='@develop')
-    depends_on('bigdft-futile@1.9.1',   when='@1.9.1')
-    depends_on('bigdft-futile@1.9.0',   when='@1.9.0')
-    depends_on('bigdft-futile@1.8.3',   when='@1.8.3')
-    depends_on('bigdft-futile@1.8.2',   when='@1.8.2')
-    depends_on('bigdft-futile@1.8.1',   when='@1.8.1')
-    depends_on('bigdft-atlab@develop',  when='@develop')
-    depends_on('bigdft-atlab@1.9.1',    when='@1.9.1')
-    depends_on('bigdft-atlab@1.9.0',    when='@1.9.0')
-    depends_on('bigdft-atlab@1.8.3',    when='@1.8.3')
     # depends_on('netlib-minpack', when='+minpack')
     depends_on('scalapack',             when='+scalapack')
     depends_on('ntpoly',                when='+ntpoly')
+
+    depends_on('bigdft-futile@develop', when='@develop')
+    depends_on('bigdft-atlab@develop',  when='@develop')
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
+    for version in ['1.8.3', '1.9.0', '1.9.1']:
+        depends_on('bigdft-atlab@{0}'.format(version), when='@{0}'.format(version))
+    
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 

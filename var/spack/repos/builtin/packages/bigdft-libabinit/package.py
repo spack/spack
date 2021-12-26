@@ -28,16 +28,13 @@ class BigdftLibabinit(AutotoolsPackage):
     depends_on('python@:2.8', type=('build', 'run'), when="@:1.8.3")
     depends_on('python@3.0:', type=('build', 'run'), when="@1.9.0:")
 
-    depends_on('mpi',                   when='+mpi')
-    depends_on('bigdft-futile@develop', when='@develop')
-    depends_on('bigdft-futile@1.9.1',   when='@1.9.1')
-    depends_on('bigdft-futile@1.9.0',   when='@1.9.0')
-    depends_on('bigdft-futile@1.8.3',   when='@1.8.3')
-    depends_on('bigdft-futile@1.8.2',   when='@1.8.2')
-    depends_on('bigdft-futile@1.8.1',   when='@1.8.1')
-
+    depends_on('mpi',          when='+mpi')
     depends_on('libxc@:2.2.2', when='@:1.9.1')
     depends_on('libxc@:4.3.4', when='@develop')
+
+    depends_on('bigdft-futile@develop', when='@develop')
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
+        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
 
     patch('m_libpaw_mpi.F90.patch', when='@:1.8.2')
 
