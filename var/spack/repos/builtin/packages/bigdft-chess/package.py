@@ -47,13 +47,18 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "chess"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
         with working_dir('chess'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         linalg = []
         fcflags = []
         cflags = []
@@ -109,16 +114,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         if '+ntpoly' in spec:
             args.append("--enable-ntpoly")
 
-        with working_dir('chess'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('chess'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('chess'):
-            make('install')
+        return args
 
     @property
     def libs(self):

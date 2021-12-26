@@ -40,9 +40,11 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
     for version in ['1.8.3', '1.9.0', '1.9.1']:
-        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
+        depends_on('bigdft-atlab@{0}'.format(version), when='@{0}'.format(version))
 
     phases = ['autoreconf', 'configure', 'build', 'install']
+
+    build_directory = "psolver"
 
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
@@ -50,7 +52,10 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
         with working_dir('psolver'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         linalg = []
         fcflags = []
         cflags = []
@@ -62,9 +67,9 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
         if '+openmp' in spec:
             fcflags.append(self.compiler.openmp_flag)
 
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
-        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
             "FCFLAGS=%s"            % " ".join(fcflags),
@@ -100,16 +105,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
             args.append("--with-cuda-libs=%s" % spec['cuda'].libs.link_flags)
 
-        with working_dir('psolver'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('psolver'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('psolver'):
-            make('install')
+        return args
 
     @property
     def libs(self):

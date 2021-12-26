@@ -50,13 +50,18 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "bigdft"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
         with working_dir('bigdft'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         linalg = []
         fcflags = []
         cflags = []
@@ -121,16 +126,7 @@ class BigdftCore(AutotoolsPackage, CudaPackage):
             args.append("--with-openbabel-libs=%s" % spec['openbabel'].prefix.lib)
             args.append("--with-openbabel-incs=%s" % spec['openbabel'].prefix.include)
 
-        with working_dir('bigdft'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('bigdft'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('bigdft'):
-            make('install')
+        return args
 
     @property
     def libs(self):

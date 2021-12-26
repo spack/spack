@@ -30,13 +30,18 @@ class BigdftAtlab(AutotoolsPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "atlab"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
         with working_dir('atlab'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         fcflags = [spec['mpi'].libs.ld_flags]
         cflags = [spec['mpi'].libs.ld_flags]
 
@@ -72,16 +77,7 @@ class BigdftAtlab(AutotoolsPackage):
             args.append("--with-openbabel-libs=%s" % spec['openbabel'].prefix.lib)
             args.append("--with-openbabel-incs=%s" % spec['openbabel'].prefix.include)
 
-        with working_dir('atlab'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('atlab'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('atlab'):
-            make('install')
+        return args
 
     @property
     def libs(self):

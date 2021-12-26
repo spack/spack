@@ -38,13 +38,18 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "futile"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
         with working_dir('futile'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         fcflags = []
         cflags = []
 
@@ -85,16 +90,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
             args.append("--enable-cuda-gpu")
             args.append("--with-cuda-path=%s" % spec['cuda'].prefix)
 
-        with working_dir('futile'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('futile'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('futile'):
-            make('install')
+        return args
 
     @property
     def libs(self):

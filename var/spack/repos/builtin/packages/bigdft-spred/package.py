@@ -44,13 +44,18 @@ class BigdftSpred(AutotoolsPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "spred"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
         with working_dir('spred'):
             autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         linalg = []
         fcflags = []
         cflags = []
@@ -99,16 +104,7 @@ class BigdftSpred(AutotoolsPackage):
             args.append("--with-scalapack")
             args.append("--with-scalapack-path=%s" % spec['scalapack'].prefix.lib)
 
-        with working_dir('spred'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('spred'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('spred'):
-            make('install')
+        return args
 
     @property
     def libs(self):

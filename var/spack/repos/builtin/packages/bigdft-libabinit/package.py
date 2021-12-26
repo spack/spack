@@ -40,6 +40,8 @@ class BigdftLibabinit(AutotoolsPackage):
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
+    build_directory = "libABINIT"
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
 
@@ -49,7 +51,10 @@ class BigdftLibabinit(AutotoolsPackage):
             else:
                 autoreconf('-fi')
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
         fcflags = []
         cflags = []
 
@@ -74,16 +79,7 @@ class BigdftLibabinit(AutotoolsPackage):
         else:
             args.append("--disable-mpi")
 
-        with working_dir('libABINIT'):
-            configure(*args)
-
-    def build(self, spec, prefix):
-        with working_dir('libABINIT'):
-            make()
-
-    def install(self, spec, prefix):
-        with working_dir('libABINIT'):
-            make('install')
+        return args
 
     @property
     def libs(self):
