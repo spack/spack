@@ -15,7 +15,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
-    version('develop', branch='devel')
+    version('1.9.2',   sha256='dc9e49b68f122a9886fa0ef09970f62e7ba21bb9ab1b86be9b7d7e22ed8fbe0f')
     version('1.9.1',   sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
     version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
     version('1.8.3',   sha256='f112bb08833da4d11dd0f14f7ab10d740b62bc924806d77c985eb04ae0629909')
@@ -35,9 +35,9 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     depends_on('mpi',                   when='+mpi')
     depends_on('scalapack',             when='+scalapack')
 
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', 'develop']:
+    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2']:
         depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
-    for version in ['1.8.3', '1.9.0', '1.9.1', 'develop']:
+    for version in ['1.8.3', '1.9.0', '1.9.1', '1.9.2']:
         depends_on('bigdft-atlab@{0}'.format(version), when='@{0}'.format(version))
 
     phases = ['autoreconf', 'configure', 'build', 'install']
@@ -62,9 +62,10 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
         if '+openmp' in spec:
             openmp_flag.append(self.compiler.openmp_flag)
 
-        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
+        linalg = []
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
 
         args = [
             "FCFLAGS=%s"            % " ".join(openmp_flag),
