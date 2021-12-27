@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class ProdUtil(CMakePackage):
@@ -20,3 +23,6 @@ class ProdUtil(CMakePackage):
     version('1.2.2', sha256='c51b903ea5a046cb9b545b5c04fd28647c58b4ab6182e61710f0287846350ef8')
 
     depends_on('w3nco')
+
+    if sys.platform == 'darwin' and macos_version() >= Version('12.0'):
+        patch('darwin/apple-clang-13.0.0-stdlib.patch')
