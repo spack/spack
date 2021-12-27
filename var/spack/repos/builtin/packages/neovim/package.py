@@ -13,8 +13,13 @@ class Neovim(CMakePackage):
     git = "https://github.com/neovim/neovim.git"
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
 
+    maintainers = ['albestro']
+
     version('master', branch='master')
     version('stable', tag='stable')
+    version('0.6.0', sha256='2cfd600cfa5bb57564cc22ffbbbcb2c91531053fc3de992df33656614384fa4c')
+    version('0.5.1', sha256='aa449795e5cc69bdd2eeed7095f20b9c086c6ecfcde0ab62ab97a9d04243ec84')
+    version('0.5.0', sha256='6bcfa5192c9460c946e853dbd1a0baf659df5de184436144147711d1bceedeee')
     version('0.4.4', sha256='2f76aac59363677f37592e853ab2c06151cca8830d4b3fe4675b4a52d41fc42c')
     version('0.4.3', sha256='91a0b5d32204a821bf414690e6b48cf69224d1961d37158c2b383f6a6cf854d2')
     version('0.3.4', sha256='a641108bdebfaf319844ed46b1bf35d6f7c30ef5aeadeb29ba06e19c3274bc0e')
@@ -45,6 +50,7 @@ class Neovim(CMakePackage):
     depends_on('msgpack-c@1.0.0:', type='link', when='@0.4:,stable')
     depends_on('gperf', type='link')
     depends_on('libluv@1.30.0:', type='link', when='@0.4:,stable')
+    depends_on('tree-sitter', when='@0.5:')
 
     def cmake_args(self):
         return ['-DPREFER_LUA=ON']

@@ -25,5 +25,5 @@ class RHtmltools(RPackage):
     depends_on('r-base64enc', when='@0.5.1:', type=('build', 'run'))
     depends_on('r-rlang@0.4.10:', when='@0.5.2:', type=('build', 'run'))
     depends_on('r-rlang', when='@0.5.1:', type=('build', 'run'))
-    depends_on('r-fastmap', when='@0.5.2:', type=('build', 'run'))
+    depends_on('r-fastmap@1.1.0:', when='@0.5.2:', type=('build', 'run'))
     depends_on('r-rcpp', when=' @:0.3.6', type=('build', 'run'))

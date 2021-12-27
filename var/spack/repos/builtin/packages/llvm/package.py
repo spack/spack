@@ -288,8 +288,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
     patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
 
-    # github.com/spack/spack/issues/24270 and MicrosoftDemangle: %gcc@10: and %clang@13:
-    patch('missing-includes.patch', when='@8:11')
+    # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
+    patch('missing-includes.patch', when='@8:9')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
