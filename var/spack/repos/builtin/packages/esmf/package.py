@@ -128,8 +128,9 @@ class Esmf(MakefilePackage):
             os.environ['ESMF_COMPILER'] = 'gfortran'
         elif self.compiler.name == 'intel':
             os.environ['ESMF_COMPILER'] = 'intel'
-        elif self.compiler.name == 'clang':
+        elif self.compiler.name in ['clang', 'apple-clang']:
             os.environ['ESMF_COMPILER'] = 'gfortranclang'
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'nag':
             os.environ['ESMF_COMPILER'] = 'nag'
         elif self.compiler.name == 'pgi':
@@ -154,7 +155,7 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
 
-        if self.spec.satisfies('%gcc@10:'):
+        if gfortran_major_version>=10:
             os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
 
         #######
