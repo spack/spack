@@ -95,12 +95,17 @@ class RocmOpenmpExtras(Package):
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
-    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0','master']:
+    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} ~openmp'.format(ver),
                    when='@' + ver)
+    if ver == 'master':
+        depends_on('hsakmt-roct@master')
+        depends_on('comgr@master')
+        depends_on('hsa-rocr-dev@master')
+        depends_on('llvm-amdgpu@master ~openmp')
 
         # tag changed to 'rocm-' in 4.0.0
         if ver == '3.9.0' or ver == '3.10.0':
