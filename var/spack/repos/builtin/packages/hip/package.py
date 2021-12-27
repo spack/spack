@@ -42,7 +42,7 @@ class Hip(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -92,6 +92,30 @@ class Hip(CMakePackage):
             placement='rocclr',
             when='@{0}'.format(d_version)
         )
+    resource(
+            name='rocclr',
+            placement='rocclr',
+            git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
+            branch='master',
+            when='@master'
+    )
+
+    resource(
+        name='opencl',
+        placement='opencl',
+        git='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git',
+        branch='master',
+        when='@master'
+    )
+
+    resource(
+        name='hipamd',
+        placement='hipamd',
+        git='https://github.com/ROCm-Developer-Tools/hipamd.git',
+        branch='main',
+        when='@master'
+    )
+
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
     # In hipcc the ROCM_PATH variable is used to point to the parent directory
@@ -109,6 +133,7 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
     patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:4.3.2')
     patch('0009-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host_disabletests.4.5.0.patch', when='@4.5.0')
+    patch('0009-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host_disabletests.4.5.0.patch', when='@master')
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
@@ -324,7 +349,7 @@ class Hip(CMakePackage):
         if '@3.5.0:4.3.2' in self.spec:
             args.append(self.define('LIBROCclr_STATIC_DIR',
                         self.spec['hip-rocclr'].prefix.lib))
-        if '@4.5.0' in self.spec:
+        if '@4.5.0' or '@master'in self.spec:
             args.append(self.define('HIP_COMMON_DIR', self.stage.source_path))
             args.append(self.define('HIP_CATCH_TEST', 'OFF'))
             args.append(self.define('ROCCLR_PATH', self.stage.source_path + '/rocclr'))

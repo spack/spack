@@ -20,7 +20,7 @@ class RocmOpencl(CMakePackage):
 
         url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
         return url.format(version)
-    version('master', branch='main')
+    version('master', branch='master')
 
     version('4.5.0', sha256='3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8')
     version('4.3.1', sha256='7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca')
@@ -53,8 +53,15 @@ class RocmOpencl(CMakePackage):
             when='@{0}'.format(d_version)
         )
 
+    resource(
+        name='rocclr',
+        placement='rocclr',
+        git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
+        branch='master',
+        when='@master'
+    )
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', 'master']:
+                '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0',  'master']:
@@ -95,7 +102,7 @@ class RocmOpencl(CMakePackage):
             '-DROCclr_DIR={0}'.format(self.spec['hip-rocclr'].prefix),
             '-DLIBROCclr_STATIC_DIR={0}/lib'.format
             (self.spec['hip-rocclr'].prefix)
-        if '@4.5.0' in self.spec:
+        if '@4.5.0' or 'master' in self.spec:
             args.append(self.define('ROCCLR_PATH', self.stage.source_path + '/rocclr'))
             args.append(self.define('AMD_OPENCL_PATH', self.stage.source_path))
         return args

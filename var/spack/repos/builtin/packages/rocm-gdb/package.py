@@ -13,7 +13,7 @@ class RocmGdb(AutotoolsPackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
     url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-4.5.0.tar.gz"
-
+    git      = "https://github.com/ROCm-Developer-Tools/ROCgdb.git"
     maintainers = ['srekolam', 'arjun-raj-kuppala']
    
     version('master', branch='amd-master')
