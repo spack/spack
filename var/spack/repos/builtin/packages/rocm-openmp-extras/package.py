@@ -101,6 +101,7 @@ class RocmOpenmpExtras(Package):
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} ~openmp'.format(ver),
                    when='@' + ver)
+    git = "https://github.com/ROCm-Developer-Tools/aomp.git"
     if ver == 'master':
         depends_on('hsakmt-roct@master')
         depends_on('comgr@master')
