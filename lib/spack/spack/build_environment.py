@@ -1237,7 +1237,7 @@ def get_package_context(traceback, context=3):
 class InstallError(spack.error.SpackError):
     """Raised by packages when a package fails to install.
 
-    Any subclass of InstallError will be annotated by Spack wtih a
+    Any subclass of InstallError will be annotated by Spack with a
     ``pkg`` attribute on failure, which the caller can use to get the
     package for which the exception was raised.
     """
