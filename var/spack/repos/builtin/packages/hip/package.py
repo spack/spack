@@ -112,7 +112,7 @@ class Hip(CMakePackage):
         name='hipamd',
         placement='hipamd',
         git='https://github.com/ROCm-Developer-Tools/hipamd.git',
-        branch='main',
+        branch='master',
         when='@master'
     )
 
