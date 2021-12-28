@@ -94,6 +94,12 @@ class Rocblas(CMakePackage):
                  commit=t_commit,
                  when=t_version)
 
+    resource(name='Tensile',
+                 git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+                 branch ='master',
+                 placement = 'Tensile',
+                 when='@master')
+
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch', when='@:3.8')
