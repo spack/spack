@@ -24,11 +24,11 @@ class PyPyyaml(PythonPackage):
 
     variant('libyaml', default=True, description='Use libYAML bindings')
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'), when='@6.0:')
-    depends_on('libyaml', when='+libyaml')
+    depends_on('python@2.7,3.5:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@6:', type=('build', 'link', 'run'))
+    depends_on('libyaml', when='+libyaml', type='link')
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', when='@6.0: +libyaml', type='build')
+    depends_on('py-cython', when='@6:+libyaml', type='build')
 
     @property
     def import_modules(self):
@@ -41,20 +41,10 @@ class PyPyyaml(PythonPackage):
 
     def global_options(self, spec, prefix):
         args = []
-        if self.spec.satisfies('@:5'):
-            if '+libyaml' in self.spec:
-                args.append('--with-libyaml')
-            else:
-                args.append('--without-libyaml')
-        return args
 
-    def install_options(self, spec, prefix):
-        args = []
-
-        if spec.satisfies('@:5 +libyaml'):
-            args.extend([
-                spec['libyaml'].libs.search_flags,
-                spec['libyaml'].headers.include_flags,
-            ])
+        if '+libyaml' in self.spec:
+            args.append('--with-libyaml')
+        else:
+            args.append('--without-libyaml')
 
         return args
