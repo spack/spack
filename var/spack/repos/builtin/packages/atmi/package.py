@@ -48,10 +48,11 @@ class Atmi(CMakePackage):
     patch('0002-Remove-usr-bin-rsync-reference.patch', when='@4.0.0:')
     patch('0002-Remove-usr-bin-rsync-reference.patch', when='@master')
 
-    def cmake_args(self):
-        return [
-            '-DROCM_VERSION={0}'.format(self.spec.version)
-        ]
+    #if version !='@master':
+    #    def cmake_args(self):
+    #        return [
+    #            '-DROCM_VERSION={0}'.format(self.spec.version)
+    #        ]
 
     @run_after('install')
     def install_stub(self):
