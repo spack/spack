@@ -33,7 +33,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('python', type='build')
+    depends_on('python@:2.7', type='build')
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('libxml2')
     depends_on('zlib')
