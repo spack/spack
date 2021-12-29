@@ -25,7 +25,6 @@ class Rocsolver(CMakePackage):
             description='This option improves performance at the cost of increased binary \
             size and compile time by adding specialized kernels \
             for small matrix sizes')
-
     version('master', branch='master')
     version('4.5.0', sha256='0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c')
     version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
@@ -43,6 +42,7 @@ class Rocsolver(CMakePackage):
 
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
     depends_on('cmake@3.5:', type='build')
+    depends_on('fmt@7.1.3:', type='build', when='@4.5.0:')
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
@@ -54,7 +54,7 @@ class Rocsolver(CMakePackage):
         self.run_test(exe, options=['--gtest_filter=checkin*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1','master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0','master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
@@ -73,7 +73,7 @@ class Rocsolver(CMakePackage):
                 '-I{0}/rocblas/include'.format(incl)
             ))
 
-        if self.spec.satisfies('@3.7.0:') or self.spec.satisfies('@master') :
+        if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
         if tgt[0] != 'none':
@@ -86,7 +86,7 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
-        if self.spec.satisfies('@4.5.0:') or self.spec.satisfies('@master') :
+        if self.spec.satisfies('@4.5.0:') or self.spec.satisfies('@master'):
             args.append(self.define('ROCSOLVER_EMBED_FMT', 'ON'))
 
         return args
