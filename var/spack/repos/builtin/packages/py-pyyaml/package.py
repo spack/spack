@@ -27,8 +27,8 @@ class PyPyyaml(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@6.0:')
     depends_on('libyaml', when='+libyaml')
-    depends_on('py-setuptools', when='@6.0:')
-    depends_on('py-cython', when='@6.0: +libyaml')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', when='@6.0: +libyaml', type='build')
 
     @property
     def import_modules(self):
