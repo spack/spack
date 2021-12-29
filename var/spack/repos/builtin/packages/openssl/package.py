@@ -90,8 +90,6 @@ class Openssl(Package, WindowsPackage):   # Uses Fake Autotools, should subclass
     depends_on('perl@5.14.0:', type=('build', 'test'))
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
 
-    conflicts('+dynamic', when=sys.platform != 'win32')
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('version', output=str, error=str)
