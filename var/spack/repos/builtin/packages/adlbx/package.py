@@ -21,7 +21,6 @@ class Adlbx(AutotoolsPackage):
 
     depends_on('exmcutils@master', when='@master')
     depends_on('exmcutils@:0.5.7', when='@:0.9.2')
-    depends_on('exmcutils@:0.5.3', when='@:0.8.0')
     depends_on('exmcutils', when='@0.9.1:')
     depends_on('autoconf', type='build', when='@master')
     depends_on('automake', type='build', when='@master')

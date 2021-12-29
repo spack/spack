@@ -77,7 +77,7 @@ class Rust(Package):
 
     # These version strings are officially supported, but aren't explicitly
     # listed because there's no stable checksum for them.
-    # version('nightly')
+    version('nightly')
     # version('beta')
 
     # Version Notes:
