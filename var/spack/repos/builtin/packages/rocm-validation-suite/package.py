@@ -16,7 +16,8 @@ class RocmValidationSuite(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
     url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.3.0.tar.gz"
-
+    git      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite.git"
+     
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
