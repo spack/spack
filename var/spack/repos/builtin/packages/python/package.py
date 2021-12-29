@@ -989,9 +989,6 @@ config.update(get_paths())
             for directory in {self.platlib, self.purelib}:
                 env.prepend_path('PYTHONPATH', os.path.join(prefix, directory))
 
-        for path in pythonpath:
-            env.prepend_path('PYTHONPATH', path)
-
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
