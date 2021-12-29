@@ -9,7 +9,7 @@ from spack import *
 class Eve(CMakePackage):
     """Expressive Velocity Engine - SIMD in C++ Goes Brrrr"""
 
-    homepage = "https://www.example.com"
+    homepage = "https://jfalcou.github.io/eve/"
     url      = "https://github.com/jfalcou/eve/archive/refs/tags/v2021.10.0.tar.gz"
     maintainers = ['jfalcou']
     git = 'https://github.com/jfalcou/eve.git'
