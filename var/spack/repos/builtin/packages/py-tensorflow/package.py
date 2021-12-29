@@ -345,7 +345,7 @@ class PyTensorflow(Package, CudaPackage):
     # When tensorflow and python protobuf use the same instance of libprotobuf,
     # pywrap_tensorflow must be imported before anything else that would import
     # protobuf definitions.
-    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch')
+    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch', when='@2.5:')
 
     phases = ['configure', 'build', 'install']
 
