@@ -55,6 +55,9 @@ class Libtiff(AutotoolsPackage):
     conflicts('+zstd', when='@:4.0.9')
     conflicts('+webp', when='@:4.0.9')
 
+    # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
+    patch('no-include-root.patch', when='@4.3.0')
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies('%nvhpc@:20.11'):
