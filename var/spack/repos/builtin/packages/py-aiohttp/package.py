@@ -22,7 +22,7 @@ class PyAiohttp(PythonPackage):
     version('3.7.0', sha256='4549b9f1857dc2f8ba4028d8ba697eb7d7e5db7803fc7eee232f07027551ea26')
     version('3.6.2', sha256='4ad2d8393843ea0c7b50a93bf04fb1cf20b93c0a5e958de128efcd2e5f8adf80')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@46.4:', type='build')
     depends_on('python@3.5.3:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@3.7:')
     depends_on('py-attrs@17.3.0:', type=('build', 'run'))
