@@ -126,6 +126,7 @@ class Esmf(MakefilePackage):
         # C++ compilers are being used to build the ESMF library.
         if self.compiler.name == 'gcc':
             os.environ['ESMF_COMPILER'] = 'gfortran'
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'intel':
             os.environ['ESMF_COMPILER'] = 'intel'
         elif self.compiler.name == 'clang':
