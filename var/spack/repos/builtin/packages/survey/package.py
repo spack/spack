@@ -33,6 +33,7 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('master', branch='master')
+    version('1.0.1.1', branch='1.0.1.1')
     version('1.0.1', branch='1.0.1')
     version('1.0.0', branch='1.0.0')
 
@@ -53,14 +54,12 @@ class Survey(CMakePackage):
     depends_on("mpi", when="+mpi")
 
     depends_on("python@3:", type=('build', 'link', 'run'))
-    depends_on("py-setuptools", type='run')
+    depends_on("py-setuptools", type='build')
     depends_on("py-pip", type='build')
-    depends_on("py-python-dateutil", type='run')
-    depends_on("py-pandas", type='run')
-    depends_on("py-psutil", type='run')
-    depends_on("py-sqlalchemy", type='run')
-    depends_on("py-pbr", type=('build', 'run'))
-    depends_on("py-pyyaml", type='run')
+    depends_on("py-pandas", type=('build', 'run'))
+    depends_on("py-psutil", type=('build', 'run'))
+    depends_on("py-sqlalchemy", type=('build', 'run'))
+    depends_on("py-pyyaml", type=('build', 'run'))
 
     extends('python')
 
