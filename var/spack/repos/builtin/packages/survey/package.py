@@ -33,8 +33,8 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('master', branch='master')
-    version('1.0.1.1', branch='1.0.1.1')
-    version('1.0.1', branch='1.0.1')
+    version('1.0.1.1', tag='1.0.1.1')
+    version('1.0.1', tag='1.0.1')
     version('1.0.0', branch='1.0.0')
 
     variant('mpi', default=False,
