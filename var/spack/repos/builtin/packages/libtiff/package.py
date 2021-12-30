@@ -58,6 +58,15 @@ class Libtiff(AutotoolsPackage):
     # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
     patch('no-include-root.patch', when='@4.3.0')
 
+    depends_on('automake', when='@4.3.0', type='build')
+    depends_on('autoconf', when='@4.3.0', type='build')
+    depends_on('libtool', when='@4.3.0', type='build')
+    depends_on('m4', when='@4.3.0', type='build')
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies('@4.3.0')
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies('%nvhpc@:20.11'):
