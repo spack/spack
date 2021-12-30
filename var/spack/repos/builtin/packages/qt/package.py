@@ -173,6 +173,7 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
+    depends_on("assimp@5.0", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -551,6 +552,12 @@ class Qt(Package):
                 # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
+
+        if '+opengl' in spec:
+            if version >= Version('5.14'):
+                use_spack_dep('assimp')
+            else:
+                config_args.append('-no-assimp')
 
         # COMPONENTS
 
