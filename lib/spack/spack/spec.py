@@ -2531,7 +2531,13 @@ class Spec(object):
         # depends_on(..., patch=...)
         for dspec in root.traverse_edges(deptype=all,
                                          cover='edges', root=False):
-            pkg_deps = dspec.parent.package_class.dependencies
+            try:
+                pkg_deps = dspec.parent.package_class.dependencies
+            except spack.repo.UnknownPackageError:
+                # The package may not be available if it is defined in an
+                # upstream repo
+                continue
+
             if dspec.spec.name not in pkg_deps:
                 continue
 
