@@ -17,6 +17,5 @@ class PyAsyncTimeout(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@3.5.3:', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.6.5:', type=('build', 'run'), when='@4.0.1:')
-    # note: in 4.0.2, the py-typing-extensions dependency is only required if
-    # the python version is < 3.8, but I don't know how to express that for spack
+    depends_on('py-typing-extensions@3.6.5:', type=('build', 'run'), when='@4.0.1')
+    depends_on('py-typing-extensions@3.6.5:', type=('build', 'run'), when='@4.0.2: ^python@:3.7')
