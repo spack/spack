@@ -214,6 +214,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0', type=('build', 'run'), when='@0.11.0')
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
+    depends_on('protobuf@:3.12', when='@:2.4')
     depends_on('protobuf@:3.17')
     depends_on('flatbuffers+python@1.12:2.9', type=('build', 'run'), when='@2.7:')
     depends_on('flatbuffers+python@1.12.0:1.12', type=('build', 'run'), when='@2.4.0:2.6')
@@ -256,9 +257,10 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cuda@:10.2', when='+cuda @:2.3')
-    depends_on('cuda@:11.1', when='+cuda @2.4.0:2.4')
-    depends_on('cuda@:11.4', when='+cuda @2.5:')
+    depends_on('cuda@:11.4', when='+cuda @2.4:')
     depends_on('cudnn', when='+cuda')
+    depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
+    depends_on('cudnn@:7', when='@0.7:2.2 +cuda')
     # depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
     depends_on('mpi', when='+mpi')
@@ -338,7 +340,7 @@ class PyTensorflow(Package, CudaPackage):
 
     # allow linker to be found in PATH
     # https://github.com/tensorflow/tensorflow/issues/39263
-    patch('null_linker_bin_path.patch')
+    patch('null_linker_bin_path.patch', when='@2.5:')
 
     # Reset import order to that of 2.4. Part of
     # https://bugs.gentoo.org/800824#c3 From the patch:
