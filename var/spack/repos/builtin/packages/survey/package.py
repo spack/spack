@@ -7,11 +7,11 @@ from spack import *
 
 
 class Survey(CMakePackage):
-    """Survey is a high-level performance tool product from Trenza, Inc.
+    """Survey is a high level performance tool product from Trenza, Inc.
        The survey collector/analytics framework is a new generation,
-       high-level, light-weight multi-platform Linux tool set that
-       targets metric collection for high-level performance analysis
-       of applications running on both single node and on large-scale
+       high level, lightweight multiplatform Linux tool set that
+       targets metric collection for high level performance analysis
+       of applications running on both single node and on large scale
        platforms, including the Cray platforms.
 
        The collector is designed to work on sequential, MPI, OpenMP,
@@ -21,7 +21,7 @@ class Survey(CMakePackage):
        architectures and has been tested on machines based on Intel,
        AMD, ARM, and IBM P8/9 processors and integrated GPUs.
 
-       Survey is a licensed product – source not openly available.
+       Survey is a licensed product with the source not openly available.
        To access the survey source and build with spack please contact:
        Trenza Inc. via: dmont@trenzasynergy.com or
                         jeg@trenzasynergy.com
