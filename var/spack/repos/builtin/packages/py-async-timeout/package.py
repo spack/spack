@@ -15,7 +15,8 @@ class PyAsyncTimeout(PythonPackage):
     version('4.0.0', sha256='2116e8c7412929579e1d4e1b3c5fdfe3835c2002a0189451d183148239c05a17')
     version('3.0.1', sha256='d0a7a927ed6b922835e1b014dfcaa9982caccbb25131320582cc660af7c93949')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.5.3:', type=('build', 'run'))
+    depends_on('py-setuptools@45:', type='build')
+    depends_on('python@3.5.3:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@4.0.1:')
     depends_on('py-typing-extensions@3.6.5:', type=('build', 'run'), when='@4.0.1')
     depends_on('py-typing-extensions@3.6.5:', type=('build', 'run'), when='@4.0.2: ^python@:3.7')
