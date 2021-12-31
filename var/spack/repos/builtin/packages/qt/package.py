@@ -178,6 +178,7 @@ class Qt(Package):
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
+    depends_on("zstd@1.3:", when='@5.13:')
 
     with when('+webkit'):
         patch(
