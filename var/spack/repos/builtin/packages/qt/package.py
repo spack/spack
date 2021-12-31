@@ -131,6 +131,8 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-84037
+    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -154,6 +156,7 @@ class Qt(Package):
     # Dependencies, then variant- and version-specific dependencies
     depends_on("icu4c")
     depends_on("jpeg")
+    depends_on('gmake')
     depends_on("libmng")
     depends_on("libtiff")
     depends_on("libxml2")
