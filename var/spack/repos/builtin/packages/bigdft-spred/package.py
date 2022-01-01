@@ -97,10 +97,6 @@ class BigdftSpred(AutotoolsPackage):
         else:
             args.append("--without-openmp")
 
-        if '+scalapack' in spec:
-            args.append("--with-scalapack")
-            args.append("--with-scalapack-path=%s" % spec['scalapack'].prefix.lib)
-
         return args
 
     @property

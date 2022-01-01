@@ -70,6 +70,8 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         linalg = []
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
+        linalg.append(spec['lapack'].libs.ld_flags)
+        linalg.append(spec['blas'].libs.ld_flags)
 
         args = [
             "FCFLAGS=%s"            % " ".join(openmp_flag),
