@@ -12,7 +12,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
        of BigDFT code, and it can also be used separately and linked to other codes."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')
@@ -37,10 +37,10 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
     depends_on('mpi',       when='+mpi')
     depends_on('scalapack', when='+scalapack')
 
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
-    for version in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-atlab@{0}'.format(version),  when='@{0}'.format(version))
+    for vers in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
+    for vers in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-atlab@{0}'.format(vers),  when='@{0}'.format(vers))
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -95,7 +95,7 @@ class BigdftPsolver(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        if spec.satisfies('@1.8.3:'):
+        if spec.satisfies('@1.8.3:') or spec.satisfies('@develop'):
             args.append("--with-atlab-libs=%s" % spec['bigdft-atlab'].prefix.lib)
 
         if '+cuda' in spec:

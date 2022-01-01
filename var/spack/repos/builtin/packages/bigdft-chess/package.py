@@ -11,7 +11,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
        via Chebyshev Polynomials."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')
@@ -40,10 +40,10 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
     depends_on('ntpoly',    when='+ntpoly')
     # depends_on('netlib-minpack', when='+minpack')
 
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
-    for version in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-atlab@{0}'.format(version),  when='@{0}'.format(version))
+    for vers in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
+    for vers in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-atlab@{0}'.format(vers),  when='@{0}'.format(vers))
 
     phases = ['autoreconf', 'configure', 'build', 'install']
 
@@ -70,8 +70,6 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         linalg = []
         if '+scalapack' in spec:
             linalg.append(spec['scalapack'].libs.ld_flags)
-        linalg.append(spec['lapack'].libs.ld_flags)
-        linalg.append(spec['blas'].libs.ld_flags)
 
         args = [
             "FCFLAGS=%s"            % " ".join(openmp_flag),
@@ -98,7 +96,7 @@ class BigdftChess(AutotoolsPackage, CudaPackage):
         else:
             args.append("--without-openmp")
 
-        if spec.satisfies('@1.8.3:'):
+        if spec.satisfies('@1.8.3:') or spec.satisfies('@develop'):
             args.append("--with-atlab-libs=%s" % spec['bigdft-atlab'].prefix.lib)
 
         if '+cuda' in spec:

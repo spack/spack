@@ -14,7 +14,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
        This library is intensively used in BigDFT packages."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')

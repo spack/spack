@@ -11,7 +11,7 @@ class PyBigdft(PythonPackage):
        based on Daubechies wavelets."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')
@@ -25,8 +25,8 @@ class PyBigdft(PythonPackage):
     depends_on('py-numpy')
     depends_on('py-setuptools')
 
-    for version in ['1.9.0', '1.9.1', '1.9.2']:
-        depends_on('bigdft-futile@{0}'.format(version), type='run', when='@{0}'.format(version))
+    for vers in ['1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-futile@{0}'.format(vers), type='run', when='@{0}'.format(vers))
 
     phases = ['build', 'install']
 

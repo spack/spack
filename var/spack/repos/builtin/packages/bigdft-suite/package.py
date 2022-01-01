@@ -11,7 +11,7 @@ class BigdftSuite(Package):
        based on Daubechies wavelets."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')
@@ -26,17 +26,17 @@ class BigdftSuite(Package):
     depends_on('python@3.0:', type=('run'), when="@1.9.0:")
     depends_on('python@3.0:', type=('run'), when="@develop")
 
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-futile@{0}'.format(version),    when='@{0}'.format(version))
-        depends_on('bigdft-psolver@{0}'.format(version),   when='@{0}'.format(version))
-        depends_on('bigdft-libabinit@{0}'.format(version), when='@{0}'.format(version))
-        depends_on('bigdft-chess@{0}'.format(version),     when='@{0}'.format(version))
-        depends_on('bigdft-core@{0}'.format(version),      when='@{0}'.format(version))
-        depends_on('bigdft-spred@{0}'.format(version),     when='@{0}'.format(version))
-    for version in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-atlab@{0}'.format(version),     when='@{0}'.format(version))
-    for version in ['1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('py-bigdft@{0}'.format(version),        when='@{0}'.format(version))
+    for vers in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-futile@{0}'.format(vers),    when='@{0}'.format(vers))
+        depends_on('bigdft-psolver@{0}'.format(vers),   when='@{0}'.format(vers))
+        depends_on('bigdft-libabinit@{0}'.format(vers), when='@{0}'.format(vers))
+        depends_on('bigdft-chess@{0}'.format(vers),     when='@{0}'.format(vers))
+        depends_on('bigdft-core@{0}'.format(vers),      when='@{0}'.format(vers))
+        depends_on('bigdft-spred@{0}'.format(vers),     when='@{0}'.format(vers))
+    for vers in ['1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-atlab@{0}'.format(vers),     when='@{0}'.format(vers))
+    for vers in ['1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('py-bigdft@{0}'.format(vers),        when='@{0}'.format(vers))
 
     phases = ['install']
 
@@ -47,7 +47,7 @@ class BigdftSuite(Package):
         install_tree(spec['bigdft-chess'].prefix,     prefix)
         install_tree(spec['bigdft-core'].prefix,      prefix)
         install_tree(spec['bigdft-spred'].prefix,     prefix)
-        if spec.satisfies('@1.9.0:'):
+        if spec.satisfies('@1.9.0:') or spec.satisfies('@develop'):
             install_tree(spec['py-bigdft'].prefix,    prefix)
-        if spec.satisfies('@1.8.3:'):
+        if spec.satisfies('@1.8.3:') or spec.satisfies('@develop'):
             install_tree(spec['bigdft-atlab'].prefix, prefix)

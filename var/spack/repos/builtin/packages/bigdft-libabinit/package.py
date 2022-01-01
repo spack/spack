@@ -13,7 +13,7 @@ class BigdftLibabinit(AutotoolsPackage):
        routines and some MD minimizers."""
 
     homepage = "https://bigdft.org/"
-    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
+    url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.2/bigdft-suite-1.9.2.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
     version('develop', branch='devel')
@@ -35,8 +35,8 @@ class BigdftLibabinit(AutotoolsPackage):
     depends_on('libxc@:4.3.4', when='@1.9.1:')
     depends_on('libxc@:4.3.4', when='@develop')
 
-    for version in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
-        depends_on('bigdft-futile@{0}'.format(version), when='@{0}'.format(version))
+    for vers in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
+        depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
 
     patch('m_libpaw_mpi.F90.patch', when='@:1.8.2')
 
