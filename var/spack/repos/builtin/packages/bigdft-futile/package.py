@@ -17,6 +17,7 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     url      = "https://gitlab.com/l_sim/bigdft-suite/-/archive/1.9.1/bigdft-suite-1.9.1.tar.gz"
     git      = "https://gitlab.com/l_sim/bigdft-suite.git"
 
+    version('develop', branch='devel')
     version('1.9.2',   sha256='dc9e49b68f122a9886fa0ef09970f62e7ba21bb9ab1b86be9b7d7e22ed8fbe0f')
     version('1.9.1',   sha256='3c334da26d2a201b572579fc1a7f8caad1cbf971e848a3e10d83bc4dc8c82e41')
     version('1.9.0',   sha256='4500e505f5a29d213f678a91d00a10fef9dc00860ea4b3edf9280f33ed0d1ac8')
@@ -24,11 +25,12 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
     version('1.8.2',   sha256='042e5a3b478b1a4c050c450a9b1be7bcf8e13eacbce4759b7f2d79268b298d61')
     version('1.8.1',   sha256='e09ff0ba381f6ffbe6a3c0cb71db5b73117874beb41f22a982a7e5ba32d018b3')
 
-    variant('mpi',    default=True,  description='Enable MPI support')
-    variant('openmp', default=True,  description='Enable OpenMP support')
+    variant('mpi',    default=True, description='Enable MPI support')
+    variant('openmp', default=True, description='Enable OpenMP support')
 
     depends_on('python@:2.8', type=('build', 'run'), when="@:1.8.3")
     depends_on('python@3.0:', type=('build', 'run'), when="@1.9.0:")
+    depends_on('python@3.0:', type=('build', 'run'), when="@develop")
 
     depends_on('blas')
     depends_on('lapack')
@@ -50,6 +52,8 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         spec = self.spec
         prefix = self.prefix
 
+        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
+
         python_version = spec['python'].version.up_to(2)
         pyyaml = join_path(spec['py-pyyaml'].prefix.lib,
                            'python{0}'.format(python_version))
@@ -58,7 +62,6 @@ class BigdftFutile(AutotoolsPackage, CudaPackage):
         if '+openmp' in spec:
             openmp_flag.append(self.compiler.openmp_flag)
 
-        linalg = [spec['blas'].libs.ld_flags, spec['lapack'].libs.ld_flags]
         args = [
             "FCFLAGS=%s"            % " ".join(openmp_flag),
             "--with-ext-linalg=%s"  % " ".join(linalg),
