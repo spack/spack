@@ -34,6 +34,7 @@ class PyTorchgeo(PythonPackage):
     depends_on('py-dataclasses', when='@0.2: ^python@3.6', type=('build', 'run'))
     depends_on('py-einops', type=('build', 'run'))
     depends_on('py-fiona@1.5:', type=('build', 'run'))
+    depends_on('py-kornia@0.5.11:', when='@0.2:', type=('build', 'run'))
     depends_on('py-kornia@0.5.4:', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
