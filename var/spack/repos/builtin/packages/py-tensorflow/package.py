@@ -116,8 +116,8 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@3.1.0:',        type='build', when='@2.7:')
-    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3:2.6')
+    depends_on('bazel@3.7.2:4.99.0',  type='build', when='@2.5:')
+    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3:2.4')
     depends_on('bazel@2.0.0',         type='build', when='@2.2.0:2.2')
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
