@@ -677,6 +677,7 @@ def protobuf_deps():
             filter_file(r"'tensorflow-tensorboard",
                         r"#'tensorflow-tensorboard",
                         'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@1.5.0: ~gcp'):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
@@ -685,11 +686,13 @@ def protobuf_deps():
             filter_file(r'--define with_gcp_support=true',
                         r'--define with_gcp_support=false',
                         '.tf_configure.bazelrc')
-        if spec.satisfies('@1.6.0:'):
+
+        if spec.satisfies('@1.6.0:2.1'):
             # tensorboard name changed
             filter_file(r"'tensorboard >=",
                         r"#'tensorboard >=",
                         'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@1.8.0: ~opencl'):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
             # generation somehow the wrong PYTHONPATH is used...
@@ -699,13 +702,15 @@ def protobuf_deps():
                 f.write('build --distinct_host_configuration=false\n')
                 f.write('build --action_env PYTHONPATH="{0}"\n'.format(
                     env['PYTHONPATH']))
-        if spec.satisfies('@1.13.1'):
+
+        if spec.satisfies('@1.13.1:'):
             # tensorflow_estimator is an API for tensorflow
             # tensorflow-estimator imports tensorflow during build, so
             # tensorflow has to be set up first
             filter_file(r"'tensorflow_estimator >=",
                         r"#'tensorflow_estimator >=",
                         'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@2.0.0:'):
             # now it depends on the nightly versions...
             filter_file(r"'tf-estimator-nightly >=",
@@ -741,6 +746,7 @@ def protobuf_deps():
             libs.extend(spec['cudnn'].libs.directories)
             if '+nccl' in spec:
                 libs.extend(spec['nccl'].libs.directories)
+
             if '+tensorrt' in spec:
                 libs.extend(spec['tensorrt'].libs.directories)
             slibs = ':'.join(libs)
