@@ -229,7 +229,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-wrapt@1.11.0:', type=('build', 'run'), when='@2.7:')
     depends_on('py-wrapt@1.12.1:1.12', type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-wrapt@1.11.1:', type=('build', 'run'), when='@1.12.1,1.14:2.3')
-    depends_on('py-wheel@0.32.0:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-wheel@0.32:0', type=('build', 'run'), when='@2.7:')
     depends_on('py-wheel@0.35:0', type=('build', 'run'), when='@2.4:2.6 ^python@3:')
     depends_on('py-wheel', type=('build', 'run'), when='@0.6:2.3')
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6:2.3 ^python@3:')
