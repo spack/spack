@@ -171,7 +171,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:2.0')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
     # propagate the mpi variant setting for h5py/hdf5 to avoid unexpected crashes
-    depends_on('py-h5py@2.9.0:3.1', type=('build', 'run'), when='@2.7:')
+    depends_on('py-h5py@2.9.0:3.1', type=('build', 'run'), when='@2.7:+mpi')
     depends_on('py-h5py~mpi@2.9.0:3.1', type=('build', 'run'), when='@2.7:~mpi')
     depends_on('py-h5py@3.1.0:3.1', type=('build', 'run'), when='@2.5:2.6+mpi')
     depends_on('py-h5py~mpi@3.1.0:3.1', type=('build', 'run'), when='@2.5:2.6~mpi')
@@ -249,7 +249,8 @@ class PyTensorflow(Package, CudaPackage):
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:2.3')
         depends_on('py-grpcio@1.32.0:1.32', type=('build', 'run'), when='@2.4.0:2.4')
         depends_on('py-grpcio@1.34.0:1.34', type=('build', 'run'), when='@2.5.0:2.5')
-        depends_on('py-grpcio@1.37.0:1', type=('build', 'run'), when='@2.6.0:')
+        depends_on('py-grpcio@1.37.0:1', type=('build', 'run'), when='@2.6.0:2.6')
+        depends_on('py-grpcio@1.24.3:1', type=('build', 'run'), when='@2.7.0:')
 
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
