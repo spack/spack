@@ -28,4 +28,3 @@ class PyClang(PythonPackage):
 
     for ver in ['5', '6', '7', '8', '9', '10', '11']:
         depends_on('llvm@' + ver, when='@' + ver, type='run')
-
