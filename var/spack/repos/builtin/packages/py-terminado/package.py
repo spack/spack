@@ -18,7 +18,7 @@ class PyTerminado(PythonPackage):
     depends_on('python@3.6:', when='@0.12.1:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@0.8.2:', type=('build', 'run'))
     depends_on('py-setuptools@40.8.0:', when='@0.12.1:', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-flit', when='@0.8', type='build')
-    depends_on('py-setuptools', when='@0.6', type='build')
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ptyprocess', type=('build', 'run'))

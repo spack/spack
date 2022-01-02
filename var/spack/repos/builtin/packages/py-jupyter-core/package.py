@@ -31,6 +31,6 @@ class PyJupyterCore(PythonPackage):
     depends_on('python@3.6:', when='@4.7:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@4.6.2:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@4.5.0:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
     # additional pywin32>=1.0 dependency for windows

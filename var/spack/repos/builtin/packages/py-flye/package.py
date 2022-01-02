@@ -19,7 +19,7 @@ class PyFlye(PythonPackage):
     # https://github.com/fenderglass/Flye/blob/flye/docs/INSTALL.md
     depends_on('python@2.7:2.8,3.5:', when='@2.6:', type=('build', 'run'))
     depends_on('python@2.7:2.8',      when='@:2.5', type=('build', 'run'))
-    depends_on('py-setuptools', when='@2.6:', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('gmake', type='build')
     depends_on('zlib')
 
