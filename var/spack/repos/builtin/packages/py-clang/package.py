@@ -25,3 +25,7 @@ class PyClang(PythonPackage):
     depends_on('python@2.7:2.8,3:', type=('build', 'run'), when='@:7')
     depends_on('python@3:', type=('build', 'run'), when='@8:')
     depends_on('py-setuptools', type='build')
+
+    for ver in ['5', '6', '7', '8', '9', '10', '11']:
+        depends_on('llvm@' + ver, when='@' + ver, type='run')
+
