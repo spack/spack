@@ -15,12 +15,9 @@ class PyKeras(PythonPackage):
     homepage = "https://keras.io"
     git = "https://github.com/keras-team/keras"
     pypi = "Keras/Keras-1.2.2.tar.gz"
-    version('2.7.0',
-            url='https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz',
-            sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
-    version('2.6.0',
-            url='https://github.com/keras-team/keras/archive/refs/tags/v2.6.0.tar.gz',
-            sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
+
+    version('2.7.0', sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
+    version('2.6.0', sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
     version('2.5.0', commit='9c266106163390f173625c4e7b1ccb03ae145ffc')
     version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
@@ -49,21 +46,28 @@ class PyKeras(PythonPackage):
     version('1.1.1', sha256='be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6')
     version('1.1.0', sha256='36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d')
 
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4:')
-    depends_on('py-h5py', type=('build', 'run'), when='@2.4:')
-    depends_on('py-keras-applications', type='run', when='@2.2')
-    depends_on('py-keras-preprocessing', type='run', when='@2.2')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2.4')
+    depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4')
+    depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4')
+    depends_on('py-h5py', type=('build', 'run'), when='@2.4')
+    depends_on('py-keras-applications', type='run', when='@2.2:2.4')
+    depends_on('py-keras-preprocessing', type='run', when='@2.2:2.4')
     depends_on('py-setuptools', type='build')
     depends_on('py-theano', type=('build', 'run'), when='@:2.2')
-    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'), when='@:2.4')
     depends_on('py-six', type=('build', 'run'), when='@:2.2')
     depends_on('py-tensorflow@2.5.0:2.5', type=('build', 'run'), when='@2.5.0:2.5')
     depends_on('py-tensorflow@2.6.0:2.6', type=('build', 'run'), when='@2.6.0:2.6')
     depends_on('py-tensorflow@2.7.0:2.7', type=('build', 'run'), when='@2.7.0:2.7')
     depends_on('bazel', type='build', when='@2.5.0:')
     depends_on('protobuf', type='build', when='@2.5.0:')
+
+    def url_for_version(self, version):
+        if version >= Version('2.6.0'):
+            url = 'https://github.com/keras-team/keras/archive/refs/tags/v{0}.tar.gz'
+            return url.format(version.dotted)
+        else:
+            return super(PyKeras, self).url_for_version(version)
 
     @when('@2.5.0:')
     def patch(self):
