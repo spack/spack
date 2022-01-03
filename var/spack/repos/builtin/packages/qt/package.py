@@ -156,7 +156,6 @@ class Qt(Package):
     # Dependencies, then variant- and version-specific dependencies
     depends_on("icu4c")
     depends_on("jpeg")
-    depends_on('gmake')
     depends_on("libmng")
     depends_on("libtiff")
     depends_on("libxml2")
