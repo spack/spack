@@ -602,6 +602,11 @@ class Root(CMakePackage):
         if '+opengl' in spec:
             add_include_path('glew')
             add_include_path('mesa-glu')
+        if 'platform=darwin' in spec:
+            # Newer deployment targets cause fatal errors in rootcling, so
+            # override with an empty value even though it may lead to link
+            # warnings when building against ROOT
+            env.unset('MACOSX_DEPLOYMENT_TARGET')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
