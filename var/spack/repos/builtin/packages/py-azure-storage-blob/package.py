@@ -21,7 +21,7 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on('py-cryptography@2.1.4:', type=('build', 'run'))
 
     depends_on('py-futures', type=('build', 'run'), when='^python@:2')
-    depends_on('py-azure-storage-nspkg@3', type=('build', 'run'), when=('^python@2.7'))
+    depends_on('py-azure-storage-nspkg@3', type=('build', 'run'), when='^python@:2')
 
     depends_on('py-enum34@1.0.4:', type=('build', 'run'), when=('^python@:3.3'))
     depends_on('py-typing', type=('build', 'run'), when=('^python@:3.4'))
