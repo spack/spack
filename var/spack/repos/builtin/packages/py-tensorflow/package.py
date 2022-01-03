@@ -653,45 +653,52 @@ def protobuf_deps():
 
         # make sure xla is actually turned off
         if spec.satisfies('~xla'):
-            filter_file(r'--define with_xla_support=true',
-                        r'--define with_xla_support=false',
-                        '.tf_configure.bazelrc')
+            filter_file(
+                r'--define with_xla_support=true',
+                r'--define with_xla_support=false',
+                '.tf_configure.bazelrc')
 
         if spec.satisfies('@1.5.0: ~android'):
             # env variable is somehow ignored -> brute force
             # TODO: find a better solution
-            filter_file(r'if workspace_has_any_android_rule\(\)',
-                        r'if True',
-                        'configure.py')
+            filter_file(
+                r'if workspace_has_any_android_rule\(\)',
+                r'if True',
+                'configure.py')
 
         # version dependent fixes
         if spec.satisfies('@1.3.0:1.5.0'):
             # checksum for protobuf that bazel downloads (@github) changed
-            filter_file(r'sha256 = "6d43b9d223ce09e5d4ce8b0060cb8a7513577a35a64c7e3dad10f0703bf3ad93"',
-                        r'sha256 = "e5fdeee6b28cf6c38d61243adff06628baa434a22b5ebb7432d2a7fbabbdb13d"',
-                        'tensorflow/workspace.bzl')
+            filter_file(
+                r'sha256 = "6d43b9d223ce09e5d4ce8b0060cb8a7513577a35a64c7e3dad10f0703bf3ad93"',
+                r'sha256 = "e5fdeee6b28cf6c38d61243adff06628baa434a22b5ebb7432d2a7fbabbdb13d"',
+                'tensorflow/workspace.bzl')
+
             # starting with tensorflow 1.3, tensorboard becomes a dependency
             # (...but is not really needed? Tensorboard should depend on
             # tensorflow, not the other way!)
             # -> remove from list of required packages
-            filter_file(r"'tensorflow-tensorboard",
-                        r"#'tensorflow-tensorboard",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'tensorflow-tensorboard",
+                r"#'tensorflow-tensorboard",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.5.0: ~gcp'):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
             # installing gcp support
             # https://github.com/tensorflow/tensorflow/issues/20677#issuecomment-404634519
-            filter_file(r'--define with_gcp_support=true',
-                        r'--define with_gcp_support=false',
-                        '.tf_configure.bazelrc')
+            filter_file(
+                r'--define with_gcp_support=true',
+                r'--define with_gcp_support=false',
+                '.tf_configure.bazelrc')
 
         if spec.satisfies('@1.6.0:2.1'):
             # tensorboard name changed
-            filter_file(r"'tensorboard (>=|~=)",
-                        r"#'tensorboard \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'tensorboard (>=|~=)",
+                r"#'tensorboard \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.8.0: ~opencl'):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
@@ -707,36 +714,43 @@ def protobuf_deps():
             # tensorflow_estimator is an API for tensorflow
             # tensorflow-estimator imports tensorflow during build, so
             # tensorflow has to be set up first
-            filter_file(r"'tensorflow_estimator (>=|~=)",
-                        r"#'tensorflow_estimator \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'tensorflow_estimator (>=|~=)",
+                r"#'tensorflow_estimator \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@2.5'):
-            filter_file(r"'keras-nightly (>=|~=)",
-                        r"#'keras-nightly \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'keras-nightly (>=|~=)",
+                r"#'keras-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@2.6:'):
-            filter_file(r"'keras (>=|~=)",
-                        r"#'keras \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'keras (>=|~=)",
+                r"#'keras \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@2.7:'):
-            filter_file(r"'tensorflow-io-gcs-filesystem (>=|~=)",
-                        r"#'tensorflow-io-gcs-filesystem \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'tensorflow-io-gcs-filesystem (>=|~=)",
+                r"#'tensorflow-io-gcs-filesystem \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@2.0.0:'):
             # now it depends on the nightly versions...
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
-                        'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly (>=|~=)",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly \1",
-                        'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'keras-nightly (>=|~=)",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'keras-nightly \1",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
+                r"pass #REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
+                'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly (>=|~=)",
+                r"pass #REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'keras-nightly (>=|~=)",
+                r"pass #REQUIRED_PACKAGES\[i\] = 'keras-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.13.1 +nccl'):
             filter_file(
@@ -752,9 +766,10 @@ def protobuf_deps():
 
         # see tensorflow issue #31187 on github
         if spec.satisfies('@2.0.0:2.0'):
-            filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
-                        '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
-                        'tensorflow/lite/experimental/ruy/platform.h')
+            filter_file(
+                r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
+                '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
+                'tensorflow/lite/experimental/ruy/platform.h')
 
         if spec.satisfies('+cuda'):
             libs = spec['cuda'].libs.directories
