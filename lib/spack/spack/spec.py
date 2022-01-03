@@ -4728,7 +4728,7 @@ def merge_abstract_anonymous_specs(*abstract_specs):
 
         # Update with additional constraints from other spec
         for name in current_spec_constraint.dep_difference(merged_spec):
-            edge = current_spec_constraint.get_dependency(name)
+            edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
             merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
 
     return merged_spec

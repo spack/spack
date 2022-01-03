@@ -1259,9 +1259,10 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
-                for dep_name, dep in spec.dependencies_dict().items():
-                    for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(spec.name, dep_name, dtype))
+                # TODO: We need to distinguish 2 specs from the same package later
+                for edge in spec.edges_to_dependencies():
+                    for dtype in edge.deptypes:
+                        clauses.append(fn.depends_on(spec.name, edge.spec.name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
