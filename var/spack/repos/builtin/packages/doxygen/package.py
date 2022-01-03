@@ -102,3 +102,12 @@ class Doxygen(CMakePackage):
                     'set(ICONV_IN_GLIBC FALSE)',
                     join_path('cmake', 'FindIconv.cmake'),
                     string=True)
+
+    def cmake_args(self):
+        args = [
+            # Doxygen's build system uses CMake's deprecated `FindPythonInterp`,
+            # which can get confused by other `python` executables in the PATH.
+            # See issue: https://github.com/spack/spack/issues/28215
+            self.define('PYTHON_EXECUTABLE', self.spec['python'].command.path)
+        ]
+        return args
