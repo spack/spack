@@ -18,7 +18,7 @@ class PyAiohttp(PythonPackage):
     version('3.7.4', sha256='d90ace66b55747e49531b13bf0a9c7ae9d1e14f315a56ea6b54c0dc1b6facd6e')
     version('3.6.2', sha256='4ad2d8393843ea0c7b50a93bf04fb1cf20b93c0a5e958de128efcd2e5f8adf80')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@46.4:', type='build')
     depends_on('py-charset-normalizer@2.0:2', type=('build', 'run'), when='@3.8.0:')
     depends_on('python@3.5.3:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@3.7:')
