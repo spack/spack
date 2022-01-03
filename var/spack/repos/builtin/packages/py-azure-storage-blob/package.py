@@ -16,7 +16,7 @@ class PyAzureStorageBlob(PythonPackage):
     version('12.9.0', sha256='cff66a115c73c90e496c8c8b3026898a3ce64100840276e9245434e28a864225')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-azure-core@1.10:', type=('build', 'run'))
+    depends_on('py-azure-core@1.10:1', type=('build', 'run'))
     depends_on('py-msrest@0.6.21:', type=('build', 'run'))
     depends_on('py-cryptography@2.1.4:', type=('build', 'run'))
 
