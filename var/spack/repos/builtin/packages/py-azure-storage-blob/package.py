@@ -11,7 +11,7 @@ class PyAzureStorageBlob(PythonPackage):
 
     homepage = "https://github.com/Azure/azure-storage-python"
     pypi = "azure-storage-blob/azure-storage-blob-12.9.0.zip"
-    maintainer = ['marcusboden']
+    maintainers = ['marcusboden']
 
     version('12.9.0', sha256='cff66a115c73c90e496c8c8b3026898a3ce64100840276e9245434e28a864225')
 
