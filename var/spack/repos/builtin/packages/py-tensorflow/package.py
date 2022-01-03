@@ -348,7 +348,7 @@ class PyTensorflow(Package, CudaPackage):
     # When tensorflow and python protobuf use the same instance of libprotobuf,
     # pywrap_tensorflow must be imported before anything else that would import
     # protobuf definitions.
-    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch', when='@2.5:')
+    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch', when='@2.5:2.6')
 
     phases = ['configure', 'build', 'install']
 
@@ -689,8 +689,8 @@ def protobuf_deps():
 
         if spec.satisfies('@1.6.0:2.1'):
             # tensorboard name changed
-            filter_file(r"'tensorboard >=",
-                        r"#'tensorboard >=",
+            filter_file(r"'tensorboard (>=|~=)",
+                        r"#'tensorboard \1",
                         'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.8.0: ~opencl'):
@@ -707,20 +707,35 @@ def protobuf_deps():
             # tensorflow_estimator is an API for tensorflow
             # tensorflow-estimator imports tensorflow during build, so
             # tensorflow has to be set up first
-            filter_file(r"'tensorflow_estimator >=",
-                        r"#'tensorflow_estimator >=",
+            filter_file(r"'tensorflow_estimator (>=|~=)",
+                        r"#'tensorflow_estimator \1",
+                        'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.5'):
+            filter_file(r"'keras-nightly (>=|~=)",
+                        r"#'keras-nightly \1",
+                        'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.6:'):
+            filter_file(r"'keras (>=|~=)",
+                        r"#'keras \1",
+                        'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.7:'):
+            filter_file(r"'tensorflow-io-gcs-filesystem (>=|~=)",
+                        r"#'tensorflow-io-gcs-filesystem \1",
                         'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@2.0.0:'):
             # now it depends on the nightly versions...
-            filter_file(r"'tf-estimator-nightly >=",
-                        r"#'tf-estimator-nightly >=",
+            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
+                        r"pass #REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
                         'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
+            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly (>=|~=)",
+                        r"pass #REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly \1",
                         'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"'tb-nightly >=",
-                        r"#'tb-nightly >=",
+            filter_file(r"REQUIRED_PACKAGES\[i\] = 'keras-nightly (>=|~=)",
+                        r"pass #REQUIRED_PACKAGES\[i\] = 'keras-nightly \1",
                         'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.13.1 +nccl'):
