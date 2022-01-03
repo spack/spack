@@ -486,7 +486,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             # Currently AOCC support only static libraries of ELPA
             if '%aocc' in spec:
-                libs.append(join_path(elpa.libs.directories[0],
+                libs.append(join_path(elpa.prefix.lib,
                             ('libelpa{elpa_suffix}.a'
                                 .format(elpa_suffix=elpa_suffix))))
             else:
