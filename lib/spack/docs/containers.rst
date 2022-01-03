@@ -129,6 +129,9 @@ are currently supported are summarized in the table below:
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``
+   * - openSUSE Leap
+     - ``opensuse/leap``
+     - ``spack/leap15``
 
 All the images are tagged with the corresponding release of Spack:
 

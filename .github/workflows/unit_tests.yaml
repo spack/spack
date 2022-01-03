@@ -211,6 +211,7 @@ jobs:
           git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
           git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
+          . .github/workflows/setup_git.sh
           bin/spack unit-test -x
     - name: Run unit tests (only package tests)
       if: ${{ needs.changes.outputs.with_coverage == 'false' }}
@@ -223,6 +224,7 @@ jobs:
           git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
           git fetch origin "${{ github.ref }}:test-branch"
           git checkout test-branch
+          . .github/workflows/setup_git.sh
           bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
 
   # Test RHEL8 UBI with platform Python. This job is run

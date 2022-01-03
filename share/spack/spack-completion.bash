@@ -335,7 +335,7 @@ _spacktivate() {
 _spack() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
+        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --show-cores --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
@@ -969,12 +969,7 @@ _spack_env_st() {
 }
 
 _spack_env_loads() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -n --module-set-name -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
-    else
-        _environments
-    fi
+    SPACK_COMPREPLY="-h --help -n --module-set-name -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
 }
 
 _spack_env_view() {
@@ -1387,7 +1382,7 @@ _spack_module_tcl() {
     then
         SPACK_COMPREPLY="-h --help -n --name"
     else
-        SPACK_COMPREPLY="refresh find rm loads"
+        SPACK_COMPREPLY="refresh find rm loads setdefault"
     fi
 }
 
@@ -1422,6 +1417,15 @@ _spack_module_tcl_loads() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude -r --dependencies"
+    else
+        _installed_packages
+    fi
+}
+
+_spack_module_tcl_setdefault() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         _installed_packages
     fi

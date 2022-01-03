@@ -91,7 +91,7 @@ class PyPandas(PythonPackage):
 
     @property
     def import_modules(self):
-        modules = super().import_modules
+        modules = super(PyPandas, self).import_modules()
 
         ignored_imports = ["pandas.tests", "pandas.plotting._matplotlib"]
 

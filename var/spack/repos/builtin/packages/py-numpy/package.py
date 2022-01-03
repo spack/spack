@@ -348,20 +348,6 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def setup_run_environment(self, env):
-        # Quick fix for the cases when python/numpy are external packages
-        if 'python' not in self.spec:
-            return
-        python_version = self.spec['python'].version.up_to(2)
-
-        include_path = join_path(
-            self.prefix.lib,
-            'python{0}'.format(python_version),
-            'site-packages',
-            'numpy/core/include')
-
-        env.prepend_path('CPATH', include_path)
-
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def install_test(self):

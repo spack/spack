@@ -611,7 +611,11 @@ class EnvironmentModifications(object):
     def shell_modifications(self, shell='sh', explicit=False, env=None):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
-        new_env = os.environ.copy()
+
+        if env is None:
+            env = os.environ
+
+        new_env = env.copy()
 
         if env is None:
             env = os.environ
@@ -621,6 +625,9 @@ class EnvironmentModifications(object):
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(new_env)
+
+        if 'MANPATH' in new_env and not new_env.get('MANPATH').endswith(':'):
+            new_env['MANPATH'] += ':'
 
         cmds = ''
 

@@ -793,7 +793,7 @@ class BaseContext(tengine.Context):
 
     def _create_module_list_of(self, what):
         mod = self.conf.module
-        name = self.conf.module_set_name
+        name = self.conf.name
         kind = mod.__name__.rsplit('.', 1)[-1]
         validate = self.conf.load_only_generated
         index = dict()
@@ -949,6 +949,9 @@ class BaseModuleFileWriter(object):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
         # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing

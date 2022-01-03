@@ -149,14 +149,6 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
         make(install_tgt, parallel=False)
 
-    @property
-    def libs(self):
-        """set up recursive search for libs"""
-        shared = "+shared" in self.spec
-        return find_libraries(
-            "lib*", root=self.prefix, shared=shared, recursive=True
-        )
-
     @run_after('install')
     def link_system_certs(self):
         if self.spec.variants['certs'].value != 'system':
