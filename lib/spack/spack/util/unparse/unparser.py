@@ -198,7 +198,7 @@ class Unparser:
             for t in tree:
                 self.dispatch(t)
             return
-        meth = getattr(self, "_" + tree.__class__.__name__)
+        meth = getattr(self, "visit_" + tree.__class__.__name__)
         meth(tree)
 
     #
@@ -208,35 +208,35 @@ class Unparser:
     # should be # grouped by sum type. Ideally, this would follow the order
     # in the grammar, but currently doesn't.
 
-    def _Module(self, tree):
+    def visit_Module(self, tree):
         for stmt in tree.body:
             self.dispatch(stmt)
 
-    def _Interactive(self, tree):
+    def visit_Interactive(self, tree):
         for stmt in tree.body:
             self.dispatch(stmt)
 
-    def _Expression(self, tree):
+    def visit_Expression(self, tree):
         self.dispatch(tree.body)
 
     # stmt
-    def _Expr(self, tree):
+    def visit_Expr(self, tree):
         self.fill()
         self.set_precedence(_Precedence.YIELD, tree.value)
         self.dispatch(tree.value)
 
-    def _NamedExpr(self, tree):
+    def visit_NamedExpr(self, tree):
         with self.require_parens(_Precedence.TUPLE, tree):
             self.set_precedence(_Precedence.ATOM, tree.target, tree.value)
             self.dispatch(tree.target)
             self.write(" := ")
             self.dispatch(tree.value)
 
-    def _Import(self, t):
+    def visit_Import(self, t):
         self.fill("import ")
         interleave(lambda: self.write(", "), self.dispatch, t.names)
 
-    def _ImportFrom(self, t):
+    def visit_ImportFrom(self, t):
         # A from __future__ import may affect unparsing, so record it.
         if t.module and t.module == '__future__':
             self.future_imports.extend(n.name for n in t.names)
@@ -248,20 +248,20 @@ class Unparser:
         self.write(" import ")
         interleave(lambda: self.write(", "), self.dispatch, t.names)
 
-    def _Assign(self, t):
+    def visit_Assign(self, t):
         self.fill()
         for target in t.targets:
             self.dispatch(target)
             self.write(" = ")
         self.dispatch(t.value)
 
-    def _AugAssign(self, t):
+    def visit_AugAssign(self, t):
         self.fill()
         self.dispatch(t.target)
         self.write(" " + self.binop[t.op.__class__.__name__] + "= ")
         self.dispatch(t.value)
 
-    def _AnnAssign(self, t):
+    def visit_AnnAssign(self, t):
         self.fill()
         with self.delimit_if(
                 "(", ")", not t.simple and isinstance(t.target, ast.Name)):
@@ -272,33 +272,33 @@ class Unparser:
             self.write(" = ")
             self.dispatch(t.value)
 
-    def _Return(self, t):
+    def visit_Return(self, t):
         self.fill("return")
         if t.value:
             self.write(" ")
             self.dispatch(t.value)
 
-    def _Pass(self, t):
+    def visit_Pass(self, t):
         self.fill("pass")
 
-    def _Break(self, t):
+    def visit_Break(self, t):
         self.fill("break")
 
-    def _Continue(self, t):
+    def visit_Continue(self, t):
         self.fill("continue")
 
-    def _Delete(self, t):
+    def visit_Delete(self, t):
         self.fill("del ")
         interleave(lambda: self.write(", "), self.dispatch, t.targets)
 
-    def _Assert(self, t):
+    def visit_Assert(self, t):
         self.fill("assert ")
         self.dispatch(t.test)
         if t.msg:
             self.write(", ")
             self.dispatch(t.msg)
 
-    def _Exec(self, t):
+    def visit_Exec(self, t):
         self.fill("exec ")
         self.dispatch(t.body)
         if t.globals:
@@ -308,7 +308,7 @@ class Unparser:
             self.write(", ")
             self.dispatch(t.locals)
 
-    def _Print(self, t):
+    def visit_Print(self, t):
         # Use print function so that python 2 unparsing is consistent with 3
         if self._py_ver_consistent:
             self.fill("print")
@@ -363,15 +363,15 @@ class Unparser:
             if not t.nl:
                 self.write(",")
 
-    def _Global(self, t):
+    def visit_Global(self, t):
         self.fill("global ")
         interleave(lambda: self.write(", "), self.write, t.names)
 
-    def _Nonlocal(self, t):
+    def visit_Nonlocal(self, t):
         self.fill("nonlocal ")
         interleave(lambda: self.write(", "), self.write, t.names)
 
-    def _Await(self, t):
+    def visit_Await(self, t):
         with self.require_parens(_Precedence.AWAIT, t):
             self.write("await")
             if t.value:
@@ -379,7 +379,7 @@ class Unparser:
                 self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
-    def _Yield(self, t):
+    def visit_Yield(self, t):
         with self.require_parens(_Precedence.YIELD, t):
             self.write("yield")
             if t.value:
@@ -387,7 +387,7 @@ class Unparser:
                 self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
-    def _YieldFrom(self, t):
+    def visit_YieldFrom(self, t):
         with self.require_parens(_Precedence.YIELD, t):
             self.write("yield from")
             if t.value:
@@ -395,7 +395,7 @@ class Unparser:
                 self.set_precedence(_Precedence.ATOM, t.value)
                 self.dispatch(t.value)
 
-    def _Raise(self, t):
+    def visit_Raise(self, t):
         self.fill("raise")
         if six.PY3:
             if not t.exc:
@@ -417,7 +417,7 @@ class Unparser:
                 self.write(", ")
                 self.dispatch(t.tback)
 
-    def _Try(self, t):
+    def visit_Try(self, t):
         self.fill("try")
         with self.block():
             self.dispatch(t.body)
@@ -432,7 +432,7 @@ class Unparser:
             with self.block():
                 self.dispatch(t.finalbody)
 
-    def _TryExcept(self, t):
+    def visit_TryExcept(self, t):
         self.fill("try")
         with self.block():
             self.dispatch(t.body)
@@ -444,7 +444,7 @@ class Unparser:
             with self.block():
                 self.dispatch(t.orelse)
 
-    def _TryFinally(self, t):
+    def visit_TryFinally(self, t):
         if len(t.body) == 1 and isinstance(t.body[0], ast.TryExcept):
             # try-except-finally
             self.dispatch(t.body)
@@ -457,7 +457,7 @@ class Unparser:
         with self.block():
             self.dispatch(t.finalbody)
 
-    def _ExceptHandler(self, t):
+    def visit_ExceptHandler(self, t):
         self.fill("except")
         if t.type:
             self.write(" ")
@@ -471,7 +471,7 @@ class Unparser:
         with self.block():
             self.dispatch(t.body)
 
-    def _ClassDef(self, t):
+    def visit_ClassDef(self, t):
         self.write("\n")
         for deco in t.decorator_list:
             self.fill("@")
@@ -516,10 +516,10 @@ class Unparser:
         with self.block():
             self.dispatch(t.body)
 
-    def _FunctionDef(self, t):
+    def visit_FunctionDef(self, t):
         self.__FunctionDef_helper(t, "def")
 
-    def _AsyncFunctionDef(self, t):
+    def visit_AsyncFunctionDef(self, t):
         self.__FunctionDef_helper(t, "async def")
 
     def __FunctionDef_helper(self, t, fill_suffix):
@@ -537,10 +537,10 @@ class Unparser:
         with self.block():
             self.dispatch(t.body)
 
-    def _For(self, t):
+    def visit_For(self, t):
         self.__For_helper("for ", t)
 
-    def _AsyncFor(self, t):
+    def visit_AsyncFor(self, t):
         self.__For_helper("async for ", t)
 
     def __For_helper(self, fill, t):
@@ -555,7 +555,7 @@ class Unparser:
             with self.block():
                 self.dispatch(t.orelse)
 
-    def _If(self, t):
+    def visit_If(self, t):
         self.fill("if ")
         self.dispatch(t.test)
         with self.block():
@@ -574,7 +574,7 @@ class Unparser:
             with self.block():
                 self.dispatch(t.orelse)
 
-    def _While(self, t):
+    def visit_While(self, t):
         self.fill("while ")
         self.dispatch(t.test)
         with self.block():
@@ -596,10 +596,10 @@ class Unparser:
         with self.block():
             self.dispatch(t.body)
 
-    def _With(self, t):
+    def visit_With(self, t):
         self._generic_With(t)
 
-    def _AsyncWith(self, t):
+    def visit_AsyncWith(self, t):
         self._generic_With(t, async_=True)
 
     def _str_literal_helper(
@@ -650,10 +650,10 @@ class Unparser:
         ))
 
     # expr
-    def _Bytes(self, t):
+    def visit_Bytes(self, t):
         self.write(repr(t.s))
 
-    def _Str(self, tree):
+    def visit_Str(self, tree):
         if six.PY3:
             # Python 3.5, 3.6, and 3.7 can't tell if something was written as a
             # unicode constant. Try to make that consistent with 'u' for '\u- literals
@@ -675,7 +675,7 @@ class Unparser:
             else:
                 assert False, "shouldn't get here"
 
-    def _JoinedStr(self, t):
+    def visit_JoinedStr(self, t):
         # JoinedStr(expr* values)
         self.write("f")
 
@@ -713,7 +713,7 @@ class Unparser:
             value=value,
         ))
 
-    def _FormattedValue(self, t):
+    def visit_FormattedValue(self, t):
         # FormattedValue(expr value, int? conversion, expr? format_spec)
         self.write("f")
         string = StringIO()
@@ -763,13 +763,13 @@ class Unparser:
             meth(t.format_spec, write)
         write("}")
 
-    def _Name(self, t):
+    def visit_Name(self, t):
         self.write(t.id)
 
-    def _NameConstant(self, t):
+    def visit_NameConstant(self, t):
         self.write(repr(t.value))
 
-    def _Repr(self, t):
+    def visit_Repr(self, t):
         self.write("`")
         self.dispatch(t.value)
         self.write("`")
@@ -790,7 +790,7 @@ class Unparser:
         else:
             self.write(repr(value))
 
-    def _Constant(self, t):
+    def visit_Constant(self, t):
         value = t.value
         if isinstance(value, tuple):
             with self.delimit("(", ")"):
@@ -802,7 +802,7 @@ class Unparser:
                 self.write("u")
             self._write_constant(t.value)
 
-    def _Num(self, t):
+    def visit_Num(self, t):
         repr_n = repr(t.n)
         if six.PY3:
             self.write(repr_n.replace("inf", INFSTR))
@@ -814,29 +814,29 @@ class Unparser:
                 # Substitute overflowing decimal literal for AST infinities.
                 self.write(repr_n.replace("inf", INFSTR))
 
-    def _List(self, t):
+    def visit_List(self, t):
         with self.delimit("[", "]"):
             interleave(lambda: self.write(", "), self.dispatch, t.elts)
 
-    def _ListComp(self, t):
+    def visit_ListComp(self, t):
         with self.delimit("[", "]"):
             self.dispatch(t.elt)
             for gen in t.generators:
                 self.dispatch(gen)
 
-    def _GeneratorExp(self, t):
+    def visit_GeneratorExp(self, t):
         with self.delimit("(", ")"):
             self.dispatch(t.elt)
             for gen in t.generators:
                 self.dispatch(gen)
 
-    def _SetComp(self, t):
+    def visit_SetComp(self, t):
         with self.delimit("{", "}"):
             self.dispatch(t.elt)
             for gen in t.generators:
                 self.dispatch(gen)
 
-    def _DictComp(self, t):
+    def visit_DictComp(self, t):
         with self.delimit("{", "}"):
             self.dispatch(t.key)
             self.write(": ")
@@ -844,7 +844,7 @@ class Unparser:
             for gen in t.generators:
                 self.dispatch(gen)
 
-    def _comprehension(self, t):
+    def visit_comprehension(self, t):
         if getattr(t, 'is_async', False):
             self.write(" async for ")
         else:
@@ -858,7 +858,7 @@ class Unparser:
             self.write(" if ")
             self.dispatch(if_clause)
 
-    def _IfExp(self, t):
+    def visit_IfExp(self, t):
         with self.require_parens(_Precedence.TEST, t):
             self.set_precedence(pnext(_Precedence.TEST), t.body, t.test)
             self.dispatch(t.body)
@@ -868,12 +868,12 @@ class Unparser:
             self.set_precedence(_Precedence.TEST, t.orelse)
             self.dispatch(t.orelse)
 
-    def _Set(self, t):
+    def visit_Set(self, t):
         assert(t.elts)  # should be at least one element
         with self.delimit("{", "}"):
             interleave(lambda: self.write(", "), self.dispatch, t.elts)
 
-    def _Dict(self, t):
+    def visit_Dict(self, t):
         def write_key_value_pair(k, v):
             self.dispatch(k)
             self.write(": ")
@@ -893,7 +893,7 @@ class Unparser:
         with self.delimit("{", "}"):
             interleave(lambda: self.write(", "), write_item, zip(t.keys, t.values))
 
-    def _Tuple(self, t):
+    def visit_Tuple(self, t):
         with self.delimit("(", ")"):
             self.items_view(self.dispatch, t.elts)
 
@@ -911,7 +911,7 @@ class Unparser:
         "-": _Precedence.FACTOR,
     }
 
-    def _UnaryOp(self, t):
+    def visit_UnaryOp(self, t):
         operator = self.unop[t.op.__class__.__name__]
         operator_precedence = self.unop_precedence[operator]
         with self.require_parens(operator_precedence, t):
@@ -968,7 +968,7 @@ class Unparser:
 
     binop_rassoc = frozenset(("**",))
 
-    def _BinOp(self, t):
+    def visit_BinOp(self, t):
         operator = self.binop[t.op.__class__.__name__]
         operator_precedence = self.binop_precedence[operator]
         with self.require_parens(operator_precedence, t):
@@ -998,7 +998,7 @@ class Unparser:
         "NotIn": "not in",
     }
 
-    def _Compare(self, t):
+    def visit_Compare(self, t):
         with self.require_parens(_Precedence.CMP, t):
             self.set_precedence(pnext(_Precedence.CMP), t.left, *t.comparators)
             self.dispatch(t.left)
@@ -1016,7 +1016,7 @@ class Unparser:
         "or": _Precedence.OR,
     }
 
-    def _BoolOp(self, t):
+    def visit_BoolOp(self, t):
         operator = self.boolops[t.op.__class__.__name__]
 
         # use a dict instead of nonlocal for Python 2 compatibility
@@ -1031,7 +1031,7 @@ class Unparser:
             s = " %s " % operator
             interleave(lambda: self.write(s), increasing_level_dispatch, t.values)
 
-    def _Attribute(self, t):
+    def visit_Attribute(self, t):
         self.set_precedence(_Precedence.ATOM, t.value)
         self.dispatch(t.value)
         # Special case: 3.__abs__() is a syntax error, so if t.value
@@ -1043,7 +1043,7 @@ class Unparser:
         self.write(".")
         self.write(t.attr)
 
-    def _Call(self, t):
+    def visit_Call(self, t):
         self.set_precedence(_Precedence.ATOM, t.func)
 
         args = t.args
@@ -1107,7 +1107,7 @@ class Unparser:
                     self.write("**")
                     self.dispatch(t.kwargs)
 
-    def _Subscript(self, t):
+    def visit_Subscript(self, t):
         self.set_precedence(_Precedence.ATOM, t.value)
         self.dispatch(t.value)
         with self.delimit("[", "]"):
@@ -1116,17 +1116,17 @@ class Unparser:
             else:
                 self.dispatch(t.slice)
 
-    def _Starred(self, t):
+    def visit_Starred(self, t):
         self.write("*")
         self.set_precedence(_Precedence.EXPR, t.value)
         self.dispatch(t.value)
 
     # slice
-    def _Ellipsis(self, t):
+    def visit_Ellipsis(self, t):
         self.write("...")
 
     # used in Python <= 3.8 -- see _Subscript for 3.9+
-    def _Index(self, t):
+    def visit_Index(self, t):
         if is_simple_tuple(t.value):
             self.set_precedence(_Precedence.ATOM, t.value)
             self.items_view(self.dispatch, t.value.elts)
@@ -1134,7 +1134,7 @@ class Unparser:
             self.set_precedence(_Precedence.TUPLE, t.value)
             self.dispatch(t.value)
 
-    def _Slice(self, t):
+    def visit_Slice(self, t):
         if t.lower:
             self.dispatch(t.lower)
         self.write(":")
@@ -1144,18 +1144,18 @@ class Unparser:
             self.write(":")
             self.dispatch(t.step)
 
-    def _ExtSlice(self, t):
+    def visit_ExtSlice(self, t):
         interleave(lambda: self.write(', '), self.dispatch, t.dims)
 
     # argument
-    def _arg(self, t):
+    def visit_arg(self, t):
         self.write(t.arg)
         if t.annotation:
             self.write(": ")
             self.dispatch(t.annotation)
 
     # others
-    def _arguments(self, t):
+    def visit_arguments(self, t):
         first = True
         # normal arguments
         all_args = getattr(t, 'posonlyargs', []) + t.args
@@ -1221,7 +1221,7 @@ class Unparser:
                     self.write(": ")
                     self.dispatch(t.kwargannotation)
 
-    def _keyword(self, t):
+    def visit_keyword(self, t):
         if t.arg is None:
             # starting from Python 3.5 this denotes a kwargs part of the invocation
             self.write("**")
@@ -1230,7 +1230,7 @@ class Unparser:
             self.write("=")
         self.dispatch(t.value)
 
-    def _Lambda(self, t):
+    def visit_Lambda(self, t):
         with self.require_parens(_Precedence.TEST, t):
             self.write("lambda ")
             self.dispatch(t.args)
@@ -1238,12 +1238,12 @@ class Unparser:
             self.set_precedence(_Precedence.TEST, t.body)
             self.dispatch(t.body)
 
-    def _alias(self, t):
+    def visit_alias(self, t):
         self.write(t.name)
         if t.asname:
             self.write(" as " + t.asname)
 
-    def _withitem(self, t):
+    def visit_withitem(self, t):
         self.dispatch(t.context_expr)
         if t.optional_vars:
             self.write(" as ")
