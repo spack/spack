@@ -95,7 +95,9 @@ class Adios2(CMakePackage):
     depends_on('libzmq', when='+dataman')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
-    depends_on('hdf5', when='+hdf5')
+    # Require HDF5 macros to use API > 1.12
+    depends_on('hdf5 api=default', when='+hdf5')
+    depends_on('hdf5 @1.12:', when='@2.7:')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
 
     depends_on('c-blosc', when='@2.4: +blosc')
