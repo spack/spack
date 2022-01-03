@@ -181,22 +181,22 @@ class Unparser:
         else:
             return nullcontext()
 
-    def require_parens(self, precedence, t):
+    def require_parens(self, precedence, node):
         """Shortcut to adding precedence related parens"""
-        return self.delimit_if("(", ")", self.get_precedence(t) > precedence)
+        return self.delimit_if("(", ")", self.get_precedence(node) > precedence)
 
-    def get_precedence(self, t):
-        return self._precedences.get(t, _Precedence.TEST)
+    def get_precedence(self, node):
+        return self._precedences.get(node, _Precedence.TEST)
 
     def set_precedence(self, precedence, *nodes):
-        for t in nodes:
-            self._precedences[t] = precedence
+        for node in nodes:
+            self._precedences[node] = precedence
 
     def dispatch(self, tree):
         "Dispatcher function, dispatching tree type T to method _T."
         if isinstance(tree, list):
-            for t in tree:
-                self.dispatch(t)
+            for node in tree:
+                self.dispatch(node)
             return
         meth = getattr(self, "visit_" + tree.__class__.__name__)
         meth(tree)
@@ -232,95 +232,95 @@ class Unparser:
             self.write(" := ")
             self.dispatch(tree.value)
 
-    def visit_Import(self, t):
+    def visit_Import(self, node):
         self.fill("import ")
-        interleave(lambda: self.write(", "), self.dispatch, t.names)
+        interleave(lambda: self.write(", "), self.dispatch, node.names)
 
-    def visit_ImportFrom(self, t):
+    def visit_ImportFrom(self, node):
         # A from __future__ import may affect unparsing, so record it.
-        if t.module and t.module == '__future__':
-            self.future_imports.extend(n.name for n in t.names)
+        if node.module and node.module == '__future__':
+            self.future_imports.extend(n.name for n in node.names)
 
         self.fill("from ")
-        self.write("." * t.level)
-        if t.module:
-            self.write(t.module)
+        self.write("." * node.level)
+        if node.module:
+            self.write(node.module)
         self.write(" import ")
-        interleave(lambda: self.write(", "), self.dispatch, t.names)
+        interleave(lambda: self.write(", "), self.dispatch, node.names)
 
-    def visit_Assign(self, t):
+    def visit_Assign(self, node):
         self.fill()
-        for target in t.targets:
+        for target in node.targets:
             self.dispatch(target)
             self.write(" = ")
-        self.dispatch(t.value)
+        self.dispatch(node.value)
 
-    def visit_AugAssign(self, t):
+    def visit_AugAssign(self, node):
         self.fill()
-        self.dispatch(t.target)
-        self.write(" " + self.binop[t.op.__class__.__name__] + "= ")
-        self.dispatch(t.value)
+        self.dispatch(node.target)
+        self.write(" " + self.binop[node.op.__class__.__name__] + "= ")
+        self.dispatch(node.value)
 
-    def visit_AnnAssign(self, t):
+    def visit_AnnAssign(self, node):
         self.fill()
         with self.delimit_if(
-                "(", ")", not t.simple and isinstance(t.target, ast.Name)):
-            self.dispatch(t.target)
+                "(", ")", not node.simple and isinstance(node.target, ast.Name)):
+            self.dispatch(node.target)
         self.write(": ")
-        self.dispatch(t.annotation)
-        if t.value:
+        self.dispatch(node.annotation)
+        if node.value:
             self.write(" = ")
-            self.dispatch(t.value)
+            self.dispatch(node.value)
 
-    def visit_Return(self, t):
+    def visit_Return(self, node):
         self.fill("return")
-        if t.value:
+        if node.value:
             self.write(" ")
-            self.dispatch(t.value)
+            self.dispatch(node.value)
 
-    def visit_Pass(self, t):
+    def visit_Pass(self, node):
         self.fill("pass")
 
-    def visit_Break(self, t):
+    def visit_Break(self, node):
         self.fill("break")
 
-    def visit_Continue(self, t):
+    def visit_Continue(self, node):
         self.fill("continue")
 
-    def visit_Delete(self, t):
+    def visit_Delete(self, node):
         self.fill("del ")
-        interleave(lambda: self.write(", "), self.dispatch, t.targets)
+        interleave(lambda: self.write(", "), self.dispatch, node.targets)
 
-    def visit_Assert(self, t):
+    def visit_Assert(self, node):
         self.fill("assert ")
-        self.dispatch(t.test)
-        if t.msg:
+        self.dispatch(node.test)
+        if node.msg:
             self.write(", ")
-            self.dispatch(t.msg)
+            self.dispatch(node.msg)
 
-    def visit_Exec(self, t):
+    def visit_Exec(self, node):
         self.fill("exec ")
-        self.dispatch(t.body)
-        if t.globals:
+        self.dispatch(node.body)
+        if node.globals:
             self.write(" in ")
-            self.dispatch(t.globals)
-        if t.locals:
+            self.dispatch(node.globals)
+        if node.locals:
             self.write(", ")
-            self.dispatch(t.locals)
+            self.dispatch(node.locals)
 
-    def visit_Print(self, t):
+    def visit_Print(self, node):
         # Use print function so that python 2 unparsing is consistent with 3
         if self._py_ver_consistent:
             self.fill("print")
             with self.delimit("(", ")"):
-                values = t.values
+                values = node.values
 
                 # Can't tell print(foo, bar, baz) and print((foo, bar, baz)) apart in
                 # python 2 and 3, so treat them the same to make hashes consistent.
                 # Single-tuple print are rare and unlikely to affect package hashes,
                 # esp. as they likely print to stdout.
                 if len(values) == 1 and isinstance(values[0], ast.Tuple):
-                    values = t.values[0].elts
+                    values = node.values[0].elts
 
                 do_comma = False
                 for e in values:
@@ -330,277 +330,277 @@ class Unparser:
                         do_comma = True
                     self.dispatch(e)
 
-                if not t.nl:
+                if not node.nl:
                     if do_comma:
                         self.write(", ")
                     else:
                         do_comma = True
                     self.write("end=''")
 
-                if t.dest:
+                if node.dest:
                     if do_comma:
                         self.write(", ")
                     else:
                         do_comma = True
                     self.write("file=")
-                    self.dispatch(t.dest)
+                    self.dispatch(node.dest)
 
         else:
             # unparse Python 2 print statements
             self.fill("print ")
 
             do_comma = False
-            if t.dest:
+            if node.dest:
                 self.write(">>")
-                self.dispatch(t.dest)
+                self.dispatch(node.dest)
                 do_comma = True
-            for e in t.values:
+            for e in node.values:
                 if do_comma:
                     self.write(", ")
                 else:
                     do_comma = True
                 self.dispatch(e)
-            if not t.nl:
+            if not node.nl:
                 self.write(",")
 
-    def visit_Global(self, t):
+    def visit_Global(self, node):
         self.fill("global ")
-        interleave(lambda: self.write(", "), self.write, t.names)
+        interleave(lambda: self.write(", "), self.write, node.names)
 
-    def visit_Nonlocal(self, t):
+    def visit_Nonlocal(self, node):
         self.fill("nonlocal ")
-        interleave(lambda: self.write(", "), self.write, t.names)
+        interleave(lambda: self.write(", "), self.write, node.names)
 
-    def visit_Await(self, t):
-        with self.require_parens(_Precedence.AWAIT, t):
+    def visit_Await(self, node):
+        with self.require_parens(_Precedence.AWAIT, node):
             self.write("await")
-            if t.value:
+            if node.value:
                 self.write(" ")
-                self.set_precedence(_Precedence.ATOM, t.value)
-                self.dispatch(t.value)
+                self.set_precedence(_Precedence.ATOM, node.value)
+                self.dispatch(node.value)
 
-    def visit_Yield(self, t):
-        with self.require_parens(_Precedence.YIELD, t):
+    def visit_Yield(self, node):
+        with self.require_parens(_Precedence.YIELD, node):
             self.write("yield")
-            if t.value:
+            if node.value:
                 self.write(" ")
-                self.set_precedence(_Precedence.ATOM, t.value)
-                self.dispatch(t.value)
+                self.set_precedence(_Precedence.ATOM, node.value)
+                self.dispatch(node.value)
 
-    def visit_YieldFrom(self, t):
-        with self.require_parens(_Precedence.YIELD, t):
+    def visit_YieldFrom(self, node):
+        with self.require_parens(_Precedence.YIELD, node):
             self.write("yield from")
-            if t.value:
+            if node.value:
                 self.write(" ")
-                self.set_precedence(_Precedence.ATOM, t.value)
-                self.dispatch(t.value)
+                self.set_precedence(_Precedence.ATOM, node.value)
+                self.dispatch(node.value)
 
-    def visit_Raise(self, t):
+    def visit_Raise(self, node):
         self.fill("raise")
         if six.PY3:
-            if not t.exc:
-                assert not t.cause
+            if not node.exc:
+                assert not node.cause
                 return
             self.write(" ")
-            self.dispatch(t.exc)
-            if t.cause:
+            self.dispatch(node.exc)
+            if node.cause:
                 self.write(" from ")
-                self.dispatch(t.cause)
+                self.dispatch(node.cause)
         else:
             self.write(" ")
-            if t.type:
-                self.dispatch(t.type)
-            if t.inst:
+            if node.type:
+                self.dispatch(node.type)
+            if node.inst:
                 self.write(", ")
-                self.dispatch(t.inst)
-            if t.tback:
+                self.dispatch(node.inst)
+            if node.tback:
                 self.write(", ")
-                self.dispatch(t.tback)
+                self.dispatch(node.tback)
 
-    def visit_Try(self, t):
+    def visit_Try(self, node):
         self.fill("try")
         with self.block():
-            self.dispatch(t.body)
-        for ex in t.handlers:
+            self.dispatch(node.body)
+        for ex in node.handlers:
             self.dispatch(ex)
-        if t.orelse:
+        if node.orelse:
             self.fill("else")
             with self.block():
-                self.dispatch(t.orelse)
-        if t.finalbody:
+                self.dispatch(node.orelse)
+        if node.finalbody:
             self.fill("finally")
             with self.block():
-                self.dispatch(t.finalbody)
+                self.dispatch(node.finalbody)
 
-    def visit_TryExcept(self, t):
+    def visit_TryExcept(self, node):
         self.fill("try")
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
 
-        for ex in t.handlers:
+        for ex in node.handlers:
             self.dispatch(ex)
-        if t.orelse:
+        if node.orelse:
             self.fill("else")
             with self.block():
-                self.dispatch(t.orelse)
+                self.dispatch(node.orelse)
 
-    def visit_TryFinally(self, t):
-        if len(t.body) == 1 and isinstance(t.body[0], ast.TryExcept):
+    def visit_TryFinally(self, node):
+        if len(node.body) == 1 and isinstance(node.body[0], ast.TryExcept):
             # try-except-finally
-            self.dispatch(t.body)
+            self.dispatch(node.body)
         else:
             self.fill("try")
             with self.block():
-                self.dispatch(t.body)
+                self.dispatch(node.body)
 
         self.fill("finally")
         with self.block():
-            self.dispatch(t.finalbody)
+            self.dispatch(node.finalbody)
 
-    def visit_ExceptHandler(self, t):
+    def visit_ExceptHandler(self, node):
         self.fill("except")
-        if t.type:
+        if node.type:
             self.write(" ")
-            self.dispatch(t.type)
-        if t.name:
+            self.dispatch(node.type)
+        if node.name:
             self.write(" as ")
             if six.PY3:
-                self.write(t.name)
+                self.write(node.name)
             else:
-                self.dispatch(t.name)
+                self.dispatch(node.name)
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
 
-    def visit_ClassDef(self, t):
+    def visit_ClassDef(self, node):
         self.write("\n")
-        for deco in t.decorator_list:
+        for deco in node.decorator_list:
             self.fill("@")
             self.dispatch(deco)
-        self.fill("class " + t.name)
+        self.fill("class " + node.name)
         if six.PY3:
-            with self.delimit_if("(", ")", condition=t.bases or t.keywords):
+            with self.delimit_if("(", ")", condition=node.bases or node.keywords):
                 comma = False
-                for e in t.bases:
+                for e in node.bases:
                     if comma:
                         self.write(", ")
                     else:
                         comma = True
                     self.dispatch(e)
-                for e in t.keywords:
+                for e in node.keywords:
                     if comma:
                         self.write(", ")
                     else:
                         comma = True
                     self.dispatch(e)
                 if sys.version_info[:2] < (3, 5):
-                    if t.starargs:
+                    if node.starargs:
                         if comma:
                             self.write(", ")
                         else:
                             comma = True
                         self.write("*")
-                        self.dispatch(t.starargs)
-                    if t.kwargs:
+                        self.dispatch(node.starargs)
+                    if node.kwargs:
                         if comma:
                             self.write(", ")
                         else:
                             comma = True
                         self.write("**")
-                        self.dispatch(t.kwargs)
-        elif t.bases:
+                        self.dispatch(node.kwargs)
+        elif node.bases:
             with self.delimit("(", ")"):
-                for a in t.bases[:-1]:
+                for a in node.bases[:-1]:
                     self.dispatch(a)
                     self.write(", ")
-                self.dispatch(t.bases[-1])
+                self.dispatch(node.bases[-1])
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
 
-    def visit_FunctionDef(self, t):
-        self.__FunctionDef_helper(t, "def")
+    def visit_FunctionDef(self, node):
+        self.__FunctionDef_helper(node, "def")
 
-    def visit_AsyncFunctionDef(self, t):
-        self.__FunctionDef_helper(t, "async def")
+    def visit_AsyncFunctionDef(self, node):
+        self.__FunctionDef_helper(node, "async def")
 
-    def __FunctionDef_helper(self, t, fill_suffix):
+    def __FunctionDef_helper(self, node, fill_suffix):
         self.write("\n")
-        for deco in t.decorator_list:
+        for deco in node.decorator_list:
             self.fill("@")
             self.dispatch(deco)
-        def_str = fill_suffix + " " + t.name
+        def_str = fill_suffix + " " + node.name
         self.fill(def_str)
         with self.delimit("(", ")"):
-            self.dispatch(t.args)
-        if getattr(t, "returns", False):
+            self.dispatch(node.args)
+        if getattr(node, "returns", False):
             self.write(" -> ")
-            self.dispatch(t.returns)
+            self.dispatch(node.returns)
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
 
-    def visit_For(self, t):
-        self.__For_helper("for ", t)
+    def visit_For(self, node):
+        self.__For_helper("for ", node)
 
-    def visit_AsyncFor(self, t):
-        self.__For_helper("async for ", t)
+    def visit_AsyncFor(self, node):
+        self.__For_helper("async for ", node)
 
-    def __For_helper(self, fill, t):
+    def __For_helper(self, fill, node):
         self.fill(fill)
-        self.dispatch(t.target)
+        self.dispatch(node.target)
         self.write(" in ")
-        self.dispatch(t.iter)
+        self.dispatch(node.iter)
         with self.block():
-            self.dispatch(t.body)
-        if t.orelse:
+            self.dispatch(node.body)
+        if node.orelse:
             self.fill("else")
             with self.block():
-                self.dispatch(t.orelse)
+                self.dispatch(node.orelse)
 
-    def visit_If(self, t):
+    def visit_If(self, node):
         self.fill("if ")
-        self.dispatch(t.test)
+        self.dispatch(node.test)
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
         # collapse nested ifs into equivalent elifs.
-        while (t.orelse and len(t.orelse) == 1 and
-               isinstance(t.orelse[0], ast.If)):
-            t = t.orelse[0]
+        while (node.orelse and len(node.orelse) == 1 and
+               isinstance(node.orelse[0], ast.If)):
+            node = node.orelse[0]
             self.fill("elif ")
-            self.dispatch(t.test)
+            self.dispatch(node.test)
             with self.block():
-                self.dispatch(t.body)
+                self.dispatch(node.body)
         # final else
-        if t.orelse:
+        if node.orelse:
             self.fill("else")
             with self.block():
-                self.dispatch(t.orelse)
+                self.dispatch(node.orelse)
 
-    def visit_While(self, t):
+    def visit_While(self, node):
         self.fill("while ")
-        self.dispatch(t.test)
+        self.dispatch(node.test)
         with self.block():
-            self.dispatch(t.body)
-        if t.orelse:
+            self.dispatch(node.body)
+        if node.orelse:
             self.fill("else")
             with self.block():
-                self.dispatch(t.orelse)
+                self.dispatch(node.orelse)
 
-    def _generic_With(self, t, async_=False):
+    def _generic_With(self, node, async_=False):
         self.fill("async with " if async_ else "with ")
-        if hasattr(t, 'items'):
-            interleave(lambda: self.write(", "), self.dispatch, t.items)
+        if hasattr(node, 'items'):
+            interleave(lambda: self.write(", "), self.dispatch, node.items)
         else:
-            self.dispatch(t.context_expr)
-            if t.optional_vars:
+            self.dispatch(node.context_expr)
+            if node.optional_vars:
                 self.write(" as ")
-                self.dispatch(t.optional_vars)
+                self.dispatch(node.optional_vars)
         with self.block():
-            self.dispatch(t.body)
+            self.dispatch(node.body)
 
-    def visit_With(self, t):
-        self._generic_With(t)
+    def visit_With(self, node):
+        self._generic_With(node)
 
-    def visit_AsyncWith(self, t):
-        self._generic_With(t, async_=True)
+    def visit_AsyncWith(self, node):
+        self._generic_With(node, async_=True)
 
     def _str_literal_helper(
             self, string, quote_types=_ALL_QUOTES, escape_special_whitespace=False
@@ -650,8 +650,8 @@ class Unparser:
         ))
 
     # expr
-    def visit_Bytes(self, t):
-        self.write(repr(t.s))
+    def visit_Bytes(self, node):
+        self.write(repr(node.s))
 
     def visit_Str(self, tree):
         if six.PY3:
@@ -675,13 +675,13 @@ class Unparser:
             else:
                 assert False, "shouldn't get here"
 
-    def visit_JoinedStr(self, t):
+    def visit_JoinedStr(self, node):
         # JoinedStr(expr* values)
         self.write("f")
 
         if self._avoid_backslashes:
             string = StringIO()
-            self._fstring_JoinedStr(t, string.write)
+            self._fstring_JoinedStr(node, string.write)
             self._write_str_avoiding_backslashes(string.getvalue())
             return
 
@@ -692,7 +692,7 @@ class Unparser:
         # in our buffer corresponds to FormattedValues and what corresponds to
         # Constant parts of the f-string, and allow escapes accordingly.
         buffer = []
-        for value in t.values:
+        for value in node.values:
             meth = getattr(self, "_fstring_" + type(value).__name__)
             string = StringIO()
             meth(value, string.write)
@@ -713,30 +713,30 @@ class Unparser:
             value=value,
         ))
 
-    def visit_FormattedValue(self, t):
+    def visit_FormattedValue(self, node):
         # FormattedValue(expr value, int? conversion, expr? format_spec)
         self.write("f")
         string = StringIO()
-        self._fstring_JoinedStr(t, string.write)
+        self._fstring_JoinedStr(node, string.write)
         self._write_str_avoiding_backslashes(string.getvalue())
 
-    def _fstring_JoinedStr(self, t, write):
-        for value in t.values:
+    def _fstring_JoinedStr(self, node, write):
+        for value in node.values:
             print("   ", value)
             meth = getattr(self, "_fstring_" + type(value).__name__)
             print(meth)
             meth(value, write)
 
-    def _fstring_Str(self, t, write):
-        value = t.s.replace("{", "{{").replace("}", "}}")
+    def _fstring_Str(self, node, write):
+        value = node.s.replace("{", "{{").replace("}", "}}")
         write(value)
 
-    def _fstring_Constant(self, t, write):
-        assert isinstance(t.value, str)
-        value = t.value.replace("{", "{{").replace("}", "}}")
+    def _fstring_Constant(self, node, write):
+        assert isinstance(node.value, str)
+        value = node.value.replace("{", "{{").replace("}", "}}")
         write(value)
 
-    def _fstring_FormattedValue(self, t, write):
+    def _fstring_FormattedValue(self, node, write):
         write("{")
 
         expr = StringIO()
@@ -744,8 +744,8 @@ class Unparser:
             py_ver_consistent=self._py_ver_consistent,
             _avoid_backslashes=True,
         )
-        unparser.set_precedence(pnext(_Precedence.TEST), t.value)
-        unparser.visit(t.value, expr)
+        unparser.set_precedence(pnext(_Precedence.TEST), node.value)
+        unparser.visit(node.value, expr)
         expr = expr.getvalue().rstrip("\n")
 
         if expr.startswith("{"):
@@ -753,25 +753,25 @@ class Unparser:
         if "\\" in expr:
             raise ValueError("Unable to avoid backslash in f-string expression part")
         write(expr)
-        if t.conversion != -1:
-            conversion = chr(t.conversion)
+        if node.conversion != -1:
+            conversion = chr(node.conversion)
             assert conversion in "sra"
             write("!{conversion}".format(conversion=conversion))
-        if t.format_spec:
+        if node.format_spec:
             write(":")
-            meth = getattr(self, "_fstring_" + type(t.format_spec).__name__)
-            meth(t.format_spec, write)
+            meth = getattr(self, "_fstring_" + type(node.format_spec).__name__)
+            meth(node.format_spec, write)
         write("}")
 
-    def visit_Name(self, t):
-        self.write(t.id)
+    def visit_Name(self, node):
+        self.write(node.id)
 
-    def visit_NameConstant(self, t):
-        self.write(repr(t.value))
+    def visit_NameConstant(self, node):
+        self.write(repr(node.value))
 
-    def visit_Repr(self, t):
+    def visit_Repr(self, node):
         self.write("`")
-        self.dispatch(t.value)
+        self.dispatch(node.value)
         self.write("`")
 
     def _write_constant(self, value):
@@ -790,90 +790,90 @@ class Unparser:
         else:
             self.write(repr(value))
 
-    def visit_Constant(self, t):
-        value = t.value
+    def visit_Constant(self, node):
+        value = node.value
         if isinstance(value, tuple):
             with self.delimit("(", ")"):
                 self.items_view(self._write_constant, value)
         elif value is Ellipsis:  # instead of `...` for Py2 compatibility
             self.write("...")
         else:
-            if t.kind == "u":
+            if node.kind == "u":
                 self.write("u")
-            self._write_constant(t.value)
+            self._write_constant(node.value)
 
-    def visit_Num(self, t):
-        repr_n = repr(t.n)
+    def visit_Num(self, node):
+        repr_n = repr(node.n)
         if six.PY3:
             self.write(repr_n.replace("inf", INFSTR))
         else:
             # Parenthesize negative numbers, to avoid turning (-1)**2 into -1**2.
-            with self.require_parens(pnext(_Precedence.FACTOR), t):
+            with self.require_parens(pnext(_Precedence.FACTOR), node):
                 if "inf" in repr_n and repr_n.endswith("*j"):
                     repr_n = repr_n.replace("*j", "j")
                 # Substitute overflowing decimal literal for AST infinities.
                 self.write(repr_n.replace("inf", INFSTR))
 
-    def visit_List(self, t):
+    def visit_List(self, node):
         with self.delimit("[", "]"):
-            interleave(lambda: self.write(", "), self.dispatch, t.elts)
+            interleave(lambda: self.write(", "), self.dispatch, node.elts)
 
-    def visit_ListComp(self, t):
+    def visit_ListComp(self, node):
         with self.delimit("[", "]"):
-            self.dispatch(t.elt)
-            for gen in t.generators:
+            self.dispatch(node.elt)
+            for gen in node.generators:
                 self.dispatch(gen)
 
-    def visit_GeneratorExp(self, t):
+    def visit_GeneratorExp(self, node):
         with self.delimit("(", ")"):
-            self.dispatch(t.elt)
-            for gen in t.generators:
+            self.dispatch(node.elt)
+            for gen in node.generators:
                 self.dispatch(gen)
 
-    def visit_SetComp(self, t):
+    def visit_SetComp(self, node):
         with self.delimit("{", "}"):
-            self.dispatch(t.elt)
-            for gen in t.generators:
+            self.dispatch(node.elt)
+            for gen in node.generators:
                 self.dispatch(gen)
 
-    def visit_DictComp(self, t):
+    def visit_DictComp(self, node):
         with self.delimit("{", "}"):
-            self.dispatch(t.key)
+            self.dispatch(node.key)
             self.write(": ")
-            self.dispatch(t.value)
-            for gen in t.generators:
+            self.dispatch(node.value)
+            for gen in node.generators:
                 self.dispatch(gen)
 
-    def visit_comprehension(self, t):
-        if getattr(t, 'is_async', False):
+    def visit_comprehension(self, node):
+        if getattr(node, 'is_async', False):
             self.write(" async for ")
         else:
             self.write(" for ")
-        self.set_precedence(_Precedence.TUPLE, t.target)
-        self.dispatch(t.target)
+        self.set_precedence(_Precedence.TUPLE, node.target)
+        self.dispatch(node.target)
         self.write(" in ")
-        self.set_precedence(pnext(_Precedence.TEST), t.iter, *t.ifs)
-        self.dispatch(t.iter)
-        for if_clause in t.ifs:
+        self.set_precedence(pnext(_Precedence.TEST), node.iter, *node.ifs)
+        self.dispatch(node.iter)
+        for if_clause in node.ifs:
             self.write(" if ")
             self.dispatch(if_clause)
 
-    def visit_IfExp(self, t):
-        with self.require_parens(_Precedence.TEST, t):
-            self.set_precedence(pnext(_Precedence.TEST), t.body, t.test)
-            self.dispatch(t.body)
+    def visit_IfExp(self, node):
+        with self.require_parens(_Precedence.TEST, node):
+            self.set_precedence(pnext(_Precedence.TEST), node.body, node.test)
+            self.dispatch(node.body)
             self.write(" if ")
-            self.dispatch(t.test)
+            self.dispatch(node.test)
             self.write(" else ")
-            self.set_precedence(_Precedence.TEST, t.orelse)
-            self.dispatch(t.orelse)
+            self.set_precedence(_Precedence.TEST, node.orelse)
+            self.dispatch(node.orelse)
 
-    def visit_Set(self, t):
-        assert(t.elts)  # should be at least one element
+    def visit_Set(self, node):
+        assert(node.elts)  # should be at least one element
         with self.delimit("{", "}"):
-            interleave(lambda: self.write(", "), self.dispatch, t.elts)
+            interleave(lambda: self.write(", "), self.dispatch, node.elts)
 
-    def visit_Dict(self, t):
+    def visit_Dict(self, node):
         def write_key_value_pair(k, v):
             self.dispatch(k)
             self.write(": ")
@@ -891,11 +891,15 @@ class Unparser:
                 write_key_value_pair(k, v)
 
         with self.delimit("{", "}"):
-            interleave(lambda: self.write(", "), write_item, zip(t.keys, t.values))
+            interleave(
+                lambda: self.write(", "),
+                write_item,
+                zip(node.keys, node.values)
+            )
 
-    def visit_Tuple(self, t):
+    def visit_Tuple(self, node):
         with self.delimit("(", ")"):
-            self.items_view(self.dispatch, t.elts)
+            self.items_view(self.dispatch, node.elts)
 
     unop = {
         "Invert": "~",
@@ -911,28 +915,28 @@ class Unparser:
         "-": _Precedence.FACTOR,
     }
 
-    def visit_UnaryOp(self, t):
-        operator = self.unop[t.op.__class__.__name__]
+    def visit_UnaryOp(self, node):
+        operator = self.unop[node.op.__class__.__name__]
         operator_precedence = self.unop_precedence[operator]
-        with self.require_parens(operator_precedence, t):
+        with self.require_parens(operator_precedence, node):
             self.write(operator)
             # factor prefixes (+, -, ~) shouldn't be separated
             # from the value they belong, (e.g: +1 instead of + 1)
             if operator_precedence != _Precedence.FACTOR:
                 self.write(" ")
-            self.set_precedence(operator_precedence, t.operand)
+            self.set_precedence(operator_precedence, node.operand)
 
             if (six.PY2 and
-                isinstance(t.op, ast.USub) and isinstance(t.operand, ast.Num)):
+                isinstance(node.op, ast.USub) and isinstance(node.operand, ast.Num)):
                 # If we're applying unary minus to a number, parenthesize the number.
                 # This is necessary: -2147483648 is different from -(2147483648) on
                 # a 32-bit machine (the first is an int, the second a long), and
                 # -7j is different from -(7j).  (The first has real part 0.0, the second
                 # has real part -0.0.)
                 with self.delimit("(", ")"):
-                    self.dispatch(t.operand)
+                    self.dispatch(node.operand)
             else:
-                self.dispatch(t.operand)
+                self.dispatch(node.operand)
 
     binop = {
         "Add": "+",
@@ -968,10 +972,10 @@ class Unparser:
 
     binop_rassoc = frozenset(("**",))
 
-    def visit_BinOp(self, t):
-        operator = self.binop[t.op.__class__.__name__]
+    def visit_BinOp(self, node):
+        operator = self.binop[node.op.__class__.__name__]
         operator_precedence = self.binop_precedence[operator]
-        with self.require_parens(operator_precedence, t):
+        with self.require_parens(operator_precedence, node):
             if operator in self.binop_rassoc:
                 left_precedence = pnext(operator_precedence)
                 right_precedence = operator_precedence
@@ -979,11 +983,11 @@ class Unparser:
                 left_precedence = operator_precedence
                 right_precedence = pnext(operator_precedence)
 
-            self.set_precedence(left_precedence, t.left)
-            self.dispatch(t.left)
+            self.set_precedence(left_precedence, node.left)
+            self.dispatch(node.left)
             self.write(" %s " % operator)
-            self.set_precedence(right_precedence, t.right)
-            self.dispatch(t.right)
+            self.set_precedence(right_precedence, node.right)
+            self.dispatch(node.right)
 
     cmpops = {
         "Eq": "==",
@@ -998,11 +1002,11 @@ class Unparser:
         "NotIn": "not in",
     }
 
-    def visit_Compare(self, t):
-        with self.require_parens(_Precedence.CMP, t):
-            self.set_precedence(pnext(_Precedence.CMP), t.left, *t.comparators)
-            self.dispatch(t.left)
-            for o, e in zip(t.ops, t.comparators):
+    def visit_Compare(self, node):
+        with self.require_parens(_Precedence.CMP, node):
+            self.set_precedence(pnext(_Precedence.CMP), node.left, *node.comparators)
+            self.dispatch(node.left)
+            for o, e in zip(node.ops, node.comparators):
                 self.write(" " + self.cmpops[o.__class__.__name__] + " ")
                 self.dispatch(e)
 
@@ -1016,45 +1020,45 @@ class Unparser:
         "or": _Precedence.OR,
     }
 
-    def visit_BoolOp(self, t):
-        operator = self.boolops[t.op.__class__.__name__]
+    def visit_BoolOp(self, node):
+        operator = self.boolops[node.op.__class__.__name__]
 
         # use a dict instead of nonlocal for Python 2 compatibility
         op = {"precedence": self.boolop_precedence[operator]}
 
-        def increasing_level_dispatch(t):
+        def increasing_level_dispatch(node):
             op["precedence"] = pnext(op["precedence"])
-            self.set_precedence(op["precedence"], t)
-            self.dispatch(t)
+            self.set_precedence(op["precedence"], node)
+            self.dispatch(node)
 
-        with self.require_parens(op["precedence"], t):
+        with self.require_parens(op["precedence"], node):
             s = " %s " % operator
-            interleave(lambda: self.write(s), increasing_level_dispatch, t.values)
+            interleave(lambda: self.write(s), increasing_level_dispatch, node.values)
 
-    def visit_Attribute(self, t):
-        self.set_precedence(_Precedence.ATOM, t.value)
-        self.dispatch(t.value)
-        # Special case: 3.__abs__() is a syntax error, so if t.value
+    def visit_Attribute(self, node):
+        self.set_precedence(_Precedence.ATOM, node.value)
+        self.dispatch(node.value)
+        # Special case: 3.__abs__() is a syntax error, so if node.value
         # is an integer literal then we need to either parenthesize
         # it or add an extra space to get 3 .__abs__().
-        if (isinstance(t.value, getattr(ast, 'Constant', getattr(ast, 'Num', None))) and
-            isinstance(t.value.n, int)):
+        num_type = getattr(ast, 'Constant', getattr(ast, 'Num', None))
+        if isinstance(node.value, num_type) and isinstance(node.value.n, int):
             self.write(" ")
         self.write(".")
-        self.write(t.attr)
+        self.write(node.attr)
 
-    def visit_Call(self, t):
-        self.set_precedence(_Precedence.ATOM, t.func)
+    def visit_Call(self, node):
+        self.set_precedence(_Precedence.ATOM, node.func)
 
-        args = t.args
+        args = node.args
         if self._py_ver_consistent:
             # make print(a, b, c) and print((a, b, c)) equivalent, since you can't
             # tell them apart between Python 2 and 3. See _Print() for more details.
-            if getattr(t.func, "id", None) == "print":
-                if len(t.args) == 1 and isinstance(t.args[0], ast.Tuple):
-                    args = t.args[0].elts
+            if getattr(node.func, "id", None) == "print":
+                if len(node.args) == 1 and isinstance(node.args[0], ast.Tuple):
+                    args = node.args[0].elts
 
-        self.dispatch(t.func)
+        self.dispatch(node.func)
         with self.delimit("(", ")"):
             comma = False
 
@@ -1072,7 +1076,7 @@ class Unparser:
                         comma = True
                     self.dispatch(e)
 
-            for e in t.keywords:
+            for e in node.keywords:
                 # starting from Python 3.5 this denotes a kwargs part of the invocation
                 if e.arg is None and move_stars_last:
                     star_and_kwargs.append(e)
@@ -1092,74 +1096,74 @@ class Unparser:
                     self.dispatch(e)
 
             if sys.version_info[:2] < (3, 5):
-                if t.starargs:
+                if node.starargs:
                     if comma:
                         self.write(", ")
                     else:
                         comma = True
                     self.write("*")
-                    self.dispatch(t.starargs)
-                if t.kwargs:
+                    self.dispatch(node.starargs)
+                if node.kwargs:
                     if comma:
                         self.write(", ")
                     else:
                         comma = True
                     self.write("**")
-                    self.dispatch(t.kwargs)
+                    self.dispatch(node.kwargs)
 
-    def visit_Subscript(self, t):
-        self.set_precedence(_Precedence.ATOM, t.value)
-        self.dispatch(t.value)
+    def visit_Subscript(self, node):
+        self.set_precedence(_Precedence.ATOM, node.value)
+        self.dispatch(node.value)
         with self.delimit("[", "]"):
-            if is_simple_tuple(t.slice):
-                self.items_view(self.dispatch, t.slice.elts)
+            if is_simple_tuple(node.slice):
+                self.items_view(self.dispatch, node.slice.elts)
             else:
-                self.dispatch(t.slice)
+                self.dispatch(node.slice)
 
-    def visit_Starred(self, t):
+    def visit_Starred(self, node):
         self.write("*")
-        self.set_precedence(_Precedence.EXPR, t.value)
-        self.dispatch(t.value)
+        self.set_precedence(_Precedence.EXPR, node.value)
+        self.dispatch(node.value)
 
     # slice
-    def visit_Ellipsis(self, t):
+    def visit_Ellipsis(self, node):
         self.write("...")
 
     # used in Python <= 3.8 -- see _Subscript for 3.9+
-    def visit_Index(self, t):
-        if is_simple_tuple(t.value):
-            self.set_precedence(_Precedence.ATOM, t.value)
-            self.items_view(self.dispatch, t.value.elts)
+    def visit_Index(self, node):
+        if is_simple_tuple(node.value):
+            self.set_precedence(_Precedence.ATOM, node.value)
+            self.items_view(self.dispatch, node.value.elts)
         else:
-            self.set_precedence(_Precedence.TUPLE, t.value)
-            self.dispatch(t.value)
+            self.set_precedence(_Precedence.TUPLE, node.value)
+            self.dispatch(node.value)
 
-    def visit_Slice(self, t):
-        if t.lower:
-            self.dispatch(t.lower)
+    def visit_Slice(self, node):
+        if node.lower:
+            self.dispatch(node.lower)
         self.write(":")
-        if t.upper:
-            self.dispatch(t.upper)
-        if t.step:
+        if node.upper:
+            self.dispatch(node.upper)
+        if node.step:
             self.write(":")
-            self.dispatch(t.step)
+            self.dispatch(node.step)
 
-    def visit_ExtSlice(self, t):
-        interleave(lambda: self.write(', '), self.dispatch, t.dims)
+    def visit_ExtSlice(self, node):
+        interleave(lambda: self.write(', '), self.dispatch, node.dims)
 
     # argument
-    def visit_arg(self, t):
-        self.write(t.arg)
-        if t.annotation:
+    def visit_arg(self, node):
+        self.write(node.arg)
+        if node.annotation:
             self.write(": ")
-            self.dispatch(t.annotation)
+            self.dispatch(node.annotation)
 
     # others
-    def visit_arguments(self, t):
+    def visit_arguments(self, node):
         first = True
         # normal arguments
-        all_args = getattr(t, 'posonlyargs', []) + t.args
-        defaults = [None] * (len(all_args) - len(t.defaults)) + t.defaults
+        all_args = getattr(node, 'posonlyargs', []) + node.args
+        defaults = [None] * (len(all_args) - len(node.defaults)) + node.defaults
         for index, elements in enumerate(zip(all_args, defaults), 1):
             a, d = elements
             if first:
@@ -1170,31 +1174,31 @@ class Unparser:
             if d:
                 self.write("=")
                 self.dispatch(d)
-            if index == len(getattr(t, 'posonlyargs', ())):
+            if index == len(getattr(node, 'posonlyargs', ())):
                 self.write(", /")
 
         # varargs, or bare '*' if no varargs but keyword-only arguments present
-        if t.vararg or getattr(t, "kwonlyargs", False):
+        if node.vararg or getattr(node, "kwonlyargs", False):
             if first:
                 first = False
             else:
                 self.write(", ")
             self.write("*")
-            if t.vararg:
-                if hasattr(t.vararg, 'arg'):
-                    self.write(t.vararg.arg)
-                    if t.vararg.annotation:
+            if node.vararg:
+                if hasattr(node.vararg, 'arg'):
+                    self.write(node.vararg.arg)
+                    if node.vararg.annotation:
                         self.write(": ")
-                        self.dispatch(t.vararg.annotation)
+                        self.dispatch(node.vararg.annotation)
                 else:
-                    self.write(t.vararg)
-                    if getattr(t, 'varargannotation', None):
+                    self.write(node.vararg)
+                    if getattr(node, 'varargannotation', None):
                         self.write(": ")
-                        self.dispatch(t.varargannotation)
+                        self.dispatch(node.varargannotation)
 
         # keyword-only arguments
-        if getattr(t, "kwonlyargs", False):
-            for a, d in zip(t.kwonlyargs, t.kw_defaults):
+        if getattr(node, "kwonlyargs", False):
+            for a, d in zip(node.kwonlyargs, node.kw_defaults):
                 if first:
                     first = False
                 else:
@@ -1205,46 +1209,46 @@ class Unparser:
                     self.dispatch(d)
 
         # kwargs
-        if t.kwarg:
+        if node.kwarg:
             if first:
                 first = False
             else:
                 self.write(", ")
-            if hasattr(t.kwarg, 'arg'):
-                self.write("**" + t.kwarg.arg)
-                if t.kwarg.annotation:
+            if hasattr(node.kwarg, 'arg'):
+                self.write("**" + node.kwarg.arg)
+                if node.kwarg.annotation:
                     self.write(": ")
-                    self.dispatch(t.kwarg.annotation)
+                    self.dispatch(node.kwarg.annotation)
             else:
-                self.write("**" + t.kwarg)
-                if getattr(t, 'kwargannotation', None):
+                self.write("**" + node.kwarg)
+                if getattr(node, 'kwargannotation', None):
                     self.write(": ")
-                    self.dispatch(t.kwargannotation)
+                    self.dispatch(node.kwargannotation)
 
-    def visit_keyword(self, t):
-        if t.arg is None:
+    def visit_keyword(self, node):
+        if node.arg is None:
             # starting from Python 3.5 this denotes a kwargs part of the invocation
             self.write("**")
         else:
-            self.write(t.arg)
+            self.write(node.arg)
             self.write("=")
-        self.dispatch(t.value)
+        self.dispatch(node.value)
 
-    def visit_Lambda(self, t):
-        with self.require_parens(_Precedence.TEST, t):
+    def visit_Lambda(self, node):
+        with self.require_parens(_Precedence.TEST, node):
             self.write("lambda ")
-            self.dispatch(t.args)
+            self.dispatch(node.args)
             self.write(": ")
-            self.set_precedence(_Precedence.TEST, t.body)
-            self.dispatch(t.body)
+            self.set_precedence(_Precedence.TEST, node.body)
+            self.dispatch(node.body)
 
-    def visit_alias(self, t):
-        self.write(t.name)
-        if t.asname:
-            self.write(" as " + t.asname)
+    def visit_alias(self, node):
+        self.write(node.name)
+        if node.asname:
+            self.write(" as " + node.asname)
 
-    def visit_withitem(self, t):
-        self.dispatch(t.context_expr)
-        if t.optional_vars:
+    def visit_withitem(self, node):
+        self.dispatch(node.context_expr)
+        if node.optional_vars:
             self.write(" as ")
-            self.dispatch(t.optional_vars)
+            self.dispatch(node.optional_vars)
