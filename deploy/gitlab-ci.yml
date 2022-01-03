@@ -36,8 +36,10 @@ default:
     bb5_duration: "24:00:00"
     # We will need these resources for parallel building
     bb5_constraint: cpu
-    bb5_cpus_per_task: 72
-    bb5_ntasks: 1
+    bb5_cpus_per_task: 8
+    bb5_memory: 80g
+    bb5_ntasks: 2
+    bb5_exclusive: user
     # We will do this ourselves, will be on GPFS
     GIT_STRATEGY: none
   before_script:
@@ -112,8 +114,6 @@ setup_spack:
   extends: .spack_basic_job
   needs: [setup_spack]
   resource_group: BlueBrain.GPFS.build.$GITHUB_PULL_REQUEST_ID
-  variables:
-    bb5_ntasks: 1
   before_script:
     - !reference [.spack_setup_gerrit_ssh]
     - !reference [.spack_basic_job, before_script]

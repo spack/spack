@@ -154,7 +154,7 @@ def export(parser, args):
     # Restore ordering
     packages = syaml_dict(sorted((k, v) for (k, v) in packages.items() if len(v) > 0))
     for pkg in args.unbuildable:
-        packages[pkg]['buildable'] = False
+        packages.setdefault(pkg, {})['buildable'] = False
     if 'all' in packages:
         packages['all'] = packages.pop('all')
     yaml.dump({'packages': packages},
