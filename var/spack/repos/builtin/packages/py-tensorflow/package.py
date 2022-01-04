@@ -678,8 +678,6 @@ def protobuf_deps():
                 'tensorflow/workspace.bzl')
 
             # starting with tensorflow 1.3, tensorboard becomes a dependency
-            # (...but is not really needed? Tensorboard should depend on
-            # tensorflow, not the other way!)
             # -> remove from list of required packages
             filter_file(
                 r"'tensorflow-tensorboard",
@@ -698,6 +696,7 @@ def protobuf_deps():
 
         if spec.satisfies('@1.6.0:2.1'):
             # tensorboard name changed
+            # there are no corresponding versions of these in spack
             filter_file(
                 r"(^\s*)'tensorboard (>=|~=)",
                 r"\1#'tensorboard \2",
