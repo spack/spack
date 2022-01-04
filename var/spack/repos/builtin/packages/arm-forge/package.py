@@ -34,6 +34,18 @@ class ArmForge(Package):
         version("21.0.2", sha256="741ff2a995c8cf7ce5d346a3f7d2a552ec602b995e477e9a5a3a6319d3907980")
         version("21.0",   sha256="71b713a05d431a3c26bd83cc4d0b65a0afd7d7f5bf57aa11edfb41da90f01774")
 
+    version(
+        "21.1.2-Linux-x86_64",
+        sha256="ebc99fa3461d2cd968e4d304c11b70cc8d9c5a2acd68681cec2067c128255cd5",
+        url="https://content.allinea.com/downloads/arm-forge-21.1.2-linux-x86_64.tar",
+    )
+
+    version(
+        "20.2.0-Redhat-7.0-x86_64",
+        sha256="26592a77c42f970f724f15b70cc5ce6af1078fd0ef9243a37c3215916cfa7cf4",
+        url="https://content.allinea.com/downloads/arm-forge-20.2-Redhat-7.0-x86_64.tar",
+    )
+
     variant('probe', default=False, description='Detect available PMU counters via "forge-probe" during install')
 
     # forge-probe executes with "/usr/bin/env python"

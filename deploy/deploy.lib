@@ -339,7 +339,13 @@ configure_compilers() {
             # standard library from the deployed version of GCC.
             NVHPC_DIR=$(dirname $(which makelocalrc))
             NVHPC_TMPDIR=$(mktemp -d -p .)
-            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x
+            # Try and avoid autoloaded dependencies of other compilers (looking
+            # at you, LLVM) polluting the localrc of the NVIDIA compilers
+            (
+              module purge
+              ${cmd}
+              makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x
+            )
             # olupton 2021-10-15: is this still needed? Not sure.
             echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${NVHPC_TMPDIR}/localrc"
             log "NVIDIA localrc template"
