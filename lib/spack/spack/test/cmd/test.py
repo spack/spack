@@ -214,6 +214,7 @@ def test_test_list_all(mock_packages):
         "py-extension2",
         "test-error",
         "test-fail",
+        "test-whens",
     ])
 
 
@@ -260,3 +261,33 @@ def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     # The results should be obtainable
     results_output = spack_test('results')
     assert 'PASSED' in results_output
+
+
+@pytest.mark.parametrize('pkg_vers,variant,res_msgs', [
+    ('0.1', '', ['NO-TESTS']),
+    ('1.0', '', ['PASSED', 'Tested 1.0']),
+    ('1.1', '', ['PASSED', 'Tested 1.1']),
+    ('1.1', '+var', ['PASSED', 'Tested 1.1 +var']),
+])
+def test_test_multi_whens(
+    mock_packages, mock_archive, mock_fetch, install_mockery,
+    capfd, pkg_vers, variant, res_msgs
+):
+    install('test-whens@{0}'.format(pkg_vers), variant)
+    with capfd.disabled():
+        out = spack_test('run', 'test-whens', fail_on_error=False)
+
+    # Expect the 'Testing package <vers_msg>' output
+    vers_msg = 'test-whens-{0}'.format(pkg_vers)
+    assert vers_msg in out
+
+    with capfd.disabled():
+        results = spack_test('results', '-l', '--', 'test-whens',
+                             fail_on_error=False)
+
+    # Again expect the 'Testing package <vers_msg>' output
+    assert vers_msg in results
+
+    # Plus version-specific results messages
+    for msg in res_msgs:
+        assert msg in results
