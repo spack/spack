@@ -19,6 +19,7 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.3',  commit='6518ff3d24ad187b7072bee854d69e285cd366ea')
     version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
     version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
     version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
