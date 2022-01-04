@@ -16,7 +16,9 @@ class PyGpustat(PythonPackage):
 
     depends_on('python@3.4:', when='@1.0.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest-runner', type='build')
+    depends_on('py-pytest-runner', when='@0.6.0', type='build')
+    depends_on('py-pytest-runner@5:', when='@1: ^python@3.5:', type='build')
+    depends_on('py-pytest-runner@:4', when='@1: ^python@:3.4', type='build')
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-nvidia-ml-py@7.352.0:', when='^python@:2', type=('build', 'run'))
     depends_on('py-nvidia-ml-py3@7.352.0:', when='^python@3:', type=('build', 'run'))
