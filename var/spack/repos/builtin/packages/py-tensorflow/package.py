@@ -268,6 +268,9 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
 
+    # TODO: add support for tensorflow-io-gcs-filesystem
+    # depends_on('tensorflow-io-gcs-filesystem
+
     # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
     conflicts('+mkl', when='platform=darwin', msg='Darwin is not yet supported')
@@ -731,6 +734,7 @@ def protobuf_deps():
                 r"\1#'keras \2",
                 'tensorflow/tools/pip_package/setup.py')
 
+        # TODO: add support for tensorflow-io-gcs-filesystem
         if spec.satisfies('@2.7:'):
             filter_file(
                 r"(^\s*)'tensorflow-io-gcs-filesystem (>=|~=)",
