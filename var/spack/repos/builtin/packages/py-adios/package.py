@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -58,12 +60,12 @@ class PyAdios(PythonPackage):
             return 'setup.py'
 
     def build_clib(self, spec, prefix):
-        rm = which('rm')
         # calls: make CYTHON=y [MPI=y] python
         args = ['CYTHON=y']
         if '+mpi' in self.spec:
             args += ['MPI=y']
         args += ['python']
         with working_dir(self.build_directory):
-            rm('adios.cpp', 'adios_mpi.cpp')
+            os.remove('adios.cpp')
+            os.remove('adios_mpi.cpp')
             make(*args, parallel=False)
