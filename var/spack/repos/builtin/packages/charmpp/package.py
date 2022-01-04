@@ -131,6 +131,16 @@ class Charmpp(Package):
     # https://github.com/UIUC-PPL/charm/issues/3181
     conflicts("+shared", when="platform=darwin %gcc")
 
+    # Charm++ versions below 7.0.0 have build issues on macOS, mainly due to the
+    # pre-7.0.0 `VERSION` file conflicting with other version files on the
+    # system: https://github.com/UIUC-PPL/charm/issues/2844. Specifically, it
+    # conflicts with LLVM's `<version>` header that was added in llvm@7.0.0 to
+    # comply with the C++20 standard:
+    # https://en.cppreference.com/w/cpp/header/version. The conflict only occurs
+    # on case-insensitive file systems, as typically used on macOS machines.
+    conflicts("@:6", when="platform=darwin %apple-clang@7:")
+    conflicts("@:6", when="platform=darwin %clang@7:")
+
     @property
     def charmarch(self):
         plat = sys.platform
