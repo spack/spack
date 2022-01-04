@@ -65,6 +65,9 @@ class Gptune(CMakePackage):
             libs.joined(";"),
             '-DCMAKE_Fortran_FLAGS=' + ''.join(fc_flags),
             '-DBUILD_SHARED_LIBS=ON',
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
         ]
 
         return args
