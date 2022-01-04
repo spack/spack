@@ -66,7 +66,7 @@ class Legion(CMakePackage):
     # but this might be helpful for other use cases down the road.  Legion's
     # current development policy is C++11 or greater so we capture that aspect
     # here.
-    cpp_stds = ["11", "14", "17"]
+    cpp_stds = ["11", "14", "17", "20"]
     variant('c++std', default="11", values=cpp_stds, multi=False)
 
     # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
