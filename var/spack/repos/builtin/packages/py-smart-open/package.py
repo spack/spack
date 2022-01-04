@@ -23,29 +23,29 @@ class PySmartOpen(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     with when('@5:'):
-        depends_on('python@3.6:', type=('build', 'run'))
+        depends_on('python@3.6:3', type=('build', 'run'))
 
         # google cloud support
         variant(
-            'gcs', default=True, description='Builds a shared version of the library'
+            'gcs', default=False, description='Adds Google Cloud support'
         )
         depends_on('py-google-cloud-storage', when='+gcs', type=('build', 'run'))
 
         # aws support
         variant(
-            's3', default=True, description='Builds a shared version of the library'
+            's3', default=False, description='Adds AWS S3 support'
         )
         depends_on('py-boto3', when='+s3', type=('build', 'run'))
 
         # http support
         variant(
-            'http', default=True, description='Builds a shared version of the library'
+            'http', default=True, description='Adds http and webhdfs support'
         )
         depends_on('py-requests', when='+http', type=('build', 'run'))
 
         # azure support
         variant(
-            'azure', default=True, description='Builds a shared version of the library'
+            'azure', default=False, description='Adds Microsoft Azure Support'
         )
         with when('+azure'):
             depends_on('py-azure-storage-blob', type=('build', 'run'))
