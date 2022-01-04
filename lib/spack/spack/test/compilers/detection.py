@@ -204,6 +204,11 @@ def test_intel_version_detection(version_str, expected_version):
         'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
         '2021.4.0'
     ),
+    (  # IFX
+        'ifx (IFORT) 2022.0.0 20211123\n'
+        'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
+        '2022.0.0'
+    ),
 ])
 def test_oneapi_version_detection(version_str, expected_version):
     version = spack.compilers.oneapi.Oneapi.extract_version_from_output(

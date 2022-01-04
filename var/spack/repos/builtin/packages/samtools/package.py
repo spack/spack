@@ -70,8 +70,11 @@ class Samtools(Package):
                 make('prefix={0}'.format(prefix), 'install')
 
         # Install dev headers and libs for legacy apps depending on them
-        mkdir(prefix.include)
-        mkdir(prefix.lib)
-        install('sam.h', prefix.include)
-        install('bam.h', prefix.include)
-        install('libbam.a', prefix.lib)
+        # per https://github.com/samtools/samtools/releases/tag/1.14
+        # these have been removed (bam.h still exists but paired down)
+        if spec.satisfies('@:1.13'):
+            mkdir(prefix.include)
+            mkdir(prefix.lib)
+            install('sam.h', prefix.include)
+            install('bam.h', prefix.include)
+            install('libbam.a', prefix.lib)

@@ -127,6 +127,10 @@ class Charmpp(Package):
     conflicts("backend=multicore", "+smp")
     conflicts("backend=ucx", when="@:6.9")
 
+    # Shared-lib builds with GCC are broken on macOS:
+    # https://github.com/UIUC-PPL/charm/issues/3181
+    conflicts("+shared", when="platform=darwin %gcc")
+
     @property
     def charmarch(self):
         plat = sys.platform

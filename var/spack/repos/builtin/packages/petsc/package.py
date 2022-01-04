@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
     version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
     version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
     version('3.15.5', sha256='67dc31f1c1c941a0e45301ed4042628586e92e8c4e9b119695717ae782ef23a3')
@@ -209,7 +210,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@main')
-    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -220,6 +220,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
+    depends_on('rocsparse', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
+    depends_on('rocblas', when='+rocm')
+    depends_on('rocrand', when='+rocm')
+    depends_on('rocthrust', when='+rocm')
+    depends_on('rocprim', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10')
@@ -264,8 +270,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
     depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
     depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
@@ -280,8 +284,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('superlu-dist@6.1.0:6.1+int64', when='@3.10.3:3.12+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
     depends_on('strumpack', when='+strumpack')
@@ -294,7 +296,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('mumps+mpi~int64+metis+parmetis+openmp', when='+mumps+metis+openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
-    depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@main+trilinos+mpi')
     depends_on('mkl', when='+mkl-pardiso')
     depends_on('fftw+mpi', when='+fftw+mpi')
@@ -320,6 +321,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels', when='+kokkos')
     depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
+    depends_on('kokkos+rocm', when='+kokkos +rocm')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -413,7 +415,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # if not (useinc || uselib): usedir - i.e (False, False)
         for library in (
                 ('cuda', 'cuda', False, False),
-                ('hip', 'hip', False, False),
+                ('hip', 'hip', True, False),
                 'metis',
                 'hypre',
                 'parmetis',
@@ -495,6 +497,22 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
+        if '+rocm' in spec:
+            if not spec.satisfies('amdgpu_target=none'):
+                hip_arch = spec.variants['amdgpu_target'].value
+                options.append('--with-hip-arch={0}'.format(hip_arch[0]))
+            hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
+            hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
+            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_inc = ''
+            hip_lib = ''
+            for pkg in hip_ipkgs:
+                hip_inc += spec[pkg].headers.include_flags + ' '
+            for pkg in hip_lpkgs:
+                hip_lib += spec[pkg].libs.joined() + ' '
+            options.append('HIPPPFLAGS=%s' % hip_inc)
+            options.append('with-hip-lib=%s -L%s -lamdhip64' %
+                           (hip_lib, spec['hip'].prefix.lib))
 
         if 'superlu-dist' in spec:
             if spec.satisfies('@3.10.3:3.15'):
@@ -519,7 +537,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
-        make('MAKE_NP=%s' % make_jobs, parallel=False)
+        make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
         if self.run_tests:
@@ -540,6 +558,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # Set up PETSC_DIR for everyone using PETSc package
         env.set('PETSC_DIR', self.prefix)
         env.unset('PETSC_ARCH')
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     @property
     def headers(self):

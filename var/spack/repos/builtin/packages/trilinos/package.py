@@ -8,6 +8,7 @@ import sys
 
 from spack import *
 from spack.build_environment import dso_suffix
+from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
 
@@ -561,31 +562,40 @@ class Trilinos(CMakePackage, CudaPackage):
                 return
             depspec = spec[spack_name]
             libs = depspec.libs
+            try:
+                options.extend([
+                    define(trilinos_name + '_INCLUDE_DIRS',
+                           depspec.headers.directories),
+                ])
+            except NoHeadersError:
+                # Handle case were depspec does not have headers
+                pass
+
             options.extend([
-                define(trilinos_name + '_INCLUDE_DIRS', depspec.headers.directories),
                 define(trilinos_name + '_ROOT', depspec.prefix),
                 define(trilinos_name + '_LIBRARY_NAMES', libs.names),
                 define(trilinos_name + '_LIBRARY_DIRS', libs.directories),
             ])
 
         # Enable these TPLs explicitly from variant options.
+        # Format is (TPL name, variant name, Spack spec name)
         tpl_variant_map = [
-            ('ADIOS2', 'adios2'),
-            ('Boost', 'boost'),
-            ('CUDA', 'cuda'),
-            ('HDF5', 'hdf5'),
-            ('HYPRE', 'hypre'),
-            ('MUMPS', 'mumps'),
-            ('UMFPACK', 'suite-sparse'),
-            ('SuperLU', 'superlu'),
-            ('SuperLUDist', 'superlu-dist'),
-            ('X11', 'x11'),
+            ('ADIOS2', 'adios2', 'adios2'),
+            ('Boost', 'boost', 'boost'),
+            ('CUDA', 'cuda', 'cuda'),
+            ('HDF5', 'hdf5', 'hdf5'),
+            ('HYPRE', 'hypre', 'hypre'),
+            ('MUMPS', 'mumps', 'mumps'),
+            ('UMFPACK', 'suite-sparse', 'suite-sparse'),
+            ('SuperLU', 'superlu', 'superlu'),
+            ('SuperLUDist', 'superlu-dist', 'superlu-dist'),
+            ('X11', 'x11', 'libx11'),
         ]
         if spec.satisfies('@13.0.2:'):
-            tpl_variant_map.append(('STRUMPACK', 'strumpack'))
+            tpl_variant_map.append(('STRUMPACK', 'strumpack', 'strumpack'))
 
-        for tpl_name, var_name in tpl_variant_map:
-            define_tpl(tpl_name, var_name, spec.variants[var_name].value)
+        for tpl_name, var_name, spec_name in tpl_variant_map:
+            define_tpl(tpl_name, spec_name, spec.variants[var_name].value)
 
         # Enable these TPLs based on whether they're in our spec; prefer to
         # require this way so that packages/features disable availability

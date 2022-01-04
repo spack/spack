@@ -12,11 +12,12 @@ class PyRadicalUtils(PythonPackage):
 
     homepage = 'https://radical-cybertools.github.io'
     git      = 'https://github.com/radical-cybertools/radical.utils.git'
-    pypi     = 'radical.utils/radical.utils-1.8.4.tar.gz'
+    pypi     = 'radical.utils/radical.utils-1.9.1.tar.gz'
 
     maintainers = ['andre-merzky']
 
     version('develop', branch='devel')
+    version('1.9.1',   sha256='0837d75e7f9dcce5ba5ac63151ab1683d6ba9ab3954b076d1f170cc4a3cdb1b4')
     version('1.8.4',   sha256='4777ba20e9f881bf3e73ad917638fdeca5a4b253d57ed7b321a07f670e3f737b')
     version('1.8.0',   sha256='8582c65593f51d394fc263c6354ec5ad9cc7173369dcedfb2eef4f5e8146cf03')
     version('1.6.7',   sha256='552f6c282f960ccd9d2401d686b0b3bfab35dfa94a26baeb2d3b4e45211f05a9')
@@ -31,7 +32,7 @@ class PyRadicalUtils(PythonPackage):
     depends_on('py-msgpack',      type=('build', 'run'))
     depends_on('py-netifaces',    type=('build', 'run'))
     depends_on('py-ntplib',       type=('build', 'run'))
-    depends_on('py-pymongo',      type=('build', 'run'))
+    depends_on('py-pymongo@:3',   type=('build', 'run'))
     depends_on('py-pyzmq',        type=('build', 'run'))
     depends_on('py-regex',        type=('build', 'run'))
     depends_on('py-setproctitle', type=('build', 'run'))

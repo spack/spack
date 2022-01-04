@@ -30,6 +30,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('veloc', default=False, description="Enable VeloC")
 
     # Vis
+    variant('sensei', default=False, description="Enable Sensei")
     variant('ascent', default=False, description="Enable Ascent")
     variant('paraview', default=False, description="Enable ParaView")
     variant('sz', default=False, description="Enable SZ")
@@ -106,6 +107,12 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     dav_sdk_depends_on('unifyfs', when='+unifyfs ')
 
     dav_sdk_depends_on('veloc', when='+veloc')
+
+    # Currenly only develop has necessary patches. Update this after SC21 release
+    propagate_to_sensei = [(v, v) for v in ['adios2', 'ascent', 'hdf5', 'vtkm']]
+    propagate_to_sensei.extend([('paraview', 'catalyst'), ('visit', 'libsim')])
+    dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
+                       propagate=dict(propagate_to_sensei))
 
     dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
                        when='+ascent')

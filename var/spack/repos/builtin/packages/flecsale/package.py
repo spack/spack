@@ -20,8 +20,8 @@ class Flecsale(CMakePackage):
 
     depends_on("pkgconfig", type='build')
     depends_on("cmake@3.1:", type='build')
-    depends_on("flecsi~mpi", when='~mpi')
-    depends_on("flecsi+mpi", when='+mpi')
+    depends_on("flecsi backend=serial", when='~mpi')
+    conflicts("^flecsi backend=serial", when='+mpi')
     depends_on("python")
     depends_on("openssl")
     depends_on("boost~mpi", when='~mpi')

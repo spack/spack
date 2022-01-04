@@ -59,6 +59,14 @@ ASTType = None
 parse_files = None
 
 
+#: whether we should write ASP unsat cores quickly in debug mode when the cores
+#: may be very large or take the time (sometimes hours) to minimize them
+minimize_cores = True
+
+#: whether we should include all facts in the unsat cores or only error messages
+full_cores = False
+
+
 # backward compatibility functions for clingo ASTs
 def ast_getter(*names):
     def getter(node):
@@ -366,6 +374,19 @@ class Result(object):
             string_list.extend(self.format_core(core))
         return string_list
 
+    def format_cores(self):
+        """List of facts for each core
+
+        Separate cores are separated by an empty line
+        Cores are not minimized
+        """
+        string_list = []
+        for core in self.cores:
+            if string_list:
+                string_list.append('\n')
+            string_list.extend(self.format_core(core))
+        return string_list
+
     def raise_if_unsat(self):
         """
         Raise an appropriate error if the result is unsatisfiable.
@@ -379,9 +400,13 @@ class Result(object):
         constraints = self.abstract_specs
         if len(constraints) == 1:
             constraints = constraints[0]
-        conflicts = self.format_minimal_cores()
 
-        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        if minimize_cores:
+            conflicts = self.format_minimal_cores()
+        else:
+            conflicts = self.format_cores()
+
+        raise UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -496,7 +521,11 @@ class PyclingoDriver(object):
         self.out.write("%s.\n" % str(symbol))
 
         atom = self.backend.add_atom(symbol)
-        choice = self.cores and assumption
+
+        # with `--show-cores=full or --show-cores=minimized, make all facts
+        # choices/assumptions, otherwise only if assumption=True
+        choice = self.cores and (full_cores or assumption)
+
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
             self.assumptions.append(atom)
@@ -2024,3 +2053,33 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
     return driver.solve(
         setup, specs, dump, models, timers, stats, tests, reuse
     )
+
+
+class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
+    """
+    Subclass for new constructor signature for new concretizer
+    """
+    def __init__(self, provided, conflicts):
+        indented = ['  %s\n' % conflict for conflict in conflicts]
+        conflict_msg = ''.join(indented)
+        issue = 'conflicts' if full_cores else 'errors'
+        msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
+
+        newline_indent = '\n    '
+        if not full_cores:
+            msg += newline_indent + 'To see full clingo unsat cores, '
+            msg += 're-run with `spack --show-cores=full`'
+        if not minimize_cores or not full_cores:
+            # not solver.minimalize_cores and not solver.full_cores impossible
+            msg += newline_indent + 'For full, subset-minimal unsat cores, '
+            msg += 're-run with `spack --show-cores=minimized'
+            msg += newline_indent
+            msg += 'Warning: This may take (up to) hours for some specs'
+
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+
+        self.provided = provided
+
+        # Add attribute expected of the superclass interface
+        self.required = None
+        self.constraint_type = None

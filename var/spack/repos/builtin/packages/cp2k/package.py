@@ -490,7 +490,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                             ('libelpa{elpa_suffix}.a'
                                 .format(elpa_suffix=elpa_suffix))))
             else:
-                libs.append(join_path(elpa.prefix.lib,
+                libs.append(join_path(elpa.libs.directories[0],
                             ('libelpa{elpa_suffix}.{dso_suffix}'
                                 .format(elpa_suffix=elpa_suffix,
                                         dso_suffix=dso_suffix))))
@@ -661,7 +661,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         ]
 
     def build(self, spec, prefix):
-        if len(spec.variants['cuda_arch'].value) > 1:
+        if '+cuda' in spec and len(spec.variants['cuda_arch'].value) > 1:
             raise InstallError("cp2k supports only one cuda_arch at a time")
 
         # Apparently the Makefile bases its paths on PWD
