@@ -171,8 +171,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:2.0')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
     # propagate the mpi variant setting for h5py/hdf5 to avoid unexpected crashes
-    depends_on('py-h5py@2.9.0:3.1', type=('build', 'run'), when='@2.7:+mpi')
-    depends_on('py-h5py~mpi@2.9.0:3.1', type=('build', 'run'), when='@2.7:~mpi')
+    depends_on('py-h5py@2.9.0:', type=('build', 'run'), when='@2.7:+mpi')
+    depends_on('py-h5py~mpi@2.9.0:', type=('build', 'run'), when='@2.7:~mpi')
     depends_on('py-h5py@3.1.0:3.1', type=('build', 'run'), when='@2.5:2.6+mpi')
     depends_on('py-h5py~mpi@3.1.0:3.1', type=('build', 'run'), when='@2.5:2.6~mpi')
     depends_on('py-h5py@2.10.0:2.10', type=('build', 'run'), when='@2.2:2.4.999+mpi')
