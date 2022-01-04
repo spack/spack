@@ -13,12 +13,13 @@ class AwsParallelcluster(PythonPackage):
     tool to deploy and manage HPC clusters in the AWS cloud."""
 
     homepage = "https://github.com/aws/aws-parallelcluster"
-    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.3.tar.gz"
+    pypi = "aws-parallelcluster/aws-parallelcluster-2.11.4.tar.gz"
 
     maintainers = [
-        'demartinofra', 'enrico-usai', 'lukeseawalker', 'tilne'
+        'demartinofra', 'enrico-usai', 'lukeseawalker',
     ]
 
+    version('2.11.4', sha256='449537ccda57f91f4ec6ae0c94a8e2b1a789f08f80245fadb28f44a4351d5da4')
     version('2.11.3', sha256='7c1d74123f2f670846aed8fe1fcca5908bb46ec014e2dfc7d3ec8994447a37a0')
     version('2.11.2', sha256='60d96a5ea4dca4816ceffc4546549743abd1f6207c62f016c9c348adc64b2ec0')
     version('2.11.1', sha256='dc102eeb0db30fb183c1ee076e340223095fde7d9079004fde401b7ad658242d')
@@ -52,8 +53,11 @@ class AwsParallelcluster(PythonPackage):
     depends_on('py-tabulate@0.8.5', when='@2.9: ^python@3.0:3.4', type=('build', 'run'))
     depends_on('py-tabulate@0.8.2:0.8.7', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
 
-    depends_on('py-pyyaml@5.2', when='@2.6:2.8 ^python@3.0:3.4', type=('build', 'run'))
-    depends_on('py-pyyaml@5.3.1:', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.3.1:', when='@2.11:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.3.1:', when='@2.9:2.10 ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.2', when='@2.6:2.10 ^python@3.0:3.4', type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.2:', when='@2.6:2.8 ^python@:2,3.5:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.2:', when='@:2.5', type=('build', 'run'))
 
     depends_on('py-jinja2@2.10.1', when='@2.9: ^python@3.0:3.4', type=('build', 'run'))
     depends_on('py-jinja2@2.11.0:', when='@2.9: ^python@:2,3.5:', type=('build', 'run'))
@@ -65,9 +69,6 @@ class AwsParallelcluster(PythonPackage):
     depends_on('py-setuptools', when='@2.6:', type=('build', 'run'))
 
     depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
-
-    depends_on('py-pyyaml@5.1.2', when='@2.6: ^python@:2,3.5:', type=('build', 'run'))
-    depends_on('py-pyyaml@5.1.2:', when='@:2.5', type=('build', 'run'))
 
     # https://github.com/aws/aws-parallelcluster/pull/1633
     patch('enum34.patch', when='@:2.5.1')

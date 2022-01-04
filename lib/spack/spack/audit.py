@@ -407,6 +407,46 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
     return errors
 
 
+@package_directives
+def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls):
+    """Report if version constraints used in directives are not satisfiable"""
+    import spack.repo
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        dependencies_to_check = []
+        for dependency_name, dependency_data in pkg.dependencies.items():
+            # Skip virtual dependencies for the time being, check on
+            # their versions can be added later
+            if spack.repo.path.is_virtual(dependency_name):
+                continue
+
+            dependencies_to_check.extend(
+                [edge.spec for edge in dependency_data.values()]
+            )
+
+        for s in dependencies_to_check:
+            dependency_pkg = None
+            try:
+                dependency_pkg = spack.repo.get(s.name)
+                assert any(
+                    v.satisfies(s.versions) for v in list(dependency_pkg.versions)
+                )
+            except Exception:
+                summary = ("{0}: dependency on {1} cannot be satisfied "
+                           "by known versions of {1.name}").format(pkg_name, s)
+                details = ['happening in ' + filename]
+                if dependency_pkg is not None:
+                    details.append('known versions of {0.name} are {1}'.format(
+                        s, ', '.join([str(x) for x in dependency_pkg.versions])
+                    ))
+                errors.append(error_cls(summary=summary, details=details))
+
+    return errors
+
+
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     import spack.variant
     variant_exceptions = (

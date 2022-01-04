@@ -90,7 +90,9 @@ class Mirror(object):
 
     def to_dict(self):
         if self._push_url is None:
-            return self._fetch_url
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._fetch_url)])
         else:
             return syaml_dict([
                 ('fetch', self._fetch_url),
@@ -105,12 +107,12 @@ class Mirror(object):
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self._fetch_url)
+            _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
             _display_mirror_entry(
-                max_len, self._name, self._fetch_url, "fetch")
+                max_len, self._name, self.fetch_url, "fetch")
             _display_mirror_entry(
-                max_len, self._name, self._push_url, "push")
+                max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
@@ -145,8 +147,8 @@ class Mirror(object):
     def get_profile(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['profile']
-            return self._fetch_url['profile']
+                return self._push_url.get('profile', None)
+            return self._fetch_url.get('profile', None)
         else:
             return None
 
@@ -159,8 +161,8 @@ class Mirror(object):
     def get_access_pair(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['access_pair']
-            return self._fetch_url['access_pair']
+                return self._push_url.get('access_pair', None)
+            return self._fetch_url.get('access_pair', None)
         else:
             return None
 
@@ -173,8 +175,8 @@ class Mirror(object):
     def get_endpoint_url(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['endpoint_url']
-            return self._fetch_url['endpoint_url']
+                return self._push_url.get('endpoint_url', None)
+            return self._fetch_url.get('endpoint_url', None)
         else:
             return None
 
@@ -187,8 +189,8 @@ class Mirror(object):
     def get_access_token(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['access_token']
-            return self._fetch_url['access_token']
+                return self._push_url.get('access_token', None)
+            return self._fetch_url.get('access_token', None)
         else:
             return None
 
@@ -642,6 +644,35 @@ def _add_single_spec(spec, mirror, mirror_stats):
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
                 getattr(exception, 'message', exception))
         mirror_stats.error()
+
+
+def push_url_from_directory(output_directory):
+    """Given a directory in the local filesystem, return the URL on
+    which to push binary packages.
+    """
+    scheme = url_util.parse(output_directory, scheme='<missing>').scheme
+    if scheme != '<missing>':
+        raise ValueError('expected a local path, but got a URL instead')
+    mirror_url = 'file://' + output_directory
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_name(mirror_name):
+    """Given a mirror name, return the URL on which to push binary packages."""
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_name)
+    if mirror.name == "<unnamed>":
+        raise ValueError('no mirror named "{0}"'.format(mirror_name))
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_url(mirror_url):
+    """Given a mirror URL, return the URL on which to push binary packages."""
+    scheme = url_util.parse(mirror_url, scheme='<missing>').scheme
+    if scheme == '<missing>':
+        raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
 
 
 class MirrorError(spack.error.SpackError):

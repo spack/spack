@@ -66,6 +66,7 @@ class Nsimd(CMakePackage):
     depends_on('cmake@2.8.7:', type='build')
     depends_on('cmake@3.0.2:', type='build', when='@2:')
     depends_on('python@3:', type='build')
+    depends_on('py-chardet', type='build', when='@3:')
     depends_on('py-requests', type='build', when='@3:')
 
     # Add a 'generate_code' phase in the beginning

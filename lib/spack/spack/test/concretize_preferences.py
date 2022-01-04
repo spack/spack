@@ -176,16 +176,16 @@ class TestConcretizePreferences(object):
 
     def test_preferred(self):
         """"Test packages with some version marked as preferred=True"""
-        spec = Spec('preferred-test')
+        spec = Spec('python')
         spec.concretize()
-        assert spec.version == Version('0.2.15')
+        assert spec.version == Version('2.7.11')
 
         # now add packages.yaml with versions other than preferred
         # ensure that once config is in place, non-preferred version is used
-        update_packages('preferred-test', 'version', ['0.2.16'])
-        spec = Spec('preferred-test')
+        update_packages('python', 'version', ['3.5.0'])
+        spec = Spec('python')
         spec.concretize()
-        assert spec.version == Version('0.2.16')
+        assert spec.version == Version('3.5.0')
 
     def test_develop(self):
         """Test concretization with develop-like versions"""

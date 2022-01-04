@@ -20,6 +20,14 @@ class Bridger(MakefilePackage, SourceforgePackage):
     depends_on('boost')
     depends_on('perl', type='run')
 
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            # some of the plugins require gnu extensions
+            flags.append('-std=gnu99')
+        if name == 'cxxflags':
+            flags.append('-std=c++03')
+        return (flags, None, None)
+
     def install(self, spec, prefix):
         # bridger depends very much on perl scripts/etc in the source tree
         install_path = join_path(prefix, 'usr/local/bridger')

@@ -24,6 +24,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
     version('5.7.0', sha256='8d6dd094feccbb8d6ecc41340ec16a65fabac82ed4415023f6d7c1c2390ea2f3')
     version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
@@ -56,6 +57,15 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         variant(pkg, default=True,
                 description='Enable %s solver' % pkg)
 
+    # Language standards
+    variant('cstd', default='99',
+            description='C language standard',
+            values=('90', '99', '11', '17'))
+
+    variant('cxxstd', default='14',
+            description='C++ language standard',
+            values=('99', '11', '14', '17'))
+
     # Real type
     variant(
         'precision',
@@ -82,6 +92,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable SYCL vector')
 
     # External libraries
+    variant('caliper',      default=False, when='@6.0.0:',
+            description='Enable Caliper instrumentation/profiling')
     variant('hypre',        default=False,
             description='Enable Hypre MPI parallel vector')
     variant('lapack',       default=False,
@@ -123,6 +135,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     variant('monitoring', default=False,
             description='Build with simulation monitoring capabilities')
 
+    # Profiling
+    variant('profiling', default=False, when='@6.0.0:',
+            description='Build with profiling capabilities')
+
     # ==========================================================================
     # Conflicts
     # ==========================================================================
@@ -158,6 +174,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # SuperLU_MT interface requires lapack for external blas (before v3.0.0)
     conflicts('+superlu-mt', when='@:2.7.0 ~lapack')
 
+    # rocm+examples and cstd do not work together in 6.0.0
+    conflicts('+rocm+examples', when='@6.0.0')
+
+    # profiling must be on for Caliper support to mean anything
+    conflicts('+caliper', when='~profiling')
+
     # ==========================================================================
     # Dependencies
     # ==========================================================================
@@ -177,13 +199,14 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+rocm', when='+raja +rocm')
 
     # External libraries
+    depends_on('caliper',                 when='+caliper')
     depends_on('lapack',                  when='+lapack')
-    depends_on('suite-sparse',            when='+klu')
-    depends_on('petsc+mpi',               when='+petsc')
     depends_on('hypre+mpi~int64',         when='@5.7.1: +hypre ~int64')
     depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
     depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
     depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('petsc+mpi',               when='+petsc')
+    depends_on('suite-sparse',            when='+klu')
     depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
     depends_on('superlu-dist@6.3.0:',     when='@5.5.0: +superlu-dist')
     depends_on('trilinos+tpetra',         when='+trilinos')
@@ -237,6 +260,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for pkg in self.sun_solvers:
             args.append(self.define_from_variant('BUILD_' + pkg, pkg))
 
+        # language standard
+        cstd = spec.variants['cstd'].value
+        args.append('CMAKE_C_STANDARD=%s' % cstd)
+        cxxstd = spec.variants['cxxstd'].value
+        args.append('CMAKE_CXX_STANDARD=%s' % cxxstd)
+
         # precision
         args.extend([
             '-DSUNDIALS_PRECISION=%s' % spec.variants['precision'].value
@@ -270,6 +299,16 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         args.extend([
             self.define_from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring')
         ])
+
+        # Profiling
+        args.extend([
+            self.define_from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling')
+        ])
+        if '+profiling+caliper' in spec:
+            args.extend([
+                '-DENABLE_CALIPER=ON',
+                '-DCALIPER_DIR=%s' % spec['caliper'].prefix
+            ])
 
         # parallelism
         args.extend([

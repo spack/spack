@@ -18,7 +18,7 @@ class PyWarpx(PythonPackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.04.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.12.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
@@ -27,6 +27,7 @@ class PyWarpx(PythonPackage):
 
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('21.12', sha256='847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1')
     version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
     version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
@@ -39,18 +40,20 @@ class PyWarpx(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['21.11', '21.10', '21.09', '21.08', '21.07', '21.06', '21.05',
-              '21.04', 'develop']:
+    for v in ['21.12', '21.11', '21.10', '21.09', '21.08', '21.07', '21.06',
+              '21.05', '21.04', 'develop']:
         depends_on('warpx@{0}'.format(v),
                    when='@{0}'.format(v),
                    type=['build', 'link'])
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.6:3.9', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:1', type=('build', 'run'))
-    depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi')
+    depends_on('py-mpi4py@2.1.0:', type=('build', 'run'), when='+mpi')
     depends_on('py-periodictable@1.5:1', type=('build', 'run'))
-    depends_on('py-picmistandard@0.0.14', type=('build', 'run'))
-    depends_on('py-setuptools@38.6:', type='build')
+    depends_on('py-picmistandard@0.0.14', type=('build', 'run'), when='@21.03:21.11')
+    depends_on('py-picmistandard@0.0.16', type=('build', 'run'), when='@21.12')
+    depends_on('py-setuptools@42:', type='build')
+    depends_on('py-cmake@3.15:3', type='build')
     depends_on('py-wheel', type='build')
     depends_on('warpx +lib ~mpi +shared', type=('build', 'link'), when='~mpi')
     depends_on('warpx +lib +mpi +shared', type=('build', 'link'), when='+mpi')

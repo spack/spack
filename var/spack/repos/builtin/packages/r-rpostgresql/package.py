@@ -27,11 +27,3 @@ class RRpostgresql(RPackage):
     depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-dbi@0.3:', type=('build', 'run'))
     depends_on('postgresql')
-
-    depends_on('automake', type='build')
-
-    patch_config_files = True
-
-    @run_before('install')
-    def patch_config_guess(self):
-        AutotoolsPackage._do_patch_config_files(self)

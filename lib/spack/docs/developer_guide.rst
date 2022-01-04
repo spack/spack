@@ -671,6 +671,13 @@ If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
 
 
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
+
+
 """""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_success(pkg, phase_name, log_file)``
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -1176,6 +1183,10 @@ completed, the steps to make the major release are:
 
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
+
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 

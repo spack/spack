@@ -54,6 +54,7 @@ class Gdal(AutotoolsPackage):
     version('2.3.0', sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2', sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
     version('2.0.2', sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -155,7 +156,8 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
-    depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-setuptools@:57', type='build', when='@:3.0+python')
+    depends_on('py-setuptools', type='build', when='@3.1:+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
     depends_on('java@6:', type=('build', 'link', 'run'), when='@2.4:+java')

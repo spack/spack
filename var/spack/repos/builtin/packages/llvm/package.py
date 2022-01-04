@@ -127,7 +127,7 @@ class Llvm(CMakePackage, CudaPackage):
         "less memory to build, less stable",
     )
     variant(
-        "build_llvm_dylib",
+        "llvm_dylib",
         default=False,
         description="Build LLVM shared library, containing all "
         "components in a single shared library",
@@ -202,8 +202,8 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6 +polly")
     depends_on("isl", when="@:3.6 +polly")
 
-    conflicts("+build_llvm_dylib", when="+shared_libs")
-    conflicts("+link_llvm_dylib", when="~build_llvm_dylib")
+    conflicts("+llvm_dylib", when="+shared_libs")
+    conflicts("+link_llvm_dylib", when="~llvm_dylib")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
@@ -288,8 +288,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
     patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
 
-    # github.com/spack/spack/issues/24270 and MicrosoftDemangle: %gcc@10: and %clang@13:
-    patch('missing-includes.patch', when='@8:11')
+    # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
+    patch('missing-includes.patch', when='@8:9')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
@@ -609,7 +609,7 @@ class Llvm(CMakePackage, CudaPackage):
 
         cmake_args.extend([
             from_variant("BUILD_SHARED_LIBS", "shared_libs"),
-            from_variant("LLVM_BUILD_LLVM_DYLIB", "build_llvm_dylib"),
+            from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
             from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
             from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
             # By default on Linux, libc++.so is a ldscript. CMake fails to add

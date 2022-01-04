@@ -9,6 +9,7 @@ import collections
 import os
 import os.path
 import re
+import warnings
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -99,9 +100,14 @@ def by_executable(packages_to_check, path_hints=None):
             # for one prefix, but without additional details (e.g. about the
             # naming scheme which differentiates them), the spec won't be
             # usable.
-            specs = _convert_to_iterable(
-                pkg.determine_spec_details(prefix, exes_in_prefix)
-            )
+            try:
+                specs = _convert_to_iterable(
+                    pkg.determine_spec_details(prefix, exes_in_prefix)
+                )
+            except Exception as e:
+                specs = []
+                msg = 'error detecting "{0}" from prefix {1} [{2}]'
+                warnings.warn(msg.format(pkg.name, prefix, str(e)))
 
             if not specs:
                 llnl.util.tty.debug(

@@ -15,6 +15,7 @@ class RRmarkdown(RPackage):
     homepage = "https://rmarkdown.rstudio.com/"
     cran     = "rmarkdown"
 
+    version('2.11', sha256='9371255300e7ea4cd936978ad2ca3d205d8605e09f4913cb0d4725005a7a9775')
     version('2.9', sha256='6ce5af8b9a7c282619f74d3999d27ec4de12d3f93cde8fd12cc4c19f02ea8668')
     version('2.6', sha256='e6e799c472de11e079bc752cca4b4dbd6803650649457bb6ae836cb1edcdf6b0')
     version('1.14', sha256='f636b1048c5be56e06aa0b2b4342ad5c8192734f1e9b27468fef62be672edc61')
@@ -34,6 +35,7 @@ class RRmarkdown(RPackage):
     depends_on('r-xfun', when='@1.13:', type=('build', 'run'))
     depends_on('r-xfun@0.15:', when='@2.6:', type=('build', 'run'))
     depends_on('r-xfun@0.21:', when='@2.8:', type=('build', 'run'))
+    depends_on('r-jquerylib', when='@2.11:', type=('build', 'run'))
     depends_on('r-stringr@1.2.0:', when='@1.6:', type=('build', 'run'))
     depends_on('r-rprojroot', when='@1.3:1.7', type=('build', 'run'))
     depends_on('r-mime', when='@1.8:1.14', type=('build', 'run'))
