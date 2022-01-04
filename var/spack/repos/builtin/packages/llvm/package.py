@@ -139,14 +139,13 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "targets",
-        description=("What targets to build. 'auto' corresponds to 'all' in LLVM. "
-                     "Spack's target family is always added (e.g. X86 is automatically "
-                     "enabled when targeting znver2."),
-        values=auto_or_any_combination_of(
-            "AArch64", "AMDGPU", "ARM", "AVR", "BPF", "CppBackend", "Hexagon", "Lanai",
-            "Mips", "MSP430", "NVPTX", "PowerPC", "RISCV", "Sparc", "SystemZ",
-            "WebAssembly", "X86", "XCore"
-        )
+        default="all",
+        description=("What targets to build. Spack's target family is always added "
+                     "(e.g. X86 is automatically enabled when targeting znver2)."),
+        values=("all", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
+                "hexagon", "lanai", "mips", "msp430", "nvptx", "powerpc", "riscv",
+                "sparc", "systemz", "webassembly", "x86", "xcore"),
+        multi=True
     )
     variant(
         "build_type",
@@ -279,7 +278,7 @@ class Llvm(CMakePackage, CudaPackage):
     # Starting in 3.9.0 CppBackend is no longer a target (see
     # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
     # the complete list of targets)
-    conflicts("targets=CppBackend", when='@3.9.0:')
+    conflicts("targets=cppbackend", when='@3.9.0:')
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
@@ -703,10 +702,33 @@ class Llvm(CMakePackage, CudaPackage):
 def get_llvm_targets_to_build(spec):
     targets = spec.variants['targets'].value
 
-    if targets == ('auto',):
+    # Build everything?
+    if 'all' in targets:
         return 'all'
 
-    llvm_targets = set(targets)
+    # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
+    spack_to_cmake = {
+        "aarch64": "AArch64",
+        "amdgpu": "AMDGPU",
+        "arm": "ARM",
+        "avr": "AVR",
+        "bpf": "BPF",
+        "cppbackend": "CppBackend",
+        "hexagon": "Hexagon",
+        "lanai": "Lanai",
+        "mips": "Mips",
+        "msp430": "MSP430",
+        "nvptx": "NVPTX",
+        "powerpc": "PowerPC",
+        "riscv": "RISCV",
+        "sparc": "Sparc",
+        "systemz": "SystemZ",
+        "webassembly": "WebAssembly",
+        "x86": "X86",
+        "xcore": "XCore"
+    }
+
+    llvm_targets = set(spack_to_cmake[target] for target in targets)
 
     if spec.target.family in ("x86", "x86_64"):
         llvm_targets.add("X86")
