@@ -67,7 +67,7 @@ class Legion(CMakePackage):
     # current development policy is C++11 or greater so we capture that aspect
     # here.
     cpp_stds = ["11", "14", "17", "20"]
-    variant('c++std', default="11", values=cpp_stds, multi=False)
+    variant('cxxstd', default="11", values=cpp_stds, multi=False)
 
     # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
@@ -210,7 +210,7 @@ class Legion(CMakePackage):
         cmake_cxx_flags = []
         from_variant = self.define_from_variant
         options = [
-            from_variant("CMAKE_CXX_STANDARD", "c++std")
+            from_variant("CMAKE_CXX_STANDARD", "cxxstd")
         ]
 
         if 'network=gasnet' in spec:
