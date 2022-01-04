@@ -80,7 +80,7 @@ class Gdal(AutotoolsPackage):
     variant('curl',      default=False, description='Include curl')
     variant('xml2',      default=False, description='Include libxml2')
     variant('sqlite3',   default=False, description='Use SQLite 3 library')
-    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1: ~pcre')
+    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1:')
     variant('pcre',      default=False, description='Include libpcre support')
     variant('geos',      default=False, description='Include GEOS support')
     variant('qhull',     default=False, description='Include QHull support')
@@ -180,6 +180,8 @@ class Gdal(AutotoolsPackage):
     conflicts('%intel@:12',  msg=msg)
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
+
+    conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
