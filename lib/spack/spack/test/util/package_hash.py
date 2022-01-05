@@ -156,32 +156,28 @@ class ManyDocstrings:
         return "TWELVE"
 '''
 
+many_strings_no_docstrings = """\
+var = 'THREE'
+
+class ManyDocstrings:
+    x = 'SEVEN'
+
+    def method1():
+        print('NINE')
+        for i in range(10):
+            print(i)
+
+    def method2():
+        return 'TWELVE'
+"""
+
 
 def test_remove_docstrings():
     tree = ast.parse(many_strings)
     tree = ph.RemoveDocstrings().visit(tree)
 
-    unparsed = unparse(tree)
-
-    # make sure the methods are preserved
-    assert "method1" in unparsed
-    assert "method2" in unparsed
-
-    # all of these are unassigned and should be removed
-    assert "ONE" not in unparsed
-    assert "TWO" not in unparsed
-    assert "FOUR" not in unparsed
-    assert "FIVE" not in unparsed
-    assert "SIX" not in unparsed
-    assert "EIGHT" not in unparsed
-    assert "TEN" not in unparsed
-    assert "ELEVEN" not in unparsed
-
-    # these are used in legitimate expressions
-    assert "THREE" in unparsed
-    assert "SEVEN" in unparsed
-    assert "NINE" in unparsed
-    assert "TWELVE" in unparsed
+    unparsed = unparse(tree, py_ver_consistent=True)
+    assert unparsed == many_strings_no_docstrings
 
 
 many_directives = """\
@@ -199,31 +195,137 @@ class HasManyDirectives:
 ))
 
 
-def test_remove_directives():
+def test_remove_all_directives():
     """Ensure all directives are removed from packages before hashing."""
+    for name in spack.directives.directive_names:
+        assert name in many_directives
+
     tree = ast.parse(many_directives)
     spec = Spec("has-many-directives")
     tree = ph.RemoveDirectives(spec).visit(tree)
-    unparsed = unparse(tree)
+    unparsed = unparse(tree, py_ver_consistent=True)
 
     for name in spack.directives.directive_names:
         assert name not in unparsed
 
 
+many_attributes = """\
+class HasManyMetadataAttributes:
+    homepage = "https://example.com"
+    url = "https://example.com/foo.tar.gz"
+    git = "https://example.com/foo/bar.git"
+
+    maintainers = ["alice", "bob"]
+    tags = ["foo", "bar", "baz"]
+
+    depends_on("foo")
+    conflicts("foo")
+"""
+
+
+many_attributes_canonical = """\
+class HasManyMetadataAttributes:
+    pass
+"""
+
+
+def test_remove_spack_attributes():
+    tree = ast.parse(many_attributes)
+    spec = Spec("has-many-metadata-attributes")
+    tree = ph.RemoveDirectives(spec).visit(tree)
+    unparsed = unparse(tree, py_ver_consistent=True)
+
+    assert unparsed == many_attributes_canonical
+
+
+complex_package_logic = """\
+class ComplexPackageLogic:
+    for variant in ["+foo", "+bar", "+baz"]:
+        conflicts("quux" + variant)
+
+    for variant in ["+foo", "+bar", "+baz"]:
+        # logic in the loop prevents our dumb analyzer from having it removed. This
+        # is uncommon so we don't (yet?) implement logic to detect that spec is unused.
+        print("oops can't remove this.")
+        conflicts("quux" + variant)
+
+        # Hard to make a while loop that makes sense, so ignore the infinite loop here.
+        # Likely nobody uses while instead of for, but we test it just in case.
+        while x <= 10:
+            depends_on("garply@%d.0" % x)
+
+    # all of these should go away, as they only contain directives
+    with when("@10.0"):
+        depends_on("foo")
+        with when("+bar"):
+            depends_on("bar")
+            with when("+baz"):
+                depends_on("baz")
+
+    # this whole statement should disappear
+    if sys.platform == "linux":
+        conflicts("baz@9.0")
+
+    # the else block here should disappear
+    if sys.platform == "linux":
+        print("foo")
+    else:
+        conflicts("foo@9.0")
+
+    # both blocks of this statement should disappear
+    if sys.platform == "darwin":
+        conflicts("baz@10.0")
+    else:
+        conflicts("bar@10.0")
+
+    # This one is complicated as the body goes away but the else block doesn't.
+    # Again, this could be optimized, but we're just testing removal logic here.
+    if sys.platform() == "darwin":
+        conflicts("baz@10.0")
+    else:
+        print("oops can't remove this.")
+        conflicts("bar@10.0")
+"""
+
+
+complex_package_logic_filtered = """\
+class ComplexPackageLogic:
+    for variant in ['+foo', '+bar', '+baz']:
+        print("oops can't remove this.")
+    if sys.platform == 'linux':
+        print('foo')
+    if sys.platform() == 'darwin':
+        pass
+    else:
+        print("oops can't remove this.")
+"""
+
+
+def test_remove_complex_package_logic_filtered():
+    tree = ast.parse(complex_package_logic)
+    spec = Spec("has-many-metadata-attributes")
+    tree = ph.RemoveDirectives(spec).visit(tree)
+    unparsed = unparse(tree, py_ver_consistent=True)
+
+    assert unparsed == complex_package_logic_filtered
+
+
 @pytest.mark.parametrize("package_spec,expected_hash", [
-    ("amdfftw",      "nfrk76xyu6wxs4xb4nyichm3om3kb7yp"),
+    ("amdfftw",      "tivb752zddjgvfkogfs7cnnvp5olj6co"),
     ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-    ("llvm",         "ngact4ds3xwgsbn5bruxpfs6f4u4juba"),
+    ("llvm",         "g3hoqf4rhprd3da7byp5nzco6tcwliiy"),
     # has @when("@4.1.0") and raw unicode literals
-    ("mfem",         "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
-    ("mfem@4.0.0",   "65xryd5zxarwzqlh2pojq7ykohpod4xz"),
-    ("mfem@4.1.0",   "2j655nix3oe57iwvs2mlgx2mresk7czl"),
+    ("mfem",         "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+    ("mfem@4.0.0",   "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+    ("mfem@4.1.0",   "gxastq64to74qt4he4knpyjfdhh5auel"),
     # has @when("@1.5.0:")
-    ("py-torch",     "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
-    ("py-torch@1.0", "lnwmqk4wadtlsc2badrt7foid5tl5vaw"),
-    ("py-torch@1.6", "5nwndnknxdfs5or5nrl4pecvw46xc5i2"),
+    ("py-torch",     "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+    ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+    ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
     # has a print with multiple arguments
-    ("legion",       "ba4tleyb3g5mdhhsje6t6jyitqj3yfpz"),
+    ("legion",       "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
+    # has nested `with when()` blocks and loops
+    ("trilinos",     "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
 ])
 def test_package_hash_consistency(package_spec, expected_hash):
     """Ensure that that package hash is consistent python version to version.
