@@ -34,51 +34,106 @@ class RemoveDocstrings(ast.NodeTransformer):
         self.generic_visit(node)
         return node
 
-    def visit_FunctionDef(self, node):  # noqa
+    def visit_FunctionDef(self, node):
         return self.remove_docstring(node)
 
-    def visit_ClassDef(self, node):  # noqa
+    def visit_ClassDef(self, node):
         return self.remove_docstring(node)
 
-    def visit_Module(self, node):  # noqa
+    def visit_Module(self, node):
         return self.remove_docstring(node)
 
 
 class RemoveDirectives(ast.NodeTransformer):
-    """Remove Spack directives from a package AST."""
+    """Remove Spack directives from a package AST.
+
+    This removes Spack directives (e.g., ``depends_on``, ``conflicts``, etc.) and
+    metadata attributes (e.g., ``tags``, ``homepage``, ``url``) in a top-level class
+    definition within a ``package.py``, but it does not modify nested classes or
+    functions.
+
+    If removing directives causes a ``for``, ``with``, or ``while`` statement to have an
+    empty body, we remove the entire statement. Similarly, If removing directives causes
+    an ``if`` statement to have an empty body or ``else`` block, we'll remove the block
+    (or replace the body with ``pass`` if there is an ``else`` block but no body).
+
+    """
+
     def __init__(self, spec):
+        # list of URL attributes and metadata attributes
+        # these will be removed from packages.
+        self.metadata_attrs = [s.url_attr for s in spack.fetch_strategy.all_strategies]
+        self.metadata_attrs += spack.package.Package.metadata_attrs
+
         self.spec = spec
+        self.in_classdef = False  # used to avoid nested classdefs
 
-    def is_directive(self, node):
-        """Check to determine if the node is a valid directive
+    def visit_Expr(self, node):
+        # Directives are represented in the AST as named function call expressions (as
+        # opposed to function calls through a variable callback). We remove them.
+        #
+        # Note that changes to directives (e.g., a preferred version change or a hash
+        # chnage on an archive) are already represented in the spec *outside* the
+        # package hash.
+        return None if (
+            node.value and isinstance(node.value, ast.Call) and
+            isinstance(node.value.func, ast.Name) and
+            node.value.func.id in spack.directives.directive_names
+        ) else node
 
-        Directives are assumed to be represented in the AST as a named function
-        call expression.  This means that they will NOT be represented by a
-        named function call within a function call expression (e.g., as
-        callbacks are sometimes represented).
+    def visit_Assign(self, node):
+        # Remove assignments to metadata attributes, b/c they don't affect the build.
+        return None if (
+            node.targets and isinstance(node.targets[0], ast.Name) and
+            node.targets[0].id in self.metadata_attrs
+        ) else node
 
-        Args:
-            node (ast.AST): the AST node being checked
+    def visit_With(self, node):
+        self.generic_visit(node)            # visit children
+        return node if node.body else None  # remove with statement if it has no body
 
-        Returns:
-            bool: ``True`` if the node represents a known directive,
-                ``False`` otherwise
-        """
-        return (isinstance(node, ast.Expr) and
-                node.value and isinstance(node.value, ast.Call) and
-                isinstance(node.value.func, ast.Name) and
-                node.value.func.id in spack.directives.directive_names)
+    def visit_For(self, node):
+        self.generic_visit(node)            # visit children
+        return node if node.body else None  # remove loop if it has no body
 
-    def is_spack_attr(self, node):
-        return (isinstance(node, ast.Assign) and
-                node.targets and isinstance(node.targets[0], ast.Name) and
-                node.targets[0].id in spack.package.Package.metadata_attrs)
+    def visit_While(self, node):
+        self.generic_visit(node)            # visit children
+        return node if node.body else None  # remove loop if it has no body
 
-    def visit_ClassDef(self, node):  # noqa
-        if node.name == spack.util.naming.mod_to_class(self.spec.name):
-            node.body = [
-                c for c in node.body
-                if (not self.is_directive(c) and not self.is_spack_attr(c))]
+    def visit_If(self, node):
+        self.generic_visit(node)
+
+        # an empty orelse is ignored by unparsing, but an empty body with a full orelse
+        # ends up unparsing as a syntax error, so we replace the empty body into `pass`.
+        if not node.body:
+            if node.orelse:
+                node.body = [ast.Pass()]
+            else:
+                return None
+
+        # if the node has a body, it's valid python code with or without an orelse
+        return node
+
+    def visit_FunctionDef(self, node):
+        # do not descend into function definitions
+        return node
+
+    def visit_ClassDef(self, node):
+        # packages are always top-level, and we do not descend
+        # into nested class defs and their attributes
+        if self.in_classdef:
+            return node
+
+        # guard against recrusive class definitions
+        self.in_classdef = True
+        self.generic_visit(node)
+        self.in_classdef = False
+
+        # replace class definition with `pass` if it's empty (e.g., packages that only
+        # have directives b/c they subclass a build system class)
+        if not node.body:
+            node.body = [ast.Pass()]
+
         return node
 
 
@@ -89,7 +144,7 @@ class TagMultiMethods(ast.NodeVisitor):
         # map from function name to (implementation, condition_list) tuples
         self.methods = {}
 
-    def visit_FunctionDef(self, func):  # noqa
+    def visit_FunctionDef(self, func):
         conditions = []
         for dec in func.decorator_list:
             if isinstance(dec, ast.Call) and dec.func.id == 'when':
@@ -207,7 +262,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
         # if nothing was picked, the last definition wins.
         return result
 
-    def visit_FunctionDef(self, func):  # noqa
+    def visit_FunctionDef(self, func):
         # if the function def wasn't visited on the first traversal there is a problem
         assert func.name in self.methods, "Inconsistent package traversal!"
 
@@ -277,7 +332,7 @@ def package_ast(spec, filter_multimethods=True, source=None):
     # create an AST
     root = ast.parse(source)
 
-    # remove docstrings and directives from the package AST
+    # remove docstrings, comments, and directives from the package AST
     root = RemoveDocstrings().visit(root)
     root = RemoveDirectives(spec).visit(root)
 
