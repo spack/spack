@@ -71,7 +71,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets, when='+rocm')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
