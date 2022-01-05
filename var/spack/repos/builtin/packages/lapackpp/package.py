@@ -46,16 +46,16 @@ class Lapackpp(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = ''
-        if (spec['blas'].name == 'cray-libsci'):
-            args += '-DBLA_VENDOR=CRAY '
-
-        return [
+        args = [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
-            args,
             '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
         ]
+
+        if spec['blas'].name == 'cray-libsci':
+            args.append(self.define('BLA_VENDOR', 'CRAY'))
+
+        return args
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
