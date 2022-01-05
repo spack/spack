@@ -13,7 +13,7 @@ class EpicsPcas(MakefilePackage):
     homepage = "https://github.com/epics-modules/pcas"
     url      = "https://github.com/epics-modules/pcas/archive/refs/tags/v4.13.3.tar.gz"
 
-    # maintainers = ['glenn-horton-smith']
+    maintainers = ['glenn-horton-smith']
 
     version('4.13.3', sha256='5004e39339c8e592fcb9b4275c84143635c6e688c0fbe01f17dafe19850398a0')
 
