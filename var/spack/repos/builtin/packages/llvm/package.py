@@ -139,10 +139,10 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "targets",
-        default="nvptx,amdgpu",
+        default="none",
         description=("What targets to build. Spack's target family is always added "
                      "(e.g. X86 is automatically enabled when targeting znver2)."),
-        values=("all", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
+        values=("all", "none", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
                 "hexagon", "lanai", "mips", "msp430", "nvptx", "powerpc", "riscv",
                 "sparc", "systemz", "webassembly", "x86", "xcore"),
         multi=True
@@ -728,7 +728,10 @@ def get_llvm_targets_to_build(spec):
         "xcore": "XCore"
     }
 
-    llvm_targets = set(spack_to_cmake[target] for target in targets)
+    if 'none' in targets:
+        llvm_targets = set()
+    else:
+        llvm_targets = set(spack_to_cmake[target] for target in targets)
 
     if spec.target.family in ("x86", "x86_64"):
         llvm_targets.add("X86")
