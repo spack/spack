@@ -499,12 +499,14 @@ template_pkg_opt = 'opt_criterion({0}, "number of non-identical {1} nodes").'
 template_pkg_null = '#minimize {{ 0@{0} : #true}}.'
 template_pkg_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
                         'package_not_equal(PSID1, PSID2, "{1}"), '
+                        'representative(PSID1, "{1}"), '
                         'node(PSID1, "{1}"), node(PSID2, "{1}") }}.')
 
 template_virtual_opt = 'opt_criterion({0}, "number of non-identical {1} providers").'
 template_virtual_null = '#minimize {{ 0@{0} : #true}}.'
 template_virtual_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
-                            'virtual_not_equal(PSID1, PSID2, "{1}")}}.')
+                            'virtual_not_equal(PSID1, PSID2, "{1}"), '
+                            'representative_virtual(PSID1, "{1}")}}.')
 
 
 class PyclingoDriver(object):

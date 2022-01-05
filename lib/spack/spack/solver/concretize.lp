@@ -870,6 +870,10 @@ representative(PSID, Package)
  :- node(PSID, Package),
     not package_equal(_, PSID, Package).
 
+representative_virtual(PSID, Virtual)
+  :- virtual_node(PSID, Virtual),
+     virtual_not_equal(_, PSID, Virtual).
+
 % Minimizing builds is tricky. We want a minimizing criterion
 
 % because we want to reuse what is avaialble, but
@@ -955,11 +959,11 @@ equality_attr("external_spec_selected").
 % indexed in an arbitrary but deterministic order.
 %opt_criterion(300+index, "number of non-identical package nodes").
 %#minimize { 0@300+index: #true }.
-%#minimize { 1@300+index,PSID1,PSID2 : package_not_equal(PSID1, PSID2, "package") }.
+%#minimize { 1@300+index,PSID1,PSID2 : package_not_equal(PSID1, PSID2, "package"), representative(PSID1, "package" }.
 % asp.py will generate statements of a similar form for each literal "virtual"
 %opt_criterion(300+index, "number of virtual providers")
 %#minimize { 0@300+index, #true }.
-%#minimize { 1@300+index,PSID1,PSID2 : virtual_not_equal(PSID1, PSID2, "virtual") }.
+%#minimize { 1@300+index,PSID1,PSID2 : virtual_not_equal(PSID1, PSID2, "virtual"), representative_virtual(PSID1, "virtual") }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
