@@ -57,7 +57,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             description="enable 64 bits ids")
 
     # Device variants
-    variant("cuda", default=False, description="build cuda support")
+    # CudaPackage provides cuda variant
+    # ROCmPackage provides rocm variant
+    variant("kokkos", default=False, description="build using Kokkos backend")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
 
@@ -71,14 +73,23 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
+    # VTK-m uses the default Kokkos backend
+    depends_on('kokkos', when='+kokkos')
+    # VTK-m native CUDA and Kokkos CUDA backends are not compatible
+    depends_on('kokkos ~cuda', when='+kokkos +cuda')
+    # VTK-m uses the Kokkos HIP backend.
+    # If Kokkos provides multiple backends, the HIP backend may or
+    # may not be used for VTK-m depending on the default selected by Kokkos
+    depends_on('kokkos +rocm', when='+kokkos +rocm')
     # Propagate AMD GPU target to kokkos for +rocm
     for amdgpu_value in ROCmPackage.amdgpu_targets:
-        depends_on("kokkos@develop +rocm amdgpu_target=%s" % amdgpu_value, when="amdgpu_target=%s" % amdgpu_value)
+        depends_on("kokkos amdgpu_target=%s" % amdgpu_value, when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value)
 
     depends_on("rocm-cmake@3.7:", when="+rocm")
     depends_on("hip@3.7:", when="+rocm")
 
     conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")
@@ -178,13 +189,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             # hip support
             if "+rocm" in spec:
                 options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
-                options.append("-DVTKm_ENABLE_HIP:BOOL=ON")
 
                 archs = ",".join(self.spec.variants['amdgpu_target'].value)
                 options.append(
                     "-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
-            else:
-                options.append("-DVTKm_ENABLE_HIP:BOOL=OFF")
 
             # openmp support
             if "+openmp" in spec:
@@ -195,6 +203,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=OFF")
+
+            if "+kokkos" in spec:
+                options.append("-DVTKm_ENABLE_KOKKOS:BOOL=ON")
+            else:
+                options.append("-DVTKm_ENABLE_KOKKOS:BOOL=OFF")
 
             # tbb support
             if "+tbb" in spec:
@@ -334,7 +347,7 @@ vtkm_add_target_information(VTKmSmokeTest
                 except ProcessError:
                     output = ""
                 print(output)
-                if "+rocm" in spec:
+                if "+kokkos" in spec:
                     expected_device = 'Kokkos'
                 elif "+cuda" in spec:
                     expected_device = 'Cuda'
