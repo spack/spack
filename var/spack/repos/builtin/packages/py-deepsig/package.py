@@ -15,7 +15,7 @@ class PyDeepsig(PythonPackage):
     git      = "https://github.com/Kaleidophon/deep-significance.git"
 
     # The tarball for pypi is missing files using github
-    version('1.2.0', url='https://github.com/Kaleidophon/deep-significance/archive/refs/tags/v1.2.0.zip', 
+    version('1.2.0', url='https://github.com/Kaleidophon/deep-significance/archive/refs/tags/v1.2.0.zip',
             sha256='4fc5d572d1bec91849daacdbba5722bd216e8398c1a8dc362d7671ff5d16548f')
 
     depends_on('python@3.5.3:',         type=('build', 'run'))
