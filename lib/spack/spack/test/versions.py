@@ -628,3 +628,20 @@ def test_version_wrong_idx_type():
     v = Version('1.1')
     with pytest.raises(TypeError):
         v['0:']
+
+
+@pytest.mark.regression('26482')
+def test_version_list_with_range_included_in_concrete_version_interpreted_as_range():
+    # Note: this test only tests whether we can construct a version list of a range
+    # and a version, where the range is contained in the version when it is interpreted
+    # as a range. That is: Version('3.1') interpreted as VersionRange('3.1', '3.1').
+    # Cleary it *shouldn't* be interpreted that way, but that is how Spack currently
+    # behaves, and this test only ensures that creating a VersionList of this type
+    # does not throw like reported in the linked Github issue.
+    VersionList([Version('3.1'), VersionRange('3.1.1', '3.1.2')])
+
+
+@pytest.mark.xfail
+def test_version_list_with_range_and_concrete_version_is_not_concrete():
+    v = VersionList([Version('3.1'), VersionRange('3.1.1', '3.1.2')])
+    assert v.concrete

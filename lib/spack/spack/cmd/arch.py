@@ -21,6 +21,10 @@ level = "short"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-g', '--generic-target', action='store_true',
+        help='show the best generic target'
+    )
+    subparser.add_argument(
         '--known-targets', action='store_true',
         help='show a list of all known targets and exit'
     )
@@ -74,6 +78,10 @@ def display_targets(targets):
 
 
 def arch(parser, args):
+    if args.generic_target:
+        print(archspec.cpu.host().generic)
+        return
+
     if args.known_targets:
         display_targets(archspec.cpu.TARGETS)
         return

@@ -46,9 +46,8 @@ licensed_files = [
     r'^lib/spack/docs/.*\.py$',
     r'^lib/spack/docs/spack.yaml$',
 
-    # 2 files in external
+    # 1 file in external
     r'^lib/spack/external/__init__.py$',
-    r'^lib/spack/external/ordereddict_backport.py$',
 
     # shell scripts in share
     r'^share/spack/.*\.sh$',

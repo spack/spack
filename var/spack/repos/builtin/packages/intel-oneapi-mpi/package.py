@@ -4,9 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import glob
 import platform
-import subprocess
 
 from spack import *
 
@@ -19,6 +17,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.5.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18370/l_mpi_oneapi_p_2021.5.0.495_offline.sh',
+                sha256='3aae53fe77f7c6aac7a32b299c25d6ca9a00ba4e2d512a26edd90811e59e7471',
+                expand=False)
         version('2021.4.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18186/l_mpi_oneapi_p_2021.4.0.441_offline.sh',
                 sha256='cc4b7072c61d0bd02b1c431b22d2ea3b84b967b59d2e587e77a9e7b2c24f2a29',
@@ -38,10 +40,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     variant('ilp64', default=False,
             description='Build with ILP64 support')
+    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    depends_on('libfabric', when='+external-libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
-
-    depends_on('patchelf', type='build')
 
     @property
     def component_dir(self):
@@ -87,16 +89,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
         libs += find_libraries('libmpi', release_lib_dir)
         libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
+
+        # Find libfabric for libmpi.so
+        if '+external-libfabric' in self.spec:
+            libs += self.spec['libfabric'].libs
+        else:
+            libs += find_libraries(['libfabric'],
+                                   join_path(self.component_path, 'libfabric', 'lib'))
+
         return libs
 
     def install(self, spec, prefix):
         super(IntelOneapiMpi, self).install(spec, prefix)
-
-        # Patch libmpi.so rpath so it can find libfabric
-        libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
-        for libmpi in glob.glob(join_path(self.component_path,
-                                          'lib', '**', 'libmpi*.so')):
-            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, libmpi])
 
         # When spack builds from source
         # fix I_MPI_SUBSTITUTE_INSTALLDIR and

@@ -37,8 +37,19 @@ class Rocsolver(CMakePackage):
     version('3.7.0', sha256='8c1c630595952806e658c539fd0f3056bd45bafc22b57f0dd10141abefbe4595')
     version('3.5.0', sha256='d655e8c762fb9e123b9fd7200b4258512ceef69973de4d0588c815bc666cb358')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
     depends_on('cmake@3.5:', type='build')
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('netlib-lapack@3.7.1:', type='test')
+
+    patch('link-clients-blas.patch', when='@4.3.0:')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'rocsolver-test')
+        self.run_test(exe, options=['--gtest_filter=checkin*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
@@ -50,7 +61,7 @@ class Rocsolver(CMakePackage):
         tgt = self.spec.variants['amdgpu_target'].value
         args = [
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
-            self.define('BUILD_CLIENTS_TESTS', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
         if self.spec.satisfies('@4.1.0'):

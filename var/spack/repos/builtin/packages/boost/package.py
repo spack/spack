@@ -26,6 +26,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.78.0', sha256='8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc')
     version('1.77.0', sha256='fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854')
     version('1.76.0', sha256='f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41')
     version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
@@ -333,6 +334,7 @@ class Boost(Package):
     def determine_toolset(self, spec):
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
+                    'icpx': 'intel',
                     'clang++': 'clang',
                     'armclang++': 'clang',
                     'xlc++': 'xlcpp',
@@ -343,6 +345,8 @@ class Boost(Package):
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
+            toolsets['icpx'] += '-linux'
+
         for cc, toolset in toolsets.items():
             if cc in self.compiler.cxx_names:
                 return toolset
@@ -383,14 +387,8 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
-            if not spec.satisfies('%intel'):
-                # using intel-linux : : spack_cxx in user-config.jam leads to
-                # error: at project-config.jam:12
-                # error: duplicate initialization of intel-linux with the following parameters:  # noqa
-                # error: version = <unspecified>
-                # error: previous initialization at ./user-config.jam:1
-                f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
-                                                       spack_cxx))
+            f.write("using {0} : : {1} ;\n".format(boost_toolset_id,
+                                                   spack_cxx))
 
             if '+mpi' in spec:
                 # Use the correct mpi compiler.  If the compiler options are
@@ -571,6 +569,11 @@ class Boost(Package):
         self.determine_bootstrap_options(spec, with_libs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
+
+        # strip the toolchain to avoid double include errors (intel) or
+        # user-config being overwritten (again intel, but different boost version)
+        filter_file(r'^\s*using {0}.*'.format(self.determine_toolset(spec)),  '',
+                    os.path.join(self.stage.source_path, 'project-config.jam'))
 
         # b2 used to be called bjam, before 1.47 (sigh)
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'

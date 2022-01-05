@@ -15,6 +15,8 @@ class File(AutotoolsPackage):
     homepage = "https://www.darwinsys.com/file/"
     url      = "https://astron.com/pub/file/file-5.37.tar.gz"
 
+    maintainers = ['sethrj']
+
     version('5.40', sha256='167321f43c148a553f68a0ea7f579821ef3b11c27b8cbe158e4df897e4a5dd57')
     version('5.39', sha256='f05d286a76d9556243d0cb05814929c2ecf3a5ba07963f8f70bfaaa70517fad1')
     version('5.38', sha256='593c2ffc2ab349c5aea0f55fedfe4d681737b6b62376a9b3ad1e77b2cc19fa34')
@@ -22,8 +24,25 @@ class File(AutotoolsPackage):
 
     executables = ['^file$']
 
+    variant('static', default=True, description='Also build static libraries')
+
+    depends_on('bzip2')
+    depends_on('xz')
+    depends_on('zlib')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'file-(\S+)', output)
         return match.group(1) if match else None
+
+    def configure_args(self):
+        args = [
+            "--disable-dependency-tracking",
+            "--enable-fsect-man5",
+            "--enable-zlib",
+            "--enable-bzlib",
+            "--enable-xzlib",
+        ]
+        args += self.enable_or_disable('static')
+        return args

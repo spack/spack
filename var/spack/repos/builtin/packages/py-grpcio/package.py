@@ -12,6 +12,7 @@ class PyGrpcio(PythonPackage):
     homepage = "https://grpc.io/"
     pypi = "grpcio/grpcio-1.32.0.tar.gz"
 
+    version('1.42.0', sha256='4a8f2c7490fe3696e0cdd566e2f099fb91b51bc75446125175c55581c2f7bc11')
     version('1.39.0', sha256='57974361a459d6fe04c9ae0af1845974606612249f467bbd2062d963cb90f407')
     version('1.38.1', sha256='1f79d8a24261e3c12ec3a6c25945ff799ae09874fd24815bc17c2dc37715ef6c')
     version('1.38.0', sha256='abbf9c8c3df4d5233d5888c6cfa85c1bb68a6923749bd4dd1abc6e1e93986f17')
@@ -41,12 +42,14 @@ class PyGrpcio(PythonPackage):
     depends_on('openssl')
     depends_on('zlib')
     depends_on('c-ares')
+    depends_on('re2+shared')
 
     def setup_build_environment(self, env):
         env.set('GRPC_PYTHON_BUILD_WITH_CYTHON', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+        env.set('GRPC_PYTHON_BUILD_SYSTEM_RE2', True)
         # https://github.com/grpc/grpc/pull/24449
         env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
         env.set('GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS', str(make_jobs))
@@ -59,3 +62,17 @@ class PyGrpcio(PythonPackage):
     def patch(self):
         if self.spec.satisfies('%fj'):
             filter_file("-std=gnu99", "", "setup.py")
+
+        # use the spack packages
+        filter_file(r'(\s+SSL_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['openssl'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+ZLIB_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['zlib'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+CARES_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['c-ares'].prefix.include),
+                    'setup.py')
+        filter_file(r'(\s+RE2_INCLUDE = ).*',
+                    r"\1('{0}',)".format(self.spec['re2'].prefix.include),
+                    'setup.py')

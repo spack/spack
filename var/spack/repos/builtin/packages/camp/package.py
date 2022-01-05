@@ -29,10 +29,14 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cub', when='+cuda')
 
+    depends_on('blt')
+
     def cmake_args(self):
         spec = self.spec
 
         options = []
+
+        options.append("-DBLT_SOURCE_DIR={0}".format(spec['blt'].prefix))
 
         if '+cuda' in spec:
             options.extend([

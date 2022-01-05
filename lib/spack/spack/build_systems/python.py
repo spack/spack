@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import inspect
 import os
+import re
 import shutil
 
 import llnl.util.tty as tty
@@ -143,6 +144,8 @@ class PythonPackage(PackageBase):
         for path in find(root, '*.py', recursive=False):
             modules.append(path.replace(root + os.sep, '', 1).replace(
                 '.py', '').replace('/', '.'))
+
+        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
         tty.debug('Detected the following modules: {0}'.format(modules))
 
@@ -393,11 +396,15 @@ class PythonPackage(PackageBase):
                 self.spec
             )
         )
+
+        to_remove = []
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
             if global_view or not path_contains_subdirectory(src, bin_dir):
-                view.remove_file(src, dst)
+                to_remove.append(dst)
             else:
                 os.remove(dst)
+
+        view.remove_files(to_remove)

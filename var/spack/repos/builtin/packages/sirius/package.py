@@ -21,6 +21,7 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('7.3.0', sha256='69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2')
     version('7.2.7', sha256='929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03')
     version('7.2.6', sha256='e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a')
     version('7.2.5', sha256='794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22')
@@ -70,7 +71,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets, when='+rocm')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -147,6 +148,7 @@ class Sirius(CMakePackage, CudaPackage):
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
     patch("cmake-fix-shared-library-installation.patch", when='@6.1.5')
+    patch("mpi_datatypes.patch", when="@:7.2.6")
 
     @property
     def libs(self):

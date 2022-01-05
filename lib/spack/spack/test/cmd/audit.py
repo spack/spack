@@ -41,7 +41,7 @@ def test_audit_packages_https(mutable_config, mock_packages):
     assert audit.returncode == 1
 
     # This uses http and should fail
-    audit('packages-https', "preferred-test", fail_on_error=False)
+    audit('packages-https', "test-dependency", fail_on_error=False)
     assert audit.returncode == 1
 
     # providing one or more package names with https should work

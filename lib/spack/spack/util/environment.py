@@ -21,6 +21,7 @@ from six.moves import shlex_quote as cmd_quote
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
+import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
@@ -43,6 +44,9 @@ _shell_unset_strings = {
     'csh': 'unsetenv {0};\n',
     'fish': 'set -e {0};\n',
 }
+
+
+tracing_enabled = False
 
 
 def is_system_path(path):
@@ -365,14 +369,17 @@ class EnvironmentModifications(object):
         * 'context' : line of code that issued the request that failed
     """
 
-    def __init__(self, other=None):
+    def __init__(self, other=None, traced=None):
         """Initializes a new instance, copying commands from 'other'
         if it is not None.
 
         Args:
             other (EnvironmentModifications): list of environment modifications
                 to be extended (optional)
+            traced (bool): enable or disable stack trace inspection to log the origin
+                of the environment modifications.
         """
+        self.traced = tracing_enabled if traced is None else bool(traced)
         self.env_modifications = []
         if other is not None:
             self.extend(other)
@@ -393,7 +400,12 @@ class EnvironmentModifications(object):
             raise TypeError(
                 'other must be an instance of EnvironmentModifications')
 
-    def _get_outside_caller_attributes(self):
+    def _maybe_trace(self, kwargs):
+        """Provide the modification with stack trace info so that we can track its
+        origin to find issues in packages. This is very slow and expensive."""
+        if not self.traced:
+            return
+
         stack = inspect.stack()
         try:
             _, filename, lineno, _, context, index = stack[2]
@@ -402,8 +414,7 @@ class EnvironmentModifications(object):
             filename = 'unknown file'
             lineno = 'unknown line'
             context = 'unknown context'
-        args = {'filename': filename, 'lineno': lineno, 'context': context}
-        return args
+        kwargs.update({'filename': filename, 'lineno': lineno, 'context': context})
 
     def set(self, name, value, **kwargs):
         """Stores a request to set an environment variable.
@@ -412,7 +423,7 @@ class EnvironmentModifications(object):
             name: name of the environment variable to be set
             value: value of the environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
@@ -425,7 +436,7 @@ class EnvironmentModifications(object):
             value: value to append to the environment variable
         Appends with spaces separating different additions to the variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         kwargs.update({'separator': sep})
         item = AppendFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -436,7 +447,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the environment variable to be unset
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = UnsetEnv(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -450,7 +461,7 @@ class EnvironmentModifications(object):
             value: value to remove to the environment variable
             sep: separator to assume for environment variable
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         kwargs.update({'separator': sep})
         item = RemoveFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
@@ -462,7 +473,7 @@ class EnvironmentModifications(object):
             name: name o the environment variable to be set.
             elements: elements of the path to set.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = SetPath(name, elements, **kwargs)
         self.env_modifications.append(item)
 
@@ -473,7 +484,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be appended
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = AppendPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -484,7 +495,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be pre-pended
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = PrependPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -495,7 +506,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be removed
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -506,7 +517,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = DeprioritizeSystemPaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -517,7 +528,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the path list in the environment.
         """
-        kwargs.update(self._get_outside_caller_attributes())
+        self._maybe_trace(kwargs)
         item = PruneDuplicatePaths(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -600,7 +611,6 @@ class EnvironmentModifications(object):
     def shell_modifications(self, shell='sh', explicit=False, env=None):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
-        new_env = os.environ.copy()
 
         if env is None:
             env = os.environ
@@ -610,6 +620,9 @@ class EnvironmentModifications(object):
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(new_env)
+
+        if 'MANPATH' in new_env and not new_env.get('MANPATH').endswith(':'):
+            new_env['MANPATH'] += ':'
 
         cmds = ''
 
@@ -843,6 +856,8 @@ def validate(env, errstream):
     Args:
         env: list of environment modifications
     """
+    if not env.traced:
+        return
     modifications = env.group_by_name()
     for variable, list_of_changes in sorted(modifications.items()):
         set_or_unset_not_first(variable, list_of_changes, errstream)

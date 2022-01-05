@@ -18,6 +18,10 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
     depends_on('intel-oneapi-mpi')
 
     if platform.system() == 'Linux':
+        version('2021.5.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18371/l_oneapi_ccl_p_2021.5.0.478_offline.sh',
+                sha256='47584ad0269fd13bcfbc2cd0bb029bdcc02b723070abcb3d5e57f9586f4e74f8',
+                expand=False)
         version('2021.4.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18188/l_oneapi_ccl_p_2021.4.0.433_offline.sh',
                 sha256='004031629d97ef99267d8ea962b666dc4be1560d7d32bd510f97bc81d9251ef6',

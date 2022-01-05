@@ -134,7 +134,11 @@ def activate(env, use_env_repo=False, add_view=True):
 
 def deactivate():
     """
-    Deactivate an environment and collect corresponding environment modifications
+    Deactivate an environment and collect corresponding environment modifications.
+
+    Note: unloads the environment in its current state, not in the state it was
+        loaded in, meaning that specs that were removed from the spack environment
+        after activation are not unloaded.
 
     Returns:
         spack.util.environment.EnvironmentModifications: Environment variables

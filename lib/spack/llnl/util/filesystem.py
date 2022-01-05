@@ -141,7 +141,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file.
     """
     string = kwargs.get('string', False)
-    backup = kwargs.get('backup', True)
+    backup = kwargs.get('backup', False)
     ignore_absent = kwargs.get('ignore_absent', False)
     stop_at = kwargs.get('stop_at', None)
 
@@ -1855,3 +1855,18 @@ def keep_modification_time(*filenames):
     for f, mtime in mtimes.items():
         if os.path.exists(f):
             os.utime(f, (os.path.getatime(f), mtime))
+
+
+@contextmanager
+def temporary_dir(*args, **kwargs):
+    """Create a temporary directory and cd's into it. Delete the directory
+    on exit.
+
+    Takes the same arguments as tempfile.mkdtemp()
+    """
+    tmp_dir = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        remove_directory_contents(tmp_dir)

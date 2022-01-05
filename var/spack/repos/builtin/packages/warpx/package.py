@@ -17,7 +17,7 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.07.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.12.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
@@ -25,6 +25,9 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    # 22.01+ requires C++17 or newer
+    version('21.12', sha256='847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1')
+    version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
     version('21.10', sha256='d372c573f0360094d5982d64eceeb0149d6620eb75e8fdbfdc6777f3328fb454')
     version('21.09', sha256='861a65f11846541c803564db133c8678b9e8779e69902ef1637b21399d257eab')
     version('21.08', sha256='6128a32cfd075bc63d08eebea6d4f62d33ce0570f4fd72330a71023ceacccc86')
@@ -32,6 +35,7 @@ class Warpx(CMakePackage):
     version('21.06', sha256='a26039dc4061da45e779dd5002467c67a533fc08d30841e01e7abb3a890fbe30')
     version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
     version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
+    # 20.01+ requires C++14 or newer
 
     variant('app', default=True,
             description='Build the WarpX executable application')
@@ -44,7 +48,7 @@ class Warpx(CMakePackage):
             description='On-node, accelerated computing backend')
     variant('dims',
             default='3',
-            values=('2', '3', 'rz'),
+            values=('1', '2', '3', 'rz'),
             multi=False,
             description='Number of spatial dimensions')
     variant('eb', default=False,
@@ -90,6 +94,7 @@ class Warpx(CMakePackage):
         depends_on('blaspp +cuda', when='compute=cuda')
     with when('+psatd compute=omp'):
         depends_on('fftw@3: +openmp')
+        depends_on('fftw ~mpi', when='~mpi')
         depends_on('fftw +mpi', when='+mpi')
         depends_on('pkgconfig', type='build')
     with when('+openpmd'):
@@ -102,11 +107,18 @@ class Warpx(CMakePackage):
         depends_on('rocprim')
         depends_on('rocrand')
 
+    conflicts('dims=1', when='@:21.12',
+              msg='WarpX 1D support starts in 22.01+')
     conflicts('~qed +qedtablegen',
               msg='WarpX PICSAR QED table generation needs +qed')
     conflicts('compute=sycl', when='+psatd',
               msg='WarpX spectral solvers are not yet tested with SYCL '
                   '(use "warpx ~psatd")')
+
+    # The symbolic aliases for our +lib target were missing in the install
+    # location
+    # https://github.com/ECP-WarpX/WarpX/pull/2626
+    patch('2626.patch', when='@21.12')
 
     def cmake_args(self):
         spec = self.spec
@@ -133,11 +145,14 @@ class Warpx(CMakePackage):
             self.define_from_variant('WarpX_QED_TABLE_GEN', 'qedtablegen'),
         ]
 
+        with when('+openpmd'):
+            args.append('-DWarpX_openpmd_internal=OFF')
+
         return args
 
     @property
     def libs(self):
-        libsuffix = {'2': '2d', '3': '3d', 'rz': 'rz'}
+        libsuffix = {'1': '1d', '2': '2d', '3': '3d', 'rz': 'rz'}
         dims = self.spec.variants['dims'].value
         return find_libraries(
             ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
@@ -153,7 +168,8 @@ class Warpx(CMakePackage):
             self.install_test_root if post_install else self.stage.source_path,
             self.examples_src_dir)
         dims = self.spec.variants['dims'].value
-        inputs_nD = {'2': 'inputs_2d', '3': 'inputs_3d', 'rz': 'inputs_2d_rz'}
+        inputs_nD = {'1': 'inputs_1d', '2': 'inputs_2d', '3': 'inputs_3d',
+                     'rz': 'inputs_2d_rz'}
         inputs = join_path(examples_dir, inputs_nD[dims])
 
         cli_args = [inputs, "max_step=50", "diag1.intervals=10"]

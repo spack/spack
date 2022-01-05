@@ -10,11 +10,14 @@ class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://www.ruby-lang.org/"
     url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
     list_url = "https://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('3.1.0', sha256='50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854')
     version('3.0.2', sha256='5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1')
     version('3.0.1', sha256='369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727')
     version('3.0.0', sha256='a13ed141a1c18eb967aac1e33f4d6ad5f21be1ac543c344e0d6feeee54af8e28')
@@ -88,15 +91,17 @@ class Ruby(AutotoolsPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in dependent_spec.traverse():
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-
-        env.set_path('GEM_PATH', ruby_paths)
+                env.prepend_path('GEM_PATH', d.prefix)
 
         # The actual installation path for this gem
         env.set('GEM_HOME', dependent_spec.prefix)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
+            if d.package.extends(self.spec):
+                env.prepend_path('GEM_PATH', d.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

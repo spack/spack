@@ -185,6 +185,13 @@ def clean_environment():
     env.unset('LD_PRELOAD')
     env.unset('DYLD_INSERT_LIBRARIES')
 
+    # Avoid <packagename>_ROOT user variables overriding spack dependencies
+    # https://cmake.org/cmake/help/latest/variable/PackageName_ROOT.html
+    # Spack needs SPACK_ROOT though, so we need to exclude that
+    for varname in os.environ.keys():
+        if varname.endswith('_ROOT') and varname != 'SPACK_ROOT':
+            env.unset(varname)
+
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
     # CNL requires these variables to be set (or at least some of them,
@@ -1230,7 +1237,7 @@ def get_package_context(traceback, context=3):
 class InstallError(spack.error.SpackError):
     """Raised by packages when a package fails to install.
 
-    Any subclass of InstallError will be annotated by Spack wtih a
+    Any subclass of InstallError will be annotated by Spack with a
     ``pkg`` attribute on failure, which the caller can use to get the
     package for which the exception was raised.
     """

@@ -20,6 +20,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
+    version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
     version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
     version('3.15.5', sha256='67dc31f1c1c941a0e45301ed4042628586e92e8c4e9b119695717ae782ef23a3')
     version('3.15.4', sha256='1e62fb0859a12891022765d1e24660cfcd704291c58667082d81a0618d6b0047')
@@ -163,6 +165,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             description='Activates support for openmp')
     variant('hwloc', default=False,
             description='Activates support for hwloc')
+    variant('kokkos', default=False,
+            description='Activates support for kokkos and kokkos-kernels')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -182,6 +186,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts('+ptscotch', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
+    conflicts('+kokkos', when='~mpi', msg=mpi_msg)
+    conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
 
     # older versions of petsc did not support mumps when +int64
     conflicts('+mumps', when='@:3.12+int64')
@@ -204,7 +210,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
     depends_on('sowing', when='@main')
-    depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
     # with BLAS/LAPACK
@@ -215,6 +220,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hip', when='+rocm')
     depends_on('hipblas', when='+rocm')
     depends_on('hipsparse', when='+rocm')
+    depends_on('rocsparse', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
+    depends_on('rocblas', when='+rocm')
+    depends_on('rocrand', when='+rocm')
+    depends_on('rocthrust', when='+rocm')
+    depends_on('rocprim', when='+rocm')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10')
@@ -259,8 +270,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('hypre@2.14:2.22.0+mpi~internal-superlu+int64', when='@3.14:3.15+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:+mpi~internal-superlu~int64', when='@3.16:+hypre+mpi~complex~int64')
     depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.16:+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
-    depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
     depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
@@ -275,8 +284,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('superlu-dist@6.1.0:6.1+int64', when='@3.10.3:3.12+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
     depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
     depends_on('strumpack', when='+strumpack')
@@ -289,7 +296,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('mumps+mpi~int64+metis+parmetis+openmp', when='+mumps+metis+openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
-    depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@main+trilinos+mpi')
     depends_on('mkl', when='+mkl-pardiso')
     depends_on('fftw+mpi', when='+fftw+mpi')
@@ -311,6 +317,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('saws', when='+saws')
     depends_on('libyaml', when='+libyaml')
     depends_on('hwloc', when='+hwloc')
+    depends_on('kokkos', when='+kokkos')
+    depends_on('kokkos-kernels', when='+kokkos')
+    depends_on('kokkos+cuda+wrapper+cuda_lambda', when='+kokkos +cuda')
+    depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
+    depends_on('kokkos+rocm', when='+kokkos +rocm')
 
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
@@ -386,7 +397,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append('--with-x=0')
 
         if 'trilinos' in spec:
-            options.append('--with-cxx-dialect=C++11')
             if spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
@@ -405,10 +415,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # if not (useinc || uselib): usedir - i.e (False, False)
         for library in (
                 ('cuda', 'cuda', False, False),
-                ('hip', 'hip', False, False),
+                ('hip', 'hip', True, False),
                 'metis',
                 'hypre',
                 'parmetis',
+                ('kokkos', 'kokkos', False, False),
+                ('kokkos-kernels', 'kokkos-kernels', False, False),
                 ('superlu-dist', 'superlu_dist', True, True),
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
@@ -485,9 +497,25 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
+        if '+rocm' in spec:
+            if not spec.satisfies('amdgpu_target=none'):
+                hip_arch = spec.variants['amdgpu_target'].value
+                options.append('--with-hip-arch={0}'.format(hip_arch[0]))
+            hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
+            hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
+            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_inc = ''
+            hip_lib = ''
+            for pkg in hip_ipkgs:
+                hip_inc += spec[pkg].headers.include_flags + ' '
+            for pkg in hip_lpkgs:
+                hip_lib += spec[pkg].libs.joined() + ' '
+            options.append('HIPPPFLAGS=%s' % hip_inc)
+            options.append('with-hip-lib=%s -L%s -lamdhip64' %
+                           (hip_lib, spec['hip'].prefix.lib))
 
         if 'superlu-dist' in spec:
-            if spec.satisfies('@3.10.3:'):
+            if spec.satisfies('@3.10.3:3.15'):
                 options.append('--with-cxx-dialect=C++11')
 
         if '+mkl-pardiso' in spec:
@@ -500,10 +528,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if '+hpddm' in spec:
             options.append('--download-hpddm')
 
+        # revert changes by kokkos-nvcc-wrapper
+        if spec.satisfies('^kokkos+cuda+wrapper'):
+            env['MPICH_CXX'] = env['CXX']
+            env['OMPI_CXX'] = env['CXX']
+            env['MPICXX_CXX'] = env['CXX']
+
         python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
-        make('MAKE_NP=%s' % make_jobs, parallel=False)
+        make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
         if self.run_tests:
@@ -526,6 +560,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         env.unset('PETSC_ARCH')
 
     @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
+
+    @property
     def headers(self):
         return find_headers('petsc', self.prefix.include, recursive=False) \
             or None  # return None to indicate failure
@@ -537,6 +576,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources('src/ksp/ksp/tutorials')
+        self.cache_extra_test_sources('src/snes/tutorials')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
@@ -575,5 +615,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                            '-sub_pc_factor_mat_solver_type', 'cusparse',
                            '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
                            '-use_gpu_aware_mpi', '0']
+                self.run_test(runexe, runopt + testexe)
+            make('clean', parallel=False)
+        w_dir = join_path(self.install_test_root, 'src/snes/tutorials')
+        with working_dir(w_dir):
+            if '+kokkos' in spec:
+                make('ex3k', parallel=False)
+                testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
+                           '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
+                           '-snes_monitor']
                 self.run_test(runexe, runopt + testexe)
             make('clean', parallel=False)

@@ -49,6 +49,7 @@ class Maker(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-module-build', type='build')
     depends_on('perl-dbi', type=('build', 'run'))
+    depends_on('perl-dbd-mysql', type=('build', 'run'))
     depends_on('perl-dbd-pg', type=('build', 'run'))
     depends_on('perl-dbd-sqlite', type=('build', 'run'))
     depends_on('perl-forks', type=('build', 'run'))

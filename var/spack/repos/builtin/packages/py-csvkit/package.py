@@ -25,8 +25,13 @@ class PyCsvkit(PythonPackage):
     depends_on('py-dbf@0.94.003',        type=('build', 'run'), when='@0.9.1')
     depends_on('py-xlrd@0.7.1:',         type=('build', 'run'), when='@0.9.1')
     depends_on('py-sqlalchemy@0.6.6:',   type=('build', 'run'), when='@0.9.1')
-    depends_on('py-openpyxl@2.2.0-b1',   type=('build', 'run'), when='@0.9.1')
+    depends_on('py-openpyxl@2.2.0',   type=('build', 'run'), when='@0.9.1')
     depends_on('py-agate@1.6.1:',        type=('build', 'run'), when='@1:')
     depends_on('py-agate-excel@0.2.2:',  type=('build', 'run'), when='@1:')
     depends_on('py-agate-dbf@0.2.0:',    type=('build', 'run'), when='@1:')
     depends_on('py-agate-sql@0.5.3:',    type=('build', 'run'), when='@1:')
+
+    @when('@0.9.1')
+    def patch(self):
+        # Non-existent version requirement
+        filter_file('2.2.0-b1', '2.2.0', 'setup.py', string=True)

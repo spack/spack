@@ -12,14 +12,15 @@ class Asio(AutotoolsPackage):
     """C++ library for network and low-level I/O programming."""
 
     homepage = "https://think-async.com/Asio/"
-    url = "https://github.com/chriskohlhoff/asio/archive/1.18.2.tar.gz"
+    url = "https://github.com/chriskohlhoff/asio/archive/asio-1-18-2.tar.gz"
     git = "https://github.com/chriskohlhoff/asio.git"
     maintainers = ["msimberg"]
 
-    version(
-        "1.18.2",
-        sha256="8d67133b89e0f8b212e9f82fdcf1c7b21a978d453811e2cd941c680e72c2ca32",
-    )
+    version('1.20.0', sha256='34a8f07be6f54e3753874d46ecfa9b7ab7051c4e3f67103c52a33dfddaea48e6')
+    version('1.19.2', sha256='5ee191aee825dfb1325cbacf643d599b186de057c88464ea98f1bae5ba4ff47a')
+    version('1.19.1', sha256='2555e0a29256de5c77d6a34b14faefd28c76555e094ba0371acb0b91d483520e')
+    version('1.19.0', sha256='11bc0e22fcdfb3f0b77574ac33760a3592c0dac7e7eece7668b823c158243629')
+    version('1.18.2', sha256='8d67133b89e0f8b212e9f82fdcf1c7b21a978d453811e2cd941c680e72c2ca32')
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

@@ -21,6 +21,8 @@ class Libdrm(AutotoolsPackage):
     version('2.4.33',  sha256='bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4')
 
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
 
@@ -31,6 +33,6 @@ class Libdrm(AutotoolsPackage):
             # Needed to fix build for spack/spack#1740, but breaks newer
             # builds/compilers
             args.append('LIBS=-lrt')
-        if self.spec.satisfies('%gcc@10.0.0:'):
+        if self.spec.satisfies('%gcc@10.0.0:') or self.spec.satisfies('%clang@12.0.0:'):
             args.append('CFLAGS=-fcommon')
         return args

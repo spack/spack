@@ -9,14 +9,16 @@ import os
 import re
 import shutil
 import sys
+import time
 
 import ruamel.yaml as yaml
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.bootstrap
+import spack.compilers
 import spack.concretize
 import spack.config
 import spack.error
@@ -28,10 +30,13 @@ import spack.schema.env
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.user_environment as uenv
+import spack.util.cpus
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
+import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -94,6 +99,16 @@ user_speclist_name = 'specs'
 default_view_name = 'default'
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = 'all'
+
+
+def installed_specs():
+    """
+    Returns the specs of packages installed in the active environment or None
+    if no packages are installed.
+    """
+    env = spack.environment.active_environment()
+    hashes = env.all_hashes() if env else None
+    return spack.store.db.query(hashes=hashes)
 
 
 def valid_env_name(name):
@@ -271,6 +286,51 @@ def _eval_conditional(string):
     return eval(string, valid_variables)
 
 
+def _is_dev_spec_and_has_changed(spec):
+    """Check if the passed spec is a dev build and whether it has changed since the
+    last installation"""
+    # First check if this is a dev build and in the process already try to get
+    # the dev_path
+    dev_path_var = spec.variants.get('dev_path', None)
+    if not dev_path_var:
+        return False
+
+    # Now we can check whether the code changed since the last installation
+    if not spec.package.installed:
+        # Not installed -> nothing to compare against
+        return False
+
+    _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    mtime = fs.last_modification_time_recursive(dev_path_var.value)
+    return mtime > record.installation_time
+
+
+def _spec_needs_overwrite(spec, changed_dev_specs):
+    """Check whether the current spec needs to be overwritten because either it has
+    changed itself or one of its dependencies have changed"""
+    # if it's not installed, we don't need to overwrite it
+    if not spec.package.installed:
+        return False
+
+    # If the spec itself has changed this is a trivial decision
+    if spec in changed_dev_specs:
+        return True
+
+    # if spec and all deps aren't dev builds, we don't need to overwrite it
+    if not any(spec.satisfies(c)
+               for c in ('dev_path=*', '^dev_path=*')):
+        return False
+
+    # If any dep needs overwrite, or any dep is missing and is a dev build then
+    # overwrite this package
+    if any(
+        ((not dep.package.installed) and dep.satisfies('dev_path=*')) or
+        _spec_needs_overwrite(dep, changed_dev_specs)
+        for dep in spec.traverse(root=False)
+    ):
+        return True
+
+
 class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link, link_type='symlink'):
@@ -302,7 +362,11 @@ class ViewDescriptor(object):
             # projections guaranteed to be ordered dict if true-ish
             # for python2.6, may be syaml or ruamel.yaml implementation
             # so we have to check for both
-            types = (OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
+            types = (
+                collections.OrderedDict,
+                syaml.syaml_dict,
+                yaml.comments.CommentedMap
+            )
             assert isinstance(self.projections, types)
             ret['projections'] = self.projections
         if self.select:
@@ -622,7 +686,7 @@ class Environment(object):
         else:
             self.raw_yaml, self.yaml = _read_yaml(f)
 
-        self.spec_lists = OrderedDict()
+        self.spec_lists = collections.OrderedDict()
 
         for item in config_dict(self.yaml).get('definitions', []):
             entry = copy.deepcopy(item)
@@ -1019,7 +1083,7 @@ class Environment(object):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def concretize(self, force=False, tests=False):
+    def concretize(self, force=False, tests=False, reuse=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1033,6 +1097,8 @@ class Environment(object):
                already concretized
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1046,14 +1112,15 @@ class Environment(object):
 
         # Pick the right concretization strategy
         if self.concretization == 'together':
-            return self._concretize_together(tests=tests)
+            return self._concretize_together(tests=tests, reuse=reuse)
+
         if self.concretization == 'separately':
-            return self._concretize_separately(tests=tests)
+            return self._concretize_separately(tests=tests, reuse=reuse)
 
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self, tests=False):
+    def _concretize_together(self, tests=False, reuse=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1086,13 +1153,14 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs, tests=tests)
+            *self.user_specs, tests=tests, reuse=reuse
+        )
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self, tests=False):
+    def _concretize_separately(self, tests=False, reuse=False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -1111,14 +1179,62 @@ class Environment(object):
                 self._add_concrete_spec(s, concrete, new=False)
 
         # Concretize any new user specs that we haven't concretized yet
-        concretized_specs = []
+        arguments, root_specs = [], []
         for uspec, uspec_constraints in zip(
-                self.user_specs, self.user_specs.specs_as_constraints):
+                self.user_specs, self.user_specs.specs_as_constraints
+        ):
             if uspec not in old_concretized_user_specs:
-                concrete = _concretize_from_constraints(uspec_constraints, tests=tests)
-                self._add_concrete_spec(uspec, concrete)
-                concretized_specs.append((uspec, concrete))
-        return concretized_specs
+                root_specs.append(uspec)
+                arguments.append((uspec_constraints, tests, reuse))
+
+        # Ensure we don't try to bootstrap clingo in parallel
+        if spack.config.get('config:concretizer') == 'clingo':
+            with spack.bootstrap.ensure_bootstrap_configuration():
+                spack.bootstrap.ensure_clingo_importable_or_raise()
+
+        # Ensure all the indexes have been built or updated, since
+        # otherwise the processes in the pool may timeout on waiting
+        # for a write lock. We do this indirectly by retrieving the
+        # provider index, which should in turn trigger the update of
+        # all the indexes if there's any need for that.
+        _ = spack.repo.path.provider_index
+
+        # Ensure we have compilers in compilers.yaml to avoid that
+        # processes try to write the config file in parallel
+        _ = spack.compilers.get_compiler_config()
+
+        # Early return if there is nothing to do
+        if len(arguments) == 0:
+            return []
+
+        # Solve the environment in parallel on Linux
+        start = time.time()
+        max_processes = min(
+            len(arguments),  # Number of specs
+            16  # Cap on 16 cores
+        )
+
+        # TODO: revisit this print as soon as darwin is parallel too
+        msg = 'Starting concretization'
+        if sys.platform != 'darwin':
+            pool_size = spack.util.parallel.num_processes(max_processes=max_processes)
+            if pool_size > 1:
+                msg = msg + ' pool with {0} processes'.format(pool_size)
+        tty.msg(msg)
+
+        concretized_root_specs = spack.util.parallel.parallel_map(
+            _concretize_task, arguments, max_processes=max_processes,
+            debug=tty.is_debug()
+        )
+
+        finish = time.time()
+        tty.msg('Environment concretized in %.2f seconds.' % (finish - start))
+        results = []
+        for abstract, concrete in zip(root_specs, concretized_root_specs):
+            self._add_concrete_spec(abstract, concrete)
+            results.append((abstract, concrete))
+
+        return results
 
     def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
         """Concretize and add a single spec to the environment.
@@ -1321,52 +1437,19 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
-    def _spec_needs_overwrite(self, spec):
-        # Overwrite the install if it's a dev build (non-transitive)
-        # and the code has been changed since the last install
-        # or one of the dependencies has been reinstalled since
-        # the last install
-
-        # if it's not installed, we don't need to overwrite it
-        if not spec.package.installed:
-            return False
-
-        # if spec and all deps aren't dev builds, we don't need to overwrite it
-        if not any(spec.satisfies(c)
-                   for c in ('dev_path=*', '^dev_path=*')):
-            return False
-
-        # if any dep needs overwrite, or any dep is missing and is a dev build
-        # then overwrite this package
-        if any(
-            self._spec_needs_overwrite(dep) or
-            ((not dep.package.installed) and dep.satisfies('dev_path=*'))
-            for dep in spec.traverse(root=False)
-        ):
-            return True
-
-        # if it's not a direct dev build and its dependencies haven't
-        # changed, it hasn't changed.
-        # We don't merely check satisfaction (spec.satisfies('dev_path=*')
-        # because we need the value of the variant in the next block of code
-        dev_path_var = spec.variants.get('dev_path', None)
-        if not dev_path_var:
-            return False
-
-        # if it is a direct dev build, check whether the code changed
-        # we already know it is installed
-        _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-        mtime = fs.last_modification_time_recursive(dev_path_var.value)
-        return mtime > record.installation_time
-
     def _get_overwrite_specs(self):
-        ret = []
+        # Collect all specs in the environment first before checking which ones
+        # to rebuild to avoid checking the same specs multiple times
+        specs_to_check = set()
         for dag_hash in self.concretized_order:
-            spec = self.specs_by_hash[dag_hash]
-            ret.extend([d.dag_hash() for d in spec.traverse(root=True)
-                        if self._spec_needs_overwrite(d)])
+            root_spec = self.specs_by_hash[dag_hash]
+            specs_to_check.update(root_spec.traverse(root=True))
 
-        return ret
+        changed_dev_specs = set(s for s in specs_to_check if
+                                _is_dev_spec_and_has_changed(s))
+
+        return [s.dag_hash() for s in specs_to_check if
+                _spec_needs_overwrite(s, changed_dev_specs)]
 
     def _install_log_links(self, spec):
         if not spec.external:
@@ -1432,13 +1515,15 @@ class Environment(object):
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
-            return
+        else:
+            tty.debug('Processing {0} uninstalled specs'.format(len(specs_to_install)))
 
-        tty.debug('Processing {0} uninstalled specs'.format(
-            len(specs_to_install)))
+        specs_to_overwrite = self._get_overwrite_specs()
+        tty.debug('{0} specs need to be overwritten'.format(
+            len(specs_to_overwrite)))
 
         install_args['overwrite'] = install_args.get(
-            'overwrite', []) + self._get_overwrite_specs()
+            'overwrite', []) + specs_to_overwrite
 
         installs = []
         for spec in specs_to_install:
@@ -1924,7 +2009,7 @@ def display_specs(concretized_specs):
         print('')
 
 
-def _concretize_from_constraints(spec_constraints, tests=False):
+def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
@@ -1943,7 +2028,7 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             if c not in invalid_constraints:
                 s.constrain(c)
         try:
-            return s.concretized(tests=tests)
+            return s.concretized(tests=tests, reuse=reuse)
         except spack.spec.InvalidDependencyError as e:
             invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints
@@ -1960,6 +2045,12 @@ def _concretize_from_constraints(spec_constraints, tests=False):
             if len(inv_variant_constraints) != len(invalid_variants):
                 raise e
             invalid_constraints.extend(inv_variant_constraints)
+
+
+def _concretize_task(packed_arguments):
+    spec_constraints, tests, reuse = packed_arguments
+    with tty.SuppressOutput(msg_enabled=False):
+        return _concretize_from_constraints(spec_constraints, tests, reuse)
 
 
 def make_repo_path(root):

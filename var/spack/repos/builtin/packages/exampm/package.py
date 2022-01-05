@@ -12,9 +12,11 @@ class Exampm(CMakePackage):
     homepage = "https://github.com/ECP-copa/ExaMPM"
     git      = "https://github.com/ECP-copa/ExaMPM.git"
 
-    version('master', branch='master')
+    maintainers = ["junghans", "streeve", "sslattery"]
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
+
+    version('master', branch='master')
 
     variant('shared', default=True, description='Build shared libraries')
 
