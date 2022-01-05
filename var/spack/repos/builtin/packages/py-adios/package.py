@@ -53,6 +53,11 @@ class PyAdios(PythonPackage):
 
     build_directory = 'wrappers/numpy'
 
+    def patch(self):
+        if '+mpi' in self.spec:
+            with working_dir(self.build_directory):
+                os.rename('setup_mpi.py', 'setup.py')
+
     @run_before('install')
     def build_clib(self, spec, prefix):
         # calls: make CYTHON=y [MPI=y] python

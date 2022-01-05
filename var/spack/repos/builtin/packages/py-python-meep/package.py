@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -32,6 +34,10 @@ class PyPythonMeep(PythonPackage):
     # pre-processor directives. Use older SWIG. But not too old,
     # or else it can't handle newer C++ compilers and flags.
     depends_on('swig@1.3.39:3.0.2')
+
+    def patch(self):
+        if '+mpi' in self.spec:
+            os.rename('setup-mpi.py', 'setup.py')
 
     def install_options(self, spec, prefix):
         include_dirs = [
