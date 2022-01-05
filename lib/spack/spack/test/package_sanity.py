@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This test does sanity checks on Spack's builtin package database."""
+import ast
 import os.path
 import pickle
 import re
@@ -58,18 +59,30 @@ def test_packages_are_pickleable():
 
 
 def test_packages_are_unparseable():
-    failed_to_unparse = list()
+    """Ensure that all packages can unparse and that unparsed code is valid Python."""
+    failed_to_unparse = []
+    failed_to_compile = []
+
     for name in spack.repo.all_package_names():
         try:
-            ph.canonical_source(name, filter_multimethods=False)
+            source = ph.canonical_source(name, filter_multimethods=False)
         except Exception:
             failed_to_unparse.append(name)
+
+        try:
+            compile(source, "internal", "exec", ast.PyCF_ONLY_AST)
+        except Exception:
+            failed_to_compile.append(name)
 
     if failed_to_unparse:
         tty.msg('The following packages failed to unparse: ' +
                 ', '.join(failed_to_unparse))
+        assert False
 
-    assert len(failed_to_unparse) == 0
+    if failed_to_compile:
+        tty.msg('The following unparsed packages failed to compile: ' +
+                ', '.join(failed_to_compile))
+        assert False
 
 
 def test_repo_getpkg_names_and_classes():

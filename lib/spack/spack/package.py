@@ -676,8 +676,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
-                      'parallel', 'make_jobs']
+    metadata_attrs = [
+        "homepage",
+        "url",
+        "urls",
+        "list_url",
+        "extendable",
+        "parallel",
+        "make_jobs",
+        "maintainers",
+        "tags",
+    ]
 
     #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
     #: This is currently used by smoke tests to ensure a compiler is available
