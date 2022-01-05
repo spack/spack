@@ -20,7 +20,7 @@ class DamaskGrid(CMakePackage):
     depends_on('petsc+mpi+hdf5')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.15', when='@3.0.0-alpha4')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.16', when='@3.0.0-alpha5')
-    depends_on('hdf5@1.12:+mpi+fortran')
+    depends_on('hdf5@1.10:+mpi+fortran')
     depends_on('fftw+mpi')
 
     patch('CMakeDebugRelease.patch', when='@3.0.0-alpha4')
