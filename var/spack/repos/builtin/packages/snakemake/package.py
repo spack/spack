@@ -40,6 +40,7 @@ class Snakemake(PythonPackage):
         depends_on('py-filelock', type=('build', 'run'))
         depends_on('py-stopit', type=('build', 'run'))
         depends_on('py-tabulate', type=('build', 'run'))
+        depends_on('py-ratelimiter', type=('build', 'run'))
 
         variant('reports', default=False, description='Generate self-contained HTML reports')
         with when('+reports'):
