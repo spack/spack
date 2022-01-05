@@ -48,16 +48,16 @@ can activate the environment with:
     $ cd $DEV_ENV
     $ spacktivate .
 
-^^^^^^^^^^^^^^^^^^^^
-Install the Software
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+Installing the Software
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Now that the environment is active, you can install the software from
 source or, if available, binary cache (as described below) and begin
 development. 
 
-The softwware will need to be installed *before* you creating the
-binary cache. This is done using the following command:
+The software will need to be installed *before* creating the binary
+cache. This is done using the following command:
 
 .. code-block:: console
 
@@ -72,20 +72,43 @@ Assuming the project doesn't already have one set up and the goal
 is to share it on the local file system, you can create one. First
 you'll need to:
 
-* activate the development environment; and
-* install the software
+#. activate the development environment; and
+#. install the software
 
 using the processes described above.
 
 Now you can create a local build cache on the file system by:
 
-* create or re-using a GPG signing key with user id
+* re-using or creating a GPG signing key with user id
   ``$USER_ID`` and email ``$EMAIL``;
 * creating a Spack mirror in the shared directory (``$MIRROR_DIR``);
 * create the source build cache; and
 * create the binary build cache.
 
-The commands for creating a GPG signing key are:
+Establishing the GPG Signing Key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can re-use or create a GPG signing key
+
+If you already have a key you want to use, you can provide it to
+the ``spack buildcache create`` command. Review your signing keys
+with the ``spack gpg list`` command. For example,
+
+.. code-block:: console
+
+    $ spack gpg list --signing
+    /home/user/spack/opt/spack/gpg/pubring.gpg
+    -------------------------------------------------
+    pub   4096R/AC30B582 2021-04-01
+    uid                  user (GPG created for Spack) <user1@llnl.gov>
+
+    pub   4096R/561130C0 2021-12-01
+    uid                  user1 (GPG created for Spack) <user1@llnl.gov>
+
+In this case there are two signing keys, one with the ``$USER_ID`` of
+``user`` and the other ``user1``.
+
+If you don't have a signing key, you can create one using the commands:
 
 .. code-block:: console
 
@@ -98,14 +121,11 @@ The commands for creating a GPG signing key are:
 Note ``$MIRROR_DIR`` is assumed to belong to and be accessible by all
 members of the ``$GROUP`` group.
 
-.. note::
+Creating the Spack mirror
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   An existing signing key can be used.  (TODO: Add this to the process.)
-
-Now create the Spack mirror for all installed packages from the active
-development environment. You can add the ``-D`` option to the ``spack``
-command if you also want dependencies of the development environment
-to be cached.
+Create the Spack mirror for all installed packages from the active
+development environment. 
 
 .. code-block:: console
 
@@ -115,21 +135,57 @@ to be cached.
 This creates a source cache mirror, which can form the basis for the
 binary cache mirror.
 
-Now you can create the binary build cache leveraging the results from
-the source cache. Adding the ``--only=package`` option to
-``spack buildcache`` will **exclude dependencies** from the build
-cache.
+.. note::
+
+   You can add the ``-D`` option to the ``spack`` command if you also
+   want dependencies of the development environment to be cached.
+
+
+Creating the Binary Build Cache
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create the binary build cache leveraging the results from the source
+cache. Start by adding the mirror to Spack's list and creating a
+``build_cache`` subdirectory within the mirror:
 
 .. code-block:: console
 
     $ spack mirror add $MY_DEV_ENV $MIRROR_DIR
-    $ spack buildcache keys --install --trust
     $ mkdir -p $MIRROR_DIR/build_cache
+
+If you are re-using a signing key, you can provide its ``$USER_ID``
+using the ``-k`` option during creation:
+
+.. code-block:: console
+
+    $ spack buildcache create --allow-root --force \
+      -k $USER_ID -d $MIRROR_DIR --all
+
+Otherwise, you can skip the option:
+
+.. code-block:: console
+
+    $ spack buildcache keys --install --trust
     $ spack buildcache create --allow-root --force -d $MIRROR_DIR --all
+
+.. note::
+
+   Adding the ``--only=package`` option to ``spack buildcache``
+   will **exclude dependencies** from the build cache.
+
+Once the build cache is created, make sure the team's group has
+access permissions:
+
+.. code-block:: console
+
     $ chmod -R g+rws $MIRROR_DIR/build_cache
 
-You can add/remove packages from the environment and re-create it
-with the command above to modify the build cache.
+.. note::
+
+   You can add and remove packages from the environment but will have
+   to re-create the buildcache with the command above to modify the
+   cache.
+
 
 ---------------------------
 Using the Local Build Cache
