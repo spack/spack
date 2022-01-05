@@ -25,7 +25,6 @@ class Openscenegraph(CMakePackage):
     variant('ffmpeg', default=False, description='Builds ffmpeg plugin for audio encoding/decoding')
 
     depends_on('cmake@2.8.7:', type='build')
-    depends_on('openexr')
     depends_on('gl')
     depends_on('qt+opengl', when='@:3.5.4')  # Qt windowing system was moved into separate osgQt project
     depends_on('qt@4:', when='@3.2:3.5.4')

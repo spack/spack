@@ -14,8 +14,15 @@ import llnl.util.lang
 
 import spack.config
 import spack.error
+import spack.util.path
 
 _extension_regexp = re.compile(r'spack-(\w[-\w]*)$')
+
+
+def _get_extension_dirs():
+    extension_dirs = spack.config.get('config:extensions') or []
+    return [spack.util.path.canonicalize_path(pth)
+            for pth in extension_dirs]
 
 
 # TODO: For consistency we should use spack.cmd.python_name(), but
@@ -109,7 +116,7 @@ def load_command_extension(command, path):
 def get_command_paths():
     """Return the list of paths where to search for command files."""
     command_paths = []
-    extension_paths = spack.config.get('config:extensions') or []
+    extension_paths = _get_extension_dirs()
 
     for path in extension_paths:
         extension = _python_name(extension_name(path))
@@ -146,7 +153,7 @@ def get_module(cmd_name):
     """
     # If built-in failed the import search the extension
     # directories in order
-    extensions = spack.config.get('config:extensions') or []
+    extensions = _get_extension_dirs()
     for folder in extensions:
         module = load_command_extension(cmd_name, folder)
         if module:
@@ -159,7 +166,7 @@ def get_template_dirs():
     """Returns the list of directories where to search for templates
     in extensions.
     """
-    extension_dirs = spack.config.get('config:extensions') or []
+    extension_dirs = _get_extension_dirs()
     extensions = [os.path.join(x, 'templates') for x in extension_dirs]
     return extensions
 

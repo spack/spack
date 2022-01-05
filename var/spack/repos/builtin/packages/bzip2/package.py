@@ -61,7 +61,6 @@ class Bzip2(Package, SourcewarePackage):
 
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
-        filter_file(r'(-o bzip2 bzip2.o) -L. -lbz2', r'\1 libbz2.a', 'Makefile')
         filter_file(r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile')
         filter_file(
             r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile-libbz2_so'
@@ -109,7 +108,7 @@ class Bzip2(Package, SourcewarePackage):
         make('install', 'PREFIX={0}'.format(prefix))
 
         if '+shared' in spec:
-            # install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
+            install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
 
             v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
             if 'darwin' in self.spec.architecture:

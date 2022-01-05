@@ -14,5 +14,5 @@ class PyDeap(PythonPackage):
 
     version('1.3.1', sha256='11f54493ceb54aae10dde676577ef59fc52d52f82729d5a12c90b0813c857a2f')
 
-    depends_on('py-setuptools@:57', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

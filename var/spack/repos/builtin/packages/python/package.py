@@ -929,24 +929,10 @@ for plat_specific in [True, False]:
         env.prepend_path('CPATH', os.pathsep.join(
             self.spec['python'].headers.directories))
 
-    def _site_packages(self, spec):
-        """Get the existing site-packages directories for `spec`."""
-        for lib in ['lib', 'lib64']:
-            pth = join_path(
-                spec.prefix, lib, 'python' + str(self.version.up_to(2)),
-                'site-packages')
-            if os.path.exists(pth):
-                yield pth
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
-
-        if self.spec.satisfies('%intel'):
-            env.set('LDSHARED', '%s -shared' % spack_cc)
-            env.set('LDCXXSHARED', '%s -shared' % spack_cxx)
-
         # If we set PYTHONHOME, we must also ensure that the corresponding
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries

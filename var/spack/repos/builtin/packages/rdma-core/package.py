@@ -33,13 +33,6 @@ class RdmaCore(CMakePackage):
     conflicts('platform=darwin', msg='rdma-core requires FreeBSD or Linux')
     conflicts('%intel', msg='rdma-core cannot be built with intel (use gcc instead)')
 
-    def patch(self):
-        filter_file(
-            r'NAMES rst2man',
-            'NAMES rst2man.py rst2man',
-            'buildlib/Findrst2man.cmake'
-        )
-
 # NOTE: specify CMAKE_INSTALL_RUNDIR explicitly to prevent rdma-core from
 #       using the spack staging build dir (which may be a very long file
 #       system path) as a component in compile-time static strings such as

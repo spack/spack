@@ -118,9 +118,6 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=mpich3')
         elif spec.satisfies('^openmpi'):
             config_args.append('--with-mpi=openmpi')
-        # new hpe-mpi hmpt version is mpich abi compatible
-        elif spec.satisfies('^hpe-mpi'):
-            config_args.append('--with-mpi=mpich3')
 
         config_args.extend([
             'CFLAGS={0}'.format(self.compiler.cc_pic_flag),

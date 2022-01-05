@@ -17,7 +17,6 @@ class Glog(Package):
     version('0.3.4', sha256='ce99d58dce74458f7656a68935d7a0c048fa7b4626566a71b7f4e545920ceb10', deprecated=True)
     version('0.3.3', sha256='544e178644bd9b454768c2c91716c3b8365cc5d47adfbdbaecd8cf3fa17adfcb', deprecated=True)
 
-    depends_on('cmake@3:', type='build')
     depends_on('gflags')
     depends_on('cmake', when="@0.3.5:", type='build')
 

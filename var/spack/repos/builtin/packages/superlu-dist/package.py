@@ -44,13 +44,9 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('parmetis~int64', when='~int64')
-    depends_on('parmetis+int64', when='+int64')
-    depends_on('metis@5:~int64', when='~int64')
-    depends_on('metis@5:+int64', when='+int64')
+    depends_on('parmetis')
+    depends_on('metis@5:')
     depends_on('cmake@3.18.1:', type='build', when='@7.1.0:')
-
-    patch('0001-Fix-libdir-pkgconfig-variable.patch', when='@:6.1.1')
 
     conflicts('+cuda', when='@:6.3')
     conflicts('^cuda@11.5.0:', when='@7.1.0:')

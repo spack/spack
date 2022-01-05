@@ -19,7 +19,6 @@ class GobjectIntrospection(Package):
     version('1.49.2', sha256='73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac')
     version('1.48.0', sha256='fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877')
 
-    depends_on("glib@2.56.1:", when="@1.56.1:")
     depends_on("glib@2.49.2:", when="@1.49.2:")
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")

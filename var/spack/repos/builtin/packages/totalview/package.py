@@ -30,8 +30,6 @@ class Totalview(Package):
     # As the install of Totalview is via multiple tarballs, the base install
     # will be the documentation.  The architecture-specific tarballs are added
     # as resources dependent on the specific architecture used.
-    version('2021.1.16',
-            sha256='4c51c7b6ab6b6afa7635ba2e9fc3b0ef833806f775a0ad0da26b13d6320625dd')
     version('2019.2.18',
             sha256='09e5c554032af945f8cf147dd548421267e50e906cc9686fb5cd0e8e63fcf650')
 
@@ -41,12 +39,6 @@ class Totalview(Package):
     # Because the actual source tarball is architecture dependent, the main
     # download is the documentation tarball and the source is downloaded as a
     # resource once the target architecture is known.
-    resource(
-        name='x86_64',
-        url='file://{0}/totalview_2020.3.11_linux_x86-64.tar'.format(os.getcwd()),
-        destination='.',
-        sha256='129e991d3ce4df9f9f04adbf79b62d3c2706d7732ec305f3d3c97a6b4d1f5a13',
-        when='@2021.1.16 target=x86_64:')
     resource(
         name='x86_64',
         url='totalview_{0}_linux_x86-64.tar'.format(version),

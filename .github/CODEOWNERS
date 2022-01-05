@@ -1,0 +1,10 @@
+# Modifications to Spack's core should require explicit approval of a few
+# people
+/var/    @matz-e @pramodk @jorblancoa
+/lib/    @matz-e @pramodk @jorblancoa
+/share/  @matz-e @pramodk @jorblancoa
+
+# Same for modifications to the CI pipeline and related utilities
+.gitlab-ci.yml              @matz-e @pramodk @jorblancoa
+/bluebrain/gitlab-ci.yml    @matz-e @pramodk @jorblancoa
+/bluebrain/spack-scripting  @matz-e @pramodk @jorblancoa

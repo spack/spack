@@ -15,8 +15,6 @@ class Stat(AutotoolsPackage):
     maintainers = ['lee218llnl']
 
     version('develop', branch='develop')
-    # That commit is 4.1.0 + a bunch of fixes, PYTHONPATH handling incuded
-    version('4.1.0-2021-12-02', commit='ff48de751f7716133cfb95a912ee8787da9acbeb')
     version('4.1.0', sha256='1d5b00afd563cf3bd9dd40818c44a03d7d4b13356216881513c058566c3b0080',
             url='https://github.com/LLNL/STAT/files/6193568/stat-4.1.0.tar.gz')
     version('4.0.2', sha256='9ece10dde8e1579c9db469ac8d2391b26e59498c0947dbb271c2d01d7ef0a65d',
@@ -62,13 +60,12 @@ class Stat(AutotoolsPackage):
     depends_on('python@:2.8', when='@:4.0.0')
     depends_on('py-pygtk', type=('build', 'run'), when='@:4.0.0 +gui')
     depends_on('py-enum34', type=('run'), when='@:4.0.0')
-    depends_on('py-xdot@1.0', type=('build', 'run'), when='@4.0.1: +gui')
+    depends_on('py-xdot@1.0', when='@4.0.1: +gui')
     depends_on('swig')
     depends_on('mpi', when='+examples')
     depends_on('boost')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
-    patch('fix-pango.patch', when='@4.1.0:')
 
     # No Mac support due to dependencies like dyninst, elf etc.
     conflicts('platform=darwin', msg='macOS is not supported')
@@ -93,10 +90,3 @@ class Stat(AutotoolsPackage):
         if '~examples' in spec:
             args.append('--disable-examples')
         return args
-
-    def setup_run_environment(self, env):
-        for d in self.spec.traverse(deptype=('run',), root=True):
-            python = self.spec['python']
-            if d.package.extends(python):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, python.package.site_packages_dir))

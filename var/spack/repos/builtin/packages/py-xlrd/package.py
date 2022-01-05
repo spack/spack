@@ -14,7 +14,6 @@ class PyXlrd(PythonPackage):
     pypi = "xlrd/xlrd-0.9.4.tar.gz"
 
     version('2.0.1', sha256='f72f148f54442c6b056bf931dbc34f986fd0c3b0b6b5a58d013c9aef274d0c88')
-    version('1.0.0', sha256='0ff87dd5d50425084f7219cb6f86bb3eb5aa29063f53d50bf270ed007e941069')
     version('0.9.4', sha256='8e8d3359f39541a6ff937f4030db54864836a06e42988c452db5b6b86d29ea72')
 
     depends_on('python@2.7:2.8,3.6:', when='@2:', type=('build', 'run'))

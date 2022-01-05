@@ -36,5 +36,3 @@ class Launchmon(AutotoolsPackage):
             # which is defined in libgcrypt.m4
             env.prepend_path('ACLOCAL_PATH',
                              self.spec['libgcrypt'].prefix.share.aclocal)
-        if self.spec.satisfies('%gcc@11:'):
-            env.set('CXXFLAGS', '--std=c++14')

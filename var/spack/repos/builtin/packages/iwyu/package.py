@@ -16,7 +16,6 @@ class Iwyu(CMakePackage):
 
     maintainers = ['sethrj']
 
-    version('0.17', sha256='eca7c04f8b416b6385ed00e33669a7fa4693cd26cb72b522cde558828eb0c665')
     version('0.16', sha256='8d6fc9b255343bc1e5ec459e39512df1d51c60e03562985e0076036119ff5a1c')
     version('0.15', sha256='2bd6f2ae0d76e4a9412f468a5fa1af93d5f20bb66b9e7bf73479c31d789ac2e2')
     version('0.14', sha256='43184397db57660c32e3298a6b1fd5ab82e808a1f5ab0591d6745f8d256200ef')
@@ -26,9 +25,6 @@ class Iwyu(CMakePackage):
 
     patch('iwyu-013-cmake.patch', when='@0.13:0.14')
 
-    depends_on('ncurses')
-
-    depends_on('llvm+clang@13.0:13', when='@0.17')
     depends_on('llvm+clang@12.0:12', when='@0.16')
     depends_on('llvm+clang@11.0:11', when='@0.15')
     depends_on('llvm+clang@10.0:10', when='@0.14')

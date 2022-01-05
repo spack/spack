@@ -196,6 +196,7 @@ setup_spack:
     - spack env create "${DEPLOY_ENV}" "${SPACK_ROOT}/deploy/environments/${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}.yaml"
     - spack env activate "${DEPLOY_ENV}"
     # Allow to cross-check what the CI sees
+    - spack config blame compilers
     - spack config blame config
     - spack config blame packages
     - spack config blame upstreams

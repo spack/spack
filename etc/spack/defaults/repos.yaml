@@ -11,5 +11,6 @@
 #   ~/.spack/repos.yaml
 # -------------------------------------------------------------------------
 repos:
-  - $spack/var/spack/repos/bluebrain
+  - $spack/bluebrain/repo-bluebrain
+  - $spack/bluebrain/repo-patches
   - $spack/var/spack/repos/builtin

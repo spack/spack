@@ -131,11 +131,6 @@ class Caliper(CMakePackage, CudaPackage):
             args.append('-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
 
         if '+cuda' in spec:
-            # this avoids the CMake install step erasing the RPATH entry
-            # pointing to /path/to/cuda/extras/CUPTI/lib64, which is correctly
-            # added by Caliper's CMake but is not known to Spack. See upstream
-            # Spack issue: https://github.com/spack/spack/issues/24724
-            args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=On')
             args.append('-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix)
             # technically only works with cuda 10.2+, otherwise cupti is in
             # ${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI

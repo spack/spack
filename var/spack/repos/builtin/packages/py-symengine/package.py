@@ -14,7 +14,6 @@ class PySymengine(PythonPackage):
     git      = "https://github.com/symengine/symengine.py.git"
 
     version('develop', branch='master')
-    version('0.3.0', sha256='0ecccfe5a09b25b6640afca12de62062bdb60ed2712d6c16cc47fc1ba1e851ac')
     version('0.2.0', sha256='78a14aea7aad5e7cbfb5cabe141581f9bba30e3c319690e5db8ad99fdf2d8885')
 
     # Build dependencies
@@ -22,7 +21,7 @@ class PySymengine(PythonPackage):
     depends_on('py-setuptools',     type='build')
     depends_on('py-cython@0.19.1:', type='build')
     depends_on('cmake@2.8.7:',      type='build')
-    depends_on('symengine@0.3.0:')
+    depends_on('symengine@0.2.0:')
 
     def build_args(self, spec, prefix):
-        return ['build_ext', '--symengine-dir={0}'.format(spec['symengine'].prefix)]
+        return ['--symengine-dir={0}'.format(spec['symengine'].prefix)]

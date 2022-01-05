@@ -245,9 +245,10 @@ virtual_condition_holds(Provider, Virtual) :-
 provider_weight(Dependency, Virtual, Weight) :- provider_weight(Dependency, Virtual, Weight, _).
 
 % A provider that is an external can use a weight of 0
-possible_provider_weight(Dependency, Virtual, 0, "external")
+possible_provider_weight(Dependency, Virtual, Weight, "external")
   :- provider(Dependency, Virtual),
-     external(Dependency).
+     external(Dependency),
+     pkg_provider_preference(Package, Virtual, Dependency, Weight).
 
 % A provider mentioned in packages.yaml can use a weight
 % according to its priority in the list of providers
@@ -263,7 +264,7 @@ possible_provider_weight(Dependency, Virtual, Weight, "default")
      default_provider_preference(Virtual, Dependency, Weight).
 
 % Any provider can use 100 as a weight, which is very high and discourage its use
-possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Dependency, Virtual).
+possible_provider_weight(Dependency, Virtual, 1000, "fallback") :- provider(Dependency, Virtual).
 
 #defined possible_provider/2.
 #defined provider_condition/3.

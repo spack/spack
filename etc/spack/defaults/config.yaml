@@ -14,6 +14,10 @@
 #   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
+  # Bluebrain specific commands
+  extensions:
+    - $spack/bluebrain/spack-scripting
+
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:

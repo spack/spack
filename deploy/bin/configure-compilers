@@ -55,8 +55,6 @@ while read -r line; do
             ;;
         nvhpc@*)
             ;;
-        pgi@*)
-            ;;
         *)
             continue
             ;;
@@ -94,7 +92,7 @@ while read -r line; do
                 log "updated ${f} with newer GCC"
             fi
         done
-    elif [[ ${line} = *"pgi"* || ${line} = *"nvhpc"* ]]; then
+    elif [[ ${line} = *"nvhpc"* ]]; then
         # Configure NVHPC compilers to use an up to date version of the C++
         # standard library from the deployed version of GCC.
         NVHPC_DIR=$(dirname $(which makelocalrc))
