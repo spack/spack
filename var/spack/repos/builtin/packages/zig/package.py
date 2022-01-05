@@ -17,6 +17,6 @@ class Zig(CMakePackage):
         default='Release', description='CMake build type'
     )
 
-    depends_on('llvm@11.0.0:')
+    depends_on('llvm@11.0.0: targets=all')
 
     provides('ziglang')
