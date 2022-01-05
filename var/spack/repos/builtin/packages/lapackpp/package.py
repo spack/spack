@@ -66,6 +66,6 @@ class Lapackpp(CMakePackage):
             raise Exception('The tester was not built!')
 
     def flag_handler(self, name, flags):
-        if self.spec.satisfies('%cce') and name == 'cxxflags':
+        if (spec['blas'].name == 'cray-libsci') and name == 'cxxflags':
             flags.append('-DLAPACK_FORTRAN_ADD_')
         return (None, None, flags)
