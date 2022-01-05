@@ -56,7 +56,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
         args = ''
         if (spec['blas'].name == 'cray-libsci'):
-            args+='-DBLA_VENDOR=CRAY '
+            args += '-DBLA_VENDOR=CRAY '
 
         return [
             '-Dbuild_tests=%s'       % self.run_tests,
