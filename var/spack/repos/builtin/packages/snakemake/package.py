@@ -40,3 +40,9 @@ class Snakemake(PythonPackage):
         depends_on('py-stopit', type=('build', 'run'))
         depends_on('py-tabulate', type=('build', 'run'))
 
+        variant('reports', default=False, description='Generate self-contained HTML reports')
+        with when('+reports'):
+            depends_on('py-jinja2', type=('build', 'run'))
+            depends_on('py-networkx', type=('build', 'run'))
+            depends_on('py-pygments', type=('build', 'run'))
+            depends_on('py-pygraphviz', type=('build', 'run'))
