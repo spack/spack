@@ -41,9 +41,6 @@ class Subversion(AutotoolsPackage):
     depends_on('swig@1.3.24:3.0.0', when='+perl')
     depends_on('perl-termreadkey', when='+perl')
 
-    # Installation has race cases.
-    parallel = False
-
     # https://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
     def configure_args(self):
         spec = self.spec
@@ -104,7 +101,7 @@ class Subversion(AutotoolsPackage):
             make('check-swig-pl')
 
     def install(self, spec, prefix):
-        make('install')
+        make('install', parallel=False)
         if '+perl' in spec:
             make('install-swig-pl-lib')
             with working_dir(join_path(
