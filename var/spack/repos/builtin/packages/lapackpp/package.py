@@ -46,18 +46,14 @@ class Lapackpp(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        blas_vendor = ''
-        cxx_flags = ' '
+        args = ''
         if (spec['blas'].name == 'cray-libsci'):
-            blas_vendor = '-DBLA_VENDOR=CRAY'
-        if (spec.satisfies('%cce')):
-            cxx_flags = '-DCMAKE_CXX_FLAGS=-DLAPACK_FORTRAN_ADD_'
+            args+='-DBLA_VENDOR=CRAY '
 
         return [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
-            blas_vendor,
-            cxx_flags,
+            args,
             '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
         ]
 
@@ -68,3 +64,8 @@ class Lapackpp(CMakePackage):
                 make('check')
         else:
             raise Exception('The tester was not built!')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce') and name == 'cxxflags':
+            flags.append('-DLAPACK_FORTRAN_ADD_')
+        return (None, None, flags)
