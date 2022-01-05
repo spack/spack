@@ -10,9 +10,9 @@ class PyZipfileDeflate64(PythonPackage):
     """Extract Deflate64 ZIP archives with Python's zipfile API."""
 
     homepage = "https://github.com/brianhelba/zipfile-deflate64"
-    pypi     = "zipfile-deflate64/zipfile-deflate64-0.1.6.tar.gz"
+    pypi     = "zipfile-deflate64/zipfile-deflate64-0.2.0.tar.gz"
 
-    version('0.1.6', sha256='792c7fc904740be3197b70afdd82a931f8dbec6db38d7b5be74c3ffbbed75a96')
+    version('0.2.0', sha256='875a3299de102edf1c17f8cafcc528b1ca80b62dc4814b9cb56867ec59fbfd18')
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools@42:', type='build')
