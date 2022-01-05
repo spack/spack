@@ -48,7 +48,7 @@ class Lapackpp(CMakePackage):
 
         args = ''
         if (spec['blas'].name == 'cray-libsci'):
-            args+='-DBLA_VENDOR=CRAY '
+            args += '-DBLA_VENDOR=CRAY '
 
         return [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
