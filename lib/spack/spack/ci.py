@@ -3,42 +3,42 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import base64
-import copy
-import datetime
-import json
-import os
-import re
-import shutil
 import stat
-import tempfile
-import zipfile
-
-from six import iteritems
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
+import re
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
+import spack.repo
+
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
-import spack
-import spack.binary_distribution as bindist
-import spack.cmd
-import spack.compilers as compilers
-import spack.config as cfg
-import spack.environment as ev
-import spack.main
-import spack.mirror
-import spack.paths
-import spack.repo
-import spack.util.executable as exe
-import spack.util.gpg as gpg_util
-import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
-import spack.util.web as web_util
-from spack.error import SpackError
 from spack.spec import Spec
+from six.moves.urllib.parse import urlencode
+import json
+from spack.error import SpackError
+import os
+import spack.main
+import llnl.util.tty as tty
+import spack.paths
+import spack.util.url as url_util
+import shutil
+import datetime
+import spack.util.spack_yaml as syaml
+import copy
+import spack.util.web as web_util
+import zipfile
+import spack.environment as ev
+import spack.util.executable as exe
+from six import iteritems
+import base64
+import tempfile
+import spack.util.gpg as gpg_util
+import spack.config as cfg
+
+import spack.mirror
+import spack
+import spack.cmd
+import spack.binary_distribution as bindist
+import spack.compilers as compilers
+from six.moves.urllib.error import HTTPError, URLError
 
 JOB_RETRY_CONDITIONS = [
     'always',
