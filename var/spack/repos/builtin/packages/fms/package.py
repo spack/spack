@@ -21,6 +21,8 @@ class Fms(CMakePackage):
     variant('gfs_phys', default=True, description='Use GFS Physics?')
     variant('openmp', default=True, description='Use OpenMP?')
     variant('enable_quad_precision', default=True, description='Enable quad precision?')
+    variant('pic', default=True, description='Generate position-independent code (PIC), useful '
+                                             'for building static libraries')
 
     version('2021.03.01', sha256='1f70e2a57f0d01e80fceb9ca9ce9661f5c1565d0437ab67618c2c4dfea0da6e9')
 
@@ -39,9 +41,21 @@ class Fms(CMakePackage):
         args.append(self.define('CMAKE_CXX_COMPILER', self.spec['mpi'].mpicxx))
         args.append(self.define('CMAKE_Fortran_COMPILER', self.spec['mpi'].mpifc))
 
+        cflags = []
+        fflags = []
+
         if self.compiler.name in ['gcc', 'clang', 'apple-clang']:
             gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
             if gfortran_major_version>=10:
-                args.append(self.define('CMAKE_Fortran_FLAGS', '-fallow-argument-mismatch'))
+                fflags.append('-fallow-argument-mismatch')
+
+        if '+pic' in self.spec:
+            cflags.append(self.compiler.cc_pic_flag)
+            fflags.append(self.compiler.fc_pic_flag)
+
+        if cflags:
+            args.append(self.define('CMAKE_C_FLAGS', ' '.join(cflags)))
+        if fflags:
+            args.append(self.define('CMAKE_Fortran_FLAGS', ' '.join(fflags)))
 
         return args
