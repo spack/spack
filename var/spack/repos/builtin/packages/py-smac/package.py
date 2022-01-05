@@ -39,8 +39,19 @@ class PySmac(PythonPackage):
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
+    depends_on('python@3.7:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
+    depends_on('py-scipy@1.7.0:', type=('build', 'run'))
+    depends_on('py-psutil', type=('build', 'run'))
+    depends_on('py-pynisher@0.4.1:', type=('build', 'run'))
+    depends_on('py-configspace@0.4.14:0.4.999', type=('build', 'run'))
+    depends_on('py-joblib', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.22.0:', type=('build', 'run'))
+    depends_on('py-pyrfr@0.8.0:', type=('build', 'run'))
+    depends_on('py-dask', type=('build', 'run'))
+    depends_on('py-distributed', type=('build', 'run'))
+    depends_on('py-emcee@3.0.0:', type=('build', 'run'))
     # depends_on('py-foo',        type=('build', 'run'))
 
     def build_args(self, spec, prefix):
