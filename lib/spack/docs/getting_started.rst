@@ -1026,7 +1026,7 @@ link against libglvnd instead of the underlying implementation.
       opengl:
         externals:
         - spec: opengl@4.6+glx+egl+glvnd
-          prefix: /does/not/exist
+          prefix: /
           extra_attributes: 
             glvnd:
               glx: 'glx_driver_name'
@@ -1046,19 +1046,6 @@ implementation's values before attempting to use an OpenGL implementation.
 To determine 'glx_driver_name`, run 'glxinfo | grep -i "opengl vendor string"'.
 To determine '/path/to/egl/vendor', find the 'glvnd/egl_vendor.d' directory. The
 vendor will be inside this directory.
-
-One final detail about the above example is that it avoids setting the true
-root of the external OpenGL implementation, instead opting to set it to a path
-that is not expected to exist on the system.  This is done for two reasons.
-First, Spack would add directories under this root to environment variables
-that would affect the process of building and installing other packages, such
-as ``PATH`` and ``PKG_CONFIG_PATH``.  These additions may potentially prevent
-those packages from installing successfully, and this risk is especially great
-for paths that house many libraries and applications, like ``/usr``.  Second,
-providing the true root of the external implementation in the ``packages``
-configuration is not necessary because libglvnd only needs the environment
-variables set above in the ``packages`` configuration to determine what OpenGL
-implementation to dispatch calls to at run time.
 
 ^^^
 Git
