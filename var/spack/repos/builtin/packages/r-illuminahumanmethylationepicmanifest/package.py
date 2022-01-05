@@ -9,7 +9,6 @@ from spack import *
 class RIlluminahumanmethylationepicmanifest(RPackage):
     """Manifest for Illumina's EPIC methylation arrays"""
 
-    homepage = "https://bitbucket.com/kasperdanielhansen/Illumina_EPIC"
     url      = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylationEPICmanifest_0.3.0.tar.gz"
     bioc     = "IlluminaHumanMethylationEPICmanifest"
 
