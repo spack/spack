@@ -11,9 +11,10 @@ class Snakemake(PythonPackage):
 
     homepage = "https://snakemake.readthedocs.io/en/stable/"
     pypi = "snakemake/snakemake-6.12.3.tar.gz"
+    maintainers = ['marcusboden']
 
     version('6.12.3', sha256='af86af9a540da3dceb05dad1040f1d3d733e6a695f8b3f8c30f8cf3bc6570a88')
-    version('3.11.2', sha256='f7a3b586bc2195f2dce4a4817b7ec828b6d2a0cff74a04e0f7566dcd923f9761')
+    version('3.11.2', sha256='f7a3b586bc2195f2dce4a4817b7ec828b6d2a0cff74a04e0f7566dcd923f9761', deprecated=True)
 
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
