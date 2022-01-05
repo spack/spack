@@ -54,17 +54,17 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
                 backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
 
-        blas_vendor = ''
+        args = ''
         if (spec['blas'].name == 'cray-libsci'):
-            blas_vendor = '-DBLA_VENDOR=all'
+            args+='-DBLA_VENDOR=CRAY '
 
         return [
             '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             backend_config,
-            blas_vendor,
-            '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
+            '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';'),
+            args
         ]
 
     def check(self):
