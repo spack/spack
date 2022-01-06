@@ -4383,12 +4383,12 @@ class Spec(object):
                        for v in d.package.virtuals_provided):
                 # There was something provided by the original that we don't
                 # get from its replacement.
-                raise Exception
+                raise SpliceError("Splice will not provide the same virtuals.")
             for n in d.traverse(root=False):
                 if not all(any(v in other_n.package.virtuals_provided
                                for other_n in other.traverse(root=False))
                            or v not in self for v in n.package.virtuals_provided):
-                    raise Exception
+                    raise SpliceError("Splice will not provide the same virtuals.")
 
         # Multiple unique specs with the same name will collide, so the
         # _dependents of these specs should not be trusted.
@@ -5275,3 +5275,8 @@ class SpecDeprecatedError(spack.error.SpecError):
 
 class InvalidSpecDetected(spack.error.SpecError):
     """Raised when a detected spec doesn't pass validation checks."""
+
+
+class SpliceError(spack.error.SpecError):
+    """Raised when a splice is not possible due to dependency or provider
+    satisfaction mismatch. The resulting splice would be unusable."""
