@@ -39,6 +39,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('15.1.0', commit='a96e6db7de6075e85b6d5346bc89845eeb89b324', submodules=True)
     version('15.0.0', commit='0fef9e0831a90e946745390882aac871b211eaac', submodules=True)
     version('14.1.0', commit='e883ab6acfe5033509ad1c27e8e2ba980dfa59f6', submodules=True)
     version('14.0.0', commit='f902bef81b60133994315c13f7d32d60048c79d8', submodules=True)
@@ -139,15 +140,16 @@ class Acts(CMakePackage, CudaPackage):
     variant('analysis', default=False, description='Build analysis applications in the examples')
 
     # Build dependencies
-    # FIXME: Use spack's autodiff package once there is one
     # FIXME: Use spack's vecmem package once there is one
     # (https://github.com/acts-project/acts/pull/998)
+    depends_on('autodiff @0.5.11:', when='@1.2: +autodiff')
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
-    depends_on('dd4hep @1.11:', when='+dd4hep')
-    depends_on('dd4hep @1.11: +geant4', when='+dd4hep +geant4')
-    depends_on('eigen @3.3.7:')
+    depends_on('dd4hep @1.11: +dddetectors +ddrec', when='+dd4hep')
+    depends_on('dd4hep +ddg4', when='+dd4hep +geant4 +examples')
+    depends_on('eigen @3.3.7:', when='@15.1:')
+    depends_on('eigen @3.3.7:3.3.99', when='@:15.0')
     depends_on('geant4', when='+fatras_geant4')
     depends_on('geant4', when='+geant4')
     depends_on('hepmc3 @3.2.1:', when='+hepmc3')
@@ -228,8 +230,9 @@ class Acts(CMakePackage, CudaPackage):
             cxxstd = spec['root'].variants['cxxstd'].value
             args.append("-DCMAKE_CXX_STANDARD={0}".format(cxxstd))
 
-        # FIXME: Once we can use spack's autodiff package, set
-        #        ACTS_USE_SYSTEM_AUTODIFF too.
+        if spec.satisfies('+autodiff'):
+            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+
         if spec.satisfies('@0.33: +json'):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
         elif spec.satisfies('@0.14.0: +json'):

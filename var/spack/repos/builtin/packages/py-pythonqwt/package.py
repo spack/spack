@@ -14,7 +14,7 @@ class PyPythonqwt(PythonPackage):
 
     version('0.5.5', sha256='1f13cc8b555a57f8fe0f806d6c2f6d847050e4d837649503932b81316d12788a')
 
-    variant('doc', default=False, description="Build documentation.")
+    variant('docs', default=False, description="Build documentation.")
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.3:',   type=('build', 'run'))

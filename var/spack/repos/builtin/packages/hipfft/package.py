@@ -22,6 +22,7 @@ class Hipfft(CMakePackage):
 
     version('master', branch='master')
 
+    version('4.5.0', sha256='96636713bc6cdafbd5a9c1e98e816895448960c86b380fc0c3c9ffa28f670844')
     version('4.3.1', sha256='429cfd40415856da8f5c2c321b612800d6826ee121df5a4e6d1596cad5b51727')
     version('4.3.0', sha256='6e52e0eb5b2a13adaf317fe5b20b3e059589aabf2af87e4c67cb1022b861ba84')
     version('4.2.0', sha256='74253b0d92feff55ebb39b3fe4a22a6454160a60bdad37384aa5340fd8843f8a')
@@ -31,7 +32,7 @@ class Hipfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocfft@' + ver, when='@' + ver)

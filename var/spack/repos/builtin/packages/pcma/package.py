@@ -18,6 +18,10 @@ class Pcma(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
         makefile.filter('gcc', spack_cc)
+        if spec.satisfies('%gcc@10:'):
+            # they missed one
+            filter_file(r'^sint \*seqlen_array;$', 'extern sint *seqlen_array;',
+                        'calctree.c')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

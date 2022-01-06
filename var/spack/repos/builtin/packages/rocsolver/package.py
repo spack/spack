@@ -12,7 +12,7 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
@@ -26,6 +26,7 @@ class Rocsolver(CMakePackage):
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('4.5.0', sha256='0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c')
     version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
     version('4.3.0', sha256='63cc88dd285c0fe01ec2394321ec3b4e1e59bb98ce05b06e4b4d8fadcf1ff028')
     version('4.2.0', sha256='e9ef72d7c29e7c36bf02be63a64ca23b444e1ca71751749f7d66647873d9fdea')
@@ -41,18 +42,19 @@ class Rocsolver(CMakePackage):
 
     depends_on('cmake@3.8:', type='build', when='@4.1.0:')
     depends_on('cmake@3.5:', type='build')
+    depends_on('fmt@7.1.3:', type='build', when='@4.5.0:')
 
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
 
-    patch('link-clients-blas.patch', when='@4.3.0:')
+    patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'rocsolver-test')
         self.run_test(exe, options=['--gtest_filter=checkin*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
@@ -83,6 +85,9 @@ class Rocsolver(CMakePackage):
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
+
+        if self.spec.satisfies('@4.5.0:'):
+            args.append(self.define('ROCSOLVER_EMBED_FMT', 'ON'))
 
         return args
 

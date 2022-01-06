@@ -90,8 +90,12 @@ class Seacas(CMakePackage):
     depends_on('hdf5+hl~mpi', when='~mpi')
     depends_on('cgns@4.2.0:+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@4.2.0:~mpi+scoping', when='+cgns ~mpi')
-    depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
-    depends_on('adios2@develop+mpi', when='+adios2 +mpi')
+
+    with when('+adios2'):
+        depends_on('adios2@master')
+        depends_on('adios2~mpi', when='~mpi')
+        depends_on('adios2+mpi', when='+mpi')
+
     depends_on('matio', when='+matio')
     with when('+metis'):
         depends_on('metis+int64+real64')

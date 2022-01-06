@@ -18,6 +18,7 @@ class QuantumEspresso(CMakePackage):
     maintainers = ['ye-luo']
 
     version('develop', branch='develop')
+    version('7.0', sha256='85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee')
     version('6.8', sha256='654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2')
     version('6.7', sha256='fe0ce74ff736b10d2a20c9d59025c01f88f86b00d229c123b1791f1edd7b4315',
             url='https://gitlab.com/QEF/q-e/-/archive/qe-6.7MaX-Release/q-e-qe-6.7MaX-Release.tar.gz'
@@ -217,6 +218,11 @@ class QuantumEspresso(CMakePackage):
 
     conflicts('@6.5:', when='+environ',
               msg='6.4.x is the latest QE series supported by Environ')
+
+    # 7.0
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
+    patch_checksum = 'ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff'
+    patch(patch_url, sha256=patch_checksum, when='@7.0+qmcpack')
 
     # 6.8
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.8.diff'

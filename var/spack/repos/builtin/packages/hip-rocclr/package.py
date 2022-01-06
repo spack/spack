@@ -26,6 +26,7 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+    version('4.5.0', sha256='ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
     version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79')
     version('4.3.0', sha256='8a86b4f2a1b1c7ac628262e5b11b07ff42a224e62e594a4e0683aeb616062538')
     version('4.2.0', sha256='c57525af32c59becf56fd83cdd61f5320a95024d9baa7fb729a01e7a9fcdfd78')
@@ -45,7 +46,7 @@ class HipRocclr(CMakePackage):
     depends_on('numactl', type='link', when="@3.7.0:")
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -64,6 +65,7 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ('4.5.0',  '3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8'),
         ('4.3.1',  '7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca'),
         ('4.3.0',  'd37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9'),
         ('4.2.0',  '18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730'),
@@ -93,6 +95,12 @@ class HipRocclr(CMakePackage):
         when='@master'
     )
 
+    @property
+    def install_targets(self):
+        if self.spec.satisfies('@4.5.0'):
+            return []
+        return ['install']
+
     @run_after('install')
     def deploy_missing_files(self):
         if '@3.5.0' in self.spec:
@@ -104,7 +112,7 @@ class HipRocclr(CMakePackage):
                                   'amdrocclr_staticTargets.cmake')
             filter_file(self.build_directory, self.prefix.lib, cmakefile)
             install(cmakefile, self.prefix.lib)
-        else:
+        elif self.spec.satisfies('@3.7.0:4.3.2'):
             path = join_path(self.prefix.lib,
                              'cmake/rocclr/ROCclrConfig.cmake')
             filter_file(self.build_directory, self.prefix, path)

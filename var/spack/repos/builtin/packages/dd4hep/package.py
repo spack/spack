@@ -57,7 +57,6 @@ class Dd4hep(CMakePackage):
     # variants for subpackages
     variant('ddcad', default=True, description="Enable CAD interface based on Assimp")
     variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
-    variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
     variant('ddrec', default=True, description="Build DDRec subpackage.")
     variant('dddetectors', default=True, description="Build DDDetectors subpackage.")
     variant('ddcond', default=True, description="Build DDCond subpackage.")

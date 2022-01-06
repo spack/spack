@@ -63,7 +63,6 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # TODO: add a command to Spack that (re)creates the package cache
-RUN spack bootstrap untrust spack-install
 RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
