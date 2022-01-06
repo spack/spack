@@ -47,7 +47,7 @@ class Rocsolver(CMakePackage):
     depends_on('googletest@1.10.0:', type='test')
     depends_on('netlib-lapack@3.7.1:', type='test')
 
-    patch('link-clients-blas.patch', when='@4.3.0:')
+    patch('link-clients-blas.patch', when='@4.3.0:4.3.1')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'rocsolver-test')
