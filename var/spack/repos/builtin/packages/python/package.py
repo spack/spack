@@ -758,8 +758,8 @@ for plat_specific in [True, False]:
             # Default config vars
             version = self.version.up_to(2)
             config = {
-                'CC': self.compiler.cc
-                'CXX': self.compiler.cxx
+                'CC': self.compiler.cc,
+                'CXX': self.compiler.cxx,
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),
                 'LIBDEST': self.prefix.lib.join('python{}').format(version),
                 'LIBDIR': self.prefix.lib,
@@ -767,8 +767,8 @@ for plat_specific in [True, False]:
                     'config-{0}-{1}').format(version, sys.platform),
                 'LDLIBRARY': 'libpython{}.{}'.format(version, dso_suffix),
                 'LIBRARY': 'libpython{}.a'.format(version),
-                'LDSHARED': self.compiler.cc
-                'LDCXXSHARED': self.compiler.cxx
+                'LDSHARED': self.compiler.cc,
+                'LDCXXSHARED': self.compiler.cxx,
                 'PYTHONFRAMEWORKPREFIX': '/System/Library/Frameworks',
                 'prefix': self.prefix,
                 'config_h_filename': self.prefix.include.join('python{}').join(
