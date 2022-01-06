@@ -60,6 +60,8 @@ def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
         MyAnalyzer(spec)
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
@@ -152,6 +154,8 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     assert not result['environment_variables']
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_list_analyzers():
     """
     test that listing analyzers shows all the possible analyzers.
@@ -167,6 +171,8 @@ def test_list_analyzers():
         assert analyzer_type in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the config args analyzer.
