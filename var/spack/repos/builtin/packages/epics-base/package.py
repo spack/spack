@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import subprocess
+
+from spack import *
+
 
 class EpicsBase(MakefilePackage):
     """This is the main core of EPICS, the Experimental Physics and Industrial
@@ -25,11 +27,11 @@ device and driver support."""
     @property
     def install_targets(self):
         return ['INSTALL_LOCATION={0}'.format(self.prefix), 'install']
-        
+
     def get_epics_host_arch(self):
         return subprocess.check_output(
-                "perl %s/perl/EpicsHostArch.pl" % self.prefix.lib,
-                shell=True).decode('utf8').strip()
+            "perl %s/perl/EpicsHostArch.pl" % self.prefix.lib,
+            shell=True).decode('utf8').strip()
 
     def setup_build_environment(self, env):
         env.set('EPICS_BASE', self.prefix)

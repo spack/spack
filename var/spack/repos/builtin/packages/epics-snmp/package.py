@@ -7,7 +7,7 @@ from spack import *
 
 
 class EpicsSnmp(MakefilePackage):
-    """This module provides EPICS device-layer support for hardware 
+    """This module provides EPICS device-layer support for hardware
     devices that communicate via SNMP (Simple Network Management
     Protocol)."""
 
@@ -26,12 +26,14 @@ class EpicsSnmp(MakefilePackage):
         return ['INSTALL_LOCATION={0}'.format(self.prefix), 'install']
 
     def edit(self, spec, prefix):
-        config_release = FileFilter('configure/RELEASE',
+        config_release = FileFilter(
+            'configure/RELEASE',
             'NventSGP/configure/RELEASE', 'WienerCrate/configure/RELEASE')
         config_release.filter('EPICS_BASE *=.*', 'EPICS_BASE = ' + env['EPICS_BASE'])
         makefile = FileFilter('snmpApp/src/Makefile')
-        makefile.filter('USR_CPPFLAGS', 
-            'USR_CPPFLAGS += `net-snmp-config --cflags`\nUSR_CPPFLAGS')    
+        makefile.filter(
+            'USR_CPPFLAGS',
+            'USR_CPPFLAGS += `net-snmp-config --cflags`\nUSR_CPPFLAGS')
 
     def setup_run_environment(self, envmod):
         envmod.prepend_path('PATH', join_path(self.prefix.bin, env['EPICS_HOST_ARCH']))
