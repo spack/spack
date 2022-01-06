@@ -7,6 +7,7 @@ import json
 import os
 import platform
 import re
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
@@ -752,11 +753,54 @@ for plat_specific in [True, False]:
 """ % self.print_string("json.dumps(config)")
 
         dag_hash = self.spec.dag_hash()
+
         if dag_hash not in self._config_vars:
+            # Default config vars
+            version = self.version.up_to(2)
+            config = {
+                'CC': self.compiler.cc
+                'CXX': self.compiler.cxx
+                'INCLUDEPY': self.prefix.include.join('python{}').format(version),
+                'LIBDEST': self.prefix.lib.join('python{}').format(version),
+                'LIBDIR': self.prefix.lib,
+                'LIBPL': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').format(version, sys.platform),
+                'LDLIBRARY': 'libpython{}.{}'.format(version, dso_suffix),
+                'LIBRARY': 'libpython{}.a'.format(version),
+                'LDSHARED': self.compiler.cc
+                'LDCXXSHARED': self.compiler.cxx
+                'PYTHONFRAMEWORKPREFIX': '/System/Library/Frameworks',
+                'prefix': self.prefix,
+                'config_h_filename': self.prefix.include.join('python{}').join(
+                    'pyconfig.h').format(version),
+                'makefile_filename': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').Makefile.format(version, sys.platform),
+                'python_inc': {
+                    # plat_specific
+                    'true': os.path.join('include64', 'python{}'.format(version)),
+                    'false': os.path.join('include', 'python{}'.format(version)),
+                },
+                'python_lib': {
+                    # plat_specific
+                    'true': {
+                        # standard_lib
+                        'true': os.path.join('lib64', 'python{}'.format(version)),
+                        'false': os.path.join(
+                            'lib64', 'python{}'.format(version), 'site-packages'),
+                    },
+                    'false': {
+                        # standard_lib
+                        'true': os.path.join('lib', 'python{}'.format(version)),
+                        'false': os.path.join(
+                            'lib', 'python{}'.format(version), 'site-packages'),
+                    },
+                },
+            }
+
             try:
-                config = json.loads(self.command('-c', cmd, output=str))
+                config.update(json.loads(self.command('-c', cmd, output=str)))
             except (ProcessError, RuntimeError):
-                config = {}
+                pass
             self._config_vars[dag_hash] = config
         return self._config_vars[dag_hash]
 
@@ -787,11 +831,7 @@ for plat_specific in [True, False]:
         determine exactly where it is installed. Fall back on
         ``spec['python'].prefix`` if that doesn't work."""
 
-        if 'prefix' in self.config_vars:
-            prefix = self.config_vars['prefix']
-        else:
-            prefix = self.prefix
-        return Prefix(prefix)
+        return Prefix(self.config_vars['prefix'])
 
     @property
     def libs(self):
@@ -846,14 +886,9 @@ for plat_specific in [True, False]:
 
     @property
     def headers(self):
-        if 'config_h_filename' in self.config_vars:
-            config_h = self.config_vars['config_h_filename']
+        config_h = self.config_vars['config_h_filename']
 
-            if not os.path.exists(config_h):
-                includepy = self.config_vars['INCLUDEPY']
-                msg = 'Unable to locate {0} headers in {1}'
-                raise RuntimeError(msg.format(self.name, includepy))
-
+        if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
             headers = find_headers(
@@ -876,10 +911,7 @@ for plat_specific in [True, False]:
         Returns:
             str: include files directory
         """
-        try:
-            return self.config_vars['python_inc']['false']
-        except KeyError:
-            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['python_inc']['false']
 
     @property
     def python_lib_dir(self):
@@ -900,10 +932,7 @@ for plat_specific in [True, False]:
         Returns:
             str: standard library directory
         """
-        try:
-            return self.config_vars['python_lib']['false']['true']
-        except KeyError:
-            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['python_lib']['false']['true']
 
     @property
     def site_packages_dir(self):
@@ -924,15 +953,7 @@ for plat_specific in [True, False]:
         Returns:
             str: site-packages directory
         """
-        try:
-            return self.config_vars['python_lib']['true']['false']
-        except KeyError:
-            return self.default_site_packages_dir
-
-    @property
-    def default_site_packages_dir(self):
-        python_dir = 'python{0}'.format(self.version.up_to(2))
-        return os.path.join('lib', python_dir, 'site-packages')
+        return self.config_vars['python_lib']['true']['false']
 
     @property
     def easy_install_file(self):
