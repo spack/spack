@@ -25,7 +25,7 @@ class Nvhpc(Compiler):
                   'f77': 'nvhpc/nvfortran',
                   'fc':  'nvhpc/nvfortran'}
 
-    PrgEnv = 'PrgEnv-nvhpc'
+    PrgEnv = 'PrgEnv-nvidia'
     PrgEnv_compiler = 'nvhpc'
 
     version_argument = '--version'
