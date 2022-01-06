@@ -12,9 +12,10 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    version('4.5.0', sha256='22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf')
     version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')
     version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
     version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
@@ -26,17 +27,32 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
-    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
-                            'gfx90a:xnack+', 'gfx90a:xnack-', 'gfx1010', 'gfx1011',
+    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900',
+                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
+                            'gfx90a:xnack-', 'gfx1010', 'gfx1011',
                             'gfx1012', 'gfx1030')
 
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
+    # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
+    # gfx803 till gfx1030  are valid gpus for @4.3.0:
+    conflicts('tensile_architecture=gfx906', when='@4.0.1:')
+    conflicts('tensile_architecture=gfx908', when='@4.0.1:')
+    conflicts('tensile_architecture=gfx906:xnack-', when='@:4.0.0')
+    conflicts('tensile_architecture=gfx908:xnack-', when='@:4.0.0')
+    conflicts('tensile_architecture=gfx90a:xnack+', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx90a:xnack-', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1010', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1011', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1012', when='@:4.2.1')
+    conflicts('tensile_architecture=gfx1030', when='@:4.2.1')
+
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -45,7 +61,7 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -69,7 +85,8 @@ class Rocblas(CMakePackage):
         ('@4.1.0',  'd175277084d3253401583aa030aba121e8875bfd'),
         ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
         ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
-        ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf')
+        ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
+        ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
@@ -86,12 +103,10 @@ class Rocblas(CMakePackage):
     def get_gpulist_for_tensile_support(self):
         arch = self.spec.variants['tensile_architecture'].value
         if arch[0] == 'all':
-            if self.spec.satisfies('@:4.0.0'):
-                arch_value = self.tensile_architecture[1:2] + 'gfx906,gfx908'
-            elif self.spec.satisfies('@4.1.0:4.2.0'):
-                arch_value = self.tensile_architecture[1:4]
+            if self.spec.satisfies('@:4.2.1'):
+                arch_value = self.tensile_architecture[0]
             elif self.spec.satisfies('@4.3.0:'):
-                arch_value = self.tensile_architecture[1:]
+                arch_value = self.tensile_architecture[3:]
             return arch_value
         else:
             return arch

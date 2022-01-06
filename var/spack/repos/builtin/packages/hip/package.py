@@ -20,6 +20,7 @@ class Hip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     version('master', branch='master')
+    version('4.5.0', sha256='4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2')
     version('4.3.1', sha256='955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f')
     version('4.3.0', sha256='293b5025b5e153f2f25e465a2e0006a2b4606db7b7ec2ae449f8a4c0b52d491b')
     version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
@@ -40,6 +41,8 @@ class Hip(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -51,6 +54,44 @@ class Hip(CMakePackage):
     # ref https://github.com/ROCm-Developer-Tools/HIP/pull/2202
     depends_on('numactl', when='@3.7.0:')
 
+    # Add hip-amd sources thru the below
+    for d_version, d_shasum in [
+        ('4.5.0', '7b93ab64d6894ff9b5ba0be35e3ed8501d6b18a2a14223d6311d72ab8a9cdba6')
+    ]:
+        resource(
+            name='hipamd',
+            url='https://github.com/ROCm-Developer-Tools/hipamd/archive/rocm-{0}.tar.gz'.format(d_version),
+            sha256=d_shasum,
+            expand=True,
+            destination='',
+            placement='hipamd',
+            when='@{0}'.format(d_version)
+        )
+    # Add opencl sources thru the below
+    for d_version, d_shasum in [
+        ('4.5.0',  '3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8')
+    ]:
+        resource(
+            name='opencl',
+            url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz'.format(d_version),
+            sha256=d_shasum,
+            expand=True,
+            destination='',
+            placement='opencl',
+            when='@{0}'.format(d_version)
+        )
+    for d_version, d_shasum in [
+        ('4.5.0',  'ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
+    ]:
+        resource(
+            name='rocclr',
+            url='https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz'.format(d_version),
+            sha256=d_shasum,
+            expand=True,
+            destination='',
+            placement='rocclr',
+            when='@{0}'.format(d_version)
+        )
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
     # In hipcc the ROCM_PATH variable is used to point to the parent directory
@@ -66,8 +107,8 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
-    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:')
-
+    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:4.3.2')
+    patch('0009-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host_disabletests.4.5.0.patch', when='@4.5.0')
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')
@@ -77,9 +118,16 @@ class Hip(CMakePackage):
         patch('0005-Disable-tests-3.5.0.patch', when='@3.5.0')
         patch('0005-Disable-tests-3.6.0.patch', when='@3.6.0:3.8.0')
         patch('0005-Disable-tests-3.9.0.patch', when='@3.9.0:4.0.0')
-        patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:')
+        patch('0005-Disable-tests-4.1.0.patch', when='@4.1.0:4.3.2')
 
-    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0:')
+    patch('Add_missing_open_cl_header_file_for_4.3.0.patch', when='@4.3.0:4.3.2')
+
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies('@:4.3.2'):
+            return self.stage.source_path
+        else:
+            return 'hipamd'
 
     def get_paths(self):
         if self.spec.external:
@@ -200,10 +248,11 @@ class Hip(CMakePackage):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
 
     def patch(self):
-        filter_file(
-            'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
-            'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
-            'hip-config.cmake.in', string=True)
+        if self.spec.satisfies('@:4.3.2'):
+            filter_file(
+                'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
+                'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
+                'hip-config.cmake.in', string=True)
 
         perl = self.spec['perl'].command
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
@@ -217,19 +266,28 @@ class Hip(CMakePackage):
                     'hipify-perl', 'hipcc', 'extractkernel',
                     'hipconfig', 'hipify-cmakefile'
                 ]
-            else:
+            elif self.spec.satisfies('@4.0.0:4.3.2'):
                 files = [
                     'hipify-perl', 'hipcc', 'roc-obj-extract',
                     'hipconfig', 'hipify-cmakefile',
                     'roc-obj-ls', 'hipvars.pm'
                 ]
-
+            elif self.spec.satisfies('@4.5.0:'):
+                files = []
             filter_file(match, substitute, *files, **kwargs)
-
             # This guy is used during the cmake phase, so we have to fix the
             # shebang already here in case it is too long.
             filter_shebang('hipconfig')
-
+        if self.spec.satisfies('@4.5.0:'):
+            perl = self.spec['perl'].command
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+            with working_dir('hipamd/bin'):
+                match = '^#!/usr/bin/perl'
+                substitute = "#!{perl}".format(perl=perl)
+                files = [
+                    'roc-obj-extract', 'roc-obj-ls'
+                ]
+                filter_file(match, substitute, *files, **kwargs)
         if '@3.7.0:' in self.spec:
             numactl = self.spec['numactl'].prefix.lib
             kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
@@ -240,7 +298,7 @@ class Hip(CMakePackage):
                 filter_file(match, substitute, 'hipcc', **kwargs)
 
     def flag_handler(self, name, flags):
-        if name == 'cxxflags' and '@3.7.0:' in self.spec:
+        if name == 'cxxflags' and self.spec.satisfies('@3.7.0:4.3.2'):
             incl = self.spec['hip-rocclr'].prefix.include
             flags.append('-I {0}/compiler/lib/include'.format(incl))
             flags.append('-I {0}/elf'.format(incl))
@@ -250,7 +308,8 @@ class Hip(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('PROF_API_HEADER_PATH', join_path(
-                self.spec['roctracer-dev-api'].prefix, 'roctracer', 'inc', 'ext')),
+                        self.spec['roctracer-dev-api'].prefix,
+                        'roctracer', 'inc', 'ext')),
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
@@ -262,8 +321,14 @@ class Hip(CMakePackage):
             args.append(self.define('HIP_PLATFORM', 'amd'))
 
         # LIBROCclr_STATIC_DIR is unused from 3.6.0 and above
-        if '@3.5.0' in self.spec:
+        if '@3.5.0:4.3.2' in self.spec:
             args.append(self.define('LIBROCclr_STATIC_DIR',
                         self.spec['hip-rocclr'].prefix.lib))
+        if '@4.5.0' in self.spec:
+            args.append(self.define('HIP_COMMON_DIR', self.stage.source_path))
+            args.append(self.define('HIP_CATCH_TEST', 'OFF'))
+            args.append(self.define('ROCCLR_PATH', self.stage.source_path + '/rocclr'))
+            args.append(self.define('AMD_OPENCL_PATH',
+                                    self.stage.source_path + '/opencl'))
 
         return args
