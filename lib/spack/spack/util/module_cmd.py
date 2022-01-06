@@ -214,6 +214,9 @@ def get_path_from_module_contents(text, module_name):
     man_endings = ['/share/man', '/man']
 
     for line in text:
+        # DH*
+        print("DH DEBUG xxx line = '{}'".format(line))
+        # *DH
         # Check entries of LD_LIBRARY_PATH and CRAY_LD_LIBRARY_PATH
         pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
         match_pattern_and_strip(line, pattern, lib_endings)

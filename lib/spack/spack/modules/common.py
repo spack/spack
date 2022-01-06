@@ -866,6 +866,9 @@ class BaseModuleFileWriter(object):
 
         # Get the template for the module
         template_name = self._get_template()
+        # DH*
+        print("DH DEBUG: template_name = '{}'".format(template_name))
+        # *DH
         import jinja2
         try:
             env = tengine.make_environment()

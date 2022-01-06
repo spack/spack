@@ -375,6 +375,9 @@ class IntelPackage(PackageBase):
         '''
         # See ./README-intel.rst for background and analysis of dir layouts.
 
+        # DH*
+        print("DH DEBUG yyy self.prefix = '{}'".format(self.prefix))
+        # *DH
         d = self.prefix
 
         # Distinguish between product installations that were done external to
