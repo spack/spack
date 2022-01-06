@@ -30,7 +30,7 @@ class PyAts(PythonPackage):
     version('7.0.5', tag='7.0.5')
     version('7.0.4', tag='7.0.4')
 
-    # TODO: Add flux variant when Flux functionality in ATS
+    # TODO: Add flux variant when Flux functionality works in ATS
 
     depends_on("python@3.8:", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
