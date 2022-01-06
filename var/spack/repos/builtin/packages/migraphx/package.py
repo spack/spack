@@ -47,7 +47,7 @@ class Migraphx(CMakePackage):
     depends_on('nlohmann-json', type='link')
     depends_on('msgpack-c', type='link')
     depends_on('half@1.12.0', type='link')
-    depends_on('python@3:', type='build')
+    depends_on('python@3.5:', type='build')
     depends_on('py-pybind11', type='build', when='@:4.0.0')
     depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
