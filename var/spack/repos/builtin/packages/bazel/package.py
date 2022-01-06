@@ -110,7 +110,7 @@ class Bazel(Package):
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
     depends_on('java', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('python+pythoncmd', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
 
     # make work on power9 (2x commits)
