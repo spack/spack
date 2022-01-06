@@ -13,6 +13,7 @@ class Diamond(CMakePackage):
     homepage = "https://ab.inf.uni-tuebingen.de/software/diamond"
     url      = "https://github.com/bbuchfink/diamond/archive/v2.0.9.tar.gz"
 
+    version('2.0.13', sha256='9b79c3a01913999dfa2543f4dd7a3494397a8723ea587207c14683b24e57eac1')
     version('2.0.11', sha256='41f3197aaafff9c42763fb7658b67f730ebc6dd3c0533c9c3d54bd3166e93f24')
     version('2.0.9', sha256='3019f1adb6411c6669a3a17351d0338ae02f6b3cab3c8a3bac91cf334dcda620')
     version('2.0.8', sha256='04eed7c83828f50c7d9a1d48fe7c50a4c753e008501dc639c6521cf8a756c43b')
@@ -34,3 +35,7 @@ class Diamond(CMakePackage):
     # fix error [-Wc++11-narrowing]
     # Ref: https://github.com/bbuchfink/diamond/commit/155e076d662b0e9268e2b00bef6d33d90aede7ff
     patch('fix_narrowing_error.patch', when='@:0.9.25')
+
+    @when('%gcc@10:')
+    def patch(self):
+        filter_file('virtual ~Pipeline() {}', '', 'src/align/align.h', string=True)
