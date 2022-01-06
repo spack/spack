@@ -271,6 +271,13 @@ class Python(AutotoolsPackage):
         python = Executable(exes[0])
 
         variants = ''
+        for exe in exes:
+            if os.path.basename(exe) == 'python':
+                variants += '+pythoncmd'
+                break
+        else:
+            variants += '~pythoncmd'
+
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
                        'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
             try:
