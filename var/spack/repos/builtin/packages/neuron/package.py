@@ -83,7 +83,7 @@ class Neuron(CMakePackage):
     variant("rx3d",       default=True,  description="Enable cython translated 3-d rxd. Depends on pysetup")
     variant("shared",     default=True,  description="Build shared libraries")
     variant("tests",      default=False, description="Enable unit tests")
-    variant("model_tests", default="None", description="Enable detailed model tests included in neuron", multi=True, values=("None", "olfactory", "channel-benchmark"))
+    variant("model_tests", default="None", description="Enable detailed model tests included in neuron", multi=True, values=("None", "olfactory", "channel-benchmark", "tqperf-heavy"))
     variant("legacy-unit", default=True,   description="Enable legacy units")
 
     variant("codechecks", default=False,
