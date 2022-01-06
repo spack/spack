@@ -5,8 +5,9 @@
 
 from spack import *
 
+
 class Hdf5VfdGds(CMakePackage, CudaPackage):
-    """This pacakge enables GPU Direct Storage Virtual File Driver in HDF5."""
+    """This package enables GPU Direct Storage Virtual File Driver in HDF5."""
 
     # Package info
     homepage    = 'https://github.com/hpc-io/vfd-gds'
@@ -16,17 +17,15 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
 
     # Versions
     version('master', branch='master')
-    version('1.0.1', sha256='00e125fd149561be991f41e883824de826d8add604aebccf103a4fb82d5faac2', default=True)
+    version('1.0.1', sha256='00e125fd149561be991f41e883824de826d8add604aebccf103a4fb82d5faac2')
     version('1.0.0', sha256='6b16105c7c49f13fc05784ee69b78d45fb159270c78d760689f9cd21e230ddd2')
-    
-    # Dependencies
-    depends_on('cuda')    
-    depends_on('cmake@3.12:')
-    depends_on('hdf5@1.13.0:')    
 
+    # Dependencies
+    conflicts('~cuda')
+    depends_on('cmake@3.12:')
+    depends_on('hdf5@1.13.0:')
 
     def cmake_args(self):
-        spec = self.spec
 
         # CMake options
         args = [
