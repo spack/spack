@@ -794,7 +794,7 @@ class SpackSolverSetup(object):
         for pkg_name, stanza in test_rules:
             self.gen.fact(fn.condition_group(pkg_name, stanza_id))
             for spec_str in stanza:
-                spec, = spack.cmd.parse_specs(spec_str)
+                spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
                 self.gen.fact(fn.condition_group_member(member_id, stanza_id))
