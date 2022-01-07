@@ -73,8 +73,7 @@ class Einsteintoolkit(AutotoolsPackage):
     # Define resources for arrangements and thorns
 
     for (version, tag) in [('2021.5.0', 'ET_2021_05_v0'),
-                           ('2021.11.0', 'ET_2021_11_v0'),
-                          ]:
+                           ('2021.11.0', 'ET_2021_11_v0')]:
 
         resource(
             when='@' + version,
@@ -305,7 +304,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +blas',
+            when='@' + version + ' +blas',
             name='BLAS',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-BLAS.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -313,7 +312,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +fftw',
+            when='@' + version + ' +fftw',
             name='FFTW3',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-FFTW3.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -321,7 +320,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +gsl',
+            when='@' + version + ' +gsl',
             name='GSL',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-GSL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -329,7 +328,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +hdf5',
+            when='@' + version + ' +hdf5',
             name='HDF5',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-HDF5.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -337,7 +336,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +hwloc',
+            when='@' + version + ' +hwloc',
             name='hwloc',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-hwloc.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -345,7 +344,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +lapack',
+            when='@' + version + ' +lapack',
             name='lapack',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-LAPACK.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -353,7 +352,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +libjpeg',
+            when='@' + version + ' +libjpeg',
             name='libjpeg',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-libjpeg.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -361,7 +360,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +lorene',
+            when='@' + version + ' +lorene',
             name='LORENE',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-LORENE.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -369,7 +368,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +mpi',
+            when='@' + version + ' +mpi',
             name='MPI',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-MPI.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -379,7 +378,7 @@ class Einsteintoolkit(AutotoolsPackage):
         # OpenBLAS is not needed; we can use BLAS and LAPACK instead
 
         resource(
-            when='@' + version+' +opencl',
+            when='@' + version + ' +opencl',
             name='OpenCL',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenCL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -387,7 +386,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +openssl',
+            when='@' + version + ' +openssl',
             name='OpenSSL',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenSSL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -395,7 +394,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +papi',
+            when='@' + version + ' +papi',
             name='PAPI',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-PAPI.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -403,7 +402,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +petsc',
+            when='@' + version + ' +petsc',
             name='PETSc',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-PETSc.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -413,7 +412,7 @@ class Einsteintoolkit(AutotoolsPackage):
         # 'pciutils' is probably unused
 
         resource(
-            when='@' + version+' +pthreads',
+            when='@' + version + ' +pthreads',
             name='pthreads',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-pthreads.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
@@ -421,7 +420,7 @@ class Einsteintoolkit(AutotoolsPackage):
         )
 
         resource(
-            when='@' + version+' +zlib',
+            when='@' + version + ' +zlib',
             name='zlib',
             svn='https://github.com/EinsteinToolkit/ExternalLibraries-zlib.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
