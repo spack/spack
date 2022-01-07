@@ -14,6 +14,7 @@ from llnl.util.filesystem import get_filetype, path_contains_subdirectory
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
