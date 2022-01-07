@@ -789,18 +789,18 @@ class SpackSolverSetup(object):
                 ("openmpi", ["%gcc", "%clang"]),
                 ("openmpi", ["@4.0.1", "@4.0.0"])
             ]
-        stanza_id = 0
+        cnd_grp_id = 0
         member_id = 100000
         for pkg_name, stanza in test_rules:
-            self.gen.fact(fn.condition_group(pkg_name, stanza_id))
+            self.gen.fact(fn.condition_group(pkg_name, cnd_grp_id))
             for spec_str in stanza:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
-                self.gen.fact(fn.condition_group_member(member_id, stanza_id))
+                self.gen.fact(fn.condition_group_member(member_id, cnd_grp_id))
                 self.impose(member_id, spec, name=pkg_name, node=False)
                 member_id += 1
-            stanza_id += 1
+            cnd_grp_id += 1
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
