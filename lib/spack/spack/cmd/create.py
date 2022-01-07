@@ -263,10 +263,11 @@ class PythonPackageTemplate(PackageTemplate):
     base_class_name = 'PythonPackage'
 
     dependencies = """\
-    # FIXME: Only add the python and wheel dependencies if you need specific versions
-    # or need to change the dependency type. Generic python and wheel dependencies are
+    # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
+    # or need to change the dependency type. Generic python/pip/wheel dependencies are
     # added implicity by the PythonPackage base class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
+    # depends_on('py-pip@X.Y:', type='build')
     # depends_on('py-wheel@X.Y:', type='build')
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
@@ -274,7 +275,6 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on('py-setuptools', type='build')
     # depends_on('py-flit-core', type='build')
     # depends_on('py-poetry-core', type='build')
-    # depends_on('py-jupyter-packaging', type='build')
 
     # FIXME: Add additional dependencies if required.
     # depends_on('py-foo', type=('build', 'run'))"""
