@@ -35,6 +35,7 @@ class PythonDev(BundlePackage):
     depends_on('py-pytest-cov', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-regex', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
     depends_on('py-rope', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-simplejson', type=('build', 'run'))
