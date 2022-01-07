@@ -209,6 +209,7 @@ class PyMatplotlib(PythonPackage):
                 config.write('[libs]\n')
                 config.write('system_freetype = True\n')
                 config.write('system_qhull = True\n')
+                # avoids error where link time opt is used for compile but not link
                 if self.spec.satisfies('%clang') or self.spec.satisfies('%oneapi'):
                     config.write('enable_lto = False\n')
 
