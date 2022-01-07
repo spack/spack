@@ -761,7 +761,7 @@ for plat_specific in [True, False]:
             try:
                 cc = self.compiler.cc
                 cxx = self.compiler.cxx
-            except TypeError:
+            except (TypeError, NoCompilerForSpecError):
                 cc = 'cc'
                 cxx = 'c++'
 
