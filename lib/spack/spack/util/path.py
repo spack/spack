@@ -14,26 +14,17 @@ import os
 import re
 import stat
 import subprocess
-from sys import platform as _platform
 import tempfile
+from sys import platform as _platform
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 from llnl.util.lang import memoized
-from llnl.util.filesystem import (
-    can_access,
-    getuid,
-    install,
-    install_tree,
-    mkdirp,
-    partition_path,
-    remove_linked_tree,
-)
 
 import spack.paths
 import spack.util.spack_yaml as syaml
 
 if _platform == "win32":
-    import win32api
     import win32security
 
 __all__ = [
@@ -86,14 +77,14 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-def get_owner_uid(path, err_msg = None):
+def get_owner_uid(path, err_msg=None):
     if not os.path.exists(path):
         mkdirp(path, mode=stat.S_IRWXU)
 
         p_stat = os.stat(path)
         if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
             tty.error("Expected {0} to support mode {1}, but it is {2}"
-                        .format(path, stat.S_IRWXU, p_stat.st_mode))
+                      .format(path, stat.S_IRWXU, p_stat.st_mode))
 
             raise OSError(errno.EACCES,
                           err_msg.format(path, path) if err_msg else "")
@@ -101,7 +92,7 @@ def get_owner_uid(path, err_msg = None):
         p_stat = os.stat(path)
 
     if _platform != "win32":
-            owner_uid = p_stat.st_uid
+        owner_uid = p_stat.st_uid
     else:
         sid = win32security.GetFileSecurity(
             path, win32security.OWNER_SECURITY_INFORMATION) \
