@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import inspect
 import os
 
@@ -43,8 +42,8 @@ class Einsteintoolkit(AutotoolsPackage):
 
     # These dependencies would be needed to re-run autoconf
     # depends_on('autoconf @2.13', type='build')
-    # depends_on('automake', type='build')   # not actually needed, but required by Spack
-    # depends_on('libtool', type='build')    # not actually needed, but required by Spack
+    # depends_on('automake', type='build')  # not actually needed, but required by Spack
+    # depends_on('libtool', type='build')   # not actually needed, but required by Spack
     # depends_on('m4', type='build')
 
     # These dependencies can be added, if necessary
@@ -73,22 +72,21 @@ class Einsteintoolkit(AutotoolsPackage):
 
     # Define resources for arrangements and thorns
 
-    for (version, tag) in [
-        ('2021.5.0', 'ET_2021_05_v0'),
-        ('2021.11.0', 'ET_2021_11_v0'),
-        ]:
+    for (version, tag) in [('2021.5.0', 'ET_2021_05_v0'),
+                           ('2021.11.0', 'ET_2021_11_v0'),
+                          ]:
 
         resource(
-            when='@'+version,
+            when='@' + version,
             name='manifest',
             git='https://bitbucket.org/einsteintoolkit/manifest.git',
             tag=tag,
             # destination='repos'
             destination='.'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='simfactory2',
             git='https://bitbucket.org/simfactory/simfactory2.git',
             tag=tag,
@@ -96,415 +94,415 @@ class Einsteintoolkit(AutotoolsPackage):
             destination='.',
             placement='simfactory'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinexamples',
             git='https://bitbucket.org/einsteintoolkit/einsteinexamples.git',
             tag=tag,
             destination='.',
             placement='par'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='utilities',
             git='https://bitbucket.org/cactuscode/utilities.git',
             tag=tag,
             destination='.',
             placement='utils'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='coredoc',
             git='https://bitbucket.org/cactuscode/coredoc.git',
             tag=tag,
             destination='.',
             placement='CoreDoc'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusbase',
             git='https://bitbucket.org/cactuscode/cactusbase.git',
             tag=tag,
             destination='arrangements',
             placement='CactusBase'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusconnect',
             git='https://bitbucket.org/cactuscode/cactusconnect.git',
             tag=tag,
             destination='arrangements',
             placement='CactusConnect'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactuselliptic',
             git='https://bitbucket.org/cactuscode/cactuselliptic.git',
             tag=tag,
             destination='arrangements',
             placement='CactusElliptic'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusexamples',
             git='https://bitbucket.org/cactuscode/cactusexamples.git',
             tag=tag,
             destination='arrangements',
             placement='CactusExamples'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusio',
             git='https://bitbucket.org/cactuscode/cactusio.git',
             tag=tag,
             destination='arrangements',
             placement='CactusIO'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusnumerical',
             git='https://bitbucket.org/cactuscode/cactusnumerical.git',
             tag=tag,
             destination='arrangements',
             placement='CactusNumerical'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactuspugh',
             git='https://bitbucket.org/cactuscode/cactuspugh.git',
             tag=tag,
             destination='arrangements',
             placement='CactusPUGH'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactuspughio',
             git='https://bitbucket.org/cactuscode/cactuspughio.git',
             tag=tag,
             destination='arrangements',
             placement='CactusPUGHIO'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactustest',
             git='https://bitbucket.org/cactuscode/cactustest.git',
             tag=tag,
             destination='arrangements',
             placement='CactusTest'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactusutils',
             git='https://bitbucket.org/cactuscode/cactusutils.git',
             tag=tag,
             destination='arrangements',
             placement='CactusUtils'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='cactuswave',
             git='https://bitbucket.org/cactuscode/cactuswave.git',
             tag=tag,
             destination='arrangements',
             placement='CactusWave'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='carpet',
             git='https://bitbucket.org/eschnett/carpet.git',
             tag=tag,
             destination='arrangements',
             placement='Carpet'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='ctthorns',
             git='https://bitbucket.org/eloisa/ctthorns.git',
             tag=tag,
             destination='arrangements',
             placement='CTThorns'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinanalysis',
             git='https://bitbucket.org/einsteintoolkit/einsteinanalysis.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinAnalysis'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinbase',
             git='https://bitbucket.org/einsteintoolkit/einsteinbase.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinBase'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteineos',
             git='https://bitbucket.org/einsteintoolkit/einsteineos.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinEOS'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinevolve',
             git='https://bitbucket.org/einsteintoolkit/einsteinevolve.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinEvolve'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinexact',
             git='https://github.com/barrywardell/EinsteinExact.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinExact'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteininitialdata',
             git='https://bitbucket.org/einsteintoolkit/einsteininitialdata.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinInitialData'
         )
-    
+
         # NRPyPN
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='einsteinutils',
             git='https://bitbucket.org/einsteintoolkit/einsteinutils.git',
             tag=tag,
             destination='arrangements',
             placement='EinsteinUtils'
         )
-    
+
         resource(
-            when='@'+version+' +blas',
+            when='@' + version+' +blas',
             name='BLAS',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-BLAS.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-BLAS.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='BLAS'
         )
-    
+
         resource(
-            when='@'+version+' +fftw',
+            when='@' + version+' +fftw',
             name='FFTW3',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-FFTW3.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-FFTW3.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='FFTW3'
         )
-    
+
         resource(
-            when='@'+version+' +gsl',
+            when='@' + version+' +gsl',
             name='GSL',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-GSL.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-GSL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='GSL'
         )
-    
+
         resource(
-            when='@'+version+' +hdf5',
+            when='@' + version+' +hdf5',
             name='HDF5',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-HDF5.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-HDF5.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='HDF5'
         )
-    
+
         resource(
-            when='@'+version+' +hwloc',
+            when='@' + version+' +hwloc',
             name='hwloc',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-hwloc.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-hwloc.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='hwloc'
         )
-    
+
         resource(
-            when='@'+version+' +lapack',
+            when='@' + version+' +lapack',
             name='lapack',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-LAPACK.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-LAPACK.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='LAPACK'
         )
-    
+
         resource(
-            when='@'+version+' +libjpeg',
+            when='@' + version+' +libjpeg',
             name='libjpeg',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-libjpeg.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-libjpeg.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='libjpeg'
         )
-    
+
         resource(
-            when='@'+version+' +lorene',
+            when='@' + version+' +lorene',
             name='LORENE',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-LORENE.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-LORENE.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='LORENE'
         )
-    
+
         resource(
-            when='@'+version+' +mpi',
+            when='@' + version+' +mpi',
             name='MPI',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-MPI.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-MPI.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='MPI'
         )
-    
+
         # OpenBLAS is not needed; we can use BLAS and LAPACK instead
-    
+
         resource(
-            when='@'+version+' +opencl',
+            when='@' + version+' +opencl',
             name='OpenCL',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenCL.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenCL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='OpenCL'
         )
-    
+
         resource(
-            when='@'+version+' +openssl',
+            when='@' + version+' +openssl',
             name='OpenSSL',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenSSL.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-OpenSSL.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='OpenSSL'
         )
-    
+
         resource(
-            when='@'+version+' +papi',
+            when='@' + version+' +papi',
             name='PAPI',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-PAPI.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-PAPI.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='PAPI'
         )
-    
+
         resource(
-            when='@'+version+' +petsc',
+            when='@' + version+' +petsc',
             name='PETSc',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-PETSc.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-PETSc.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='PETSc'
         )
-    
+
         # 'pciutils' is probably unused
-    
+
         resource(
-            when='@'+version+' +pthreads',
+            when='@' + version+' +pthreads',
             name='pthreads',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-pthreads.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-pthreads.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='pthreads'
         )
-    
+
         resource(
-            when='@'+version+' +zlib',
+            when='@' + version+' +zlib',
             name='zlib',
-            svn='https://github.com/EinsteinToolkit/ExternalLibraries-zlib.git/tags/'+tag,
+            svn='https://github.com/EinsteinToolkit/ExternalLibraries-zlib.git/tags/' + tag,
             destination=join_path('arrangements', 'ExternalLibraries'),
             placement='zlib'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='Kranc',
             git='https://github.com/ianhinder/Kranc.git',
             tag=tag,
             destination='arrangements',
             placement={'Auxiliary/Cactus/KrancNumericalTools': 'KrancNumericalTools'}
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='lean',
             git='https://bitbucket.org/canuda/lean_public.git',
             tag=tag,
             destination='arrangements',
             placement='Lean'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='llama',
             git='https://bitbucket.org/llamacode/llama.git',
             tag=tag,
             destination='arrangements',
             placement='Llama'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='mclachlan',
             git='https://bitbucket.org/einsteintoolkit/mclachlan.git',
             tag=tag,
             destination='arrangements',
             placement='McLachlan'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='numerical',
             git='https://bitbucket.org/cactuscode/numerical.git',
             tag=tag,
             destination='arrangements',
             placement='Numerical'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='pittnullcode',
             git='https://bitbucket.org/einsteintoolkit/pittnullcode.git',
             tag=tag,
             destination='arrangements',
             placement='PITTNullCode'
         )
-    
+
         # Not checked out: Power
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='Proca',
             git='https://bitbucket.org/canuda/Proca.git',
             tag=tag,
             destination='arrangements'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='wvuthorns',
             git='https://bitbucket.org/zach_etienne/wvuthorns.git',
             tag=tag,
             destination='arrangements',
             placement='WVUThorns'
         )
-    
+
         resource(
-            when='@'+version,
+            when='@' + version,
             name='wvuthorns_diagnostics',
             git='https://bitbucket.org/zach_etienne/wvuthorns_diagnostics.git',
             tag=tag,
@@ -534,7 +532,7 @@ class Einsteintoolkit(AutotoolsPackage):
             'CPP = cpp',
             'CC = ' + self.compiler.cc_names[0],
             'CXX = ' + self.compiler.cxx_names[0],
-            'FPP = ' + join_path(self.stage.source_path, 'cpp.sh'), # /opt/local/bin/cpp
+            'FPP = ' + join_path(self.stage.source_path, 'cpp.sh'),
             'FC = ' + self.compiler.fc_names[0],
             'F90 = ' + self.compiler.fc_names[0],
 
@@ -552,12 +550,20 @@ class Einsteintoolkit(AutotoolsPackage):
             'C_DEBUG_FLAGS = -fbounds-check -fstack-protector-all -ftrapv',
             'CXX_DEBUG_FLAGS = -fbounds-check -fstack-protector-all -ftrapv',
             'FPP_DEBUG_FLAGS =',
-            'F90_DEBUG_FLAGS = -fcheck=bounds,do,mem,pointer,recursion -finit-character=65 -finit-integer=42424242 -finit-real=nan -fstack-protector-all -ftrapv',
+            'F90_DEBUG_FLAGS = ' +
+                '-fcheck=bounds,do,mem,pointer,recursion -finit-character=65 ' +
+                '-finit-integer=42424242 -finit-real=nan -fstack-protector-all -ftrapv',
 
             'OPTIMISE = ' + ('no' if '+debug' in spec else 'yes'),
-            'C_OPTIMISE_FLAGS = -O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno -fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
-            'CXX_OPTIMISE_FLAGS = -O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno -fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
-            'F90_OPTIMISE_FLAGS = -O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno -fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+            'C_OPTIMISE_FLAGS = ' +
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+            'CXX_OPTIMISE_FLAGS = ' +
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+            'F90_OPTIMISE_FLAGS = ' +
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
 
             'OPENMP = ' + ('yes' if '+openmp' in spec else 'no'),
             'CPP_OPENMP_FLAGS = ' + self.compiler.openmp_flag,
@@ -589,7 +595,9 @@ class Einsteintoolkit(AutotoolsPackage):
                 'HDF5_ENABLE_FORTRAN = yes',
                 'HDF5_INC_DIRS = ' + spec['hdf5'].prefix.include,
                 'HDF5_LIB_DIRS = ' + spec['hdf5'].prefix.lib,
-                'HDF5_LIBS = hdf5_hl_cpp hdf5_cpp hdf5_hl_f90cstub hdf5_f90cstub hdf5_hl_fortran hdf5_fortran hdf5_hl hdf5',
+                'HDF5_LIBS = ' +
+                    'hdf5_hl_cpp hdf5_cpp hdf5_hl_f90cstub hdf5_f90cstub ' +
+                    'hdf5_hl_fortran hdf5_fortran hdf5_hl hdf5',
             ])
         if '+hwloc' in spec:
             options.append('HWLOC_DIR = ' + spec['hwloc'].prefix)
