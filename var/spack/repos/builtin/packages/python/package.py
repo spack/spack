@@ -15,6 +15,7 @@ from llnl.util.lang import match_predicate
 
 from spack import *
 from spack.build_environment import dso_suffix
+from spack.compilers import NoCompilerForSpecError
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -761,7 +762,7 @@ for plat_specific in [True, False]:
             try:
                 cc = self.compiler.cc
                 cxx = self.compiler.cxx
-            except TypeError:
+            except (TypeError, NoCompilerForSpecError):
                 cc = 'cc'
                 cxx = 'c++'
 
