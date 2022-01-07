@@ -761,7 +761,7 @@ for plat_specific in [True, False]:
             try:
                 cc = self.compiler.cc
                 cxx = self.compiler.cxx
-            except (TypeError, NoCompilerForSpecError):
+            except TypeError:
                 cc = 'cc'
                 cxx = 'c++'
 
@@ -961,7 +961,7 @@ for plat_specific in [True, False]:
         Returns:
             str: site-packages directory
         """
-        return self.config_vars['python_lib']['true']['false']
+        return self.config_vars['python_lib']['false']['false']
 
     @property
     def easy_install_file(self):
