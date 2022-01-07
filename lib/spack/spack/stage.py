@@ -23,6 +23,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
+    getuid,
     install,
     install_tree,
     mkdirp,
@@ -61,10 +62,7 @@ def create_stage_root(path):
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-    if _platform != "win32":
-        user_uid = os.getuid()  # type: ignore[attr-defined]
-    else:
-        user_uid = win32api.GetUserName()
+    user_uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     group_paths, user_node, user_paths = partition_path(path,
@@ -97,26 +95,7 @@ def create_stage_root(path):
     for p in user_paths:
         # Ensure access controls of subdirs from `$user` on down are
         # restricted to the user.
-        if not os.path.exists(p):
-            mkdirp(p, mode=stat.S_IRWXU)
-
-            p_stat = os.stat(p)
-            if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
-                tty.error("Expected {0} to support mode {1}, but it is {2}"
-                          .format(p, stat.S_IRWXU, p_stat.st_mode))
-
-                raise OSError(errno.EACCES, err_msg.format(path, p))
-        else:
-            p_stat = os.stat(p)
-
-        if _platform != "win32":
-            owner_uid = p_stat.st_uid
-        else:
-            sid = win32security.GetFileSecurity(
-                p, win32security.OWNER_SECURITY_INFORMATION) \
-                .GetSecurityDescriptorOwner()
-            owner_uid = win32security.LookupAccountSid(None, sid)[0]
-
+        owner_uid = sup.get_owner_uid(p)
         if user_uid != owner_uid:
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, owner_uid))
