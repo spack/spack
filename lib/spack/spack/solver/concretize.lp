@@ -392,11 +392,10 @@ external_conditions_hold(Package, LocalIndex) :-
 % from each condition_group holds.
 1 { condition(Y) : condition_group_member(Y, X) } 1 :- node(Package), condition_group(Package, X).
 
-% TODO: allow weighting the conditions; a condition should be preferred if it
-% appears first in a condition_group. Compared to other preference weights
-% this is less important, but presumably the user might want to exert some
-% level of control by ordering the preferences. This will probably involve
-% a #minimize statement like others at the end of this file
+% If a condition is a member of a condition group, then it has a weight
+% equal to its ID (so you can prioritize by assigning higher ID numbers
+% to less-preferred conditions)
+condition_weight(Package, Y) :- condition(Y), condition_group_member(Y, X), node(Package), condition_group(Package, X).
 
 %-----------------------------------------------------------------------------
 % Variant semantics
@@ -869,6 +868,18 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 0@100: #true }.
 #minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
+
+% A condition group specifies one or more specs that must be satisfied.
+% Specs declared first are preferred, so we assign increasing weights and
+% minimize the weights.
+opt_criterion(16, "requirement weight").
+#minimize{ 0@216: #true }.
+#minimize{ 0@16: #true }.
+#minimize {
+    Weight@16+Priority
+    : root(Package),condition_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
 
 % Minimize the number of deprecated versions being used
 opt_criterion(15, "deprecated versions used").
