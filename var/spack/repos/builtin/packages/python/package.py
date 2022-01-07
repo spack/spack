@@ -758,9 +758,16 @@ for plat_specific in [True, False]:
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
+            try:
+                cc = self.compiler.cc
+                cxx = self.compiler.cxx
+            except TypeError:
+                cc = 'cc'
+                cxx = 'c++'
+
             config = {
-                'CC': self.compiler.cc,
-                'CXX': self.compiler.cxx,
+                'CC': cc,
+                'CXX': cxx,
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),
                 'LIBDEST': self.prefix.lib.join('python{}').format(version),
                 'LIBDIR': self.prefix.lib,
@@ -768,8 +775,8 @@ for plat_specific in [True, False]:
                     'config-{0}-{1}').format(version, sys.platform),
                 'LDLIBRARY': 'libpython{}.{}'.format(version, dso_suffix),
                 'LIBRARY': 'libpython{}.a'.format(version),
-                'LDSHARED': self.compiler.cc,
-                'LDCXXSHARED': self.compiler.cxx,
+                'LDSHARED': cc,
+                'LDCXXSHARED': cxx,
                 'PYTHONFRAMEWORKPREFIX': '/System/Library/Frameworks',
                 'prefix': self.prefix,
                 'config_h_filename': self.prefix.include.join('python{}').join(

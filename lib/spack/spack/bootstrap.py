@@ -77,15 +77,13 @@ def _try_import_from_store(module, query_spec, query_info=None):
     installed_specs = spack.store.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        version = candidate_spec['python'].version
-        lib_spd = ['lib', 'python{}'.format(version.up_to(2)), 'site-packages']
-        lib64_spd = ['lib64', 'python{}'.format(version.up_to(2)), 'site-packages']
-        lib_debian = ['lib', 'python{}'.format(version.up_to(1)), 'dist-packages']
+        pkg = candidate_spec['python'].package
+        purelib = pkg.config_vars['python_lib']['false']['false']
+        platlib = pkg.config_vars['python_lib']['true']['false']
 
         module_paths = [
-            os.path.join(candidate_spec.prefix, *lib_debian),
-            os.path.join(candidate_spec.prefix, *lib_spd),
-            os.path.join(candidate_spec.prefix, *lib64_spd)
+            os.path.join(candidate_spec.prefix, purelib),
+            os.path.join(candidate_spec.prefix, platlib),
         ]
         sys.path.extend(module_paths)
 
