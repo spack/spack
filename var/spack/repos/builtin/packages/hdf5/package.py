@@ -80,6 +80,7 @@ class Hdf5(CMakePackage):
             multi=False)
 
     depends_on('cmake@3.12:', type='build')
+    depends_on('gmake', type='build')     # the CMakeFile calls `make`
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
