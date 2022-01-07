@@ -872,12 +872,14 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
 % minimize the weights.
+% TODO: I don't know what the purpose of 'build_priority' is but it appears
+% in most of the other minimization constraints
 opt_criterion(16, "requirement weight").
 #minimize{ 0@216: #true }.
 #minimize{ 0@16: #true }.
 #minimize {
     Weight@16+Priority
-    : root(Package),condition_weight(Package, Weight),
+    : condition_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
