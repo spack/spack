@@ -49,6 +49,8 @@ while read -r line; do
             ;;
         intel@*)
             ;;
+        intel-oneapi-compilers@*)
+            ;;
         intel-parallel-studio@*)
             ;;
         llvm@*)

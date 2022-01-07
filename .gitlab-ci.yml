@@ -26,7 +26,7 @@ setup_environment:
     DEFAULT_GCC_VERSION: "11.2.0"
     # Needed for Intel compilers, which may re-use some libraries from a
     # GCC
-    INTEL_GCC_VERSION: "9.4.0"
+    INTEL_GCC_VERSION: "11.2.0"
     # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
