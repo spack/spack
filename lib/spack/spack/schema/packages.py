@@ -78,8 +78,7 @@ properties = {
                                  'properties': {
                                      'one_of': {'type': 'array'}
                                  }
-                             }
-                            },
+                             }},
                             # Shorthand for a condition group with one member
                             {'type': 'string'}
                         ]
