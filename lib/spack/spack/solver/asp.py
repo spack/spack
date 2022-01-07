@@ -775,25 +775,20 @@ class SpackSolverSetup(object):
             ))
 
     def cfg_required_rules(self, pkg):
-        experimental_hack_selector = 1
-        if experimental_hack_selector == 1:
-            # The goal here is to say "if we need to build MPI, then it has to
-            # either satisfy @4.0.2+static or @4.0.1~static"
-            test_rules = [
-                ("openmpi", ["@4.0.2+static", "@4.0.1~static"])
-            ]
-        elif experimental_hack_selector == 2:
-            # Example of combinatoric constraints, you can mix either compiler
-            # with either version, but it must be one of the 4 combinations
-            test_rules = [
-                ("openmpi", ["%gcc", "%clang"]),
-                ("openmpi", ["@4.0.1", "@4.0.0"])
-            ]
+        pkg_name = pkg.name
+        config = spack.config.get("packages")
+        requirements = config.get(pkg_name, {}).get("require", {})
+        if isinstance(requirements, string_types):
+            rules = [(pkg_name, requirements)]
+        else:
+            rules = []
+            for requirement in requirements:
+                rules.append((pkg_name, requirement['one_of']))
         cnd_grp_id = 0
         member_id = 100000
-        for pkg_name, stanza in test_rules:
+        for pkg_name, cnd_group in rules:
             self.gen.fact(fn.condition_group(pkg_name, cnd_grp_id))
-            for spec_str in stanza:
+            for spec_str in cnd_group:
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name

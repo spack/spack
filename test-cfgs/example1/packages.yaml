@@ -1,0 +1,4 @@
+packages:
+  openmpi:
+    require:
+    - one_of: ['@4.0.1~static', '@4.0.2+static']
