@@ -310,6 +310,10 @@ class Boost(Package):
           when="@1.77.0",
           working_dir="tools/build")
 
+    # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
+    # See https:://github.com/spack/spack/issues/28273
+    patch("pthread-stack-min-fix.patch", when="@1.69.0:1.73.0")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
