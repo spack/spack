@@ -73,9 +73,9 @@ class Einsteintoolkit(AutotoolsPackage):
     # Define resources for arrangements and thorns
 
     for (version, tag) in [
-            ('2021.5.0', 'ET_2021_05_v0'),
-            ('2021.11.0', 'ET_2021_11_v0'),
-        ]:
+                ('2021.5.0', 'ET_2021_05_v0'),
+                ('2021.11.0', 'ET_2021_11_v0'),
+            ]:
 
         resource(
             when='@' + version,
@@ -553,18 +553,18 @@ class Einsteintoolkit(AutotoolsPackage):
             'FPP_DEBUG_FLAGS =',
             'F90_DEBUG_FLAGS = '
                 '-fcheck=bounds,do,mem,pointer,recursion -finit-character=65 '
-                '-finit-integer=42424242 -finit-real=nan -fstack-protector-all -ftrapv',
+                    '-finit-integer=42424242 -finit-real=nan -fstack-protector-all -ftrapv',
 
             'OPTIMISE = ' + ('no' if '+debug' in spec else 'yes'),
             'C_OPTIMISE_FLAGS = '
                 '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
-                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+                    '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
             'CXX_OPTIMISE_FLAGS = '
                 '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
-                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+                    '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
             'F90_OPTIMISE_FLAGS = '
                 '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
-                '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
+                    '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
 
             'OPENMP = ' + ('yes' if '+openmp' in spec else 'no'),
             'CPP_OPENMP_FLAGS = ' + self.compiler.openmp_flag,
@@ -598,7 +598,7 @@ class Einsteintoolkit(AutotoolsPackage):
                 'HDF5_LIB_DIRS = ' + spec['hdf5'].prefix.lib,
                 'HDF5_LIBS = '
                     'hdf5_hl_cpp hdf5_cpp hdf5_hl_f90cstub hdf5_f90cstub '
-                    'hdf5_hl_fortran hdf5_fortran hdf5_hl hdf5',
+                        'hdf5_hl_fortran hdf5_fortran hdf5_hl hdf5',
             ])
         if '+hwloc' in spec:
             options.append('HWLOC_DIR = ' + spec['hwloc'].prefix)
