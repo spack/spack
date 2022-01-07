@@ -72,8 +72,10 @@ class Einsteintoolkit(AutotoolsPackage):
 
     # Define resources for arrangements and thorns
 
-    for (version, tag) in [('2021.5.0', 'ET_2021_05_v0'),
-                           ('2021.11.0', 'ET_2021_11_v0')]:
+    for (version, tag) in [
+            ('2021.5.0', 'ET_2021_05_v0'),
+            ('2021.11.0', 'ET_2021_11_v0'),
+        ]:
 
         resource(
             when='@' + version,
@@ -549,19 +551,19 @@ class Einsteintoolkit(AutotoolsPackage):
             'C_DEBUG_FLAGS = -fbounds-check -fstack-protector-all -ftrapv',
             'CXX_DEBUG_FLAGS = -fbounds-check -fstack-protector-all -ftrapv',
             'FPP_DEBUG_FLAGS =',
-            'F90_DEBUG_FLAGS = ' +
-                '-fcheck=bounds,do,mem,pointer,recursion -finit-character=65 ' +
+            'F90_DEBUG_FLAGS = '
+                '-fcheck=bounds,do,mem,pointer,recursion -finit-character=65 '
                 '-finit-integer=42424242 -finit-real=nan -fstack-protector-all -ftrapv',
 
             'OPTIMISE = ' + ('no' if '+debug' in spec else 'yes'),
-            'C_OPTIMISE_FLAGS = ' +
-                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+            'C_OPTIMISE_FLAGS = '
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
                 '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
-            'CXX_OPTIMISE_FLAGS = ' +
-                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+            'CXX_OPTIMISE_FLAGS = '
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
                 '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
-            'F90_OPTIMISE_FLAGS = ' +
-                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno ' +
+            'F90_OPTIMISE_FLAGS = '
+                '-O3 -fcx-limited-range -fexcess-precision=fast -fno-math-errno '
                 '-fno-rounding-math -fno-signaling-nans -funsafe-math-optimizations',
 
             'OPENMP = ' + ('yes' if '+openmp' in spec else 'no'),
@@ -594,8 +596,8 @@ class Einsteintoolkit(AutotoolsPackage):
                 'HDF5_ENABLE_FORTRAN = yes',
                 'HDF5_INC_DIRS = ' + spec['hdf5'].prefix.include,
                 'HDF5_LIB_DIRS = ' + spec['hdf5'].prefix.lib,
-                'HDF5_LIBS = ' +
-                    'hdf5_hl_cpp hdf5_cpp hdf5_hl_f90cstub hdf5_f90cstub ' +
+                'HDF5_LIBS = '
+                    'hdf5_hl_cpp hdf5_cpp hdf5_hl_f90cstub hdf5_f90cstub '
                     'hdf5_hl_fortran hdf5_fortran hdf5_hl hdf5',
             ])
         if '+hwloc' in spec:
@@ -646,9 +648,9 @@ class Einsteintoolkit(AutotoolsPackage):
 
         with working_dir(self.build_directory):
             configureopts = [
-                'PROMPT=no',              # non-interactive
-                'THORNLIST=thornlist.th', # list of thorns (plug-ins)
-                'options=options.cfg',    # build options
+                'PROMPT=no',               # non-interactive
+                'THORNLIST=thornlist.th',  # list of thorns (plug-ins)
+                'options=options.cfg',     # build options
             ]
             makeopts = [
                 'VERBOSE=yes',
