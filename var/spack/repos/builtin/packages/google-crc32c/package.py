@@ -12,7 +12,7 @@ class GoogleCrc32c(CMakePackage):
     homepage = "https://github.com/google/crc32c"
     git      = "https://github.com/google/crc32c"
 
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['marcusboden']
 
     version('1.1.2', tag='1.1.2')
 

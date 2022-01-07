@@ -24,12 +24,13 @@ from spack import *
 
 
 class PyGoogleCrc32c(PythonPackage):
-    """This package wraps the google/crc32c hardware-based implementation of the CRC32C hashing algorithm."""
+    """This package wraps the google/crc32c hardware-based implementation
+    of the CRC32C hashing algorithm."""
 
     homepage = "https://github.com/googleapis/python-crc32c"
     git      = "https://github.com/googleapis/python-crc32c"
 
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['marcusboden']
 
     version('1.3.0', tag='v1.3.0')
 
