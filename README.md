@@ -3,21 +3,20 @@
 Official documentation [below](#-spack).
 
 The concepts of our deployment are described in [Deployment
-Concepts](deploy/Concepts.md), and deployment duties in [Deployment
-Workflows](deploy/Workflows.md).
+Concepts](bluebrain/documentation/Concepts.md), and deployment duties in [Deployment
+Workflows](bluebrain/documentation/Workflows.md).
 
-For some common issues, please see the [FAQ](deploy/docs/FAQ.md). Further
+For some common issues, please see the [FAQ](bluebrain/documentation/FAQ.md). Further
 documentation:
 
-* [Setting Spack up on BlueBrain5](deploy/docs/setup_bb5.md)
-* [Setting Spack up on personal machines](deploy/docs/setup_personal.md)
-* [Installing software from local sources directories](deploy/docs/installing_from_source.md)
-* [Installing software using environments](deploy/docs/installing_with_environments.md),
+* [Setting Spack up on BlueBrain5](bluebrain/documentation/setup_bb5.md)
+* [Setting Spack up on personal machines](bluebrain/documentation/setup_personal.md)
+* [Installing software from local sources directories](bluebrain/documentation/installing_from_source.md)
+* [Installing software using environments](bluebrain/documentation/installing_with_environments.md),
   allowing to customize software used in complex build scenarios
-* [Deploying modules on BlueBrain5](deploy/docs/deploy_bb5.md)
-* [Debugging pull requests on BlueBrain5](deploy/docs/debug_bb5.md)
-* [Continuous Integration with Spack on BlueBrain5](deploy/docs/ci_bb5.md)
-* [Continuous Integration with Spack on Travis](deploy/docs/ci_travis.md)
+* [Deploying modules on BlueBrain5](bluebrain/documentation/deploy_bb5.md)
+* [Debugging pull requests on BlueBrain5](bluebrain/documentation/debug_bb5.md)
+* [Continuous Integration with Spack on BlueBrain5](bluebrain/documentation/ci_bb5.md)
 
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 

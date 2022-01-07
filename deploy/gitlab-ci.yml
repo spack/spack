@@ -228,7 +228,7 @@ setup_spack:
     -     configure-compilers < specs.txt
     # Make all explicitly installed software available to following stages
     # without considering the full dependency DAG
-    -     spack export --scope=user --module tcl --explicit --unbuildable llvm openscenegraph optix --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
+    -     spack export --scope=user --module tcl --explicit --unbuildable intel-mkl llvm openscenegraph optix --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
     - fi
   artifacts:
     when: always
