@@ -53,13 +53,19 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
-        return [
+
+        args = [
             '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             backend_config,
             '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
         ]
+
+        if spec['blas'].name == 'cray-libsci':
+            args.append(self.define('BLA_VENDOR', 'CRAY'))
+
+        return args
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
