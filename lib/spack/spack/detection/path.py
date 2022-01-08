@@ -70,13 +70,13 @@ def executables_in_path(path_hints=None):
     for search_path in reversed(search_paths):
         for exe in os.listdir(search_path):
             exe_path = os.path.join(search_path, exe)
-            if is_readable(exe_path):
+            if is_executable(exe_path):
                 path_to_exe[exe_path] = exe
     return path_to_exe
 
 
-def libraries_in_path(path_hints=None):
-    """Get the paths of all libraries available from the current PATH.
+def libraries_in_ld_library_path(path_hints=None):
+    """Get the paths of all libraries available from LD_LIBRARY_PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -98,7 +98,7 @@ def libraries_in_path(path_hints=None):
     for search_path in reversed(search_paths):
         for lib in os.listdir(search_path):
             lib_path = os.path.join(search_path, lib)
-            if is_executable(lib_path):
+            if is_readable(lib_path):
                 path_to_lib[lib_path] = lib
     return path_to_lib
 
@@ -126,7 +126,7 @@ def by_library(packages_to_check, path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the LD_LIBRARY_PATH environment variable.
     """
-    path_to_lib_name = libraries_in_path(path_hints=path_hints)
+    path_to_lib_name = libraries_in_ld_library_path(path_hints=path_hints)
     lib_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, 'libraries'):
@@ -150,7 +150,6 @@ def by_library(packages_to_check, path_hints=None):
                 "{0} must define 'determine_spec_details' in order"
                 " for Spack to detect externally-provided instances"
                 " of the package.".format(pkg.name))
-            print("Skipping test")
             continue
 
         for prefix, libs_in_prefix in sorted(_group_by_prefix(libs)):
