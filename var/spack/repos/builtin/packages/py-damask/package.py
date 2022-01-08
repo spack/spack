@@ -7,8 +7,8 @@
 class PyDamask(PythonPackage):
     """Pre- and post-processing tools for DAMASK"""
 
-    homepage = "https://damask3.mpie.de"
-    url      = "https://damask3.mpie.de/download/damask-3.0.0.tar.xz"
+    homepage = "https://damask.mpie.de"
+    url      = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
     maintainers = ['MarDiehl']
 
