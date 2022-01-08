@@ -177,5 +177,6 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
             options.append('--enable-autotune-redistribute-matrix')
 
         options.append('--disable-silent-rules')
+        options.append('--without-threading-support-check-during-build')
 
         return options
