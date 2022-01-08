@@ -69,6 +69,10 @@ class Mirror(object):
         self._push_url = push_url
         self._name = name
 
+    def __eq__(self, other):
+        return (self._fetch_url == other._fetch_url and
+                self._push_url == other._push_url)
+
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
 
@@ -246,6 +250,9 @@ class MirrorCollection(Mapping):
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
                 spack.config.get('mirrors', scope=scope).items()))
+
+    def __eq__(self, other):
+        return self._mirrors == other._mirrors
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(True), stream)

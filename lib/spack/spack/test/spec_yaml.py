@@ -23,7 +23,7 @@ import spack.version
 from spack import repo
 from spack.spec import Spec, save_dependency_specfiles
 from spack.util.mock_package import MockPackageMultiRepo
-from spack.util.spack_yaml import syaml_dict
+from spack.util.spack_yaml import SpackYAMLError, syaml_dict
 
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable, Mapping  # novm
@@ -54,6 +54,34 @@ def test_normal_spec(mock_packages):
     spec.normalize()
     check_yaml_round_trip(spec)
     check_json_round_trip(spec)
+
+
+@pytest.mark.parametrize(
+    "invalid_yaml",
+    [
+        "playing_playlist: {{ action }} playlist {{ playlist_name }}"
+    ]
+)
+def test_invalid_yaml_spec(invalid_yaml):
+    with pytest.raises(SpackYAMLError) as e:
+        Spec.from_yaml(invalid_yaml)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing YAML spec:")
+    assert invalid_yaml in exc_msg
+
+
+@pytest.mark.parametrize(
+    "invalid_json, error_message",
+    [
+        ("{13:", "Expecting property name")
+    ]
+)
+def test_invalid_json_spec(invalid_json, error_message):
+    with pytest.raises(sjson.SpackJSONError) as e:
+        Spec.from_json(invalid_json)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing JSON spec:")
+    assert error_message in exc_msg
 
 
 def test_external_spec(config, mock_packages):
