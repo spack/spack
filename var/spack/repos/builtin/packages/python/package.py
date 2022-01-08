@@ -837,9 +837,8 @@ for plat_specific in [True, False]:
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed. Fall back on
-        ``spec['python'].prefix`` if that doesn't work."""
-
+        determine exactly where it is installed.
+        """
         return Prefix(self.config_vars['prefix'])
 
     @property
