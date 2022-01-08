@@ -506,7 +506,7 @@ class Python(AutotoolsPackage):
             ])
 
         # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies('@3.2: +sqlite3'):
+        if spec.satisfies('@3.2: +sqlite3 ^sqlite+dynamic_extensions'):
             config_args.append('--enable-loadable-sqlite-extensions')
 
         if spec.satisfies('%oneapi'):
