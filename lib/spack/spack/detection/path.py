@@ -111,13 +111,11 @@ def _group_by_prefix(paths):
 
 
 def by_library(packages_to_check, path_hints=None):
-    # What tool will we use? Is that per-package?
-    # Use that tool (maybe get it on per-package basis)
-    # Call determine_spec_details on each package?
-    # Do we need separate determine_spec_details_exe and determine_spec_details_lib?
-    # How do we get compiler information?
-    #   for things in /usr we can lookup by OS
-    # Or should enabling this be an assertion that the compiler doesn't matter?
+    # Techniques for finding libraries is determined on a per recipe basis in
+    # the determine_version class method. Some packages will extract the
+    # version number from a shared libraries filename.
+    # Other libraries could use the strings function to extract it as described
+    # in https://unix.stackexchange.com/questions/58846/viewing-linux-library-executable-version-info
     """Return the list of packages that have been detected on the system,
     searching by LD_LIBRARY_PATH.
 
