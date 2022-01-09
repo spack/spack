@@ -25,14 +25,10 @@ class Petaca(CMakePackage):
     maintainers = ['pbrady']
 
     version('develop', branch="master")
-    version('1.0', commit='f17df95193ca1a3879687a59a91a123be25e3efa', preferred=True)
+    version('develop-2021-03-31', commit='f17df95193ca1a3879687a59a91a123be25e3efa', preferred=True)
 
     depends_on('cmake@3.3:', type='build')
     depends_on('yajl@2.0.1:')
-
-    variant("unit", default=False, description='build test programs')
-
-    variant("examples", default=False, description='build example programs')
 
     # override RelWithDebugInfo since those flags aren't set in petaca
     variant('build_type', default="Release",
@@ -49,6 +45,5 @@ class Petaca(CMakePackage):
 
     def cmake_args(self):
         return [
-            self.define_from_variant('ENABLE_TESTS', 'unit'),
-            self.define_from_variant('ENABLE_EXAMPLES', 'examples')
+            self.define('ENABLE_TESTS', self.run_tests)
         ]
