@@ -1,12 +1,18 @@
 # Setup for BlueBrain5
 
-On BlueBrain5, clone this repository to get started using Spack.
+On BlueBrain5, installing software and creating modules requires only the
+Spack module:
+
+    $ module load spack
+
+To modify packages and update deployment related files,
+clone this repository in addition.
 The following commands are a good way to get started:
 
-    $ module load unstable git
+    $ module load spack unstable git
     $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ . spack/share/spack/setup-env.sh
-    $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ${SPACK_ROOT}/etc/spack
+    $ cp ${SPACK_ROOT}/bluebrain/sysconfig/bluebrain5 ${SPACK_ROOT}/etc/spack
 
 Note that the `git clone` should be executed in a subdirectory of the home
 directory on GPFS.
@@ -14,30 +20,31 @@ The project directories are backed by a slower GPFS setup, and using a
 Spack installation from the project directories will result in a big
 performance penalty.
 
-This will install all software into the directory that Spack was cloned
-into.
-The configuration linked into the `etc/spack` subdirectory will provide a
-setup to re-use centrally installed software and decrease installation
-times.
-
 ## Customizing the Software Installation Directory
 
-To use multiple different software directories, one can override the
-configuration above by creating a `${HOME}/.spack/config.yaml` with the
-following contents:
-```yaml
-config:
-  install_tree:
-    root: $SPACK_INSTALL_PREFIX
-  source_cache: $SPACK_INSTALL_PREFIX/.cache
-  module_roots:
-    tcl: $SPACK_INSTALL_PREFIX/modules/tcl
-    lmod: $SPACK_INSTALL_PREFIX/modules/lmod
-```
-and then exporting the environment variable `${SPACK_INSTALL_PREFIX}` to
-point to a location where the software should be located.
+By loading the provided Spack module and sourcing the local Spack
+installation **afterwards**,
+software and modules will be installed into `${HOME}/spack_install`.
 
-## Automatically Generate Modules for all Installed Software
+To customise this, use the following commands:
+
+    $ spack config add config:install_tree:root:${HOME}/my_software
+    $ spack config add config:module_roots:tcl:${HOME}/my_modules
+
+## Generating Custom Modules
+
+To generate a module for the package `my_package`,
+modify the whitelist with the following command:
+
+    $ spack config add modules:tcl:whitelist:my_package
+
+And use
+
+    $ spack module tcl refresh my_package
+
+To generate or update the module.
+
+### Automatically Generate Modules for all Installed Software
 
 Similarly, the module configuration can be overwritten to provide modules
 for **all** manually installed software, including new dependencies, by
@@ -51,3 +58,4 @@ modules:
     projections:
       all: '{name}/{version}-{hash:6}'
 ```
+**Note that this may have unintended consequences and is not a supported configuration**.

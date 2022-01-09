@@ -15,7 +15,7 @@ the next `archive` module available at the end of the month.
 
 If no modules are available, the following will restore the setup:
 
-    $ . /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/modules.sh
+    $ . /gpfs/bbp.cscs.ch/apps/bsd/config/modules.sh
 
 ## Updating deployed software versions
 
@@ -23,7 +23,7 @@ To update the version of any of these modules, first we have to make sure
 that the corresponding software is built by edit the corresponding Spack
 environment:
 
-    $ nvim spack/deploy/environments/applications_${team}.yaml
+    $ nvim ${SPACK_ROOT}/bluebrain/deployment/environments/applications_${team}.yaml
 
 The above environment definition provides the end-user software that is
 developed by BlueBrain, split by team.
@@ -38,7 +38,8 @@ Please ensure that:
 
 If there are dependencies used in a broader scope/by several software
 packages, consider adding them to one of the following steps in the
-deployment chain (all found in `spack/deploy/environments`):
+deployment chain (all found in
+`${SPACK_ROOT}/bluebrain/deployment/environments`):
 
 * `libraries` for general purpose libraries, and dependencies that depend
   on MPI
@@ -54,7 +55,7 @@ Github.
 Jenkins will build the additional software required, with all output
 available in a separate directory:
 
-    $ ls /gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/12345
+    $ ls /gpfs/bbp.cscs.ch/apps/bsd/pulls/12345
     config  deploy  mirror  spack
 
 Software packages and modules should be updated upon pull request merge and
@@ -66,6 +67,6 @@ corresponding modules:
 
     $ module purge     # remove anything that may pollute the shell environment
     $ unset MODULEPATH # start with a clean slate, no interference
-    $ . /gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/${MY_PULL_REQUEST_NUMBER}/config/modules.sh
+    $ . /gpfs/bbp.cscs.ch/apps/bsd/pulls/${MY_PULL_REQUEST_NUMBER}/config/modules.sh
     $ module load unstable
     $ module load ${SOFTWARE_I_JUST_UPDATED}

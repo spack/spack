@@ -15,7 +15,7 @@ Python.org, as several issues have been found with Homebrew's Python
 
     $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
-    $ cp spack/sysconfig/mac_osx/*.yaml ~/.spack
+    $ cp spack/bluebrain/sysconfig/mac_osx/*.yaml ~/.spack
     $ . spack/share/spack/setup-env.sh
     $ spack compiler find
 
@@ -30,8 +30,8 @@ used to set Spack up on the desktops:
 
     $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
-    $ cp spack/sysconfig/ubuntu-18.04/*.yaml ~/.spack
-    $ sed -e 's/#.*//g' spack/sysconfig/ubuntu-18.04/packages|xargs -r sudo apt-get install --assume-yes
+    $ cp spack/bluebrain/sysconfig/ubuntu-18.04/*.yaml ~/.spack
+    $ sed -e 's/#.*//g' spack/bluebrain/sysconfig/ubuntu-18.04/packages|xargs -r sudo apt-get install --assume-yes
     $ . spack/share/spack/setup-env.sh
     $ spack compiler find
 
@@ -39,8 +39,8 @@ used to set Spack up on the desktops:
 
     $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ mkdir ~/.spack
-    $ cp spack/sysconfig/ubuntu-20.04/*.yaml ~/.spack
-    $ sed -e 's/#.*//g' spack/sysconfig/ubuntu-20.04/packages|xargs -r sudo apt-get install --assume-yes
+    $ cp spack/bluebrain/sysconfig/ubuntu-20.04/*.yaml ~/.spack
+    $ sed -e 's/#.*//g' spack/bluebrain/sysconfig/ubuntu-20.04/packages|xargs -r sudo apt-get install --assume-yes
     $ . spack/share/spack/setup-env.sh
     $ spack compiler find
 

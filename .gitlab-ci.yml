@@ -25,8 +25,8 @@ setup_environment:
     # the wrong one as default :(
     DEFAULT_GCC_VERSION: "11.2.0"
     # Needed for Intel compilers, which may re-use some libraries from a
-    # GCC
-    INTEL_GCC_VERSION: "11.2.0"
+    # legacy GCC
+    LEGACY_GCC_VERSION: "9.4.0"
     # Used for cloning Spack
     DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
     # Proprietary sources
@@ -61,7 +61,7 @@ setup_environment:
     # The `rules` keyword seems to not inherit variables specified via a
     # dotenv ⇒ do things manually once more
     - echo "DEFAULT_GCC_VERSION=$DEFAULT_GCC_VERSION" > deployment.env
-    - echo "INTEL_GCC_VERSION=$INTEL_GCC_VERSION" >> deployment.env
+    - echo "LEGACY_GCC_VERSION=$LEGACY_GCC_VERSION" >> deployment.env
     - echo "DEPLOYMENT_ARTIFACTS=$DEPLOYMENT_ARTIFACTS" >> deployment.env
     - echo "DEPLOYMENT_BASE=$DEPLOYMENT_BASE" >> deployment.env
     - echo "DEPLOYMENT_BRANCH=$DEPLOYMENT_BRANCH" >> deployment.env
@@ -88,7 +88,7 @@ setup_environment:
 atomic_build:
   needs: [setup_environment]
   trigger:
-    include: deploy/gitlab-ci.yml
+    include: bluebrain/deployment/gitlab-ci.yml
     strategy: depend
   variables:
     # Used to store artifacts in the right directory, grab dotenv

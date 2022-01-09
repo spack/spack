@@ -20,9 +20,9 @@ fi
 # Find the location of *any* GCC, disregarding the environment that's
 # active (-E).  Prefer the hash passed through by earlier stages, if
 # not available fall back to the crude version.
-GCC_DIR=$(spack -E location --install-dir ${INTEL_GCC_HASH:-gcc@${INTEL_GCC_VERSION}})
-NVHPC_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFAULT_GCC_VERSION}})
-log "...got NVHPC_GCC_DIR=${NVHPC_GCC_DIR}"
+LEGACY_GCC_DIR=$(spack -E location --install-dir ${LEGACY_GCC_HASH:-gcc@${LEGACY_GCC_VERSION}})
+DEFAULT_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFAULT_GCC_VERSION}})
+log "...got DEFAULT_GCC_DIR=${DEFAULT_GCC_DIR}"
 # Use the Spack configuration to grab the matching module for GCC;
 # requires GCC to be compiler found beforehand.
 GCC_MODULES="$(spack -E config get compilers|sed -n "
@@ -32,8 +32,8 @@ GCC_MODULES="$(spack -E config get compilers|sed -n "
             p;
         }
     }")"
-log "...using gcc ${INTEL_GCC_VERSION} from ${GCC_DIR} for Intel"
-log "...using gcc ${DEFAULT_GCC_VERSION} from ${NVHPC_GCC_DIR} for NVHPC with module(s) ${GCC_MODULES}"
+log "...using gcc ${LEGACY_GCC_VERSION} from ${LEGACY_GCC_DIR} for Intel (legacy)"
+log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Intel and NVHPC with module(s) ${GCC_MODULES}"
 
 while read -r line; do
     sha="${line%% *}"  # Remove everything after and including the first space
@@ -77,6 +77,11 @@ while read -r line; do
         spack compiler find --scope=user
     fi
 
+    GCC_DIR=${DEFAULT_GCC_DIR}
+    if [[ ${spec} = "intel@"* ]]; then
+        GCC_DIR=${LEGACY_GCC_DIR}
+    fi
+
     if [[ ${spec} = *"intel"* ]]; then
         # update intel modules to use newer gcc in .cfg files
         INTEL_DIR=$(spack location --install-dir ${sha})
@@ -104,7 +109,7 @@ while read -r line; do
         (
             module purge
             ${cmd}
-            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${NVHPC_GCC_DIR}/bin/gcc -gpp ${NVHPC_GCC_DIR}/bin/g++ -g77 ${NVHPC_GCC_DIR}/bin/gfortran -x
+            makelocalrc ${NVHPC_DIR} -d "${NVHPC_TMPDIR}" -gcc ${DEFAULT_GCC_DIR}/bin/gcc -gpp ${DEFAULT_GCC_DIR}/bin/g++ -g77 ${DEFAULT_GCC_DIR}/bin/gfortran -x
         )
         # olupton 2021-10-15: is this still needed? Not sure.
         echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${NVHPC_TMPDIR}/localrc"

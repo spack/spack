@@ -93,7 +93,7 @@ setup_spack:
       fi
       git log --oneline -n5
     # Global values that are even appropriate for end-users
-    - cp "${DEPLOYMENT_ROOT}/spack/deploy/configs/"*.yaml "${DEPLOYMENT_ROOT}/spack/etc/spack"
+    - cp "${DEPLOYMENT_ROOT}/spack/bluebrain/sysconfig/bluebrain5/"*.yaml "${DEPLOYMENT_ROOT}/spack/etc/spack"
   # Just loop this stuff through…
   artifacts:
     when: always
@@ -106,7 +106,7 @@ setup_spack:
 # * The GitLab CI stage will set the installation directory for all
 #   software
 # * The GitLab CI job name will set the environment to use. Meaning that
-#   `deploy/environments/${CI_JOB_NAME}.yaml` has to exist and be a valid
+#   `bluebrain/deployment/environments/${CI_JOB_NAME}.yaml` has to exist and be a valid
 #   Spack environment
 # * Subsequent deployment stages have to depend on each other to pass
 #   exported entities like compilers and external packages through
@@ -118,7 +118,7 @@ setup_spack:
     - !reference [.spack_setup_gerrit_ssh]
     - !reference [.spack_basic_job, before_script]
     # Supplementary scripts
-    - export PATH="${DEPLOYMENT_ROOT}/spack/deploy/bin:${PATH}"
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
     # Clean test stacks and miscellaneous files from previous stages
     - rm -rf stack-*xml missing.txt specs.txt
     # Create a local Spack configuration directory if not present from
@@ -193,7 +193,7 @@ setup_spack:
     - if [[ -d "${SPACK_ROOT}/var/spack/environments/${DEPLOY_ENV}" ]]; then
     -     rm -rf "${SPACK_ROOT}/var/spack/environments/${DEPLOY_ENV}"
     - fi
-    - spack env create "${DEPLOY_ENV}" "${SPACK_ROOT}/deploy/environments/${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}.yaml"
+    - spack env create "${DEPLOY_ENV}" "${SPACK_ROOT}/bluebrain/deployment/environments/${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}.yaml"
     - spack env activate "${DEPLOY_ENV}"
     # Allow to cross-check what the CI sees
     - spack config blame compilers
@@ -218,9 +218,9 @@ setup_spack:
     # This will be needed by future compiler finds: extract the one base
     # gcc used in the compiler stage.
     -     export DEFAULT_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$DEFAULT_GCC_VERSION)"
-    -     export INTEL_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$INTEL_GCC_VERSION)"
+    -     export LEGACY_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$LEGACY_GCC_VERSION)"
     -     echo "DEFAULT_GCC_HASH=$DEFAULT_GCC_HASH" >> deployment.env
-    -     echo "INTEL_GCC_HASH=$INTEL_GCC_HASH" >> deployment.env
+    -     echo "LEGACY_GCC_HASH=$LEGACY_GCC_HASH" >> deployment.env
     # Make compilers here available to following stages
     -     configure-compilers < specs.txt
     - elif [[ "${CI_JOB_STAGE}" == "externals" ]]; then
@@ -301,7 +301,7 @@ viz:
   before_script:
     - !reference [.spack_basic_job, before_script]
     # Supplementary scripts
-    - export PATH="${DEPLOYMENT_ROOT}/spack/deploy/bin:${PATH}"
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
     # May need some Spack libraries
     - source "$DEPLOYMENT_ROOT/spack/share/spack/setup-env.sh"
   # Keep on looping through settings
@@ -381,7 +381,7 @@ github_feedback:
   rules:
     - if: $GITHUB_PULL_REQUEST_ID
   script:
-    - export PATH="${DEPLOYMENT_ROOT}/spack/deploy/bin:${PATH}"
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
     - give-github-feedback
 
 check_modules:

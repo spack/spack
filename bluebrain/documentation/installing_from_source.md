@@ -39,37 +39,3 @@ This Python module can now be used:
     $ spack load /xilq
     $ python -c 'import mvdtool; print(mvdtool.__file__)'
     …/linux-rhel7-x86_64/gcc-9.3.0/py-mvdtool-123-xilqkul…
-
-## Interactively Building CMake-based Software
-
-To interactively develop the CMake based packages, `spack setup` can be
-used to emulate the traditional Cmake workflow.
-**Please note that this seems to have been deprecated upstream and may not
-always work**.
-
-    $ git clone git@github.com:BlueBrain/MVDTool.git
-    $ cd MVDTool
-    $ spack setup mvdtool@develop
-    [+] …/linux-rhel7-x86_64/gcc-9.3.0/mvdtool-develop-2qofleiy…
-
-
-The last command will create an empty installation directory filled with
-some bogus files (this is needed for eventual dependencies, but can also
-interfere with builds).
-As before, the hash contained in this line can be used to refer to the
-package to be installed.
-Also note that this created a file called `spconfig.py` in the current
-directory, which will replace the `cmake` executable in the following:
-
-    $ mkdir build && cd build
-    $ spack build-env /2qof ../spconfig.py ..
-    $ spack build-env /2qof make
-    $ spack build-env /2qof make test
-    $ spack build-env /2qof make install
-
-Using `spack build-env /hash` is recommended to ensure that all of the
-build-environment is available to the installation process, but may be
-omitted, depending on the software installed.
-
-The latter steps may be repeated while editing the source to provide an
-interactive test environment similar to a purely CMake based workflow.
