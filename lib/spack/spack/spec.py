@@ -1302,10 +1302,10 @@ class Spec(object):
         # WARNING: the same package in a DAG, here we hard-code
         # WARNING: using index 0 i.e. we assume that we have only
         # WARNING: one edge from package "name"
-        dep = self._dependencies.get(name)
-        if dep is not None:
-            return dep[0]
-        raise InvalidDependencyError(self.name, name)
+        deps = self.edges_to_dependencies(name=name)
+        err_msg = 'expected only 1 "{0}" dependency, but got {1}'
+        assert len(deps) == 1, err_msg.format(name, len(deps))
+        return deps[0]
 
     def edges_from_dependents(self, name=None, deptype='all'):
         """Return a list of edges connecting this node in the DAG
