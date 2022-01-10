@@ -31,18 +31,18 @@ spack:
         +plasticity: '{name}-plasticity/{version}'
   specs:
     - asciitoh5@1.0
-    # - model-neocortex%intel
+    - model-neocortex%intel
     - nest@2.20.1
-    # - neurodamus-core~common%intel
-    # - neurodamus-core+common
-    # - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper
-    # - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper+knl
-    # - neurodamus-mousify+coreneuron%intel^coreneuron+caliper
-    # - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
-    # - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
-    # - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
-    # - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
-    # - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-core~common%intel
+    - neurodamus-core+common
+    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper
+    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-mousify+coreneuron%intel^coreneuron+caliper
+    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
+    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
+    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
+    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
     - parquet-converters
     - py-basalt@0.2.9
     - py-neurodamus+all_deps
