@@ -22,7 +22,7 @@ class PyTpot(PythonPackage):
     depends_on('py-deap@1.2:',              type=('build', 'run'))
     depends_on('py-numpy@1.16.3:',          type=('build', 'run'))
     depends_on('py-scikit-learn@0.22.0:',   type=('build', 'run'))
-    depends_on('py-scipy@1.3.1',            type=('build', 'run'))
+    depends_on('py-scipy@1.3.1:',           type=('build', 'run'))
     depends_on('py-tqdm@4.36.1:',           type=('build', 'run'))
     depends_on('py-stopit@1.1.1:',          type=('build', 'run'))
     depends_on('py-pandas@0.24.2:',         type=('build', 'run'))
