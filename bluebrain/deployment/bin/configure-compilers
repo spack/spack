@@ -20,6 +20,7 @@ fi
 # Find the location of *any* GCC, disregarding the environment that's
 # active (-E).  Prefer the hash passed through by earlier stages, if
 # not available fall back to the crude version.
+BINUTILS_DIR=$(spack -E location --install-dir ${BINUTILS_HASH:-binutils})
 LEGACY_GCC_DIR=$(spack -E location --install-dir ${LEGACY_GCC_HASH:-gcc@${LEGACY_GCC_VERSION}})
 DEFAULT_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFAULT_GCC_VERSION}})
 log "...got DEFAULT_GCC_DIR=${DEFAULT_GCC_DIR}"
@@ -34,6 +35,9 @@ GCC_MODULES="$(spack -E config get compilers|sed -n "
     }")"
 log "...using gcc ${LEGACY_GCC_VERSION} from ${LEGACY_GCC_DIR} for Intel (legacy)"
 log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Intel and NVHPC with module(s) ${GCC_MODULES}"
+# Get the path to the binutils module
+BINUTILS_MODULE=$(spack -E module tcl find --full-path ${BINUTILS_HASH})
+log "...got binutils module ${BINUTILS_MODULE}"
 
 while read -r line; do
     sha="${line%% *}"  # Remove everything after and including the first space
@@ -133,6 +137,12 @@ while read -r line; do
             full_module_path="${GCC_MODULES},${full_module_path}"
         else
             log "unable to add GCC module(s) to NVHPC definition"
+            exit 1
+        fi
+        if [[ -n $BINUTILS_MODULE ]]; then
+            full_module_path="${BINUTILS_MODULE},${full_module_path}"
+        else
+            log "unable to add binutils module to NVHPC definition"
             exit 1
         fi
     fi
