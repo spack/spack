@@ -128,22 +128,24 @@ class PythonPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
-        root = os.path.join(
-            self.prefix,
-            self.spec['python'].package.config_vars['python_lib']['true']['false'],
-        )
+        pkg = self.spec['python'].package
 
-        # Some Python libraries are packages: collections of modules
-        # distributed in directories containing __init__.py files
-        for path in find(root, '__init__.py', recursive=True):
-            modules.append(path.replace(root + os.sep, '', 1).replace(
-                os.sep + '__init__.py', '').replace('/', '.'))
+        # Packages may be installed in platform-specific or platform-independent
+        # site-packages directories
+        for site_packages_dir in {pkg.platlib, pkg.purelib}:
+            root = os.path.join(self.prefix, site_packages_dir)
 
-        # Some Python libraries are modules: individual *.py files
-        # found in the site-packages directory
-        for path in find(root, '*.py', recursive=False):
-            modules.append(path.replace(root + os.sep, '', 1).replace(
-                '.py', '').replace('/', '.'))
+            # Some Python libraries are packages: collections of modules
+            # distributed in directories containing __init__.py files
+            for path in find(root, '__init__.py', recursive=True):
+                modules.append(path.replace(root + os.sep, '', 1).replace(
+                    os.sep + '__init__.py', '').replace('/', '.'))
+
+            # Some Python libraries are modules: individual *.py files
+            # found in the site-packages directory
+            for path in find(root, '*.py', recursive=False):
+                modules.append(path.replace(root + os.sep, '', 1).replace(
+                    '.py', '').replace('/', '.'))
 
         modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
 
@@ -258,18 +260,13 @@ class PythonPackage(PackageBase):
         # Get all relative paths since we set the root to `prefix`
         # We query the python with which these will be used for the lib and inc
         # directories. This ensures we use `lib`/`lib64` as expected by python.
-        pure_site_packages_dir = spec['python'].package.config_vars[
-            'python_lib']['false']['false']
-        plat_site_packages_dir = spec['python'].package.config_vars[
-            'python_lib']['true']['false']
-        inc_dir = spec['python'].package.config_vars['python_inc']['true']
-
+        pkg = spec['python'].package
         args += ['--root=%s' % prefix,
-                 '--install-purelib=%s' % pure_site_packages_dir,
-                 '--install-platlib=%s' % plat_site_packages_dir,
+                 '--install-purelib=%s' % pkg.purelib,
+                 '--install-platlib=%s' % pkg.platlib,
                  '--install-scripts=bin',
                  '--install-data=',
-                 '--install-headers=%s' % inc_dir
+                 '--install-headers=%s' % pkg.include,
                  ]
 
         return args

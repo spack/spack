@@ -64,11 +64,9 @@ class Migraphx(CMakePackage):
         """Include the python include path to the
         CMake based on current spec
         """
-        python_spec = self.spec['python']
-        include_dir = join_path(
-            python_spec.prefix, python_spec.package.config_vars['python_inc']['false'])
+        python = self.spec['python']
         return [
-            self.define('Python_INCLUDE_DIR', include_dir)
+            self.define('Python_INCLUDE_DIR', python.package.config_vars['include'])
         ]
 
     def cmake_args(self):

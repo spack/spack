@@ -26,10 +26,8 @@ class PyShiboken(PythonPackage):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
-        pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(
-            self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+        rpath.append(os.path.join(site_packages_dir, 'Shiboken'))
 
         filter_file(
             r'OPTION_CMAKE,',

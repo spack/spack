@@ -53,7 +53,7 @@ class PySip(PythonPackage):
                 '--sip-module={0}'.format(spec.variants['module'].value),
                 '--bindir={0}'.format(prefix.bin),
                 '--destdir={0}'.format(site_packages_dir),
-                '--incdir={0}'.format(python_include_dir),
+                '--incdir={0}'.format(spec['python'].package.include),
                 '--sipdir={0}'.format(prefix.share.sip),
                 '--stubsdir={0}'.format(site_packages_dir),
             ]
