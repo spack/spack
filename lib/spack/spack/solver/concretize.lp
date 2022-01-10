@@ -869,20 +869,6 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
-% A condition group specifies one or more specs that must be satisfied.
-% Specs declared first are preferred, so we assign increasing weights and
-% minimize the weights.
-% TODO: I don't know what the purpose of 'build_priority' is but it appears
-% in most of the other minimization constraints
-opt_criterion(80, "requirement weight").
-#minimize{ 0@280: #true }.
-#minimize{ 0@80: #true }.
-#minimize {
-    Weight@80+Priority
-    : condition_weight(Package, Weight),
-      build_priority(Package, Priority)
-}.
-
 % Minimize the number of deprecated versions being used
 opt_criterion(75, "deprecated versions used").
 #minimize{ 0@275: #true }.
@@ -890,6 +876,18 @@ opt_criterion(75, "deprecated versions used").
 #minimize{
     1@75+Priority,Package
     : deprecated(Package, _),
+      build_priority(Package, Priority)
+}.
+
+% A condition group specifies one or more specs that must be satisfied.
+% Specs declared first are preferred, so we assign increasing weights and
+% minimize the weights.
+opt_criterion(73, "requirement weight").
+#minimize{ 0@273: #true }.
+#minimize{ 0@73: #true }.
+#minimize {
+    Weight@73+Priority
+    : condition_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
