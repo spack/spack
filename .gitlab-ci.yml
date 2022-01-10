@@ -32,7 +32,7 @@ setup_environment:
     # Proprietary sources
     DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
     # This date should increment for new deployments — about once a year
-    DEPLOYMENT_DATE: "2021-11"
+    DEPLOYMENT_DATE: "2022-01-10"
     # Global base directory
     DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
     # Global module archive
