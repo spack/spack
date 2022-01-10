@@ -215,6 +215,6 @@ def compute_windows_program_path_for_package(pkg):
     """
     program_files = 'C:\\Program Files {}\\{}'
 
-    return[program_files.format(arch, ) for
+    return[program_files.format(arch, name) for
            arch, name in itertools.product(("", "(x86)"),
            (pkg.name, pkg.name.capitalize()))]
