@@ -93,8 +93,8 @@ def libraries_in_ld_library_path(path_hints=None):
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
-    # Reverse order of search directories so that a lib in the first PATH
-    # entry overrides later entries
+    # Reverse order of search directories so that a lib in the first
+    # LD_LIBRARY_PATH entry overrides later entries
     for search_path in reversed(search_paths):
         for lib in os.listdir(search_path):
             lib_path = os.path.join(search_path, lib)
