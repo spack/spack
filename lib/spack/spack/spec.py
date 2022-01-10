@@ -1272,7 +1272,7 @@ class Spec(object):
         self._dependencies.clear()
 
     def reset_edges(self):
-        """Trim the dependents of this spec."""
+        """Trim the dependencies and dependents of this spec."""
         self._dependencies.clear()
         self._dependents.clear()
 
