@@ -210,7 +210,7 @@ def compute_windows_program_path_for_package(pkg):
     program files location, return list of best guesses
 
     Args:
-        pkg (spack.Package): package for which
+        pkg (spack.package.Package): package for which
                            Program Files location is to be computed
     """
     program_files = 'C:\\Program Files {}\\{}'
