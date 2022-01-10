@@ -10,7 +10,7 @@ from spack import *
 
 
 class Lorene(MakefilePackage):
-    """LORENE: Langage Objet pour la RElativite NumeriquE
+    """LORENE: Langage Objet pour la RElativite NumeriquE.
 
     LORENE is a set of C++ classes to solve various problems
     arising in numerical relativity, and more generally in
