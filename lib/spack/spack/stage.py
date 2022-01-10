@@ -533,7 +533,7 @@ class Stage(object):
         for entry in hidden_entries + entries:
             if os.path.isdir(entry):
                 d = os.path.join(dest, os.path.basename(entry))
-                shutil.copytree(entry, d)
+                shutil.copytree(entry, d, symlinks=True)
             else:
                 shutil.copy2(entry, dest)
 
