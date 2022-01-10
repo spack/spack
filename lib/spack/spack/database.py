@@ -1520,8 +1520,7 @@ class Database(object):
             # us anyway (so e.g. they should never uninstall specs)
             upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
 
-        local_results = self.query_local(*args, **kwargs)
-        local_results = set(local_results)
+        local_results = set(self.query_local(*args, **kwargs))
 
         results = list(local_results) + list(
             x for x in upstream_results if x not in local_results)
