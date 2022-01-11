@@ -272,10 +272,10 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf', type='build', when='@master')
-    depends_on('automake', type='build', when='@master')
-    depends_on('libtool',  type='build', when='@master')
-    depends_on('m4',       type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@master')
+    depends_on('automake @1.13.4:', type='build', when='@master')
+    depends_on('libtool @2.4.2:',   type='build', when='@master')
+    depends_on('m4',                type='build', when='@master')
     depends_on('pandoc', type='build', when='@master')
 
     depends_on('perl',     type='build')
@@ -320,11 +320,6 @@ class Openmpi(AutotoolsPackage):
     depends_on('libevent', when='+pmix')
 
     depends_on('openssh', type='run')
-
-    depends_on('autoconf @2.69:', type='build', when='@master')
-    depends_on('automake @1.13.4:', type='build', when='@master')
-    depends_on('libtool @2.4.2:', type='build', when='@master')
-    depends_on('pandoc', type='build', when='@master')
 
     # CUDA support was added in 1.7
     conflicts('+cuda', when='@:1.6')
