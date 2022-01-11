@@ -20,7 +20,7 @@ class Scorpio(CMakePackage):
 
     version('develop', branch='truchas')
 
-    version('develop-2021-12-10',
+    version('2021-12-10',
             commit='b802f16877a6562ccdbeca8887910d3bd3e25cbb',
             preferred=True)
 
