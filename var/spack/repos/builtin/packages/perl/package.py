@@ -194,7 +194,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append('CCTYPE=%s' % self.compiler.msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append('INST_TOP="%s"' % self.prefix.replace('/', '\\'))
+        args.append('INST_TOP=%s' % self.prefix.replace('/', '\\'))
         args.append("INST_ARCH=\\$(ARCHNAME)")
         if self.spec.satisfies('~shared'):
             args.append("ALL_STATIC=%s" % "define")
