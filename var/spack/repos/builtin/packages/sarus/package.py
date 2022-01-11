@@ -48,7 +48,7 @@ class Sarus(CMakePackage):
     depends_on("autoconf", type="build")
 
     # Python 3 is used to run integration tests
-    depends_on("python@3:", type="run", when="@develop")
+    depends_on("python@3:", type="test", when="@develop")
 
     def cmake_args(self):
         spec = self.spec
