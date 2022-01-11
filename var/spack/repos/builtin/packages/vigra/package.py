@@ -71,7 +71,7 @@ class Vigra(CMakePackage):
                 '-DBoost_DIR={0}'.format(spec['boost'].prefix),
                 '-DBoost_INCLUDE_DIR={0}'.format(spec['boost'].prefix.include),
                 '-DBoost_PYTHON_LIBRARY={0}'.format(boost_python_lib),
-                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(site_packages_dir)
+                '-DVIGRANUMPY_INSTALL_DIR={0}'.format(python_platlib)
             ])
         if '+fftw' in spec:
             args.extend([

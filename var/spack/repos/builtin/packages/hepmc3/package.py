@@ -51,11 +51,10 @@ class Hepmc3(CMakePackage):
 
         if self.spec.satisfies('+python'):
             py_ver = spec['python'].version.up_to(2)
-            py_sitepkg = join_path(self.prefix, site_packages_dir)
             args.extend([
                 '-DHEPMC3_PYTHON_VERSIONS={0}'.format(py_ver),
                 '-DHEPMC3_Python_SITEARCH{0}={1}'.format(
-                    py_ver.joined, py_sitepkg)
+                    py_ver.joined, python_platlib)
             ])
 
         if self.spec.satisfies('+rootio'):

@@ -63,7 +63,7 @@ class HoomdBlue(CMakePackage):
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-            '-DCMAKE_INSTALL_PREFIX={0}'.format(site_packages_dir)
+            '-DCMAKE_INSTALL_PREFIX={0}'.format(python_platlib)
         ]
 
         # MPI support

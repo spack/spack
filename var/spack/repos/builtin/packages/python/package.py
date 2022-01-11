@@ -986,8 +986,8 @@ config.update(get_paths())
         for prefix in prefixes:
             # Packages may be installed in platform-specific or platform-independent
             # site-packages directories
-            for site_packages_dir in {self.platlib, self.purelib}:
-                env.prepend_path('PYTHONPATH', os.path.join(prefix, site_packages_dir))
+            for directory in {self.platlib, self.purelib}:
+                env.prepend_path('PYTHONPATH', os.path.join(prefix, directory))
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -1052,9 +1052,9 @@ config.update(get_paths())
             if d.package.extends(self.spec):
                 # Packages may be installed in platform-specific or platform-independent
                 # site-packages directories
-                for site_packages_dir in {self.platlib, self.purelib}:
+                for directory in {self.platlib, self.purelib}:
                     env.prepend_path(
-                        'PYTHONPATH', os.path.join(d.prefix, site_packages_dir)
+                        'PYTHONPATH', os.path.join(d.prefix, directory)
                     )
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -1064,13 +1064,15 @@ config.update(get_paths())
         module.setup_py = Executable(
             self.command.path + ' setup.py --no-user-cfg')
 
-        module.site_packages_dir = join_path(dependent_spec.prefix, self.purelib)
+        module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
+        module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
         self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
-            mkdirp(module.site_packages_dir)
+            mkdirp(module.python_platlib)
+            mkdirp(module.python_purelib)
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.

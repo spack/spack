@@ -167,6 +167,6 @@ class Elemental(CMakePackage):
 
         if '+python' in spec:
             args.extend([
-                '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
+                '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(python_platlib)])
 
         return args

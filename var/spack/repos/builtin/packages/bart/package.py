@@ -70,9 +70,9 @@ class Bart(MakefilePackage, CudaPackage):
         install_tree('matlab', prefix.matlab)
         install('startup.m', prefix)
 
-        install('python/bart.py', site_packages_dir)
-        install('python/cfl.py', site_packages_dir)
-        install('python/wslsupport.py', site_packages_dir)
+        install('python/bart.py', python_platlib)
+        install('python/cfl.py', python_platlib)
+        install('python/wslsupport.py', python_platlib)
 
         if '^python@3:' in spec:
             install('python/bartview3.py', join_path(prefix.bin, 'bartview'))

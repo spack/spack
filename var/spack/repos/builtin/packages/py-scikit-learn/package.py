@@ -100,4 +100,4 @@ class PyScikitLearn(PythonPackage):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
         with working_dir('spack-test', create=True):
             pytest = which('pytest')
-            pytest(join_path(self.prefix, site_packages_dir, 'sklearn'))
+            pytest(join_path(self.prefix, python_purelib, 'sklearn'))

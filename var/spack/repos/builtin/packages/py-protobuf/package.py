@@ -86,4 +86,4 @@ class PyProtobuf(PythonPackage):
     def fix_import_error(self):
         if str(self.spec['python'].version.up_to(1)) == '2':
             touch = which('touch')
-            touch(join_path(site_packages_dir, 'google', '__init__.py'))
+            touch(join_path(python_platlib, 'google', '__init__.py'))

@@ -234,7 +234,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Add the PYTHONPATH to bohrium to the PYTHONPATH environment
         pythonpaths = [p for p in os.environ["PYTHONPATH"].split(":")]
-        pythonpaths.append(site_packages_dir)
+        pythonpaths.append(python_platlib)
         test_env["PYTHONPATH"] = ":".join(pythonpaths)
 
         # Collect the stacks which should be available:

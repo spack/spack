@@ -132,8 +132,8 @@ class PythonPackage(PackageBase):
 
         # Packages may be installed in platform-specific or platform-independent
         # site-packages directories
-        for site_packages_dir in {pkg.platlib, pkg.purelib}:
-            root = os.path.join(self.prefix, site_packages_dir)
+        for directory in {pkg.platlib, pkg.purelib}:
+            root = os.path.join(self.prefix, directory)
 
             # Some Python libraries are packages: collections of modules
             # distributed in directories containing __init__.py files

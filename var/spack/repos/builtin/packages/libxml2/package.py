@@ -62,7 +62,7 @@ class Libxml2(AutotoolsPackage):
         if '+python' in spec:
             args.extend([
                 '--with-python={0}'.format(spec['python'].home),
-                '--with-python-install-dir={0}'.format(site_packages_dir)
+                '--with-python-install-dir={0}'.format(python_platlib)
             ])
         else:
             args.append('--without-python')
