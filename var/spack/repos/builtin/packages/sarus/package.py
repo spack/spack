@@ -35,7 +35,6 @@ class Sarus(CMakePackage):
         "to enable connections inside containers",
     )
 
-    depends_on("wget", type="build")
     depends_on("expat", type="build")
     depends_on("squashfs", type=("build", "run"))
     depends_on("boost@1.65.0: cxxstd=11")
