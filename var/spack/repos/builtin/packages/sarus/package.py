@@ -30,7 +30,7 @@ class Sarus(CMakePackage):
 
     variant(
         "ssh",
-        default=True,
+        default=False,
         description="Build and install the SSH hook and custom SSH software "
         "to enable connections inside containers",
     )
@@ -71,7 +71,7 @@ class Sarus(CMakePackage):
             """
                 To complete Sarus's configuration do:
 
-                1. Make sure `tini` and `tini-static` binaries are in PATH, for example do `spack load tini`.
+                1. Make sure `tini`, `tini-static` and `squashfs` binaries are in PATH, for example do `spack load tini squashfs`.
                 2. Execute the script {} with root privileges.
 
                 The script generates a basic working configuration. For more details:
