@@ -1,4 +1,6 @@
 enable:
   - tcl
 tcl:
+  all:
+    autoload: none
   naming_scheme: '{name}/{version}-{compiler.name}'

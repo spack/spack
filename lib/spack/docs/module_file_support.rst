@@ -615,17 +615,34 @@ modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 Autoload dependencies
 """""""""""""""""""""
 
-In some cases it can be useful to have module files that automatically load
-their dependencies.  This may be the case for Python extensions, if not
-activated using ``spack activate``:
+Often it is required for a module to have its (transient) dependencies loaded as well.
+One example where this is useful is when one package needs to use executables provided
+by its dependency; when the dependency is autoloaded, the executable will be in the
+PATH. Similarly for scripting languages such as Python, packages and their dependencies
+have to be loaded together.
+
+As of Spack 0.18.0, autoloading is enabled in the default configuration:
 
 .. code-block:: yaml
 
-   modules:
-     default:
-       tcl:
-         ^python:
-           autoload: 'direct'
+    modules:
+      default:
+        tcl:
+          all:
+            autoload: direct
+        lmod:
+          all:
+            autoload: direct
+
+For more fine-grained control, autoloading can be disabled or enabled conditionally:
+
+    modules:
+      default:
+        tcl:
+          all:
+            autoload: none
+          ^python:
+            autoload: direct
 
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
@@ -641,11 +658,6 @@ The allowed values for the ``autoload`` statement are either ``none``,
 
   .. code-block:: yaml
 
-     modules:
-       default:
-         lmod:
-           all:
-             autoload: 'direct'
 
 .. note::
   TCL prerequisites
