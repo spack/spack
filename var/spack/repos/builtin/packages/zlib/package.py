@@ -43,7 +43,7 @@ class Zlib(CMakePackage, WindowsPackage):
 
     def cmake_args(self):
         args = ['-DBUILD_SHARED_LIBS:BOOL=' +
-                ('ON' if self.shared else 'OFF')]
+                ('ON' if self.spec.satisfies('+shared') else 'OFF')]
 
         if self.spec.satisfies('+staticmt'):
             args.append(self.define('CMAKE_POLICY_DEFAULT_CMP0091', 'NEW'))
