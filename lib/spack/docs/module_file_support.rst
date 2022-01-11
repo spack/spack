@@ -621,20 +621,12 @@ by its dependency; when the dependency is autoloaded, the executable will be in 
 PATH. Similarly for scripting languages such as Python, packages and their dependencies
 have to be loaded together.
 
-As of Spack 0.18.0, autoloading is enabled in the default configuration:
+Autoloading is enabled by default for LMod, as it has great builtin support for through
+the ``depends_on`` function. For Environment Modules it is disabled by default.
+
+Autoloading can also be enabled conditionally:
 
 .. code-block:: yaml
-
-    modules:
-      default:
-        tcl:
-          all:
-            autoload: direct
-        lmod:
-          all:
-            autoload: direct
-
-For more fine-grained control, autoloading can be disabled or enabled conditionally:
 
     modules:
       default:
@@ -647,24 +639,15 @@ For more fine-grained control, autoloading can be disabled or enabled conditiona
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.  The default is ``none``.
-
-.. tip::
-  Building external software
-     Setting ``autoload`` to ``direct`` for all packages can be useful
-     when building software outside of a Spack installation that depends on
-     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
-     as appropriate):
-
-  .. code-block:: yaml
-
+``direct`` or ``all``.
 
 .. note::
   TCL prerequisites
      In the ``tcl`` section of the configuration file it is possible to use
      the ``prerequisites`` directive that accepts the same values as
      ``autoload``. It will produce module files that have a ``prereq``
-     statement instead of automatically loading other modules.
+     statement, which can be used to autoload dependencies in some versions
+     of Environment Modules.
 
 ------------------------
 Maintaining Module Files
