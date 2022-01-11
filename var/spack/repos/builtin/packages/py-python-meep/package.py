@@ -13,10 +13,11 @@ class PyPythonMeep(PythonPackage):
     homepage = "https://launchpad.net/python-meep"
     url      = "https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.tar"
 
-    version('1.4.2', sha256='d91428aa4727c308383cea31ca9cdacee409320c686e9a8368769933e56c8762')
+    version('1.4.2', sha256='d91428aa4727c308383cea31ca9cdacee409320c686e9a8368769933e56c8762', deprecated=True)
 
     variant('mpi', default=True, description='Enable MPI support')
 
+    depends_on('python@2.6:2.7', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))

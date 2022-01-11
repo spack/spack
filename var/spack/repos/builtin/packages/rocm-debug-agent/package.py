@@ -15,6 +15,7 @@ class RocmDebugAgent(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/rocm-4.3.1.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    version('4.5.0', sha256='6486b1a8515da4711d3c85f8e41886f8fe6ba37ca2c63664f00c811f6296ac20')
     version('4.3.1', sha256='7bee6be6c29883f03f47a8944c0d50b7cf43a6b5eeed734602f521c3c40a18d0')
     version('4.3.0', sha256='0cdee5792b808e03b839070da0d1b08dc4078a7d1fc295f0c99c6a5ae7d636a6')
     version('4.2.0', sha256='ce02a5b752291882daa0a2befa23944e59087ce9fe65a91061476c3c399e4a0c')
@@ -41,12 +42,12 @@ class RocmDebugAgent(CMakePackage):
     depends_on('elfutils@:0.168', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1']:
+                '4.3.0', '4.3.1', '4.5.0']:
         depends_on('rocm-dbgapi@' + ver, when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
 

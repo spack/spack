@@ -123,6 +123,10 @@ class Conduit(CMakePackage):
     depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
     depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
     depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
+
+    # conduit uses a <=1.10 api version.
+    depends_on("hdf5@:1.10", when="@:0.7 +hdf5")
+
     # we need to hand this to conduit so it can properly
     # handle downstream linking of zlib reqed by hdf5
     depends_on("zlib", when="+hdf5")

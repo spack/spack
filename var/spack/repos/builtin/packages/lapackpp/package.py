@@ -45,11 +45,17 @@ class Lapackpp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        return [
+
+        args = [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
             '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
         ]
+
+        if spec['blas'].name == 'cray-libsci':
+            args.append(self.define('BLA_VENDOR', 'CRAY'))
+
+        return args
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
@@ -58,3 +64,8 @@ class Lapackpp(CMakePackage):
                 make('check')
         else:
             raise Exception('The tester was not built!')
+
+    def flag_handler(self, name, flags):
+        if (self.spec['blas'].name == 'cray-libsci') and name == 'cxxflags':
+            flags.append('-DLAPACK_FORTRAN_ADD_')
+        return (None, None, flags)

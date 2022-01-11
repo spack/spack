@@ -16,7 +16,7 @@ class PyOpentuner(PythonPackage):
 
     version('0.8.7', commit='070c5ce')
     version('0.8.2', commit='8e720a2')
-    version('0.8.0', commit='4cb9135')
+    version('0.8.0', commit='4cb9135', deprecated=True)
 
     depends_on('python@3:', type=('build', 'run'), when='@0.8.1:')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@:0.8.0')
