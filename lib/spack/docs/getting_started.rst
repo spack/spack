@@ -1537,9 +1537,6 @@ To use Spack on Windows, you will need the following packages:
 * Intel Fortran (needed for some packages)
 * Python 
 * Git
-* Perl (needed for some packages)
-* NASM (needed for some packages)
-* CMake
 
 """""""""""""""""""""""
 Microsoft Visual Studio
@@ -1587,21 +1584,6 @@ When given the option of adjusting your ``PATH``, choose the ``Git from the
 command line and also from 3rd-party software`` option. This will automatically
 update your ``PATH`` variable to include the ``git`` command.
 
-""""
-NASM
-""""
-
-The Netwide Assembler (NASM) is a x86-64 assembler that some Windows packages
-will use to create binaries and can be found at https://www.nasm.us.
-
-"""""
-CMake
-"""""
-
-While the CMake provided by your Microsoft Visual Studio installation should
-suffice for most packages, we still recommend downloading and installing the
-most recent version of the software at https://cmake.org/download/ in case
-of version restrictions.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2: Install and setup Spack
@@ -1612,10 +1594,23 @@ begin by creating a top-level directory to do our work in: we will call
 it ``spack_install`` in this tutorial. Inside this directory, use Git to
 clone the Spack repo, hosted at https://github.com/spack/spack.git.
 
-The files and scripts used for Windows installation are on the
-features/windows-support branch; ``cd`` into the repo and use 
-``git checkout`` to switch to it. 
+Presently, Windows operations are supported by Spack soley through the
+features/windows-support branch on the upstream Spack repository,
+located at the above url.
 
+In order to install Spack with Windows support, run the following one liner
+in a Windows CMD prompt.
+
+.. code-block:: console
+
+   git clone https://github.com/spack/spack.git -b features/windows-support win_spack
+
+or if working from a previous clone of Spack, simply checkout the Windows support feature branch
+with
+
+.. code-block:: console
+
+  git checkout -b features/windows-support --track <spack_upstream>/features/windows-support
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
