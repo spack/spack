@@ -15,6 +15,8 @@ class Rocblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+
+    version('4.5.2', sha256='15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4')
     version('4.5.0', sha256='22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf')
     version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')
     version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
@@ -52,7 +54,7 @@ class Rocblas(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -61,7 +63,7 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -86,7 +88,8 @@ class Rocblas(CMakePackage):
         ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
         ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
         ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
-        ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0')
+        ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
+        ('@4.5.2',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',

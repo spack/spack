@@ -26,6 +26,7 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+    version('4.5.2', sha256='6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1')
     version('4.5.0', sha256='ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
     version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79')
     version('4.3.0', sha256='8a86b4f2a1b1c7ac628262e5b11b07ff42a224e62e594a4e0683aeb616062538')
@@ -46,7 +47,7 @@ class HipRocclr(CMakePackage):
     depends_on('numactl', type='link', when="@3.7.0:")
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -65,6 +66,7 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ('4.5.2',  '96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d'),
         ('4.5.0',  '3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8'),
         ('4.3.1',  '7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca'),
         ('4.3.0',  'd37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9'),
@@ -97,7 +99,7 @@ class HipRocclr(CMakePackage):
 
     @property
     def install_targets(self):
-        if self.spec.satisfies('@4.5.0'):
+        if self.spec.satisfies('@4.5.0:'):
             return []
         return ['install']
 
