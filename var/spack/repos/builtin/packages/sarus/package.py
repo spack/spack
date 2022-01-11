@@ -70,7 +70,7 @@ class Sarus(CMakePackage):
             """
                 To complete Sarus's configuration:
 
-                1. Make sure `tini`, `tini-static` and `squashfs` binaries are in PATH, for example do `spack load tini squashfs`.
+                1. Make sure sarus and its dependencies (tini, squashfs) are in PATH, for example do `spack load sarus`.
                 2. Execute the script {} with root privileges.
 
                 The script generates a basic working configuration. For more details:
