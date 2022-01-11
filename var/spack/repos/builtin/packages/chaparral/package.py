@@ -15,7 +15,7 @@ class Chaparral(CMakePackage):
     maintainers = ['pbrady']
 
     version('develop', branch='truchas')
-    version('develop-2020-08-28',
+    version('2020-08-28',
             commit='c8a190bb74ef33ad8b2f7b67d20590f393fde32a',
             preferred=True)
 
