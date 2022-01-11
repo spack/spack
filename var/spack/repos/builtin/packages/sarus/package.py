@@ -69,7 +69,7 @@ class Sarus(CMakePackage):
         script_sh = join_path(self.spec.prefix, "configure_installation.sh")
         tty.warn(
             """
-                To complete Sarus's configuration do:
+                To complete Sarus's configuration:
 
                 1. Make sure `tini`, `tini-static` and `squashfs` binaries are in PATH, for example do `spack load tini squashfs`.
                 2. Execute the script {} with root privileges.
@@ -81,6 +81,3 @@ class Sarus(CMakePackage):
                 script_sh
             )
         )
-
-        # sudo = which('sudo')
-        # sudo(script_sh)
