@@ -77,6 +77,8 @@ class Sarus(CMakePackage):
     # Python 3 is used to run integration tests
     depends_on("python@3:", type="test", when="@develop")
 
+    patch("use_shared_dropbear_lib.patch", when="+ssh")
+
     def cmake_args(self):
         spec = self.spec
         args = [
