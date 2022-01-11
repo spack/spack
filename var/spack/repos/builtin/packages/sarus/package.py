@@ -40,7 +40,7 @@ class Sarus(CMakePackage):
     depends_on("boost@1.65.0: cxxstd=11")
     depends_on("cpprestsdk@2.10.0:")
     depends_on("libarchive@3.4.1:")
-    depends_on("rapidjson@00dbcf2", type="build")
+    depends_on("rapidjson@1.2.0-2021-08-13", type="build")
     depends_on("runc")
     depends_on("tini")
 
