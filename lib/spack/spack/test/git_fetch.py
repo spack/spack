@@ -212,7 +212,7 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert(nbranches == 5)
+            assert(nbranches >= 5)
             assert(ncommits == 2)
         else:
             assert(nbranches == 2)

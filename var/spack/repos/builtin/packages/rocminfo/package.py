@@ -12,12 +12,13 @@ class Rocminfo(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
     git      = "https://github.com/RadeonOpenCompute/rocminfo.git"
-    url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-4.3.1.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
-
+    version('4.5.0', sha256='421ed55192780eb478f0341fd1ce47a0dd3ffafbec9d7a02109a411878a58ee5')
+    version('4.3.1', sha256='d042947d3f29e943a2e3294a2a2d759ca436cebe31151ce048e49bc4f02d6993')
     version('4.3.0', sha256='2cc1f251c0ed9c3ea413cc15cb5ce11559e4497540eebbf5e8dcfd52b03e53d1')
     version('4.2.0', sha256='6952b6e28128ab9f93641f5ccb66201339bb4177bb575b135b27b69e2e241996')
     version('4.1.0', sha256='5b994ad02b6d250160770f6f7730835f3a52127193ac9a8dee40c53aec911f4f')
@@ -28,10 +29,12 @@ class Rocminfo(CMakePackage):
     version('3.7.0', sha256='86a8e3ce7d91fb2d79688a22a2805757c83922d9f17ea7ea1cb41bf9516197ea')
     version('3.5.0', sha256='1d113f06b7c9b60d0e92b2c12c0c704a565696867496fe7038e5dddd510567b7')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
 

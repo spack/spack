@@ -27,11 +27,8 @@ class Fenics(CMakePackage):
     version('2016.2.0',
             sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d',
             deprecated=True)
-    version('1.6.0',
-            sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201',
-            deprecated=True)
 
-    dolfin_versions = ['2019.1.0', '2018.1.0', '2017.2.0', '2016.2.0', '1.6.0']
+    dolfin_versions = ['2019.1.0', '2018.1.0', '2017.2.0', '2016.2.0']
 
     variant('python',       default=True,  description='Compile with Python interface')
     variant('hdf5',         default=True,  description='Compile with HDF5')
@@ -68,8 +65,6 @@ class Fenics(CMakePackage):
 
     # Patches
     # patch('petsc-3.7.patch', when='petsc@3.7:')
-    patch('petsc-version-detection.patch', when='@1.6.0')
-    patch('hdf5~cxx-detection.patch', when='@:1.6.0')
 
     patch('header_fix.patch', when='@2019.1.0.post0')
     # endian.hpp for byte order detection was removed with Boost 1.73,
@@ -102,7 +97,7 @@ class Fenics(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
-    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018.99')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018')
 
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+hl+fortran', when='+hdf5+petsc')

@@ -6,12 +6,15 @@ import os
 import re
 
 
-class SpectrumMpi(Package):
+class SpectrumMpi(BundlePackage):
     """IBM MPI implementation from Spectrum MPI."""
 
     has_code = False
 
-    homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+    homepage = "https://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+
+    # https://www.ibm.com/docs/en/smpi/10.4
+    version('10.4')
 
     provides('mpi')
 
@@ -90,9 +93,6 @@ class SpectrumMpi(Package):
             else:
                 results.append('')
         return results
-
-    def install(self, spec, prefix):
-        raise InstallError('IBM MPI is not installable; it is vendor supplied')
 
     def setup_dependent_package(self, module, dependent_spec):
         # get the compiler names

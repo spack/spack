@@ -16,11 +16,11 @@ class OntAlbacore(Package):
     homepage = "https://nanoporetech.com"
     url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-2.3.1-cp35-cp35m-manylinux1_x86_64.whl"
 
-    version('2.3.1', sha256='dc1af11b0f38b26d071e5389c2b4595c496319c987401754e1853de42467a7d1', expand=False)
+    version('2.3.1', sha256='dc1af11b0f38b26d071e5389c2b4595c496319c987401754e1853de42467a7d1', expand=False, deprecated=True)
 
     extends('python')
 
-    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
+    depends_on('python@3.5.0:3.5', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build', 'run'))
     depends_on('py-numpy@1.13.0',      type=('build', 'run'))
     depends_on('py-python-dateutil',   type=('build', 'run'))

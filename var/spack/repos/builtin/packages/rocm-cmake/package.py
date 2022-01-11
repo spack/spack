@@ -13,11 +13,13 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
-    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocm-cmake/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.5.0', sha256='c77b71454010adbeea5357773aa98dd0725f655f51a411815807cabf29258395')
+    version('4.3.1', sha256='acf2a58e2cd486f473194bf01247c52dbf20bd5f6465810fb221470298f2557f')
     version('4.3.0', sha256='bb752d8d2727b7ef2754838e389075dd4212cf5439d099392141f93d05391415')
     version('4.2.0', sha256='299e190ec3d38c2279d9aec762469628f0b2b1867adc082edc5708d1ac785c3b')
     version('4.1.0', sha256='a4521d119fa07954e529d5e717ad1b338992c0694690dbce00fee26c01129c8c')
@@ -28,7 +30,7 @@ class RocmCmake(CMakePackage):
     version('3.7.0', sha256='51abfb06124c2e0677c4d6f7fe83c22fe855cb21386f0053ace09f8ab297058b')
     version('3.5.0', sha256='5fc09e168879823160f5fdf4fd1ace2702d36545bf733e8005ed4ca18c3e910f')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('ldconfig', default=True, description='ROCm ldconfig')
 
     depends_on('cmake@3:', type='build')

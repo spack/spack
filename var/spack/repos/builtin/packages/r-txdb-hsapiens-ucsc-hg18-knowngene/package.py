@@ -13,8 +13,8 @@ class RTxdbHsapiensUcscHg18Knowngene(RPackage):
     TxDb objects"""
 
     # This is a bioconductor package but ther is no available git repo
-    homepage = "http://bioconductor.org/packages/release/data/annotation/html/TxDb.Hsapiens.UCSC.hg18.knownGene.html"
-    url      = "http://bioconductor.org/packages/release/data/annotation/src/contrib/TxDb.Hsapiens.UCSC.hg18.knownGene_3.2.2.tar.gz"
+    homepage = "https://bioconductor.org/packages/release/data/annotation/html/TxDb.Hsapiens.UCSC.hg18.knownGene.html"
+    url      = "https://bioconductor.org/packages/release/data/annotation/src/contrib/TxDb.Hsapiens.UCSC.hg18.knownGene_3.2.2.tar.gz"
 
     version('3.2.2', sha256='bc9ca40b4eab87f5ca64a4b876d42502b9b8e9f5983d745bfe0ee349d97b69fa')
 

@@ -68,8 +68,8 @@ def compare_specs(a, b, to_string=False, color=None):
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
-    a_facts = set(t for t in setup.spec_clauses(a, body=True))
-    b_facts = set(t for t in setup.spec_clauses(b, body=True))
+    a_facts = set(t for t in setup.spec_clauses(a, body=True, expand_hashes=True))
+    b_facts = set(t for t in setup.spec_clauses(b, body=True, expand_hashes=True))
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))

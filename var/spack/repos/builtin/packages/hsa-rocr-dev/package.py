@@ -15,11 +15,14 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.1.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.3.1.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
+
+    version('4.5.0', sha256='fbf550f243dddfef46a716e360b77c43886fed3eef67215ab9dab1c82f3851ca')
+    version('4.3.1', sha256='85fbd1645120b71635844090ce8bd9f7af0a3d1065d5fae476879f99ba0c0475')
     version('4.3.0', sha256='2a08657a517971447fc233cb2c8ee2e117c6ab5efc31af147b28b3ef59b3847d')
     version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc')
     version('4.1.0', sha256='c223a5f7ccac280520abb6ea49fdd36fa9468718098a9d984be6ef839ccbc6db')
@@ -30,7 +33,7 @@ class HsaRocrDev(CMakePackage):
     version('3.7.0', sha256='0071d14431f73ce74574e61d0786f2b7cf34b14ea898a1f54b6e1b06b2d468c0')
     version('3.5.0', sha256='52c12eec3e3404c0749c70f156229786ee0c3e6d3c979aed9bbaea500fa1f3b8')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('shared', default=True, description='Build shared or static library')
     variant('image', default=True, description='build with or without image support')
 
@@ -42,7 +45,7 @@ class HsaRocrDev(CMakePackage):
     depends_on('libelf@0.8:', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
         # allow standalone rocm-device-libs (useful for aomp)

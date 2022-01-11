@@ -14,15 +14,18 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     Solvers)"""
 
     homepage = "https://computing.llnl.gov/projects/sundials"
-    urls = ["https://computing.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz",
-            "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"]
+    url = "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"
     git = "https://github.com/llnl/sundials.git"
-    maintainers = ['cswoodward', 'gardner48', 'balos1']
+    tags = ['radiuss', 'e4s']
+
+    maintainers = ['balos1', 'cswoodward', 'gardner48']
 
     # ==========================================================================
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
+    version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
     version('5.7.0', sha256='8d6dd094feccbb8d6ecc41340ec16a65fabac82ed4415023f6d7c1c2390ea2f3')
     version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
     version('5.6.0', sha256='95e4201912e150f29c6f6f7625de763385e2073dae7f929c4a544561ea29915d')
@@ -54,6 +57,15 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         variant(pkg, default=True,
                 description='Enable %s solver' % pkg)
 
+    # Language standards
+    variant('cstd', default='99',
+            description='C language standard',
+            values=('90', '99', '11', '17'))
+
+    variant('cxxstd', default='14',
+            description='C++ language standard',
+            values=('99', '11', '14', '17'))
+
     # Real type
     variant(
         'precision',
@@ -76,8 +88,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable Pthreads parallel vector')
     variant('raja',    default=False,
             description='Enable RAJA vector')
+    variant('sycl',    default=False,
+            description='Enable SYCL vector')
 
     # External libraries
+    variant('caliper',      default=False, when='@6.0.0:',
+            description='Enable Caliper instrumentation/profiling')
     variant('hypre',        default=False,
             description='Enable Hypre MPI parallel vector')
     variant('lapack',       default=False,
@@ -119,6 +135,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     variant('monitoring', default=False,
             description='Build with simulation monitoring capabilities')
 
+    # Profiling
+    variant('profiling', default=False, when='@6.0.0:',
+            description='Build with profiling capabilities')
+
     # ==========================================================================
     # Conflicts
     # ==========================================================================
@@ -127,6 +147,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+petsc',         when='@:2.6.2')
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
+    conflicts('+sycl',          when='@:5.6.0')
     conflicts('~int64',         when='@:2.7.0')
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
@@ -153,6 +174,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # SuperLU_MT interface requires lapack for external blas (before v3.0.0)
     conflicts('+superlu-mt', when='@:2.7.0 ~lapack')
 
+    # rocm+examples and cstd do not work together in 6.0.0
+    conflicts('+rocm+examples', when='@6.0.0')
+
+    # profiling must be on for Caliper support to mean anything
+    conflicts('+caliper', when='~profiling')
+
     # ==========================================================================
     # Dependencies
     # ==========================================================================
@@ -172,21 +199,23 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('raja+rocm', when='+raja +rocm')
 
     # External libraries
-    depends_on('lapack',              when='+lapack')
-    depends_on('suite-sparse',        when='+klu')
-    depends_on('petsc+mpi',           when='+petsc')
-    depends_on('hypre+mpi',           when='+hypre')
-    depends_on('superlu-dist@6.1.1:', when='@:5.4.0 +superlu-dist')
-    depends_on('superlu-dist@6.3.0:', when='@5.5.0: +superlu-dist')
-    depends_on('trilinos+tpetra',     when='+trilinos')
+    depends_on('caliper',                 when='+caliper')
+    depends_on('lapack',                  when='+lapack')
+    depends_on('hypre+mpi~int64',         when='@5.7.1: +hypre ~int64')
+    depends_on('hypre+mpi+int64',         when='@5.7.1: +hypre +int64')
+    depends_on('hypre@:2.22.0+mpi~int64', when='@:5.7.0 +hypre ~int64')
+    depends_on('hypre@:2.22.0+mpi+int64', when='@:5.7.0 +hypre +int64')
+    depends_on('petsc+mpi',               when='+petsc')
+    depends_on('suite-sparse',            when='+klu')
+    depends_on('superlu-dist@6.1.1:',     when='@:5.4.0 +superlu-dist')
+    depends_on('superlu-dist@6.3.0:',     when='@5.5.0: +superlu-dist')
+    depends_on('trilinos+tpetra',         when='+trilinos')
 
     # Require that external libraries built with the same precision
     depends_on('petsc~double~complex', when='+petsc precision=single')
     depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
-    depends_on('hypre~int64', when='+hypre ~int64')
-    depends_on('hypre+int64', when='+hypre +int64')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
     depends_on('superlu-dist+int64', when='+superlu-dist +int64')
@@ -231,6 +260,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for pkg in self.sun_solvers:
             args.append(self.define_from_variant('BUILD_' + pkg, pkg))
 
+        # language standard
+        cstd = spec.variants['cstd'].value
+        args.append('CMAKE_C_STANDARD=%s' % cstd)
+        cxxstd = spec.variants['cxxstd'].value
+        args.append('CMAKE_CXX_STANDARD=%s' % cxxstd)
+
         # precision
         args.extend([
             '-DSUNDIALS_PRECISION=%s' % spec.variants['precision'].value
@@ -265,11 +300,22 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('SUNDIALS_BUILD_WITH_MONITORING', 'monitoring')
         ])
 
+        # Profiling
+        args.extend([
+            self.define_from_variant('SUNDIALS_BUILD_WITH_PROFILING', 'profiling')
+        ])
+        if '+profiling+caliper' in spec:
+            args.extend([
+                '-DENABLE_CALIPER=ON',
+                '-DCALIPER_DIR=%s' % spec['caliper'].prefix
+            ])
+
         # parallelism
         args.extend([
             self.define_from_variant('MPI_ENABLE', 'mpi'),
             self.define_from_variant('OPENMP_ENABLE', 'openmp'),
-            self.define_from_variant('PTHREAD_ENABLE', 'pthread')
+            self.define_from_variant('PTHREAD_ENABLE', 'pthread'),
+            self.define_from_variant('ENABLE_SYCL', 'sycl')
         ])
 
         if '+cuda' in spec:
@@ -283,6 +329,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             args.extend([
+                '-DCMAKE_C_COMPILER=%s' % (spec['llvm-amdgpu'].prefix + '/bin/clang'),
                 '-DCMAKE_CXX_COMPILER=%s' % spec['hip'].hipcc,
                 '-DENABLE_HIP=ON',
                 '-DHIP_PATH=%s' % spec['hip'].prefix,
@@ -674,6 +721,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             self.run_test('examples/cvode/hip/cvAdvDiff_kry_hip',
                           work_dir=self._extra_tests_path)
             self.run_test('examples/nvector/hip/test_nvector_hip',
+                          options=['10', '0', '0'],
+                          work_dir=self._extra_tests_path)
+        if '+sycl' in self.spec:
+            self.run_test('examples/cvode/CXX_sycl/cvAdvDiff_kry_sycl',
+                          work_dir=self._extra_tests_path)
+            self.run_test('examples/nvector/sycl/test_nvector_sycl',
                           options=['10', '0', '0'],
                           work_dir=self._extra_tests_path)
         return

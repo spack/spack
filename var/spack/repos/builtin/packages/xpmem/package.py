@@ -11,7 +11,7 @@ class Xpmem(AutotoolsPackage):
     of another process into its virtual address space."""
 
     # The README file of the repository says that the development was
-    # transferred to a new repository on GitLab: http://gitlab.com/hjelmn/xpmem
+    # transferred to a new repository on GitLab: https://gitlab.com/hjelmn/xpmem
     # However, it looks like that the repository on GitHub has a more recent
     # version of the codebase.
     homepage = "https://github.com/hjelmn/xpmem"

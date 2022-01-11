@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -73,11 +72,30 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack build/install environment modifications file.
+_spack_build_envmodsfile = 'spack-build-env-mods.txt'
+
 # Filename of json with total build and phase times (seconds)
 _spack_times_log = 'install_times.json'
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = 'spack-configure-args.txt'
+
+
+def preferred_version(pkg):
+    """
+    Returns a sorted list of the preferred versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose versions are to be assessed.
+    """
+    # Here we sort first on the fact that a version is marked
+    # as preferred in the package, then on the fact that the
+    # version is not develop, then lexicographically
+    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                        not v.isdevelop(),
+                        v)
+    return sorted(pkg.versions, key=key_fn).pop()
 
 
 class InstallPhase(object):
@@ -283,34 +301,27 @@ class PackageMeta(
 
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
-            attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, attr_name)
+            check_attr = PackageMeta.phase_fmt.format(check_name)
+            checks = getattr(cls, check_attr)
             if checks:
                 for phase_name, funcs in checks.items():
+                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
                     try:
                         # Search for the phase in the attribute dictionary
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr]
                     except KeyError:
                         # If it is not there it's in the bases
                         # and we added a check. We need to copy
                         # and extend
                         for base in bases:
-                            phase = getattr(
-                                base,
-                                PackageMeta.phase_fmt.format(phase_name),
-                                None
-                            )
+                            phase = getattr(base, phase_attr, None)
                             if phase is not None:
                                 break
 
-                        attr_dict[PackageMeta.phase_fmt.format(
-                            phase_name)] = phase.copy()
-                        phase = attr_dict[
-                            PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[phase_attr] = phase.copy()
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(cls, attr_name, {})
+                setattr(cls, check_attr, {})
 
         _flush_callbacks('run_before')
         _flush_callbacks('run_after')
@@ -457,8 +468,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):
@@ -891,7 +901,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
@@ -1040,6 +1050,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return old_filename
         else:
             return os.path.join(self.stage.path, _spack_build_envfile)
+
+    @property
+    def env_mods_path(self):
+        """
+        Return the build environment modifications file path associated with
+        staging.
+        """
+        return os.path.join(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
@@ -1266,14 +1284,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property
-    def architecture(self):
-        """Get the spack.architecture.Arch object that represents the
-        environment in which this package will be built."""
-        if not self.spec.concrete:
-            raise ValueError("Can only get the arch for concrete package.")
-        return spack.architecture.arch_for_spec(self.spec.architecture)
-
     @property  # type: ignore
     @memoized
     def compiler(self):
@@ -1321,9 +1331,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Creates a stage directory and downloads the tarball for this package.
         Working directory will be set to the stage directory.
         """
-        if not self.has_code:
-            tty.debug('No fetch required for {0}: package has no code.'
-                      .format(self.name))
+        if not self.has_code or self.spec.external:
+            tty.debug('No fetch required for {0}'.format(self.name))
+            return
 
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
@@ -1785,12 +1795,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
+        # Defer tests to virtual and concrete packages
         pass
 
     def run_test(self, exe, options=[], expected=[], status=0,
@@ -1952,10 +1964,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(
-            spack.store.layout.hidden_file_paths)
+            spack.store.layout.hidden_file_regexes)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
+
+    def apply_macos_rpath_fixups(self):
+        """On Darwin, make installed libraries more easily relocatable.
+
+        Some build systems (handrolled, autotools, makefiles) can set their own
+        rpaths that are duplicated by spack's compiler wrapper. This fixup
+        interrogates, and postprocesses if necessary, all libraries installed
+        by the code.
+
+        It should be added as a @run_after to packaging systems (or individual
+        packages) that do not install relocatable libraries by default.
+        """
+        if 'platform=darwin' not in self.spec:
+            return
+
+        from spack.relocate import fixup_macos_rpaths
+        fixup_macos_rpaths(self.spec)
 
     @property
     def build_log_path(self):
@@ -2551,11 +2580,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.build_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                fn()
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
@@ -2570,11 +2600,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for name in self.install_time_test_callbacks:
             try:
                 fn = getattr(self, name)
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
+            else:
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
 
 
 def test_process(pkg, kwargs):
@@ -2603,6 +2634,7 @@ def test_process(pkg, kwargs):
         test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
                                    for v_name in sorted(v_names)]
 
+        ran_actual_test_function = False
         try:
             with fsys.working_dir(
                     pkg.test_suite.test_dir_for_spec(pkg.spec)):
@@ -2637,7 +2669,16 @@ def test_process(pkg, kwargs):
                     if not isinstance(test_fn, types.FunctionType):
                         test_fn = test_fn.__func__
 
+                    # Skip any test methods consisting solely of 'pass'
+                    # since they do not contribute to package testing.
+                    source = (inspect.getsource(test_fn)).splitlines()[1:]
+                    lines = (ln.strip() for ln in source)
+                    statements = [ln for ln in lines if not ln.startswith('#')]
+                    if len(statements) > 0 and statements[0] == 'pass':
+                        continue
+
                     # Run the tests
+                    ran_actual_test_function = True
                     test_fn(pkg)
 
             # If fail-fast was on, we error out above
@@ -2648,6 +2689,11 @@ def test_process(pkg, kwargs):
         finally:
             # reset debug level
             tty.set_debug(old_debug)
+
+            # flag the package as having been tested (i.e., ran one or more
+            # non-pass-only methods
+            if ran_actual_test_function:
+                fsys.touch(pkg.tested_file)
 
 
 inject_flags = PackageBase.inject_flags
@@ -2680,6 +2726,8 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
+    run_after('install')(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

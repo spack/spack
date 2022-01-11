@@ -14,9 +14,9 @@ class PyPygobject(PythonPackage):
 
     version('3.38.0', sha256='0372d1bb9122fc19f500a249b1f38c2bb67485000f5887497b4b205b3e7084d5')
     version('3.28.3', sha256='3dd3e21015d06e00482ea665fc1733b77e754a6ab656a5db5d7f7bfaf31ad0b0')
-    version('2.28.6', sha256='fb8a1d4f665130a125011659bd347c7339c944232163dbb9a34fd0686577adb8')
+    version('2.28.6', sha256='fb8a1d4f665130a125011659bd347c7339c944232163dbb9a34fd0686577adb8', deprecated=True)
     version('2.28.3', sha256='7da88c169a56efccc516cebd9237da3fe518a343095a664607b368fe21df95b6',
-            url='http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.28/pygobject-2.28.3.tar.bz2')
+            url='http://ftp.gnome.org/pub/GNOME/sources/pygobject/2.28/pygobject-2.28.3.tar.bz2', deprecated=True)
 
     extends('python')
 
@@ -24,9 +24,9 @@ class PyPygobject(PythonPackage):
     depends_on('pkgconfig', type='build')
     depends_on("libffi")
     depends_on('glib')
-    depends_on('python@2:2.99', when='@2:2.99', type=('build', 'run'))
+    depends_on('python@2.0:2', when='@2.0:2', type=('build', 'run'))
     depends_on('py-pycairo', type=('build', 'run'), when='@3:')
-    depends_on('py-py2cairo', type=('build', 'run'), when='@2:2.99')
+    depends_on('py-py2cairo', type=('build', 'run'), when='@2.0:2')
     depends_on('gobject-introspection')
     depends_on('gtkplus', when='@3:')
 
@@ -47,11 +47,11 @@ class PyPygobject(PythonPackage):
         return url + '/%s/pygobject-%s.tar.xz' % (version.up_to(2), version)
 
     # pygobject version 2 requires an autotools build
-    @when('@2:2.99')
+    @when('@2.0:2')
     def build(self, spec, prefix):
         configure('--prefix=%s' % spec.prefix)
 
-    @when('@2:2.99')
+    @when('@2.0:2')
     def install(self, spec, prefix):
         make('install', parallel=False)
 

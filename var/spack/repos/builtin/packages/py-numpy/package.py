@@ -23,7 +23,10 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('main', branch='main')
-    version('master', branch='main', deprecated=True)
+    version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
+    version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
+    version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')
+    version('1.21.3', sha256='63571bb7897a584ca3249c86dd01c10bcb5fe4296e3568b2e9c1a55356b6410e')
     version('1.21.2', sha256='423216d8afc5923b15df86037c6053bf030d15cc9e3224206ef868c2d63dd6dc')
     version('1.21.1', sha256='dff4af63638afcc57a3dfb9e4b26d434a7a602d225b42d746ea7fe2edf1342fd')
     version('1.21.0', sha256='e80fe25cba41c124d04c662f33f6364909b985f2eb5998aaa5ae4b9587242cce')
@@ -91,13 +94,14 @@ class PyNumpy(PythonPackage):
     depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
     depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
     depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
-    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:1.21')
+    depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
     depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
-    depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
-    depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
-    depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
-    depends_on('py-cython@0.29.24:', when='@1.21.2:', type='build')
+    depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
+    depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')
+    depends_on('py-cython@0.29.21:2', when='@1.19.1:', type='build')
+    depends_on('py-cython@0.29.24:2', when='@1.21.2:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
@@ -129,7 +133,7 @@ class PyNumpy(PythonPackage):
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
-    conflicts('%nvhpc', when='@:1.19.999')
+    conflicts('%nvhpc', when='@:1.19')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
@@ -206,7 +210,9 @@ class PyNumpy(PythonPackage):
 
         # Tell numpy where to find BLAS/LAPACK libraries
         with open('site.cfg', 'w') as f:
-            if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
+            if '^intel-mkl' in spec or \
+               '^intel-parallel-studio+mkl' or \
+               '^intel-oneapi-mkl' in spec:
                 f.write('[mkl]\n')
                 # FIXME: as of @1.11.2, numpy does not work with separately
                 # specified threading and interface layers. A workaround is a
@@ -299,7 +305,8 @@ class PyNumpy(PythonPackage):
         if 'blas' not in spec:
             blas = ''
         elif spec['blas'].name == 'intel-mkl' or \
-                spec['blas'].name == 'intel-parallel-studio':
+                spec['blas'].name == 'intel-parallel-studio' or \
+                spec['blas'].name == 'intel-oneapi-mkl':
             blas = 'mkl'
         elif spec['blas'].name == 'blis':
             blas = 'blis'
@@ -318,7 +325,8 @@ class PyNumpy(PythonPackage):
         if 'lapack' not in spec:
             lapack = ''
         elif spec['lapack'].name == 'intel-mkl' or \
-                spec['lapack'].name == 'intel-parallel-studio':
+                spec['lapack'].name == 'intel-parallel-studio' or \
+                spec['lapack'].name == 'intel-oneapi-mkl':
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'

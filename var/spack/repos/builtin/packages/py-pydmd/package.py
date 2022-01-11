@@ -26,7 +26,7 @@ class PyPydmd(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-nose', type='test')
     depends_on('texlive', type='build', when='+docs')
-    depends_on('py-sphinx@1.4.0:1.4.99', type='build', when='+docs')
+    depends_on('py-sphinx@1.4.0:1.4', type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     # https://github.com/mathLab/PyDMD/pull/133

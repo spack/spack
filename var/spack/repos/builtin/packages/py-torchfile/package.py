@@ -18,5 +18,5 @@ class PyTorchfile(PythonPackage):
 
     version('0.1.0', sha256='a53dfe134b737845a9f2cb24fe0585317874f965932cebdb0439d13c8da4136e')
 
-    depends_on('python@2.7:2.999,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2,3.4:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))

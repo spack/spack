@@ -15,5 +15,5 @@ class PySpeechRecognition(PythonPackage):
 
     version('3.8.1', sha256='82d3313db383409ddaf3e42625fb0c3518231a1feb5e2ed5473b10b3d5ece7bd')
 
-    depends_on('python@2.6:2.999,3.3:', type=('build', 'run'))
+    depends_on('python@2.6:2,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

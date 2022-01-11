@@ -33,8 +33,8 @@ class Hpcc(MakefilePackage):
            latency and bandwidth of  a number of simultaneous communication
            patterns; based on b_eff (effective bandwidth benchmark)."""
 
-    homepage = "http://icl.cs.utk.edu/hpcc"
-    url = "http://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
+    homepage = "https://icl.cs.utk.edu/hpcc"
+    url = "https://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
     git = "https://github.com/icl-utk-edu/hpcc.git"
 
     version('develop', branch='main')

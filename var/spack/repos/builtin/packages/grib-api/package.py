@@ -53,11 +53,11 @@ class GribApi(CMakePackage):
     # depends_on('valgrind', type='test', when='+test')
 
     depends_on('netcdf-c', when='+netcdf')
-    depends_on('openjpeg@1.5.0:1.5.999', when='jp2k=openjpeg')
+    depends_on('openjpeg@1.5.0:1.5', when='jp2k=openjpeg')
     depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
     depends_on('libaec', when='+aec')
-    depends_on('python@2.5:2.999', when='+python',
+    depends_on('python@2.5:2', when='+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python+numpy', type=('build', 'run'))
     extends('python', when='+python')

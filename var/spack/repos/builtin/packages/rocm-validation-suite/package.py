@@ -15,10 +15,12 @@ class RocmValidationSuite(CMakePackage):
        compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.2.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.3.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
+    version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
     version('4.3.0', sha256='f7a918b513c51dd5eadce3f2e091679b2dfe6544a913960ac483567792a06a4c')
     version('4.2.0', sha256='b25e58a842a8eb90bfd6c4ae426ca5cfdd5de2f8a091761f83597f7cfc2cd0f3')
     version('4.1.0', sha256='f9618f89384daa0ae897b36638a3737bcfa47e98778e360338267cd1fe2bbc66')
@@ -29,21 +31,26 @@ class RocmValidationSuite(CMakePackage):
     version('3.7.0', sha256='bb42d7fb7ee877b80ce53b0cd1f04b0c8301197b6777d2edddcb44732bf8c9e2')
     version('3.5.0', sha256='273e67ecce7e32939341679362b649f3361a36a22fab5f64cefe94b49e6f1e46')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch')
-    patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:')
-    patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:')
+    patch('001-fixes-for-rocblas-rocm-smi-install-prefix-path.patch', when='@4.1.0:4.3.2')
+    patch('002-remove-force-setting-hip-inc-path.patch', when='@4.1.0:4.3.2')
+    patch('003-cmake-change-to-remove-installs-and-sudo.patch', when='@4.1.0:4.3.2')
+    patch('004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch', when='@4.3.0:4.3.2')
+    patch('005-cleanup-path-reference-donot-download-googletest-yaml.patch', when='@4.5.0:')
 
     depends_on('cmake@3.5:', type='build')
     depends_on('zlib', type='link')
+    depends_on('yaml-cpp~shared')
+    depends_on('googletest~shared', when='@4.5.0:')
+    depends_on('doxygen', type='build', when='@4.5.0:')
 
     def setup_build_environment(self, build_env):
         spec = self.spec
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)
@@ -51,8 +58,14 @@ class RocmValidationSuite(CMakePackage):
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
 
     def cmake_args(self):
-        return [
+        args = [
             self.define('HIP_INC_DIR', self.spec['hip'].prefix),
             self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix),
-            self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix)
+            self.define('ROCBLAS_DIR', self.spec['rocblas'].prefix),
+            self.define('YAML_INC_DIR', self.spec['yaml-cpp'].prefix.include),
+            self.define('YAML_LIB_DIR', self.spec['yaml-cpp'].libs.directories[0]),
         ]
+        if self.spec.satisfies('@4.5.0:'):
+            args.append(self.define('UT_INC', self.spec['googletest'].prefix.include))
+            args.append(self.define('UT_LIB', self.spec['googletest'].prefix.lib64))
+        return args

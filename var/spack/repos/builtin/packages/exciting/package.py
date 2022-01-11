@@ -17,7 +17,9 @@ class Exciting(MakefilePackage):
 
     homepage = "https://exciting-code.org/"
     url      = "https://exciting.wdfiles.com/local--files/nitrogen-14/exciting.nitrogen-14.tar.gz"
+    git      = "https://github.com/exciting/exciting.git"
 
+    version('oxygen', branch='oxygen_release', preferred=True)
     version('14', sha256='a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff')
 
     # as-of-yet unpublished fix to version 14
@@ -35,72 +37,104 @@ class Exciting(MakefilePackage):
     depends_on('mkl', when='+mkl')
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack')
-    conflicts('%gcc@10:', msg='exciting cannot be built with GCC 10')
+    # conflicts('%gcc@10:', msg='exciting cannot be built with GCC 10')
 
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != 'intel':
             conflicts('%{0}'.format(__compiler), when='^mkl',
-                      msg='MKL only works with the Intel compiler')
+                      msg='Intel MKL only works with the Intel compiler')
+            conflicts('%{0}'.format(__compiler), when='^intel-mkl',
+                      msg='Intel MKL only works with the Intel compiler')
+            conflicts('%{0}'.format(__compiler), when='^intel-mpi',
+                      msg='Intel MPI only works with the Intel compiler')
+
+    def patch(self):
+        """Fix bad logic in m_makespectrum.f90 for the Oxygen release
+        """
+        if self.spec.satisfies('@oxygen'):
+            filter_file(' '.join(['if ((.not. input%xs%BSE%coupling) .and.',
+                                  'input%xs%BSE%chibar0) then']),
+                        ' '.join(['if ((.not. input%xs%BSE%coupling)',
+                                  '.and. (.not. input%xs%BSE%chibar0)) then']),
+                        'src/src_xs/m_makespectrum.f90', string=True)
 
     def edit(self, spec, prefix):
         opts = {}
-        opts['BUILDSMP'] = 'true'
-        opts['F90_OPTS'] = '-cpp '
-        opts['F77_OPTS'] = '-cpp -O3 '
+        opts['FCCPP'] = 'cpp'
+        opts['F90_OPTS'] = '-O3'
+        opts['F77_OPTS'] = '-O3'
         opts['CPP_ON_OPTS'] = '-cpp -DXS -DISO -DLIBXC'
         opts['LIB_ARP'] = 'libarpack.a'
         opts['F90'] = spack_fc
         opts['F77'] = spack_f77
         if '+omp' in spec:
-            opts['LDFLAGS'] = self.compiler.openmp_flag + ' -DUSEOMP'
-            opts['F90_OPTS'] += self.compiler.openmp_flag + ' -DUSEOMP'
-            opts['F77_OPTS'] += self.compiler.openmp_flag + ' -DUSEOMP'
+            opts['SMPF90_OPTS'] = self.compiler.openmp_flag + ' -DUSEOMP'
+            opts['SMPF77_OPTS'] = self.compiler.openmp_flag + ' -DUSEOMP'
+        else:
+            opts['BUILDSMP'] = 'false'
+
         if '%intel' in spec:
-            opts['F90_OPTS'] += ' -O3 -cpp -ip -unroll -scalar_rep '
+            opts['F90_OPTS'] += ' -cpp -ip -unroll -scalar_rep '
             opts['CPP_ON_OPTS'] += ' -DIFORT -DFFTW'
         if '%gcc' in spec:
-            opts['F90_OPTS'] += '-O3 -march=native -ffree-line-length-0'
+            opts['F90_OPTS'] += ' -march=native -ffree-line-length-0'
+            if '%gcc@10:' in spec:
+                # The INSTALL file says this will fix the GCC@10 issues
+                opts['F90_OPTS'] += ' -fallow-argument-mismatch'
+                opts['F77_OPTS'] += ' -fallow-argument-mismatch'
         filter_file('FCFLAGS = @FCFLAGS@',
                     ' '.join(['FCFLAGS = @FCFLAGS@', '-cpp',
                               self.compiler.openmp_flag]),
                     'src/libXC/src/Makefile.in')
         if '+mkl' in spec:
-            if '%intel' in spec:
-                opts['LIB_LPK'] = '-mkl=parallel'
+            opts['LIB_LPK'] = '-mkl=parallel'
             opts['INC_MKL'] = spec['mkl'].headers.include_flags
             opts['LIB_MKL'] = spec['mkl'].libs.ld_flags
+            opts['F90_OPTS'] += spec['mkl'].headers.include_flags
         else:
             opts['LIB_LPK'] = ' '.join([spec['lapack'].libs.ld_flags,
                                         spec['blas'].libs.ld_flags,
                                         self.compiler.openmp_flag])
+
+        if '+omp' in spec:
+            opts['BUILDSMP'] = 'true'
+
         if '+mpi' in spec:
             opts['BUILDMPI'] = 'true'
             opts['MPIF90'] = spec['mpi'].mpifc
-            opts['MPIF90_CPP_OPTS'] = self.compiler.openmp_flag
-            opts['MPIF90_CPP_OPTS'] += ' -DMPI -DMPIRHO -DMPISEC '
+            opts['MPIF90_CPP_OPTS'] = '-DMPI -DMPIRHO -DMPISEC'
             opts['MPIF90_OPTS'] = ' '.join(['$(F90_OPTS)', '$(CPP_ON_OPTS) '
                                             '$(MPIF90_CPP_OPTS)'])
             opts['MPIF90MT'] = '$(MPIF90)'
+
+            if '+omp' in spec:
+                opts['BUILDMPISMP'] = 'true'
+                opts['SMPF90_OPTS'] = self.compiler.openmp_flag + ' -DUSEOMP'
+                opts['SMPF77_OPTS'] = opts['SMPF90_OPTS']
+                opts['SMP_LIBS'] = ''
+
         else:
             opts['BUILDMPI'] = 'false'
-
         if '+scalapack' in spec:
             opts['LIB_SCLPK'] = spec['scalapack'].libs.ld_flags
-            opts['LIB_SCLPK'] += ' ' + self.compiler.openmp_flag
             opts['CPP_SCLPK'] = ' -DSCAL '
-            opts['LIBS_MPI'] = '$(LIB_SCLPK)'
+            opts['MPI_LIBS'] = '$(LIB_SCLPK)'
             opts['MPIF90_CPP_OPTS'] += ' $(CPP_SCLPK) '
 
         opts['USE_SYS_LAPACK'] = 'true'
         opts['LIB_FFT'] = 'fftlib.a'
         opts['LIB_BZINT'] = 'libbzint.a'
         opts['LIBS'] = '$(LIB_ARP) $(LIB_LPK) $(LIB_FFT) $(LIB_BZINT)'
+
+        if '+mpi' not in spec or '+omp' not in spec:
+            opts['BUILDMPISMP'] = 'false'
+        # Write the build/make.inc file
         with open('build/make.inc', 'a') as inc:
             for key in opts:
                 inc.write('{0} = {1}\n'.format(key, opts[key]))
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix)
+        install_tree('bin', prefix.bin)
         install_tree('species', prefix.species)
         install_tree('tools', prefix.tools)
 
@@ -114,6 +148,7 @@ class Exciting(MakefilePackage):
         env.set('EXCITINGCONVERT', self.prefix.xml.inputfileconverter)
         env.set('TIMEFORMAT', ' Elapsed time = %0lR')
         env.set('WRITEMINMAX', '1')
+        env.set('USE_SYS_LAPACK', 'true')
         env.append_path('PYTHONPATH', self.prefix.tools.stm)
         env.append_path('PATH', self.prefix.tools)
         env.append_path('PATH', self.prefix)

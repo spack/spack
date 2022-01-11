@@ -24,7 +24,7 @@ class RNcdf4(RPackage):
     packages installed simultaneously without a problem. However, the ncdf
     package does not provide an interface for netcdf version 4 files."""
 
-    homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
+    homepage = "https://cirrus.ucsd.edu/~pierce/ncdf"
     url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
 

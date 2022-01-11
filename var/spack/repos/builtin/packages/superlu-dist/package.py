@@ -6,17 +6,22 @@
 from spack import *
 
 
-class SuperluDist(CMakePackage, CudaPackage):
+class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
-    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
+    homepage = "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
-    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
+    tags = ['e4s']
+
+    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels', 'liuyangzhuan']
 
     version('develop', branch='master')
+    version('amd', branch='amd')
+    version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
+    version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
     version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
     version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')
@@ -42,11 +47,17 @@ class SuperluDist(CMakePackage, CudaPackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+    depends_on('cmake@3.18.1:', type='build', when='@7.1.0:')
+    depends_on('hipblas', when='+rocm')
+    depends_on('rocsolver', when='+rocm')
 
-    conflicts('+cuda', when='@:6.3.999')
+    conflicts('+rocm', when='+cuda')
+    conflicts('+cuda', when='@:6.3')
+    conflicts('^cuda@11.5.0:', when='@7.1.0:')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
+    patch('superlu-cray-ftn-case.patch', when='@7.1.1 %cce')
 
     def cmake_args(self):
         spec = self.spec
@@ -54,6 +65,7 @@ class SuperluDist(CMakePackage, CudaPackage):
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_INSTALL_LIBDIR:STRING=%s' % self.prefix.lib,
+            '-DCMAKE_INSTALL_BINDIR:STRING=%s' % self.prefix.bin,
             '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
             '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
             '-DUSE_XSDK_DEFAULTS=YES',
@@ -87,6 +99,15 @@ class SuperluDist(CMakePackage, CudaPackage):
             if cuda_arch[0] != 'none':
                 args.append(
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+
+        if '+rocm' in spec and spec.satisfies('@amd'):
+            args.append('-DTPL_ENABLE_HIPLIB=TRUE')
+            args.append(
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
+            rocm_archs = spec.variants['amdgpu_target'].value
+            if 'none' not in rocm_archs:
+                args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
+                            format(",".join(rocm_archs)))
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

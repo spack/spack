@@ -210,15 +210,6 @@ Spec-related modules
      but compilers aren't fully integrated with the build process
      yet.
 
-:mod:`spack.architecture`
-  :func:`architecture.sys_type <spack.architecture.sys_type>` is used
-  to determine the host architecture while building.
-
-  .. warning::
-
-     Not yet implemented.  Should eventually have architecture
-     descriptions for cross-compiling.
-
 ^^^^^^^^^^^^^^^^^
 Build environment
 ^^^^^^^^^^^^^^^^^
@@ -678,6 +669,13 @@ This hook is run given an install failure that happens outside of the build
 subprocess, but somewhere in ``installer.py`` when something else goes wrong.
 If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
+
+
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
 
 
 """""""""""""""""""""""""""""""""""""""""""""""
@@ -1185,6 +1183,10 @@ completed, the steps to make the major release are:
 
    If CI is not passing, submit pull requests to ``develop`` as normal
    and keep rebasing the release branch on ``develop`` until CI passes.
+
+#. Make sure the entire documentation is up to date. If documentation
+   is outdated submit pull requests to ``develop`` as normal
+   and keep rebasing the release branch on ``develop``.
 
 #. Follow the steps in :ref:`publishing-releases`.
 

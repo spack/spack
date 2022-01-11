@@ -8,9 +8,9 @@ from spack import *
 
 class RRcolorbrewer(RPackage):
     """Provides color schemes for maps (and other graphics) designed by Cynthia
-    Brewer as described at http://colorbrewer2.org"""
+    Brewer as described at https://colorbrewer2.org/"""
 
-    homepage = "http://colorbrewer2.org"
+    homepage = "https://colorbrewer2.org"
     url      = "https://cloud.r-project.org/src/contrib/RColorBrewer_1.1-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RColorBrewer"
 

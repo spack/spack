@@ -13,6 +13,7 @@ class PyMaestrowf(PythonPackage):
     homepage = "https://github.com/LLNL/maestrowf/"
     pypi = "maestrowf/maestrowf-1.1.8.tar.gz"
     git      = "https://github.com/LLNL/maestrowf/"
+    tags     = ['radiuss']
 
     maintainers = ['FrankD412']
 

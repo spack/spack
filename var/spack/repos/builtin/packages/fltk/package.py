@@ -20,7 +20,10 @@ class Fltk(Package):
     """
     homepage = 'https://www.fltk.org/'
     url = 'https://fltk.org/pub/fltk/1.3.3/fltk-1.3.3-source.tar.gz'
+    git = 'https://github.com/fltk/fltk.git'
 
+    version('master', branch='master')
+    version('1.3.7', sha256='5d2ccb7ad94e595d3d97509c7a931554e059dd970b7b29e6fd84cb70fd5491c6')
     version('1.3.3', sha256='f8398d98d7221d40e77bc7b19e761adaf2f1ef8bb0c30eceb7beb4f2273d0d97')
 
     depends_on('libx11')
@@ -41,8 +44,13 @@ class Fltk(Package):
     variant('gl', default=True,
             description='Enables opengl support')
 
+    variant('xft', default=False,
+            description='Enables Anti-Aliased Fonts')
+
     # variant dependencies
     depends_on('gl', when='+gl')
+
+    depends_on('libxft', when='+xft')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
@@ -52,6 +60,12 @@ class Fltk(Package):
 
         if '+shared' in spec:
             options.append('--enable-shared')
+
+        if '+xft' in spec:
+            # https://www.fltk.org/articles.php?L374+I0+TFAQ+P1+Q
+            options.append('--enable-xft')
+        else:
+            options.append('--disable-xft')
 
         if '~gl' in spec:
             options.append('--disable-gl')

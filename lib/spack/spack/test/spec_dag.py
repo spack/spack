@@ -7,7 +7,6 @@ These tests check Spec DAG operations using dummy packages.
 """
 import pytest
 
-import spack.architecture
 import spack.error
 import spack.package
 import spack.util.hash as hashutil

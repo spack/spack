@@ -12,4 +12,4 @@ class RubyTerminalTable(RubyPackage):
 
     version('1.8.0', sha256='69b8e157f5dc3f056b5242923ab3e729a16c6f893b3a5d540e71135a973e5fbe')
 
-    depends_on('ruby-unicode-display-width@1.1.1:1.999', type=('build', 'run'))
+    depends_on('ruby-unicode-display-width@1.1.1:1', type=('build', 'run'))

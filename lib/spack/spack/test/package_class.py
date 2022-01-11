@@ -30,6 +30,7 @@ def mpi_names(mock_repo_path):
 def mpileaks_possible_deps(mock_packages, mpi_names):
     possible = {
         'callpath': set(['dyninst'] + mpi_names),
+        'low-priority-provider': set(),
         'dyninst': set(['libdwarf', 'libelf']),
         'fake': set(),
         'libdwarf': set(['libelf']),

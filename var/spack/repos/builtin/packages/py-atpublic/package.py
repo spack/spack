@@ -19,4 +19,4 @@ class PyAtpublic(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-typing-extensions', when='^python@:3.7.999', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='^python@:3.7', type=('build', 'run'))

@@ -354,3 +354,10 @@ class TestLmod(object):
             # point to the right one
             assert any(expected in line for line in content)
             assert not any(spec.prefix in line for line in content)
+
+    def test_modules_no_arch(self, factory, module_configuration):
+        module_configuration('no_arch')
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
+
+        assert str(spec.os) not in path

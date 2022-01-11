@@ -12,7 +12,7 @@ class Mesa18(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
-    homepage = "http://www.mesa3d.org"
+    homepage = "https://www.mesa3d.org"
     maintainers = ['v-dobrev', 'chuckatkins', 'ChristianTackeGSI']
 
     # Note that we always want to build from the git repo instead of a
@@ -136,7 +136,7 @@ class Mesa18(AutotoolsPackage):
         if '+llvm' in spec:
             args.append('--enable-llvm')
             args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-            if '+link_dylib' in spec['llvm']:
+            if '+llvm_dylib' in spec['llvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')

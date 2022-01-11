@@ -13,7 +13,7 @@ class Kdiff3(Package):
 
     version('0.9.98', sha256='802c1ababa02b403a5dca15955c01592997116a24909745016931537210fd668')
 
-    depends_on("qt@:4.99,5.2.0:")
+    depends_on("qt@:4,5.2.0:")
 
     def install(self, spec, prefix):
         # make is done inside

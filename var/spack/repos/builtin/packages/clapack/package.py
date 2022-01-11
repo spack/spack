@@ -15,8 +15,8 @@ class Clapack(MakefilePackage):
     is to provide LAPACK for someone who does not have access to a Fortran
     compiler."""
 
-    homepage = "http://www.netlib.org/clapack/"
-    url      = "http://www.netlib.org/clapack/clapack.tgz"
+    homepage = "https://www.netlib.org/clapack/"
+    url      = "https://www.netlib.org/clapack/clapack.tgz"
 
     version('3.2.1', sha256='6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac')
 

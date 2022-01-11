@@ -117,11 +117,17 @@ class SpecError(SpackError):
 
 
 class UnsatisfiableSpecError(SpecError):
-    """Raised when a spec conflicts with package constraints.
-       Provide the requirement that was violated when raising."""
+    """
+    Raised when a spec conflicts with package constraints.
+
+    For original concretizer, provide the requirement that was violated when
+    raising.
+    """
     def __init__(self, provided, required, constraint_type):
+        # This is only the entrypoint for old concretizer errors
         super(UnsatisfiableSpecError, self).__init__(
             "%s does not satisfy %s" % (provided, required))
+
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type

@@ -23,14 +23,14 @@ class PyLuigi(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-enum34@1.1.1:', when='^python@:3.3.999', type=('build', 'run'))
+    depends_on('py-enum34@1.1.1:', when='^python@:3.3', type=('build', 'run'))
 
-    depends_on('py-tornado@4.0:4.999', type=('build', 'run'), when='@:2.999')
-    depends_on('py-tornado@5.0:5.999', type=('build', 'run'), when='@3.0.1')
-    depends_on('py-tornado@5.0:6.999', type=('build', 'run'), when='@3.0.2:')
+    depends_on('py-tornado@4.0:4', type=('build', 'run'), when='@:2')
+    depends_on('py-tornado@5.0:5', type=('build', 'run'), when='@3.0.1')
+    depends_on('py-tornado@5.0:6', type=('build', 'run'), when='@3.0.2:')
 
-    depends_on('py-tenacity@6.3.0:6.999', type=('build', 'run'), when='@3.0.3:')
+    depends_on('py-tenacity@6.3.0:6', type=('build', 'run'), when='@3.0.3:')
 
     depends_on('py-python-daemon', type=('build', 'run'))
 
-    depends_on('py-python-dateutil@2.7.5:2.999', when='@2.8.3:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.7.5:2', when='@2.8.3:', type=('build', 'run'))

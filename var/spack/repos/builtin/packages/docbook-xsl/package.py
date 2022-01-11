@@ -37,13 +37,13 @@ class DocbookXsl(Package):
         # create catalog
         xmlcatalog('--noout', '--create', catalog)
         xmlcatalog('--noout', '--add', 'system',
-                   'http://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'system',
-                   'http://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'uri',
-                   'http://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2001/xml.xsd', xml_xsd, catalog)
         xmlcatalog('--noout', '--add', 'uri',
-                   'http://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
+                   'https://www.w3.org/2009/01/xml.xsd', xml_xsd, catalog)
 
         docbook_urls = ['docbook.sourceforge.net', 'cdn.docbook.org']
         docbook_rewrites = ['rewriteSystem', 'rewriteURI']

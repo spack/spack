@@ -8,19 +8,29 @@ import os.path
 import pytest
 
 import spack
-from spack.cmd.external import ExternalPackageEntry
+import spack.detection
+import spack.detection.path
 from spack.main import SpackCommand
 from spack.spec import Spec
 
 
-def test_find_external_single_package(mock_executable):
+@pytest.fixture
+def executables_found(monkeypatch):
+    def _factory(result):
+        def _mock_search(path_hints=None):
+            return result
+
+        monkeypatch.setattr(spack.detection.path, 'executables_in_path', _mock_search)
+    return _factory
+
+
+def test_find_external_single_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
+    executables_found({
+        mock_executable("cmake", output='echo "cmake version 1.foo"'): 'cmake'
+    })
 
-    cmake_path = mock_executable("cmake", output='echo "cmake version 1.foo"')
-    system_path_to_exe = {cmake_path: 'cmake'}
-
-    pkg_to_entries = spack.cmd.external._get_external_packages(
-        pkgs_to_check, system_path_to_exe)
+    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
@@ -28,7 +38,7 @@ def test_find_external_single_package(mock_executable):
     assert single_entry.spec == Spec('cmake@1.foo')
 
 
-def test_find_external_two_instances_same_package(mock_executable):
+def test_find_external_two_instances_same_package(mock_executable, executables_found):
     pkgs_to_check = [spack.repo.get('cmake')]
 
     # Each of these cmake instances is created in a different prefix
@@ -38,30 +48,30 @@ def test_find_external_two_instances_same_package(mock_executable):
     cmake_path2 = mock_executable(
         "cmake", output='echo "cmake version 3.17.2"', subdir=('base2', 'bin')
     )
-    system_path_to_exe = {
+    executables_found({
         cmake_path1: 'cmake',
-        cmake_path2: 'cmake'}
+        cmake_path2: 'cmake'
+    })
 
-    pkg_to_entries = spack.cmd.external._get_external_packages(
-        pkgs_to_check, system_path_to_exe)
+    pkg_to_entries = spack.detection.by_executable(pkgs_to_check)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
-    spec_to_path = dict((e.spec, e.base_dir) for e in entries)
+    spec_to_path = dict((e.spec, e.prefix) for e in entries)
     assert spec_to_path[Spec('cmake@1.foo')] == (
-        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path1)))
+        spack.detection.executable_prefix(os.path.dirname(cmake_path1)))
     assert spec_to_path[Spec('cmake@3.17.2')] == (
-        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path2)))
+        spack.detection.executable_prefix(os.path.dirname(cmake_path2)))
 
 
 def test_find_external_update_config(mutable_config):
     entries = [
-        ExternalPackageEntry(Spec.from_detection('cmake@1.foo'), '/x/y1/'),
-        ExternalPackageEntry(Spec.from_detection('cmake@3.17.2'), '/x/y2/'),
+        spack.detection.DetectedPackage(Spec.from_detection('cmake@1.foo'), '/x/y1/'),
+        spack.detection.DetectedPackage(Spec.from_detection('cmake@3.17.2'), '/x/y2/'),
     ]
     pkg_to_entries = {'cmake': entries}
 
     scope = spack.config.default_modify_scope('packages')
-    spack.cmd.external._update_pkg_config(scope, pkg_to_entries, False)
+    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
 
     pkgs_cfg = spack.config.get('packages')
     cmake_cfg = pkgs_cfg['cmake']
@@ -75,7 +85,7 @@ def test_get_executables(working_env, mock_executable):
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
-    path_to_exe = spack.cmd.external._get_system_executables()
+    path_to_exe = spack.detection.executables_in_path()
     assert path_to_exe[cmake_path1] == 'cmake'
 
 
@@ -149,16 +159,16 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
 
     mutable_config.update_config('packages', pkgs_cfg_init)
     entries = [
-        ExternalPackageEntry(
+        spack.detection.DetectedPackage(
             Spec.from_detection('find-externals1@1.1'), '/x/y1/'
         ),
-        ExternalPackageEntry(
+        spack.detection.DetectedPackage(
             Spec.from_detection('find-externals1@1.2'), '/x/y2/'
         )
     ]
     pkg_to_entries = {'find-externals1': entries}
     scope = spack.config.default_modify_scope('packages')
-    spack.cmd.external._update_pkg_config(scope, pkg_to_entries, False)
+    spack.detection.update_configuration(pkg_to_entries, scope=scope, buildable=True)
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']

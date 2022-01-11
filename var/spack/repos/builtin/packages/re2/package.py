@@ -19,9 +19,15 @@ class Re2(CMakePackage):
 
     variant('shared', default=False,
             description='Build shared instead of static libraries')
+    variant('pic', default=True,
+            description='Enable position independent code')
+
+    # shared libs must have position-independent code
+    conflicts('+shared ~pic')
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic')
         ]
         return args

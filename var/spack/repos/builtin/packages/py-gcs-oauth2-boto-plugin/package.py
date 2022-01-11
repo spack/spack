@@ -19,7 +19,7 @@ class PyGcsOauth2BotoPlugin(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-rsa@:4.0', when='^python@:3.4.999', type=('build', 'run'))
+    depends_on('py-rsa@:4.0', when='^python@:3.4', type=('build', 'run'))
     depends_on('py-boto@2.29.1:', type=('build', 'run'))
     depends_on('py-google-auth@0.1.0:', type=('build', 'run'))
     depends_on('py-httplib2@0.18:', type=('build', 'run'))

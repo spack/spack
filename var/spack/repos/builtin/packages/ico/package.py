@@ -12,7 +12,7 @@ class Ico(AutotoolsPackage, XorgPackage):
     polyhedron, with hidden lines removed, or a solid-fill polyhedron with
     hidden faces removed."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/ico"
+    homepage = "https://cgit.freedesktop.org/xorg/app/ico"
     xorg_mirror_path = "app/ico-1.0.4.tar.gz"
 
     version('1.0.4', sha256='eb8609c3b43dc2e575272f2702590525fe13229e022c4aff8b9a0cc2a3f3205d')

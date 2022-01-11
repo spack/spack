@@ -20,7 +20,8 @@ class RocmDbgapi(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='amd-master')
-
+    version('4.5.0', sha256='583bbf18df593f376c4cc70f25b68c191bd38fde20a336c0f5c8e5d85fda2fcf')
+    version('4.3.1', sha256='dddf2549ad6bb806f7e5d5a5336f5a00fe87a124f2a778be18ec4dc41f891912')
     version('4.3.0', sha256='4255d83d218bb0db8be9fef18e03a955ea1c6de1c635c31685ee5fc1540ddde6')
     version('4.2.0', sha256='fcdee5aaf5ed40c0377ce007a2947da9e718eeee86ca3e13192ff9e96a1b7373')
     version('4.1.0', sha256='d04fd9b2005691313547c4134b027b56b0ec6089f67d3bccbdb8fb1c92cde9bd')
@@ -31,10 +32,12 @@ class RocmDbgapi(CMakePackage):
     version('3.7.0', sha256='bdeaf81ea8a0ac861a697e435c72cbe767c291638be43f0d09116ad605dfee4f')
     version('3.5.0', sha256='eeba0592bc79b90e5b874bba18fd003eab347e8a3cc80343708f8d19e047e87b')
 
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type=('build', 'link'), when='@' + ver)
 

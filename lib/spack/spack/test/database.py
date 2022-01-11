@@ -894,3 +894,33 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     with pytest.raises(Exception):
         with spack.store.db.prefix_write_lock(s):
             assert False
+
+
+@pytest.mark.regression('26600')
+def test_database_works_with_empty_dir(tmpdir):
+    # Create the lockfile and failures directory otherwise
+    # we'll get a permission error on Database creation
+    db_dir = tmpdir.ensure_dir('.spack-db')
+    db_dir.ensure('lock')
+    db_dir.ensure_dir('failures')
+    tmpdir.chmod(mode=0o555, rec=1)
+    db = spack.database.Database(str(tmpdir))
+    with db.read_transaction():
+        db.query()
+    # Check that reading an empty directory didn't create a new index.json
+    assert not os.path.exists(db._index_path)
+
+
+@pytest.mark.parametrize('query_arg,exc_type,msg_str', [
+    (['callpath'], spack.store.MatchError, 'matches multiple packages'),
+    (['tensorflow'], spack.store.MatchError, 'does not match any')
+])
+def test_store_find_failures(database, query_arg, exc_type, msg_str):
+    with pytest.raises(exc_type) as exc_info:
+        spack.store.find(query_arg, multiple=False)
+    assert msg_str in str(exc_info.value)
+
+
+def test_store_find_accept_string(database):
+    result = spack.store.find('callpath', multiple=True)
+    assert len(result) == 3

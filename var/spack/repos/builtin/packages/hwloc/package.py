@@ -30,6 +30,8 @@ class Hwloc(AutotoolsPackage):
     maintainers = ['bgoglin']
 
     version('master', branch='master')
+    version('2.7.0', sha256='d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374')
+    version('2.6.0', sha256='9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f')
     version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
     version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
     version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
@@ -78,7 +80,7 @@ class Hwloc(AutotoolsPackage):
             description="Support ROCm devices")
 
     # netloc isn't available until version 2.0.0
-    conflicts('+netloc', when="@:1.99.99")
+    conflicts('+netloc', when="@:1")
 
     # libudev isn't available until version 1.11.0
     conflicts('+libudev', when="@:1.10")
@@ -133,6 +135,14 @@ class Hwloc(AutotoolsPackage):
         # 'cuda' and 'rocm-opencl' to be used.
         if '+opencl' not in self.spec:
             args.append('--disable-opencl')
+
+        # If ROCm libraries are found in system /opt/rocm
+        # during config stage, hwloc builds itself with
+        # librocm_smi support.
+        # This can fail the config tests while building
+        # OpenMPI due to lack of rpath to librocm_smi
+        if '+rocm' not in self.spec:
+            args.append('--disable-rsmi')
 
         if '+netloc' in self.spec:
             args.append('--enable-netloc')

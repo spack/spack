@@ -15,7 +15,7 @@ class RRmpfr(RPackage):
     Reliable) Library which itself is based on the GMP (GNU Multiple Precision)
     Library."""
 
-    homepage = "http://rmpfr.r-forge.r-project.org"
+    homepage = "https://rmpfr.r-forge.r-project.org"
     url      = "https://cloud.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Rmpfr"
 

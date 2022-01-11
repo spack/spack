@@ -13,7 +13,7 @@ class Mapsplice2(MakefilePackage):
        and not on any further annotations."""
 
     homepage = "http://www.netlab.uky.edu/p/bioinfo/MapSplice2"
-    url = "http://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"
+    url = "https://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"
 
     version(
         "2.2.1",
