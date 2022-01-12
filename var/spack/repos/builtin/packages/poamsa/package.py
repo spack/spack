@@ -21,6 +21,10 @@ class Poamsa(MakefilePackage):
         url = "https://downloads.sourceforge.net/project/poamsa/poamsa/{0}/poaV{1}.tar.gz"
         return url.format(version.dotted, version.up_to(1))
 
+    def edit(self, spec, prefix):
+        filter_file(r'^(char \*Program_name;)', 'extern \\1', 'black_flag.h')
+        filter_file(r'^(char \*Program_version;)', 'extern \\1', 'black_flag.h')
+
     def build(self, spec, prefix):
         make('poa')
 
