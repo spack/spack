@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -105,7 +105,7 @@ def list_files(args):
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
 
 #: Latest year that copyright applies. UPDATE THIS when bumping copyright.
-latest_year = 2021
+latest_year = 2022
 strict_date = r'Copyright 2013-%s' % latest_year
 
 #: regexes for valid license lines at tops of files
