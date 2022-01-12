@@ -18,7 +18,7 @@ class EpicsPcas(MakefilePackage):
 
     version('4.13.3', sha256='5004e39339c8e592fcb9b4275c84143635c6e688c0fbe01f17dafe19850398a0')
 
-    depends_on('epics-base')
+    depends_on('epics-base', type=('build', 'link', 'run'))
 
     @property
     def install_targets(self):
@@ -27,9 +27,6 @@ class EpicsPcas(MakefilePackage):
     def edit(self, spec, prefix):
         with open('configure/RELEASE.local', 'w') as release_file:
             release_file.write('EPICS_BASE = ' + env['EPICS_BASE'] + '\n')
-
-    def setup_build_environment(self, envmod):
-        envmod.set('EPICS_BASE', env['EPICS_BASE'])
 
     def setup_run_environment(self, envmod):
         envmod.prepend_path('PATH', join_path(self.prefix.bin, env['EPICS_HOST_ARCH']))
