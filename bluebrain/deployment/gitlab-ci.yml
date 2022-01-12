@@ -203,7 +203,7 @@ setup_spack:
     # Activate if checksums fail
     # - spack clean -a
     # Concretize and pre-fetch, afterwards build the environment
-    - spack concretize -f
+    - spack concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
@@ -235,6 +235,7 @@ setup_spack:
   artifacts:
     when: always
     paths:
+      - concretization_*.txt
       - deployment.env
       - missing.txt
       - specs.txt
@@ -320,6 +321,7 @@ update_config:
     # Copy artifacts to common area
     - mkdir -p "$DEPLOYMENT_ARTIFACTS"
     - rsync -av spack_tests "$DEPLOYMENT_ARTIFACTS"
+    - cp concretization_* "$DEPLOYMENT_ARTIFACTS"
     - if grep -q -m1 -l -R '<failure' "$DEPLOYMENT_ARTIFACTS"; then exit 1; fi
     # Will create $DEPLOYMENT_ROOT/modules
     - merge-modules "$DEPLOYMENT_ROOT"

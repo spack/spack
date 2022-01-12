@@ -125,8 +125,7 @@ packages:
     compiler: [gcc@11.2.0]
     target: [skylake]
     providers:
-      # Needs all possible MPIs, otherwise ranking seems to get odd
-      mpi: [hpe-mpi@2.25.hmpt, hpe-mpi, intel-mpi, mvapich2]
-      scalapack: [intel-mkl, netlib-scalapack]
-      lapack: [intel-mkl, openblas]
-      blas: [intel-mkl, openblas]
+      mpi: [hpe-mpi, intel-mpi, mvapich2]
+      scalapack:: [intel-mkl]
+      lapack:: [intel-mkl]
+      blas:: [intel-mkl]

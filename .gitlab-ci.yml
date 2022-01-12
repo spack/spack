@@ -46,10 +46,14 @@ setup_environment:
     DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE/mirror/proprietary"
     # Artifacts to be passed back from the child pipeline: needs GitLab
     # fix/new feature
-    DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
+    #
+    # Keep only the latest for the deployment proper.  See below for PR
+    # specialization
+    DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts"
   rules:
     - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
       variables:
+        DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
         DEPLOYMENT_BRANCH: "$CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
         DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
         DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
