@@ -20,3 +20,9 @@ class E2fsprogs(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)
+
+    def configure_args(self):
+        # avoid installing things in /etc
+        return ['--without-udev-rules-dir',
+                '--without-crond-dir',
+                '--without-systemd-unit-dir']
