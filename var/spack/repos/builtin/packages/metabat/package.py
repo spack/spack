@@ -13,6 +13,7 @@ class Metabat(SConsPackage):
     homepage = "https://bitbucket.org/berkeleylab/metabat"
     url      = "https://bitbucket.org/berkeleylab/metabat/get/v2.12.1.tar.gz"
 
+    version('2.15',   sha256='550487b66ec9b3bc53edf513d00c9deda594a584f53802165f037bde29b4d34e')
     version('2.14',   sha256='d43d5e91afa8f2d211a913739127884669516bfbed870760597fcee2b513abe2')
     version('2.13',   sha256='aa75a2b62ec9588add4c288993821bab5312a83b1259ff0d508c215133492d74')
     version('2.12.1', sha256='e3aca0656f56f815135521360dc56667ec26af25143c3a31d645fef1a96abbc2')
