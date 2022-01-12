@@ -10,6 +10,7 @@ import pytest
 
 import llnl.util.filesystem
 
+import spack.compilers
 import spack.main
 import spack.version
 
@@ -271,3 +272,13 @@ def test_compiler_find_path_order(
         'f77': str(clangdir.join('first_in_path', 'gfortran-8')),
         'fc': str(clangdir.join('first_in_path', 'gfortran-8')),
     }
+
+
+def test_compiler_list_empty(no_compilers_yaml, working_env, clangdir):
+    # Spack should not automatically search for compilers when listing them and none
+    # are available. And when stdout is not a tty like in tests, there should be no
+    # output and no error exit code.
+    os.environ['PATH'] = str(clangdir)
+    out = compiler('list')
+    assert not out
+    assert compiler.returncode == 0
