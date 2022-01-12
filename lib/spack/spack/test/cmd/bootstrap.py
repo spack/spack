@@ -135,11 +135,9 @@ def test_trust_or_untrust_fails_with_no_method(mutable_config):
 def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
     wrong_config = {'sources': [
         {'name': 'github-actions',
-         'type': 'buildcache',
-         'description': ''},
+         'metadata': '$spack/share/spack/bootstrap/github-actions/metadata.yaml'},
         {'name': 'github-actions',
-         'type': 'buildcache',
-         'description': 'Another entry'}],
+         'metadata': '$spack/share/spack/bootstrap/github-actions/metadata.yaml'}],
         'trusted': {}
     }
     with spack.config.override('bootstrap', wrong_config):

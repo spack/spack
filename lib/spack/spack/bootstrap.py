@@ -15,6 +15,7 @@ import re
 import sys
 import sysconfig
 
+import ruamel.yaml
 import six
 
 import archspec.cpu
@@ -505,11 +506,9 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
         return
 
     abstract_spec = abstract_spec or module
-    source_configs = spack.config.get('bootstrap:sources', [])
-
     errors = {}
 
-    for current_config in source_configs:
+    for current_config in bootstrapping_sources():
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP MODULE {0}] Skipping source "{1}" since it is '
                    'not trusted').format(module, current_config['name'])
@@ -557,8 +556,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
         return cmd
 
     executables_str = ', '.join(executables)
-    source_configs = spack.config.get('bootstrap:sources', [])
-    for current_config in source_configs:
+    for current_config in bootstrapping_sources():
         if not _source_is_trusted(current_config):
             msg = ('[BOOTSTRAP EXECUTABLES {0}] Skipping source "{1}" since it is '
                    'not trusted').format(executables_str, current_config['name'])
@@ -975,3 +973,18 @@ def status_message(section):
         msg += '\n'
         msg = msg.format(pass_token if not missing_software else fail_token)
     return msg, missing_software
+
+
+def bootstrapping_sources(scope=None):
+    """Return the list of configured sources of software for bootstrapping Spack
+
+    Args:
+        scope (str or None): if a valid configuration scope is given, return the
+            list only from that scope
+    """
+    source_configs = spack.config.get('bootstrap:sources', [], scope=scope)
+    for entry in source_configs:
+        metadata_file = spack.util.path.canonicalize_path(entry['metadata'])
+        with open(metadata_file) as f:
+            entry.update(ruamel.yaml.load(f))
+    return source_configs
