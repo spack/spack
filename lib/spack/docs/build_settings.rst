@@ -234,12 +234,12 @@ Each following paragraph will discuss one of the bullet points above.
 Module/Package Name Mismatches
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For certain libraries there exist multiple implementations (e.g., MPI). If you
-modify the ``packages.yaml`` file, then you must make sure to select the
-correct package name. For example, the package ``mpich`` can be used only for
-the vanilla MPICH implementation but not for Cray MPICH; Cray MPICH has its own
-package called ``cray-mpich``. If the wrong module name is picked, this can
-cause errors later, e.g., Spack may compute a wrong prefix.
+For certain libraries there exist multiple implementations (e.g., MPI). When
+defining an external entry for a package, make sure the package name identifies
+the implementation that matches the module. For example, the package ``mpich``
+can be used only for the vanilla MPICH implementation but not for Cray MPICH;
+Cray MPICH has its own package called ``cray-mpich``. If the wrong module name
+is picked, this can cause errors later, e.g., Spack may compute a wrong prefix.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Missing Modules Dependencies
@@ -346,8 +346,9 @@ mpi`` output:
     [snip]
 
 Given this module output, ``spack external find`` will determine
-``/usr/lib64/openmpi`` as the prefix when it is actually ``/usr``. This
-incorrect prefix can cause the error message below when building packages::
+``/usr/lib64/openmpi`` as the prefix when only ``/usr`` allows Spack to
+determine all required paths. This incorrect prefix can cause the error message
+below when building packages::
 
     ==> Error: AttributeError: Query of package 'openmpi' for 'headers' failed
     	prefix : None
@@ -390,9 +391,10 @@ Consider the following ``module show`` output:
     -------------------------------------------------------------------
 
 The module ``intel-all`` is obviously a metamodule because it only loads other
-modules and its ``module show`` output cannot be used to derive the needed
-environment changes to use, e.g., Intel MPI. For this reason, metamodules
-*cannot* be used in ``packages.yaml`` files.
+modules; the module contents do not include direct manipulations of ``PATH``,
+which Spack depends on to determine the package prefix. For this reason,
+metamodules cannot generally be used in place of the direct package module when
+defining external packages.
 
 
 .. _concretization-preferences:
