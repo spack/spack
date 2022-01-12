@@ -32,6 +32,7 @@ class Itensor(MakefilePackage):
 
     variant('openmp', default=False, description='Enable OpenMP support.')
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
+    variant('shared', default=False, description='Also build dynamic libraries.')
 
     depends_on('lapack')
     depends_on('hdf5+hl', when='+hdf5')
@@ -100,6 +101,10 @@ class Itensor(MakefilePackage):
             'PREFIX={0}'.format(os.getcwd()),
             mf
         )
+
+        # 5.shared
+        if '+shared' in spec:
+            filter_file('ITENSOR_MAKE_DYLIB=0', 'ITENSOR_MAKE_DYLIB=1', mf)
 
     def install(self, spec, prefix):
         # 0.backup options.mk
