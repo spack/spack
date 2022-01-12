@@ -403,7 +403,52 @@ def replace_environment(env):
             os.environ[name] = val
 
 
-class log_output(object):
+def log_output(*args, **kwargs):
+    """Context manager that logs its output to a file.
+
+    In the simplest case, the usage looks like this::
+
+        with log_output('logfile.txt'):
+            # do things ... output will be logged
+
+    Any output from the with block will be redirected to ``logfile.txt``.
+    If you also want the output to be echoed to ``stdout``, use the
+    ``echo`` parameter::
+
+        with log_output('logfile.txt', echo=True):
+            # do things ... output will be logged and printed out
+
+    And, if you just want to echo *some* stuff from the parent, use
+    ``force_echo``::
+
+        with log_output('logfile.txt', echo=False) as logger:
+            # do things ... output will be logged
+
+            with logger.force_echo():
+                # things here will be echoed *and* logged
+
+    Under the hood, we spawn a daemon and set up a pipe between this
+    process and the daemon.  The daemon writes our output to both the
+    file and to stdout (if echoing).  The parent process can communicate
+    with the daemon to tell it when and when not to echo; this is what
+    force_echo does.  You can also enable/disable echoing by typing 'v'.
+
+    We try to use OS-level file descriptors to do the redirection, but if
+    stdout or stderr has been set to some Python-level file object, we
+    use Python-level redirection instead.  This allows the redirection to
+    work within test frameworks like nose and pytest.
+
+
+    This method is actually a factory serving a per platform
+    (nix vs windows) log_output class
+    """
+    if sys.platform == 'win32':
+        return winlog(*args, **kwargs)
+    else:
+        return nixlog(*args, **kwargs)
+
+
+class nixlog(object):
     """Context manager that logs its output to a file.
 
     In the simplest case, the usage looks like this::
@@ -747,12 +792,13 @@ class StreamWrapper:
                 os.close(self.saved_stream)
 
 
-class winlog:
-    def __init__(self, logfile, echo=False, debug=0, env=None):
+class winlog(object):
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
+                 env=None, filter_fn=None):
         self.env = env
         self.debug = debug
         self.echo = echo
-        self.logfile = logfile
+        self.logfile = file_like
         self.stdout = StreamWrapper('stdout')
         self.stderr = StreamWrapper('stderr')
         self._active = False
@@ -807,6 +853,7 @@ class winlog:
                 self._thread = Thread(target=background_reader,
                                       args=(self.reader, self.echo_writer, self._kill))
                 self._thread.start()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._ioflag:
@@ -831,18 +878,10 @@ class winlog:
         if not self._active:
             raise RuntimeError(
                 "Can't call force_echo() outside log_output region!")
-
-        # This uses the xon/xoff to highlight regions to be echoed in the
-        # output. We use these control characters rather than, say, a
-        # separate pipe, because they're in-band and assured to appear
-        # exactly before and after the text we want to echo.
-        sys.stdout.write(xon)
-        sys.stdout.flush()
         try:
-            yield
+            yield self
         finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
+            pass
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,

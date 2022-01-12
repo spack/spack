@@ -17,8 +17,10 @@ from spack.util.executable import which
 
 debug = SpackCommand('debug')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+
 @pytest.mark.db
 def test_create_db_tarball(tmpdir, database):
     with tmpdir.as_cwd():
@@ -48,7 +50,6 @@ def test_create_db_tarball(tmpdir, database):
             assert spec_suffix in contents
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_report():
     out = debug('report')
     host_platform = spack.platforms.host()

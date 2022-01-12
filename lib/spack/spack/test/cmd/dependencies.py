@@ -20,8 +20,10 @@ mpis = [
 ]
 mpi_deps = ['fake']
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+
 def test_direct_dependencies(mock_packages):
     out = dependencies('mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
@@ -29,7 +31,6 @@ def test_direct_dependencies(mock_packages):
     assert expected == actual
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_transitive_dependencies(mock_packages):
     out = dependencies('--transitive', 'mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
@@ -38,7 +39,6 @@ def test_transitive_dependencies(mock_packages):
     assert expected == actual
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_transitive_dependencies_with_deptypes(mock_packages):
     out = dependencies('--transitive', '--deptype=link,run', 'dtbuild1')
     deps = set(re.split(r'\s+', out.strip()))
@@ -53,7 +53,6 @@ def test_transitive_dependencies_with_deptypes(mock_packages):
     assert set(['dtlink2']) == deps
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_direct_installed_dependencies(mock_packages, database):
     with color_when(False):
@@ -71,7 +70,6 @@ def test_direct_installed_dependencies(mock_packages, database):
     assert expected == hashes
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_transitive_installed_dependencies(mock_packages, database):
     with color_when(False):

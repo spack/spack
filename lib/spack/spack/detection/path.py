@@ -6,6 +6,7 @@
 and running executables.
 """
 import collections
+from distutils.spawn import find_executable
 import os
 import os.path
 import re
@@ -28,7 +29,7 @@ from .common import (
 )
 
 
-def determine_search_paths(path_hints):
+def find_executables(path_hints):
     """Get the paths of all executables available from provided hints
 
     For convenience, this is constructed as a dictionary where the keys are
@@ -86,7 +87,7 @@ def executables_in_path(path_hints=None):
             for path in msvc_paths]
         path_hints = msvc_ninja_paths + path_hints
         path_hints.extend(find_win32_additional_install_paths())
-    return determine_search_paths(path_hints)
+    return find_executables(path_hints)
 
 
 def _group_by_prefix(paths):
@@ -115,7 +116,7 @@ def by_executable(packages_to_check, path_hints=None):
                 exe_pattern_to_pkgs[exe].append(pkg)
 
         path_to_exe_name.update(
-            determine_search_paths(
+            find_executables(
                 compute_windows_program_path_for_package(pkg)
             )
         )

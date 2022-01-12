@@ -15,9 +15,10 @@ undevelop = SpackCommand('undevelop')
 env = SpackCommand('env')
 concretize = SpackCommand('concretize')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
+
 def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')
@@ -45,8 +46,6 @@ env:
     assert not after.satisfies('dev_path=*')
 
 
-@pytest.mark.skipif(sys.platform == "win32",
-                    reason='Not supported on Windows (yet)')
 def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')

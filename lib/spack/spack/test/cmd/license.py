@@ -17,8 +17,10 @@ from spack.main import SpackCommand
 
 license = SpackCommand('license')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+
 def test_list_files():
     files = license('list-files').strip().split('\n')
     assert all(f.startswith(spack.paths.prefix) for f in files)
@@ -26,7 +28,6 @@ def test_list_files():
     assert os.path.abspath(__file__) in files
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_verify(tmpdir):
     source_dir = tmpdir.join('lib', 'spack', 'spack')
     mkdirp(str(source_dir))
@@ -74,7 +75,6 @@ def test_verify(tmpdir):
     assert license.returncode == 1
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
 def test_update_copyright_year(tmpdir):
     source_dir = tmpdir.join('lib', 'spack', 'spack')
     mkdirp(str(source_dir))

@@ -272,7 +272,11 @@ class Lock(object):
         self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
         self._current_lock = None
 
-    def __lock_fail_condition(self, e):
+    def _lock_fail_condition(self, e):
+        """
+        Catch certain errors associated with expected locking logic
+        and seperate from 'real' errors.
+        """
         if is_windows:
             # 33 "The process cannot access the file because another
             #     process has locked a portion of the file."
@@ -310,7 +314,7 @@ class Lock(object):
         """Formal representation of the lock."""
         rep = '{0}('.format(self.__class__.__name__)
         for attr, value in self.__dict__.items():
-            if attr != "LOCK_CATCH":
+            if not attr.startswith("LOCK"):
                 rep += '{0}={1}, '.format(attr, value.__repr__())
         return '{0})'.format(rep.strip(', '))
 
@@ -406,7 +410,7 @@ class Lock(object):
 
         except self.LOCK_CATCH as e:
             # check if lock failure or lock is already held
-            if self.__lock_fail_condition(e):
+            if self._lock_fail_condition(e):
                 raise
 
         return False

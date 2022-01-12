@@ -13,8 +13,10 @@ import spack.spec
 
 gc = spack.main.SpackCommand('gc')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
+
 @pytest.mark.db
 def test_no_packages_to_remove(config, mutable_database, capsys):
     with capsys.disabled():
@@ -22,7 +24,6 @@ def test_no_packages_to_remove(config, mutable_database, capsys):
     assert 'There are no unused specs.' in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_packages_are_removed(config, mutable_database, capsys):
     s = spack.spec.Spec('simple-inheritance')
@@ -33,7 +34,6 @@ def test_packages_are_removed(config, mutable_database, capsys):
     assert 'Successfully uninstalled cmake' in output
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 @pytest.mark.db
 def test_gc_with_environment(
         config, mutable_database, mutable_mock_env_path, capsys

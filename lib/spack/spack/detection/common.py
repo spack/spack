@@ -198,7 +198,10 @@ def find_win32_additional_install_paths():
                               add_path(key)])
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
+    # Add search path for default Chocolatey (https://github.com/chocolatey/choco)
+    # install directory
     windows_search_ext.append("C:\\ProgramData\\chocolatey\\bin")
+    # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
     windows_search_ext.extend(
         spack.config.get("config:additional_external_search_paths", default=[])

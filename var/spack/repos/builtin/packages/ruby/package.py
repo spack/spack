@@ -46,7 +46,9 @@ class Ruby(Package):
             depends_on('openssl@:1.0', when='@:2.3')
 
     extendable = True
-    phases = ['autoreconf', 'configure', 'build', 'install']
+    phases = ['configure', 'build', 'install']
+    build_targets = []
+    install_targets = ['install']
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
@@ -120,17 +122,17 @@ class Ruby(Package):
         module.rake = Executable(self.prefix.bin.rake)
 
     def configure(self, spec, prefix):
-        with working_dir(self.build_directory, create=True):
-            if is_windows:
-                Executable("win32\\configure.bat", "--prefix=%s" % self.prefix)
-            else:
-                options = getattr(self, 'configure_flag_args', [])
-                options += ['--prefix={0}'.format(prefix)]
-                options += self.configure_args()
-                configure(*options)
+        with working_dir(self.stage.source_path, create=True):
+            # if is_windows:
+            Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)
+            # else:
+            #     options = getattr(self, 'configure_flag_args', [])
+            #     options += ['--prefix={0}'.format(prefix)]
+            #     options += self.configure_args()
+            #     configure(*options)
 
     def build(self, spec, prefix):
-        with working_dir(self.build_directory):
+        with working_dir(self.stage.source_path):
             if is_windows:
                 nmake()
             else:
@@ -139,7 +141,7 @@ class Ruby(Package):
                 make(*params)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
+        with working_dir(self.stage.source_path):
             if is_windows:
                 nmake('install')
             else:
