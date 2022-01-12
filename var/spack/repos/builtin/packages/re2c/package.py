@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Re2c(AutotoolsPackage):
+class Re2c(CMakePackage):
     """re2c: a free and open-source lexer generator for C and C++"""
 
     homepage = "https://re2c.org/index.html"
@@ -33,3 +33,10 @@ class Re2c(AutotoolsPackage):
             '--disable-libs',  # experimental
             '--enable-golang',
         ]
+
+    @when('platform=windows')
+    def cmake(self, spec, prefix):
+        super(Re2c, self).cmake(spec, prefix)
+
+    def cmake(self, spec, prefix):
+        configure("--prefix="+ prefix, *self.configure_args())
