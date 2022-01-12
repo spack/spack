@@ -100,17 +100,29 @@ def sysctl_info_dict():
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
     if platform.machine() == "x86_64":
-        flags = (
-            sysctl("-n", "machdep.cpu.features").lower()
-            + " "
-            + sysctl("-n", "machdep.cpu.leaf7_features").lower()
-        )
-        info = {
-            "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
-            "flags": flags,
-            "model": sysctl("-n", "machdep.cpu.model"),
-            "model name": sysctl("-n", "machdep.cpu.brand_string"),
-        }
+        # Rosetta emulator
+        if "Apple" in sysctl("-n", "machdep.cpu.brand_string"):
+            flags = (
+                sysctl("-n", "machdep.cpu.features").lower()
+            )
+            info = {
+                "vendor_id": "Apple",
+                "flags": flags,
+                "model": "m1",
+                "model name": sysctl("-n", "machdep.cpu.brand_string"),
+            }
+        else:
+            flags = (
+                sysctl("-n", "machdep.cpu.features").lower()
+                + " "
+                + sysctl("-n", "machdep.cpu.leaf7_features").lower()
+            )
+            info = {
+                "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
+                "flags": flags,
+                "model": sysctl("-n", "machdep.cpu.model"),
+                "model name": sysctl("-n", "machdep.cpu.brand_string"),
+            }
     else:
         model = (
             "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
