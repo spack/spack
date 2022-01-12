@@ -10,7 +10,7 @@ from spack import *
 from spack.operating_systems.mac_os import macos_version
 
 
-class Bison(AutotoolsPackage, GNUMirrorPackage):
+class BisonNix(AutotoolsPackage, GNUMirrorPackage):
     """Bison is a general-purpose parser generator that converts
     an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
@@ -50,6 +50,7 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     patch('parallel.patch', when='@3.4.2')
 
     provides('yacc')
+    provides('bison')
 
     depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
