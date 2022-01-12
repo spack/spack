@@ -137,10 +137,7 @@ def _root(args):
 
 
 def _list(args):
-    sources = spack.config.get(
-        'bootstrap:sources', default=None, scope=args.scope
-    )
-
+    sources = spack.bootstrap.bootstrapping_sources(scope=args.scope)
     if not sources:
         llnl.util.tty.msg(
             "No method available for bootstrapping Spack's dependencies"
