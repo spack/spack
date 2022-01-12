@@ -156,7 +156,7 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
 
-        if gfortran_major_version>=10:
+        if self.compiler.name in ['gcc', 'clang', 'apple-clang'] and gfortran_major_version>=10:
             os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
 
         #######
