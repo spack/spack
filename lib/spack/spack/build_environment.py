@@ -856,7 +856,9 @@ def _make_runnable(pkg, env):
             env.prepend_path('PATH', bin_dir)
 
 
-def modifications_from_dependencies(spec, context, custom_mods_only=True):
+def modifications_from_dependencies(
+        spec, context, custom_mods_only=True, set_package_py_globals=True
+):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -889,6 +891,11 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         spec (spack.spec.Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
+        custom_mods_only (bool): if True returns only custom modifications, if False
+            returns custom and default modifications
+        set_package_py_globals (bool): whether or not to set the global variables in the
+            package.py files (this may be problematic when using buildcaches that have
+            been built on a different but compatible OS)
     """
     if context not in ['build', 'run', 'test']:
         raise ValueError(
@@ -962,7 +969,8 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         # PKG_CONFIG_PATH)
         if dep in custom_mod_deps:
             dpkg = dep.package
-            set_module_variables_for_package(dpkg)
+            if set_package_py_globals:
+                set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
             dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':
