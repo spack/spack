@@ -71,6 +71,12 @@ class Touchdetector(CMakePackage):
             filter_file(r'(int messageLength) = -1;$',
                         r'\1 = 0;',
                         'touchdetector/DistributedTouchDetector.cxx')
+        elif self.spec.satisfies('@develop'):
+            filter_file(
+                r'-Werror',
+                '-Werror -Wno-error=stringop-overflow',
+                'touchdetector/CMakeLists.txt'
+            )
 
     def cmake_args(self):
         args = [
