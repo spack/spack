@@ -52,11 +52,13 @@ class Wonton(CMakePackage):
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
 
-    # We need boost only when no thrust option
-    depends_on('boost', when='~thrust')
-
-    # NVidia thrust library
-    depends_on('thrust@1.8.3', when='+thrust')
+    if (version('master', branch='master', submodules=True)):
+        # NVidia thrust library
+        print("master version: disable boost")
+        depends_on('thrust@1.8.3', when='+thrust')
+    else:
+        depends_on('boost', when='~thrust')
+        depends_on('thrust@1.8.3', when='+thrust')
 
     # CUDA library
     depends_on('cuda', when='+cuda')
