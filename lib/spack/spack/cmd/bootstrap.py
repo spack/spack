@@ -67,24 +67,43 @@ def setup_parser(subparser):
     )
 
     list = sp.add_parser(
-        'list', help='list the methods available for bootstrapping'
+        'list', help='list all the sources of software to bootstrap Spack'
     )
     _add_scope_option(list)
 
     trust = sp.add_parser(
-        'trust', help='trust a bootstrapping method'
+        'trust', help='trust a bootstrapping source'
     )
     _add_scope_option(trust)
     trust.add_argument(
-        'name', help='name of the method to be trusted'
+        'name', help='name of the source to be trusted'
     )
 
     untrust = sp.add_parser(
-        'untrust', help='untrust a bootstrapping method'
+        'untrust', help='untrust a bootstrapping source'
     )
     _add_scope_option(untrust)
     untrust.add_argument(
-        'name', help='name of the method to be untrusted'
+        'name', help='name of the source to be untrusted'
+    )
+
+    add = sp.add_parser(
+        'add', help='add a new source for bootstrapping'
+    )
+    _add_scope_option(add)
+    add.add_argument(
+        'name', help='name of the new source of software'
+    )
+    add.add_argument(
+        'metadata', help='location of the metadata file'
+    )
+
+    remove = sp.add_parser(
+        'remove', help='remove a bootstrapping source'
+    )
+    _add_scope_option(remove)
+    remove.add_argument(
+        'name', help='name of the source to be removed'
     )
 
 
@@ -246,6 +265,57 @@ def _status(args):
         print()
 
 
+def _add(args):
+    initial_sources = spack.bootstrap.bootstrapping_sources()
+    names = [s['name'] for s in initial_sources]
+
+    # If the name is already used error out
+    if args.name in names:
+        msg = 'a source named "{0}" already exist. Please choose a different name'
+        raise RuntimeError(msg.format(args.name))
+
+    # Check that the metadata file exists
+    file = spack.util.path.canonicalize_path(args.metadata)
+    if not os.path.exists(file):
+        msg = 'the file "{0}" does not exist'
+        raise RuntimeError(msg.format(args.metadata))
+
+    # Insert the new source as the highest priority one
+    write_scope = args.scope or spack.config.default_modify_scope(section='bootstrap')
+    sources = spack.config.get('bootstrap:sources', scope=write_scope) or []
+    sources = [
+        {'name': args.name, 'metadata': args.metadata}
+    ] + sources
+    spack.config.set('bootstrap:sources', sources, scope=write_scope)
+
+    msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
+    llnl.util.tty.msg(msg.format(args.name, write_scope))
+
+
+def _remove(args):
+    initial_sources = spack.bootstrap.bootstrapping_sources()
+    names = [s['name'] for s in initial_sources]
+    if args.name not in names:
+        msg = ('cannot find any bootstrapping source named "{0}". '
+               'Run `spack bootstrap list` to see available sources.')
+        raise RuntimeError(msg.format(args.name))
+
+    for current_scope in spack.config.scopes():
+        sources = spack.config.get('bootstrap:sources', scope=current_scope) or []
+        if args.name in [s['name'] for s in sources]:
+            sources = [s for s in sources if s['name'] != args.name]
+            spack.config.set('bootstrap:sources', sources, scope=current_scope)
+            msg = ('Removed the bootstrapping source named "{0}" from the '
+                   '"{1}" configuration scope.')
+            llnl.util.tty.msg(msg.format(args.name, current_scope))
+        trusted = spack.config.get('bootstrap:trusted', scope=current_scope) or []
+        if args.name in trusted:
+            trusted.pop(args.name)
+            spack.config.set('bootstrap:trusted', trusted, scope=current_scope)
+            msg = 'Deleting information on "{0}" from list of trusted sources'
+            llnl.util.tty.msg(msg.format(args.name))
+
+
 def bootstrap(parser, args):
     callbacks = {
         'status': _status,
@@ -255,6 +325,8 @@ def bootstrap(parser, args):
         'root': _root,
         'list': _list,
         'trust': _trust,
-        'untrust': _untrust
+        'untrust': _untrust,
+        'add': _add,
+        'remove': _remove
     }
     callbacks[args.subcommand](args)
