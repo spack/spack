@@ -6,6 +6,7 @@
 from os.path import split
 
 from spack import *
+from spack.util.environment import EnvironmentModifications
 
 
 class Anaconda3(Package):
@@ -56,3 +57,7 @@ class Anaconda3(Package):
         dir, anaconda_script = split(self.stage.archive_file)
         bash = which('bash')
         bash(anaconda_script, '-b', '-f', '-p', self.prefix)
+
+    def setup_run_environment(self, env):
+        filename = self.prefix.etc.join('profile.d').join('conda.sh')
+        env.extend(EnvironmentModifications.from_sourcing_file(filename))
