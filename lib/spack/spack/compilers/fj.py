@@ -20,10 +20,10 @@ class Fj(spack.compiler.Compiler):
     fc_names = ['frt']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'fj/fcc',
-                  'cxx': 'fj/case-insensitive/FCC',
-                  'f77': 'fj/frt',
-                  'fc': 'fj/frt'}
+    link_paths = {'cc': ('fj', 'fcc'),
+                  'cxx': ('fj', 'case-insensitive', 'FCC'),
+                  'f77': ('fj', 'frt'),
+                  'fc': ('fj', 'frt')}
 
     version_argument = '--version'
     version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'

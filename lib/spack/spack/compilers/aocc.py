@@ -42,10 +42,10 @@ class Aocc(Compiler):
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'aocc/clang',
-                      'cxx': 'aocc/clang++',
-                      'f77': 'aocc/flang',
-                      'fc': 'aocc/flang'}
+        link_paths = {'cc': ('aocc', 'clang'),
+                      'cxx': ('aocc', 'clang++'),
+                      'f77': ('aocc', 'flang'),
+                      'fc': ('aocc', 'flang')}
 
         return link_paths
 

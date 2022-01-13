@@ -20,7 +20,7 @@ class XlR(spack.compilers.xl.Xl):
     fc_names = ['xlf90_r', 'xlf95_r', 'xlf2003_r', 'xlf2008_r']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'xl_r/xlc_r',
-                  'cxx': 'xl_r/xlc++_r',
-                  'f77': 'xl_r/xlf_r',
-                  'fc': 'xl_r/xlf90_r'}
+    link_paths = {'cc': ('xl_r', 'xlc_r'),
+                  'cxx': ('xl_r', 'xlc++_r'),
+                  'f77': ('xl_r', 'xlf_r'),
+                  'fc': ('xl_r', 'xlf90_r')}

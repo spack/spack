@@ -26,8 +26,8 @@ class Nag(spack.compiler.Compiler):
     link_paths = {
         'cc': 'cc',
         'cxx': 'c++',
-        'f77': 'nag/nagfor',
-        'fc': 'nag/nagfor'}
+        'f77': ('nag', 'nagfor'),
+        'fc': ('nag', 'nagfor')}
 
     version_argument = '-V'
     version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'

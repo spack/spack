@@ -21,10 +21,10 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'pgi/pgcc',
-                  'cxx': 'pgi/pgc++',
-                  'f77': 'pgi/pgfortran',
-                  'fc': 'pgi/pgfortran'}
+    link_paths = {'cc': ('pgi', 'pgcc'),
+                  'cxx': ('pgi', 'pgc++'),
+                  'f77': ('pgi', 'pgfortran'),
+                  'fc': ('pgi', 'pgfortran')}
 
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'

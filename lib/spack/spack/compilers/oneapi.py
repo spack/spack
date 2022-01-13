@@ -22,10 +22,10 @@ class Oneapi(Compiler):
     fc_names = ['ifx']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'oneapi/icx',
-                  'cxx': 'oneapi/icpx',
-                  'f77': 'oneapi/ifx',
-                  'fc': 'oneapi/ifx'}
+    link_paths = {'cc': ('oneapi', 'icx'),
+                  'cxx': ('oneapi', 'icpx'),
+                  'f77': ('oneapi', 'ifx'),
+                  'fc': ('oneapi', 'ifx')}
 
     PrgEnv = 'PrgEnv-oneapi'
     PrgEnv_compiler = 'oneapi'

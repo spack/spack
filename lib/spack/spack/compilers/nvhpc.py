@@ -20,10 +20,10 @@ class Nvhpc(Compiler):
     fc_names = ['nvfortran']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc':  'nvhpc/nvc',
-                  'cxx': 'nvhpc/nvc++',
-                  'f77': 'nvhpc/nvfortran',
-                  'fc':  'nvhpc/nvfortran'}
+    link_paths = {'cc':  ('nvhpc', 'nvc'),
+                  'cxx': ('nvhpc', 'nvc++'),
+                  'f77': ('nvhpc', 'nvfortran'),
+                  'fc':  ('nvhpc', 'nvfortran')}
 
     PrgEnv = 'PrgEnv-nvhpc'
     PrgEnv_compiler = 'nvhpc'
