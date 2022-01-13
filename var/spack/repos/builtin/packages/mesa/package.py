@@ -106,7 +106,7 @@ class Mesa(MesonPackage):
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
 
-    patch('llvm-check-prerelease-13.patch', when='@21.2.3:')
+    patch('mesa_check_llvm_version_suffix.patch', when='@21.2.3:')
 
     # 'auto' needed when shared llvm is built
     @when('^llvm~shared_libs')
@@ -177,7 +177,8 @@ class Mesa(MesonPackage):
 
         if '+llvm' in spec:
             # Fix builds on hosts where /usr/bin/llvm-config-* is found and provides an
-            # incompatible version. Ensure that the llvm-config of spec['libllvm'] is used.
+            # incompatible version. Ensure that the llvm-config of spec['libllvm'] is
+            # used.
             args.append('--native-file')
             args.append('meson-native-config.ini')
             mkdirp(self.build_directory)
