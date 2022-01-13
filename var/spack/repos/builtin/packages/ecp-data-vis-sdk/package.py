@@ -119,12 +119,11 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
 
     depends_on('py-cinemasci', when='+cinema')
 
-    # +adios2 is not yet enabled in the paraview package
     paraview_base_spec = 'paraview +mpi +python3 +kits'
     # Want +shared when not using cuda
     dav_sdk_depends_on(paraview_base_spec + '+shared ~cuda',
                        when='+paraview ~cuda',
-                       propagate=['hdf5'])
+                       propagate=['hdf5', 'adios2'])
     # Can't have +shared when using cuda, propagate cuda_arch_variants
     dav_sdk_depends_on(paraview_base_spec + '~shared +cuda',
                        when='+paraview +cuda',

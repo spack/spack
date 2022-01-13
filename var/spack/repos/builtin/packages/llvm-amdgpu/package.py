@@ -37,6 +37,16 @@ class LlvmAmdgpu(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
+    variant(
+        "llvm_dylib",
+        default=False,
+        description="Build LLVM shared library, containing all "
+        "components in a single shared library",
+    )
+
+    provides('libllvm@11', when='@3.5:3.8')
+    provides('libllvm@12', when='@3.9:4.2')
+    provides('libllvm@13', when='@4.3:')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
@@ -133,6 +143,9 @@ class LlvmAmdgpu(CMakePackage):
                 self.define('LLVM_EXTERNAL_PROJECTS', 'device-libs'),
                 self.define('LLVM_EXTERNAL_DEVICE_LIBS_SOURCE_DIR', dir)
             ])
+
+        if '+llvm_dylib' in self.spec:
+            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":

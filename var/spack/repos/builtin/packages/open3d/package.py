@@ -22,6 +22,8 @@ class Open3d(CMakePackage, CudaPackage):
     # http://www.open3d.org/docs/latest/compilation.html
 
     depends_on('cmake@3.19:', type='build')
+    # https://github.com/isl-org/Open3D/issues/3762
+    depends_on('llvm')
     # depends_on('eigen')
     # depends_on('flann')
     # depends_on('fmt')

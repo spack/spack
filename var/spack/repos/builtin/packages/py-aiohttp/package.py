@@ -11,12 +11,12 @@ class PyAiohttp(PythonPackage):
     plugable routing."""
 
     homepage = "https://github.com/aio-libs/aiohttp"
-    url      = "https://github.com/aio-libs/aiohttp/archive/v3.6.2.tar.gz"
+    pypi = "aiohttp/aiohttp-3.8.1.tar.gz"
 
-    version('3.8.1', sha256='45210606552ed4f8992e17ffa3273e9ad2815c8c3ca00832a57b3a62735b1fc7')
-    version('3.8.0', sha256='0587288bf063cc0433542ab17674af11cb3639f4cb5ddf89420501ca16565e75')
-    version('3.7.4', sha256='d90ace66b55747e49531b13bf0a9c7ae9d1e14f315a56ea6b54c0dc1b6facd6e')
-    version('3.6.2', sha256='4ad2d8393843ea0c7b50a93bf04fb1cf20b93c0a5e958de128efcd2e5f8adf80')
+    version('3.8.1', sha256='fc5471e1a54de15ef71c1bc6ebe80d4dc681ea600e68bfd1cbce40427f0b7578')
+    version('3.8.0', sha256='d3b19d8d183bcfd68b25beebab8dc3308282fe2ca3d6ea3cb4cd101b3c279f8d')
+    version('3.7.4', sha256='5d84ecc73141d0a0d61ece0742bb7ff5751b0657dab8405f899d3ceb104cc7de')
+    version('3.6.2', sha256='259ab809ff0727d0e834ac5e8a283dc5e3e0ecc30c4d80b3cd17a4139ce1f326')
 
     depends_on('py-setuptools@46.4:', type='build')
     depends_on('py-charset-normalizer@2.0:2', type=('build', 'run'), when='@3.8.0:')
