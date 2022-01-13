@@ -34,6 +34,7 @@ class HsakmtRoct(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('shared', default=True, description='Build shared or static library')
 
+    depends_on('pkgconfig', type='build', when='@4.5.0:')
     depends_on('cmake@3:', type='build')
     depends_on('numactl')
     depends_on('libdrm', when='@4.5.0:')
