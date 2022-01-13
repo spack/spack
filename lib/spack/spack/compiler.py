@@ -14,7 +14,7 @@ from typing import List, Sequence  # novm
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
+from llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs, path_to_os_path
 
 import spack.compilers
 import spack.error
@@ -102,6 +102,7 @@ def _parse_link_paths(string):
     the RPATH of generated binaries and libraries.  It allows us to
     ensure, e.g., that codes load the right libstdc++ for their compiler.
     """
+    string = path_to_os_path(string)
     lib_search_paths = False
     raw_link_dirs = []
     tty.debug('parsing implicit link info')
