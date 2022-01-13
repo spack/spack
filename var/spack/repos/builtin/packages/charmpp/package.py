@@ -101,6 +101,10 @@ class Charmpp(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
+    # Versions 7.0.0+ use CMake by default when it's available. It's more
+    # robust.
+    depends_on('cmake@3.4:', when='@7.0.0:', type='build')
+
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
     depends_on("cuda", when="+cuda")
