@@ -32,7 +32,7 @@ class Simrna(Package):
     phases = ['install']
 
     def url_for_version(self, version):
-        return "file://{0}/SimRNA_64bitIntel_Linux.tgz".format(os.getcwd(), version)
+        return "file://{0}/SimRNA_64bitIntel_Linux.tgz".format(os.getcwd())
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
