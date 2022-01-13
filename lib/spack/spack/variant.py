@@ -647,7 +647,7 @@ def substitute_abstract_variants(spec):
     Args:
         spec: spec on which to operate the substitution
     """
-    # This method needs to be best effort so that it works in matrix exlusion
+    # This method needs to be best effort so that it works in matrix exclusion
     # in $spack/lib/spack/spack/spec_list.py
     failed = []
     for name, v in spec.variants.items():

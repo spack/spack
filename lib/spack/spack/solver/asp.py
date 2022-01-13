@@ -1893,7 +1893,7 @@ class SpecBuilder(object):
         flags will appear last on the compile line, in the order they
         were specified.
 
-        The solver determines wihch flags are on nodes; this routine
+        The solver determines which flags are on nodes; this routine
         imposes order afterwards.
         """
         # nodes with no flags get flag order from compiler
