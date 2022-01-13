@@ -12,17 +12,29 @@ import sys
 from six import string_types, text_type
 
 import llnl.util.tty as tty
-import llnl.util.filesystem as fs
 
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
+def path_to_os_path(*pths):
+    import pdb; pdb.set_trace()
+    ret_pths = []
+    for pth in pths:
+        if sys.platform == 'win32' and type(pth) is str:
+            pth = pth.replace('/', '\\')
+        ret_pths.append(pth)
+    return ret_pths
+
+def system_path_filter(f):
+    def path_filter_caller(*args, **kwargs):
+        return f(*path_to_os_path(*args), **kwargs)
+    return path_filter_caller
+
 
 class Executable(object):
     """Class representing a program that can be run on the command line."""
-
-    @fs.system_path_filter
+    @system_path_filter
     def __init__(self, name):
         self.exe = shlex.split(str(name))
         self.default_env = {}
@@ -33,7 +45,7 @@ class Executable(object):
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    @fs.system_path_filter
+    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
@@ -79,7 +91,6 @@ class Executable(object):
         return self.exe[0]
 
     # needs a small fixup tp better handle URLS and the like
-    @fs.system_path_filter
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 
@@ -272,7 +283,7 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
-@fs.system_path_filter
+@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get('path', os.environ.get('PATH', ''))
@@ -306,7 +317,7 @@ def which_string(*args, **kwargs):
     return None
 
 
-@fs.system_path_filter
+@system_path_filter
 def which(*args, **kwargs):
     """Finds an executable in the path like command-line which.
 

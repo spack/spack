@@ -23,7 +23,7 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
-from spack.util.executable import Executable
+from spack.util.executable import Executable, path_to_os_path, system_path_filter
 
 is_windows  = _platform == 'win32'
 
@@ -81,19 +81,6 @@ __all__ = [
     'working_dir',
     'keep_modification_time'
 ]
-
-def path_to_os_path(*pths):
-        ret_pths = []
-        for pth in pths:
-            if sys.platform == 'win32' and type(pth) is str:
-                pth = pth.replace('/', '\\')
-            ret_pths.append(pth)
-        return tuple(ret_pths)
-
-def system_path_filter(f):
-    def path_filter_caller(*args, **kwargs):
-        return f(path_to_os_path(*args), **kwargs)
-    return path_filter_caller
 
 
 def getuid():
