@@ -3,18 +3,18 @@ name: Containers
 on:
   # This Workflow can be triggered manually
   workflow_dispatch:
-  # Build new Spack develop containers nightly.
-  schedule:
-    - cron: '34 0 * * *'
-  # Run on pull requests that modify this file
-  pull_request:
-    branches:
-      - develop
-    paths:
-      - '.github/workflows/build-containers.yml'
-  # Let's also build & tag Spack containers on releases.
-  release:
-    types: [published]
+  # # Build new Spack develop containers nightly.
+  # schedule:
+  #   - cron: '34 0 * * *'
+  # # Run on pull requests that modify this file
+  # pull_request:
+  #   branches:
+  #     - develop
+  #   paths:
+  #     - '.github/workflows/build-containers.yml'
+  # # Let's also build & tag Spack containers on releases.
+  # release:
+  #   types: [published]
 
 jobs:
   deploy-images:

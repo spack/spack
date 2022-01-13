@@ -13,6 +13,8 @@ on:
       - '!var/spack/repos/builtin/packages/python/**'
       - '!var/spack/repos/builtin/packages/re2c/**'
       - 'lib/spack/docs/**'
+      # Ignore our stuff
+      - 'bluebrain/**'
   schedule:
     # nightly at 2:16 AM
     - cron: '16 2 * * *'
