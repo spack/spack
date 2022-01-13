@@ -44,21 +44,17 @@ class Op2Dsl(MakefilePackage):
         conflicts('+parmetis', msg='ParMETIS partitioning support requires MPI')
         conflicts('+scotch', msg='PT-Scotch partitioning support requires MPI')
 
-    depends_on('gmake', type='build')
-
     def edit(self, spec, prefix):
         compiler_map = {
-            '%gcc': 'gnu',
-            '%cce': 'cray',
-            '%intel': 'intel',
-            '%nvhpc': 'nvhpc',
-            '%xl': 'xl',
+            'gcc': 'gnu',
+            'cce': 'cray',
+            'intel': 'intel',
+            'nvhpc': 'nvhpc',
+            'xl': 'xl',
         }
 
-        for compiler in compiler_map.keys():
-            if compiler in self.spec:
-                env['OP2_COMPILER'] = compiler_map[compiler]
-                break
+        if self.spec.compiler.name in compiler_map:
+            env['OP2_COMPILER'] = compiler_map[self.spec.compiler.name]
 
     def install(self, spec, prefix):
         install_tree('op2/lib', prefix.lib)
