@@ -3,10 +3,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import shutil
 
 from spack import *
-import shutil
-import os
 
 
 class Asciitoh5(Package):

@@ -3,13 +3,13 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import stat
+from os.path import dirname
 from tempfile import TemporaryFile
 
-import os
-from os.path import dirname
-import stat
-
 from llnl.util.filesystem import find
+
 from spack import *
 
 

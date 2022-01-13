@@ -6,8 +6,9 @@
 import os
 import subprocess
 import sys
-from spack import *
 from contextlib import contextmanager
+
+from spack import *
 
 
 class Neuron(CMakePackage):

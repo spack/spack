@@ -5,15 +5,15 @@
 
 import os
 import sys
+
 import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
 
-import spack.repo
 import spack.cmd.common.arguments as arguments
-from spack.filesystem_view import filter_exclude
-
+import spack.repo
 import spack.util.spack_yaml as syaml
+from spack.filesystem_view import filter_exclude
 from spack.util.spack_yaml import syaml_dict, syaml_list
 
 description = "create a package.yaml from installed packages"
