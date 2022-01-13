@@ -27,7 +27,8 @@ class PyTensorflow(Package):
 
     def url_for_version(self, version):
         python = self.spec['python'].version.up_to(2).joined
-        self.versions[version]['sha256'] = self.tensorflow_sha[(str(version), str(python))]
+        self.versions[version]['sha256'] = \
+            self.tensorflow_sha[(str(version), str(python))]
         return (
             'https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-{0}-cp{1}-cp{1}-manylinux2010_x86_64.whl'  # noqa: E501
         ).format(version, python)
@@ -57,7 +58,12 @@ class PyTensorflow(Package):
 
     def install(self, spec, prefix):
         pip = which('pip')
-        pip('install', '--ignore-installed', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        pip(
+            'install',
+            '--ignore-installed',
+            self.stage.archive_file,
+            '--prefix={0}'.format(prefix)
+        )
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

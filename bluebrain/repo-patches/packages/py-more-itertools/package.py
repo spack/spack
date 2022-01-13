@@ -1,4 +1,6 @@
-from spack.pkg.builtin.py_more_itertools import PyMoreItertools as BuiltinPyMoreItertools
+from spack import *
+from spack.pkg.builtin.py_more_itertools \
+    import PyMoreItertools as BuiltinPyMoreItertools
 
 
 class PyMoreItertools(BuiltinPyMoreItertools):

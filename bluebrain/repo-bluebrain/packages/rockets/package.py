@@ -17,7 +17,7 @@ class Rockets(CMakePackage):
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ninja', type='build')
-    depends_on('boost', type='build') # For tests
+    depends_on('boost', type='build')  # For tests
 
     depends_on('libwebsockets@3.0.1 +libuv')
 

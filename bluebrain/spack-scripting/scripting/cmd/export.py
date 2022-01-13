@@ -56,7 +56,7 @@ def setup_parser(sp):
     sp.add_argument("-v", "--variants", choices=('all', 'changed'),
                     default='all',
                     help="which variant flags to store: "
-                     "only changed ones or all (default)")
+                    "only changed ones or all (default)")
     arguments.add_common_arguments(sp, ['tags', 'constraint'])
     sp.add_argument('--unbuildable', default=[], nargs='+',
                     help='mark packages as unbuildable')

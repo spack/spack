@@ -264,6 +264,7 @@ def no_checksum():
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
 
+
 @arg
 def test():
     return Args(
@@ -273,17 +274,12 @@ def test():
         "is chosen, run package tests during installation for all packages. "
         "If neither are chosen, don't run tests for any packages.")
 
+
 @arg
 def overwrite():
     return Args(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
-
-@arg
-def deprecated():
-    return Args(
-        '--deprecated', action='store_true', default=False,
-        help='fetch deprecated versions without warning')
 
 
 @arg
