@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import contextlib
+import copy
 import fnmatch
 import functools
 import json
@@ -218,6 +219,7 @@ class _BuildcacheBootstrapper(object):
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+        self.metadata_file = conf['metadata']
         self.last_search = None
 
     @staticmethod
@@ -244,8 +246,9 @@ class _BuildcacheBootstrapper(object):
     def _read_metadata(self, package_name):
         """Return metadata about the given package."""
         json_filename = '{0}.json'.format(package_name)
-        json_path = os.path.join(
-            spack.paths.share_path, 'bootstrap', self.name, json_filename
+        json_dir = os.path.dirname(self.metadata_file)
+        json_path = spack.util.path.canonicalize_path(
+            os.path.join(json_dir, json_filename)
         )
         with open(json_path) as f:
             data = json.load(f)
@@ -982,9 +985,13 @@ def bootstrapping_sources(scope=None):
         scope (str or None): if a valid configuration scope is given, return the
             list only from that scope
     """
-    source_configs = spack.config.get('bootstrap:sources', [], scope=scope)
+    source_configs = spack.config.get('bootstrap:sources', default=None, scope=scope)
+    source_configs = source_configs or []
+    list_of_sources = []
     for entry in source_configs:
+        current = copy.copy(entry)
         metadata_file = spack.util.path.canonicalize_path(entry['metadata'])
         with open(metadata_file) as f:
-            entry.update(ruamel.yaml.load(f))
-    return source_configs
+            current.update(ruamel.yaml.load(f))
+        list_of_sources.append(current)
+    return list_of_sources
