@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Vrpn(CMakePackage):
     """The Virtual-Reality Peripheral Network (VRPN) is designed to implement a
        network-transparent interface between application programs and the set

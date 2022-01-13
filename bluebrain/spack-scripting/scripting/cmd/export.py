@@ -8,14 +8,10 @@ import sys
 import ruamel.yaml as yaml
 
 import llnl.util.tty as tty
-import llnl.util.lang
 
 import spack.repo
 import spack.cmd.common.arguments as arguments
-from spack.cmd import display_specs
 from spack.filesystem_view import filter_exclude
-
-from spack.build_systems.python import PythonPackage
 
 import spack.util.spack_yaml as syaml
 from spack.util.spack_yaml import syaml_dict, syaml_list
@@ -59,7 +55,8 @@ def setup_parser(sp):
                     help="configuration scope to modify.")
     sp.add_argument("-v", "--variants", choices=('all', 'changed'),
                     default='all',
-                    help="which variant flags to store: only changed ones or all (default)")
+                    help="which variant flags to store: "
+                     "only changed ones or all (default)")
     arguments.add_common_arguments(sp, ['tags', 'constraint'])
     sp.add_argument('--unbuildable', default=[], nargs='+',
                     help='mark packages as unbuildable')

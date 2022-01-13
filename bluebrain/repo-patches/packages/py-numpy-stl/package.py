@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyNumpyStl(PythonPackage):
-    """Library to make reading, writing and modifying both binary and ascii STL files easy"""
+    """Library to make reading, writing and modifying both binary and ascii
+    STL files easy"""
 
     homepage = "https://github.com/WoLpH/numpy-stl/"
     url = "https://pypi.io/packages/source/n/numpy-stl/numpy-stl-2.10.1.tar.gz"

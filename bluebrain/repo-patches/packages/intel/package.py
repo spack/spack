@@ -1,6 +1,5 @@
 import re
 
-from spack import *
 from spack.pkg.builtin.intel import Intel as BuiltinIntel
 
 

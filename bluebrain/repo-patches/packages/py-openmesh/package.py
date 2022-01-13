@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyOpenmesh(PythonPackage):
-    """A versatile halfedge-based data structure for representing and manipulating polygon meshes"""
+    """A versatile halfedge-based data structure for representing and
+    manipulating polygon meshes"""
 
     homepage = "https://www.graphics.rwth-aachen.de:9000/OpenMesh/openmesh-python"
     url = "https://pypi.io/packages/source/o/openmesh/openmesh-1.1.3.tar.gz"

@@ -1,4 +1,3 @@
-from spack import *
 from spack.pkg.builtin.scorep import Scorep as BuiltinScorep
 
 

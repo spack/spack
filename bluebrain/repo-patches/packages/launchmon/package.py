@@ -1,4 +1,3 @@
-from spack import *
 from spack.pkg.builtin.launchmon import Launchmon as BuiltinLaunchmon
 
 

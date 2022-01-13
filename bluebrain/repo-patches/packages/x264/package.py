@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class X264(AutotoolsPackage):
     """Software library and application for encoding video streams"""
 

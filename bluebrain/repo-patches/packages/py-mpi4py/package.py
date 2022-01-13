@@ -1,4 +1,3 @@
-from spack import *
 from spack.pkg.builtin.py_mpi4py import PyMpi4py as BuiltinPyMpi4py
 
 

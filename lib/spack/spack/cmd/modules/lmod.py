@@ -5,8 +5,6 @@
 
 import functools
 
-import llnl.util.filesystem
-
 import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config

@@ -1,5 +1,6 @@
 from spack import *
-from spack.pkg.builtin.gobject_introspection import GobjectIntrospection as BuiltinGobjectIntrospection
+from spack.pkg.builtin.gobject_introspection \
+        import GobjectIntrospection as BuiltinGobjectIntrospection
 
 
 class GobjectIntrospection(BuiltinGobjectIntrospection):
