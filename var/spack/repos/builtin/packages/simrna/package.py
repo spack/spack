@@ -6,6 +6,7 @@
 import os
 from spack import *
 
+
 class Simrna(Package):
     """SimRNA is a tool for simulations of RNA conformational dynamics
     (folding, unfolding, multiple chain complex formation etc.), and its
