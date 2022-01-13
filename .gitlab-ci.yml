@@ -1,6 +1,6 @@
 variables:
   # Used in GitLab rules
-  DEPLOYMENT_DEFAULT_BRANCH: "merge-upstream"
+  DEPLOYMENT_DEFAULT_BRANCH: "develop"
 
 # FIXME revisit whenever GitLab gets their act together and makes it easier
 # to avoid doubled pipelines…
