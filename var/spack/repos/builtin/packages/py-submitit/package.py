@@ -10,11 +10,8 @@ class PySubmitit(PythonPackage):
     """Python toolbox for submitting jobs to Slurm."""
 
     homepage = "https://github.com/facebookincubator/submitit"
-    git      = "https://github.com/facebookincubator/submitit.git"
-    url      = "https://pypi.io/packages/source/s/submitit/submitit-1.3.3.tar.gz"
+    pypi = "submitit/submitit-1.3.3.tar.gz"
 
-    # specify the commit because submitit-1.4.0.tar.gz is broken on pypi
-    version('1.4.0', commit='d85b7abf73d094dd11c4a89343afa88f8908b316')
     version('1.3.3', sha256='efaa77b2df9ea9ee02545478cbfc377853ddf8016bff59df6988bebcf51ffa7e')
 
     depends_on('python@3.6:', type=('build', 'run'))

@@ -1,0 +1,51 @@
+#!/usr/bin/env spack-python
+# vim: ft=python
+"""Merges modules from separate build stages and removes obsolete ones
+"""
+
+from argparse import ArgumentParser
+from pathlib import Path
+
+import spack.util.spack_yaml as syaml
+
+
+def run():
+    """Merges modules from separate build stages and removes obsolete ones
+    """
+    parser = ArgumentParser()
+    parser.add_argument('basedir', metavar='DIR', help="the base directory of the deployment")
+    args = parser.parse_args()
+
+    basedir = Path(args.basedir)
+    module_root = basedir / 'modules'
+
+    for stagedir in basedir.glob('stage_*'):
+        stage = stagedir.name.split('_', 1)[1]
+        outdir = module_root / stage
+        outdir.mkdir(parents=True, exist_ok=True)
+        index = {}
+        copied = set()
+        print("Processing", stage)
+        for moduledir in stagedir.glob('modules_tcl*'):
+            with (moduledir / 'module-index.yaml').open() as fd:
+                data = syaml.load(fd)['module_index']
+                index.update(data)
+            for path in moduledir.glob('**/*'):
+                if path.is_file() and path.suffix != '.yaml':
+                    fragment = path.relative_to(moduledir)
+                    target = outdir / fragment
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_text(path.read_text())
+                    copied.add(target)
+        print("  Writing new module index")
+        with (outdir / 'module-index.yaml').open('w') as fd:
+            syaml.dump(index, fd)
+        print("  Cleaning up obsolete modules")
+        for path in outdir.glob('**/*'):
+            if path.is_file() and path.suffix != '.yaml' and path not in copied:
+                print("  ...deleting", path)
+                path.unlink()
+
+
+if __name__ == "__main__":
+    run()

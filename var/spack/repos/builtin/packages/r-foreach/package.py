@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RForeach(RPackage):
-    """Support for the foreach looping construct. Foreach is an idiom that
+    """Provides Foreach Looping Construct
+
+    Support for the foreach looping construct. Foreach is an idiom that
     allows for iterating over elements in a collection, without the use of an
     explicit loop counter. This package in particular is intended to be used
     for its return value, rather than for its side effects. In that sense, it
@@ -19,6 +21,7 @@ class RForeach(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/foreach"
 
+    version('1.5.1', sha256='fb5ad69e295618c52b2ac7dff84a0771462870a97345374d43b3de2dc31a68e1')
     version('1.4.7', sha256='95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160')
     version('1.4.3', sha256='1ef03f770f726a62e3753f2402eb26b226245958fa99d570d003fc9e47d35881')
 

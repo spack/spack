@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,68 +6,76 @@
 from spack import *
 
 
-class Arbor(CMakePackage):
+class Arbor(CMakePackage, CudaPackage):
     """Arbor is a high-performance library for computational neuroscience
     simulations."""
 
-    homepage = "https://github.com/arbor-sim/arbor/"
-    url      = "https://github.com/arbor-sim/arbor/archive/v0.2.tar.gz"
+    homepage = 'https://arbor-sim.org'
+    git      = 'https://github.com/arbor-sim/arbor.git'
+    url      = 'https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz'
+    maintainers = ['bcumming', 'brenthuisman', 'haampie', 'halfflat']
 
-    version('0.4', sha256='7d9fc6b3262954cc5dc1751215fbb9f2cdb7010e829a2be43022f90da2d8d2e3')
-    version('0.2', sha256='43c9181c03be5f3c9820b2b50592d7b41344f37e1200980119ad347eb7bcf4eb')
+    version('master', branch='master', submodules=True)
+    version('0.5.2', sha256='290e2ad8ca8050db1791cabb6b431e7c0409c305af31b559e397e26b300a115d', url='https://github.com/arbor-sim/arbor/releases/download/v0.5.2/arbor-v0.5.2-full.tar.gz')
+    version('0.5', sha256='d0c8a4c7f97565d7c30493c66249be794d1dc424de266fc79cecbbf0e313df59', url='https://github.com/arbor-sim/arbor/releases/download/v0.5/arbor-v0.5-full.tar.gz')
 
-    variant('vectorize', default=False,
-            description='Enable vectorization of computational kernels')
-    variant('gpu', default=False, description='Enable GPU support')
+    variant('assertions', default=False, description='Enable arb_assert() assertions in code.')
+    variant('doc', default=False, description='Build documentation.')
     variant('mpi', default=False, description='Enable MPI support')
-    variant('python', default=False,
-            description='Enable Python frontend support')
-    variant('unwind', default=False,
-            description='Enable libunwind for pretty stack traces')
+    variant('neuroml', default=True, description='Build NeuroML support library.')
+    variant('python', default=True, description='Enable Python frontend support')
+    variant('vectorize', default=False, description='Enable vectorization of computational kernels')
 
-    depends_on('cuda', when='+gpu')
+    # https://docs.arbor-sim.org/en/latest/install/build_install.html?highlight=requirements#compilers
+    conflicts('%gcc@:8.3')
+    conflicts('%clang@:7')
+    # Cray compiler v9.2 and later is Clang-based.
+    conflicts('%cce@:9.1')
+    conflicts('%intel')
+
+    depends_on('cmake@3.12:', type='build')
+
+    # misc dependencies
+    depends_on('nlohmann-json')
+    depends_on('cuda@10:', when='+cuda')
+    depends_on('libxml2', when='+neuroml')
+
+    # mpi
     depends_on('mpi', when='+mpi')
-    depends_on('libunwind', when='+unwind')
-
-    extends('python@3.6:', when='+python')
     depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
 
-    depends_on('cmake@3.9:', type='build')
-    # mentioned in documentation but shouldn't be necessary when
-    # using the archive
-    # depends_on('git@2.0:', type='build')
+    # python (bindings)
+    extends('python', when='+python')
+    depends_on('python@3.6:', when="+python", type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-pybind11@2.6:', when='+python', type=('build', 'run'))
 
-    # compiler dependencies
-    # depends_on(C++14)
-    # depends_on('gcc@6.1.0:', type='build')
-    # depends_on('llvm@4:', type='build')
-    # depends_on('clang-apple@9:', type='build')
+    # sphinx based documentation
+    depends_on('python@3.6:', when="+doc", type='build')
+    depends_on('py-sphinx', when="+doc", type='build')
+    depends_on('py-svgwrite', when='+doc', type='build')
 
-    # when building documentation, this could be an optional dependency
-    depends_on('py-sphinx', type='build')
-
-    conflicts('@:0.2', when='target=aarch64:')
-
-    def patch(self):
-        filter_file(
-            r'find_library\(_unwind_library_target unwind-\${libunwind_arch}',
-            r'find_library(_unwind_library_target unwind-${_libunwind_arch}',
-            'cmake/FindUnwind.cmake'
-        )
-        filter_file(
-            r'target_compile_definitions\(arbor-private-deps ARB_WITH_UNWIND\)',      # noqa: E501
-            r'target_compile_definitions(arbor-private-deps INTERFACE WITH_UNWIND)',  # noqa: E501
-            'CMakeLists.txt'
-        )
+    @property
+    def build_targets(self):
+        return ['all', 'html'] if '+doc' in self.spec else ['all']
 
     def cmake_args(self):
         args = [
-            '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),      # noqa: E501
-            '-DARB_WITH_GPU=' + ('ON' if '+gpu' in self.spec else 'OFF'),
-            '-DARB_WITH_PYTHON=' + ('ON' if '+python' in self.spec else 'OFF'),
+            self.define_from_variant('ARB_WITH_ASSERTIONS', 'assertions'),
+            self.define_from_variant('ARB_WITH_MPI', 'mpi'),
+            self.define_from_variant('ARB_WITH_NEUROML', 'neuroml'),
+            self.define_from_variant('ARB_WITH_PYTHON', 'python'),
+            self.define_from_variant('ARB_VECTORIZE', 'vectorize'),
         ]
 
-        if '+unwind' in self.spec:
-            args.append('-DUnwind_ROOT_DIR={0}'.format(self.spec['libunwind'].prefix))  # noqa: E501
+        if '+cuda' in self.spec:
+            args.append('-DARB_GPU=cuda')
+
+        # query spack for the architecture-specific compiler flags set by its wrapper
+        args.append('-DARB_ARCH=none')
+        opt_flags = self.spec.target.optimization_flags(
+            self.spec.compiler.name,
+            self.spec.compiler.version)
+        args.append('-DARB_CXX_FLAGS_TARGET=' + opt_flags)
 
         return args

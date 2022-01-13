@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMakecdfenv(RPackage):
-    """CDF Environment Maker.
+    """CDF Environment Maker
 
        This package has two functions. One reads a Affymetrix chip description
        file (CDF) and creates a hash table environment containing the
@@ -17,6 +17,7 @@ class RMakecdfenv(RPackage):
     homepage = "https://bioconductor.org/packages/makecdfenv"
     git      = "https://git.bioconductor.org/packages/makecdfenv.git"
 
+    version('1.66.0', commit='02aa975d543089f5495cb3b4e8edbcf0ff05148a')
     version('1.60.0', commit='900ece3ecd7a0ade9f8a0374e5a03def4e079cb3')
     version('1.58.0', commit='6f513e39c4920a6da10d22718fc3bf278fe5ffe2')
     version('1.56.0', commit='f6b48e9a9f18598653d05bc0bdffeae7fefbb327')

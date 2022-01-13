@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class PyJdcal(PythonPackage):
     """Julian dates from proleptic Gregorian and Julian calendars"""
 
-    homepage = "http://github.com/phn/jdcal"
-    url      = "https://pypi.io/packages/source/j/jdcal/jdcal-1.3.tar.gz"
+    homepage = "https://github.com/phn/jdcal"
+    pypi = "jdcal/jdcal-1.3.tar.gz"
 
     version('1.3', sha256='b760160f8dc8cc51d17875c6b663fafe64be699e10ce34b6a95184b5aa0fdc9e')
     version('1.2', sha256='5ebedb58b95ebabd30f56abef65139c6f69ec1687cf1d2f3a7c503f9a2cdfa4d')

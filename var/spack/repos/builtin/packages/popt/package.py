@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,10 @@ class Popt(AutotoolsPackage):
 
     version('1.16', sha256='e728ed296fe9f069a0e005003c3d6b2dde3d9cad453422a10d6558616d304cc8')
 
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compilers
-        if self.spec.satisfies('%nvhpc'):
+        if self.spec.satisfies('%nvhpc@:20.11'):
             filter_file('CFLAGS="$CFLAGS -Wall -W"',
                         'CFLAGS="$CFLAGS -Wall"', 'configure', string=True)

@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+
 #
 from spack import *
-import glob
 
 
 class Pfunit(CMakePackage):
@@ -17,6 +18,9 @@ class Pfunit(CMakePackage):
 
     maintainers = ['citibeth']
 
+    version('4.1.14', sha256='bada2be8d7e69ca1f16209ba92293fa1c06748b78534d71b24b2c825450a495f')
+    version('4.1.13', sha256='f388e08c67c51cbfd9f3a3658baac912b5506d2fc651410cd34a21260c309630')
+    version('4.1.12', sha256='7d71b0fb996497fe9a20eb818d02d596cd0d3cded1033a89a9081fbd925c68f2')
     version('4.1.11', sha256='16160bac223aaa3ed2b27e30287d25fdaec3cf6f2c570ebd8d61196e6aa6180f')
     version('4.1.10', sha256='051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')
@@ -46,8 +50,7 @@ class Pfunit(CMakePackage):
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
     conflicts("+shared", when="@4.0.0:")
     conflicts("+use_comm_world", when="~mpi")
-    conflicts('+mpi', when='@:3.99.99 %gcc@10.0.0:')
-    patch("mpi-test.patch", when="@:3.99.99 +use_comm_world")
+    patch("mpi-test.patch", when="@:3 +use_comm_world")
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
@@ -69,16 +72,19 @@ class Pfunit(CMakePackage):
         spec = self.spec
         args = [
             '-DPYTHON_EXECUTABLE=%s' % spec['python'].command,
-            '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
+            self.define_from_variant('BUILD_SHARED', 'shared'),
             '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
-            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
-            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+            self.define_from_variant('BUILD_DOCS', 'docs'),
+            self.define_from_variant('OPENMP', 'openmp'),
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
+
+        if self.spec.satisfies('%gcc@10:'):
+            args.append('-DCMAKE_Fortran_FLAGS_DEBUG=-g -O2 -fallow-argument-mismatch')
 
         if spec.satisfies('@4.0.0:'):
             args.append('-DSKIP_MPI=%s' % ('YES' if '~mpi' in spec else 'NO'))
         else:
-            args.append('-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'))
+            args.append(self.define_from_variant('MPI', 'mpi'))
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI_USE_MPIEXEC=YES',
@@ -100,7 +106,7 @@ class Pfunit(CMakePackage):
 
     def compiler_vendor(self):
         vendors = {'%gcc': 'GNU', '%clang': 'GNU', '%intel': 'Intel',
-                   '%pgi': 'PGI', '%nag': 'NAG'}
+                   '%pgi': 'PGI', '%nag': 'NAG', '%cce': 'Cray'}
         for key, value in vendors.items():
             if self.spec.satisfies(key):
                 return value

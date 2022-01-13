@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Glusterfs(AutotoolsPackage):
     depends_on('bison',    type='build')
     depends_on('rpcsvc-proto')
     depends_on('acl')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libtirpc')
     depends_on('userspace-rcu')
     depends_on('pkgconfig', type='build')

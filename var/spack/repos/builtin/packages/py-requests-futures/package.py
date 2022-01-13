@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRequestsFutures(PythonPackage):
     """Asynchronous Python HTTP Requests for Humans using Futures"""
 
     homepage = "https://github.com/ross/requests-futures"
-    url      = "https://pypi.io/packages/source/r/requests-futures/requests-futures-1.0.0.tar.gz"
+    pypi = "requests-futures/requests-futures-1.0.0.tar.gz"
 
     version('1.0.0', sha256='35547502bf1958044716a03a2f47092a89efe8f9789ab0c4c528d9c9c30bc148')
 

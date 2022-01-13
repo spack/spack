@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,12 @@ from spack import *
 
 
 class OpaPsm2(MakefilePackage):
-    """ Intel Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
+    """ Omni-Path Performance Scaled Messaging 2 (PSM2) library"""
 
-    homepage = "http://github.com/intel/opa-psm2"
-    url      = "https://github.com/intel/opa-psm2/archive/PSM2_10.3-8.tar.gz"
+    homepage = "https://github.com/cornelisnetworks/opa-psm2"
+    url      = "https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_10.3-8.tar.gz"
 
+    version('11.2.185', sha256='8c0446e989feb4a3822791e4a3687060916f7c4612d1e8e493879be66f10db09')
     version('11.2.77', sha256='5cc33d1e19d871a5861efe0bb897526f404b4bf2b88ac58bb277db96ac5ecb54')
     version('11.2.68', sha256='42e16a14fc8c90b50855dcea46af3315bee32fb1ae89d83060f9b2ebdce1ec26')
     version('10.3-37',  sha256='43e46f6fb345db67bb45b48e2b2bb05f590f7ccbc3ee337b33312043b46946b9')
@@ -26,13 +27,8 @@ class OpaPsm2(MakefilePackage):
 
     depends_on('numactl')
 
-    # patch to prevent opa-psm2 from adding an additional "usr/"
-    #   subdirectory within the installation prefix, which breaks paths for
-    #   dependent packages like libfabric
-    patch('opa-psm2-install-prefix.patch', when='@11.2.68:')
-
     # patch to get the Makefile to use the spack compiler wrappers
-    patch('opa-psm2-compiler.patch', when='@11.2.68:',
+    patch('opa-psm2-compiler.patch', when='@11.2.68:11.2.77',
           sha256='fe31fda9aaee13acb87d178af2282446196d2cc0b21163034573706110b2e2d6')
 
     def setup_build_environment(self, env):
@@ -46,7 +42,8 @@ class OpaPsm2(MakefilePackage):
         # Change the makefile so libraries and includes are not
         # placed under $PREFIX/usr
         env['LIBDIR'] = '/lib'
-        filter_file(r'${DESTDIR}/usr', '${DESTDIR}', 'Makefile')
+        filter_file(r'${DESTDIR}/usr', '${DESTDIR}', 'Makefile', string=True)
+        filter_file(r'/usr/lib', '/lib', 'Makefile', string=True)
 
         if '~avx2' in spec:
             env['PSM_DISABLE_AVX2'] = 'True'

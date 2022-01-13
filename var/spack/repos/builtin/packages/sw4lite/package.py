@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,9 +81,9 @@ class Sw4lite(MakefilePackage, CudaPackage):
 
     def build(self, spec, prefix):
         if '+cuda' in spec:
-            make('-f', 'Makefile.cuda')
+            make('-f', 'Makefile.cuda', *self.build_targets)
         else:
-            make('-f', 'Makefile')
+            make('-f', 'Makefile', *self.build_targets)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

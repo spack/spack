@@ -1,0 +1,44 @@
+#!/bin/bash -eu
+#
+# Will construct a "upstreams.yaml" configuration file for Spack based on
+# GitLab CI environmental variables.
+
+chain() {
+    # expected arguments:
+    # * stage name
+    # * (optional) prefix to use with upstream stage
+    local what=$1
+    local suffix=${2:+_}${2:-}
+    local default=
+    local where=$DEPLOYMENT_ROOT
+    if [[ -n "${2:-}" ]]; then
+        where=$DEPLOYMENT_UPSTREAM
+    fi
+    cat << EOF
+  $what$suffix:
+    install_tree: $where/stage_$what
+    modules:
+      tcl: $where/stage_$what/modules_tcl
+EOF
+}
+
+header="upstreams:\n"
+if [[ "$CI_JOB_STAGE" == "externals" ]]; then
+    echo -ne "$header"
+    header=""
+    chain compilers
+fi
+
+if [[ "$DEPLOYMENT_ROOT" != "$DEPLOYMENT_UPSTREAM" ]]; then
+    echo -ne "$header"
+    header=""
+    if [[ "$CI_JOB_STAGE" == "externals" ]]; then
+        chain compilers upstream
+    fi
+    chain "$CI_JOB_STAGE" upstream
+fi
+
+# We didn't print anything, set empty upstreams.
+if [[ -n "$header" ]]; then
+    echo "upstreams: {}"
+fi

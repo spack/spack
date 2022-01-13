@@ -10,7 +10,7 @@ class PyXarray(PythonPackage):
     """N-D labeled arrays and datasets in Python"""
 
     homepage = "https://github.com/pydata/xarray"
-    url      = "https://pypi.io/packages/source/x/xarray/xarray-0.9.1.tar.gz"
+    pypi = "xarray/xarray-0.9.1.tar.gz"
 
     # 'xarray.tests' requires 'pytest'. Leave out of 'import_modules' to avoid
     # unnecessary dependency.

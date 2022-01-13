@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class Expect(AutotoolsPackage):
@@ -13,9 +14,11 @@ class Expect(AutotoolsPackage):
     telnet, ftp, passwd, fsck, rlogin, tip, etc."""
 
     homepage = "http://expect.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz/download"
+    url      = "https://sourceforge.net/projects/expect/files/Expect/5.45.4/expect5.45.4.tar.gz/download"
 
-    version('5.45', sha256='b28dca90428a3b30e650525cdc16255d76bb6ccd65d448be53e620d95d5cc040')
+    version('5.45.4', sha256='49a7da83b0bdd9f46d04a04deec19c7767bb9a323e40c4781f89caf760b92c34')
+    version('5.45.3', sha256='c520717b7195944a69ce1492ec82ca0ac3f3baf060804e6c5ee6d505ea512be9')
+    version('5.45',   sha256='b28dca90428a3b30e650525cdc16255d76bb6ccd65d448be53e620d95d5cc040')
 
     depends_on('tcl')
 
@@ -24,12 +27,10 @@ class Expect(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    # https://github.com/spack/spack/issues/19767
-    conflicts('%apple-clang@12:')
-
     force_autoreconf = True
 
-    patch('expect_detect_tcl_private_header_os_x_mountain_lion.patch', when='@5.45')
+    patch('xcode_12.patch', when='%apple-clang@12:')
+    patch('expect_detect_tcl_private_header_os_x_mountain_lion.patch', when='@5.45:5.45.0')
 
     def configure_args(self):
         spec = self.spec

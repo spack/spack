@@ -1,0 +1,11 @@
+--- spack-src/third_party/ideep/mkl-dnn/src/common/primitive_cache.cpp.orig	2021-11-18 18:35:32.754787810 +0100
++++ spack-src/third_party/ideep/mkl-dnn/src/common/primitive_cache.cpp	2021-11-18 18:35:48.793998335 +0100
+@@ -152,7 +152,7 @@
+     //    by another thread
+     // 2. After the requested entry had been evicted it was inserted again
+     //    by another thread
+-    if (it == cache_mapper_.end() || it->first.thread_id() != key.thread_id())
++    if (it == cache_mapper_.end() || !(it->first.thread_id() == key.thread_id()))
+         return;
+ 
+     const auto *op_desc = pd->op_desc();

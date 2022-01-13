@@ -1,14 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
+import os
 
-from llnl.util.filesystem import working_dir, join_path
+import llnl.util.tty as tty
+from llnl.util.filesystem import find, join_path, working_dir
+
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-import os
 
 
 class SIPPackage(PackageBase):
@@ -36,12 +38,52 @@ class SIPPackage(PackageBase):
     sip_module = 'sip'
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['import_module_test']
+    install_time_test_callbacks = ['test']
 
     extends('python')
 
     depends_on('qt')
     depends_on('py-sip')
+
+    @property
+    def import_modules(self):
+        """Names of modules that the Python package provides.
+
+        These are used to test whether or not the installation succeeded.
+        These names generally come from running:
+
+        .. code-block:: python
+
+           >> import setuptools
+           >> setuptools.find_packages()
+
+        in the source tarball directory. If the module names are incorrectly
+        detected, this property can be overridden by the package.
+
+        Returns:
+            list: list of strings of module names
+        """
+        modules = []
+        root = os.path.join(
+            self.prefix,
+            self.spec['python'].package.config_vars['python_lib']['true']['false'],
+        )
+
+        # Some Python libraries are packages: collections of modules
+        # distributed in directories containing __init__.py files
+        for path in find(root, '__init__.py', recursive=True):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                os.sep + '__init__.py', '').replace('/', '.'))
+
+        # Some Python libraries are modules: individual *.py files
+        # found in the site-packages directory
+        for path in find(root, '*.py', recursive=False):
+            modules.append(path.replace(root + os.sep, '', 1).replace(
+                '.py', '').replace('/', '.'))
+
+        tty.debug('Detected the following modules: {0}'.format(modules))
+
+        return modules
 
     def python(self, *args, **kwargs):
         """The python ``Executable``."""
@@ -57,7 +99,9 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
+        python_include_dir = os.path.basename(
+            inspect.getmodule(self).python_include_dir
+        )
 
         args.extend([
             '--verbose',
@@ -98,17 +142,16 @@ class SIPPackage(PackageBase):
 
     # Testing
 
-    def import_module_test(self):
-        """Attempts to import the module that was just installed.
-
-        This test is only run if the package overrides
-        :py:attr:`import_modules` with a list of module names."""
+    def test(self):
+        """Attempts to import modules of the installed package."""
 
         # Make sure we are importing the installed modules,
-        # not the ones in the current directory
-        with working_dir('spack-test', create=True):
-            for module in self.import_modules:
-                self.python('-c', 'import {0}'.format(module))
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(inspect.getmodule(self).python.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

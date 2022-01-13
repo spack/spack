@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,10 @@ class PyPbr(PythonPackage):
     """PBR is a library that injects some useful and sensible default
        behaviors into your setuptools run."""
 
-    homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.io/packages/source/p/pbr/pbr-5.4.3.tar.gz"
+    pypi = "pbr/pbr-5.4.3.tar.gz"
+
+    # Skip 'pbr.tests' imports
+    import_modules = ['pbr', 'pbr.cmd', 'pbr.hooks']
 
     version('5.4.3',  sha256='2c8e420cd4ed4cec4e7999ee47409e876af575d4c35a45840d59e8b5f3155ab8')
     version('5.2.1',  sha256='93d2dc6ee0c9af4dbc70bc1251d0e545a9910ca8863774761f92716dece400b6')
@@ -22,19 +24,3 @@ class PyPbr(PythonPackage):
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    # test-requirements.txt
-    depends_on('py-wheel@0.32.0:', type='test')
-    depends_on('py-fixtures@3.0.0:', type='test')
-    depends_on('py-hacking@0.12.0:0.12.999,0.13.1:0.13.999', type='test')
-    depends_on('py-mock@2.0.0:', type='test')
-    depends_on('py-six@1.10.0:', type='test')
-    depends_on('py-stestr@2.1.0:', type='test')
-    depends_on('py-testresources@2.0.0:', type='test')
-    depends_on('py-testscenarios@0.4:', type='test')
-    depends_on('py-testtools@2.2.0:', type='test')
-    depends_on('py-virtualenv@14.0.6:', type='test')
-    depends_on('py-coverage@4.0:4.3,4.5:', type='test')
-    depends_on('py-sphinx@1.6.2:1.6.5,1.6.8:1.999', when='^python@:2', type='test')
-    depends_on('py-sphinx@1.6.2:1.6.5,1.6.8:', type='test')
-    depends_on('py-testrepository@0.0.18:', type='test')

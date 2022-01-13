@@ -1,0 +1,29 @@
+spack:
+  view: false
+  concretization: separately
+  modules:
+    tcl:
+      all:
+        environment:
+          set:: {}
+        filter:
+          environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+      whitelist:
+        - binutils
+        - gcc
+        - pgi
+        - llvm
+        - intel
+        - intel-oneapi-compilers
+        - nvhpc
+  packages:
+    all:
+      compiler: [gcc@4.8.5]
+    intel-parallel-studio:
+      variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
+  specs:
+    - binutils
+    - gcc@9.4.0
+    - gcc@11.2.0
+    - intel@20.0.4
+    - intel-oneapi-compilers@2021.4.0

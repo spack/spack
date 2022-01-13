@@ -1,12 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+import sys
+
 from spack import *
 from spack.operating_systems.mac_os import macos_version
-import sys
-import re
 
 
 class Bison(AutotoolsPackage, GNUMirrorPackage):
@@ -19,6 +20,16 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ['^bison$']
 
+    version('3.8.2', sha256='06c9e13bdf7eb24d4ceb6b59205a4f67c2c7e7213119644430fe82fbd14a0abb')
+    version('3.8.1', sha256='ce318a47196155fb7c26912b513102f3d0e14757c2e495e34608757b61339c5c')
+    version('3.8',   sha256='d5d184d421aee15603939973a6b0f372f908edfb24c5bc740697497021ad9458')
+    version('3.7.6', sha256='69dc0bb46ea8fc307d4ca1e0b61c8c355eb207d0b0c69f4f8462328e74d7b9ea')
+    version('3.7.5', sha256='151cb5f12716e3fe93a27a317cd44878329659f275b342779bfaef4a526bbf70')
+    version('3.7.4', sha256='fbabc7359ccd8b4b36d47bfe37ebbce44805c052526d5558b95eda125d1677e2')
+    version('3.7.3', sha256='104fe912f2212ab4e4a59df888a93b719a046ffc38d178e943f6c54b1f27b3c7')
+    version('3.7.2', sha256='415cd91044517bbfd8d135dea24e054501db238a5515edd9cdbb795ba3e82a84')
+    version('3.7.1', sha256='1dd952839cf0d5a8178c691eeae40dc48fa50d18dcce648b1ad9ae0195367d13')
+    version('3.7',   sha256='492ad61202de893ca21a99b621d63fa5389da58804ad79d3f226b8d04b803998')
     version('3.6.4', sha256='8183de64b5383f3634942c7b151bf2577f74273b2731574cdda8a8f3a0ab13e9')
     version('3.6.3', sha256='4b4c4943931e811f1073006ce3d8ee022a02b11b501e9cbf4def3613b24a3e63')
     version('3.6.2', sha256='e28ed3aad934de2d1df68be209ac0b454f7b6d3c3d6d01126e5cd2cbadba089a')
@@ -43,10 +54,12 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     depends_on('diffutils', type='build')
     depends_on('m4', type=('build', 'run'))
     depends_on('perl', type='build')
-    depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
-    patch('nvhpc.patch', when='%nvhpc')
+    # The NVIDIA compilers do not currently support some GNU builtins.
+    # Detect this case and use the fallback path.
+    patch('nvhpc-3.6.patch', when='@3.6.0:3.6 %nvhpc')
+    patch('nvhpc-3.7.patch', when='@3.7.0:3.7 %nvhpc')
 
     conflicts('%intel@:14', when='@3.4.2:',
               msg="Intel 14 has immature C11 support")

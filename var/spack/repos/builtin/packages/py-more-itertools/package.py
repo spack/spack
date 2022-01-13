@@ -10,11 +10,8 @@ class PyMoreItertools(PythonPackage):
     """Additions to the standard Python itertools package."""
 
     homepage = "https://github.com/erikrose/more-itertools"
-    url      = "https://pypi.io/packages/source/m/more-itertools/more-itertools-8.7.0.tar.gz"
+    pypi = "more-itertools/more-itertools-7.2.0.tar.gz"
 
-    import_modules = ['more_itertools', 'more_itertools.tests']
-
-    version('8.7.0', sha256='c5d6da9ca3ff65220c3bfd2a8db06d698f05d4d2b9be57e1deb2be5a45019713')
     version('7.2.0', sha256='409cd48d4db7052af495b09dec721011634af3753ae1ef92d2b32f73a745f832')
     version('7.0.0', sha256='c3e4748ba1aad8dba30a4886b0b1a2004f9a863837b8654e7059eebf727afa5a')
     version('5.0.0', sha256='38a936c0a6d98a38bcc2d03fdaaedaba9f412879461dd2ceff8d37564d6522e4')
@@ -27,4 +24,4 @@ class PyMoreItertools(PythonPackage):
     depends_on('python@2.7:2.8,3.2:', when='@2.3:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.0.0:1.999', when='@:5', type=('build', 'run'))
+    depends_on('py-six@1.0.0:1', when='@:5', type=('build', 'run'))

@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -14,6 +15,8 @@ class RevocapCoupler(AutotoolsPackage):
 
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/dl/index.php"
     url      = "file://{0}/REVOCAP_Coupler-2.1.tar.gz".format(os.getcwd())
+    manual_download = True
+
     version('2.1', sha256='9e7612d5c508ccdce23bff9ccbf62aeb635877bc2276cdc05c109de40f609f49')
 
     depends_on('mpi')

@@ -1,12 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import errno
-import hashlib
 import glob
 import grp
+import hashlib
 import itertools
 import numbers
 import os
@@ -19,10 +19,11 @@ import tempfile
 from contextlib import contextmanager
 
 import six
+
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
-from spack.util.executable import Executable
 
+from spack.util.executable import Executable
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
@@ -56,9 +57,9 @@ __all__ = [
     'is_exe',
     'join_path',
     'last_modification_time_recursive',
-    'mkdirp',
     'copy_all',
     'make_link',
+    'mkdirp',
     'partition_path',
     'prefixes',
     'remove_dead_links',
@@ -71,7 +72,8 @@ __all__ = [
     'touchp',
     'traverse_tree',
     'unset_executable_mode',
-    'working_dir'
+    'working_dir',
+    'keep_modification_time'
 ]
 
 
@@ -141,7 +143,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file.
     """
     string = kwargs.get('string', False)
-    backup = kwargs.get('backup', True)
+    backup = kwargs.get('backup', False)
     ignore_absent = kwargs.get('ignore_absent', False)
     stop_at = kwargs.get('stop_at', None)
 
@@ -215,6 +217,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
+
         finally:
             os.remove(tmp_filename)
             if not backup and os.path.exists(backup_filename):
@@ -443,7 +446,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         src (str): the directory to copy
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-        ignore (function): function indicating which files to ignore
+        ignore (typing.Callable): function indicating which files to ignore
         _permissions (bool): for internal use only
 
     Raises:
@@ -517,7 +520,7 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         src (str): the directory to install
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
-        ignore (function): function indicating which files to ignore
+        ignore (typing.Callable): function indicating which files to ignore
 
     Raises:
         IOError: if *src* does not match any files or directories
@@ -556,12 +559,12 @@ def mkdirp(*paths, **kwargs):
         paths (str): paths to create with mkdirp
 
     Keyword Aguments:
-        mode (permission bits or None, optional): optional permissions to set
+        mode (permission bits or None): optional permissions to set
             on the created directory -- use OS default if not provided
-        group (group name or None, optional): optional group for permissions of
+        group (group name or None): optional group for permissions of
             final created directory -- use OS default if not provided. Only
             used if world write permissions are not set
-        default_perms ('parents' or 'args', optional): The default permissions
+        default_perms (str or None): one of 'parents' or 'args'. The default permissions
             that are set for directories that are not themselves an argument
             for mkdirp. 'parents' means intermediate directories get the
             permissions of their direct parent directory, 'args' means
@@ -653,7 +656,6 @@ def copy_all(src, dst, copyfunc=shutil.copy):
 
 def make_link(src, dst):
     """Create a symlink in a given destination.
-
     make_link is copy compatible i.e. will take the same args and behave
     similarly to shutil.copy except that it will create a soft link instead.
     If destination is a directory then a new symlink is created inside with
@@ -662,7 +664,6 @@ def make_link(src, dst):
     absolute paths crete an abolute-path symlink.
     If another link already exists in the destination with the same it is
     deleted before link creation.
-
     Args:
         src (str): The path of the file to create a link to
         dst (str): The link destination path (may be a directory)
@@ -693,6 +694,12 @@ def working_dir(dirname, **kwargs):
         os.chdir(orig_dir)
 
 
+class CouldNotRestoreDirectoryBackup(RuntimeError):
+    def __init__(self, inner_exception, outer_exception):
+        self.inner_exception = inner_exception
+        self.outer_exception = outer_exception
+
+
 @contextmanager
 def replace_directory_transaction(directory_name, tmp_root=None):
     """Moves a directory to a temporary space. If the operations executed
@@ -720,32 +727,33 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         assert os.path.isabs(tmp_root)
 
     tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('TEMPORARY DIRECTORY CREATED [{0}]'.format(tmp_dir))
+    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
 
     shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('DIRECTORY MOVED [src={0}, dest={1}]'.format(
-        directory_name, tmp_dir
-    ))
+    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit) as e:
-        # Delete what was there, before copying back the original content
-        if os.path.exists(directory_name):
-            shutil.rmtree(directory_name)
-        shutil.move(
-            src=os.path.join(tmp_dir, directory_basename),
-            dst=os.path.dirname(directory_name)
-        )
-        tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
+    except (Exception, KeyboardInterrupt, SystemExit) as inner_exception:
+        # Try to recover the original directory, if this fails, raise a
+        # composite exception.
+        try:
+            # Delete what was there, before copying back the original content
+            if os.path.exists(directory_name):
+                shutil.rmtree(directory_name)
+            shutil.move(
+                src=os.path.join(tmp_dir, directory_basename),
+                dst=os.path.dirname(directory_name)
+            )
+        except Exception as outer_exception:
+            raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
-        msg = 'the transactional move of "{0}" failed.'
-        msg += '\n    ' + str(e)
-        raise RuntimeError(msg.format(directory_name))
+        tty.debug('Directory recovered [{0}]'.format(directory_name))
+        raise
     else:
         # Otherwise delete the temporary directory
-        shutil.rmtree(tmp_dir)
-        tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
 
 
 def hash_directory(directory, ignore=[]):
@@ -903,7 +911,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     Keyword Arguments:
         order (str): Whether to do pre- or post-order traversal. Accepted
             values are 'pre' and 'post'
-        ignore (function): function indicating which files to ignore
+        ignore (typing.Callable): function indicating which files to ignore
         follow_nonexisting (bool): Whether to descend into directories in
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
@@ -1139,23 +1147,23 @@ def find(root, files, recursive=True):
 
     Accepts any glob characters accepted by fnmatch:
 
-    =======  ====================================
-    Pattern  Meaning
-    =======  ====================================
-    *        matches everything
-    ?        matches any single character
-    [seq]    matches any character in ``seq``
-    [!seq]   matches any character not in ``seq``
-    =======  ====================================
+    ==========  ====================================
+    Pattern     Meaning
+    ==========  ====================================
+    ``*``       matches everything
+    ``?``       matches any single character
+    ``[seq]``   matches any character in ``seq``
+    ``[!seq]``  matches any character not in ``seq``
+    ==========  ====================================
 
     Parameters:
         root (str): The root directory to start searching from
         files (str or Sequence): Library name(s) to search for
-        recurse (bool, optional): if False search only root folder,
+        recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
 
     Returns:
-        list of strings: The files that have been found
+        list: The files that have been found
     """
     if isinstance(files, six.string_types):
         files = [files]
@@ -1237,7 +1245,7 @@ class FileList(Sequence):
         ['/dir1', '/dir2']
 
         Returns:
-            list of strings: A list of directories
+            list: A list of directories
         """
         return list(dedupe(
             os.path.dirname(x) for x in self.files if os.path.dirname(x)
@@ -1255,7 +1263,7 @@ class FileList(Sequence):
         ['a.h', 'b.h']
 
         Returns:
-            list of strings: A list of base-names
+            list: A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
@@ -1342,7 +1350,7 @@ class HeaderList(FileList):
         """Stable de-duplication of the headers.
 
         Returns:
-            list of strings: A list of header files
+            list: A list of header files
         """
         return self.files
 
@@ -1355,7 +1363,7 @@ class HeaderList(FileList):
         ['a', 'b']
 
         Returns:
-            list of strings: A list of files without extensions
+            list: A list of files without extensions
         """
         names = []
 
@@ -1446,9 +1454,9 @@ def find_headers(headers, root, recursive=False):
     =======  ====================================
 
     Parameters:
-        headers (str or list of str): Header name(s) to search for
+        headers (str or list): Header name(s) to search for
         root (str): The root directory to start searching from
-        recursive (bool, optional): if False search only root folder,
+        recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
 
     Returns:
@@ -1484,7 +1492,7 @@ def find_all_headers(root):
     in the directory passed as argument.
 
     Args:
-        root (path): directory where to look recursively for header files
+        root (str): directory where to look recursively for header files
 
     Returns:
         List of all headers found in ``root`` and subdirectories.
@@ -1504,7 +1512,7 @@ class LibraryList(FileList):
         """Stable de-duplication of library files.
 
         Returns:
-            list of strings: A list of library files
+            list: A list of library files
         """
         return self.files
 
@@ -1517,7 +1525,7 @@ class LibraryList(FileList):
         ['a', 'b']
 
         Returns:
-            list of strings: A list of library names
+            list: A list of library names
         """
         names = []
 
@@ -1537,19 +1545,6 @@ class LibraryList(FileList):
                 names.append(name)
 
         return list(dedupe(names))
-
-    @property
-    def rpath_flags(self):
-        """Rpath flags for the libraries
-
-        >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> l.rpath_flags
-        '-Wl,-rpath,/dir1 -Wl,-rpath,/dir2'
-
-        Returns:
-            str: A joined list of rpath flags
-        """
-        return ' '.join(['-Wl,-rpath,' + x for x in self.directories])
 
     @property
     def search_flags(self):
@@ -1615,8 +1610,8 @@ def find_system_libraries(libraries, shared=True):
     =======  ====================================
 
     Parameters:
-        libraries (str or list of str): Library name(s) to search for
-        shared (bool, optional): if True searches for shared libraries,
+        libraries (str or list): Library name(s) to search for
+        shared (bool): if True searches for shared libraries,
             otherwise for static. Defaults to True.
 
     Returns:
@@ -1666,11 +1661,11 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     =======  ====================================
 
     Parameters:
-        libraries (str or list of str): Library name(s) to search for
+        libraries (str or list): Library name(s) to search for
         root (str): The root directory to start searching from
-        shared (bool, optional): if True searches for shared libraries,
+        shared (bool): if True searches for shared libraries,
             otherwise for static. Defaults to True.
-        recursive (bool, optional): if False search only root folder,
+        recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
 
     Returns:
@@ -1877,3 +1872,39 @@ def remove_directory_contents(dir):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)
+
+
+@contextmanager
+def keep_modification_time(*filenames):
+    """
+    Context manager to keep the modification timestamps of the input files.
+    Tolerates and has no effect on non-existent files and files that are
+    deleted by the nested code.
+
+    Parameters:
+        *filenames: one or more files that must have their modification
+            timestamps unchanged
+    """
+    mtimes = {}
+    for f in filenames:
+        if os.path.exists(f):
+            mtimes[f] = os.path.getmtime(f)
+    yield
+    for f, mtime in mtimes.items():
+        if os.path.exists(f):
+            os.utime(f, (os.path.getatime(f), mtime))
+
+
+@contextmanager
+def temporary_dir(*args, **kwargs):
+    """Create a temporary directory and cd's into it. Delete the directory
+    on exit.
+
+    Takes the same arguments as tempfile.mkdtemp()
+    """
+    tmp_dir = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        remove_directory_contents(tmp_dir)

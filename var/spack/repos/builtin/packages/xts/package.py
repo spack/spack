@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,11 @@ class Xts(AutotoolsPackage, XorgPackage):
     depends_on('libxt', type='link')
     depends_on('libxmu', type='link')
     depends_on('libxaw', type='link')
-    depends_on('inputproto', type='link')
-    depends_on('recordproto', type='link')
-    depends_on('fixesproto', type='link')
+    depends_on('inputproto')
+    depends_on('recordproto')
+    depends_on('fixesproto')
 
-    depends_on('xtrans', type='build')
+    depends_on('xtrans')
     depends_on('bdftopcf', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('perl', type='build')

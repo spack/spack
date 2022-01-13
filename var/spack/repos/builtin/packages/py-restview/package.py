@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRestview(PythonPackage):
     """A viewer for ReStructuredText documents that renders them on the fly."""
 
     homepage = "https://mg.pov.lt/restview/"
-    url = "https://pypi.io/packages/source/r/restview/restview-2.6.1.tar.gz"
+    pypi = "restview/restview-2.6.1.tar.gz"
 
     version('2.6.1', sha256='14d261ee0edf30e0ebc1eb320428ef4898e97422b00337863556966b851fb5af')
 

@@ -1,0 +1,39 @@
+diff --git a/qtlocation/src/3rdparty/mapbox-gl-native/include/mbgl/util/convert.hpp b/qtlocation/src/3rdparty/mapbox-gl-native/include/mbgl/util/convert.hpp
+index 02ec7fe..6c1284e 100644
+--- a/qtlocation/src/3rdparty/mapbox-gl-native/include/mbgl/util/convert.hpp
++++ b/qtlocation/src/3rdparty/mapbox-gl-native/include/mbgl/util/convert.hpp
+@@ -1,6 +1,7 @@
+ #include <mbgl/util/util.hpp>
+ 
+ #include <array>
++#include <stdint.h>
+ #include <type_traits>
+ #include <utility>
+ 
+diff --git a/qtlocation/src/3rdparty/mapbox-gl-native/platform/default/bidi.cpp b/qtlocation/src/3rdparty/mapbox-gl-native/platform/default/bidi.cpp
+index d475c38..6947f0b 100644
+--- a/qtlocation/src/3rdparty/mapbox-gl-native/platform/default/bidi.cpp
++++ b/qtlocation/src/3rdparty/mapbox-gl-native/platform/default/bidi.cpp
+@@ -4,6 +4,7 @@
+ #include <unicode/ubidi.h>
+ #include <unicode/ushape.h>
+ 
++#include <stdexcept>
+ #include <memory>
+ 
+ namespace mbgl {
+diff --git a/qtlocation/src/3rdparty/mapbox-gl-native/src/mbgl/renderer/sources/render_vector_source.cpp b/qtlocation/src/3rdparty/mapbox-gl-native/src/mbgl/renderer/sources/render_vector_source.cpp
+index 4de4f01..afb639d 100644
+--- a/qtlocation/src/3rdparty/mapbox-gl-native/src/mbgl/renderer/sources/render_vector_source.cpp
++++ b/qtlocation/src/3rdparty/mapbox-gl-native/src/mbgl/renderer/sources/render_vector_source.cpp
+@@ -2,6 +2,7 @@
+ #include <mbgl/renderer/render_tile.hpp>
+ #include <mbgl/renderer/paint_parameters.hpp>
+ #include <mbgl/tile/vector_tile.hpp>
++#include <mbgl/tile/tile_loader_impl.hpp>
+ 
+ #include <mbgl/algorithm/generate_clip_ids.hpp>
+ #include <mbgl/algorithm/generate_clip_ids_impl.hpp>
+-- 
+2.26.0
+

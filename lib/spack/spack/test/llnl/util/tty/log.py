@@ -1,20 +1,18 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
+
 import contextlib
 import multiprocessing
 import os
 import signal
 import sys
 import time
-
-try:
-    import termios
-except ImportError:
-    termios = None
+from types import ModuleType  # novm
+from typing import Optional  # novm
 
 import pytest
 
@@ -24,6 +22,13 @@ from llnl.util.tty.log import log_output
 from llnl.util.tty.pty import PseudoShell
 
 from spack.util.executable import which
+
+termios = None  # type: Optional[ModuleType]
+try:
+    import termios as term_mod
+    termios = term_mod
+except ImportError:
+    pass
 
 
 @contextlib.contextmanager
@@ -73,6 +78,39 @@ def test_log_python_output_and_echo_output(capfd, tmpdir):
         assert capfd.readouterr()[0] == 'force echo\n'
 
 
+def _log_filter_fn(string):
+    return string.replace("foo", "bar")
+
+
+def test_log_output_with_filter(capfd, tmpdir):
+    with tmpdir.as_cwd():
+        with log_output('foo.txt', filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # output is not echoed
+    assert capfd.readouterr()[0] == ''
+
+    # now try with echo
+    with tmpdir.as_cwd():
+        with log_output('foo.txt', echo=True, filter_fn=_log_filter_fn):
+            print('foo blah')
+            print('blah foo')
+            print('foo foo')
+
+        # foo.txt output is still not filtered
+        with open('foo.txt') as f:
+            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+
+    # echoed output is filtered.
+    assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
+
+
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     echo = which('echo')
@@ -112,12 +150,13 @@ def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
 #
 def simple_logger(**kwargs):
     """Mock logger (minion) process for testing log.keyboard_input."""
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
 
     log_path = kwargs["log_path"]
-    running = [True]
     with log_output(log_path):
         while running[0]:
             print("line")
@@ -305,6 +344,8 @@ def synchronized_logger(**kwargs):
     toggle output.  It is used in ``test_foreground_background_output`` below.
 
     """
+    running = [True]
+
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
@@ -313,7 +354,6 @@ def synchronized_logger(**kwargs):
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
-    running = [True]
     sys.stderr.write(os.getcwd() + "\n")
     with log_output(log_path) as logger:
         with logger.force_echo():
@@ -432,20 +472,14 @@ def test_foreground_background_output(
     with open(log_path) as log:
         log = log.read().strip().split("\n")
 
-    # Controller and minion process coordinate with locks such that the minion
-    # writes "off" when echo is off, and "on" when echo is on.  The
-    # output should contain mostly "on" lines, but may contain an "off"
-    # or two. This is because the controller toggles echo by sending "v" on
-    # stdin to the minion, but this is not synchronized with our locks.
-    # It's good enough for a test, though.  We allow at most 4 "off"'s in
-    # the output to account for the race.
-    #
-    # Originally we only allowed 2, but GitHub's macOS runners seem to be
-    # very slow, and frequently we get 3 "off"'s. Increased limit to 4 to
-    # account for this. Real errors should still be caught with this limit.
+    # Controller and minion process coordinate with locks such that the
+    # minion writes "off" when echo is off, and "on" when echo is on. The
+    # output should contain mostly "on" lines, but may contain "off"
+    # lines if the controller is slow. The important thing to observe
+    # here is that we started seeing 'on' in the end.
     assert (
         ['forced output', 'on'] == uniq(output) or
-        output.count("off") <= 4  # if controller_fd is a bit slow
+        ['forced output', 'off', 'on'] == uniq(output)
     )
 
     # log should be off for a while, then on, then off

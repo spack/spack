@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libbson(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('1.17.6', sha256='8644deec7ae585e8d12566978f2017181e883f303a028b5b3ccb83c91248b150')
+    version('1.17.5', sha256='4b15b7e73a8b0621493e4368dc2de8a74af381823ae8f391da3d75d227ba16be')
     version('1.17.0', sha256='90aa23a3f92be0a076fe0b903b68276a7973d4e472929943069f503d5ab50cb9')
     version('1.16.2', sha256='0a722180e5b5c86c415b9256d753b2d5552901dc5d95c9f022072c3cd336887e')
     version('1.9.5', sha256='6bb51b863a4641d6d7729e4b55df8f4389ed534c34eb3a1cda906a53df11072c')
@@ -69,7 +71,7 @@ class Libbson(Package):
         # 1.6.1 tarball is broken
         return self.spec.satisfies('@1.6.1')
 
-    @when('@:1.9.99')
+    @when('@:1.9')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
         make()

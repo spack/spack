@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RRpostgresql(RPackage):
     issue tracking system for the package are available at Google Code at
     https://code.google.com/p/rpostgresql/."""
 
-    homepage = "https://code.google.com/p/rpostgresql/"
+    homepage = "https://cran.r-project.org/web/packages/RPostgreSQL/index.html"
     url      = "https://cloud.r-project.org/src/contrib/RPostgreSQL_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RPostgreSQL"
 
@@ -27,3 +27,11 @@ class RRpostgresql(RPackage):
     depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-dbi@0.3:', type=('build', 'run'))
     depends_on('postgresql')
+
+    depends_on('automake', type='build')
+
+    patch_config_files = True
+
+    @run_before('install')
+    def patch_config_guess(self):
+        AutotoolsPackage._do_patch_config_files(self)

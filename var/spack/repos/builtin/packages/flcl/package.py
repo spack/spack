@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,6 @@ class Flcl(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DBUILD_TESTING:BOOL={0}'.format(
-                    'ON' if self.run_tests else 'OFF'))
+        args.append(self.define('BUILD_TESTING', self.run_tests))
 
         return args

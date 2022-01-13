@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class FluxCore(AutotoolsPackage):
@@ -13,20 +14,27 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
+    tags     = ['radiuss', 'e4s']
+
+    maintainers = ['grondo']
 
     version('master', branch='master')
+    version('0.30.0', sha256='e51fde4464140367ae4bc1b44f960675ea0a6f58eede3a561cacd8a11ca3e776')
+    version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
+    version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
+    version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a')
+    version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1')
+    version('0.25.0', sha256='3c97e21eaec51e8aa0eaee6aa8eb23246650d102a6b6a5c9943cd69e3c8e1008')
+    version('0.24.0', sha256='fb7e0f9a44d84144a8eaf8f42a5d7e64a4a847861d0ddc2ad8fc4908b5a9190e')
+    version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7')
+    version('0.22.0', sha256='1dd0b737199b8a40f245e6a4e1b3b28770f0ecf2f483d284232080b8b252521f')
+    version('0.21.0', sha256='cc1b7a46d7c1c1a3e99e8861bba0dde89a97351eabd6f1b264788bd76e64c329')
+    version('0.20.0', sha256='2970b9b1c389fc4a381f9e605921ce0eb6aa9339387ea741978bcffb4bd81b6f')
     version('0.19.0', sha256='f45328a37d989c308c46639a9ed771f47b11184422cf5604249919fbd320d6f5')
     version('0.18.0', sha256='9784bbca94177a32dbbc99728e8925bf894f3aebaa316961d6ea85df32d59545')
     version('0.17.0', sha256='3f8c6cb72982028f86a96c0098cacd3a6e9de359fa1cf077380c835a20e7b7f7')
     version('0.16.0', sha256='1582f7fb4d2313127418c34de7c9ce4f5fef00622d19cedca7bed929f4709f10')
     version('0.15.0', sha256='51bc2eae69501f802459fc82f191eb5e8ae0b4f7e9e77ac18543a850cc8445f5')
-    version('0.11.3', sha256='91b5d7dca8fc28a77777c4e4cb8717fc3dc2c174e70611740689a71901c6de7e')
-    version('0.11.2', sha256='ab8637428cd9b74b2dff4842d10e0fc4acc8213c4e51f31d32a4cbfbdf730412')
-    version('0.11.1', sha256='3c8495db0f3b701f6dfe3e2a75aed794fc561e9f28284e8c02ac67693bfe890e')
-    version('0.11.0', sha256='a4d8ff92e79b4ca19d556395bb8c5f8dc02fd9d5a8cc38c4a2c66867a96de5ea')
-    version('0.10.0', sha256='a70cdd228077af60c9443a5c69d3da932e447dd11697f5fef9028c48dabb3041')
-    version('0.9.0',  sha256='7b5b4aa72704b3c4432136b9e515e0d663568e6dbfc3ecd2f91c83b65841104e')
-    version('0.8.0',  sha256='eb4b0fe0da191acd3823ef42d415c40aae6a0c3aef62ebb27905658d045e11cc')
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
@@ -36,37 +44,27 @@ class FluxCore(AutotoolsPackage):
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("libzmq@4.0.4:")
-    depends_on("czmq")
-    depends_on("czmq@2.2:3.99", when="@0.1:0.6")
-    depends_on("czmq@3.0.1:", when="@0.7:")
-    depends_on("hwloc@1.11.1:1.99")
+    depends_on("czmq@3.0.1:")
+    depends_on("hwloc@1.11.1:1", when="@:0.17.0")
+    depends_on("hwloc@1.11.1:", when="@0.17.0:")
     depends_on("hwloc +cuda", when='+cuda')
     # Provide version hints for lua so that the concretizer succeeds when no
     # explicit flux-core version is given. See issue #10000 for details
-    depends_on("lua@5.1:5.2.99", type=('build', 'run', 'link'))
-    depends_on("lua@5.1:5.1.99", when="@0.1.0:0.9.0")
-    depends_on("lua@5.1:5.2.99", when="@0.10.0:,master")
+    depends_on("lua", type=('build', 'run', 'link'))
+    depends_on("lua@5.1:5.2", when="@:0.17.0")
+    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
     depends_on("lua-luaposix")
-    depends_on("munge", when="@0.1.0:0.10.0")
     # `link` dependency on python due to Flux's `pymod` module
-    depends_on("python", type=('build', 'run', 'link'))
-    depends_on("python@2.7:2.99",
-               when="@0.1.0:0.11.0",
-               type=('build', 'run', 'link'))
-    depends_on("python@2.7:", when="@0.11.1:", type=('build', 'run', 'link'))
-    depends_on("python@3.6:", when="@0.17.0:,master", type=('build', 'run', 'link'))
+    depends_on("python@3.6:", type=('build', 'run', 'link'))
     depends_on("py-cffi", type=('build', 'run'))
-    depends_on("py-six", type=('build', 'run'), when="@0.11.0:")
-    depends_on("py-pyyaml", type=('build', 'run'), when="@0.11.0:")
-    depends_on("py-jsonschema", type=('build', 'run'), when="@0.12.0:")
+    depends_on("py-six", type=('build', 'run'))
+    depends_on("py-pyyaml")
+    depends_on("py-jsonschema")
     depends_on("jansson")
+    depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
-    depends_on("yaml-cpp", when="@:0.11")
-    depends_on("lz4", when="@0.11.0:")
-
-    # versions up to 0.8.0 uses pylint to check Flux's python binding
-    # later versions provide a configure flag and disable the check by default
-    depends_on("py-pylint", when='@:0.8.0', type='build')
+    depends_on("yaml-cpp")
+    depends_on("lz4")
 
     depends_on("asciidoc", type='build', when="+docs")
 
@@ -78,7 +76,11 @@ class FluxCore(AutotoolsPackage):
     # Testing Dependencies
     depends_on("mpich pmi=pmi", type="test")
     depends_on("valgrind", type="test")
-    depends_on("jq", type="test", when='@0.12.0:')
+    depends_on("jq", type="test")
+
+    # Patch 0.27-0.30 for build errors when czmq built with "draft APIs":
+    patch('0001-build-fix-build-errors-with-side-installed-0MQ.patch',
+          when='@0.27.0:0.30.0')
 
     def url_for_version(self, version):
         '''
@@ -152,30 +154,34 @@ class FluxCore(AutotoolsPackage):
         )
         env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
         env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
-        env.prepend_path('FLUX_RC1_PATH', self.prefix.etc.flux.rc1)
-        env.prepend_path('FLUX_RC3_PATH', self.prefix.etc.flux.rc3)
         env.prepend_path(
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
         )
-        env.prepend_path(
+        env.set_path(
             'FLUX_PMI_LIBRARY_PATH',
             os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
-        # Wreck was removed in 0.12
-        if self.version < Version("0.12.0"):
-            env.prepend_path(
-                'FLUX_WREXECD_PATH',
-                self.prefix.libexec.flux.wrexecd
-            )
-            env.prepend_path(
-                'FLUX_WRECK_LUA_PATTERN',
-                os.path.join(self.prefix.etc.wreck, "lua.d", "*.lua")
-            )
 
     def configure_args(self):
         args = ['--enable-pylint=no']
         if '+docs' not in self.spec:
             args.append('--disable-docs')
         return args
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            # https://github.com/flux-framework/flux-core/issues/3482
+            if self.spec.satisfies('%gcc@10:') and \
+               self.spec.satisfies('@0.23.0:0.23'):
+                if flags is None:
+                    flags = []
+                flags.append('-Wno-error=stringop-truncation')
+
+            if self.spec.satisfies('%gcc@8:') and \
+               self.spec.satisfies('@0.23.0'):
+                if flags is None:
+                    flags = []
+                flags.append('-Wno-error=maybe-uninitialized')
+
+        return (flags, None, None)

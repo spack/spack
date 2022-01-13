@@ -1,19 +1,22 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import sys
+
+from spack import *
 
 
 class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
+    git      = "git://git.savannah.gnu.org/emacs.git"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
+    version('master', branch='master')
+    version('27.2', sha256='80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73')
     version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
     version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')
@@ -31,6 +34,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         description="Select an X toolkit (gtk, athena)"
     )
     variant('tls', default=False, description="Build Emacs with gnutls")
+    variant('native', default=False, description="enable native compilation of elisp")
 
     depends_on('pkgconfig', type='build')
 
@@ -47,8 +51,15 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
+    depends_on('m4', type='build', when="@master:")
+    depends_on('autoconf', type='build', when="@master:")
+    depends_on('automake', type='build', when="@master:")
+    depends_on('libtool', type='build', when="@master:")
+    depends_on('texinfo', type='build', when="@master:")
+    depends_on('gcc@11: +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
+    conflicts('+native', when='@:27', msg="native compilation require @master")
 
     @when('platform=darwin')
     def setup_build_environment(self, env):
@@ -73,6 +84,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         # doing so throws an error at build-time
         if sys.platform == 'darwin':
             args.append('--without-ns')
+
+        if '+native' in spec:
+            args.append('--with-native-compilation')
 
         if '+tls' in spec:
             args.append('--with-gnutls')

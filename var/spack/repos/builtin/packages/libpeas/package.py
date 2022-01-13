@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import os
+
+from spack import *
 
 
 class Libpeas(AutotoolsPackage):
@@ -37,7 +38,7 @@ class Libpeas(AutotoolsPackage):
     depends_on('pango')
     depends_on('gnome-common')
     depends_on('py-pygobject@3:', type='build')
-    depends_on('python@3:', type='build')
+    depends_on('python@3:3.7.9', type='build')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/libpeas/'
@@ -86,7 +87,7 @@ class Libpeas(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         autoreconf_args = ['-ivf']
-        aclocal_pkg_list = ['pkg-config',
+        aclocal_pkg_list = ['pkgconfig',
                             'gettext',
                             'intltool',
                             'glib',

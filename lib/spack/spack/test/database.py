@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,11 @@ both in memory and in its file
 """
 import datetime
 import functools
-import os
-import pytest
 import json
+import os
+
+import pytest
+
 try:
     import uuid
     _use_uuid = True
@@ -24,27 +26,16 @@ from jsonschema import validate
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
-import spack.repo
-import spack.store
 import spack.database
 import spack.package
+import spack.repo
 import spack.spec
-from spack.util.mock_package import MockPackageMultiRepo
-from spack.util.executable import Executable
+import spack.store
 from spack.schema.database_index import schema
-
+from spack.util.executable import Executable
+from spack.util.mock_package import MockPackageMultiRepo
 
 pytestmark = pytest.mark.db
-
-
-@pytest.fixture()
-def test_store(tmpdir):
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
-
-    yield
-
-    spack.store.store = real_store
 
 
 @pytest.fixture()
@@ -180,8 +171,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
             spack.store.db = orig_db
 
 
-@pytest.mark.usefixtures('config')
-def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
+@pytest.mark.usefixtures('config', 'temporary_store')
+def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
 
@@ -205,8 +196,8 @@ def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
-@pytest.mark.usefixtures('config')
-def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
+@pytest.mark.usefixtures('config', 'temporary_store')
+def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
@@ -434,7 +425,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 14
+    assert len(all_specs) == 15
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
@@ -555,7 +546,8 @@ def test_041_ref_counts_deprecate(mutable_database):
 def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     # query everything
-    assert len(spack.store.db.query()) == 16
+    total_specs = len(spack.store.db.query())
+    assert total_specs == 17
 
     # query specs with multiple configurations
     mpileaks_specs = database.query('mpileaks')
@@ -581,10 +573,10 @@ def test_050_basic_query(database):
     assert len(database.query('mpileaks ^zmpi')) == 1
 
     # Query by date
-    assert len(database.query(start_date=datetime.datetime.min)) == 16
+    assert len(database.query(start_date=datetime.datetime.min)) == total_specs
     assert len(database.query(start_date=datetime.datetime.max)) == 0
     assert len(database.query(end_date=datetime.datetime.min)) == 0
-    assert len(database.query(end_date=datetime.datetime.max)) == 16
+    assert len(database.query(end_date=datetime.datetime.max)) == total_specs
 
 
 def test_060_remove_and_add_root_package(mutable_database):
@@ -648,10 +640,6 @@ def test_090_non_root_ref_counts(mutable_database):
     assert mpich_rec.ref_count == 0
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_100_no_write_with_exception_on_remove(database):
     def fail_while_writing():
         with database.write_transaction():
@@ -669,10 +657,6 @@ def test_100_no_write_with_exception_on_remove(database):
         assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_110_no_write_with_exception_on_install(database):
     def fail_while_writing():
         with database.write_transaction():
@@ -910,3 +894,18 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     with pytest.raises(Exception):
         with spack.store.db.prefix_write_lock(s):
             assert False
+
+
+@pytest.mark.regression('26600')
+def test_database_works_with_empty_dir(tmpdir):
+    # Create the lockfile and failures directory otherwise
+    # we'll get a permission error on Database creation
+    db_dir = tmpdir.ensure_dir('.spack-db')
+    db_dir.ensure('lock')
+    db_dir.ensure_dir('failures')
+    tmpdir.chmod(mode=0o555, rec=1)
+    db = spack.database.Database(str(tmpdir))
+    with db.read_transaction():
+        db.query()
+    # Check that reading an empty directory didn't create a new index.json
+    assert not os.path.exists(db._index_path)

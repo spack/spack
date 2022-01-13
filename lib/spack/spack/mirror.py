@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,21 +11,19 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
-import sys
-import os
-import traceback
-import os.path
 import operator
-
-import six
+import os
+import os.path
+import sys
+import traceback
 
 import ruamel.yaml.error as yaml_error
-
+import six
 from ordereddict_backport import OrderedDict
 
-try:
+if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
-except ImportError:
+else:
     from collections import Mapping
 
 import llnl.util.tty as tty
@@ -33,14 +31,14 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.error
-import spack.url as url
 import spack.fetch_strategy as fs
+import spack.spec
+import spack.url as url
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
-import spack.spec
-from spack.version import VersionList
 from spack.util.spack_yaml import syaml_dict
+from spack.version import VersionList
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -458,6 +456,51 @@ def create(path, specs, skip_unstable_versions=False):
             ))
 
     return mirror_stats.stats()
+
+
+def add(name, url, scope):
+    """Add a named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name in mirrors:
+        tty.die("Mirror with name %s already exists." % name)
+
+    items = [(n, u) for n, u in mirrors.items()]
+    items.insert(0, (name, url))
+    mirrors = syaml_dict(items)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+
+def remove(name, scope):
+    """Remove the named mirror in the given scope"""
+    mirrors = spack.config.get('mirrors', scope=scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if name not in mirrors:
+        tty.die("No mirror with name %s" % name)
+
+    old_value = mirrors.pop(name)
+    spack.config.set('mirrors', mirrors, scope=scope)
+
+    debug_msg_url = "url %s"
+    debug_msg = ["Removed mirror %s with"]
+    values = [name]
+
+    try:
+        fetch_value = old_value['fetch']
+        push_value = old_value['push']
+
+        debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
+        values.extend((fetch_value, push_value))
+    except TypeError:
+        debug_msg.append(debug_msg_url)
+        values.append(old_value)
+
+    tty.debug(" ".join(debug_msg) % tuple(values))
+    tty.msg("Removed mirror %s." % name)
 
 
 class MirrorStats(object):

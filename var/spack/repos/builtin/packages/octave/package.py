@@ -1,8 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import re
 import shutil
 import sys
 import tempfile
@@ -26,6 +27,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True
 
+    version('6.3.0', sha256='232065f3a72fc3013fe9f17f429a3df69d672c1f6b6077029a31c8f3cd58a66e')
+    version('6.2.0', sha256='457d1fda8634a839e2fd7cfc55b98bd56f36b6ae73d31bb9df43dde3012caa7c')
+    version('6.1.0', sha256='6ff34e401658622c44094ecb67e497672e4337ca2d36c0702d0403ecc60b0a57')
     version('5.2.0', sha256='2fea62b3c78d6f38e9451da8a4d26023840725977dffee5250d3d180f56595e1')
     version('5.1.0', sha256='e36b1124cac27c7caa51cc57de408c31676d5f0096349b4d50b57bfe1bcd7495')
     version('4.4.1', sha256='09fbd0f212f4ef21e53f1d9c41cf30ce3d7f9450fb44911601e21ed64c67ae97')
@@ -86,12 +90,13 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('imagemagick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
+    depends_on('java',         when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
-    # depends_on('opengl',      when='+opengl')    # TODO: add package
+    depends_on('gl',           when='+opengl')
+    depends_on('gl',           when='+fltk')
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
-    # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
+    depends_on('qscintilla',   when='+qscintilla')
     depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
@@ -156,10 +161,19 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        config_args.extend([
-            "--with-blas=%s" % spec['blas'].libs.ld_flags,
-            "--with-lapack=%s" % spec['lapack'].libs.ld_flags
-        ])
+        if '^mkl' in spec and 'gfortran' in self.compiler.fc:
+            mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
+            config_args.extend([
+                mkl_re.sub(r'\g<1>gf\g<2>',
+                           '--with-blas={0}'.format(
+                               spec['blas'].libs.ld_flags)),
+                '--with-lapack'
+            ])
+        else:
+            config_args.extend([
+                '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+                '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
+            ])
 
         # Strongly recommended dependencies
         if '+readline' in spec:
@@ -237,7 +251,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--disable-java")
 
-        if '~opengl' in spec:
+        if '~opengl' and '~fltk' in spec:
             config_args.extend([
                 "--without-opengl",
                 "--without-framework-opengl"

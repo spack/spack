@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,7 @@ class PyDescartes(PythonPackage):
     """Use Shapely or GeoJSON-like geometric objects as matplotlib paths
        and patches"""
 
-    homepage = "https://pypi.org/project/descartes/"
-    url      = "https://pypi.io/packages/source/d/descartes/descartes-1.1.0.tar.gz"
+    pypi = "descartes/descartes-1.1.0.tar.gz"
 
     version('1.1.0', sha256='135a502146af5ed6ff359975e2ebc5fa4b71b5432c355c2cafdc6dea1337035b')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,14 +10,14 @@ import os.path
 import shutil
 import sys
 
-from llnl.util import filesystem, lang, tty
+from llnl.util import filesystem, tty
 
 import spack.cmd
-import spack.modules
-import spack.repo
-import spack.modules.common
-
 import spack.cmd.common.arguments as arguments
+import spack.config
+import spack.modules
+import spack.modules.common
+import spack.repo
 
 description = "manipulate module files"
 section = "environment"
@@ -25,6 +25,11 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-n', '--name',
+        action='store', dest='module_set_name', default='default',
+        help="Named module set to use from modules configuration."
+    )
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
 
     refresh_parser = sp.add_parser('refresh', help='regenerate module files')
@@ -38,18 +43,6 @@ def setup_parser(subparser):
         help='generate modules for packages installed upstream',
         action='store_true'
     )
-    refresh_parser.add_argument(
-        '--latest',
-        help='use the last installed package when multiple ones match',
-        action='store_true'
-    )
-    refresh_parser.add_argument(
-        '--start-date',
-        help='earliest date of installation [YYYY-MM-DD]'
-    )
-    refresh_parser.add_argument(
-        '--end-date', help='latest date of installation [YYYY-MM-DD]'
-    )
     arguments.add_common_arguments(
         refresh_parser, ['constraint', 'yes_to_all']
     )
@@ -58,11 +51,6 @@ def setup_parser(subparser):
     find_parser.add_argument(
         '--full-path',
         help='display full path to module file',
-        action='store_true'
-    )
-    find_parser.add_argument(
-        '--latest',
-        help='use the last installed package when multiple ones match',
         action='store_true'
     )
     arguments.add_common_arguments(
@@ -97,11 +85,6 @@ def add_loads_arguments(subparser):
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
     )
-    subparser.add_argument(
-        '--latest',
-        help='use the last installed package when multiple ones match',
-        action='store_true'
-    )
     arguments.add_common_arguments(
         subparser, ['recurse_dependencies']
     )
@@ -133,6 +116,19 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
+def check_module_set_name(name):
+    modules_config = spack.config.get('modules')
+    valid_names = set([key for key, value in modules_config.items()
+                       if isinstance(value, dict) and value.get('enable', [])])
+    if 'enable' in modules_config and modules_config['enable']:
+        valid_names.add('default')
+
+    if name not in valid_names:
+        msg = "Cannot use invalid module set %s." % name
+        msg += "    Valid module set names are %s" % list(valid_names)
+        raise spack.config.ConfigError(msg)
+
+
 _missing_modules_warning = (
     "Modules have been omitted for one or more specs, either"
     " because they were blacklisted or because the spec is"
@@ -143,13 +139,8 @@ _missing_modules_warning = (
 
 def loads(module_type, specs, args, out=None):
     """Prompt the list of modules associated with a list of specs"""
+    check_module_set_name(args.module_set_name)
     out = sys.stdout if out is None else out
-
-    if args.latest:
-        def install_date(s):
-            _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
-            return record.installation_time
-        specs = sorted(specs, key=install_date, reverse=True)[:1]
 
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
@@ -170,7 +161,8 @@ def loads(module_type, specs, args, out=None):
     modules = list(
         (spec,
          spack.modules.common.get_module(
-             module_type, spec, get_full_path=False, required=False))
+             module_type, spec, get_full_path=False,
+             module_set_name=args.module_set_name, required=False))
         for spec in specs)
 
     module_commands = {
@@ -205,6 +197,7 @@ def loads(module_type, specs, args, out=None):
 
 def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
+    check_module_set_name(args.module_set_name)
 
     single_spec = one_spec_or_raise(specs)
 
@@ -218,12 +211,14 @@ def find(module_type, specs, args):
     try:
         modules = [
             spack.modules.common.get_module(
-                module_type, spec, args.full_path, required=False)
+                module_type, spec, args.full_path,
+                module_set_name=args.module_set_name, required=False)
             for spec in dependency_specs_to_retrieve]
 
         modules.append(
             spack.modules.common.get_module(
-                module_type, single_spec, args.full_path, required=True))
+                module_type, single_spec, args.full_path,
+                module_set_name=args.module_set_name, required=True))
     except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
 
@@ -237,13 +232,16 @@ def rm(module_type, specs, args):
     """Deletes the module files associated with every spec in specs, for every
     module type in module types.
     """
+    check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(module_cls(x).layout.filename)
+    module_exist = lambda x: os.path.exists(
+        module_cls(x, args.module_set_name).layout.filename)
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    modules = [module_cls(spec) for spec in specs_with_modules]
+    modules = [module_cls(spec, args.module_set_name)
+               for spec in specs_with_modules]
 
     if not modules:
         tty.die('No module file matches your query')
@@ -263,19 +261,11 @@ def rm(module_type, specs, args):
         s.remove()
 
 
-def keep_latest(writers):
-    """Keep the module writer with the most recently installed package
-    """
-    def install_date(w):
-        _, record = spack.store.db.query_by_spec_hash(w.spec.dag_hash())
-        return record.installation_time
-    return sorted(writers, key=install_date, reverse=True)[0]
-
-
 def refresh(module_type, specs, args):
     """Regenerates the module files for every spec in specs and every module
     type in module types.
     """
+    check_module_set_name(args.module_set_name)
 
     # Prompt a message to the user about what is going to change
     if not specs:
@@ -299,26 +289,19 @@ def refresh(module_type, specs, args):
     cls = spack.modules.module_types[module_type]
 
     # Skip unknown packages.
-    clean_specs = [spec
-                   for spec in specs
-                   if spack.repo.path.exists(spec.name)]
-    writers = [cls(spec) for spec in clean_specs]
+    writers = [
+        cls(spec, args.module_set_name) for spec in specs
+        if spack.repo.path.exists(spec.name)]
 
     # Filter blacklisted packages early
-    with spack.store.db.read_transaction():
-        writers = [x for x in writers if not x.conf.blacklisted]
+    writers = [x for x in writers if not x.conf.blacklisted]
 
     # Detect name clashes in module files
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.layout.filename].append(item)
 
-    if args.latest:
-        writers = []
-        with spack.store.db.read_transaction():
-            for fn, matches in file2writer.items():
-                writers.append(keep_latest(matches))
-    elif len(file2writer) != len(writers):
+    if len(file2writer) != len(writers):
         message = 'Name clashes detected in module files:\n'
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
@@ -342,20 +325,17 @@ def refresh(module_type, specs, args):
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
 
-    hashes = set(spec.dag_hash() for spec in clean_specs)
-
     # Dump module index after potentially removing module tree
     spack.modules.common.generate_module_index(
         module_type_root, writers, overwrite=args.delete_tree)
-    with spack.store.db.read_transaction():
-        for x in writers:
-            try:
-                x.write(overwrite=True, concurrent=hashes)
-            except Exception as e:
-                tty.debug(e)
-                msg = 'Could not write module file [{0}]'
-                tty.warn(msg.format(x.layout.filename))
-                tty.warn('\t--> {0} <--'.format(str(e)))
+    for x in writers:
+        try:
+            x.write(overwrite=True)
+        except Exception as e:
+            tty.debug(e)
+            msg = 'Could not write module file [{0}]'
+            tty.warn(msg.format(x.layout.filename))
+            tty.warn('\t--> {0} <--'.format(str(e)))
 
 
 #: Dictionary populated with the list of sub-commands.
@@ -372,9 +352,8 @@ callbacks = {
 }
 
 
-def query_arguments(args):
-    """Set up query arguments
-    """
+def modules_cmd(parser, args, module_type, callbacks=callbacks):
+
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
         'refresh': {
@@ -382,25 +361,10 @@ def query_arguments(args):
             'known': True
         },
     }
-
-    q_args = constraint_qualifiers.get(args.subparser_name, {})
-
-    # Time window of installation
-    for attribute in ('start_date', 'end_date'):
-        date = getattr(args, attribute, None)
-        if date:
-            q_args[attribute] = lang.pretty_string_to_date(date)
-
-    return q_args
-
-
-def modules_cmd(parser, args, module_type, callbacks=callbacks):
-
-    query_args = query_arguments(args)
+    query_args = constraint_qualifiers.get(args.subparser_name, {})
 
     # Get the specs that match the query from the DB
-    with spack.store.db.read_transaction():
-        specs = args.specs(**query_args)
+    specs = args.specs(**query_args)
 
     try:
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ from spack import *
 class PyKombu(PythonPackage):
     """Messaging library for Python."""
 
-    homepage = "https://pypi.org/project/kombu/"
-    url      = "https://pypi.io/packages/source/k/kombu/kombu-4.3.0.tar.gz"
+    pypi = "kombu/kombu-4.3.0.tar.gz"
 
     version('5.0.2', sha256='f4965fba0a4718d47d470beeb5d6446e3357a62402b16c510b6a2f251e05ac3c')
     version('4.6.11', sha256='ca1b45faac8c0b18493d02a8571792f3c40291cf2bcf1f55afed3d8f3aa7ba74')
@@ -21,7 +20,7 @@ class PyKombu(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-amqp@2.5.2:2.5.999', when="@:4.6.6", type=('build', 'run'))
-    depends_on('py-amqp@2.6.0:2.6.999', when="@4.6.7:4.999", type=('build', 'run'))
-    depends_on('py-amqp@5.0.0:5.999', when="@5.0.0:", type=('build', 'run'))
+    depends_on('py-amqp@2.5.2:2.5', when="@:4.6.6", type=('build', 'run'))
+    depends_on('py-amqp@2.6.0:2.6', when="@4.6.7:4", type=('build', 'run'))
+    depends_on('py-amqp@5.0.0:5', when="@5.0.0:", type=('build', 'run'))
     depends_on('py-importlib-metadata@0.18:', type=('build', 'run'))

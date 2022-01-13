@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,10 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.37.tar.gz"
-    list_url = "https://sourceforge.net/projects/libpng/files/"
-    list_depth = 2
+    url = "https://prdownloads.sourceforge.net/libpng/libpng-1.6.37.tar.xz"
+    git = "https://github.com/glennrp/libpng.git"
 
-    version('1.6.37', sha256='daeb2620d829575513e35fecc83f0d3791a620b9b93d800b763542ece9390fb4')
+    version('1.6.37', sha256='505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca')
     # From http://www.libpng.org/pub/png/libpng.html (2019-04-15)
     #     libpng versions 1.6.36 and earlier have a use-after-free bug in the
     #     simplified libpng API png_image_free(). It has been assigned ID
@@ -22,7 +21,7 @@ class Libpng(AutotoolsPackage):
     #     released on 15 April 2019.
 
     # Required for qt@3
-    version('1.2.57', sha256='09ec37869fc5b130f5eb06ffb9bf949796e8d2d78e0788f78ab1c78624c6e9da')
+    version('1.2.57', sha256='0f4620e11fa283fedafb474427c8e96bf149511a1804bdc47350963ae5cf54d8')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
 

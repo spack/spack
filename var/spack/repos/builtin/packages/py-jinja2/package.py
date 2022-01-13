@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ class PyJinja2(PythonPackage):
     and an optional sandboxed environment."""
 
     homepage = "https://palletsprojects.com/p/jinja/"
-    url      = "https://pypi.io/packages/source/J/Jinja2/Jinja2-2.10.3.tar.gz"
+    pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
 
-    import_modules = ['jinja2']
-
+    version('3.0.1', sha256='703f484b47a6af502e743c9122595cc812b0271f661722403114f71a79d0f5a4')
+    version('2.11.3', sha256='a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6')
     version('2.10.3', sha256='9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de')
     version('2.10.1', sha256='065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013')
     version('2.10',   sha256='f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4')
@@ -26,6 +26,12 @@ class PyJinja2(PythonPackage):
     version('2.7.1',  sha256='5cc0a087a81dca1c08368482fb7a92fe2bdd8cfbb22bc0fccfe6c85affb04c8b')
     version('2.7',    sha256='474f1518d189ae7e318b139fecc1d30b943f124448cfa0f09582ca23e069fa4d')
 
+    variant('i18n', default=False, description="Enables I18N support with Babel")
+
+    depends_on('python@3.6:', when='@3:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-markupsafe@2.0:', when='@3:', type=('build', 'run'))
     depends_on('py-markupsafe@0.23:', type=('build', 'run'))
-    depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n
+    depends_on('py-babel@2.7:', when='@3:+i18n', type=('build', 'run'))
+    depends_on('py-babel@0.8:', when='+i18n', type=('build', 'run'))

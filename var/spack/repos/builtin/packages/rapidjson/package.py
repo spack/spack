@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Rapidjson(CMakePackage):
     """A fast JSON parser/generator for C++ with both SAX/DOM style API"""
 
-    homepage = "http://rapidjson.org"
+    homepage = "https://rapidjson.org"
     url      = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz"
 
     version('1.1.0', sha256='bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e')

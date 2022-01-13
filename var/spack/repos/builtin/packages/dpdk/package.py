@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,15 +19,9 @@ class Dpdk(MakefilePackage):
     version('19.05', sha256='5fea95cb726e6adaa506dab330e79563ccd4dacf03f126c826aabdced605d32b')
     version('19.02', sha256='04885d32c86fff5aefcfffdb8257fed405233602dbcd22f8298be13c2e285a50')
 
-    depends_on('numactl')
+    conflicts('target=aarch64:', msg='DPDK is not supported on aarch64.')
 
-    @when('%gcc target=aarch64:')
-    def patch(self):
-        filter_file(
-            r'^MACHINE_CFLAGS',
-            '#MACHINE_CFLAGS',
-            join_path('mk', 'machine', 'armv8a', 'rte.vars.mk')
-        )
+    depends_on('numactl')
 
     def build(self, spec, prefix):
         make('defconfig')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,8 @@ class Bzip2(Package, SourcewarePackage):
     version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
+    variant('pic', default=False, description='Build static libraries with PIC')
+    variant('debug', default=False, description='Enable debug symbols and disable optimization')
 
     depends_on('diffutils', type='build')
 
@@ -43,17 +45,29 @@ class Bzip2(Package, SourcewarePackage):
             'libbz2', root=self.prefix, shared=shared, recursive=True
         )
 
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            if '+pic' in self.spec:
+                flags.append(self.compiler.cc_pic_flag)
+            if '+debug' in self.spec:
+                flags.append('-g')
+        return(flags, None, None)
+
     def patch(self):
+        if self.spec.satisfies('+debug'):
+            for makefile in ['Makefile', 'Makefile-libbz2_so']:
+                filter_file(r'-O ', '-O0 ', makefile)
+                filter_file(r'-O2 ', '-O0 ', makefile)
+
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
-        filter_file(r'(-o bzip2 bzip2.o) -L. -lbz2', r'\1 libbz2.a', 'Makefile')
         filter_file(r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile')
         filter_file(
             r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile-libbz2_so'
         )
 
         # The Makefiles use GCC flags that are incompatible with PGI
-        if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc'):
+        if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc@:20.11'):
             filter_file('-Wall -Winline', '-Minform=inform', 'Makefile')
             filter_file('-Wall -Winline', '-Minform=inform',
                         'Makefile-libbz2_so')
@@ -94,7 +108,7 @@ class Bzip2(Package, SourcewarePackage):
         make('install', 'PREFIX={0}'.format(prefix))
 
         if '+shared' in spec:
-            # install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
+            install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
 
             v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
             if 'darwin' in self.spec.architecture:

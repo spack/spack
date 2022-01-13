@@ -1,10 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import spack.hooks.sbang as sbang
+from spack import *
 
 
 class GobjectIntrospection(Package):
@@ -19,12 +19,11 @@ class GobjectIntrospection(Package):
     version('1.49.2', sha256='73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac')
     version('1.48.0', sha256='fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877')
 
-    depends_on("glib@2.56.1:", when="@1.56.1:")
     depends_on("glib@2.49.2:", when="@1.49.2:")
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("python")
-    depends_on("cairo")
+    depends_on("cairo+gobject")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("pkgconfig", type="build")
@@ -53,6 +52,14 @@ class GobjectIntrospection(Package):
     #   an `#!/bin/bash /path/to/spack/bin/sbang` unconditionally being
     #   inserted into the scripts as they're generated.
     patch("sbang.patch")
+
+    # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
+    # to compilation issues with Python 3.9.
+    # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
+    patch('https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/'
+          '1f9284228092b2a7200e8a78bc0ea6702231c6db.patch',
+          sha256='7700828b638c85255c87fcc317ea7e9572ff443f65c86648796528885e5b4cea',
+          when='@:1.63.1')
 
     def url_for_version(self, version):
         url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'

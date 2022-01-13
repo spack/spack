@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,14 +31,18 @@ def get_origin_info(remote):
     git_dir = os.path.join(spack.paths.prefix, '.git')
     git = which('git', required=True)
     try:
-        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
+        branch = git(
+            '--git-dir=%s' % git_dir,
+            'symbolic-ref', '--short', 'HEAD',
+            output=str)
     except ProcessError:
         branch = 'develop'
         tty.warn('No branch found; using default branch: %s' % branch)
-    if remote == 'origin' and \
-       branch not in ('master', 'develop'):
-        branch = 'develop'
-        tty.warn('Unknown branch found; using default branch: %s' % branch)
+    # BlueBrain: disable the below to be able to work from PRs
+    # if remote == 'origin' and \
+    #    branch not in ('master', 'develop'):
+    #     branch = 'develop'
+    #     tty.warn('Unknown branch found; using default branch: %s' % branch)
     try:
         origin_url = git(
             '--git-dir=%s' % git_dir,

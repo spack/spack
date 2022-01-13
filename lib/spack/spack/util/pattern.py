@@ -1,12 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import functools
+import inspect
 import sys
-
 
 if sys.version_info >= (3, 3):
     from collections.abc import MutableSequence  # novm
@@ -42,7 +41,7 @@ def composite(interface=None, method_list=None, container=list):
         interface (type): class exposing the interface to which the
             composite object must conform. Only non-private and
             non-special methods will be taken into account
-        method_list (list of str): names of methods that should be part
+        method_list (list): names of methods that should be part
             of the composite
         container (MutableSequence): container for the composite object
             (default = list).  Must fulfill the MutableSequence

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Libgit2(CMakePackage):
 
     maintainers = ["AndrewGaspar"]
 
+    version('1.1.1',   sha256='13a525373f64c711a00a058514d890d1512080265f98e0935ab279393f21a620')
+    version('1.1.0',   sha256='41a6d5d740fd608674c7db8685685f45535323e73e784062cf000a633d420d1e')
     version('1.0.1',   sha256='1775427a6098f441ddbaa5bd4e9b8a043c7401e450ed761e69a415530fea81d2')
     version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
     version('0.99.0',  sha256='174024310c1563097a6613a0d3f7539d11a9a86517cd67ce533849065de08a11')
@@ -95,6 +97,6 @@ class Libgit2(CMakePackage):
 
         # Control tests
         args.append(
-            '-DBUILD_CLAR={0}'.format('ON' if self.run_tests else 'OFF'))
+            self.define('BUILD_CLAR', self.run_tests))
 
         return args

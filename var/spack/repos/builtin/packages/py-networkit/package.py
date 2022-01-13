@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,22 @@ class PyNetworkit(PythonPackage):
        parallelism and scalability."""
 
     homepage = "https://networkit.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkit/networkit-6.1.tar.gz"
+    pypi = "networkit/networkit-6.1.tar.gz"
 
+    maintainers = ['fabratu']
+
+    version('9.0', sha256='e27872d0d6a8a0a1ba862b0dab6adb4f0046fe6b20d3c47863075d1ee70226d3')
+    version('8.1', sha256='5ff9e61496259280df4f913b1e37f51ca6f94974c4b9f623851f4d518f5ce0d5')
+    version('8.0', sha256='36c30e894e835bf93f0aa0fb0b526758234e74318150820911e024ffe5ec1fd2')
     version('7.1', sha256='8609dc7a574a8a82d8880b8b1e3dfdd9c59ad67cd02135628e675c482fe98a96')
     version('7.0', sha256='eea4b5e565d6990b674e1c7f4d598be9377d57b61d0d82883ecc39edabaf3631')
     version('6.1', sha256='f7fcb50dec66a8253f85c10ff9314100de013c7578d531c81d3f71bc6cf8f093')
 
     # Required dependencies
     depends_on('cmake', type='build')
+    depends_on('libnetworkit@9.0', type=('build', 'link'), when='@9.0')
+    depends_on('libnetworkit@8.1', type=('build', 'link'), when='@8.1')
+    depends_on('libnetworkit@8.0', type=('build', 'link'), when='@8.0')
     depends_on('libnetworkit@7.1', type=('build', 'link'), when='@7.1')
     depends_on('libnetworkit@7.0', type=('build', 'link'), when='@7.0')
     depends_on('libnetworkit@6.1', type=('build', 'link'), when='@6.1')
@@ -35,6 +43,7 @@ class PyNetworkit(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('python@3:', type=('build', 'run'))
 
     phases = ['build_ext', 'install']
 

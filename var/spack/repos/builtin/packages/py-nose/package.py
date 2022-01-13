@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,7 @@ class PyNose(PythonPackage):
     """nose extends the test loading and running features of unittest,
     making it easier to write, find and run tests."""
 
-    homepage = "https://pypi.python.org/pypi/nose"
-    url      = "https://pypi.io/packages/source/n/nose/nose-1.3.4.tar.gz"
-
-    import_modules = [
-        'nose', 'nose.ext', 'nose.plugins', 'nose.sphinx', 'nose.tools'
-    ]
+    pypi = "nose/nose-1.3.4.tar.gz"
 
     version('1.3.7', sha256='f1bffef9cbc82628f6e7d7b40d7e255aefaa1adb6a1b1d26c69a8b79e6208a98')
     version('1.3.6', sha256='f61e0909a743eed37b1207e38a8e7b4a2fe0a82185e36f2be252ef1b3f901758')

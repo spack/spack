@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os
+
+from spack import *
 
 
 class KokkosNvccWrapper(Package):
@@ -13,7 +14,7 @@ class KokkosNvccWrapper(Package):
     # We no longer maintain this as a separate repo
     # Download the Kokkos repo and install from there
     homepage = "https://github.com/kokkos/kokkos"
-    git = "git@github.com:kokkos/kokkos.git"
+    git = "https://github.com/kokkos/kokkos.git"
     url = "https://github.com/kokkos/kokkos/archive/3.1.01.tar.gz"
 
     version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')
@@ -41,6 +42,7 @@ class KokkosNvccWrapper(Package):
         env.set('KOKKOS_CXX', self.compiler.cxx)
         env.set('MPICH_CXX', wrapper)
         env.set('OMPI_CXX', wrapper)
+        env.set('MPICXX_CXX', wrapper)  # HPE MPT
 
     def setup_dependent_package(self, module, dependent_spec):
         wrapper = join_path(self.prefix.bin, "nvcc_wrapper")

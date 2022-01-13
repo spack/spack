@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,30 +6,37 @@
 """
 This test checks the binary packaging infrastructure
 """
-import os
-import stat
-import shutil
-import pytest
 import argparse
-import re
+import os
 import platform
+import re
+import shutil
+import stat
+
+import pytest
 
 from llnl.util.filesystem import mkdirp
 
-import spack.repo
-import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.package
+import spack.repo
+import spack.store
 import spack.util.gpg
-from spack.spec import Spec
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import relocate_text, relocate_links
-from spack.relocate import macho_make_paths_relative
-from spack.relocate import macho_make_paths_normal
-from spack.relocate import _placeholder, macho_find_paths
-from spack.relocate import file_is_relocatable
+from spack.relocate import (
+    _placeholder,
+    file_is_relocatable,
+    macho_find_paths,
+    macho_make_paths_normal,
+    macho_make_paths_relative,
+    needs_binary_relocation,
+    needs_text_relocation,
+    relocate_links,
+    relocate_text,
+)
+from spack.spec import Spec
 
 
 def fake_fetchify(url, pkg):
@@ -39,8 +46,6 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
-                    reason='This test requires gpg')
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
@@ -594,3 +599,31 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
     expected = pkg.download_instr if manual else 'All fetchers failed'
     with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
         pkg.do_fetch()
+
+
+@pytest.fixture()
+def fetching_not_allowed(monkeypatch):
+    class FetchingNotAllowed(spack.fetch_strategy.FetchStrategy):
+        def mirror_id(self):
+            return None
+
+        def fetch(self):
+            raise Exception("Sources are fetched but shouldn't have been")
+    fetcher = FetchStrategyComposite()
+    fetcher.append(FetchingNotAllowed())
+    monkeypatch.setattr(spack.package.PackageBase, 'fetcher', fetcher)
+
+
+def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    pkg = Spec('a').concretized().package
+    pkg.has_code = False
+    pkg.do_fetch()
+
+
+def test_fetch_external_package_is_noop(install_mockery, fetching_not_allowed):
+    """do_fetch for packages without code should be a no-op"""
+    spec = Spec('a').concretized()
+    spec.external_path = "/some/where"
+    assert spec.external
+    spec.package.do_fetch()

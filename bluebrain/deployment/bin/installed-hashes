@@ -1,0 +1,54 @@
+#!/usr/bin/env spack-python
+# vim: ft=python
+
+from argparse import ArgumentParser
+import sys
+
+import llnl.util.tty as tty
+
+import spack.environment as ev
+import spack.repo
+import spack.store
+
+
+def run():
+    """Dump the hashes of installed, explicitly requested specs in an
+    environment
+    """
+    parser = ArgumentParser()
+    parser.add_argument('-e', '--env', help='environment to use')
+    parser.add_argument('-m', '--missing', default=False, action='store_true',
+                        help='list uninstalled specs')
+    args = parser.parse_args()
+
+    native = []
+    staged = []
+    missing = []
+
+    if args.env:
+        env = ev.activate(args.env)
+    else:
+        env = ev.active_environment()
+    with spack.store.db.read_transaction():
+        for requested, spec in env.concretized_specs():
+            stringified = "/{0} {1}".format(spec.dag_hash(7), requested)
+            package = spack.repo.get(spec)
+            if package.installed:
+                if "%" in str(requested):
+                    staged.append(stringified)
+                else:
+                    native.append(stringified)
+            else:
+                missing.append(stringified)
+
+    if args.missing:
+        for l in missing:
+            print(l)
+    else:
+        for l in native:
+            print(l)
+        for l in staged:
+            print(l)
+
+if __name__ == "__main__":
+    run()

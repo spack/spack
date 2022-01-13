@@ -75,11 +75,178 @@
             "flags": "-march={name} -mtune=generic"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "intel": [
           {
             "versions": ":",
             "name": "pentium4",
             "flags": "-march={name} -mtune=generic"
+          }
+        ]
+      }
+    },
+    "x86_64_v2": {
+      "from": ["x86_64"],
+      "vendor": "generic",
+      "features": [
+        "cx16",
+        "lahf_lm",
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.1:",
+            "name": "x86-64-v2",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "4.6:11.0",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "x86-64-v2",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "3.9:11.1",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
+          }
+        ]
+      }
+    },
+    "x86_64_v3": {
+      "from": ["x86_64_v2"],
+      "vendor": "generic",
+      "features": [
+        "cx16",
+        "lahf_lm",
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "avx",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "abm",
+        "movbe",
+        "xsave"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.1:",
+            "name": "x86-64-v3",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "4.8:11.0",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "x86-64-v3",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "3.9:11.1",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "8.0:",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
+          }
+        ]
+      }
+    },
+    "x86_64_v4": {
+      "from": ["x86_64_v3"],
+      "vendor": "generic",
+      "features": [
+        "cx16",
+        "lahf_lm",
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "avx",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "abm",
+        "movbe",
+        "xsave",
+        "avx512f",
+        "avx512bw",
+        "avx512cd",
+        "avx512dq",
+        "avx512vl"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.1:",
+            "name": "x86-64-v4",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "6.0:11.0",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "x86-64-v4",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": "3.9:11.1",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "8.0:",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
           }
         ]
       }
@@ -104,6 +271,12 @@
           {
             "versions": "3.9:",
             "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "apple-clang": [
@@ -143,6 +316,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -152,13 +331,13 @@
         "intel": [
           {
             "versions": "16.0:",
-            "flags": "-march={name} -mtune={name}}"
+            "flags": "-march={name} -mtune={name}"
           }
         ]
       }
     },
     "nehalem": {
-      "from": ["core2"],
+      "from": ["core2", "x86_64_v2"],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -185,6 +364,12 @@
           {
             "versions": "3.9:",
             "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "apple-clang": [
@@ -227,6 +412,12 @@
           {
             "versions": "3.9:",
             "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "apple-clang": [
@@ -274,6 +465,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -331,6 +528,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -351,7 +554,7 @@
       }
     },
     "haswell": {
-      "from": ["ivybridge"],
+      "from": ["ivybridge", "x86_64_v3"],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -387,6 +590,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -446,6 +655,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -497,6 +712,12 @@
         "clang": [
           {
             "versions": "3.9:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "flags": "-march={name} -mtune={name}"
           }
         ],
@@ -558,6 +779,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "knl",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -574,7 +802,7 @@
       }
     },
     "skylake_avx512": {
-      "from": ["skylake"],
+      "from": ["skylake", "x86_64_v4"],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -619,6 +847,13 @@
             "versions": "3.9:",
             "name": "skylake-avx512",
             "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "skylake-avx512",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "apple-clang": [
@@ -685,6 +920,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -746,6 +987,12 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "11.0:",
@@ -754,7 +1001,7 @@
         ],
         "intel": [
           {
-            "versions": "19.0:",
+            "versions": "19.0.1:",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -827,6 +1074,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "icelake-client",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "10.0.1:",
@@ -875,6 +1129,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "amdfam10",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "intel": [
           {
             "versions": "16.0:",
@@ -885,7 +1146,7 @@
       }
     },
     "bulldozer": {
-      "from": ["x86_64"],
+      "from": ["x86_64_v2"],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -914,6 +1175,13 @@
         "clang": [
           {
             "versions": "3.9:",
+            "name": "bdver1",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "name": "bdver1",
             "flags": "-march={name} -mtune={name}"
           }
@@ -961,6 +1229,13 @@
         "clang": [
           {
             "versions": "3.9:",
+            "name": "bdver2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "name": "bdver2",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1013,6 +1288,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "bdver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "intel": [
           {
             "versions": "16.0:",
@@ -1023,7 +1305,7 @@
       }
     },
     "excavator": {
-      "from": ["steamroller"],
+      "from": ["steamroller", "x86_64_v3"],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1064,6 +1346,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "bdver4",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "intel": [
           {
             "versions": "16.0:",
@@ -1075,7 +1364,7 @@
       }
     },
     "zen": {
-      "from": ["x86_64"],
+      "from": ["x86_64_v3"],
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
@@ -1115,6 +1404,13 @@
         "clang": [
           {
             "versions": "4.0:",
+            "name": "znver1",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "2.2:",
             "name": "znver1",
             "flags": "-march={name} -mtune={name}"
           }
@@ -1175,11 +1471,76 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "znver2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "intel": [
           {
             "versions": "16.0:",
             "warnings": "Intel's compilers may or may not optimize to the same degree for non-Intel microprocessors for optimizations that are not unique to Intel microprocessors",
             "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "zen3": {
+      "from": ["zen2"],
+      "vendor": "AuthenticAMD",
+      "features": [
+        "bmi1",
+        "bmi2",
+        "f16c",
+        "fma",
+        "fsgsbase",
+        "avx",
+        "avx2",
+        "rdseed",
+        "clzero",
+        "aes",
+        "pclmulqdq",
+        "cx16",
+        "movbe",
+        "mmx",
+        "sse",
+        "sse2",
+        "sse4a",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "abm",
+        "xsavec",
+        "xsaveopt",
+        "clflushopt",
+        "popcnt",
+        "clwb",
+        "vaes",
+        "vpclmulqdq",
+        "pku"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "10.3:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "3.0:",
+            "name": "znver3",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -1358,6 +1719,18 @@
             "versions": ":",
             "flags": "-march=armv8-a -mtune=generic"
           }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8-a -mtune=generic"
+          }
         ]
       }
     },
@@ -1459,6 +1832,12 @@
           },
           {
             "versions": "5:",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "20:",
             "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
           }
         ]
@@ -1563,7 +1942,38 @@
                   "versions": "5:",
                   "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
               }
+          ],
+          "arm" : [
+              {
+                  "versions": "20:",
+                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              }
           ]
+      }
+    },
+    "m1": {
+      "from": ["aarch64"],
+      "vendor": "Apple",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8.0:",
+            "flags" : "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "9.0:",
+            "flags" : "-march=armv8.4-a"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:",
+            "flags" : "-march=armv8.4-a"
+          }
+        ]
       }
     },
     "arm": {
@@ -1606,6 +2016,44 @@
       "vendor": "generic",
       "features": [],
       "compilers": {
+      }
+    },
+    "riscv64": {
+      "from": [],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "7.1:",
+            "flags" : "-march=rv64gc"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "9.0:",
+            "flags" : "-march=rv64gc"
+          }
+        ]
+      }
+    },
+    "u74mc": {
+      "from": ["riscv64"],
+      "vendor": "SiFive",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "10.2:",
+            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "12.0:",
+            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+          }
+        ]
       }
     }
   },

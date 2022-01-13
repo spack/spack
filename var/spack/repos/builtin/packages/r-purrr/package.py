@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class RPurrr(RPackage):
     """A complete and consistent functional programming toolkit for R."""
 
-    homepage = "http://purrr.tidyverse.org/"
+    homepage = "https://purrr.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/purrr_0.2.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/purrr"
 

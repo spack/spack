@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,41 +15,38 @@ class OmegaH(CMakePackage):
     url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
     git      = "https://github.com/sandialabs/omega_h.git"
 
+    maintainers = ['cwsmith']
+    tags = ['e4s']
     version('main', branch='main')
-    version('9.34.6', sha256='0fcdfedab6afb855ca982c429698eaa2c25e78909152b8bee508c80a54234aac')
-    version('9.34.5', sha256='1fa67122d2b6d2b3d0d05fa0c5ed1fa24234d072292b29cb334879ffb5adcc92')
-    version('9.33.2', sha256='02ddea3aca36170edb1a63c6e2af419004727d2346d759ab224c70bbfa3455da')
-    version('9.33.0.dev1', sha256='984831746222317b9701a58042cb3da1754845a50cb17d865e3e8210beb5dd6b')
-    version('9.32.5.dev3', sha256='83381f728688ad9d786f02946fe101bf577c7c3268a40e46264935e7cd1a5d97')
-    version('9.31.3.dev2', sha256='8ff448a5185e916068dc41e25a0e7a262d12543426c3888ae145ed90a7afa0de')
-    version('9.30.0', sha256='7160045ea12718269f345c7be93a386533ebb76788504df413f22fbcb072f158')
-    version('9.29.2.dev1', sha256='d180c8b32768464e6e3e909f06ed9c8dbb21bd6443e88687409434dd307fe150')
-    version('9.29.2', sha256='8eea6da0ebde44176a6d19fb858f89f872611cbad08cad65700757e096058465')
-    version('9.28.0', sha256='681588974116025c6c1c535972386c23fe354502319fcbbbdc5b9d373429c08e')
-    version('9.27.3', sha256='7c0b0c9c00cda97763be1287d3bf8b931bcdd07bf4971fc7258a3892d628cf20')
-    version('9.26.6', sha256='5022bf3f9be1a27668fd2ec396d66f6b0124dc4a3adeedb20a580a701d37d893')
-    version('9.25.4', sha256='9a9b26d5c4fc352776c1da02d787e653b5878c0cca3890eefebd3df202c75aed')
+    version('9.34.1', sha256='3a812da3b8df3e0e5d78055e91ad23333761bcd9ed9b2c8c13ee1ba3d702e46c')
+    version('9.32.5', sha256='963a203e9117024cd48d829d82b8543cd9133477fdc15386113b594fdc3246d8')
+    version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
+    version('9.27.0', sha256='aa51f83508cbd14a41ae953bda7da98a6ad2979465c76e5b3a3d9a7a651cb34a')
+    version('9.22.2', sha256='ab5636be9dc171a514a7015df472bd85ab86fa257806b41696170842eabea37d')
+    version('9.19.1', sha256='60ef65c2957ce03ef9d1b995d842fb65c32c5659d064de002c071effe66b1b1f')
+    version('9.19.0', sha256='4a1606c4e7287a1b67359cf6ef1c2d7e24b7dc379065566a1d2e0b0330c0abbd')
+    version('9.15.0', sha256='342a506a0ff22f6cac759862efdcf34e360110f7901eb9b4c5de8afe38741522')
+    version('9.14.0', sha256='035d0f47142f965a57818d1cb6c5c00b5ae6b5a0178b67b0bc9177fa99ba083d')
+    version('9.13.14', sha256='f617dfd024c9cc323e56800ca23df3386bfa37e1b9bd378847d1f5d32d2b8e5d')
+    version('9.13.13', sha256='753702edf4bda9ae57ea21f09ca071e341604a468d8c86468c9aebba049f581c')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('zlib', default=True, description='Activates ZLib support')
-    variant('trilinos', default=False, description='Use Teuchos and Kokkos')
-    variant('build_type', default='Release')
+    variant('trilinos', default=True, description='Use Teuchos and Kokkos')
     variant('throw', default=False, description='Errors throw exceptions instead of abort')
     variant('examples', default=False, description='Compile examples')
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
     variant('warnings', default=False, description='Compile C++ with warnings')
-    variant('gmsh', default=False, description='Use Gmsh C++ API')
 
     depends_on('gmsh', when='+examples', type='build')
-    depends_on('gmsh', when='+gmsh@4.4.1:', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos +kokkos +teuchos', when='+trilinos')
+    depends_on('trilinos +kokkos', when='+trilinos')
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
-    conflicts('%gcc@8:8.2.99', when='@:9.22.1')
+    conflicts('%gcc@8:8.2', when='@:9.22.1')
 
     def _bob_options(self):
         cmake_var_prefix = 'Omega_h_CXX_'
@@ -74,8 +71,6 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_USE_MPI:BOOL=OFF')
         if '+trilinos' in self.spec:
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
-        if '+gmsh' in self.spec:
-            args.append('-DOmega_h_USE_Gmsh:BOOL=ON')
         if '+zlib' in self.spec:
             args.append('-DOmega_h_USE_ZLIB:BOOL=ON')
             args.append('-DZLIB_ROOT:PATH={0}'.format(
@@ -90,14 +85,38 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_THROW:BOOL=ON')
         else:
             args.append('-DOmega_h_THROW:BOOL=OFF')
-        if '@:9.29.99' in self.spec:
-            # omega-h requires empty CMAKE_BUILD_TYPE
-            args.append('-DCMAKE_BUILD_TYPE:STRING=')
-            args += list(self._bob_options())
+        # omega-h requires empty CMAKE_BUILD_TYPE
+        args.append('-DCMAKE_BUILD_TYPE:STRING=')
+        args += list(self._bob_options())
         return args
 
     def flag_handler(self, name, flags):
         flags = list(flags)
         if name == 'cxxflags':
             flags.append(self.compiler.cxx11_flag)
+
+            if self.spec.satisfies('%cce'):
+                flags.append("-Wno-final-dtor-non-final-class")
+
         return (None, None, flags)
+
+    def test(self):
+        if self.spec.version < Version('9.34.1'):
+            print('Skipping tests since only relevant for versions > 9.34.1')
+            return
+
+        exe = join_path(self.prefix.bin, 'osh_box')
+        options = ['1', '1', '1', '2', '2', '2', 'box.osh']
+        description = 'testing mesh construction'
+        self.run_test(exe, options, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh_scale')
+        options = ['box.osh', '100', 'box_100.osh']
+        expected = 'adapting took'
+        description = 'testing mesh adaptation'
+        self.run_test(exe, options, expected, purpose=description)
+
+        exe = join_path(self.prefix.bin, 'osh2vtk')
+        options = ['box_100.osh', 'box_100_vtk']
+        description = 'testing mesh to vtu conversion'
+        self.run_test(exe, options, purpose=description)

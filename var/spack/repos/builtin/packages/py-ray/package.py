@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyRay(PythonPackage):
     build_directory = 'python'
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('bazel@3.2.0:', type='build')
+    depends_on('bazel@3.2.0', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.29.14:', type='build')
     depends_on('py-wheel', type='build')
@@ -30,7 +30,7 @@ class PyRay(PythonPackage):
     depends_on('py-gpustat', type=('build', 'run'))
     depends_on('py-grpcio@1.28.1:', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-msgpack@1.0:1.999', type=('build', 'run'))
+    depends_on('py-msgpack@1.0:1', type=('build', 'run'))
     depends_on('py-numpy@1.16:', type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'))
     depends_on('py-py-spy@0.2.0:', type=('build', 'run'))

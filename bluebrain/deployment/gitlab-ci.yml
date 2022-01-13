@@ -1,0 +1,403 @@
+stages:
+  - setup
+  - compilers
+  - externals
+  - applications
+  - test
+
+default:
+  tags: [bb5_map]  # Will use a special deployment user with write permissions to `bsd`
+  timeout: 3 day   # Building takes a while
+
+# This is a blatant copy of the documentation deployment setup from `nse/ci`
+# IMPORTANT the last line setting the git ssh command, otherwise it will not
+# see the "redirected" HOME
+# FIXME purge this once the move to GitLab is complete
+# FIXME we still need the identity for Github's BlueBrain/Ultraliser
+.spack_setup_gerrit_ssh:
+  # - SSH_CONFIG=$HOME/.ssh/config
+  # - if [[ -f $SSH_CONFIG ]]; then echo "SSH config file $SSH_CONFIG already exists, exiting"; exit 1; fi
+  - if [[ -z $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY ]]; then echo 'Please set the $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY variable'; exit 1; fi
+  # - |
+  #   mkdir -p $(dirname $SSH_CONFIG) && cat > $SSH_CONFIG <<EOF
+  #   User $(whoami)
+  #   IdentityFile ${BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY}
+  #   StrictHostKeyChecking no
+  #   IdentitiesOnly yes
+  #   EOF
+  - chmod 600 $SSH_CONFIG $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY
+  # - export GIT_SSH_COMMAND="ssh -F $HOME/.ssh/config"
+  - export GIT_SSH_COMMAND="ssh -i $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY -o ProxyCommand='/usr/bin/socat - PROXY:bbpproxy.epfl.ch:%h:%p'"
+
+.spack_basic_job:
+  interruptible: true
+  variables:
+    # Max out duration to install stuff
+    bb5_duration: "24:00:00"
+    # We will need these resources for parallel building
+    bb5_constraint: cpu
+    bb5_cpus_per_task: 8
+    bb5_memory: 80g
+    bb5_ntasks: 2
+    bb5_exclusive: user
+    # We will do this ourselves, will be on GPFS
+    GIT_STRATEGY: none
+  before_script:
+    # Tell Git how to re-write BBP GitLab URLs to use a token instead of SSH
+    - export XDG_CONFIG_HOME=${PWD}/local_config
+    - mkdir -p "${XDG_CONFIG_HOME}/git"
+    - |
+      cat <<EOF > "${XDG_CONFIG_HOME}/git/config"
+      [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/"]
+        insteadOf = git@bbpgitlab.epfl.ch:
+      [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/hpc/sim/"]
+        insteadOf = ssh://bbpcode.epfl.ch/sim/
+      EOF
+    - cat "${XDG_CONFIG_HOME}/git/config"
+
+setup_spack:
+  extends: .spack_basic_job
+  needs:
+    - pipeline: $PARENT_PIPELINE_ID
+      job: setup_environment
+      artifacts: true
+  stage: setup
+  script:
+    - printenv
+    - pwd
+    - set -x
+    - echo "Cloning/updating spack repository"
+    - |
+      if [[ -d "$DEPLOYMENT_ROOT/spack" ]]; then
+          cd "$DEPLOYMENT_ROOT/spack"
+          git fetch origin "$DEPLOYMENT_BRANCH"
+          git reset --hard "$CI_COMMIT_SHORT_SHA"
+          git status
+      else
+          git clone --branch "$DEPLOYMENT_BRANCH" --single-branch https://github.com/BlueBrain/spack.git "$DEPLOYMENT_ROOT/spack"
+          cd "$DEPLOYMENT_ROOT/spack"
+      fi
+      git describe
+      git log --oneline -n5
+    - echo "Cloning/updating license repository"
+    - |
+      export LICENSE_ROOT="$DEPLOYMENT_ROOT/spack/etc/spack/licenses"
+      if [[ -d "$LICENSE_ROOT" ]]; then
+          cd "$LICENSE_ROOT"
+          git fetch
+          git reset --hard FETCH_HEAD
+          git status
+      else
+      git clone --single-branch git@bbpgitlab.epfl.ch:hpc/spack-licenses.git "$LICENSE_ROOT"
+          cd "$LICENSE_ROOT"
+      fi
+      git log --oneline -n5
+    # Global values that are even appropriate for end-users
+    - cp "${DEPLOYMENT_ROOT}/spack/bluebrain/sysconfig/bluebrain5/"*.yaml "${DEPLOYMENT_ROOT}/spack/etc/spack"
+  # Just loop this stuff through…
+  artifacts:
+    when: always
+    paths: [deployment.env]
+    reports:
+      dotenv: deployment.env
+
+# This is the basic setup for one of our deployment stages. Things to
+# consider:
+# * The GitLab CI stage will set the installation directory for all
+#   software
+# * The GitLab CI job name will set the environment to use. Meaning that
+#   `bluebrain/deployment/environments/${CI_JOB_NAME}.yaml` has to exist and be a valid
+#   Spack environment
+# * Subsequent deployment stages have to depend on each other to pass
+#   exported entities like compilers and external packages through
+.spack_stage:
+  extends: .spack_basic_job
+  needs: [setup_spack]
+  resource_group: BlueBrain.GPFS.build.$GITHUB_PULL_REQUEST_ID
+  before_script:
+    - !reference [.spack_setup_gerrit_ssh]
+    - !reference [.spack_basic_job, before_script]
+    # Supplementary scripts
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
+    # Clean test stacks and miscellaneous files from previous stages
+    - rm -rf stack-*xml missing.txt specs.txt
+    # Create a local Spack configuration directory if not present from
+    # artifacts of previous jobs, link it into $HOME for Spack to pick up
+    - if [[ ! -d spack_config ]]; then
+    -     mkdir spack_config
+    - fi
+    - ln -sf "${PWD}/spack_config" "${HOME}/.spack"
+    # Configure installation directories et al based on the job's stage:
+    # this keeps environment files simpler
+    - |
+      DEPLOYMENT_SUFFIX=""
+      if [[ "$CI_JOB_STAGE" != "$CI_JOB_NAME" ]]; then
+          DEPLOYMENT_SUFFIX="_$CI_JOB_NAME"
+      fi
+      cat <<EOF > "spack_config/config.yaml"
+      config:
+        install_tree:
+          root: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}
+        module_roots:
+          tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
+      EOF
+    # Create an empty database if not present yet (ensures this can be used
+    # as an "upstream" later)
+    - |
+      if [[ ! -f "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db/index.json" ]]; then
+          mkdir -p "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db"
+          echo '{"database":{"installs":{},"version":"6"}}' >  "$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/.spack-db/index.json"
+      fi
+    # Hook up software from other stages if needed (also for PRs)
+    - configure-upstreams > "spack_config/upstreams.yaml"
+    # Sourcing should happen after upstreams to add upstream modules to the path
+    - source "$DEPLOYMENT_ROOT/spack/share/spack/setup-env.sh"
+    - echo "$MODULEPATH"|sed 's/:/\n/g'
+    # Set up a mirror for proprietary software for the external stage; only
+    # populate it once per pipeline, all other stages will receive the same
+    # configuration
+    - if [[ "${CI_JOB_STAGE}" == "compilers" ]]; then
+    -     spack mirror add --scope=user my_proprietary_mirror "file://${DEPLOYMENT_PROPRIETARY_MIRROR}"
+    -     mkdir -p "${DEPLOYMENT_PROPRIETARY_MIRROR}"
+    -     rsync -av "${DEPLOYMENT_DATA}/" "${DEPLOYMENT_PROPRIETARY_MIRROR}"
+    - elif [[ "${CI_JOB_STAGE}" == "applications" ]]; then
+    -     module use "$DEPLOYMENT_ROOT/stage_compilers/modules_tcl/linux-"*
+    -     module use "$DEPLOYMENT_ROOT/stage_externals/modules_tcl/linux-"*
+    - fi
+  script:
+    # A more modern git is required for some Spack checkouts… this may fail
+    # for the compilers stage, but the module command always exits with
+    # status 0…
+    - module load git
+    - module list
+    - echo $GIT_SSH_COMMAND
+    - export GIT_SSH_COMMAND="ssh -i $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY -o ProxyCommand='/usr/bin/socat - PROXY:bbpproxy.epfl.ch:%h:%p'"
+    # Spack's install procedure will generate a bunch of JUnit test XMl,
+    # prepare for that
+    - if [[ ! -d "spack_tests/$CI_JOB_STAGE" ]]; then mkdir -p "spack_tests/$CI_JOB_STAGE"; fi
+    - |
+      cat > "spack_tests/$CI_JOB_STAGE/${CI_JOB_NAME}-fake.xml" <<EOF
+      <?xml version="1.0" encoding="UTF-8"?>
+      <testsuites>
+      </testsuites>
+      EOF
+    - export JUNIT_PREFIX="spack_tests/$CI_JOB_STAGE/$CI_JOB_NAME"
+    # Remove any old Spack environment and recreate it, using the version
+    # controlled template
+    - export DEPLOY_ENV="${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}-$(date +%Y-%m)"
+    - echo "Processing environment ${DEPLOY_ENV}"
+    - if [[ -n "$(spack env list|grep "${DEPLOY_ENV}")" ]]; then
+    -     spack env remove -y "${DEPLOY_ENV}"
+    - fi
+    # Remove any leftover trace of the environment
+    - if [[ -d "${SPACK_ROOT}/var/spack/environments/${DEPLOY_ENV}" ]]; then
+    -     rm -rf "${SPACK_ROOT}/var/spack/environments/${DEPLOY_ENV}"
+    - fi
+    - spack env create "${DEPLOY_ENV}" "${SPACK_ROOT}/bluebrain/deployment/environments/${CI_JOB_STAGE}${DEPLOYMENT_SUFFIX}.yaml"
+    - spack env activate "${DEPLOY_ENV}"
+    # Allow to cross-check what the CI sees
+    - spack config blame compilers
+    - spack config blame config
+    - spack config blame packages
+    - spack config blame upstreams
+    # Activate if checksums fail
+    # - spack clean -a
+    # Concretize and pre-fetch, afterwards build the environment
+    - spack concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
+    - installed-hashes -m|tee missing.txt
+    - if [[ -n "$(<missing.txt)" ]]; then
+    -     spack fetch -m
+    -     srun -J"spack!${CI_EXTERNAL_PULL_REQUEST_IID:+ №}${CI_EXTERNAL_PULL_REQUEST_IID:-}" slurmspack
+    - fi
+    # We always want to regenerate the modules and compiler configurations,
+    # as they may change independenty of package dependencies and shas
+    - installed-hashes|tee specs.txt
+    - shas="$(cut -d" " -f1 specs.txt)"
+    - spack module tcl refresh -y --delete-tree --upstream-modules ${shas}
+    - if [[ "${CI_JOB_STAGE}" == "compilers" ]]; then
+    # This will be needed by future compiler finds: extract the one base
+    # gcc used in the compiler stage.
+    -     export BINUTILS_HASH="/$(spack find --format '{hash:7}' binutils)"
+    -     export DEFAULT_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$DEFAULT_GCC_VERSION)"
+    -     export LEGACY_GCC_HASH="/$(spack find --format '{hash:7}' gcc@$LEGACY_GCC_VERSION)"
+    -     echo "BINUTILS_HASH=$BINUTILS_HASH" >> deployment.env
+    -     echo "DEFAULT_GCC_HASH=$DEFAULT_GCC_HASH" >> deployment.env
+    -     echo "LEGACY_GCC_HASH=$LEGACY_GCC_HASH" >> deployment.env
+    # Make compilers here available to following stages
+    -     configure-compilers < specs.txt
+    - elif [[ "${CI_JOB_STAGE}" == "externals" ]]; then
+    # Make compilers here available to following stages
+    -     configure-compilers < specs.txt
+    # Make all explicitly installed software available to following stages
+    # without considering the full dependency DAG
+    -     spack export --scope=user --module tcl --explicit --unbuildable intel-mkl llvm openscenegraph optix --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
+    - fi
+  artifacts:
+    when: always
+    paths:
+      - concretization_*.txt
+      - deployment.env
+      - missing.txt
+      - specs.txt
+      - spack_config/*.yaml
+      - spack_tests
+    reports:
+      junit: spack_tests/$CI_JOB_STAGE/$CI_JOB_NAME-*.xml
+      dotenv: deployment.env
+
+compilers:
+  extends: .spack_stage
+  stage: compilers
+  script:
+    - !reference [.spack_stage, script]
+    - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
+
+externals:
+  extends: .spack_stage
+  needs: [compilers]
+  stage: externals
+  script:
+    - !reference [.spack_stage, script]
+    - if grep -q -m1 -l -R '<failure' "spack_tests"; then exit 1; fi
+
+.spack_stage_applications:
+  extends: .spack_stage
+  needs: [externals]
+  stage: applications
+
+dke:
+  extends: .spack_stage_applications
+
+hpc:
+  extends: .spack_stage_applications
+
+libraries:
+  extends: .spack_stage_applications
+
+ml:
+  extends: .spack_stage_applications
+
+nse:
+  extends: .spack_stage_applications
+
+nse_circuits:
+  extends: .spack_stage_applications
+
+science:
+  extends: .spack_stage_applications
+
+viz:
+  extends: .spack_stage_applications
+
+.spack_check:
+  needs:
+    - dke
+    - hpc
+    - libraries
+    - ml
+    - nse
+    - nse_circuits
+    - science
+    - viz
+  extends: .spack_basic_job
+  stage: test
+  before_script:
+    - !reference [.spack_basic_job, before_script]
+    # Supplementary scripts
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
+    # May need some Spack libraries
+    - source "$DEPLOYMENT_ROOT/spack/share/spack/setup-env.sh"
+  # Keep on looping through settings
+  artifacts:
+    when: always
+    paths:
+      - deployment.env
+    reports:
+      dotenv: deployment.env
+
+update_config:
+  extends: .spack_check
+  script:
+    # Copy artifacts to common area
+    - mkdir -p "$DEPLOYMENT_ARTIFACTS"
+    - rsync -av spack_tests "$DEPLOYMENT_ARTIFACTS"
+    - cp concretization_* "$DEPLOYMENT_ARTIFACTS"
+    - if grep -q -m1 -l -R '<failure' "$DEPLOYMENT_ARTIFACTS"; then exit 1; fi
+    # Will create $DEPLOYMENT_ROOT/modules
+    - merge-modules "$DEPLOYMENT_ROOT"
+    # Find the GCC module and set a default version
+    - |
+      gcc_module=$(find "$DEPLOYMENT_ROOT/modules" -wholename "*/gcc/$DEFAULT_GCC_VERSION")
+      cat <<EOF > "${gcc_module%$DEFAULT_GCC_VERSION}/.version"
+      #%Module1.0
+      set ModulesVersion "$DEFAULT_GCC_VERSION"
+      EOF
+
+    # Sync modules for the current month
+    - mkdir -p "$MODULE_ROOT/$(date +%Y-%m)"
+    - rsync -av --delete-after "$DEPLOYMENT_ROOT/modules/" "$MODULE_ROOT/$(date +%Y-%m)"
+    # Sync old deployment archives
+    - mkdir -p "$MODULE_ROOT/_meta"
+    - rsync -av "$OLD_DEPLOYMENT_MODULES" "$MODULE_ROOT/_meta"
+    # Create newer archive modules
+    - |
+      for year in $(seq 2019 $(date +%Y)); do
+          for month in $(seq 1 12); do
+              time="${year}-$(printf '%02d' ${month})"
+              if [ "${time}" = "$(date +%Y-%m)" ]; then
+                  module="unstable"
+              else
+                  module="archive/${time}"
+                  if [ -f "$MODULE_ROOT/_meta/$module" ]; then
+                      echo "...skipping ${module}"
+                      continue
+                  fi
+              fi
+              modulefile="$MODULE_ROOT/_meta/$module"
+              mkdir -p $(dirname "$modulefile")
+              echo -e "#%Module1.0\n\nconflict archive\nconflict unstable\n" > "$modulefile"
+              for path in "$MODULE_ROOT/${time}/"*/linux*; do
+                  if [[ -d $path ]]; then
+                    echo "append-path MODULEPATH \"$path\"" >> "$modulefile"
+                  fi
+              done
+              if [ "${module}" = "unstable" ]; then
+                  break
+              fi
+          done
+      done
+    # Create a module for Spack itself, then move it "transactionally"
+    - configure-spack-module > "$MODULE_ROOT/_meta/.spack"
+    - mv "$MODULE_ROOT/_meta/"{.,}spack
+    # Create the configuration
+    - configure-spack-config spack_config "$DEPLOYMENT_ROOT/config"
+
+link_configuration:
+  needs: [update_config]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
+  script:
+    # Link configuration into global deployment directory
+    - ln -sf "$DEPLOYMENT_ROOT/config" "$DEPLOYMENT_BASE"
+
+github_feedback:
+  needs: [update_config]
+  rules:
+    - if: $GITHUB_PULL_REQUEST_ID
+  script:
+    - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
+    - give-github-feedback
+
+check_modules:
+  needs: [update_config]
+  variables:
+    MODULE_SCRIPT: "$DEPLOYMENT_ROOT/config/modules.sh"
+  trigger:
+    project: hpc/module-testing
+    strategy: depend
+
+check_python_modules:
+  extends: .spack_check
+  needs: [update_config]
+  script:
+    - spack-check "$DEPLOYMENT_ROOT/config/modules.sh"

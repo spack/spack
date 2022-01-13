@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import shutil
+
+from spack import *
 
 
 class Herwig3(AutotoolsPackage):
@@ -12,6 +13,8 @@ class Herwig3(AutotoolsPackage):
 
     homepage = "https://herwig.hepforge.org"
     url      = "https://herwig.hepforge.org/downloads/Herwig-7.2.1.tar.bz2"
+
+    tags = ['hep']
 
     version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686')
 
@@ -28,7 +31,7 @@ class Herwig3(AutotoolsPackage):
     depends_on('vbfnlo@3:', type='link')
     depends_on('madgraph5amc', type='link')
     depends_on('njet', type='link')
-    depends_on('py-gosam', type='link', when='^python@2.7:2.7.99')
+    depends_on('py-gosam', type='link', when='^python@2.7.0:2.7')
     depends_on('gosam-contrib', type='link')
     depends_on('openloops', type='link')
 
@@ -60,7 +63,7 @@ class Herwig3(AutotoolsPackage):
                 '--with-njet=' + self.spec['njet'].prefix,
                 '--with-vbfnlo=' + self.spec['vbfnlo'].prefix]
 
-        if self.spec.satisfies('^python@2.7:2.7.99'):
+        if self.spec.satisfies('^python@2.7.0:2.7'):
             args.append('--with-gosam=' + self.spec['gosam'].prefix)
 
         return args

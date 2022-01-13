@@ -1,0 +1,349 @@
+name: linux tests
+
+on:
+  push:
+    branches:
+      - develop
+      - releases/**
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+jobs:
+  # Validate that the code can be run on all the Python versions
+  # supported by Spack
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: 3.9
+    - name: Install Python Packages
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade vermin
+    - name: vermin (Spack's Core)
+      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: vermin (Repositories)
+      run: vermin --backport argparse --violations --backport typing -t=2.6- -t=3.5- -vvv var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools types-six
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/setup_git.sh
+    - name: Run style tests
+      run: |
+          share/spack/qa/run-style-tests
+  # Check which files have been updated by the PR
+  changes:
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      packages: ${{ steps.filter.outputs.packages }}
+      with_coverage: ${{ steps.coverage.outputs.with_coverage }}
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      if: ${{ github.event_name == 'push' }}
+      with:
+        fetch-depth: 0
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721
+      id: filter
+      with:
+        # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
+        filters: |
+          core:
+          - './!(var/**)/**'
+          packages:
+          - 'var/**'
+    # Some links for easier reference:
+    #
+    # "github" context: https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+    # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+    # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+    #
+    - id: coverage
+      # Run the subsequent jobs with coverage if core has been modified,
+      # regardless of whether this is a pull request or a push to a branch
+      run: |
+        echo Core changes: ${{ steps.filter.outputs.core }}
+        echo Event name: ${{ github.event_name }}
+        if [ "${{ steps.filter.outputs.core }}" == "true" ]
+        then
+          echo "::set-output name=with_coverage::true"
+        else
+          echo "::set-output name=with_coverage::false"
+        fi
+
+  # Run unit tests with different configurations on linux
+  unittests:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        concretizer: ['original', 'clingo']
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          # Needed for unit tests
+          sudo apt-get -y install \
+              coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
+              patchelf cmake bison libbison-dev kcov
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools codecov coverage[toml]
+          # ensure style checks are not skipped in unit tests for python >= 3.6
+          # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
+          if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
+              pip install --upgrade flake8 isort>=4.3.5 mypy>=0.900 black
+          fi
+    - name: Setup git configuration
+      run: |
+          # Need this for the git tests to succeed.
+          git --version
+          . .github/workflows/setup_git.sh
+    - name: Bootstrap clingo
+      if: ${{ matrix.concretizer == 'clingo' }}
+      env:
+          SPACK_PYTHON: python
+      run: |
+          . share/spack/setup-env.sh
+          spack bootstrap untrust spack-install
+          spack -v solve zlib
+    - name: Run unit tests (full suite with coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      env:
+          SPACK_PYTHON: python
+          COVERAGE: true
+          SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
+      run: |
+          share/spack/qa/run-unit-tests
+          coverage combine
+          coverage xml
+    - name: Run unit tests (reduced suite without coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      env:
+          SPACK_PYTHON: python
+          ONLY_PACKAGES: true
+          SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
+      run: |
+          share/spack/qa/run-unit-tests
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        flags: unittests,linux,${{ matrix.concretizer }}
+  # Test shell integration
+  shell:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: 3.9
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          # Needed for shell tests
+          sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools codecov coverage[toml]
+    - name: Setup git configuration
+      run: |
+          # Need this for the git tests to succeed.
+          git --version
+          . .github/workflows/setup_git.sh
+    - name: Run shell tests (without coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      run: |
+          share/spack/qa/run-shell-tests
+    - name: Run shell tests (with coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      env:
+          COVERAGE: true
+      run: |
+          share/spack/qa/run-shell-tests
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        flags: shelltests,linux
+  # Test for Python2.6 run on Centos 6
+  centos6:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    container: spack/github-actions:centos6
+    steps:
+    - name: Run unit tests (full test-suite)
+      # The CentOS 6 container doesn't run with coverage, but
+      # under the same conditions it runs the full test suite
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      env:
+          HOME: /home/spack-test
+          SPACK_TEST_SOLVER: original
+      run: |
+          whoami && echo $HOME && cd $HOME
+          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          git fetch origin "${{ github.ref }}:test-branch"
+          git checkout test-branch
+          . .github/workflows/setup_git.sh
+          bin/spack unit-test -x
+    - name: Run unit tests (only package tests)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      env:
+          HOME: /home/spack-test
+          ONLY_PACKAGES: true
+          SPACK_TEST_SOLVER: original
+      run: |
+          whoami && echo $HOME && cd $HOME
+          git clone "${{ github.server_url }}/${{ github.repository }}.git" && cd spack
+          git fetch origin "${{ github.ref }}:test-branch"
+          git checkout test-branch
+          . .github/workflows/setup_git.sh
+          bin/spack unit-test -x -m "not maybeslow" -k "package_sanity"
+
+  # Test RHEL8 UBI with platform Python. This job is run
+  # only on PRs modifying core Spack
+  rhel8-platform-python:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+    container: registry.access.redhat.com/ubi8/ubi
+    steps:
+    - name: Install dependencies
+      run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch tcl unzip which xz
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - name: Setup repo and non-root user
+      run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd spack-test
+          chown -R spack-test .
+    - name: Run unit tests
+      shell: runuser -u spack-test -- bash {0}
+      run: |
+          source share/spack/setup-env.sh
+          spack -d solve zlib
+          spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
+  # Test for the clingo based solver (using clingo-cffi)
+  clingo-cffi:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: 3.9
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          # Needed for unit tests
+          sudo apt-get -y install \
+              coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
+              patchelf kcov
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools codecov coverage[toml] clingo
+    - name: Setup git configuration
+      run: |
+          # Need this for the git tests to succeed.
+          git --version
+          . .github/workflows/setup_git.sh
+    - name: Run unit tests (full suite with coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      env:
+          COVERAGE: true
+          SPACK_TEST_SOLVER: clingo
+      run: |
+          share/spack/qa/run-unit-tests
+          coverage combine
+          coverage xml
+    - name: Run unit tests (reduced suite without coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      env:
+          ONLY_PACKAGES: true
+          SPACK_TEST_SOLVER: clingo
+      run: |
+          share/spack/qa/run-unit-tests
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        flags: unittests,linux,clingo
+  # Run unit tests on MacOS
+  build:
+    needs: [ validate, style, changes ]
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip six setuptools
+          pip install --upgrade codecov coverage[toml]
+    - name: Setup Homebrew packages
+      run: |
+        brew install dash fish gcc gnupg2 kcov
+    - name: Run unit tests
+      env:
+        SPACK_TEST_SOLVER: clingo
+      run: |
+        git --version
+        . .github/workflows/setup_git.sh
+        . share/spack/setup-env.sh
+        $(which spack) bootstrap untrust spack-install
+        $(which spack) solve zlib
+        if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ]
+        then
+          coverage run $(which spack) unit-test -x
+          coverage combine
+          coverage xml
+          # Delete the symlink going from ./lib/spack/docs/_spack_root back to
+          # the initial directory, since it causes ELOOP errors with codecov/actions@2
+          rm lib/spack/docs/_spack_root
+        else
+          echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
+          $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
+        fi
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        files: ./coverage.xml
+        flags: unittests,macos

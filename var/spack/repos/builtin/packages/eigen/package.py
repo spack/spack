@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,13 @@ class Eigen(CMakePackage):
     vectors, numerical solvers, and related algorithms.
     """
 
-    homepage = 'http://eigen.tuxfamily.org/'
-    url = 'https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz'
+    homepage = 'https://eigen.tuxfamily.org/'
+    url = 'https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz'
+    maintainers = ['HaoZeke']
 
-    # BBP mirrored version with CUDA fixes from CERN (needs until 3.5 release)
-    version('3.5a1', sha256='bb43c3d0b5673405c6e40acf5a10d7b853c494a1270bdf197633ba56ca58b715',
-            url="https://github.com/BlueBrain/eigen/archive/refs/tags/v3.5-alpha.1.tar.gz")
-    version('3.3.8', sha256='146a480b8ed1fb6ac7cd33fec9eb5e8f8f62c3683b3f850094d9d5c35a92419a', preferred=True)
+    version('3.4.0', sha256='8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72')
+    version('3.3.9', sha256='7985975b787340124786f092b3a07d594b2e9cd53bbfe5f3d9b1daee7d55f56f')
+    version('3.3.8', sha256='146a480b8ed1fb6ac7cd33fec9eb5e8f8f62c3683b3f850094d9d5c35a92419a')
     version('3.3.7', sha256='d56fbad95abf993f8af608484729e3d87ef611dd85b3380a8bad1d5cbc373a57')
     version('3.3.6', sha256='e7cd8c94d6516d1ada9893ccc7c9a400fcee99927c902f15adba940787104dba')
     version('3.3.5', sha256='383407ab3d0c268074e97a2cbba84ac197fd24532f014aa2adc522355c1aa2d0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,18 @@ class Vecgeom(CMakePackage, CudaPackage):
     url = "https://gitlab.cern.ch/VecGeom/VecGeom/-/archive/v1.1.6/VecGeom-v1.1.6.tar.gz"
     git = "https://gitlab.cern.ch/VecGeom/VecGeom.git"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.17', sha256='2e95429b795311a6986320d785bedcd9dace9f8e7b7f6bd778d23a4ff23e0424')
+    version('1.1.16', sha256='2fa636993156d9d06750586e8a1ac1701ae2be62dea07964e2369698ae521d02')
+    version('1.1.15', sha256='0ee9897eb12d8d560dc0c9e56e8fdb78d0111f651a984df24e983da035bd1c70')
+    version('1.1.13', sha256='6bb364cc74bdab2e64e2fe132debd7f1e192da0a103f5149df7ab25b7c19a205')
+    version('1.1.12', sha256='fec4495aac4a9d583f076551da61a68b956bba1dd1ebe1cd48c00ef95c962049')
+    version('1.1.9', sha256='a90e11bf83724300d1d7206e5fe89a7915c4ec6aae881587f18e282ac0f6ee8e')
+    version('1.1.8', sha256='9c42206d788ec4b791571882f5ea8d2c591c938abe61c21cc5ec37bfea6bf768')
     version('1.1.7', sha256='cc79a0baa783b21ecc399c4e7cca925ca340e6aeb96e3b2cad45c141557519bf')
     version('1.1.6', sha256='c4806a6b67d01b40074b8cc6865d78574a6a1c573be51696f2ecdf98b9cb954a')
     version('1.1.5', sha256='da674f3bbc75c30f56c1a2d251fa8930c899f27fa64b03a36569924030d87b95')

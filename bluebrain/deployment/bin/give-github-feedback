@@ -1,0 +1,100 @@
+#!/bin/sh
+""":"
+# Provides some feedback to a Github pull request about installed software
+# and testing procedures
+#
+# In the spirit of Spack, this first docstring is executed by the shell and
+# launches the appropriate Python setup
+MY_VENV=$(mktemp -d)/venv
+trap "rm -rf '${MY_VENV}'" EXIT
+python3 -mvenv "${MY_VENV}"
+. "${MY_VENV}/bin/activate"
+pip install requests pyyaml
+exec python3 $0
+# Error out if the above fails
+exit 1
+":"""
+
+from copy import copy
+from glob import glob
+import json
+import os
+from pprint import pprint
+import yaml
+import requests
+
+
+GLOBAL_FORMAT_KEYS = {
+    "github_repository": os.environ["GITHUB_REPOSITORY"],
+    "github_pull_request": int(os.environ["GITHUB_PULL_REQUEST_ID"]),
+}
+
+
+DEPLOYMENT_ROOT = os.environ["DEPLOYMENT_ROOT"]
+
+
+def gather_updated_modules(basedir):
+    build_shas = set()
+    for filename in glob(f"{basedir}/*/.spack-db/index.json"):
+        with open(filename) as fd:
+            data = json.load(fd).get("database", {})
+            build_shas.update(data.get("installs", {}).keys())
+    for filename in glob(f"{basedir}/*/modules*/module-index.yaml"):
+        with open(filename) as fd:
+            data = yaml.safe_load(fd).get("module_index", {})
+        for sha in build_shas:
+            if sha in data:
+                yield data[sha]["use_name"]
+
+
+def github_api_post(url, payload, **kwargs):
+    format_keys = copy(GLOBAL_FORMAT_KEYS)
+    format_keys.update(**kwargs)
+    auth_user = os.environ.get("GITHUB_API_USER_OVERRIDE", "")
+    if not len(auth_user):
+        auth_user = "bbpbuildbot"
+    auth_token = os.environ.get("GITHUB_API_KEY_OVERRIDE", "")
+    if not len(auth_token):
+        auth_token = os.environ["GITHUB_API_KEY"]
+    return requests.post(
+        url.format(**format_keys),
+        data=json.dumps(payload),
+        auth=(auth_user, auth_token),
+        headers={"Accept": "application/vnd.github.v3+json"},
+    )
+
+
+COMMENT_TEST_TEMPLATE = f"""
+To test your PR, use the following on BlueBrain5:
+```shell
+unset MODULEPATH
+. {DEPLOYMENT_ROOT}/config/modules.sh
+module load unstable
+```
+"""
+
+COMMENT_UPDATED_MODULES = """
+
+Please test the following updated modules:
+```
+{updated_modules}
+```
+"""
+
+
+def run():
+    comment_body = COMMENT_TEST_TEMPLATE
+    mods = list(gather_updated_modules(DEPLOYMENT_ROOT))
+    if mods:
+        comment_body += COMMENT_UPDATED_MODULES.format(updated_modules="\n".join(mods))
+    print("Posting a comment to the GitHub PR...")
+    comment_request = github_api_post(
+        "https://api.github.com/repos/{github_repository}/issues/{github_pull_request}/comments",
+        {"body": comment_body},
+    )
+    pprint(comment_request.json())
+    print(":wave:")
+
+
+if __name__ == "__main__":
+    run()

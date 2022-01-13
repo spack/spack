@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 from datetime import datetime
+
+from spack import *
 
 
 class Stata(Package):
@@ -25,13 +26,14 @@ class Stata(Package):
 # * I haven't tested any installer version but 15.
 
     homepage = "https://www.stata.com/"
+    manual_download = True
     # url      = "stata"
 
     version('16', 'a13a6a92558eeb3c6cb3013c458a6777e54c21af43599df6b0a924f5f5c2d5d2')
     version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
 
     depends_on('libpng@1.2.57', when='@15', type='run')
-    depends_on('libpng@1.6:1.6.99', when='@16', type='run')
+    depends_on('libpng@1.6.0:1.6', when='@16', type='run')
 
     # STATA is downloaded from user/pass protected ftp as Stata15Linux64.tar.gz
     def url_for_version(self, version):

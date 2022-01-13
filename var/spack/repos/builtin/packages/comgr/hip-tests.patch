@@ -1,0 +1,11 @@
+diff -Naurb ROCm-CompilerSupport-rocm-3.10.0.orig/lib/comgr/test/CMakeLists.txt ROCm-CompilerSupport-rocm-3.10.0/lib/comgr/test/CMakeLists.txt
+--- ROCm-CompilerSupport-rocm-3.10.0.orig/lib/comgr/test/CMakeLists.txt	2020-09-16 14:17:12.000000000 -0500
++++ ROCm-CompilerSupport-rocm-3.10.0/lib/comgr/test/CMakeLists.txt	2020-12-14 10:11:56.609584283 -0600
+@@ -120,7 +120,6 @@
+ add_comgr_test(include_subdirectory_test)
+ add_comgr_test(options_test)
+ # Test : Compile HIP only if HIP-Clang is installed.
+-find_package(hip CONFIG PATHS /opt/rocm/hip QUIET)
+ if (DEFINED HIP_COMPILER AND "${HIP_COMPILER}" STREQUAL "clang")
+   add_comgr_test(compile_hip_test)
+   add_comgr_test(compile_hip_test_in_process)

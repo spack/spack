@@ -1,30 +1,30 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import os
 import filecmp
+import os
 import re
-from six.moves import builtins
+import shutil
 import time
 
 import pytest
+from six.moves import builtins
 
 import llnl.util.filesystem as fs
 
-import spack.config
+import spack.cmd.install
 import spack.compilers as compilers
+import spack.config
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.package
-import spack.cmd.install
+import spack.util.executable
 from spack.error import SpackError
-from spack.spec import Spec, CompilerSpec
 from spack.main import SpackCommand
-import spack.environment as ev
-
-from six.moves.urllib.error import HTTPError, URLError
+from spack.spec import CompilerSpec, Spec
 
 install = SpackCommand('install')
 env = SpackCommand('env')
@@ -32,6 +32,7 @@ add = SpackCommand('add')
 mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
+find = SpackCommand('find')
 
 
 @pytest.fixture()
@@ -119,7 +120,9 @@ def test_install_dirty_flag(arguments, expected):
 
 
 def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
-    """Ensure output printed from pkgs is captured by output redirection."""
+    """
+    Ensure output printed from pkgs is captured by output redirection.
+    """
     # we can't use output capture here because it interferes with Spack's
     # logging. TODO: see whether we can get multiple log_outputs to work
     # when nested AND in pytest
@@ -140,12 +143,15 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
+    """
+    This test used to assume receiving full output, but since we've updated
+    spack to generate logs on the level of phases, it will only return the
+    last phase, install.
+    """
     # capfd interferes with Spack's capturing
     with capfd.disabled():
-        out = install('build-error', fail_on_error=False)
-    assert 'ProcessError' in out
-    assert 'configure: error: in /path/to/some/file:' in out
-    assert 'configure: error: cannot run C compiled programs.' in out
+        out = install('-v', 'build-error', fail_on_error=False)
+    assert 'Installing build-error' in out
 
 
 @pytest.mark.disable_clean_stage_check
@@ -169,23 +175,29 @@ def test_install_with_source(
                        os.path.join(src, 'configure'))
 
 
+def test_install_env_variables(
+    mock_packages, mock_archive, mock_fetch, config, install_mockery
+):
+    spec = Spec('libdwarf')
+    spec.concretize()
+    install('libdwarf')
+    assert os.path.isfile(spec.package.install_env_path)
+
+
 @pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
-    """Make sure --show-log-on-error works."""
+    """
+    Make sure --show-log-on-error works.
+    """
     with capfd.disabled():
         out = install('--show-log-on-error', 'build-error',
                       fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.pkg.name == 'build-error'
-    assert 'Full build log:' in out
 
-    print(out)
-
-    # Message shows up for ProcessError (1) and output (1)
-    errors = [line for line in out.split('\n')
-              if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 2
+    assert '==> Installing build-error' in out
+    assert 'See build log for details:' in out
 
 
 def test_install_overwrite(
@@ -197,30 +209,32 @@ def test_install_overwrite(
 
     install('libdwarf')
 
+    # Ignore manifest and install times
     manifest = os.path.join(spec.prefix, spack.store.layout.metadata_dir,
                             spack.store.layout.manifest_file_name)
+    ignores = [manifest, spec.package.times_log_path]
 
     assert os.path.exists(spec.prefix)
-    expected_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
+    expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
     with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
+    bad_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
 
     assert bad_md5 != expected_md5
 
     install('--overwrite', '-y', 'libdwarf')
 
     assert os.path.exists(spec.prefix)
-    assert fs.hash_directory(spec.prefix, ignore=[manifest]) == expected_md5
-    assert fs.hash_directory(spec.prefix, ignore=[manifest]) != bad_md5
+    assert fs.hash_directory(spec.prefix, ignore=ignores) == expected_md5
+    assert fs.hash_directory(spec.prefix, ignore=ignores) != bad_md5
 
 
 def test_install_overwrite_not_installed(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery
+        mock_packages, mock_archive, mock_fetch, config, install_mockery,
 ):
     # Try to install a spec and then to reinstall it.
     spec = Spec('libdwarf')
@@ -230,6 +244,32 @@ def test_install_overwrite_not_installed(
 
     install('--overwrite', '-y', 'libdwarf')
     assert os.path.exists(spec.prefix)
+
+
+def test_install_commit(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """
+    Test installing a git package from a commit.
+
+    This ensures Spack appropriately associates commit versions with their
+    packages in time to do version lookups. Details of version lookup tested elsewhere
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    commit = commits[-1]
+    spec = spack.spec.Spec('git-test-commit@%s' % commit)
+    spec.concretize()
+    spec.package.do_install()
+
+    # Ensure first commit file contents were written
+    installed = os.listdir(spec.prefix.bin)
+    assert filename in installed
+    with open(spec.prefix.bin.join(filename), 'r') as f:
+        content = f.read().strip()
+    assert content == '[]'  # contents are weird for another test
 
 
 def test_install_overwrite_multiple(
@@ -250,16 +290,19 @@ def test_install_overwrite_multiple(
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
+    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
-                                              ignore=[ld_manifest])
+                                              ignore=ld_ignores)
 
     cm_manifest = os.path.join(cmake.prefix,
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
+    cm_ignores = [cm_manifest, cmake.package.times_log_path]
     assert os.path.exists(cmake.prefix)
-    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
@@ -268,8 +311,8 @@ def test_install_overwrite_multiple(
     with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
-    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
     assert bad_libdwarf_md5 != expected_libdwarf_md5
     assert bad_cmake_md5 != expected_cmake_md5
@@ -278,8 +321,8 @@ def test_install_overwrite_multiple(
     assert os.path.exists(libdwarf.prefix)
     assert os.path.exists(cmake.prefix)
 
-    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
-    cm_hash = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
+    cm_hash = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
     assert ld_hash == expected_libdwarf_md5
     assert cm_hash == expected_cmake_md5
     assert ld_hash != bad_libdwarf_md5
@@ -304,7 +347,7 @@ def test_install_invalid_spec(invalid_spec):
         install(invalid_spec)
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('spec,concretize,error_code', [
     (Spec('mpi'), False, 1),
     (Spec('mpi'), True, 0),
@@ -350,8 +393,13 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
             '--log-format=junit', '--log-file=test.xml',
             'raiser',
             'exc_type={0}'.format(exc_typename),
-            'msg="{0}"'.format(msg)
+            'msg="{0}"'.format(msg),
+            fail_on_error=False,
         )
+
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == exc_typename
+    assert install.error.pkg.name == 'raiser'
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -364,18 +412,22 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     assert 'failures="1"' in content
     assert 'errors="0"' in content
 
+    # Nothing should have succeeded
+    assert 'tests="0"' not in content
+    assert 'failures="0"' not in content
+
     # We want to have both stdout and stderr
     assert '<system-out>' in content
     assert msg in content
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.parametrize('exc_typename,msg', [
-    ('RuntimeError', 'something weird happened'),
-    ('KeyboardInterrupt', 'Ctrl-C strikes again')
+@pytest.mark.parametrize('exc_typename,expected_exc,msg', [
+    ('RuntimeError', spack.installer.InstallError, 'something weird happened'),
+    ('KeyboardInterrupt', KeyboardInterrupt, 'Ctrl-C strikes again')
 ])
 def test_junit_output_with_errors(
-        exc_typename, msg,
+        exc_typename, expected_exc, msg,
         mock_packages, mock_archive, mock_fetch, install_mockery,
         config, tmpdir, monkeypatch):
 
@@ -386,11 +438,11 @@ def test_junit_output_with_errors(
     monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
                         just_throw)
 
-    # TODO: Why does junit output capture appear to swallow the exception
-    # TODO: as evidenced by the two failing packages getting tagged as
-    # TODO: installed?
     with tmpdir.as_cwd():
-        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf',
+                fail_on_error=False)
+
+    assert isinstance(install.error, expected_exc)
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -398,20 +450,21 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Count failures and errors correctly: libdwarf _and_ libelf
-    #
-    # BlueBrain: we don't even attempt to build when a dependency fails, so
-    # we observe only one test/error here, rather than two.
+    # Only libelf error is reported (through libdwarf root spec). libdwarf
+    # install is skipped and it is not an error.
     assert 'tests="1"' in content
     assert 'failures="0"' in content
     assert 'errors="1"' in content
+
+    # Nothing should have succeeded
+    assert 'errors="0"' not in content
 
     # We want to have both stdout and stderr
     assert '<system-out>' in content
     assert 'error message="{0}"'.format(msg) in content
 
 
-@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.usefixtures('noop_install', 'mock_packages', 'config')
 @pytest.mark.parametrize('clispecs,filespecs', [
     [[],                  ['mpi']],
     [[],                  ['mpi', 'boost']],
@@ -475,7 +528,7 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
             # new or the old concretizer
             expected_messages = (
                 'Conflicts in concretized spec',
-                'does not satisfy'
+                'A conflict was triggered',
             )
             assert any(x in content for x in expected_messages)
 
@@ -486,7 +539,7 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
+            with pytest.raises(SpackError):
                 install(
                     '--log-format=cdash',
                     '--log-file=cdash_reports',
@@ -632,10 +685,11 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     with capfd.disabled():
-        out = install('--cache-only', 'libdwarf')
+        out = install('--cache-only', 'libdwarf', fail_on_error=False)
 
     assert 'Failed to install libelf' in out
     assert 'Skipping build of libdwarf' in out
+    assert 'was not installed' in out
 
     # Check that failure prefix locks are still cached
     failure_lock_prefixes = ','.join(spack.store.db._prefix_failures.keys())
@@ -712,8 +766,116 @@ def test_install_only_dependencies_of_all_in_env(
                 assert os.path.exists(dep.prefix)
 
 
+def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
+                               mutable_mock_env_path):
+    # To test behavior of --no-add option, we create the following environment:
+    #
+    #     mpileaks
+    #         ^callpath
+    #             ^dyninst
+    #                 ^libelf@0.8.13     # or latest, really
+    #                 ^libdwarf
+    #         ^mpich
+    #     libelf@0.8.10
+    #     a~bvv
+    #         ^b
+    #     a
+    #         ^b
+    e = ev.create('test')
+    e.add('mpileaks')
+    e.add('libelf@0.8.10')  # so env has both root and dep libelf specs
+    e.add('a')
+    e.add('a ~bvv')
+    e.concretize()
+    env_specs = e.all_specs()
+
+    a_spec = None
+    b_spec = None
+    mpi_spec = None
+
+    # First find and remember some target concrete specs in the environment
+    for e_spec in env_specs:
+        if e_spec.satisfies(Spec('a ~bvv')):
+            a_spec = e_spec
+        elif e_spec.name == 'b':
+            b_spec = e_spec
+        elif e_spec.satisfies(Spec('mpi')):
+            mpi_spec = e_spec
+
+    assert(a_spec)
+    assert(a_spec.concrete)
+
+    assert(b_spec)
+    assert(b_spec.concrete)
+    assert(b_spec not in e.roots())
+
+    assert(mpi_spec)
+    assert(mpi_spec.concrete)
+
+    # Activate the environment
+    with e:
+        # Assert using --no-add with a spec not in the env fails
+        inst_out = install(
+            '--no-add', 'boost', fail_on_error=False, output=str)
+
+        assert('no such spec exists in environment' in inst_out)
+
+        # Ensure using --no-add with an ambiguous spec fails
+        with pytest.raises(ev.SpackEnvironmentError) as err:
+            inst_out = install(
+                '--no-add', 'a', output=str)
+
+        assert('a matches multiple specs in the env' in str(err))
+
+        # With "--no-add", install an unambiguous dependency spec (that already
+        # exists as a dep in the environment) using --no-add and make sure it
+        # gets installed (w/ deps), but is not added to the environment.
+        install('--no-add', 'dyninst')
+
+        find_output = find('-l', output=str)
+        assert('dyninst' in find_output)
+        assert('libdwarf' in find_output)
+        assert('libelf' in find_output)
+        assert('callpath' not in find_output)
+
+        post_install_specs = e.all_specs()
+        assert all([s in env_specs for s in post_install_specs])
+
+        # Make sure we can install a concrete dependency spec from a spec.yaml
+        # file on disk, using the ``--no-add` option, and the spec is installed
+        # but not added as a root
+        mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
+        with open(mpi_spec_yaml_path.strpath, 'w') as fd:
+            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+
+        install('--no-add', '-f', mpi_spec_yaml_path.strpath)
+        assert(mpi_spec not in e.roots())
+
+        find_output = find('-l', output=str)
+        assert(mpi_spec.name in find_output)
+
+        # Without "--no-add", install an unambiguous depependency spec (that
+        # already exists as a dep in the environment) without --no-add and make
+        # sure it is added as a root of the environment as well as installed.
+        assert(b_spec not in e.roots())
+
+        install('b')
+
+        assert(b_spec in e.roots())
+        assert(b_spec not in e.uninstalled_specs())
+
+        # Without "--no-add", install a novel spec and make sure it is added
+        # as a root and installed.
+        install('bowtie')
+
+        assert(any([s.name == 'bowtie' for s in e.roots()]))
+        assert(not any([s.name == 'bowtie' for s in e.uninstalled_specs()]))
+
+
 def test_install_help_does_not_show_cdash_options(capsys):
-    """Make sure `spack install --help` does not describe CDash arguments"""
+    """
+    Make sure `spack install --help` does not describe CDash arguments
+    """
     with pytest.raises(SystemExit):
         install('--help')
         captured = capsys.readouterr()
@@ -728,7 +890,7 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
         with capfd.disabled():
@@ -739,6 +901,25 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
                 '--log-format=cdash',
                 'a')
             assert 'Using CDash auth token from environment' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            # Test would fail if install raised an error.
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'configure-warning')
+            # Verify Configure.xml exists with expected contents.
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Configure.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'foo: No such file or directory' in content
 
 
 def test_compiler_bootstrap(
@@ -756,7 +937,9 @@ def test_compiler_bootstrap(
 def test_compiler_bootstrap_from_binary_mirror(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch, tmpdir):
-    """Make sure installing compiler from buildcache registers compiler"""
+    """
+    Make sure installing compiler from buildcache registers compiler
+    """
 
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join('mirror_dir')
@@ -828,11 +1011,16 @@ def test_install_fails_no_args_suggests_env_activation(tmpdir):
     assert 'using the `spack.yaml` in this directory' in output
 
 
+default_full_hash = spack.spec.Spec.full_hash
+
+
 def fake_full_hash(spec):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when
     # the hash changes)
-    return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    if spec.name == 'libdwarf':
+        return 'tal4c7h4z0gqmixb1eqa92mjoybxn5l6'
+    return default_full_hash(spec)
 
 
 def test_cache_install_full_hash_match(
@@ -887,3 +1075,39 @@ def test_cache_install_full_hash_match(
 
     uninstall('-y', s.name)
     mirror('rm', 'test-mirror')
+
+    # Get rid of that libdwarf binary in the mirror so other tests don't try to
+    # use it and fail because of NoVerifyException
+    shutil.rmtree(mirror_dir.strpath)
+
+
+def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
+                                    install_mockery, mutable_mock_env_path):
+    env('create', 'test')
+    with ev.read('test'):
+        test_dep = Spec('test-dependency').concretized()
+        add('depb')
+        install('--test', 'all')
+        assert os.path.exists(test_dep.prefix)
+
+
+def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
+                                     install_mockery, mutable_mock_env_path):
+    env('create', 'test')
+    with ev.read('test'):
+        test_dep = Spec('test-dependency').concretized()
+        add('depb')
+        install('--test', 'root')
+        assert not os.path.exists(test_dep.prefix)
+
+
+def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
+                           install_mockery, mutable_mock_env_path):
+    env_name = 'empty'
+    env('create', env_name)
+    with ev.read(env_name):
+        out = install(fail_on_error=False)
+
+    assert env_name in out
+    assert 'environment' in out
+    assert 'no specs to install' in out

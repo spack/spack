@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,9 @@ import subprocess
 import pytest
 
 import spack.cmd
-from spack.cmd.commands import _positional_to_subroutine
 import spack.main
 import spack.paths
-
+from spack.cmd.commands import _positional_to_subroutine
 
 commands = spack.main.SpackCommand('commands')
 
@@ -118,48 +117,21 @@ def test_rst_with_header(tmpdir):
 def test_rst_update(tmpdir):
     update_file = tmpdir.join('output')
 
-    # not yet created when commands is run
     commands('--update', str(update_file))
     assert update_file.exists()
-    with update_file.open() as f:
-        assert f.read()
-
-    # created but older than commands
-    with update_file.open('w') as f:
-        f.write('empty\n')
-    update_file.setmtime(0)
-    commands('--update', str(update_file))
-    assert update_file.exists()
-    with update_file.open() as f:
-        assert f.read() != 'empty\n'
-
-    # newer than commands
-    with update_file.open('w') as f:
-        f.write('empty\n')
-    commands('--update', str(update_file))
-    assert update_file.exists()
-    with update_file.open() as f:
-        assert f.read() == 'empty\n'
 
 
 def test_update_with_header(tmpdir):
     update_file = tmpdir.join('output')
 
-    # not yet created when commands is run
     commands('--update', str(update_file))
     assert update_file.exists()
-    with update_file.open() as f:
-        assert f.read()
     fake_header = 'this is a header!\n\n'
 
     filename = tmpdir.join('header.txt')
     with filename.open('w') as f:
         f.write(fake_header)
 
-    # created, newer than commands, but older than header
-    commands('--update', str(update_file), '--header', str(filename))
-
-    # newer than commands and header
     commands('--update', str(update_file), '--header', str(filename))
 
 
@@ -229,7 +201,6 @@ def test_update_completion_arg(tmpdir, monkeypatch):
         old_file = old.read()
         with open(mock_args['bash']['update'], 'w') as mock:
             mock.write(old_file.replace("--update-completion", ""))
-    mock_bashfile.setmtime(0)  # ensure mtime triggers update
 
     monkeypatch.setattr(
         spack.cmd.commands, 'update_completion_args', mock_args)

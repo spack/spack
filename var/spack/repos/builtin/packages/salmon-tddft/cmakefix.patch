@@ -1,0 +1,108 @@
+diff -ru spack-src.org/cmakefiles/Modules/FindBLACS.cmake spack-src/cmakefiles/Modules/FindBLACS.cmake
+--- spack-src.org/cmakefiles/Modules/FindBLACS.cmake	2020-12-22 17:37:19.960178408 +0900
++++ spack-src/cmakefiles/Modules/FindBLACS.cmake	2020-12-22 17:32:55.395622085 +0900
+@@ -29,7 +29,7 @@
+ # ## List of vendors (BLA_VENDOR) valid in this module
+ # Generic, Intel (MKL)
+ 
+-set(_lapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
++set(_salmon_blacks_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ 
+ # Check the language being used
+ if( NOT (CMAKE_C_COMPILER_LOADED OR CMAKE_CXX_COMPILER_LOADED OR CMAKE_Fortran_COMPILER_LOADED) )
+@@ -55,7 +55,7 @@
+ 
+ # TODO: move this stuff to separate module
+ 
+-macro(Check_Lapack_Libraries LIBRARIES _prefix _name _flags _list _blas _threads)
++macro(salmon_Check_Lapack_Libraries LIBRARIES _prefix _name _flags _list _blas _threads)
+   # This macro checks for the existence of the combination of fortran libraries
+   # given by _list.  If the combination is found, this macro checks (using the
+   # Check_Fortran_Function_Exists macro) whether can link against that library
+@@ -170,7 +170,7 @@
+   if (BLA_VENDOR STREQUAL "Generic" OR
+       BLA_VENDOR STREQUAL "All")
+     if ( NOT BLACS_LIBRARIES )
+-      check_lapack_libraries(
++      salmon_check_lapack_libraries(
+         BLACS_LIBRARIES
+         BLACS
+         pcheevx
+@@ -215,7 +215,7 @@
+ 
+       # First try empty lapack libs
+       if (NOT ${_LIBRARIES})
+-        check_lapack_libraries(
++        salmon_check_lapack_libraries(
+           ${_LIBRARIES}
+           BLACS
+           ${BLACS_mkl_SEARCH_SYMBOL}
+@@ -228,7 +228,7 @@
+       # Then try the search libs
+       foreach (IT ${BLACS_SEARCH_LIBS})
+         if (NOT ${_LIBRARIES})
+-          check_lapack_libraries(
++          salmon_check_lapack_libraries(
+             ${_LIBRARIES}
+             BLACS
+             ${BLACS_mkl_SEARCH_SYMBOL}
+@@ -268,4 +268,4 @@
+ endif()
+ 
+ cmake_pop_check_state()
+-set(CMAKE_FIND_LIBRARY_SUFFIXES ${_lapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
++set(CMAKE_FIND_LIBRARY_SUFFIXES ${_salmon_blacks_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+diff -ru spack-src.org/cmakefiles/Modules/FindScaLAPACK.cmake spack-src/cmakefiles/Modules/FindScaLAPACK.cmake
+--- spack-src.org/cmakefiles/Modules/FindScaLAPACK.cmake	2020-12-22 17:37:19.965178229 +0900
++++ spack-src/cmakefiles/Modules/FindScaLAPACK.cmake	2020-12-22 17:33:39.365051770 +0900
+@@ -29,7 +29,7 @@
+ # ## List of vendors (BLA_VENDOR) valid in this module
+ # Generic, Intel (MKL)
+ 
+-set(_lapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
++set(_salmon_scalapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ 
+ # Check the language being used
+ if( NOT (CMAKE_C_COMPILER_LOADED OR CMAKE_CXX_COMPILER_LOADED OR CMAKE_Fortran_COMPILER_LOADED) )
+@@ -55,7 +55,7 @@
+ 
+ # TODO: move this stuff to separate module
+ 
+-macro(Check_Lapack_Libraries LIBRARIES _prefix _name _flags _list _blas _threads)
++macro(salmon_Check_Lapack_Libraries LIBRARIES _prefix _name _flags _list _blas _threads)
+   # This macro checks for the existence of the combination of fortran libraries
+   # given by _list.  If the combination is found, this macro checks (using the
+   # Check_Fortran_Function_Exists macro) whether can link against that library
+@@ -161,7 +161,7 @@
+   if (BLA_VENDOR STREQUAL "Generic" OR
+       BLA_VENDOR STREQUAL "All")
+     if ( NOT ScaLAPACK_LIBRARIES )
+-      check_lapack_libraries(
++      salmon_check_lapack_libraries(
+         ScaLAPACK_LIBRARIES
+         ScaLAPACK
+         pcheevx
+@@ -202,7 +202,7 @@
+ 
+       # First try empty lapack libs
+       if (NOT ${_LIBRARIES})
+-        check_lapack_libraries(
++        salmon_check_lapack_libraries(
+           ${_LIBRARIES}
+           ScaLAPACK
+           ${ScaLAPACK_mkl_SEARCH_SYMBOL}
+@@ -215,7 +215,7 @@
+       # Then try the search libs
+       foreach (IT ${ScaLAPACK_SEARCH_LIBS})
+         if (NOT ${_LIBRARIES})
+-          check_lapack_libraries(
++          salmon_check_lapack_libraries(
+             ${_LIBRARIES}
+             ScaLAPACK
+             ${ScaLAPACK_mkl_SEARCH_SYMBOL}
+@@ -255,4 +255,4 @@
+ endif()
+ 
+ cmake_pop_check_state()
+-set(CMAKE_FIND_LIBRARY_SUFFIXES ${_lapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
++set(CMAKE_FIND_LIBRARY_SUFFIXES ${_salmon_scalapack_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})

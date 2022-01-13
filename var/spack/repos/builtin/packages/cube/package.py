@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,11 @@ class Cube(AutotoolsPackage):
     - system resource
     """
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url      = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.2.tar.gz"
+    homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
+    url      = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.2.tar.gz"
 
-    version('4.5', sha256='ffe84108adce0adf06dca80820d941b1a60a5580a8bacc8f7c1b6989c8ab1bfa')
+    version('4.6',   sha256='1871c6736121d94a22314cb5daa8f3cbb978b58bfe54f677c4c9c9693757d0c5')
+    version('4.5',   sha256='ffe84108adce0adf06dca80820d941b1a60a5580a8bacc8f7c1b6989c8ab1bfa')
     version('4.4.4', sha256='9b7b96d5a64b558a9017cc3599bba93a42095534e018e3de9b1f80ab6d04cc34')
     version('4.4.3', sha256='bf4b0f2ff68507ff82ba24eb4895aed961710dae16d783c222a12f152440cf36')
     version('4.4.2', sha256='29b6479616a524f8325f5031a883963bf965fb92569de33271a020f08650ec7b')
@@ -29,16 +30,22 @@ class Cube(AutotoolsPackage):
 
     variant('gui', default=True, description='Build Cube GUI')
 
-    patch('qt-version.patch', when='@4.3.0:4.3.999 +gui')
+    patch('qt-version.patch', when='@4.3.0:4.3 +gui')
 
-    depends_on('cubelib', when='@4.4:')
+    depends_on('cubelib@4.6', when='@4.6')
+    depends_on('cubelib@4.5', when='@4.5')
+    # There is a backwards dependency in series 4
+    depends_on('cubelib@4.4:4.4.4', when='@4.4.4')
+    depends_on('cubelib@4.4:4.4.3', when='@4.4.3')
+    depends_on('cubelib@4.4:4.4.2', when='@4.4.2')
+    depends_on('cubelib@4.4', when='@4.4')
 
     depends_on('pkgconfig', type='build')
     depends_on('dbus')
     depends_on('zlib')
 
     depends_on('qt@5:', when='@4.3.0: +gui')
-    depends_on('qt@4.8:', when='@4.2.0:4.2.999 +gui')
+    depends_on('qt@4.8:', when='@4.2.0:4.2 +gui')
 
     conflicts('~gui', when='@4.4:')
 
@@ -57,13 +64,6 @@ class Cube(AutotoolsPackage):
 
         if '+gui' not in spec:
             configure_args.append('--without-gui')
-
-        if spec.satisfies('%intel'):
-            configure_args.append('--with-nocross-compiler-suite=intel')
-        elif spec.satisfies('%pgi'):
-            configure_args.append('--with-nocross-compiler-suite=pgi')
-        elif spec.satisfies('%clang'):
-            configure_args.append('--with-nocross-compiler-suite=clang')
 
         return configure_args
 

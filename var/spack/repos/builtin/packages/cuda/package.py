@@ -137,7 +137,13 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
 
+    variant('dev', default=False, description='Enable development dependencies, i.e to use cuda-gdb')
+
     depends_on('libxml2', when='@10.1.243:')
+    # cuda-gdb needed libncurses.so.5 before 11.4.0
+    # see https://docs.nvidia.com/cuda/archive/11.3.1/cuda-gdb/index.html#common-issues-oss
+    # see https://docs.nvidia.com/cuda/archive/11.4.0/cuda-gdb/index.html#release-notes
+    depends_on('ncurses abi=5', type='run', when='@:11.3.99+dev')
 
     provides('opencl@:1.2', when='@7:')
     provides('opencl@:1.1', when='@:6')
@@ -165,7 +171,6 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
-        env.append_path('LD_LIBRARY_PATH', self.prefix.extras.CUPTI.lib64)
 
     def install(self, spec, prefix):
         if os.path.exists('/tmp/cuda-installer.log'):
@@ -185,8 +190,7 @@ class Cuda(Package):
         # https://gist.github.com/ax3l/9489132
         # for details.
 
-        # CUDA 10.1 on ppc64le fails to copy some files, the workaround is
-        # adapted from
+        # CUDA 10.1 on ppc64le fails to copy some files, the workaround is adapted from
         # https://forums.developer.nvidia.com/t/cuda-10-1-243-10-1-update-2-ppc64le-run-file-installation-issue/82433
         # See also #21170
         if spec.satisfies('@10.1.243') and platform.machine() == 'ppc64le':
@@ -199,11 +203,10 @@ class Cuda(Package):
 
         if self.spec.satisfies('@:8.0.61'):
             # Perl 5.26 removed current directory from module search path.
-            # We are addressing this by exporting `PERL5LIB` earlier, but for
-            # some reason, it is not enough. One more file needs to be
-            # extracted before running the actual installer. This solution is
-            # one of the commonly found on the Internet, when people try to
-            # install CUDA <= 8 manually.
+            # We are addressing this by exporting `PERL5LIB` earlier, but for some
+            # reason, it is not enough. One more file needs to be extracted before
+            # running the actual installer. This solution is one of the commonly
+            # found on the Internet, when people try to install CUDA <= 8 manually.
             # For example: https://askubuntu.com/a/1087842
             arguments = [runfile, '--tar', 'mxvf', './InstallUtils.pm']
             install_shell(*arguments)

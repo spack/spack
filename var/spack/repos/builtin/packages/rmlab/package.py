@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,10 +29,7 @@ class Rmlab(CMakePackage):
     depends_on('pngwriter@0.6.0:', when='+png')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
-            '-DRmlab_USE_PNG={0}'.format(
-                'ON' if '+png' in spec else 'OFF')
+            self.define_from_variant('Rmlab_USE_PNG', 'png')
         ]
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,17 @@ class Opensubdiv(CMakePackage, CudaPackage):
     This code path is optimized for drawing deforming surfaces
     with static topology at interactive framerates."""
 
-    homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
+    homepage = "https://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
     git      = "https://github.com/PixarAnimationStudios/OpenSubdiv"
 
     version('develop', branch='dev')
-    version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
+    version('3.4.3', sha256='7b22eb27d636ab0c1e03722c7a5a5bd4f11664ee65c9b48f341a6d0ce7f36745')
+    version('3.4.0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
+
+    def url_for_version(self, version):
+        url = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v{0}.tar.gz"
+        return url.format(version.underscored)
 
     variant('tbb', default=False, description='Builds with Intel TBB support')
     variant('openmp', default=False, description='Builds with OpenMP support')
@@ -29,7 +34,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('graphviz', type='build', when='+doc')
     depends_on('doxygen', type='build', when='+doc')
     depends_on('py-docutils', type='build', when='+doc')
-    depends_on('python@2.6:2.999', type='build', when='+doc')
+    depends_on('python@2.6:2', type='build', when='+doc')
     depends_on('gl')
     depends_on('glew@1.9.0:')
     depends_on('glfw@3.0.0:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,17 @@ class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
+    maintainers = ['Kerilk']
+
     homepage = "https://www.ruby-lang.org/"
-    url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
-    list_url = "http://cache.ruby-lang.org/pub/ruby/"
+    url      = "https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
+    list_url = "https://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
+    version('3.0.2', sha256='5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1')
+    version('3.0.1', sha256='369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727')
+    version('3.0.0', sha256='a13ed141a1c18eb967aac1e33f4d6ad5f21be1ac543c344e0d6feeee54af8e28')
+    version('2.7.2', sha256='6e5706d0d4ee4e1e2f883db9d768586b4d06567debea353c796ec45e8321c3d4')
     version('2.7.1', sha256='d418483bdd0000576c1370571121a6eb24582116db0b7bb2005e90e250eae418')
     version('2.6.2', sha256='a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
     version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
@@ -28,19 +34,21 @@ class Ruby(AutotoolsPackage):
     depends_on('pkgconfig', type=('build'))
     depends_on('libffi')
     depends_on('zlib')
-    depends_on('libx11')
-    depends_on('tcl')
-    depends_on('tk')
-    depends_on('openssl@:1.0', when='@:2.3+openssl')
-    depends_on('openssl', when='+openssl')
+    depends_on('libx11', when='@:2.3')
+    depends_on('tcl', when='@:2.3')
+    depends_on('tk', when='@:2.3')
     depends_on('readline', when='+readline')
+
+    with when('+openssl'):
+        depends_on('openssl@:1')
+        depends_on('openssl@:1.0', when='@:2.3')
 
     # Known build issues when Avira antivirus software is running:
     # https://github.com/rvm/rvm/issues/4313#issuecomment-374020379
     # TODO: add check for this and warn user
 
     # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
-    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2 %gcc@7:')
     patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
     patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
 
@@ -63,7 +71,7 @@ class Ruby(AutotoolsPackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        url = "http://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
+        url = "https://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
@@ -73,7 +81,8 @@ class Ruby(AutotoolsPackage):
         if '+readline' in self.spec:
             args.append("--with-readline-dir=%s"
                         % self.spec['readline'].prefix)
-        args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        if '^tk' in self.spec:
+            args.append('--with-tk=%s' % self.spec['tk'].prefix)
         if self.spec.satisfies("%fj"):
             args.append('--disable-dtrace')
         return args
@@ -81,15 +90,17 @@ class Ruby(AutotoolsPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in dependent_spec.traverse():
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-
-        env.set_path('GEM_PATH', ruby_paths)
+                env.prepend_path('GEM_PATH', d.prefix)
 
         # The actual installation path for this gem
         env.set('GEM_HOME', dependent_spec.prefix)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
+            if d.package.extends(self.spec):
+                env.prepend_path('GEM_PATH', d.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
@@ -109,7 +120,7 @@ class Ruby(AutotoolsPackage):
         """ RubyGems updated their SSL certificates at some point, so
         new certificates must be installed after Ruby is installed
         in order to download gems; see
-        http://guides.rubygems.org/ssl-certificate-update/
+        https://guides.rubygems.org/ssl-certificate-update/
         for details.
         """
         if self.spec.satisfies("+openssl"):

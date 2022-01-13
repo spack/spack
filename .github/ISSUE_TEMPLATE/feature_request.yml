@@ -1,0 +1,41 @@
+name: "\U0001F38A Feature request" 
+description: Suggest adding a feature that is not yet in Spack
+labels: [feature]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Please add a concise summary of your suggestion here.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Is your feature request related to a problem? Please describe it!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the solution you'd like and the alternatives you have considered.
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional information
+      description: Add any other context about the feature request here.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: General information
+      options:
+        - label: I have run `spack --version` and reported the version of Spack
+          required: true
+        - label: I have searched the issues of this repo and believe this is not a duplicate
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        If you want to ask a question about the tool (how to use it, what it can currently do, etc.), try the `#general` channel on [our Slack](https://slack.spack.io/) first. We have a welcoming community and chances are you'll get your reply faster and without opening an issue.
+        
+        Other than that, thanks for taking the time to contribute to Spack!

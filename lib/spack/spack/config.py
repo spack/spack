@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ configuration system behaves.  The scopes are:
 And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
 functions in this module are:
 
-* :py:func:`get_config`
-* :py:func:`update_config`
+* :func:`~spack.config.Configuration.get_config`
+* :func:`~spack.config.Configuration.update_config`
 
 ``get_config`` reads in YAML data for a particular scope and returns
 it. Callers can then modify the data and write it back with
@@ -35,34 +35,36 @@ import functools
 import os
 import re
 import sys
-import multiprocessing
 from contextlib import contextmanager
-from six import iteritems
-from ordereddict_backport import OrderedDict
+from typing import List  # novm
 
 import ruamel.yaml as yaml
+from ordereddict_backport import OrderedDict
 from ruamel.yaml.error import MarkedYAMLError
+from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
-import spack.paths
-import spack.architecture
 import spack.compilers
+import spack.paths
+import spack.platforms
 import spack.schema
+import spack.schema.bootstrap
 import spack.schema.compilers
-import spack.schema.mirrors
-import spack.schema.repos
-import spack.schema.packages
-import spack.schema.modules
 import spack.schema.config
-import spack.schema.upstreams
 import spack.schema.env
-from spack.error import SpackError
+import spack.schema.mirrors
+import spack.schema.modules
+import spack.schema.packages
+import spack.schema.repos
+import spack.schema.upstreams
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
+from spack.error import SpackError
+from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -73,6 +75,7 @@ section_schemas = {
     'modules': spack.schema.modules.schema,
     'config': spack.schema.config.schema,
     'upstreams': spack.schema.upstreams.schema,
+    'bootstrap': spack.schema.bootstrap.schema
 }
 
 # Same as above, but including keys for environments
@@ -81,22 +84,9 @@ all_schemas = copy.deepcopy(section_schemas)
 all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
-#: Builtin paths to configuration files in Spack
-configuration_paths = (
-    # Default configuration scope is the lowest-level scope. These are
-    # versioned with Spack and can be overridden by systems, sites or users
-    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
-
-    # System configuration is per machine.
-    # No system-level configs should be checked into spack by default
-    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
-
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    ('site', os.path.join(spack.paths.etc_path, 'spack')),
-
-    # User configuration can override both spack defaults and site config
-    ('user', spack.paths.user_config_path)
+#: Path to the default configuration
+configuration_defaults_path = (
+    'defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -109,7 +99,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': min(16, multiprocessing.cpu_count()),
+        'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
         'concretizer': 'original',
     }
@@ -128,7 +118,7 @@ def first_existing(dictionary, keys):
     try:
         return next(k for k in keys if k in dictionary)
     except StopIteration:
-        raise KeyError("None of %s is in dict!" % keys)
+        raise KeyError("None of %s is in dict!" % str(keys))
 
 
 class ConfigScope(object):
@@ -439,7 +429,8 @@ class Configuration(object):
 
     @_config_mutator
     def remove_scope(self, scope_name):
-        return self.scopes.pop(scope_name)
+        """Remove scope by name; has no effect when ``scope_name`` does not exist"""
+        return self.scopes.pop(scope_name, None)
 
     @property
     def file_scopes(self):
@@ -533,7 +524,7 @@ class Configuration(object):
             msg = ('The "{0}" section of the configuration needs to be written'
                    ' to disk, but is currently using a deprecated format. '
                    'Please update it using:\n\n'
-                   '\tspack config [--scope=<scope] update {0}\n\n'
+                   '\tspack config [--scope=<scope>] update {0}\n\n'
                    'Note that previous versions of Spack will not be able to '
                    'use the updated configuration.')
             msg = msg.format(section)
@@ -564,22 +555,23 @@ class Configuration(object):
 
         If ``scope`` is ``None`` or not provided, return the merged contents
         of all of Spack's configuration scopes.  If ``scope`` is provided,
-        return only the confiugration as specified in that scope.
+        return only the configuration as specified in that scope.
 
         This off the top-level name from the YAML section.  That is, for a
         YAML config file that looks like this::
 
            config:
-             install_tree: $spack/opt/spack
-             module_roots:
-               lmod:   $spack/share/spack/lmod
+             install_tree:
+               root: $spack/opt/spack
+             build_stage:
+             - $tmpdir/$user/spack-stage
 
         ``get_config('config')`` will return::
 
-           { 'install_tree': '$spack/opt/spack',
-             'module_roots: {
-                 'lmod': '$spack/share/spack/lmod'
+           { 'install_tree': {
+                 'root': '$spack/opt/spack',
              }
+             'build_stage': ['$tmpdir/$user/spack-stage']
            }
 
         """
@@ -647,7 +639,11 @@ class Configuration(object):
 
         while parts:
             key = parts.pop(0)
-            value = value.get(key, default)
+            # cannot use value.get(key, default) in case there is another part
+            # and default is not a dict
+            if key not in value:
+                return default
+            value = value[key]
 
         return value
 
@@ -714,7 +710,7 @@ def override(path_or_scope, value=None):
 
     Arguments:
         path_or_scope (ConfigScope or str): scope or single option to override
-        value (object, optional): value for the single option
+        value (object or None): value for the single option
 
     Temporarily push a scope on the current configuration, then remove it
     after the context completes. If a single option is provided, create
@@ -741,20 +737,21 @@ def override(path_or_scope, value=None):
         config.push_scope(overrides)
         config.set(path_or_scope, value, scope=scope_name)
 
-    yield config
-
-    scope = config.remove_scope(overrides.name)
-    assert scope is overrides
+    try:
+        yield config
+    finally:
+        scope = config.remove_scope(overrides.name)
+        assert scope is overrides
 
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []
+command_line_scopes = []  # type: List[str]
 
 
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
-    platform = spack.architecture.platform().name
+    platform = spack.platforms.host().name
     plat_name = '%s/%s' % (name, platform)
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
@@ -793,8 +790,37 @@ def _config():
     cfg = Configuration()
 
     # first do the builtin, hardcoded defaults
-    defaults = InternalConfigScope('_builtin', config_defaults)
-    cfg.push_scope(defaults)
+    builtin = InternalConfigScope('_builtin', config_defaults)
+    cfg.push_scope(builtin)
+
+    # Builtin paths to configuration files in Spack
+    configuration_paths = [
+        # Default configuration scope is the lowest-level scope. These are
+        # versioned with Spack and can be overridden by systems, sites or users
+        configuration_defaults_path,
+    ]
+
+    disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
+
+    # System configuration is per machine.
+    # This is disabled if user asks for no local configuration.
+    if not disable_local_config:
+        configuration_paths.append(
+            ('system', spack.paths.system_config_path),
+        )
+
+    # Site configuration is per spack instance, for sites or projects
+    # No site-level configs should be checked into spack by default.
+    configuration_paths.append(
+        ('site', os.path.join(spack.paths.etc_path, 'spack')),
+    )
+
+    # User configuration can override both spack defaults and site config
+    # This is disabled if user asks for no local configuration.
+    if not disable_local_config:
+        configuration_paths.append(
+            ('user', spack.paths.user_config_path)
+        )
 
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
@@ -815,6 +841,81 @@ def _config():
 
 #: This is the singleton configuration instance for Spack.
 config = llnl.util.lang.Singleton(_config)
+
+
+def add_from_file(filename, scope=None):
+    """Add updates to a config from a filename
+    """
+    import spack.environment as ev
+
+    # Get file as config dict
+    data = read_config_file(filename)
+    if any(k in data for k in spack.schema.env.keys):
+        data = ev.config_dict(data)
+
+    # update all sections from config dict
+    # We have to iterate on keys to keep overrides from the file
+    for section in data.keys():
+        if section in section_schemas.keys():
+            # Special handling for compiler scope difference
+            # Has to be handled after we choose a section
+            if scope is None:
+                scope = default_modify_scope(section)
+
+            value = data[section]
+            existing = get(section, scope=scope)
+            new = merge_yaml(existing, value)
+
+            # We cannot call config.set directly (set is a type)
+            config.set(section, new, scope)
+
+
+def add(fullpath, scope=None):
+    """Add the given configuration to the specified config scope.
+    Add accepts a path. If you want to add from a filename, use add_from_file"""
+
+    components = process_config_path(fullpath)
+
+    has_existing_value = True
+    path = ''
+    override = False
+    for idx, name in enumerate(components[:-1]):
+        # First handle double colons in constructing path
+        colon = '::' if override else ':' if path else ''
+        path += colon + name
+        if getattr(name, 'override', False):
+            override = True
+        else:
+            override = False
+
+        # Test whether there is an existing value at this level
+        existing = get(path, scope=scope)
+
+        if existing is None:
+            has_existing_value = False
+            # We've nested further than existing config, so we need the
+            # type information for validation to know how to handle bare
+            # values appended to lists.
+            existing = get_valid_type(path)
+
+            # construct value from this point down
+            value = syaml.load_config(components[-1])
+            for component in reversed(components[idx + 1:-1]):
+                value = {component: value}
+            break
+
+    if has_existing_value:
+        path, _, value = fullpath.rpartition(':')
+        value = syaml.load_config(value)
+        existing = get(path, scope=scope)
+
+    # append values to lists
+    if isinstance(existing, list) and not isinstance(value, list):
+        value = [value]
+
+    # merge value into existing
+    new = merge_yaml(existing, value)
+    config.set(path, new, scope)
 
 
 def get(path, default=None, scope=None):
@@ -854,6 +955,7 @@ def validate(data, schema, filename=None):
     on Spack YAML structures.
     """
     import jsonschema
+
     # validate a copy to avoid adding defaults
     # This allows us to round-trip data without adding to it.
     test_data = copy.deepcopy(data)
@@ -965,22 +1067,36 @@ def get_valid_type(path):
     path given, the priority order is ``list``, ``dict``, ``str``, ``bool``,
     ``int``, ``float``.
     """
+    types = {
+        'array': list,
+        'object': syaml.syaml_dict,
+        'string': str,
+        'boolean': bool,
+        'integer': int,
+        'number': float
+    }
+
     components = process_config_path(path)
     section = components[0]
-    for type in (list, syaml.syaml_dict, str, bool, int, float):
-        try:
-            ret = type()
-            test_data = ret
-            for component in reversed(components):
-                test_data = {component: test_data}
-            validate(test_data, section_schemas[section])
-            return ret
-        except (ConfigFormatError, AttributeError):
-            # This type won't validate, try the next one
-            # Except AttributeError because undefined behavior of dict ordering
-            # in python 3.5 can cause the validator to raise an AttributeError
-            # instead of a ConfigFormatError.
-            pass
+
+    # Use None to construct the test data
+    test_data = None
+    for component in reversed(components):
+        test_data = {component: test_data}
+
+    try:
+        validate(test_data, section_schemas[section])
+    except (ConfigFormatError, AttributeError) as e:
+        jsonschema_error = e.validation_error
+        if jsonschema_error.validator == 'type':
+            return types[jsonschema_error.validator_value]()
+        elif jsonschema_error.validator == 'anyOf':
+            for subschema in jsonschema_error.validator_value:
+                anyof_type = subschema.get('type')
+                if anyof_type is not None:
+                    return types[anyof_type]()
+    else:
+        return type(None)
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
 
@@ -1079,7 +1195,7 @@ def default_modify_scope(section='config'):
     priority scope.
 
     Arguments:
-        section (boolean): Section for which to get the default scope.
+        section (bool): Section for which to get the default scope.
             If this is not 'compilers', a general (non-platform) scope is used.
     """
     if section == 'compilers':
@@ -1154,11 +1270,12 @@ def use_configuration(*scopes_or_paths):
 
     saved_config, config = config, configuration
 
-    yield configuration
-
-    # Restore previous config files
-    spack.compilers._cache_config_file = saved_compiler_cache
-    config = saved_config
+    try:
+        yield configuration
+    finally:
+        # Restore previous config files
+        spack.compilers._cache_config_file = saved_compiler_cache
+        config = saved_config
 
 
 @llnl.util.lang.memoized
@@ -1198,6 +1315,7 @@ class ConfigFormatError(ConfigError):
     def __init__(self, validation_error, data, filename=None, line=None):
         # spack yaml has its own file/line marks -- try to find them
         # we prioritize these over the inputs
+        self.validation_error = validation_error
         mark = self._get_mark(validation_error, data)
         if mark:
             filename = mark.name

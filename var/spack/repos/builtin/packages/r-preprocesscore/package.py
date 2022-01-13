@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,14 @@ from spack import *
 
 
 class RPreprocesscore(RPackage):
-    """A collection of pre-processing functions.
+    """A collection of pre-processing functions
 
        A library of core preprocessing routines."""
 
     homepage = "https://bioconductor.org/packages/preprocessCore"
     git      = "https://git.bioconductor.org/packages/preprocessCore.git"
 
+    version('1.52.1', commit='91de4ab67315dc2af68554ae3c48823f4b1ea8ac')
     version('1.46.0', commit='8cfc3938c1b08424587f437ed6cd2ec43512500e')
     version('1.44.0', commit='dc1dc61fc562aaff3fd9b11ab0d48c2d6b3a5b81')
     version('1.42.0', commit='2e3a8baeacfaa1526d51252642772ea951015bba')

@@ -1,10 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.package_hash import package_hash, package_content
 from spack.spec import Spec
+from spack.util.package_hash import package_content, package_hash
 
 
 def test_hash(tmpdir, mock_packages, config):

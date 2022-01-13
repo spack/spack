@@ -1,0 +1,31 @@
+--- spack-src/openmp/libomptarget/plugins/amdgpu/CMakeLists.txt.orig	2021-12-08 10:53:51.927878196 +0100
++++ spack-src/openmp/libomptarget/plugins/amdgpu/CMakeLists.txt	2021-12-08 10:54:10.690128995 +0100
+@@ -34,6 +34,9 @@
+ ################################################################################
+ # Define the suffix for the runtime messaging dumps.
+ add_definitions(-DTARGET_NAME=AMDGPU)
++
++include_directories(${LIBOMPTARGET_DEP_LIBELF_INCLUDE_DIRS})
++
+ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(ppc64le)|(aarch64)$")
+    add_definitions(-DLITTLEENDIAN_CPU=1)
+ endif()
+--- spack-src/llvm/cmake/modules/LLVMExternalProjectUtils.cmake.orig	2021-12-08 16:11:29.777609236 +0100
++++ spack-src/llvm/cmake/modules/LLVMExternalProjectUtils.cmake	2021-12-08 16:11:15.218414766 +0100
+@@ -280,6 +280,7 @@
+     list(APPEND compiler_args -DCMAKE_ASM_COMPILER_TARGET=${ARG_TARGET_TRIPLE})
+   endif()
+ 
++  string(REPLACE ";" ":" semicolons_break_things "${CMAKE_INSTALL_RPATH}")
+   ExternalProject_Add(${name}
+     DEPENDS ${ARG_DEPENDS} llvm-config
+     ${name}-clobber
+@@ -305,6 +306,8 @@
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=1
++               -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=${CMAKE_INSTALL_RPATH_USE_LINK_PATH}
++               -DCMAKE_INSTALL_RPATH=${semicolons_break_things}
+                ${cmake_args}
+                ${PASSTHROUGH_VARIABLES}
+     INSTALL_COMMAND ""

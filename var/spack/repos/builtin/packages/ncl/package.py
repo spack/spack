@@ -1,12 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
 import tempfile
+
+from spack import *
 
 
 class Ncl(Package):
@@ -22,6 +23,8 @@ class Ncl(Package):
     version('6.6.2', sha256='cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
     version('6.5.0', sha256='133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
     version('6.4.0', sha256='0962ae1a1d716b182b3b27069b4afe66bf436c64c312ddfcf5f34d4ec60153c8')
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     patch('spack_ncl.patch')
     # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
@@ -92,7 +95,7 @@ class Ncl(Package):
     # triangle's features.
     resource(
         name='triangle',
-        url='http://www.netlib.org/voronoi/triangle.zip',
+        url='https://www.netlib.org/voronoi/triangle.zip',
         sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480',
         placement='triangle_src',
         when='+triangle')

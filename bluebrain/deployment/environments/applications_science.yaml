@@ -1,0 +1,38 @@
+spack:
+  view: false
+  concretization: separately
+  modules:
+    tcl:
+      whitelist:
+        - py-bglibpy
+        - py-bluepyefe
+        - py-bluepymm
+        - py-bluepyopt
+        - py-bluepyemodel
+        - py-bluepyparallel
+        - py-efel
+  packages:
+    hdf5:
+      variants: ~mpi+hl
+    highfive:
+      variants: ~mpi
+    libsonata:
+      variants: ~mpi
+    mvdtool:
+      variants: ~mpi
+    netcdf-c:
+      variants: ~mpi
+    py-h5py:
+      variants: ~mpi
+    py-mvdtool:
+      variants: ~mpi
+    vtk:
+      variants: ~mpi~ffmpeg~opengl2
+  specs:
+    - py-bglibpy%gcc ^py-bluepy%gcc ^neuron%intel
+    - py-bluepyefe
+    - py-bluepymm%gcc ^neuron%intel
+    - py-bluepyopt%gcc ^neuron%intel
+    - py-bluepyemodel
+    - py-bluepyparallel
+    - py-efel

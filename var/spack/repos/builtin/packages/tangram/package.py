@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,11 @@ class Tangram(CMakePackage):
 
     homepage = "https://portage.lanl.gov"
     git      = "https://github.com/laristra/tangram.git"
-    url      = "https://github.com/laristra/tangram/releases/download/1.0.1/tangram-1.0.1.tar.gz"
+    url      = "https://github.com/laristra/tangram/releases/download/1.0.5/tangram-1.0.5.tar.gz"
 
     maintainers = ['raovgarimella']
 
+    version('1.0.5', sha256='4fa61d5fecd67215237ab3df8fe64bc6c4d018b22313f2174923486026e93e53')
     version('1.0.1', sha256='8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90')
     version('master', branch='master', submodules=True)
 
@@ -54,7 +55,6 @@ class Tangram(CMakePackage):
     depends_on('wonton+kokkos', when='+kokkos')
     depends_on('wonton+cuda', when='+cuda')
     depends_on('wonton+openmp', when='+openmp')
-    depends_on('wonton+cuda', when='+cuda')
 
     def cmake_args(self):
         options = []

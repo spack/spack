@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Xpmem(AutotoolsPackage):
     of another process into its virtual address space."""
 
     # The README file of the repository says that the development was
-    # transferred to a new repository on GitLab: http://gitlab.com/hjelmn/xpmem
+    # transferred to a new repository on GitLab: https://gitlab.com/hjelmn/xpmem
     # However, it looks like that the repository on GitHub has a more recent
     # version of the codebase.
     homepage = "https://github.com/hjelmn/xpmem"
@@ -25,6 +25,7 @@ class Xpmem(AutotoolsPackage):
     # Versions starting 2.6.4 are neither tagged nor released in the repo
     # (the choice of commits is based on the commit history of
     # 'kernel/xpmem_private.h'):
+    version('2.6.5-36', commit='0d0bad4e1d07b38d53ecc8f20786bb1328c446da')
     version('2.6.5', commit='4efeed9cbaabe971f3766d67cb108e2c3316d4b8')
     version('2.6.4', commit='522054850e4d1479d69f50f7190d1548bf9749fd')
 
@@ -34,6 +35,10 @@ class Xpmem(AutotoolsPackage):
 
     variant('kernel-module', default=True,
             description='Enable building the kernel module')
+
+    # Added RHEL 8.3 kernel support
+    # Here 2.6.5-36 referes to 2.6.5 version and 36th commit id
+    patch('xpmem_v2.6.5-36.patch', when="@2.6.5-36", level=1)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

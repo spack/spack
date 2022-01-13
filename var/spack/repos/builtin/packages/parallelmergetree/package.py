@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,18 +17,41 @@ class Parallelmergetree(CMakePackage):
 
     maintainers = ['spetruzza']
 
-    version('develop',
-            commit='6774ed74fd13b9747ac792978a676ce6e8b05cab',
+    version('1.1.0',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.1.0',
             submodules=True)
 
-    depends_on('babelflow@develop')
+    version('1.0.2',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.0.2',
+            submodules=True)
+
+    version('1.0.0',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.0.0',
+            submodules=True)
+
+    depends_on('babelflow@1.1.0', when='@1.1.0')
+    depends_on('babelflow@1.0.1', when='@1.0.2')
 
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
 
+    # The C++ headers of gcc-11 don't provide <algorithm> as side effect of others
+    @when('%gcc@11:')
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', '-include algorithm')
+
     def cmake_args(self):
-        args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DLIBRARY_ONLY=ON'
-        ]
+        args = []
+
+        if "+shared" in self.spec:
+            args.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            args.append('-DBUILD_SHARED_LIBS=OFF')
+
+        args.append('-DLIBRARY_ONLY=ON')
+        args.append('-DBabelFlow_DIR={0}'.format(
+                    self.spec['babelflow'].prefix))
+
         return args

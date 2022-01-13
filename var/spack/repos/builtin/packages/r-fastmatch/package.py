@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RFastmatch(RPackage):
        function on first match against a table, but extremely fast on any
        subsequent lookup as it keeps the hash table in memory."""
 
-    homepage = "http://www.rforge.net/fastmatch"
+    homepage = "https://www.rforge.net/fastmatch"
     url      = "https://cloud.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fastmatch"
 

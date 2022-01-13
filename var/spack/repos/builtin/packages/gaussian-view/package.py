@@ -1,12 +1,14 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------
 
-from spack import *
-import llnl.util.tty as tty
 import os
+
+import llnl.util.tty as tty
+
+from spack import *
 
 
 class GaussianView(Package):
@@ -38,11 +40,20 @@ class GaussianView(Package):
         description='Use gaussian-src instead of gaussian (prebuilt binary)'
     )
 
-    depends_on('gaussian@16-B.01', type='run', when='@:6.0.99')
+    depends_on('gaussian@16-B.01', type='run', when='@:6.0')
     depends_on('gaussian@16-C.01', type='run', when='~gaussian-src@6.1:')
     depends_on('gaussian-src@16-C.01', type='run', when='+gaussian-src@6.1:')
 
-    conflicts('+gaussian-src', when='@:6.0.99')
+    conflicts('+gaussian-src', when='@:6.0')
+
+    depends_on('libx11', type=('run', 'link'))
+    depends_on('libxext', type=('run', 'link'))
+    depends_on('gl@3:', type=('run', 'link'))
+    depends_on('glu@1.3', type=('run', 'link'))
+    depends_on('libxrender', type=('run', 'link'))
+    depends_on('libsm', type=('run', 'link'))
+    depends_on('libice', type=('run', 'link'))
+    depends_on('patchelf', type='build')
 
     def url_for_version(self, version):
         return "file://{0}/gv{1}-linux-x86_64.tbz".format(
@@ -51,6 +62,18 @@ class GaussianView(Package):
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
+
+        # make sure the executable finds and uses the Spack-provided
+        # libraries, otherwise the executable may or may not run depending
+        # on what is installed on the host
+        # the $ORIGIN prefix is required for the executable to find its
+        # own bundled shared libraries
+        patchelf = which('patchelf')
+        rpath = '$ORIGIN:$ORIGIN/lib' + ':'.join(
+            self.spec[dep].libs.directories[0]
+            for dep in ['libx11', 'libxext', 'libxrender', 'libice', 'libsm',
+                        'gl', 'glu'])
+        patchelf('--set-rpath', rpath, join_path(self.prefix, 'gview.exe'))
 
     @run_after('install')
     def caveats(self):
@@ -78,7 +101,7 @@ files as documented here:
     https://spack.readthedocs.io/en/latest/build_settings.html#package-permissions"""
                  .format(perm_script_path))
 
-    @when('@:6.0.99')
+    @when('@:6.0')
     def setup_run_environment(self, env):
         env.set('GV_DIR', self.prefix)
 

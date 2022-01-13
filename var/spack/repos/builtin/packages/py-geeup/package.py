@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyGeeup(PythonPackage):
     """Simple Client for Earth Engine Uploads with Selenium Support."""
 
     homepage = "https://github.com/samapriya/geeup"
-    url      = "https://pypi.io/packages/source/g/geeup/geeup-0.2.4.tar.gz"
+    pypi = "geeup/geeup-0.2.4.tar.gz"
 
     version('0.2.4', sha256='20f62306ea900d7fa28a97cc92204716212dc030c50a6ac8214772a61a1a83fe')
 
@@ -29,6 +29,6 @@ class PyGeeup(PythonPackage):
     depends_on('py-pysmartdl', type=('build', 'run'))
     depends_on('py-pysmartdl@1.2.5', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-pysmartdl@1.3.1:', type=('build', 'run'), when='^python@3.4:')
-    depends_on('py-pathlib@1.0.1:', type=('build', 'run'))
+    depends_on('py-pathlib@1.0.1:', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-lxml@4.1.1:', type=('build', 'run'))
     depends_on('py-oauth2client@4.1.3:', type=('build', 'run'))

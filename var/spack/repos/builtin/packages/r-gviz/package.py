@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGviz(RPackage):
-    """Plotting data and annotation information along genomic coordinates.
+    """Plotting data and annotation information along genomic coordinates
 
        Genomic data analyses requires integrated visualization of known genomic
        information and new experimental data. Gviz uses the biomaRt and the
@@ -19,6 +19,7 @@ class RGviz(RPackage):
     homepage = "https://bioconductor.org/packages/Gviz"
     git      = "https://git.bioconductor.org/packages/Gviz.git"
 
+    version('1.34.0', commit='445fadff2aedd8734580fa908aa47ff1216a8182')
     version('1.28.3', commit='20b9825af144cfc888629c34aa980b5bbd65bf86')
     version('1.26.5', commit='430310b9d2e098f9757a71d26a2f69871071f30c')
     version('1.24.0', commit='3ee1eec97a56653c07c434a97f82cfe3c4281841')
@@ -26,6 +27,7 @@ class RGviz(RPackage):
     version('1.20.0', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
 
     depends_on('r@2.10.0:', type=('build', 'run'))
+    depends_on('r@4.0:', when='@1.34.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-iranges@1.99.18:', type=('build', 'run'))
     depends_on('r-genomicranges@1.17.20:', type=('build', 'run'))
@@ -37,6 +39,7 @@ class RGviz(RPackage):
     depends_on('r-annotationdbi@1.27.5:', type=('build', 'run'))
     depends_on('r-biobase@2.15.3:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.17.22:', type=('build', 'run'))
+    depends_on('r-ensembldb@2.11.3:', when='@1.34.0:', type=('build', 'run'))
     depends_on('r-bsgenome@1.33.1:', type=('build', 'run'))
     depends_on('r-biostrings@2.33.11:', type=('build', 'run'))
     depends_on('r-biovizbase@1.13.8:', type=('build', 'run'))

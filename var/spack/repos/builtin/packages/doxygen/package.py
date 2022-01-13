@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -17,7 +19,11 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
+    version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
+    version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
     version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
+    version('1.8.18', commit='a1b07ad0e92e4526c9ba1711d39f06b58c2a7459')
     version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
     version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
     version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')
@@ -33,14 +39,38 @@ class Doxygen(CMakePackage):
     variant('mscgen', default=False,
             description='Build with support for code graphs from mscgen.')
 
+    executables = ['doxygen']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-v', output=str, error=str)
+        match = re.search(r"^([\d\.]+)$", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = ''
+        if which('dot'):
+            variants += "+graphviz"
+        else:
+            variants += "~graphviz"
+
+        if which('mscgen'):
+            variants += "+mscgen"
+        else:
+            variants += "~mscgen"
+
+        return variants
+
     depends_on("cmake@2.8.12:", type='build')
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
     depends_on("flex", type='build')
+    depends_on("bison", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
     depends_on("flex@2.5.39", type='build', when='@1.8.10')
-    depends_on("bison", type='build')
+    depends_on("bison@2.7:", type='build', when='@1.8.10:')
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
@@ -50,6 +80,16 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
+
+    # Support C++17's nested namespaces a::b::c. For details about this patch, see
+    # https://github.com/doxygen/doxygen/pull/6977/commits/788440279e0f0fdc7dce27ec266d7d5c11bcda1c
+    patch('cpp17_namespaces.patch', when='@1.8.15')
+
+    # Workaround for gcc getting stuck in an infinite loop
+    patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
+
+    # Some GCC 7.x get stuck in an infinite loop
+    conflicts('%gcc@7.0:7.9', when='@1.9:')
 
     def patch(self):
         if self.spec['iconv'].name == 'libc':

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,11 @@ class Samtools(Package):
        the SAM format, including sorting, merging, indexing and generating
        alignments in a per-position format"""
 
-    homepage = "http://www.htslib.org"
-    url      = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
+    homepage = "https://www.htslib.org"
+    url      = "https://github.com/samtools/samtools/releases/download/1.13/samtools-1.13.tar.bz2"
 
+    version('1.13', sha256='616ca2e051cc8009a1e9c01cfd8c7caf8b70916ddff66f3b76914079465f8c60')
+    version('1.12', sha256='6da3770563b1c545ca8bdf78cf535e6d1753d6383983c7929245d5dba2902dcb')
     version('1.10', sha256='7b9ec5f05d61ec17bd9a82927e45d8ef37f813f79eb03fe06c88377f1bd03585')
     version('1.9', sha256='083f688d7070082411c72c27372104ed472ed7a620591d06f928e653ebc23482')
     version('1.8', sha256='c942bc1d9b85fd1b05ea79c5afd2805d489cd36b2c2d8517462682a4d779be16')
@@ -32,6 +34,9 @@ class Samtools(Package):
     depends_on('python', type='run')
 
     # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.13', when='@1.13')
+    depends_on('htslib@1.12', when='@1.12')
+    depends_on('htslib@1.11', when='@1.11')
     depends_on('htslib@1.10.2', when='@1.10')
     depends_on('htslib@1.9', when='@1.9')
     depends_on('htslib@1.8', when='@1.8')

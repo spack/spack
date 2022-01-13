@@ -14,6 +14,10 @@
 #   ~/.spack/config.yaml
 # -------------------------------------------------------------------------
 config:
+  # Bluebrain specific commands
+  extensions:
+    - $spack/bluebrain/spack-scripting
+
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
@@ -33,13 +37,6 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
-
-  # Locations where different types of modules should be installed.
-  module_roots:
-    tcl:    $spack/share/spack/modules
-    lmod:   $spack/share/spack/lmod
-
-
   # Temporary locations Spack can try to use for builds.
   #
   # Recommended options are given below.
@@ -49,8 +46,8 @@ config:
   # (i.e., ``$TMP` or ``$TMPDIR``).
   #
   # Another option that prevents conflicts and potential permission issues is
-  # to specify `~/.spack/stage`, which ensures each user builds in their home
-  # directory.
+  # to specify `$user_cache_path/stage`, which ensures each user builds in their
+  # home directory.
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
@@ -67,13 +64,13 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $user_cache_path/stage
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: ~/.spack/test
+  test_stage: $user_cache_path/test
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
@@ -82,7 +79,13 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_cache_path/cache
+
+
+  # Setting for environments, can be overridden by their configuration
+  environments:
+    root: $spack/var/spack/environments
+    concretization: separately
 
 
   # Timeout in seconds used for downloading sources etc. This only applies
@@ -107,12 +110,17 @@ config:
   # If set to true, Spack will attempt to build any compiler on the spec
   # that is not already available. If set to False, Spack will only use
   # compilers already configured in compilers.yaml
-  install_missing_compilers: False
+  install_missing_compilers: false
 
 
   # If set to true, Spack will always check checksums after downloading
   # archives. If false, Spack skips the checksum step.
   checksum: true
+
+
+  # If set to true, Spack will fetch deprecated versions without warning.
+  # If false, Spack will raise an error when trying to install a deprecated version.
+  deprecated: false
 
 
   # If set to true, `spack install` and friends will NOT clean
@@ -136,12 +144,18 @@ config:
   # enabling locks.
   locks: true
 
+  # The default url fetch method to use.
+  # If set to 'curl', Spack will require curl on the user's system
+  # If set to 'urllib', Spack will use python built-in libs to fetch
+  url_fetch_method: urllib
 
-  # The maximum number of jobs to use when running `make` in parallel,
-  # always limited by the number of cores available. For instance:
-  # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
-  # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
-  # If not set, Spack will use all available cores up to 16.
+  # The maximum number of jobs to use for the build system (e.g. `make`), when
+  # the -j flag is not given on the command line. Defaults to 16 when not set.
+  # Note that the maximum number of jobs is limited by the number of cores
+  # available, taking thread affinity into account when supported. For instance:
+  # - With `build_jobs: 16` and 4 cores available `spack install` will run `make -j4`
+  # - With `build_jobs: 16` and 32 cores available `spack install` will run `make -j16`
+  # - With `build_jobs: 2` and 4 cores available `spack install -j6` will run `make -j6`
   # build_jobs: 16
 
 
@@ -156,11 +170,10 @@ config:
   #       sufficiently for many specs.
   #
   #   'clingo': Uses a logic solver under the hood to solve DAGs with full
-  #       backtracking and optimization for user preferences.
+  #       backtracking and optimization for user preferences. Spack will
+  #       try to bootstrap the logic solver, if not already available.
   #
-  # 'clingo' currently requires the clingo ASP solver to be installed and
-  # built with python bindings. 'original' is built in.
-  concretizer: original
+  concretizer: clingo
 
 
   # How long to wait to lock the Spack installation database. This lock is used
@@ -187,3 +200,8 @@ config:
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
   # manipulation by unprivileged user (e.g. AFS)
   allow_sgid: true
+
+  # Whether to set the terminal title to display status information during
+  # building and installing packages. This gives information about Spack's
+  # current progress as well as the current and total number of packages.
+  terminal_title: false

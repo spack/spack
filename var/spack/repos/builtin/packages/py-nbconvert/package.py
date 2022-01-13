@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyNbconvert(PythonPackage):
     """Jupyter Notebook Conversion"""
 
     homepage = "https://github.com/jupyter/nbconvert"
-    url      = "https://pypi.io/packages/source/n/nbconvert/nbconvert-6.0.1.tar.gz"
+    pypi = "nbconvert/nbconvert-6.0.1.tar.gz"
 
     version('6.0.1', sha256='db94117fbac29153834447e31b30cda337d4450e46e0bdb1a36eafbbf4435156')
     version('5.6.0', sha256='427a468ec26e7d68a529b95f578d5cbf018cb4c1f889e897681c2b6d11897695')
@@ -24,7 +24,7 @@ class PyNbconvert(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@6:')
     depends_on('py-setuptools', type=('build', 'run'), when='@5:')
     depends_on('py-pycurl', type='build', when='^python@:2.7.8')
-    depends_on('py-mistune@0.8.1:1.999', type=('build', 'run'))
+    depends_on('py-mistune@0.8.1:1', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2@2.4:', type=('build', 'run'), when='@5:')
     depends_on('py-pygments', type=('build', 'run'))
@@ -41,7 +41,7 @@ class PyNbconvert(PythonPackage):
     depends_on('py-pandocfilters@1.4.1:', type=('build', 'run'), when='@5:')
     depends_on('py-testpath', type=('build', 'run'), when='@5:')
     depends_on('py-defusedxml', type=('build', 'run'), when='@5:')
-    depends_on('py-nbclient@0.5.0:0.5.999', type=('build', 'run'), when='@6:')
+    depends_on('py-nbclient@0.5.0:0.5', type=('build', 'run'), when='@6:')
     depends_on('py-tornado@4.0:', type=('build', 'run'), when='+serve')
 
     def patch(self):
@@ -49,3 +49,12 @@ class PyNbconvert(PythonPackage):
         # doesn't try to download it.
         install(join_path(self.package_dir, 'style.min.css'),
                 join_path('nbconvert', 'resources', 'style.min.css'))
+
+    def setup_run_environment(self, env):
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)

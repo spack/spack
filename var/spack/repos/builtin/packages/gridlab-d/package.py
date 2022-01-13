@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,6 +50,7 @@ class GridlabD(AutotoolsPackage):
             args.append('CFLAGS=-g -O0 -w')
             args.append('CXXFLAGS=-g -O0 -w -std=c++14')
             args.append('LDFLAGS=-g -O0 -w')
+            args.append('--with-xerces=' + self.spec['xerces-c'].prefix)
 
         return args
 

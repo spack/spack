@@ -1,0 +1,15 @@
+--- src/lib/crypto/builtin/aes/Makefile.in.orig	2019-06-27 14:51:51.305688932 +0200
++++ src/lib/crypto/builtin/aes/Makefile.in	2019-06-27 14:52:46.428203235 +0200
+@@ -34,10 +34,10 @@
+ 
+ all-unix: all-libobjs # aes-gen
+ 
+-iaesx64@SHOBJEXT@: $(srcdir)/iaesx64.s
++iaesx64.$(OBJEXT) iaesx64@SHOBJEXT@: $(srcdir)/iaesx64.s
+ 	$(YASM) $(AESNI_FLAGS) -o $@ $(srcdir)/iaesx64.s
+ 
+-iaesx86@SHOBJEXT@: $(srcdir)/iaesx86.s
++iaesx86.$(OBJEXT) iaesx86@SHOBJEXT@: $(srcdir)/iaesx86.s
+ 	$(YASM) $(AESNI_FLAGS) -o $@ $(srcdir)/iaesx86.s
+ 
+ includes: depend

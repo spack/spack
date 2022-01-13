@@ -1,0 +1,53 @@
+#!/bin/bash -eu
+
+set -o nounset
+
+CONFIG=$1
+
+. /etc/profile.d/modules.sh
+
+if [[ -n "${MODULEPATH:-}" ]]; then
+    export MODULEPATH=
+fi
+. ${CONFIG}
+
+RELEASE=${2:-unstable}
+STAGES="applications"
+VENV=$(mktemp -d)/venv
+MAKEFILE=$(mktemp)
+
+trap "echo 'Removing temporary files'; rm -rf ${VENV} ${MAKEFILE}" EXIT
+echo "Using release: ${RELEASE}"
+
+module purge
+echo module load "${RELEASE}"
+module load "${RELEASE}"
+module av
+module load python
+
+python3 -mvenv ${VENV}
+source ${VENV}/bin/activate
+pip install -U pip setuptools wheel
+
+mods=""
+for stage in ${STAGES}; do
+    available_modules=$(module avail -t |& sed -n -e '/\/'"${stage}"'\/.*:$/,/:$/ {/:$/ d; p}'|sort)
+    for mod in ${available_modules}; do
+        module purge
+        module load ${RELEASE} 2> /dev/null
+        modulefile=$(module show ${mod} |& sed -n -e '2 { s/:$//; p }')
+        if [[ -z $(grep "Autoloading python" "${modulefile}") ]]; then
+            # echo "SKIPPING ${mod}: no python dependency"
+            continue
+        fi
+        mods="${mods} ${mod}"
+        cat <<EOF >> ${MAKEFILE}
+${mod}:
+	@module-check ${VENV} ${CONFIG} ${RELEASE} ${modulefile}
+
+EOF
+    done
+done
+
+set -x
+make -k -j ${SLURM_CPUS_PER_TASK:-4} -f ${MAKEFILE} ${mods}

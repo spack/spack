@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import datetime
+
+from spack import *
 
 
 class HttpPost(MakefilePackage):
@@ -12,15 +13,15 @@ class HttpPost(MakefilePackage):
     to stdout. It does not do gopher, ftp, file, news, or any other type of
     URL, only HTTP. It can be configured to do HTTPS POSTs as well."""
 
-    homepage = "http://www.acme.com/software/http_post/"
-    url      = "http://www.acme.com/software/http_post/http_post_18May2018.tar.gz"
+    homepage = "https://www.acme.com/software/http_post/"
+    url      = "https://www.acme.com/software/http_post/http_post_18May2018.tar.gz"
 
-    version('2018-05-18', sha256='981c62bcc5cd12b8531f887b3e3779a63a7b7f370062575cded412865a20ea2c')
+    version('2018-05-18', sha256='6607faa91aea410efb9b86ae0b1b64541b55318831cf6bb3fdee5d68f8adab31')
 
     def url_for_version(self, version):
         ver = datetime.datetime.strptime(str(version), '%Y-%m-%d').date()
         verstr = datetime.datetime.strftime(ver, '%d%b%Y')
-        return "http://www.acme.com/software/http_post/http_post_{0}.tar.gz".format(verstr)
+        return "https://www.acme.com/software/http_post/http_post_{0}.tar.gz".format(verstr)
 
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")

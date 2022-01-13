@@ -1,17 +1,18 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
 import os
-import spack
 
+import pytest
+
+import spack
 from spack.util.module_cmd import (
+    get_path_args_from_module_line,
+    get_path_from_module_contents,
     module,
     path_from_modules,
-    get_path_args_from_module_line,
-    get_path_from_module_contents
 )
 
 test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',

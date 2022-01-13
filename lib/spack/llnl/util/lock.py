@@ -1,22 +1,33 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import fcntl
 import errno
-import time
+import fcntl
+import os
 import socket
+import time
 from datetime import datetime
+from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
+
 import spack.util.string
 
-
-__all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
-           'LockError', 'LockTimeoutError',
-           'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
+__all__ = [
+    'Lock',
+    'LockDowngradeError',
+    'LockUpgradeError',
+    'LockTransaction',
+    'WriteTransaction',
+    'ReadTransaction',
+    'LockError',
+    'LockTimeoutError',
+    'LockPermissionError',
+    'LockROFileError',
+    'CantCreateLockError'
+]
 
 #: Mapping of supported locks to description
 lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
@@ -66,7 +77,7 @@ class OpenFileTracker(object):
 
     def __init__(self):
         """Create a new ``OpenFileTracker``."""
-        self._descriptors = {}
+        self._descriptors = {}  # type: Dict[Tuple[int, int], OpenFile]
 
     def get_fh(self, path):
         """Get a filehandle for a lockfile.
@@ -370,7 +381,7 @@ class Lock(object):
         self.old_host = self.host
 
         self.pid = os.getpid()
-        self.host = socket.getfqdn()
+        self.host = socket.gethostname()
 
         # write pid, host to disk to sync over FS
         self._file.seek(0)
@@ -508,7 +519,7 @@ class Lock(object):
         """Releases a read lock.
 
         Arguments:
-            release_fn (callable): function to call *before* the last recursive
+            release_fn (typing.Callable): function to call *before* the last recursive
                 lock (read or write) is released.
 
         If the last recursive lock will be released, then this will call
@@ -544,7 +555,7 @@ class Lock(object):
         """Releases a write lock.
 
         Arguments:
-            release_fn (callable): function to call before the last recursive
+            release_fn (typing.Callable): function to call before the last recursive
                 write is released.
 
         If the last recursive *write* lock will be released, then this
@@ -640,10 +651,10 @@ class LockTransaction(object):
     Arguments:
         lock (Lock): underlying lock for this transaction to be accquired on
             enter and released on exit
-        acquire (callable or contextmanager): function to be called after lock
-            is acquired, or contextmanager to enter after acquire and leave
+        acquire (typing.Callable or contextlib.contextmanager): function to be called
+            after lock is acquired, or contextmanager to enter after acquire and leave
             before release.
-        release (callable): function to be called before release. If
+        release (typing.Callable): function to be called before release. If
             ``acquire`` is a contextmanager, this will be called *after*
             exiting the nexted context and before the lock is released.
         timeout (float): number of seconds to set for the timeout when

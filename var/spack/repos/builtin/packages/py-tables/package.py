@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,8 @@ class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
     efficiently and easily cope with extremely large amounts of data."""
 
-    homepage = "http://www.pytables.org/"
-    url      = "https://pypi.io/packages/source/t/tables/tables-3.6.1.tar.gz"
-
-    import_modules = [
-        'tables', 'tables.misc', 'tables.nodes', 'tables.scripts'
-    ]
+    homepage = "https://www.pytables.org/"
+    pypi = "tables/tables-3.6.1.tar.gz"
 
     version('3.6.1', sha256='49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49')
     version('3.6.0', sha256='db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d')
@@ -38,9 +34,8 @@ class PyTables(PythonPackage):
     depends_on('py-numpy@1.9.3:', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', when='@:3.5', type=('build', 'run'))
-    depends_on('py-mock@2.0:', type='test')
     # tables/req_versions.py
-    depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
+    depends_on('hdf5@1.8.4:1.8', when='@:3.3')
     depends_on('hdf5@1.8.4:', when='@3.4.0:')
     # Versions prior to 3.3 must build with the internal blosc due to a lock
     # problem in a multithreaded environment.

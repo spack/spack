@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,12 @@ class Eztrace(AutotoolsPackage):
     """EZTrace is a tool to automatically generate execution traces
        of HPC applications."""
 
-    homepage = "http://eztrace.gforge.inria.fr"
+    homepage = "https://eztrace.gforge.inria.fr"
     url      = "https://gitlab.com/eztrace/eztrace/-/archive/eztrace-1.1-10/eztrace-eztrace-1.1-10.tar.gz"
     maintainers = ['trahay']
 
     version('1.1-10', sha256='97aba8f3b3b71e8e2f7ef47e00c262234e27b9cb4a870c85c525317a83a3f0d4')
 
-    depends_on('binutils')
     depends_on('mpi')
 
     # Does not work on Darwin due to MAP_POPULATE

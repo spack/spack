@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,3 +17,13 @@ class Apr(AutotoolsPackage):
     version('1.5.2', sha256='1af06e1720a58851d90694a984af18355b65bb0d047be03ec7d659c746d6dbdb')
 
     patch('missing_includes.patch', when='@1.7.0')
+
+    depends_on('uuid', type='link')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libapr-{0}'.format(self.version.up_to(1))],
+            root=self.prefix,
+            recursive=True,
+        )

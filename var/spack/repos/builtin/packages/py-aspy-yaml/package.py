@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyAspyYaml(PythonPackage):
     """Some extensions to pyyaml."""
 
     homepage = "https://github.com/asottile/aspy.yaml/"
-    url      = "https://pypi.io/packages/source/a/aspy.yaml/aspy.yaml-1.3.0.tar.gz"
+    pypi = "aspy.yaml/aspy.yaml-1.3.0.tar.gz"
 
     version('1.3.0', sha256='e7c742382eff2caed61f87a39d13f99109088e5e93f04d76eb8d4b28aa143f45')
 

@@ -1,0 +1,58 @@
+spack:
+  view: false
+  concretization: separately
+  modules:
+    tcl:
+      whitelist:
+        - circuit-analysis
+        - connectome-tools
+        - emsim
+        - gene-expression-volume
+        - psp-validation
+        - py-atlas-building-tools
+        - py-bbp-analysis-framework
+        - py-bbp-workflow
+        - py-bluepy
+        - py-bluepysnap
+        - py-currentscape
+        - py-entity-management
+        - py-minis-validation
+        - py-morphio
+        - py-morphology-repair-workflow
+        - py-sonata-network-reduction
+        - regiodesics
+  packages:
+    hdf5:
+      variants: ~mpi+hl
+    highfive:
+      variants: ~mpi
+    libsonata:
+      variants: ~mpi
+    mvdtool:
+      variants: ~mpi
+    netcdf-c:
+      variants: ~mpi
+    py-h5py:
+      variants: ~mpi
+    py-mvdtool:
+      variants: ~mpi
+    vtk:
+      variants: ~mpi~ffmpeg~opengl2
+  specs:
+    - connectome-tools
+    - emsim
+    - gene-expression-volume
+    - psp-validation%gcc ^neuron%intel
+    - py-atlas-building-tools
+    - py-bbp-analysis-framework
+    - py-bbp-workflow
+    - py-bluepy
+    - py-bluepysnap
+    - py-currentscape
+    - py-entity-management
+    - py-minis-validation%gcc ^neuron%intel
+    - py-morphio
+    - py-morphology-repair-workflow
+    - py-morph-tool%gcc ^neuron%intel
+    - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
+    - regiodesics

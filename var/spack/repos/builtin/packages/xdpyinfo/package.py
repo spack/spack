@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xdpyinfo(AutotoolsPackage, XorgPackage):
     and the server, and the different types of screens, visuals, and X11
     protocol extensions that are available."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xdpyinfo"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xdpyinfo"
     xorg_mirror_path = "app/xdpyinfo-1.3.2.tar.gz"
 
     version('1.3.2', sha256='ef39935e8e9b328e54a85d6218d410d6939482da6058db1ee1b39749d98cbcf2')
@@ -24,9 +24,9 @@ class Xdpyinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxtst')
     depends_on('libxcb')
 
-    depends_on('xproto@7.0.22:', type='build')
-    depends_on('recordproto', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('xproto@7.0.22:')
+    depends_on('recordproto')
+    depends_on('inputproto')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

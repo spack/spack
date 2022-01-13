@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@
 #        environment: {}
 #        extra_rpaths: []
 #
+#    It is advisable to replace /rocm/ in the paths above with /rocm-version/
+#    and introduce spec version numbers to ensure reproducible results.
 #
 # 2. hip and its dependencies are currently NOT picked up by spack
 #    automatically, and should therefore be added to packages.yaml by hand:
@@ -37,7 +39,7 @@
 #    in packages.yaml:
 #    hip:
 #      externals:
-#      - spec: hip@3.8.20371-d1886b0b
+#      - spec: hip
 #        prefix: /opt/rocm/hip
 #        extra_attributes:
 #          compilers:
@@ -64,16 +66,18 @@
 #            cxx: /opt/rocm/llvm/bin/clang++
 #      buildable: false
 #
+#    It is advisable to replace /rocm/ in the paths above with /rocm-version/
+#    and introduce spec version numbers to ensure reproducible results.
+#
 # 3. In part 2, DO NOT list the path to hsa as /opt/rocm/hsa ! You want spack
 #    to find hsa in /opt/rocm/include/hsa/hsa.h . The directory of
 #    /opt/rocm/hsa also has an hsa.h file, but it won't be found because spack
 #    does not like its directory structure.
 #
 
-from spack.package import PackageBase
-from spack.directives import depends_on, variant, conflicts
-
 import spack.variant
+from spack.directives import conflicts, depends_on, variant
+from spack.package import PackageBase
 
 
 class ROCmPackage(PackageBase):
@@ -101,6 +105,8 @@ class ROCmPackage(PackageBase):
     depends_on('llvm-amdgpu', when='+rocm')
     depends_on('hsa-rocr-dev', when='+rocm')
     depends_on('hip', when='+rocm')
+
+    conflicts('^blt@:0.3.6', when='+rocm')
 
     # need amd gpu type for rocm builds
     conflicts('amdgpu_target=none', when='+rocm')

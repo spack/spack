@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Pcre(AutotoolsPackage):
     libraries. These are useful for implementing regular expression
     pattern matching using the same syntax and semantics as Perl 5."""
 
-    homepage = "http://www.pcre.org"
+    homepage = "https://www.pcre.org"
     url      = "https://ftp.pcre.org/pub/pcre/pcre-8.42.tar.bz2"
 
     version('8.44', sha256='19108658b23b3ec5058edc9f66ac545ea19f9537234be1ec62b714c84399366d')

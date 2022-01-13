@@ -1,12 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class Cln(AutotoolsPackage):
@@ -38,6 +38,7 @@ class Cln(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('gmp@4.1:', when='+gmp')
+    depends_on('texinfo', type='build')
 
     # Dependencies required to define macro AC_LIB_LINKFLAGS_FROM_LIBS
     depends_on('gettext',  type='build')

@@ -1,0 +1,59 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index da913bf..c858c35 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -35,7 +35,6 @@ find_package(benchmark)
+ find_package(Boost 1.41.0 REQUIRED filesystem system atomic unit_test_framework)
+ find_package(Eigen3 REQUIRED NO_MODULE)
+ find_package(fmt REQUIRED)
+-find_package(HDF5 1.8 REQUIRED)
+ find_package(MorphoKit REQUIRED)
+ find_package(MPI REQUIRED)
+ find_package(sonata REQUIRED)
+@@ -75,8 +74,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in
+ 
+ include_directories(${CMAKE_CURRENT_BINARY_DIR}/touchdetector
+                     SYSTEM
+-                    ${MPI_C_INCLUDE_PATH}
+-                    ${HDF5_INCLUDE_DIRS})
++                    ${MPI_C_INCLUDE_PATH})
+ 
+ add_subdirectory(touchdetector)
+ 
+diff --git a/deps/cli11 b/deps/cli11
+--- a/deps/cli11
++++ b/deps/cli11
+@@ -1 +1 @@
+-Subproject commit 5cb3efabce007c3a0230e4cc2e27da491c646b6c
++Subproject commit 5cb3efabce007c3a0230e4cc2e27da491c646b6c-dirty
+diff --git a/deps/hpc-coding-conventions b/deps/hpc-coding-conventions
+--- a/deps/hpc-coding-conventions
++++ b/deps/hpc-coding-conventions
+@@ -1 +1 @@
+-Subproject commit f14440f23f6286266bc5feaf12cbc8084151d4c9
++Subproject commit f14440f23f6286266bc5feaf12cbc8084151d4c9-dirty
+diff --git a/touchdetector/CMakeLists.txt b/touchdetector/CMakeLists.txt
+index 0592380..03e146f 100644
+--- a/touchdetector/CMakeLists.txt
++++ b/touchdetector/CMakeLists.txt
+@@ -65,8 +65,9 @@ target_compile_options(touchdetector
+ string(FIND ${MPI_CXX_COMPILER} mvapich2 MVAPICH_POS)
+ if(${MVAPICH_POS} EQUAL -1)
+     target_compile_options(touchdetector
+-                           PRIVATE
+-                           -Werror)
++                           PRIVATE -Werror
++                                   -Wno-error=stringop-overflow  # reported false positives
++                                   )
+ endif()
+ 
+ target_link_libraries(touchdetector
+@@ -74,7 +75,7 @@ target_link_libraries(touchdetector
+                       CLI11::CLI11
+                       pugixml
+                       MorphoKit::morphokit_shared
+-                      sonata
++                      sonata::sonata_shared
+                       Eigen3::Eigen
+                       fmt::fmt
+                       Random123

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFlake8Polyfill(PythonPackage):
        simultaneously.
     """
     homepage = "https://gitlab.com/pycqa/flake8-polyfill"
-    url      = "https://pypi.io/packages/source/f/flake8-polyfill/flake8-polyfill-1.0.2.tar.gz"
+    pypi = "flake8-polyfill/flake8-polyfill-1.0.2.tar.gz"
 
     version('1.0.2', sha256='e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda')
 

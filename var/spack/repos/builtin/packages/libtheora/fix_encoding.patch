@@ -1,0 +1,12 @@
+diff --git a/doc/spec/spec.tex b/doc/spec/spec.tex
+index 2206e10..34a0724 100644
+--- a/doc/spec/spec.tex
++++ b/doc/spec/spec.tex
+@@ -14,6 +14,7 @@
+ \usepackage{float}
+ \usepackage[pdfpagemode=None,pdfstartview=FitH,pdfview=FitH,colorlinks=true]%
+  {hyperref}
++\usepackage{utf8x}[inputenc]
+ 
+ \newtheorem{theorem}{Theorem}[section]
+ \newcommand{\idx}[1]{{\ensuremath{\mathit{#1}}}}

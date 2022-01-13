@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Minizip(AutotoolsPackage):
     """C library for zip/unzip via zLib."""
 
-    homepage = "http://www.winimage.com/zLibDll/minizip.html"
+    homepage = "https://www.winimage.com/zLibDll/minizip.html"
     url      = "https://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
     version('1.2.11', sha256='c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1')
@@ -21,6 +21,14 @@ class Minizip(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('zlib')
+
+    # error: implicit declaration of function 'mkdir' is invalid in C99
+    patch('implicit.patch', when='%apple-clang@12:')
+    patch('implicit.patch', when='%gcc@7.3.0:')
+
+    # statically link to libz.a
+    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/minizip.rb
+    patch('static.patch', when='%apple-clang@12:')
 
     # build minizip and miniunz
     @run_before('autoreconf')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,11 +8,19 @@ package.
 """
 import collections
 import os
+import sys
+from typing import Callable, DefaultDict, Dict, List  # novm
+
+if sys.version_info >= (3, 5):
+    CallbackDict = DefaultDict[str, List[Callable]]
+else:
+    CallbackDict = None
 
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers'
+    'filter_compiler_wrappers',
+    'PackageMixinsMeta',
 ]
 
 
@@ -26,12 +34,12 @@ class PackageMixinsMeta(type):
     gets implicitly attached to the package class by calling the mixin.
     """
 
-    _methods_to_be_added = {}
-    _add_method_before = collections.defaultdict(list)
-    _add_method_after = collections.defaultdict(list)
+    _methods_to_be_added = {}  # type: Dict[str, Callable]
+    _add_method_before = collections.defaultdict(list)  # type: CallbackDict
+    _add_method_after = collections.defaultdict(list)  # type: CallbackDict
 
     @staticmethod
-    def register_method_before(fn, phase):
+    def register_method_before(fn, phase):  # type: (Callable, str) -> None
         """Registers a method to be run before a certain phase.
 
         Args:
@@ -42,7 +50,7 @@ class PackageMixinsMeta(type):
         PackageMixinsMeta._add_method_before[phase].append(fn)
 
     @staticmethod
-    def register_method_after(fn, phase):
+    def register_method_after(fn, phase):  # type: (Callable, str) -> None
         """Registers a method to be run after a certain phase.
 
         Args:
@@ -184,7 +192,11 @@ def filter_compiler_wrappers(*files, **kwargs):
         ]
         for env_var, compiler_path in replacements:
             if env_var in os.environ:
-                x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
+                # filter spack wrapper and links to spack wrapper in case
+                # build system runs realpath
+                wrapper = os.environ[env_var]
+                for wrapper_path in (wrapper, os.path.realpath(wrapper)):
+                    x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
         x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',

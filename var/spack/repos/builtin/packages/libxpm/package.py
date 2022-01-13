@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Libxpm(AutotoolsPackage, XorgPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXpm"
     xorg_mirror_path = "lib/libXpm-3.5.12.tar.gz"
 
     version('3.5.12', sha256='2523acc780eac01db5163267b36f5b94374bfb0de26fc0b5a7bee76649fd8501')
@@ -22,7 +22,7 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on('gettext')
     depends_on('libx11')
 
-    depends_on('xproto', type='build')
+    depends_on('xproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 

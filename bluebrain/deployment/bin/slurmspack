@@ -1,0 +1,26 @@
+#!/bin/sh
+
+CPUS=${SLURM_CPUS_PER_TASK}
+TASK=${SLURM_PROCID}
+ENV_FLAGS=""
+
+unset $(env|awk -F= '/^(PMI|SLURM)_/ {if (match($1, "_(ACCOUNT|PARTITION)$")==0) print $1}')
+
+if [[ -z "${CPUS}" ]]; then
+    echo "need to run inside SLURM with cores assigned to tasks"
+    exit 1
+elif [[ -z "${1}" ]]; then
+    if [[ -z "${SPACK_ENV}" ]]; then
+        echo "${0} ENV"
+        exit 1
+    fi
+else
+    ENV_FLAGS="-e ${1}"
+fi
+
+echo ">>> Spacking away on $(hostname)"
+
+# In case of locking issues: fan out deployment of builder tasks a little
+sleep $(( ${TASK} * 2 ))
+
+spack ${ENV_FLAGS} install -j ${CPUS} --log-format junit --log-file "${JUNIT_PREFIX}-${TASK}.xml" | tee "${JUNIT_PREFIX}-${TASK}.log" || true

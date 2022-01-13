@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAlsace(RPackage):
-    """ALS for the Automatic Chemical Exploration of mixtures.
+    """ALS for the Automatic Chemical Exploration of mixtures
 
        Alternating Least Squares (or Multivariate Curve Resolution) for
        analytical chemical data, in particular hyphenated data where the first
@@ -19,6 +19,7 @@ class RAlsace(RPackage):
     homepage = "https://bioconductor.org/packages/alsace"
     git      = "https://git.bioconductor.org/packages/alsace.git"
 
+    version('1.26.0', commit='40a76404acb1466723a78a55d87c67eec3e6f306')
     version('1.20.0', commit='47f1cf8daafc864e5e3418009f349ce85d6b0389')
     version('1.18.0', commit='c9fc43c7b441de43b14ef1be69926c4c4a566191')
     version('1.16.0', commit='5a51a19aeccbba0123222201cb7a228559f29653')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,10 @@ class Systemtap(AutotoolsPackage):
     version('4.1', sha256='8efa1ee2b34f1c6b2f33a25313287d59c8ed1b00265e900aea874da8baca1e1d')
 
     depends_on('gettext')
-    depends_on('elfutils')
+    depends_on('elfutils@0.151:')
+    depends_on('sqlite')
+    depends_on('py-setuptools', type='build')
+    depends_on('python', type=('build', 'run'))
 
     def configure_args(self):
         args = ['LDFLAGS=-lintl']

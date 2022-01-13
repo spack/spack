@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Patch(AutotoolsPackage, GNUMirrorPackage):
     original files, producing patched versions.
     """
 
-    homepage = "http://savannah.gnu.org/projects/patch/"
+    homepage = "https://savannah.gnu.org/projects/patch/"
     gnu_mirror_path = "patch/patch-2.7.6.tar.xz"
 
     version('2.7.6', sha256='ac610bda97abe0d9f6b7c963255a11dcb196c25e337c61f94e4778d632f1d8fd')

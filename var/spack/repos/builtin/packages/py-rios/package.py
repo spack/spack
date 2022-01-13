@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyRios(PythonPackage):
        etc., allowing the programmer to concentrate on the processing involved.
     """
 
-    homepage = "http://rioshome.org"
+    homepage = "https://www.rioshome.org/en/latest/"
     url      = "https://github.com/ubarsc/rios/archive/rios-1.4.10.tar.gz"
 
     version('1.4.10', sha256='7f11b54eb1f2ec551d7fc01c039b60bf2c67f0c2fc5b2946f8d986d6a9bc7063')

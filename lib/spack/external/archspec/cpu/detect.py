@@ -99,17 +99,29 @@ def sysctl_info_dict():
     def sysctl(*args):
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
-    flags = (
-        sysctl("-n", "machdep.cpu.features").lower()
-        + " "
-        + sysctl("-n", "machdep.cpu.leaf7_features").lower()
-    )
-    info = {
-        "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
-        "flags": flags,
-        "model": sysctl("-n", "machdep.cpu.model"),
-        "model name": sysctl("-n", "machdep.cpu.brand_string"),
-    }
+    if platform.machine() == "x86_64":
+        flags = (
+            sysctl("-n", "machdep.cpu.features").lower()
+            + " "
+            + sysctl("-n", "machdep.cpu.leaf7_features").lower()
+        )
+        info = {
+            "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
+            "flags": flags,
+            "model": sysctl("-n", "machdep.cpu.model"),
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
+    else:
+        model = (
+            "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
+        )
+        info = {
+            "vendor_id": "Apple",
+            "flags": [],
+            "model": model,
+            "CPU implementer": "Apple",
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
     return info
 
 
@@ -173,6 +185,11 @@ def compatible_microarchitectures(info):
         info (dict): dictionary containing information on the host cpu
     """
     architecture_family = platform.machine()
+    # On Apple M1 platform.machine() returns "arm64" instead of "aarch64"
+    # so we should normalize the name here
+    if architecture_family == "arm64":
+        architecture_family = "aarch64"
+
     # If a tester is not registered, be conservative and assume no known
     # target is compatible with the host
     tester = COMPATIBILITY_CHECKS.get(architecture_family, lambda x, y: False)
@@ -189,11 +206,26 @@ def host():
     # Get a list of possible candidates for this micro-architecture
     candidates = compatible_microarchitectures(info)
 
+    # Sorting criteria for candidates
+    def sorting_fn(item):
+        return len(item.ancestors), len(item.features)
+
+    # Get the best generic micro-architecture
+    generic_candidates = [c for c in candidates if c.vendor == "generic"]
+    best_generic = max(generic_candidates, key=sorting_fn)
+
+    # Filter the candidates to be descendant of the best generic candidate.
+    # This is to avoid that the lack of a niche feature that can be disabled
+    # from e.g. BIOS prevents detection of a reasonably performant architecture
+    candidates = [c for c in candidates if c > best_generic]
+
+    # If we don't have candidates, return the best generic micro-architecture
+    if not candidates:
+        return best_generic
+
     # Reverse sort of the depth for the inheritance tree among only targets we
     # can use. This gets the newest target we satisfy.
-    return sorted(
-        candidates, key=lambda t: (len(t.ancestors), len(t.features)), reverse=True
-    )[0]
+    return max(candidates, key=sorting_fn)
 
 
 def compatibility_check(architecture_family):
@@ -228,7 +260,13 @@ def compatibility_check_for_power(info, target):
     """Compatibility check for PPC64 and PPC64LE architectures."""
     basename = platform.machine()
     generation_match = re.search(r"POWER(\d+)", info.get("cpu", ""))
-    generation = int(generation_match.group(1))
+    try:
+        generation = int(generation_match.group(1))
+    except AttributeError:
+        # There might be no match under emulated environments. For instance
+        # emulating a ppc64le with QEMU and Docker still reports the host
+        # /proc/cpuinfo and not a Power
+        generation = 0
 
     # We can use a target if it descends from our machine type and our
     # generation (9 for POWER9, etc) is at least its generation.
@@ -267,4 +305,23 @@ def compatibility_check_for_aarch64(info, target):
         (target == arch_root or arch_root in target.ancestors)
         and (target.vendor == vendor or target.vendor == "generic")
         and target.features.issubset(features)
+    )
+
+
+@compatibility_check(architecture_family="riscv64")
+def compatibility_check_for_riscv64(info, target):
+    """Compatibility check for riscv64 architectures."""
+    basename = "riscv64"
+    uarch = info.get("uarch")
+
+    # sifive unmatched board
+    if uarch == "sifive,u74-mc":
+        uarch = "u74mc"
+    # catch-all for unknown uarchs
+    else:
+        uarch = "riscv64"
+
+    arch_root = TARGETS[basename]
+    return (target == arch_root or arch_root in target.ancestors) and (
+        target == uarch or target.vendor == "generic"
     )

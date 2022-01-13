@@ -1,13 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+import platform
 
-releases = {
-    '2021.1.1': {'irc_id': '17378', 'build': '119'}}
+from spack import *
 
 
 class IntelOneapiTbb(IntelOneApiLibraryPackage):
@@ -17,33 +16,26 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onetbb.html'
 
-    version('2021.1.1', sha256='535290e3910a9d906a730b24af212afa231523cf13a668d480bade5f2a01b53b', expand=False)
+    if platform.system() == 'Linux':
+        version('2021.4.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18194/l_tbb_oneapi_p_2021.4.0.643_offline.sh',
+                sha256='33332012ff8ffe7987b1a20bea794d76f7d8050ccff04fa6e1990974c336ee24',
+                expand=False)
+        version('2021.3.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17952/l_tbb_oneapi_p_2021.3.0.511_offline.sh',
+                sha256='b83f5e018e3d262e42e9c96881845bbc09c3f036c265e65023422ca8e8637633',
+                expand=False)
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17759/l_tbb_oneapi_p_2021.2.0.357_offline.sh',
+                sha256='c1c3623c5bef547b30eac009e7a444611bf714c758d7472c114e9be9d5700eba',
+                expand=False)
+        version('2021.1.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17378/l_tbb_oneapi_p_2021.1.1.119_offline.sh',
+                sha256='535290e3910a9d906a730b24af212afa231523cf13a668d480bade5f2a01b53b',
+                expand=False)
 
     provides('tbb')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='tbb',
-                            components='intel.oneapi.lin.tbb.devel',
-                            releases=releases,
-                            url_name='tbb_oneapi')
-        super(IntelOneapiTbb, self).__init__(spec)
-
-    def _join_prefix(self, path):
-        return join_path(self.prefix, 'tbb', 'latest', path)
-
-    def _ld_library_path(self):
-        dirs = ['lib/intel64/gcc4.8']
-        for dir in dirs:
-            yield self._join_prefix(dir)
-
-    def _library_path(self):
-        dirs = ['lib/intel64/gcc4.8']
-        for dir in dirs:
-            yield self._join_prefix(dir)
-
-    def setup_run_environment(self, env):
-        for dir in self._library_path():
-            env.prepend_path('LIBRARY_PATH', dir)
-        for dir in self._ld_library_path():
-            env.prepend_path('LD_LIBRARY_PATH', dir)
-        env.set('TBBROOT', join_path(self.prefix, 'tbb', 'latest'))
+    @property
+    def component_dir(self):
+        return 'tbb'

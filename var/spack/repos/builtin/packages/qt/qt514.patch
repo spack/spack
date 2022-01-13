@@ -1,0 +1,9 @@
+diff -ruN qt-everywhere-src-5.14.2.orig/qtimageformats/src/plugins/imageformats/jp2/qjp2handler.cpp qt-everywhere-src-5.14.2/qtimageformats/src/plugins/imageformats/jp2/qjp2handler.cpp
+--- qt-everywhere-src-5.14.2.orig/qtimageformats/src/plugins/imageformats/jp2/qjp2handler.cpp	2020-03-03 13:10:30.000000000 +0000
++++ qt-everywhere-src-5.14.2/qtimageformats/src/plugins/imageformats/jp2/qjp2handler.cpp	2020-11-16 19:57:56.792619032 +0000
+@@ -38,4 +38,5 @@
+ **
+ ****************************************************************************/
+ 
++#include <math.h>
+ #include "qjp2handler_p.h"

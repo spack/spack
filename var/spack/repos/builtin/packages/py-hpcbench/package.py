@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyHpcbench(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/hpcbench"
 
-    url      = "https://pypi.io/packages/source/h/hpcbench/hpcbench-0.8.tar.gz"
+    pypi = "hpcbench/hpcbench-0.8.tar.gz"
     git      = "https://github.com/BlueBrain/hpcbench.git"
 
     version('master', branch='master')
@@ -23,7 +23,7 @@ class PyHpcbench(PythonPackage):
     depends_on('py-clustershell@1.8:', type=('build', 'run'))
     depends_on('py-cookiecutter@1.6.0', type=('build', 'run'))
     depends_on('py-docopt@0.6.2', type=('build', 'run'))
-    depends_on('py-elasticsearch@6:6.999', type=('build', 'run'))
+    depends_on('py-elasticsearch@6.0:6', type=('build', 'run'))
     depends_on('py-jinja2@2.10', type=('build', 'run'))
     depends_on('py-mock@2.0.0', type=('build', 'run'))
     depends_on('py-numpy@1.13.3', type=('build', 'run'))

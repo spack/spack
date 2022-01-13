@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,10 @@ class Openmm(CMakePackage, CudaPackage):
     LGPL. Part of the Omnia suite of tools for predictive biomolecular
     simulation. """
 
-    homepage = "http://openmm.org/"
+    homepage = "https://openmm.org/"
     url      = "https://github.com/openmm/openmm/archive/7.4.1.tar.gz"
 
+    version('7.5.0', sha256='516748b4f1ae936c4d70cc6401174fc9384244c65cd3aef27bc2c53eac6d6de5')
     version('7.4.1', sha256='e8102b68133e6dcf7fcf29bc76a11ea54f30af71d8a7705aec0aee957ebe3a6d')
 
     install_targets = ['install', 'PythonInstall']

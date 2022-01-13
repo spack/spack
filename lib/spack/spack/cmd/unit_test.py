@@ -1,15 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from __future__ import print_function
-from __future__ import division
+from __future__ import division, print_function
 
-import collections
-import sys
-import re
 import argparse
+import collections
+import re
+import sys
+
 import pytest
 from six import StringIO
 
@@ -146,7 +146,7 @@ def add_back_pytest_args(args, unknown_args):
 def unit_test(parser, args, unknown_args):
     if args.pytest_help:
         # make the pytest.main help output more accurate
-        sys.argv[0] = 'spack test'
+        sys.argv[0] = 'spack unit-test'
         return pytest.main(['-h'])
 
     # add back any parsed pytest args we need to pass to pytest

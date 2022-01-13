@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,10 @@ from spack import *
 class Cubelib(AutotoolsPackage):
     """Component of CubeBundle: General purpose C++ library and tools """
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubelib-4.4.tar.gz"
+    homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
+    url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubelib-4.4.tar.gz"
 
+    version('4.6', sha256='36eaffa7688db8b9304c9e48ca5dc4edc2cb66538aaf48657b9b5ccd7979385b')
     version('4.5', sha256='98f66837b4a834b1aacbcd4480a242d7a8c4a1b8dd44e02e836b8c7a4f0ffd98')
     version('4.4.4', sha256='adb8216ee3b7701383884417374e7ff946edb30e56640307c65465187dca7512')
     version('4.4.3', sha256='bcd4fa81a5ba37194e590a5d7c3e6c44b448f5e156a175837b77c21206847a8d')
@@ -23,19 +24,11 @@ class Cubelib(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cubelib-{1}.tar.gz'
+
         return url.format(version.up_to(2), version)
 
     def configure_args(self):
-        spec = self.spec
-
         configure_args = ['--enable-shared']
-
-        if spec.satisfies('%intel'):
-            configure_args.append('--with-nocross-compiler-suite=intel')
-        elif spec.satisfies('%pgi'):
-            configure_args.append('--with-nocross-compiler-suite=pgi')
-        elif spec.satisfies('%clang'):
-            configure_args.append('--with-nocross-compiler-suite=clang')
 
         return configure_args
 

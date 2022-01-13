@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,12 @@ import os
 
 import ordereddict_backport
 import pytest
+
+import llnl.util.tty as tty
+
+import spack.config
 import spack.paths
+import spack.util.s3
 import spack.util.web
 from spack.version import ver
 
@@ -195,3 +200,87 @@ def test_list_url(tmpdir):
                               'file-0.txt',
                               'file-1.txt',
                               'file-2.txt']
+
+
+class MockPages(object):
+    def search(self, *args, **kwargs):
+        return [
+            {'Key': 'keyone'},
+            {'Key': 'keytwo'},
+            {'Key': 'keythree'},
+        ]
+
+
+class MockPaginator(object):
+    def paginate(self, *args, **kwargs):
+        return MockPages()
+
+
+class MockClientError(Exception):
+    def __init__(self):
+        self.response = {'Error': {'Code': 'NoSuchKey'}}
+
+
+class MockS3Client(object):
+    def get_paginator(self, *args, **kwargs):
+        return MockPaginator()
+
+    def delete_objects(self, *args, **kwargs):
+        return {
+            'Errors': [
+                {'Key': 'keyone', 'Message': 'Access Denied'}
+            ],
+            'Deleted': [
+                {'Key': 'keytwo'},
+                {'Key': 'keythree'}
+            ],
+        }
+
+    def delete_object(self, *args, **kwargs):
+        pass
+
+    def get_object(self, Bucket=None, Key=None):
+        self.ClientError = MockClientError
+        if Bucket == 'my-bucket' and Key == 'subdirectory/my-file':
+            return True
+        raise self.ClientError
+
+
+def test_remove_s3_url(monkeypatch, capfd):
+    fake_s3_url = 's3://my-bucket/subdirectory/mirror'
+
+    def mock_create_s3_session(url):
+        return MockS3Client()
+
+    monkeypatch.setattr(
+        spack.util.s3, 'create_s3_session', mock_create_s3_session)
+
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
+
+    spack.util.web.remove_url(fake_s3_url, recursive=True)
+    err = capfd.readouterr()[1]
+
+    tty.set_debug(current_debug_level)
+
+    assert('Failed to delete keyone (Access Denied)' in err)
+    assert('Deleted keythree' in err)
+    assert('Deleted keytwo' in err)
+
+
+def test_s3_url_exists(monkeypatch, capfd):
+    def mock_create_s3_session(url):
+        return MockS3Client()
+    monkeypatch.setattr(
+        spack.util.s3, 'create_s3_session', mock_create_s3_session)
+
+    fake_s3_url_exists = 's3://my-bucket/subdirectory/my-file'
+    assert(spack.util.web.url_exists(fake_s3_url_exists))
+
+    fake_s3_url_does_not_exist = 's3://my-bucket/subdirectory/my-notfound-file'
+    assert(not spack.util.web.url_exists(fake_s3_url_does_not_exist))
+
+
+def test_s3_url_parsing():
+    assert(spack.util.s3._parse_s3_endpoint_url("example.com") == 'https://example.com')
+    assert(spack.util.s3._parse_s3_endpoint_url("http://example.com") == 'http://example.com')

@@ -1,0 +1,37 @@
+From 237ed848e8cca208334c352f09caa85101a634c6 Mon Sep 17 00:00:00 2001
+From: Simon Frasch <simon.frasch@cscs.ch>
+Date: Tue, 11 May 2021 11:53:13 +0200
+Subject: [PATCH] fix missing <limits> include
+
+---
+ src/memory/array_view_utility.hpp | 1 +
+ src/spfft/grid_internal.cpp       | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/memory/array_view_utility.hpp b/src/memory/array_view_utility.hpp
+index 51ccef0..0095842 100644
+--- a/src/memory/array_view_utility.hpp
++++ b/src/memory/array_view_utility.hpp
+@@ -34,6 +34,7 @@
+ #include <complex>
+ #include <cstdint>
+ #include <utility>
++#include <limits>
+ #include "memory/gpu_array_view.hpp"
+ #include "memory/host_array_view.hpp"
+ #include "memory/memory_type_trait.hpp"
+diff --git a/src/spfft/grid_internal.cpp b/src/spfft/grid_internal.cpp
+index e95e7f6..4a1483a 100644
+--- a/src/spfft/grid_internal.cpp
++++ b/src/spfft/grid_internal.cpp
+@@ -29,6 +29,7 @@
+ 
+ #include <complex>
+ #include <memory>
++#include <limits>
+ #include "spfft/grid_internal.hpp"
+ 
+ #ifdef SPFFT_MPI
+-- 
+2.24.3 (Apple Git-128)
+

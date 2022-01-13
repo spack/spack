@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,14 @@ import json
 import os
 
 import pytest
+
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.environment as ev
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
-import spack.environment as ev
-
 
 find = SpackCommand('find')
 env = SpackCommand('env')
@@ -89,7 +89,7 @@ def test_query_arguments():
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag1(parser, specs):
 
-    args = parser.parse_args(['--tags', 'tag1'])
+    args = parser.parse_args(['--tag', 'tag1'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 2
@@ -100,7 +100,7 @@ def test_tag1(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2'])
+    args = parser.parse_args(['--tag', 'tag2'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 1
@@ -110,7 +110,7 @@ def test_tag2(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2_tag3(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2', '--tags', 'tag3'])
+    args = parser.parse_args(['--tag', 'tag2', '--tag', 'tag3'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 0
@@ -128,11 +128,12 @@ def test_namespaces_shown_correctly(database):
 def _check_json_output(spec_list):
     assert len(spec_list) == 3
     assert all(spec["name"] == "mpileaks" for spec in spec_list)
+    assert all(spec["hash"] for spec in spec_list)
 
     deps = [spec["dependencies"] for spec in spec_list]
-    assert sum(["zmpi" in d for d in deps]) == 1
-    assert sum(["mpich" in d for d in deps]) == 1
-    assert sum(["mpich2" in d for d in deps]) == 1
+    assert sum(["zmpi" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich" in [node["name"] for d in deps for node in d]]) == 1
+    assert sum(["mpich2" in [node["name"] for d in deps for node in d]]) == 1
 
 
 def _check_json_output_deps(spec_list):

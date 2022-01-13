@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,18 @@ class Proj(AutotoolsPackage):
     transformations."""
 
     homepage = "https://proj.org/"
-    url      = "https://download.osgeo.org/proj/proj-7.1.0.tar.gz"
+    url      = "https://download.osgeo.org/proj/proj-7.2.1.tar.gz"
 
     maintainers = ['adamjstewart']
 
     # Version 6 removes projects.h, while version 7 removes proj_api.h.
     # Many packages that depend on proj do not yet support the newer API.
     # See https://github.com/OSGeo/PROJ/wiki/proj.h-adoption-status
+    version('8.1.0', sha256='22c5cdc5aa0832077b16c95ebeec748a0942811c1c3438c33d43c8d2ead59f48')
+    version('8.0.1', sha256='e0463a8068898785ca75dd49a261d3d28b07d0a88f3b657e8e0089e16a0375fa')
+    version('8.0.0', sha256='aa5d4b934450149a350aed7e5fbac880e2f7d3fa2f251c26cb64228f96a2109e')
+    version('7.2.1', sha256='b384f42e5fb9c6d01fe5fa4d31da2e91329668863a684f97be5d4760dbbf0a14')
+    version('7.2.0', sha256='2957798e5fe295ff96a2af1889d0428e486363d210889422f76dd744f7885763')
     version('7.1.0', sha256='876151e2279346f6bdbc63bd59790b48733496a957bccd5e51b640fdd26eaa8d')
     version('7.0.1', sha256='a7026d39c9c80d51565cfc4b33d22631c11e491004e19020b3ff5a0791e1779f')
     version('7.0.0', sha256='ee0e14c1bd2f9429b1a28999240304c0342ed739ebaea3d4ff44c585b1097be8')
@@ -44,10 +49,24 @@ class Proj(AutotoolsPackage):
     # https://github.com/OSGeo/PROJ-data
     resource(
         name='proj-data',
+        url='https://download.osgeo.org/proj/proj-data-1.4.tar.gz',
+        sha256='76960d34d635aa127058ce654d89ea0eff91e2e4f2036482e677af5a88669b08',
+        placement='nad',
+        when='@7.2.1:',
+    )
+    resource(
+        name='proj-data',
+        url='https://download.osgeo.org/proj/proj-data-1.3.tar.gz',
+        sha256='0faa3e5ca6d816c907868c1ab2523668ccad27c6c4af9c7b00df9e4c3eb84398',
+        placement='nad',
+        when='@7.2.0',
+    )
+    resource(
+        name='proj-data',
         url='https://download.osgeo.org/proj/proj-data-1.1.tar.gz',
         sha256='df7c57e60f9e1d5bcc724f1def71d2a7cd33bd83c28f4b4bb71dbb2d8849c84a',
         placement='nad',
-        when='@7:',
+        when='@7:7.1',
     )
 
     # https://github.com/OSGeo/PROJ#distribution-files-and-format
@@ -88,3 +107,17 @@ class Proj(AutotoolsPackage):
                 args.append('--without-curl')
 
         return args
+
+    def setup_run_environment(self, env):
+        # PROJ_LIB doesn't need to be set. However, it may be set by conda.
+        # If an incompatible version of PROJ is found in PROJ_LIB, it can
+        # cause the package to fail at run-time. See the following for details:
+        # * https://proj.org/usage/environmentvars.html
+        # * https://rasterio.readthedocs.io/en/latest/faq.html
+        env.set('PROJ_LIB', self.prefix.share.proj)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)

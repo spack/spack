@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,28 +93,17 @@ class Pism(CMakePackage):
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             # Fortran not needed for PISM...
             # '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DPism_BUILD_EXTRA_EXECS=%s' %
-            ('YES' if '+extra' in spec else 'NO'),
-            '-DBUILD_SHARED_LIBS=%s' %
-            ('YES' if '+shared' in spec else 'NO'),
-            '-DPism_BUILD_PYTHON_BINDINGS=%s' %
-            ('YES' if '+python' in spec else 'NO'),
-            '-DPism_BUILD_ICEBIN=%s' %
-            ('YES' if '+icebin' in spec else 'NO'),
-            '-DPism_USE_PROJ4=%s' %
-            ('YES' if '+proj' in spec else 'NO'),
-            '-DPism_USE_PARALLEL_NETCDF4=%s' %
-            ('YES' if '+parallel-netcdf4' in spec else 'NO'),
-            '-DPism_USE_PNETCDF=%s' %
-            ('YES' if '+parallel-netcdf3' in spec else 'NO'),
-            '-DPism_USE_PARALLEL_HDF5=%s' %
-            ('YES' if '+parallel-hdf5' in spec else 'NO'),
-            '-DPism_BUILD_PDFS=%s' %
-            ('YES' if '+doc' in spec else 'NO'),
-            '-DPism_INSTALL_EXAMPLES=%s' %
-            ('YES' if '+examples' in spec else 'NO'),
-            '-DPism_USE_EVERYTRACE=%s' %
-            ('YES' if '+everytrace' in spec else 'NO')]
+            self.define_from_variant('Pism_BUILD_EXTRA_EXECS', 'extra'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('Pism_BUILD_PYTHON_BINDINGS', 'python'),
+            self.define_from_variant('Pism_BUILD_ICEBIN', 'icebin'),
+            self.define_from_variant('Pism_USE_PROJ4', 'proj'),
+            self.define_from_variant('Pism_USE_PARALLEL_NETCDF4', 'parallel-netcdf4'),
+            self.define_from_variant('Pism_USE_PNETCDF', 'parallel-netcdf3'),
+            self.define_from_variant('Pism_USE_PARALLEL_HDF5', 'parallel-hdf5'),
+            self.define_from_variant('Pism_BUILD_PDFS', 'doc'),
+            self.define_from_variant('Pism_INSTALL_EXAMPLES', 'examples'),
+            self.define_from_variant('Pism_USE_EVERYTRACE', 'everytrace')]
 
     def setup_run_environment(self, env):
         env.set('PISM_PREFIX', self.prefix)

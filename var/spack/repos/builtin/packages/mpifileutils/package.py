@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,10 @@ class Mpifileutils(Package):
     url      = "https://github.com/hpc/mpifileutils/archive/v0.9.tar.gz"
     git      = "https://github.com/hpc/mpifileutils.git"
 
+    tags = ['e4s']
+
     version('develop', branch='master')
+    version('0.11',   sha256='f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd')
     version('0.10.1', sha256='4c8409ef4140f6f557d0e93f0c1267baf5d893c203b29fb7a33d9bc3c5a5d25c')
     version('0.10',   sha256='5a71a9acd9841c3c258fc0eaea942f18abcb40098714cc90462b57696c07e3c5')
     version('0.9.1',  sha256='15a22450f86b15e7dc4730950b880fda3ef6f59ac82af0b268674d272aa61c69')
@@ -38,7 +41,17 @@ class Mpifileutils(Package):
     depends_on('dtcmp@1.0.3',  when='@:0.7')
     depends_on('dtcmp@1.1.0:', when='@0.8:')
 
+    # fixes were added to libarchive somewhere between 3.1.2 and 3.5.0
+    # which helps with file names that start with "._", bumping to newer
+    # libarchive, but in a way that does not disrupt older mpiFileUtils installs
     depends_on('libarchive')
+    depends_on('libarchive@3.5.1:', when='@0.11:')
+
+    depends_on('bzip2')
+
+    depends_on('libcap')
+
+    depends_on('openssl')
 
     depends_on('cmake@3.1:', when='@0.9:', type='build')
 

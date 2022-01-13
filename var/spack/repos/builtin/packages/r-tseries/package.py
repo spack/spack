@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,15 @@ from spack import *
 
 
 class RTseries(RPackage):
-    """Time series analysis and computational finance."""
+    """Time series analysis and computational finance
+
+    Time series analysis and computational finance."""
 
     homepage = "https://cloud.r-project.org/package=tseries"
     url      = "https://cloud.r-project.org/src/contrib/tseries_0.10-42.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tseries"
 
+    version('0.10-48', sha256='53bd22708c936205c5f839a10f2e302524d2cc54dc309e7d885ebd081ccb4471')
     version('0.10-47', sha256='202377df56806fe611c2e12c4d9732c71b71220726e2defa7e568d2b5b62fb7b')
     version('0.10-46', sha256='12940afd1d466401160e46f993ed4baf28a42cef98d3757b66ee15e916e07222')
     version('0.10-42', sha256='827f79858715c700e8cabd2c27853ba88ad0e05eb043bc94e126b155a75546c4')

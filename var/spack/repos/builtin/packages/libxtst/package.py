@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Libxtst(AutotoolsPackage, XorgPackage):
     The RECORD extension supports the recording and reporting of all
     core X protocol and arbitrary X extension protocol."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXtst"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXtst"
     xorg_mirror_path = "lib/libXtst-1.2.2.tar.gz"
 
     version('1.2.2', sha256='221838960c7b9058cd6795c1c3ee8e25bae1c68106be314bc3036a4f26be0e6c')
@@ -27,9 +27,9 @@ class Libxtst(AutotoolsPackage, XorgPackage):
     depends_on('libxext@1.0.99.4:')
     depends_on('libxi')
 
-    depends_on('recordproto@1.13.99.1:', type='build')
-    depends_on('xextproto@7.0.99.3:', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('recordproto@1.13.99.1:')
+    depends_on('xextproto@7.0.99.3:')
+    depends_on('inputproto')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

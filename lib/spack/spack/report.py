@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,11 +7,12 @@
 import codecs
 import collections
 import functools
+import os
 import time
 import traceback
-import os
 
 import llnl.util.lang
+
 import spack.build_environment
 import spack.fetch_strategy
 import spack.package
@@ -150,6 +151,22 @@ class InfoCollector(object):
                     'installed_from_binary_cache': False
                 }
 
+                # Append the package to the correct spec report. In some
+                # cases it may happen that a spec that is asked to be
+                # installed explicitly will also be installed as a
+                # dependency of another spec. In this case append to both
+                # spec reports.
+                for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
+                    name = name_fmt.format(s.name, s.dag_hash(length=7))
+                    try:
+                        item = next((
+                            x for x in self.specs
+                            if x['name'] == name
+                        ))
+                        item['packages'].append(package)
+                    except StopIteration:
+                        pass
+
                 start_time = time.time()
                 value = None
                 error = None
@@ -171,6 +188,7 @@ class InfoCollector(object):
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['stdout'] += package['message']
                     package['exception'] = e.traceback
+                    raise
 
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
@@ -180,6 +198,7 @@ class InfoCollector(object):
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['message'] = str(e) or 'Unknown error'
                     package['exception'] = traceback.format_exc()
+                    raise
 
                 finally:
                     package['elapsed_time'] = time.time() - start_time

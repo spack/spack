@@ -1,0 +1,142 @@
+variables:
+  # Used in GitLab rules
+  DEPLOYMENT_DEFAULT_BRANCH: "develop"
+
+# FIXME revisit whenever GitLab gets their act together and makes it easier
+# to avoid doubled pipelines…
+workflow:
+  rules:
+    - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
+    - if: '$CI_COMMIT_BRANCH == $DEPLOYMENT_DEFAULT_BRANCH'
+
+# This prepares the environment for the rest of the pipeline.  Could have
+# been a simple function in a CI environment with a proper DSL ¯\_(ツ)_/¯
+#
+# Needed as jobs can't inherit from this *and* augment the rules
+setup_environment:
+  variables:
+    # We will do this ourselves, will be on GPFS
+    GIT_STRATEGY: none
+    # All the variables below should be added to `deployment.env` to build
+    # the basis for further stages without relying to much on the
+    # `variables` key of GitLab
+    #
+    # Global default, as long as we have a 9.x.x, environment-modules picks
+    # the wrong one as default :(
+    DEFAULT_GCC_VERSION: "11.2.0"
+    # Needed for Intel compilers, which may re-use some libraries from a
+    # legacy GCC
+    LEGACY_GCC_VERSION: "9.4.0"
+    # Used for cloning Spack
+    DEPLOYMENT_BRANCH: "$DEPLOYMENT_DEFAULT_BRANCH"
+    # Proprietary sources
+    DEPLOYMENT_DATA: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
+    # This date should increment for new deployments — about once a year
+    DEPLOYMENT_DATE: "2022-01-10"
+    # Global base directory
+    DEPLOYMENT_BASE: "/gpfs/bbp.cscs.ch/ssd/apps/bsd"
+    # Global module archive
+    MODULE_ROOT: "$DEPLOYMENT_BASE/modules"
+    # Previous deployment modules
+    OLD_DEPLOYMENT_MODULES: "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/modules/all/archive"
+    # All directories below should change for pull requests (replacing the
+    # date)
+    DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
+    DEPLOYMENT_UPSTREAM: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE"
+    DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/$DEPLOYMENT_DATE/mirror/proprietary"
+    # Artifacts to be passed back from the child pipeline: needs GitLab
+    # fix/new feature
+    #
+    # Keep only the latest for the deployment proper.  See below for PR
+    # specialization
+    DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts"
+  rules:
+    - if: '$CI_EXTERNAL_PULL_REQUEST_IID'
+      variables:
+        DEPLOYMENT_ARTIFACTS: "$DEPLOYMENT_ROOT/artifacts/$CI_PIPELINE_IID"
+        DEPLOYMENT_BRANCH: "$CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
+        DEPLOYMENT_ROOT: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID"
+        DEPLOYMENT_PROPRIETARY_MIRROR: "$DEPLOYMENT_BASE/pulls/$CI_EXTERNAL_PULL_REQUEST_IID/mirror/proprietary"
+        # Somewhat awkward, but "$DEPLOYMENT_ROOT/modules" is already used.
+        MODULE_ROOT: "$DEPLOYMENT_ROOT/config/modules"
+      when: always
+    - when: always
+  script:
+    # The `rules` keyword seems to not inherit variables specified via a
+    # dotenv ⇒ do things manually once more
+    - echo "DEFAULT_GCC_VERSION=$DEFAULT_GCC_VERSION" > deployment.env
+    - echo "LEGACY_GCC_VERSION=$LEGACY_GCC_VERSION" >> deployment.env
+    - echo "DEPLOYMENT_ARTIFACTS=$DEPLOYMENT_ARTIFACTS" >> deployment.env
+    - echo "DEPLOYMENT_BASE=$DEPLOYMENT_BASE" >> deployment.env
+    - echo "DEPLOYMENT_BRANCH=$DEPLOYMENT_BRANCH" >> deployment.env
+    - echo "DEPLOYMENT_DATA=$DEPLOYMENT_DATA" >> deployment.env
+    - echo "DEPLOYMENT_DATE=$DEPLOYMENT_DATE" >> deployment.env
+    - echo "DEPLOYMENT_PROPRIETARY_MIRROR=$DEPLOYMENT_PROPRIETARY_MIRROR" >> deployment.env
+    - echo "DEPLOYMENT_ROOT=$DEPLOYMENT_ROOT" >> deployment.env
+    - echo "DEPLOYMENT_UPSTREAM=$DEPLOYMENT_UPSTREAM" >> deployment.env
+    - echo "MODULE_ROOT=$MODULE_ROOT" >> deployment.env
+    - echo "OLD_DEPLOYMENT_MODULES=$OLD_DEPLOYMENT_MODULES" >> deployment.env
+    # Needed to nest `srun` commands within SLURM
+    - echo "SLURM_OVERLAP=1" >> deployment.env
+  artifacts:
+    when: always
+    paths: [deployment.env]
+    reports:
+      dotenv: deployment.env
+
+# GitLab has no scheduling concept on the pipeline level, see
+# https://gitlab.com/gitlab-org/gitlab/-/issues/16548
+#
+# This is just a workaround to at least guarantee that no two (now child)
+# pipelines run at the same time. SNAFU
+atomic_build:
+  needs: [setup_environment]
+  trigger:
+    include: bluebrain/deployment/gitlab-ci.yml
+    strategy: depend
+  variables:
+    # Used to store artifacts in the right directory, grab dotenv
+    PARENT_PIPELINE_ID: $CI_PIPELINE_ID
+    # For feedback stuff, will be empty if not in a PR
+    GITHUB_PULL_REQUEST_ID: $CI_EXTERNAL_PULL_REQUEST_IID
+    GITHUB_REPOSITORY: $CI_EXTERNAL_PULL_REQUEST_TARGET_REPOSITORY
+    GITHUB_API_USER_OVERRIDE: $GITHUB_API_USER_FOR_GITLAB_LOG_UPLOAD
+    GITHUB_API_KEY_OVERRIDE: $GITHUB_API_KEY_FOR_GITLAB_LOG_UPLOAD
+  resource_group: BlueBrain.GPFS.$CI_EXTERNAL_PULL_REQUEST_IID
+
+clean_merged_prs:
+  needs: [setup_environment]
+  tags: [bb5_map]
+  # Really only want to run this a few times a day at most: exclude running
+  # on PRs, just merges and schedules.
+  rules:
+    - if: $CI_EXTERNAL_PULL_REQUEST_IID
+      when: never
+    - when: always
+  # No race conditions, please!
+  resource_group: BlueBrain.GPFS.Cleanup
+  script:
+    - |
+      pulls=$(curl -sG "https://api.github.com/repos/BlueBrain/spack/pulls"|python -c '
+      import json,os,sys
+      import json,os,sys
+      basedir=os.path.join(os.environ["DEPLOYMENT_BASE"], "pulls")
+      prs=set(str(p["number"]) for p in json.load(sys.stdin))
+      for dn in os.listdir(basedir):
+        if dn not in prs:
+          print(os.path.join(basedir, dn))')
+    - for pth in $pulls; do echo "Cleaning up $pth"; rm -rf "$pth"; done
+
+forward_tests:
+  needs: [setup_environment, atomic_build]
+  tags: [bb5_map]
+  when: always
+  script:
+    - rsync -av "$DEPLOYMENT_ARTIFACTS/" .
+    - if grep -q -m1 -l -R '<failure' "$DEPLOYMENT_ARTIFACTS"; then exit 1; fi
+  artifacts:
+    when: always
+    paths:
+      - spack_tests
+    reports:
+      junit: spack_tests/*/*.xml

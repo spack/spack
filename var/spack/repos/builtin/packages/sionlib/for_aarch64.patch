@@ -1,0 +1,11 @@
+--- spack-src/mf/Makefile.defs.linux-gomp.bak	2019-11-20 20:03:44.000000000 +0900
++++ spack-src/mf/Makefile.defs.linux-gomp	2020-12-22 17:23:16.857881412 +0900
+@@ -11,7 +11,7 @@
+ # Platform Settings
+ #------------------------------------------------------------------------------
+ PREC   = 64
+-PFLAG  = -m$(PREC)
++PFLAG  =
+ AFLAG  =
+ 
+ PLAT     = linux

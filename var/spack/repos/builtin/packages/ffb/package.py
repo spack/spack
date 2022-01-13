@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 
 
@@ -12,6 +13,8 @@ class Ffb(MakefilePackage):
 
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/dl/index.php"
     url      = "file://{0}/FrontFlow_blue.8.1.tar.gz".format(os.getcwd())
+    manual_download = True
+
     version('8.1', sha256='1ad008c909152b6c27668bafbad820da3e6ec3309c7e858ddb785f0a3d6e43ae')
 
     patch('revocap_refiner.patch')
@@ -150,12 +153,14 @@ class Ffb(MakefilePackage):
         cxx_fortran_flags = []
         if spec.satisfies('%gcc'):
             cxx_fortran_flags.append('-lgfortran')
-        elif spec.satisfies('%intel'):
-            cxx_fortran_flags.expand(['-lifcore', '-limf'])
+            m = FileFilter(editfile)
+            m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
         elif spec.satisfies('%fj'):
             cxx_fortran_flags.append('--linkfortran')
-        m = FileFilter(editfile)
-        m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
+            m = FileFilter(editfile)
+            m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
+        elif spec.satisfies('%intel'):
+            pass
 
     def build(self, spec, prefix):
         for m in [join_path('make',  'Makeall'),

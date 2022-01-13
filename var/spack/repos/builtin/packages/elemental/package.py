@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -12,7 +13,7 @@ class Elemental(CMakePackage):
     """Elemental: Distributed-memory dense and sparse-direct linear algebra
        and optimization library."""
 
-    homepage = "http://libelemental.org"
+    homepage = "https://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.7.tar.gz"
     git      = "https://github.com/elemental/Elemental.git"
 
@@ -61,14 +62,14 @@ class Elemental(CMakePackage):
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
 
-    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
-    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+    depends_on('intel-mkl', when="blas=mkl")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
+    depends_on('intel-mkl@2017.1 +ilp64', when='blas=mkl +int64_blas')
 
     depends_on('veclibfort', when='blas=accelerate')
 
-    depends_on('essl ~cuda', when='blas=essl ~openmp_blas ~int64_blas')
-    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl', when='blas=essl')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')

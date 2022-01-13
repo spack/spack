@@ -10,7 +10,7 @@ class PyPydap(PythonPackage):
     """An implementation of the Data Access Protocol."""
 
     homepage = "https://www.pydap.org/en/latest/"
-    url      = "https://pypi.io/packages/source/p/Pydap/Pydap-3.2.2.tar.gz"
+    pypi     = "Pydap/Pydap-3.2.2.tar.gz"
 
     version('3.2.2', sha256='86326642e24f421595a74b0f9986da76d7932b277768f501fe214d72592bdc40')
 
@@ -21,4 +21,4 @@ class PyPydap(PythonPackage):
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-beautifulsoup4', type=('build', 'run'))
-    depends_on('py-singledispatch', when='^python@:3.4.999', type=('build', 'run'))
+    depends_on('py-singledispatch', when='^python@:3.4', type=('build', 'run'))

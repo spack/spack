@@ -1,24 +1,20 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import ast
+import json
 import os
 import platform
 import re
-import sys
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import get_filetype, path_contains_subdirectory
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import (force_remove, get_filetype,
-                                  path_contains_subdirectory)
 
-import spack.store
-import spack.util.spack_json as sjson
+from spack import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
-from spack import *
 
 
 class Python(AutotoolsPackage):
@@ -29,16 +25,31 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'skosukhin']
 
+    version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
+    version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
+    version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
+    version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
+    version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
+    version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21', preferred=True)
+    version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a', preferred=True)
+    version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
+    version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
+    version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
+    version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7')
+    version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac')
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
     version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
     version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.12', sha256='33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46')
+    version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
+    version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
     version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
     version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
     version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
@@ -49,6 +60,9 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043')
+    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
+    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
     version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
     version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
     version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
@@ -155,7 +169,9 @@ class Python(AutotoolsPackage):
     # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
     depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
-    depends_on('sqlite@3.0.8:', when='+sqlite3')
+    depends_on('openssl@1.1.1:', when='@3.10:+ssl')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
+    depends_on('sqlite@3.0.8:', when='@:3.9+sqlite3')
+    depends_on('sqlite@3.7.15:', when='@3.10:+sqlite3')  # https://docs.python.org/3.10/whatsnew/3.10.html#build-changes
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
     depends_on('libnsl', when='+nis')
     depends_on('zlib@1.1.3:', when='+zlib')
@@ -165,14 +181,8 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('uuid', when='+uuid')
     depends_on('tix', when='+tix')
-    if sys.platform != 'darwin':
-        # On macOS systems, Spack's libuuid conflicts with the system-installed
-        # version and breaks anything linked against Cocoa/Carbon. Since the
-        # system-provided version is sufficient to build Python's UUID support,
-        # the easy solution is to only depend on Spack's libuuid when *not* on
-        # a Mac.
-        depends_on('libuuid', when='+uuid')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -186,19 +196,24 @@ class Python(AutotoolsPackage):
     # https://github.com/spack/spack/pull/16856
     patch('python-2.7.8-distutils-C++.patch', when='@2.7.8:2.7.16')
     patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
+    patch('python-2.7.17+-distutils-C++-fixup.patch', when='@2.7.17:2.7.18')
     patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
+    patch('python-3.7.4+-distutils-C++-testsuite.patch', when='@3.7.4:')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
+    # Patch the setup script to deny that tcl/x11 exists rather than allowing
+    # autodetection of (possibly broken) system components
+    patch('tkinter-3.8.patch', when='@3.8: ~tkinter')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
-    patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
+    patch('cray-rpath-3.1.patch', when='@3.1:3  platform=cray')
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3.99  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -226,12 +241,8 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
-    _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
-    _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
-    _distutil_vars = None
-
-    # Used to cache home locations, since computing them might be expensive
-    _homes = {}
+    # Used to cache various attributes that are expensive to compute
+    _config_vars = {}
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -328,7 +339,7 @@ class Python(AutotoolsPackage):
         # configuration option, so the installation's module setup file needs
         # to be modified directly in order to point to the correct SSL path.
         # See: https://stackoverflow.com/a/5939170
-        if self.spec.satisfies('@:3.6.999+ssl'):
+        if self.spec.satisfies('@:3.6+ssl'):
             ff = FileFilter(join_path('Modules', 'Setup.dist'))
             ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
             ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
@@ -339,7 +350,7 @@ class Python(AutotoolsPackage):
         # Because Python uses compiler system paths during install, it's
         # possible to pick up a system OpenSSL when building 'python~ssl'.
         # To avoid this scenario, we disable the 'ssl' module with patching.
-        elif self.spec.satisfies('@:3.6.999~ssl'):
+        elif self.spec.satisfies('@:3.6~ssl'):
             ff = FileFilter('setup.py')
             ff.filter(
                 r'^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$',
@@ -388,6 +399,7 @@ class Python(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = []
+        cflags = []
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
@@ -422,8 +434,8 @@ class Python(AutotoolsPackage):
             config_args.append('--disable-toolbox-glue')
 
         if spec.satisfies('%intel', strict=True) and \
-                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
-            config_args.append('--with-icc')
+                spec.satisfies('@2.7.12:2.8,3.5.2:3.7', strict=True):
+            config_args.append('--with-icc={0}'.format(spack_cc))
 
         if '+debug' in spec:
             config_args.append('--with-pydebug')
@@ -449,7 +461,7 @@ class Python(AutotoolsPackage):
             config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
-            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
+            cflags.append(self.compiler.cc_pic_flag)
 
         if '+ssl' in spec:
             if spec.satisfies('@3.7:'):
@@ -484,91 +496,13 @@ class Python(AutotoolsPackage):
         if spec.satisfies('@3.2: +sqlite3'):
             config_args.append('--enable-loadable-sqlite-extensions')
 
+        if spec.satisfies('%oneapi'):
+            cflags.append('-fp-model=strict')
+
+        if cflags:
+            config_args.append('CFLAGS={0}'.format(' '.join(cflags)))
+
         return config_args
-
-    @run_after('install')
-    def _save_distutil_vars(self):
-        """
-        Run before changing automatically generated contents of the
-        _sysconfigdata.py, which is used by distutils to figure out what
-        executables to use while compiling and linking extensions. If we build
-        extensions with spack those executables should be spack's wrappers.
-        Spack partially covers this by setting environment variables that
-        are also accounted for by distutils. Currently there is one more known
-        variable that must be set, which is LDSHARED, so the method saves its
-        autogenerated value to pass it to the dependent package's setup script.
-        """
-
-        self._distutil_vars = {}
-
-        input_filename = self.get_sysconfigdata_name()
-        input_dict = None
-        try:
-            with open(input_filename) as input_file:
-                match = re.search(r'build_time_vars\s*=\s*(?P<dict>{.*})',
-                                  input_file.read(),
-                                  flags=re.DOTALL)
-
-                if match:
-                    input_dict = ast.literal_eval(match.group('dict'))
-        except (IOError, SyntaxError):
-            pass
-
-        if not input_dict:
-            tty.warn("Failed to find 'build_time_vars' dictionary in file "
-                     "'%s'. This might cause the extensions that are "
-                     "installed with distutils to call compilers directly "
-                     "avoiding Spack's wrappers." % input_filename)
-            return
-
-        for var_name in Python._DISTUTIL_VARS_TO_SAVE:
-            if var_name in input_dict:
-                self._distutil_vars[var_name] = input_dict[var_name]
-            else:
-                tty.warn("Failed to find key '%s' in 'build_time_vars' "
-                         "dictionary in file '%s'. This might cause the "
-                         "extensions that are installed with distutils to "
-                         "call compilers directly avoiding Spack's wrappers."
-                         % (var_name, input_filename))
-
-        if len(self._distutil_vars) > 0:
-            output_filename = None
-            try:
-                output_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
-                    Python._DISTUTIL_CACHE_FILENAME)
-                with open(output_filename, 'w') as output_file:
-                    sjson.dump(self._distutil_vars, output_file)
-            except Exception:
-                tty.warn("Failed to save metadata for distutils. This might "
-                         "cause the extensions that are installed with "
-                         "distutils to call compilers directly avoiding "
-                         "Spack's wrappers.")
-                # We make the cache empty if we failed to save it to file
-                # to provide the same behaviour as in the case when the cache
-                # is initialized by the method load_distutils_data().
-                self._distutil_vars = {}
-                if output_filename:
-                    force_remove(output_filename)
-
-    def _load_distutil_vars(self):
-        # We update and keep the cache unchanged only if the package is
-        # installed.
-        if not self._distutil_vars and self.installed:
-            try:
-                input_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
-                    Python._DISTUTIL_CACHE_FILENAME)
-                if os.path.isfile(input_filename):
-                    with open(input_filename) as input_file:
-                        self._distutil_vars = sjson.load(input_file)
-            except Exception:
-                pass
-
-            if not self._distutil_vars:
-                self._distutil_vars = {}
-
-        return self._distutil_vars
 
     @run_after('install')
     def filter_compilers(self):
@@ -582,7 +516,7 @@ class Python(AutotoolsPackage):
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
         filenames = [
-            self.get_sysconfigdata_name(), self.get_makefile_filename()
+            self.get_sysconfigdata_name(), self.config_vars['makefile_filename']
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
@@ -616,6 +550,13 @@ class Python(AutotoolsPackage):
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
                        os.path.join(prefix.bin, 'python-config'))
+
+    @run_after('install')
+    def install_python_gdb(self):
+        # https://devguide.python.org/gdb/
+        src = os.path.join('Tools', 'gdb', 'libpython.py')
+        if os.path.exists(src):
+            install(src, self.command.path + '-gdb.py')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -755,57 +696,61 @@ class Python(AutotoolsPackage):
         else:
             return 'print({0})'.format(string)
 
-    def get_config_var(self, key):
-        """Return the value of a single variable. Wrapper around
-        ``distutils.sysconfig.get_config_var()``."""
+    @property
+    def config_vars(self):
+        """Return a set of variable definitions associated with a Python installation.
 
-        cmd = 'from distutils.sysconfig import get_config_var; '
-        cmd += self.print_string("get_config_var('{0}')".format(key))
+        Wrapper around various ``distutils.sysconfig`` functions.
 
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_config_h_filename(self):
-        """Return the full path name of the configuration header.
-        Wrapper around ``distutils.sysconfig.get_config_h_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_config_h_filename; '
-        cmd += self.print_string('get_config_h_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_makefile_filename(self):
-        """Return the full path name of ``Makefile`` used to build Python.
-        Wrapper around ``distutils.sysconfig.get_makefile_filename()``."""
-
-        cmd = 'from distutils.sysconfig import get_makefile_filename; '
-        cmd += self.print_string('get_makefile_filename()')
-
-        return self.command('-c', cmd, output=str).strip()
-
-    def get_python_inc(self):
-        """Return the directory for either the general or platform-dependent C
-        include files. Wrapper around ``distutils.sysconfig.get_python_inc()``.
+        Returns:
+            dict: variable definitions
         """
+        # TODO: distutils is deprecated in Python 3.10 and will be removed in
+        # Python 3.12, find a different way to access this information.
+        # Also, calling the python executable disallows us from cross-compiling,
+        # so we want to try to avoid that if possible.
+        cmd = """
+import json
+from distutils.sysconfig import (
+    get_config_vars,
+    get_config_h_filename,
+    get_makefile_filename,
+    get_python_inc,
+    get_python_lib,
+)
 
-        cmd = 'from distutils.sysconfig import get_python_inc; '
-        cmd += self.print_string('get_python_inc()')
+config = get_config_vars()
+config['config_h_filename'] = get_config_h_filename()
+config['makefile_filename'] = get_makefile_filename()
+config['python_inc'] = {}
+config['python_lib'] = {}
 
-        return self.command('-c', cmd, output=str).strip()
+for plat_specific in [True, False]:
+    plat_key = str(plat_specific).lower()
+    config['python_inc'][plat_key] = get_python_inc(plat_specific, prefix='')
+    config['python_lib'][plat_key] = {}
+    for standard_lib in [True, False]:
+        lib_key = str(standard_lib).lower()
+        config['python_lib'][plat_key][lib_key] = get_python_lib(
+            plat_specific, standard_lib, prefix=''
+        )
 
-    def get_python_lib(self):
-        """Return the directory for either the general or platform-dependent
-        library installation. Wrapper around
-        ``distutils.sysconfig.get_python_lib()``."""
+%s
+""" % self.print_string("json.dumps(config)")
 
-        cmd = 'from distutils.sysconfig import get_python_lib; '
-        cmd += self.print_string('get_python_lib()')
-
-        return self.command('-c', cmd, output=str).strip()
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._config_vars:
+            try:
+                config = json.loads(self.command('-c', cmd, output=str))
+            except (ProcessError, RuntimeError):
+                config = {}
+            self._config_vars[dag_hash] = config
+        return self._config_vars[dag_hash]
 
     def get_sysconfigdata_name(self):
         """Return the full path name of the sysconfigdata file."""
 
-        libdest = self.get_config_var('LIBDEST')
+        libdest = self.config_vars['LIBDEST']
 
         filename = '_sysconfigdata.py'
         if self.spec.satisfies('@3.6:'):
@@ -829,14 +774,11 @@ class Python(AutotoolsPackage):
         determine exactly where it is installed. Fall back on
         ``spec['python'].prefix`` if that doesn't work."""
 
-        dag_hash = self.spec.dag_hash()
-        if dag_hash not in self._homes:
-            try:
-                prefix = self.get_config_var('prefix')
-            except ProcessError:
-                prefix = self.prefix
-            self._homes[dag_hash] = Prefix(prefix)
-        return self._homes[dag_hash]
+        if 'prefix' in self.config_vars:
+            prefix = self.config_vars['prefix']
+        else:
+            prefix = self.prefix
+        return Prefix(prefix)
 
     @property
     def libs(self):
@@ -844,19 +786,27 @@ class Python(AutotoolsPackage):
         # installs them into lib64. If the user is using an externally
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
-        libdir = self.get_config_var('LIBDIR')
+        libdir = self.config_vars['LIBDIR']
 
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        libpl = self.get_config_var('LIBPL')
+        libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
-        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+        frameworkprefix = self.config_vars['PYTHONFRAMEWORKPREFIX']
+
+        # Get the active Xcode environment's Framework location.
+        macos_developerdir = os.environ.get('DEVELOPER_DIR')
+        if macos_developerdir and os.path.exists(macos_developerdir):
+            macos_developerdir = os.path.join(
+                macos_developerdir, 'Library', 'Frameworks')
+        else:
+            macos_developerdir = ''
 
         if '+shared' in self.spec:
-            ldlibrary = self.get_config_var('LDLIBRARY')
+            ldlibrary = self.config_vars['LDLIBRARY']
 
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
@@ -864,11 +814,14 @@ class Python(AutotoolsPackage):
                 return LibraryList(os.path.join(libpl, ldlibrary))
             elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            elif macos_developerdir and \
+                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
+                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
             else:
                 msg = 'Unable to locate {0} libraries in {1}'
                 raise RuntimeError(msg.format(ldlibrary, libdir))
         else:
-            library = self.get_config_var('LIBRARY')
+            library = self.config_vars['LIBRARY']
 
             if os.path.exists(os.path.join(libdir, library)):
                 return LibraryList(os.path.join(libdir, library))
@@ -880,16 +833,16 @@ class Python(AutotoolsPackage):
 
     @property
     def headers(self):
-        try:
-            config_h = self.get_config_h_filename()
+        if 'config_h_filename' in self.config_vars:
+            config_h = self.config_vars['config_h_filename']
 
             if not os.path.exists(config_h):
-                includepy = self.get_config_var('INCLUDEPY')
+                includepy = self.config_vars['INCLUDEPY']
                 msg = 'Unable to locate {0} headers in {1}'
                 raise RuntimeError(msg.format(self.name, includepy))
 
             headers = HeaderList(config_h)
-        except ProcessError:
+        else:
             headers = find_headers(
                 'pyconfig', self.prefix.include, recursive=True)
             config_h = headers[0]
@@ -898,16 +851,75 @@ class Python(AutotoolsPackage):
         return headers
 
     @property
-    def python_lib_dir(self):
-        return join_path('lib', 'python{0}'.format(self.version.up_to(2)))
+    def python_include_dir(self):
+        """Directory for the include files.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``include/pythonX.Y``
+
+        However, some systems append a ``m`` to the end of this path.
+
+        Returns:
+            str: include files directory
+        """
+        try:
+            return self.config_vars['python_inc']['false']
+        except KeyError:
+            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
 
     @property
-    def python_include_dir(self):
-        return join_path('include', 'python{0}'.format(self.version.up_to(2)))
+    def python_lib_dir(self):
+        """Directory for the standard library.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``lib/pythonX.Y``
+
+        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
+
+            ``lib64/pythonX.Y``
+
+        On Debian/Ubuntu, when using the system Python, this will look like:
+
+            ``lib/pythonX``
+
+        Returns:
+            str: standard library directory
+        """
+        try:
+            return self.config_vars['python_lib']['false']['true']
+        except KeyError:
+            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
 
     @property
     def site_packages_dir(self):
-        return join_path(self.python_lib_dir, 'site-packages')
+        """Directory where third-party extensions should be installed.
+
+        On most systems, and for Spack-installed Python, this will look like:
+
+            ``lib/pythonX.Y/site-packages``
+
+        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
+
+            ``lib64/pythonX.Y/site-packages``
+
+        On Debian/Ubuntu, when using the system Python, this will look like:
+
+            ``lib/pythonX/dist-packages``
+
+        Returns:
+            str: site-packages directory
+        """
+        try:
+            return self.config_vars['python_lib']['true']['false']
+        except KeyError:
+            return self.default_site_packages_dir
+
+    @property
+    def default_site_packages_dir(self):
+        python_dir = 'python{0}'.format(self.version.up_to(2))
+        return os.path.join('lib', python_dir, 'site-packages')
 
     @property
     def easy_install_file(self):
@@ -917,23 +929,10 @@ class Python(AutotoolsPackage):
         env.prepend_path('CPATH', os.pathsep.join(
             self.spec['python'].headers.directories))
 
-    def _site_packages(self, spec):
-        """Get the existing site-packages directories for `spec`."""
-        for lib in ['lib', 'lib64']:
-            pth = join_path(
-                spec.prefix, lib, 'python' + str(self.version.up_to(2)),
-                'site-packages')
-            if os.path.exists(pth):
-                yield pth
-
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
-        extension and any other python extensions it depends on."""
-
-        if self.spec.satisfies('%intel'):
-            env.set('LDSHARED', '%s -shared' % spack_cc)
-            env.set('LDCXXSHARED', '%s -shared' % spack_cxx)
-
+        extension and any other python extensions it depends on.
+        """
         # If we set PYTHONHOME, we must also ensure that the corresponding
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries
@@ -944,56 +943,81 @@ class Python(AutotoolsPackage):
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
-        python_paths = []
-        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
             if d.package.extends(self.spec):
-                # Python libraries may be installed in lib or lib64
-                # See issues #18520 and #17126
-                for pth in self._site_packages(d):
-                    python_paths.append(pth)
+                env.prepend_path('PYTHONPATH', join_path(
+                    d.prefix, self.site_packages_dir))
 
-        pythonpath = ':'.join(python_paths)
-        env.set('PYTHONPATH', pythonpath)
+        # We need to make sure that the extensions are compiled and linked with
+        # the Spack wrapper. Paths to the executables that are used for these
+        # operations are normally taken from the sysconfigdata file, which we
+        # modify after the installation (see method filter compilers). The
+        # modified file contains paths to the real compilers, not the wrappers.
+        # The values in the file, however, can be overridden with environment
+        # variables. The first variable, CC (CXX), which is used for
+        # compilation, is set by Spack for the dependent package by default.
+        # That is not 100% correct because the value for CC (CXX) in the
+        # sysconfigdata file often contains additional compiler flags (e.g.
+        # -pthread), which we lose by simply setting CC (CXX) to the path to the
+        # Spack wrapper. Moreover, the user might try to build an extension with
+        # a compiler that is different from the one that was used to build
+        # Python itself, which might have unexpected side effects. However, the
+        # experience shows that none of the above is a real issue and we will
+        # not try to change the default behaviour. Given that, we will simply
+        # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
+        # used for linking, in a consistent manner.
+
+        for compile_var, link_var in [('CC', 'LDSHARED'),
+                                      ('CXX', 'LDCXXSHARED')]:
+            # First, we get the values from the sysconfigdata:
+            config_compile = self.config_vars[compile_var]
+            config_link = self.config_vars[link_var]
+
+            # The dependent environment will have the compilation command set to
+            # the following:
+            new_compile = join_path(
+                spack.paths.build_env_path,
+                dependent_spec.package.compiler.link_paths[compile_var.lower()])
+
+            # Normally, the link command starts with the compilation command:
+            if config_link.startswith(config_compile):
+                new_link = new_compile + config_link[len(config_compile):]
+            else:
+                # Otherwise, we try to replace the compiler command if it
+                # appears "in the middle" of the link command; to avoid
+                # mistaking some substring of a path for the compiler (e.g. to
+                # avoid replacing "gcc" in "-L/path/to/gcc/"), we require that
+                # the compiler command be surrounded by spaces. Note this may
+                # leave "config_link" unchanged if the compilation command does
+                # not appear in the link command at all, for example if "ld" is
+                # invoked directly (no change would be required in that case
+                # because Spack arranges for the Spack ld wrapper to be the
+                # first instance of "ld" in PATH).
+                new_link = config_link.replace(" {0} ".format(config_compile),
+                                               " {0} ".format(new_compile))
+
+            # There is logic in the sysconfig module that is sensitive to the
+            # fact that LDSHARED is set in the environment, therefore we export
+            # the variable only if the new value is different from what we got
+            # from the sysconfigdata file:
+            if config_link != new_link:
+                env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            for pth in self._site_packages(dependent_spec):
-                env.prepend_path('PYTHONPATH', pth)
-
-        # For run time environment set path for all dependent_spec
-        # recursively and prepend it to PYTHONPATH
-        python_paths = set()
-        if dependent_spec.package.extends(self.spec):
-            path = join_path(dependent_spec.prefix, self.site_packages_dir)
-            python_paths.add(path)
-        for em in env.env_modifications:
-            if em.name == 'PYTHONPATH':
-                python_paths.add(em.value)
-        for d in dependent_spec.traverse(deptype=('run')):
+        """Set PYTHONPATH to include the site-packages directory for the
+        extension and any other python extensions it depends on.
+        """
+        for d in dependent_spec.traverse(deptype=('run'), root=True):
             if d.package.extends(self.spec):
-                path = join_path(d.prefix, self.site_packages_dir)
-                python_paths.add(path)
-        for path in python_paths:
-            env.prepend_path('PYTHONPATH', path)
+                env.prepend_path('PYTHONPATH', join_path(
+                    d.prefix, self.site_packages_dir))
 
     def setup_dependent_package(self, module, dependent_spec):
-        """Called before python modules' install() methods.
-
-        In most cases, extensions will only need to have one line::
-
-        setup_py('install', '--prefix={0}'.format(prefix))"""
+        """Called before python modules' install() methods."""
 
         module.python = self.command
         module.setup_py = Executable(
             self.command.path + ' setup.py --no-user-cfg')
-
-        distutil_vars = self._load_distutil_vars()
-
-        if distutil_vars:
-            for key, value in distutil_vars.items():
-                module.setup_py.add_default_env(key, value)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir = join_path(dependent_spec.prefix,
@@ -1018,17 +1042,17 @@ class Python(AutotoolsPackage):
         ignore_arg = args.get('ignore', lambda f: False)
 
         # Always ignore easy-install.pth, as it needs to be merged.
-        patterns = [r'site-packages/easy-install\.pth$']
+        patterns = [r'(site|dist)-packages/easy-install\.pth$']
 
         # Ignore pieces of setuptools installed by other packages.
         # Must include directory name or it will remove all site*.py files.
         if ext_pkg.name != 'py-setuptools':
             patterns.extend([
                 r'bin/easy_install[^/]*$',
-                r'site-packages/setuptools[^/]*\.egg$',
-                r'site-packages/setuptools\.pth$',
-                r'site-packages/site[^/]*\.pyc?$',
-                r'site-packages/__pycache__/site[^/]*\.pyc?$'
+                r'(site|dist)-packages/setuptools[^/]*\.egg$',
+                r'(site|dist)-packages/setuptools\.pth$',
+                r'(site|dist)-packages/site[^/]*\.pyc?$',
+                r'(site|dist)-packages/__pycache__/site[^/]*\.pyc?$'
             ])
         if ext_pkg.name != 'py-pygments':
             patterns.append(r'bin/pygmentize$')

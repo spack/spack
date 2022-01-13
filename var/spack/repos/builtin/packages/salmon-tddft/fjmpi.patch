@@ -1,0 +1,67 @@
+--- spack-src.org/CMakeLists.txt        2020-07-21 12:08:53.000000000 +0900
++++ spack-src/CMakeLists.txt    2020-12-23 11:32:57.147128677 +0900
+@@ -38,6 +38,7 @@
+ option_set(USE_SCALAPACK           "Use ScaLAPACK Library"   OFF)
+ option_set(USE_EIGENEXA            "Use EigenExa Library"    OFF)
+ option_set(USE_LIBXC               "Use Libxc library"       OFF)
++option_set(USE_FJMPI               "Use FUJITSU MPI"         OFF)
+ 
+ ## Optimization for stencil compitations
+ option_set(USE_OPT_DOMAIN_IS_POW2          "Enable whether the opimization assumes that a stencil domain size is power of two" OFF)
+--- spack-src.org/src/config.h.in       2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/config.h.in   2020-12-23 11:48:48.384061907 +0900
+@@ -15,6 +15,7 @@
+ #cmakedefine SYSTEM_HAS_PATH_MAX_IN_LINUX_LIMITS_H
+ 
+ #cmakedefine USE_MPI
++#cmakedefine USE_FJMPI
+ #cmakedefine USE_SCALAPACK
+ #cmakedefine USE_EIGENEXA
+ #cmakedefine USE_LIBXC
+diff -ru spack-src.org/src/parallel/init_communicator.f90 spack-src/src/parallel/init_communicator.f90
+--- spack-src.org/src/parallel/init_communicator.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/parallel/init_communicator.f90	2020-12-23 11:50:58.997384260 +0900
+@@ -13,6 +13,7 @@
+ !  See the License for the specific language governing permissions and
+ !  limitations under the License.
+ !
++#include "config.h"
+ MODULE init_communicator
+   implicit none
+ 
+@@ -35,7 +36,7 @@
+   integer :: i1,i2,i3,i4,i5,ix,iy,iz,nl
+   integer,allocatable :: iranklists(:)
+ 
+-#ifdef __FUJITSU
++#ifdef USE_FJMPI
+   integer :: iret
+ #endif
+ 
+@@ -59,7 +60,7 @@
+                      0:nproc_k-1))
+ 
+ ! communicator r,o,k,ro,ko
+-#ifdef __FUJITSU
++#ifdef USE_FJMPI
+   call tofu_network_oriented_mapping(iret)
+   if (iret < 0) then
+     if (comm_is_root(info%id_rko)) then
+@@ -106,7 +107,7 @@
+ 
+     if (nl /= info%isize_rko-1) &
+       stop '[FATAL ERROR] init_communicator_dft'
+-#ifdef __FUJITSU
++#ifdef USE_FJMPI
+   end if
+ #endif
+ 
+@@ -234,7 +235,7 @@
+   info%icomm_xy = comm_create_group_byid(comm, iranklists(1:nl))
+   call comm_get_groupinfo(info%icomm_xy, info%id_xy, info%isize_xy)
+ 
+-#ifdef __FUJITSU
++#ifdef USE_FJMPI
+ contains
+   subroutine tofu_network_oriented_mapping(iret)
+     use mpi_ext

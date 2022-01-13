@@ -1,0 +1,130 @@
+spack:
+  view: false
+  concretization: separately
+  modules:
+    tcl:
+      whitelist:
+        - arm-forge
+        - bison
+        - blender
+        - ccache
+        - cli-tools
+        - cmake
+        - cuda
+        - cudnn
+        - darshan-runtime
+        - darshan-util
+        - doxygen
+        - environment-modules
+        - flex
+        - ffmpeg
+        - gdb
+        - git
+        - graphviz
+        - hpctoolkit
+        - hpcviewer
+        - hpe-mpi
+        - intel-mpi
+        - ispc
+        - julia
+        - llvm
+        - mvapich2
+        - ninja
+        - nvhpc
+        - pgi
+        - python
+        - snakemake
+        - stat
+        - totalview
+        - valgrind
+        - virtualgl
+        - freeimage
+        - ilmbase
+        - openexr
+  packages:
+    all:
+      providers:
+        jpeg: [libjpeg-turbo]
+        lapack: [intel-mkl]
+    cairo:
+      variants: +pdf+png
+    graphviz:
+      variants: +pangocairo+expat
+    llvm:
+      # The general cuda should be set via the generic packages.yaml!
+      variants: +cuda cuda_arch=70 +omp_tsan +python +link_dylib
+    mvapich2:
+      variants: fabrics=mrail process_managers=slurm file_systems=gpfs
+    pgi:
+      variants: +network+nvidia+mpi
+  specs:
+    - llvm@13.0.0
+    - llvm@12.0.1
+    - llvm@11.1.0
+    - nvhpc@21.2 install_type=network
+    - nvhpc@21.9
+    - nvhpc@21.11
+    - arm-forge
+    - bison
+    - blender
+    - boost~mpi
+    - bzip2
+    - ccache
+    - cgal
+    - cli-tools
+    - cmake
+    - cuda@11.0.2
+    - cuda@11.4.2
+    - cuda@11.5.1
+    - cudnn@8.0.3.33-11.0
+    - darshan-runtime
+    - darshan-util
+    - doxygen
+    - environment-modules@4.5.1
+    - ffmpeg
+    - flex
+    - freetype
+    - gdb~python
+    - git
+    - glew
+    - gmsh+metis~mpi+oce+openmp+shared
+    - graphviz
+    - hdf5~mpi@1.10.7
+    - help2man
+    - hpctoolkit
+    - hpcviewer
+    - hpe-mpi@2.25.hmpt
+    - intel-mkl
+    # Leads to issues down the line, where it is preferred over hpe-mpi
+    # #providers
+    # - intel-mpi
+    - ispc
+    - julia
+    - libxslt
+    - libzmq+libsodium%intel
+    - mvapich2@2.3.6
+    - ncurses
+    - ninja
+    - openscenegraph  # doesn't like to be built in a spec with LLVM
+    # Leads to issues down the line, where it is preferred over intel-mkl
+    # #providers
+    # - openblas
+    - poppler
+    - python
+    - qhull
+    - "qt@5:"  # Forcefully avoid qt@4
+    - readline
+    - snakemake
+    - sqlite
+    - stat
+    - totalview
+    - valgrind~mpi
+    - virtualgl
+    - vrpn
+    - zlib
+    # Viz stuff that complicates specs
+    - optix
+    # Viz needs; FreeImage should be axed ASAP
+    - freeimage
+    - ilmbase
+    - openexr

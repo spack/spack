@@ -1,25 +1,24 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
 
 import spack.store
-import os
+from spack import *
 
 
 class Openspeedshop(CMakePackage):
-    """OpenSpeedShop is a community effort by The Krell Institute with
-       current direct funding from DOEs NNSA.  It builds on top of a
-       broad list of community infrastructures, most notably Dyninst
-       and MRNet from UW, libmonitor from Rice, and PAPI from UTK.
-       OpenSpeedShop is an open source multi platform Linux performance
-       tool which is targeted to support performance analysis of
-       applications running on both single node and large scale IA64,
-       IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue Gene and
-       Cray platforms.  OpenSpeedShop development is hosted by the Krell
-       Institute. The infrastructure and base components of OpenSpeedShop
+    """OpenSpeedShop is a community effort led by Trenza, Inc.
+       It builds on top of a broad list of community infrastructures,
+       most notably Dyninst and MRNet from UW, libmonitor from Rice,
+       and PAPI from UTK.  OpenSpeedShop is an open source multi platform
+       Linux performance tool which is targeted to support performance
+       analysis of applications running on both single node and large
+       scale IA64, IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue
+       Gene and Cray platforms.  OpenSpeedShop development is hosted by
+       Trenza Inc.. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
     """
 
@@ -27,11 +26,9 @@ class Openspeedshop(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.4.2.1', branch='2.4.2.1')
+    version('2.4.2', branch='2.4.2')
     version('2.4.1', branch='2.4.1')
-    version('2.4.0', branch='2.4.0')
-    version('2.3.1.5', branch='2.3.1.5')
-    version('2.3.1.4', branch='2.3.1.4')
-    version('2.3.1.3', branch='2.3.1.3')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
@@ -43,11 +40,12 @@ class Openspeedshop(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
 
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
+    variant('gui', default='none', values=('none', 'qt3', 'qt4'),
             description='Build or not build a GUI of choice')
 
-    variant('build_type', default='None', values=('None',),
-            description='CMake build type')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # MPI variants
     variant('openmpi', default=False,
@@ -78,21 +76,20 @@ class Openspeedshop(CMakePackage):
     depends_on("flex@2.6.1", type='build')
 
     # For binutils
-    depends_on("binutils")
+    depends_on("binutils+plugins~gold@2.32")
 
-    depends_on("elf", type="link")
+    depends_on("elfutils", type="link")
     depends_on("libdwarf")
 
     depends_on("sqlite")
 
     # For boost
-    # depends_on("boost@1.66.0:")
-    depends_on("boost@1.66.0:1.69.0")
+    depends_on("boost@1.70.0:")
 
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@10:", when='@2.3.1.3:9999')
+    depends_on("dyninst@10:", when='@2.4.0:9999')
 
-    depends_on("python@2.7.14:2.7.99", type=('build', 'run'))
+    depends_on("python@2.7.14:2.7", type=('build', 'run'))
 
     depends_on("libxml2")
 
@@ -100,44 +97,44 @@ class Openspeedshop(CMakePackage):
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
-    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.3:9999", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.3:9999", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+cti', when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpich2', when='@2.4.0:9999+mpich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpt', when='@2.4.0:9999+mpt', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mvapich', when='@2.4.0:9999+mvapich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mvapich2', when='@2.4.0:9999+mvapich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+openmpi', when='@2.4.0:9999+openmpi', type=('build', 'link', 'run'))
 
     depends_on("cbtf-argonavis@develop", when='@develop+cuda', type=('build', 'link', 'run'))
-    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda', type=('build', 'link', 'run'))
+    depends_on("cbtf-argonavis@1.9.3:9999", when='@2.4.0:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     patch('arm.patch', when='target=aarch64:')
     parallel = False
@@ -161,7 +158,7 @@ class Openspeedshop(CMakePackage):
 
         # Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-        #               % <base dir>/cbtf_v2.3.1.release/compute)
+        #               % <base dir>/cbtf_v2.4.0.release/compute)
         cray_login_node_options.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
                                        % be_ck.prefix)
         cray_login_node_options.append('-DRUNTIME_PLATFORM=%s'
@@ -173,7 +170,7 @@ class Openspeedshop(CMakePackage):
 
         spec = self.spec
 
-        compile_flags = "-O2 -g"
+        compile_flags = "-O2 -g -Wall"
 
         cmake_args = []
 
@@ -186,10 +183,15 @@ class Openspeedshop(CMakePackage):
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                  '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                 '-DINSTRUMENTOR=%s' % instrumentor_setting,
-                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                 '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
-                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
+                 '-DINSTRUMENTOR=%s'     % instrumentor_setting,
+                 '-DCBTF_DIR=%s'         % spec['cbtf'].prefix,
+                 '-DCBTF_KRELL_DIR=%s'   % spec['cbtf-krell'].prefix,
+                 '-DMRNET_DIR=%s'        % spec['mrnet'].prefix])
+
+            if spec.satisfies('+cuda'):
+                cmake_args.extend(
+                    ['-DCBTF_ARGONAVIS_DIR=%s'
+                        % spec['cbtf-argonavis'].prefix])
 
         else:
 
@@ -198,12 +200,12 @@ class Openspeedshop(CMakePackage):
             guitype = self.spec.variants['gui'].value
             cmake_args.extend(
                 ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
-                 '-DCMAKE_C_FLAGS=%s' % compile_flags,
-                 '-DINSTRUMENTOR=%s' % instrumentor_setting,
-                 '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
-                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                 '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
-                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
+                 '-DCMAKE_C_FLAGS=%s'   % compile_flags,
+                 '-DINSTRUMENTOR=%s'    % instrumentor_setting,
+                 '-DSQLITE3_DIR=%s'     % spec['sqlite'].prefix,
+                 '-DCBTF_DIR=%s'        % spec['cbtf'].prefix,
+                 '-DCBTF_KRELL_DIR=%s'  % spec['cbtf-krell'].prefix,
+                 '-DMRNET_DIR=%s'       % spec['mrnet'].prefix])
 
             if guitype == 'none':
                 cmake_args.extend(
@@ -215,6 +217,11 @@ class Openspeedshop(CMakePackage):
                 cmake_args.extend(
                     ['-DQTLIB_DIR=%s'
                         % spec['qt'].prefix])
+
+            if spec.satisfies('+cuda'):
+                cmake_args.extend(
+                    ['-DCBTF_ARGONAVIS_DIR=%s'
+                        % spec['cbtf-argonavis'].prefix])
 
             if spec.satisfies('+crayfe'):
                 # We need to build target/compute node
@@ -232,17 +239,18 @@ class Openspeedshop(CMakePackage):
         python_exe = spec['python'].command.path
         python_library = spec['python'].libs[0]
         python_include = spec['python'].headers.directories[0]
+        true_value = 'TRUE'
 
         base_options = []
 
         base_options.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        base_options.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
+        base_options.append('-DLIBELF_DIR=%s' % spec['elfutils'].prefix)
         base_options.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
         base_options.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
         base_options.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
         base_options.append('-DPYTHON_LIBRARY=%s' % python_library)
-        base_options.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
-        base_options.append('-DBoost_NO_BOOST_CMAKE=TRUE')
+        base_options.append('-DBoost_NO_SYSTEM_PATHS=%s' % true_value)
+        base_options.append('-DBoost_NO_BOOST_CMAKE=%s' % true_value)
         base_options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
         base_options.append('-DBoost_DIR=%s' % spec['boost'].prefix)
         base_options.append('-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib)
@@ -298,6 +306,7 @@ class Openspeedshop(CMakePackage):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
+
         plugin_path = '/openspeedshop'
         oss_plugin_path = lib_dir + plugin_path
         env.set('OPENSS_PLUGIN_PATH', oss_plugin_path)

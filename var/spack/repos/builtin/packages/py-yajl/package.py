@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyYajl(PythonPackage):
     """Python bindings for the Yajl JSON encoder/decoder library."""
 
     homepage = "https://github.com/rtyler/py-yajl"
-    url      = "https://pypi.io/packages/source/y/yajl/yajl-0.3.5.tar.gz"
+    pypi = "yajl/yajl-0.3.5.tar.gz"
 
     version('0.3.5', sha256='432321ea613692a4782a2368a300f57b59c64a3c8508c7465af3fdc045e7bcc2')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,16 @@ class Libcircle(AutotoolsPackage):
 
     depends_on('mpi')
     depends_on('pkgconfig', type='build')
+    depends_on('libpciaccess', type='link')
+    depends_on('autoconf', when='%cce', type='build')
+    depends_on('automake', when='%cce', type='build')
+    depends_on('libtool', when='%cce', type='build')
+
+    patch('CrayPE_configure-ac.patch', when='%cce')
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies('%cce')
 
     @when('@master')
     def autoreconf(self, spec, prefix):

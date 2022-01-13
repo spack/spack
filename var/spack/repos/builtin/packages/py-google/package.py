@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@
 class PyGoogle(PythonPackage):
     """Python bindings to the Google search engine."""
 
-    homepage = "http://breakingcode.wordpress.com/"
-    url      = "https://pypi.io/packages/source/g/google/google-3.0.0.tar.gz"
+    homepage = "https://breakingcode.wordpress.com/"
+    pypi = "google/google-3.0.0.tar.gz"
 
     version('3.0.0', sha256='143530122ee5130509ad5e989f0512f7cb218b2d4eddbafbad40fd10e8d8ccbe')
 

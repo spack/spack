@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyKerasPreprocessing(PythonPackage):
     """Utilities for working with image data, text data, and sequence data."""
 
     homepage = "https://github.com/keras-team/keras-preprocessing"
-    url      = "https://pypi.io/packages/source/K/Keras-Preprocessing/Keras_Preprocessing-1.1.2.tar.gz"
+    pypi = "Keras-Preprocessing/Keras_Preprocessing-1.1.2.tar.gz"
 
     version('1.1.2', sha256='add82567c50c8bc648c14195bf544a5ce7c1f76761536956c3d2978970179ef3')
     version('1.1.0', sha256='5a8debe01d840de93d49e05ccf1c9b81ae30e210d34dacbcc47aeb3049b528e5')
@@ -22,3 +22,5 @@ class PyKerasPreprocessing(PythonPackage):
     version('1.0.1', sha256='8649ba6377ecc06ea10e0a8a954df5600d115b4b626861e33c79b41ec03c5194')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-six@1.9.0:', type=('build', 'run'))
+    depends_on('py-numpy@1.9.1:', type=('build', 'run'))

@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import argparse
-import multiprocessing
 
 import spack.cmd
 import spack.config
@@ -70,7 +69,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev._active_environment
+        env = ev.active_environment()
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 
@@ -102,21 +101,9 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        jobs = min(jobs, multiprocessing.cpu_count())
         spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
-
-    @property
-    def default(self):
-        # This default is coded as a property so that look-up
-        # of this value is done only on demand
-        return min(spack.config.get('config:build_jobs', 16),
-                   multiprocessing.cpu_count())
-
-    @default.setter
-    def default(self, value):
-        pass
 
 
 class DeptypeAction(argparse.Action):
@@ -250,8 +237,8 @@ def very_long():
 @arg
 def tags():
     return Args(
-        '-t', '--tags', action='append',
-        help='filter a package query by tags')
+        '-t', '--tag', action='append', dest='tags', metavar='TAG',
+        help='filter a package query by tag (multiple use allowed)')
 
 
 @arg
@@ -267,6 +254,7 @@ def install_status():
         '-I', '--install-status', action='store_true', default=False,
         help='show install status of packages. packages can be: '
         'installed [+], missing and needed by an installed package [-], '
+        'installed in and upstream instance [^], '
         'or not installed (no annotation)')
 
 
@@ -275,6 +263,7 @@ def no_checksum():
     return Args(
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
+
 
 @arg
 def test():
@@ -285,11 +274,20 @@ def test():
         "is chosen, run package tests during installation for all packages. "
         "If neither are chosen, don't run tests for any packages.")
 
+
 @arg
 def overwrite():
     return Args(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
+
+
+@arg
+def deprecated():
+    return Args(
+        '--deprecated', action='store_true', default=False,
+        help='fetch deprecated versions without warning')
+
 
 def add_cdash_args(subparser, add_help):
     cdash_help = {}
@@ -338,4 +336,12 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
         '--cdash-buildstamp',
         default=None,
         help=cdash_help['buildstamp']
+    )
+
+
+@arg
+def reuse():
+    return Args(
+        '--reuse', action='store_true', default=False,
+        help='reuse installed dependencies'
     )

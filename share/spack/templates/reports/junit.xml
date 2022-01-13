@@ -22,9 +22,15 @@
         <testcase classname="{{ package.name }}"
                   name="{{ package.id }}"
                   time="{{ package.elapsed_time }}">
+<!--
+    BBP: GitLab expects any and all output in the failure tag :-/
+-->
 {% if package.result == 'failure' %}
             <failure message="{{ package.message|e }}">
 {{ package.exception|e }}
+{% if package.stdout %}
+{{ package.stdout|e }}
+{% endif %}
             </failure>
 {% elif package.result == 'error' %}
             <error message="{{ package.message|e }}">

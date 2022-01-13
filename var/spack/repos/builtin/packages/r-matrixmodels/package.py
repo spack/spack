@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class RMatrixmodels(RPackage):
     """Modelling with sparse and dense 'Matrix' matrices, using modular
     prediction and response module classes."""
 
-    homepage = "http://matrix.r-forge.r-project.org/"
+    homepage = "https://matrix.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/MatrixModels_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MatrixModels"
 

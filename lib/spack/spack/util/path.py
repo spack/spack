@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,10 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
+import contextlib
+import getpass
 import os
 import re
-import getpass
 import subprocess
 import tempfile
 
@@ -17,7 +18,7 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
 import spack.paths
-
+import spack.util.spack_yaml as syaml
 
 __all__ = [
     'substitute_config_variables',
@@ -29,6 +30,7 @@ replacements = {
     'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'user_cache_path': spack.paths.user_cache_path,
 }
 
 # This is intended to be longer than the part of the install path
@@ -44,7 +46,11 @@ replacements = {
 #  ---------------------
 #   total        ->  300
 SPACK_MAX_INSTALL_PATH_LENGTH = 300
-SPACK_PATH_PADDING_CHARS = 'spack_path_placeholder'
+
+#: Padded paths comprise directories with this name (or some prefix of it). :
+#: It starts with two underscores to make it unlikely that prefix matches would
+#: include some other component of the intallation path.
+SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 
 @memoized
@@ -69,15 +75,30 @@ def substitute_config_variables(path):
 
     Spack allows paths in configs to have some placeholders, as follows:
 
-    - $spack     The Spack instance's prefix
-    - $user      The current user's username
-    - $tempdir   Default temporary directory returned by tempfile.gettempdir()
+    - $env               The active Spack environment.
+    - $spack             The Spack instance's prefix
+    - $tempdir           Default temporary directory returned by tempfile.gettempdir()
+    - $user              The current user's username
+    - $user_cache_path   The user cache directory (~/.spack, unless overridden)
 
     These are substituted case-insensitively into the path, and users can
-    use either ``$var`` or ``${var}`` syntax for the variables.
-
+    use either ``$var`` or ``${var}`` syntax for the variables. $env is only
+    replaced if there is an active environment, and should only be used in
+    environment yaml files.
     """
-    # Look up replacements for re.sub in the replacements dict.
+    env = None
+    try:
+        import spack.environment as ev  # break circular
+        env = ev.active_environment()
+    except AttributeError:  # if called from spack.environment
+        pass
+    if env:
+        replacements.update({'env': env.path})
+    else:
+        # If a previous invocation added env, remove it
+        replacements.pop('env', None)
+
+    # Look up replacements
     def repl(match):
         m = match.group(0).strip('${}')
         return replacements.get(m.lower(), match.group(0))
@@ -132,7 +153,105 @@ def add_padding(path, length):
 
 def canonicalize_path(path):
     """Same as substitute_path_variables, but also take absolute path."""
-    path = substitute_path_variables(path)
-    path = os.path.abspath(path)
+    # Get file in which path was written in case we need to make it absolute
+    # relative to that path.
+    filename = None
+    if isinstance(path, syaml.syaml_str):
+        filename = os.path.dirname(path._start_mark.name)
+        assert path._start_mark.name == path._end_mark.name
 
-    return path
+    path = substitute_path_variables(path)
+    if not os.path.isabs(path):
+        if filename:
+            path = os.path.join(filename, path)
+        else:
+            path = os.path.abspath(path)
+            tty.debug("Using current working directory as base for abspath")
+
+    return os.path.normpath(path)
+
+
+def longest_prefix_re(string, capture=True):
+    """Return a regular expression that matches a the longest possible prefix of string.
+
+    i.e., if the input string is ``the_quick_brown_fox``, then::
+
+        m = re.compile(longest_prefix('the_quick_brown_fox'))
+        m.match('the_').group(1)                 == 'the_'
+        m.match('the_quick').group(1)            == 'the_quick'
+        m.match('the_quick_brown_fox').group(1)  == 'the_quick_brown_fox'
+        m.match('the_xquick_brown_fox').group(1) == 'the_'
+        m.match('the_quickx_brown_fox').group(1) == 'the_quick'
+
+    """
+    if len(string) < 2:
+        return string
+
+    return "(%s%s%s?)" % (
+        "" if capture else "?:",
+        string[0],
+        longest_prefix_re(string[1:], capture=False)
+    )
+
+
+#: regex cache for padding_filter function
+_filter_re = None
+
+
+def padding_filter(string):
+    """Filter used to reduce output from path padding in log output.
+
+    This turns paths like this:
+
+        /foo/bar/__spack_path_placeholder__/__spack_path_placeholder__/...
+
+    Into paths like this:
+
+        /foo/bar/[padded-to-512-chars]/...
+
+    Where ``padded-to-512-chars`` indicates that the prefix was padded with
+    placeholders until it hit 512 characters. The actual value of this number
+    depends on what the `install_tree``'s ``padded_length`` is configured to.
+
+    For a path to match and be filtered, the placeholder must appear in its
+    entirety at least one time. e.g., "/spack/" would not be filtered, but
+    "/__spack_path_placeholder__/spack/" would be.
+
+    """
+    global _filter_re
+
+    pad = spack.util.path.SPACK_PATH_PADDING_CHARS
+    if not _filter_re:
+        longest_prefix = longest_prefix_re(pad)
+        regex = (
+            r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
+            r"(/{pad})+"         # the padding string repeated one or more times
+            r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
+        )
+        regex = regex.replace("/", os.sep)
+        regex = regex.format(pad=pad, longest_prefix=longest_prefix)
+        _filter_re = re.compile(regex)
+
+    def replacer(match):
+        return "%s%s[padded-to-%d-chars]" % (
+            match.group(1),
+            os.sep,
+            len(match.group(0))
+        )
+    return _filter_re.sub(replacer, string)
+
+
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the intsall command output
+        with tty.output_filter(padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled

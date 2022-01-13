@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,5 @@ class PyGeeAssetManager(PythonPackage):
     depends_on('py-retrying@1.3.3:', type=('build', 'run'))
     depends_on('py-beautifulsoup4@4.5.1:', type=('build', 'run'))
     depends_on('py-requests-toolbelt@0.7.0:', type=('build', 'run'))
-    depends_on('py-pytest@3.0.0:', type=('build', 'test'))
     depends_on('py-future@0.16.0:', type=('build', 'run'))
     depends_on('py-google-cloud-storage@1.1.1:', type=('build', 'run'))

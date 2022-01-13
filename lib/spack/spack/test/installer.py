@@ -1,19 +1,20 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
+
 import py
 import pytest
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import llnl.util.lock as ulk
+import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
-import spack.directory_layout as dl
 import spack.installer as inst
 import spack.package_prefs as prefs
 import spack.repo
@@ -64,7 +65,7 @@ def create_build_task(pkg, install_args={}):
     Create a built task for the given (concretized) package
 
     Args:
-        pkg (PackageBase): concretized package associated with the task
+        pkg (spack.package.PackageBase): concretized package associated with the task
         install_args (dict): dictionary of kwargs (or install args)
 
     Return:
@@ -79,10 +80,10 @@ def create_installer(installer_args):
     Create an installer using the concretized spec for each arg
 
     Args:
-        installer_args (list of tuples): the list of (spec name, kwargs) tuples
+        installer_args (list): the list of (spec name, kwargs) tuples
 
     Return:
-        installer (PackageInstaller): the associated package installer
+        spack.installer.PackageInstaller: the associated package installer
     """
     const_arg = [(spec.package, kwargs) for spec, kwargs in installer_args]
     return inst.PackageInstaller(const_arg)
@@ -92,11 +93,11 @@ def installer_args(spec_names, kwargs={}):
     """Return a the installer argument with each spec paired with kwargs
 
     Args:
-        spec_names (list of str): list of spec names
+        spec_names (list): list of spec names
         kwargs (dict or None): install arguments to apply to all of the specs
 
     Returns:
-        list of (spec, kwargs): the installer constructor argument
+        list: list of (spec, kwargs), the installer constructor argument
     """
     arg = []
     for name in spec_names:
@@ -229,26 +230,32 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
-                                       monkeypatch, capsys):
-    """Tests SystemExit path for_try_install_from_binary_cache."""
-    def _mirrors_for_spec(spec, force, full_hash_match=False):
-        spec = spack.spec.Spec('mpi').concretized()
-        return [{
-            'mirror_url': 'notused',
-            'spec': spec,
-        }]
+                                       monkeypatch):
+    """Tests SystemExit path for_try_install_from_binary_cache.
+
+       This test does not make sense.  We tell spack there is a mirror
+       with a binary for this spec and then expect it to die because there
+       are no mirrors configured."""
+    # def _mirrors_for_spec(spec, full_hash_match=False):
+    #     spec = spack.spec.Spec('mpi').concretized()
+    #     return [{
+    #         'mirror_url': 'notused',
+    #         'spec': spec,
+    #     }]
 
     spec = spack.spec.Spec('mpich')
     spec.concretize()
 
-    monkeypatch.setattr(
-        spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
+    # monkeypatch.setattr(
+    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
 
-    with pytest.raises(SystemExit):
-        inst._try_install_from_binary_cache(spec.package, False, False)
+    # with pytest.raises(SystemExit):
+    #     inst._try_install_from_binary_cache(spec.package, False, False)
+    result = inst._try_install_from_binary_cache(spec.package, False, False)
+    assert(not result)
 
-    captured = capsys.readouterr()
-    assert 'add a spack mirror to allow download' in str(captured)
+    # captured = capsys.readouterr()
+    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -579,6 +586,32 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(os, 'remove', orig_fn)
 
 
+def test_combine_phase_logs(tmpdir):
+    """Write temporary files, and assert that combine phase logs works
+    to combine them into one file. We aren't currently using this function,
+    but it's available when the logs are refactored to be written separately.
+    """
+    log_files = ['configure-out.txt', 'install-out.txt', 'build-out.txt']
+    phase_log_files = []
+
+    # Create and write to dummy phase log files
+    for log_file in log_files:
+        phase_log_file = os.path.join(str(tmpdir), log_file)
+        with open(phase_log_file, 'w') as plf:
+            plf.write('Output from %s\n' % log_file)
+        phase_log_files.append(phase_log_file)
+
+    # This is the output log we will combine them into
+    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
+    spack.installer.combine_phase_logs(phase_log_files, combined_log)
+    with open(combined_log, 'r') as log_file:
+        out = log_file.read()
+
+    # Ensure each phase log file is represented
+    for log_file in log_files:
+        assert "Output from %s\n" % log_file in out
+
+
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -751,7 +784,11 @@ def test_requeue_task(install_mockery, capfd):
     installer = create_installer(const_arg)
     task = create_build_task(installer.build_requests[0].pkg)
 
+    # temporarily set tty debug messages on so we can test output
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
     installer._requeue_task(task)
+    tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
@@ -760,7 +797,7 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
 
-    out = capfd.readouterr()[0]
+    out = capfd.readouterr()[1]
     assert 'Installing a' in out
     assert ' in progress by another process' in out
 
@@ -879,7 +916,8 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert installer.build_requests[0].pkg_id in out
@@ -894,7 +932,8 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert 'failed to install' in out
@@ -1046,7 +1085,9 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     out = capfd.readouterr()[0]
     expected = ['write locked', 'read locked', 'requeued']
     for exp, ln in zip(expected, out.split('\n')):
@@ -1077,7 +1118,9 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     assert b_pkg_id not in installer.installed
 
     out = capfd.readouterr()[0]
@@ -1113,54 +1156,15 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     const_arg = installer_args(['b'], {})
     installer = create_installer(const_arg)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     assert 'b' not in installer.installed
 
     out = capfd.readouterr()[0]
     expected = ['write->read locked', 'preparing', 'requeued']
     for exp, ln in zip(expected, out.split('\n')):
         assert exp in ln
-
-
-def test_install_dir_exists(install_mockery, monkeypatch):
-    """Cover capture of install directory exists error."""
-    def _install(installer, task):
-        raise dl.InstallDirectoryAlreadyExistsError(task.pkg.prefix)
-
-    # Ensure raise the desired exception
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
-
-    const_arg = installer_args(['b'], {})
-    installer = create_installer(const_arg)
-
-    err = 'already exists'
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
-        installer.install()
-
-    b, _ = const_arg[0]
-    assert inst.package_id(b.package) in installer.installed
-
-
-def test_install_dir_exists_multi(install_mockery, monkeypatch, capfd):
-    """Cover capture of install directory exists error for multiple specs."""
-    def _install(installer, task):
-        raise dl.InstallDirectoryAlreadyExistsError(task.pkg.prefix)
-
-    # Skip the actual installation though should never reach it
-    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
-
-    # Use two packages to ensure multiple specs
-    const_arg = installer_args(['b', 'c'], {})
-    installer = create_installer(const_arg)
-
-    with pytest.raises(inst.InstallError, match='Installation request failed'):
-        installer.install()
-
-    err = capfd.readouterr()[1]
-    assert 'already exists' in err
-    for spec, install_args in const_arg:
-        pkg_id = inst.package_id(spec.package)
-        assert pkg_id in installer.installed
 
 
 def test_install_skip_patch(install_mockery, mock_fetch):
@@ -1174,3 +1178,97 @@ def test_install_skip_patch(install_mockery, mock_fetch):
 
     spec, install_args = const_arg[0]
     assert inst.package_id(spec.package) in installer.installed
+
+
+def test_overwrite_install_backup_success(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should restore the backup
+    of the original prefix, and leave the original spec marked installed.
+    """
+    # Where to store the backups
+    backup = str(tmpdir.mkdir("backup"))
+
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists with some trivial file
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    class InstallerThatWipesThePrefixDir:
+        def _install_task(self, task):
+            shutil.rmtree(task.pkg.prefix, ignore_errors=True)
+            fs.mkdirp(task.pkg.prefix)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    fake_installer = InstallerThatWipesThePrefixDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(
+        fake_installer, fake_db, task, tmp_root=backup)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure the package is not marked uninstalled and the original dir
+    # is back.
+    assert not fake_db.called
+    assert os.path.exists(installed_file)
+
+
+def test_overwrite_install_backup_failure(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should try to recover the
+    original prefix. If that fails, the spec is lost, and it should be removed
+    from the database.
+    """
+    # Where to store the backups
+    backup = str(tmpdir.mkdir("backup"))
+
+    class InstallerThatAccidentallyDeletesTheBackupDir:
+        def _install_task(self, task):
+            # Remove the backup directory so that restoring goes terribly wrong
+            shutil.rmtree(backup)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(
+        fake_installer, fake_db, task, tmp_root=backup)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure that `remove` was called on the database after an unsuccessful
+    # attempt to restore the backup.
+    assert fake_db.called

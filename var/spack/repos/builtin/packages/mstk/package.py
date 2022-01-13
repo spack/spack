@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,11 +23,12 @@ class Mstk(CMakePackage):
 
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
-    url      = "https://github.com/MeshToolkit/MSTK/archive/3.3.1.tar.gz"
+    url      = "https://github.com/MeshToolkit/MSTK/archive/3.3.6.tar.gz"
 
     maintainers = ['raovgarimella', 'julienloiseau']
 
     version('master', branch='master')
+    version('3.3.6', sha256='30041ee6f32d754e5d9b46db8f62609bb66d2686f8e6e16ad254f552849cb0f1')
     version('3.3.5', sha256='64c976e12d1393aafd086ef941b176add6cfb963f463c33259596e7ef641cdd8')
     version('3.3.4', sha256='bd34d31fc1fc468147a51e8d837d6bf9902ca8d38c7c0615e7f20968d4659da2')
     version('3.3.3', sha256='54ea7929c9046915472f38367c83f75af634a6989ce0b89aad17fb9f4a25023e')

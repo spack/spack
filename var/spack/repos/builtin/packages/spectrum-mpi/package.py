@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class SpectrumMpi(Package):
 
     has_code = False
 
-    homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+    homepage = "https://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
     provides('mpi')
 

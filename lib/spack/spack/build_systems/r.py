@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 
 import inspect
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 
 
@@ -25,13 +25,49 @@ class RPackage(PackageBase):
     """
     phases = ['install']
 
+    # package attributes that can be expanded to set the homepage, url,
+    # list_url, and git values
+    # For CRAN packages
+    cran = None
+
+    # For Bioconductor packages
+    bioc = None
+
+    maintainers = ['glennpj']
+
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'RPackage'
 
     extends('r')
 
-    depends_on('r', type=('build', 'run'))
+    @property
+    def homepage(self):
+        if self.cran:
+            return 'https://cloud.r-project.org/package=' + self.cran
+        elif self.bioc:
+            return 'https://bioconductor.org/packages/' + self.bioc
+
+    @property
+    def url(self):
+        if self.cran:
+            return (
+                'https://cloud.r-project.org/src/contrib/'
+                + self.cran + '_' + str(list(self.versions)[0]) + '.tar.gz'
+            )
+
+    @property
+    def list_url(self):
+        if self.cran:
+            return (
+                'https://cloud.r-project.org/src/contrib/Archive/'
+                + self.cran + '/'
+            )
+
+    @property
+    def git(self):
+        if self.bioc:
+            return 'https://git.bioconductor.org/packages/' + self.bioc
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
@@ -48,6 +84,7 @@ class RPackage(PackageBase):
         config_vars = self.configure_vars()
 
         args = [
+            '--vanilla',
             'CMD',
             'INSTALL'
         ]

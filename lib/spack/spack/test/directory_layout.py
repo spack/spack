@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,26 +7,20 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
+import os.path
+
 import pytest
 
 import spack.paths
 import spack.repo
-from spack.directory_layout import YamlDirectoryLayout
-from spack.directory_layout import InvalidDirectoryLayoutParametersError
+from spack.directory_layout import (
+    DirectoryLayout,
+    InvalidDirectoryLayoutParametersError,
+)
 from spack.spec import Spec
 
 # number of packages to test (to reduce test time)
 max_packages = 10
-
-
-@pytest.fixture()
-def layout_and_dir(tmpdir):
-    """Returns a directory layout and the corresponding directory."""
-    layout = YamlDirectoryLayout(str(tmpdir))
-    old_layout = spack.store.layout
-    spack.store.layout = layout
-    yield layout, str(tmpdir)
-    spack.store.layout = old_layout
 
 
 def test_yaml_directory_layout_parameters(tmpdir, config):
@@ -36,7 +30,7 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     spec.concretize()
 
     # Ensure default layout matches expected spec format
-    layout_default = YamlDirectoryLayout(str(tmpdir))
+    layout_default = DirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
     assert(path_default == spec.format(
         "{architecture}/"
@@ -44,9 +38,9 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
         "{name}-{version}-{hash}"))
 
     # Test hash_length parameter works correctly
-    layout_10 = YamlDirectoryLayout(str(tmpdir), hash_length=10)
+    layout_10 = DirectoryLayout(str(tmpdir), hash_length=10)
     path_10 = layout_10.relative_path_for_spec(spec)
-    layout_7 = YamlDirectoryLayout(str(tmpdir), hash_length=7)
+    layout_7 = DirectoryLayout(str(tmpdir), hash_length=7)
     path_7 = layout_7.relative_path_for_spec(spec)
 
     assert(len(path_default) - len(path_10) == 22)
@@ -55,8 +49,8 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
     projections_package7 = {'all': "{name}-{version}-{hash:7}"}
-    layout_package7 = YamlDirectoryLayout(str(tmpdir),
-                                          projections=projections_package7)
+    layout_package7 = DirectoryLayout(str(tmpdir),
+                                      projections=projections_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert(package7 == path_package7)
@@ -68,7 +62,7 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
     arch_ns_scheme_projections = {'all': arch_scheme,
                                   'python': ns_scheme}
-    layout_arch_ns = YamlDirectoryLayout(
+    layout_arch_ns = DirectoryLayout(
         str(tmpdir), projections=arch_ns_scheme_projections)
 
     arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
@@ -79,19 +73,19 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
-        YamlDirectoryLayout(str(tmpdir),
-                            hash_length=20,
-                            projections=projections_package7)
+        DirectoryLayout(str(tmpdir),
+                        hash_length=20,
+                        projections=projections_package7)
 
 
-def test_read_and_write_spec(layout_and_dir, config, mock_packages):
+def test_read_and_write_spec(temporary_store, config, mock_packages):
     """This goes through each package in spack and creates a directory for
     it.  It then ensures that the spec for the directory's
     installed package can be read back in consistently, and
     finally that the directory can be removed by the directory
     layout.
     """
-    layout, tmpdir = layout_and_dir
+    layout = temporary_store.layout
     packages = list(spack.repo.path.all_packages())[:max_packages]
 
     for pkg in packages:
@@ -114,7 +108,7 @@ def test_read_and_write_spec(layout_and_dir, config, mock_packages):
 
         # Ensure directory has been created in right place.
         assert os.path.isdir(install_dir)
-        assert install_dir.startswith(str(tmpdir))
+        assert install_dir.startswith(temporary_store.root)
 
         # Ensure spec file exists when directory is created
         assert os.path.isfile(spec_path)
@@ -129,7 +123,7 @@ def test_read_and_write_spec(layout_and_dir, config, mock_packages):
         # TODO: fix this when we can concretize more loosely based on
         # TODO: what is installed. We currently omit these to
         # TODO: increase reuse of build dependencies.
-        stored_deptypes = ('link', 'run')
+        stored_deptypes = spack.hash_types.full_hash
         expected = spec.copy(deps=stored_deptypes)
         expected._mark_concrete()
 
@@ -160,7 +154,7 @@ def test_read_and_write_spec(layout_and_dir, config, mock_packages):
         assert not os.path.exists(install_dir)
 
 
-def test_handle_unknown_package(layout_and_dir, config, mock_packages):
+def test_handle_unknown_package(temporary_store, config, mock_packages):
     """This test ensures that spack can at least do *some*
     operations with packages that are installed but that it
     does not know about.  This is actually not such an uncommon
@@ -171,7 +165,7 @@ def test_handle_unknown_package(layout_and_dir, config, mock_packages):
     information about installed packages' specs to uninstall
     or query them again if the package goes away.
     """
-    layout, _ = layout_and_dir
+    layout = temporary_store.layout
     mock_db = spack.repo.RepoPath(spack.paths.mock_packages_path)
 
     not_in_mock = set.difference(
@@ -199,7 +193,7 @@ def test_handle_unknown_package(layout_and_dir, config, mock_packages):
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
             spec_from_file = layout.read_spec(
-                os.path.join(path, '.spack', 'spec.yaml'))
+                os.path.join(path, '.spack', 'spec.json'))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.
@@ -209,9 +203,9 @@ def test_handle_unknown_package(layout_and_dir, config, mock_packages):
             assert spec.dag_hash() == spec_from_file.dag_hash()
 
 
-def test_find(layout_and_dir, config, mock_packages):
+def test_find(temporary_store, config, mock_packages):
     """Test that finding specs within an install layout works."""
-    layout, _ = layout_and_dir
+    layout = temporary_store.layout
     packages = list(spack.repo.path.all_packages())[:max_packages]
 
     # Create install prefixes for all packages in the list
@@ -237,7 +231,7 @@ def test_yaml_directory_layout_build_path(tmpdir, config):
     spec = Spec('python')
     spec.concretize()
 
-    layout = YamlDirectoryLayout(str(tmpdir))
+    layout = DirectoryLayout(str(tmpdir))
     rel_path = os.path.join(layout.metadata_dir, layout.packages_dir)
     assert layout.build_packages_path(spec) == os.path.join(spec.prefix,
                                                             rel_path)

@@ -1,20 +1,20 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack import *
 
 
 class PyPyside(PythonPackage):
     """Python bindings for Qt."""
-    homepage = "https://pypi.python.org/pypi/pyside"
-    url      = "https://pypi.io/packages/source/P/PySide/PySide-1.2.2.tar.gz"
+    pypi = "PySide/PySide-1.2.2.tar.gz"
 
     # More recent versions of PySide2 (for Qt5) have been taken under
     # the offical Qt umbrella.  For more information, see:
-    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+    # https://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     # Version 1.2.4 claims to not work with Python 3.5, mostly
     # because it hasn't been tested.  Otherwise, it's the same as v1.2.3
@@ -29,7 +29,8 @@ class PyPyside(PythonPackage):
     depends_on('cmake', type='build')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx', type=('build', 'run'))
+    depends_on('py-sphinx',        type=('build', 'run'))
+    depends_on('py-sphinx@:3.5.0', type=('build', 'run'), when='@:1.2.2')
     depends_on('qt@4.5:4.9')
     depends_on('libxml2@2.6.32:')
     depends_on('libxslt@1.1.19:')

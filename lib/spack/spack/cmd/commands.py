@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,9 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.argparsewriter import (
-    ArgparseWriter, ArgparseRstWriter, ArgparseCompletionWriter
+    ArgparseCompletionWriter,
+    ArgparseRstWriter,
+    ArgparseWriter,
 )
 from llnl.util.tty.colify import colify
 
@@ -22,7 +24,6 @@ import spack.cmd
 import spack.main
 import spack.paths
 from spack.main import section_descriptions
-
 
 description = "list available spack commands"
 section = "developer"
@@ -262,20 +263,7 @@ def _commands(parser, args):
     if args.header and not os.path.exists(args.header):
         tty.die("No such file: '%s'" % args.header)
 
-    # if we're updating an existing file, only write output if a command
-    # or the header is newer than the file.
     if args.update:
-        if os.path.exists(args.update):
-            files = [
-                spack.cmd.get_module(command).__file__.rstrip('c')  # pyc -> py
-                for command in spack.cmd.all_commands()]
-            if args.header:
-                files.append(args.header)
-            last_update = os.path.getmtime(args.update)
-            if not any(os.path.getmtime(f) > last_update for f in files):
-                tty.msg('File is up to date: %s' % args.update)
-                return
-
         tty.msg('Updating file: %s' % args.update)
         with open(args.update, 'w') as f:
             prepend_header(args, f)

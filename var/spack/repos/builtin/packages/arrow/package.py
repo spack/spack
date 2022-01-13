@@ -1,8 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 
 
@@ -12,14 +11,14 @@ class Arrow(CMakePackage, CudaPackage):
     This package contains the C++ bindings.
     """
 
-    homepage = "http://arrow.apache.org"
+    homepage = "https://arrow.apache.org"
     url      = "https://github.com/apache/arrow/archive/apache-arrow-0.9.0.tar.gz"
-    git      = "https://github.com/apache/arrow.git"
 
-    version('3.0.0', sha256='fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82')
+    version('4.0.1',  sha256='79d3e807df4a179cfab1e7a1ab5f79d95f7b72ac2c33aba030febd125d77eb3b')
+    version('3.0.0',  sha256='fc461c4f0a60e7470a7c58b28e9344aa8fb0be5cc982e9658970217e084c3a82')
     version('0.17.1', sha256='ecb6da20f9288c0ca31f9b457ffdd460198765a8af27c1cac4b1382a8d130f86')
     version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
-    version('0.15.0', sha256='be92f0169747c99282da71e951a8fbe72fef2058ee95a207ad484b5307b5003c')
+    version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
     version('0.14.1', sha256='69d9de9ec60a3080543b28a5334dbaf892ca34235b8bd8f8c1c01a33253926c1')
     version('0.12.1', sha256='aae68622edc3dcadaa16b2d25ae3f00290d5233100321993427b03bcf5b1dd3b')
     version('0.11.0', sha256='0ac629a7775d86108e403eb66d9f1a3d3bdd6b3a497a86228aa4e8143364b7cc')
@@ -29,13 +28,12 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on('boost@1.60:')
     depends_on('cmake@3.2.0:', type='build')
     depends_on('flatbuffers build_type=Release')  # only Release contains flatc
-    depends_on('gettext', when='+python')
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('rapidjson')
     depends_on('snappy~shared')
     depends_on('zlib+pic')
-    depends_on('zstd+pic')
+    depends_on('zstd')
     depends_on('thrift+pic', when='+parquet')
     depends_on('orc', when='+orc')
 
@@ -57,14 +55,12 @@ class Arrow(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         args = [
-            "-DBoost_DEBUG=ON",
             "-DARROW_USE_SSE=ON",
             "-DARROW_BUILD_SHARED=ON",
-            "-DARROW_BUILD_STATIC=ON",
+            "-DARROW_BUILD_STATIC=OFF",
             "-DARROW_BUILD_TESTS=OFF",
             "-DARROW_WITH_BROTLI=OFF",
             "-DARROW_WITH_LZ4=OFF",
-            "-DARROW_WITH_SNAPPY=ON",
         ]
 
         if self.spec.satisfies('+cuda'):

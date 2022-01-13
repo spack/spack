@@ -1,0 +1,10 @@
+diff -purw src/options.h src/options.h
+--- src/options.h	2020-05-13 13:26:39.743491698 +0200
++++ src/options.h	2020-05-13 13:28:47.277181534 +0200
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <string>
+ #include <unordered_map>
+ 
+ std::unordered_map<std::string, std::string> ParseOptions(int argc,

@@ -1,0 +1,131 @@
+packages:
+  autoconf:
+    version: [2.69]
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr
+  automake:
+    version: [1.13.4]
+    externals:
+    - spec: automake@1.13.4
+      prefix: /usr
+  binutils:
+    version: [2.37]
+    # Merged GCC / LLVM requirements
+    variants: +gas+gold+ld+plugins~libiberty
+  boost:
+    variants: +pic
+  cmake:
+    version: [3.21.4]
+  cuda:
+    # Should match what is provided by NVHPC, too
+    version: [11.4.2]
+  curl:
+    version: [7.29.0]
+    externals:
+    - spec: curl@7.29.0
+      prefix: /usr
+  darshan-runtime:
+    variants: +slurm
+  eigen:
+    variants: ~fftw~gmp~metis~mpfr~scotch
+  gcc:
+    variants: +binutils
+  gmsh:
+    variants: ~mmg~fltk
+  hadoop:
+    version: [2.10.1]
+  hdf5:
+    variants: +cxx+hl
+  icu4c:
+    version: [64.1]
+    # Drags in heavy PEARL dependencies
+  intltool:
+    version: [0.50.2]
+    externals:
+    - spec: intltool@0.50.2
+      prefix: /usr
+  julia:
+    variants: +external_llvm
+  libtool:
+    buildable: false  # different versions interact badly with autohell
+    version: [2.4.2]
+    externals:
+    - spec: libtool@2.4.2
+      prefix: /usr
+  m4:
+    version: [1.4.16]
+    externals:
+    - spec: m4@1.4.16
+      prefix: /usr
+  node-js:
+    version: [14.13.0]
+  omega-h:
+    variants: +trilinos
+  opencv:
+    variants: ~gtk~vtk
+  openssl:
+    version: [1.0.2k]
+    externals:
+    - spec: openssl@1.0.2k
+      prefix: /usr
+  opengl:
+    buildable: false
+    version: [4.5]
+    externals:
+    - spec: opengl@4.5
+      prefix: /usr
+  perl:
+    version: [5.16.3]
+    externals:
+    - spec: perl@5.16.3
+      prefix: /usr
+  petsc:
+    variants: ~fortran
+  python:
+    variants: +tk
+    version: [3.9.7]
+  py-numpy:
+    version: [1.19.5]  # thanks, tensorflow!
+  py-setuptools:
+    version: [57.4.0]  # last one to provide use_2to3, required by some software
+  py-six:
+    version: [1.15.0]  # thanks, tensorflow!
+  py-tables:
+    variants: +lzo     # leads to compile errors otherwise
+  py-tensorflow:
+    version: [2.5.1]   # For Python 3.9 compatibility
+  py-tensorflow-addons:
+    version: [0.13.0]  # Matches tensorflow
+  qt:
+    version: [5.14.2]
+    variants: ~ssl~sql~tools
+  range-v3:
+    variants: ~doc
+  slurm:
+    buildable: false
+    version: [21.08.3]
+    externals:
+    - spec: slurm@21.08.3
+      prefix: /usr
+  steps:
+    variants: +lapack+petsc+mpi
+  superlu-dist:
+    variants: +int64
+  tar:
+    version: [1.28]
+    externals:
+    - spec: tar@1.28
+      prefix: /usr
+  timemory:
+    variants: +mpi~cuda+cupti+caliper~gperftools~python@3.0.0a
+  trilinos:
+    variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+  all:
+    compiler: [gcc@11.2.0]
+    target: [skylake]
+    providers:
+      mpi: [hpe-mpi, intel-mpi, mvapich2]
+      scalapack:: [intel-mkl]
+      lapack:: [intel-mkl]
+      blas:: [intel-mkl]

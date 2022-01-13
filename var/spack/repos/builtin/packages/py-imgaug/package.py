@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,27 +7,25 @@ from spack import *
 
 
 class PyImgaug(PythonPackage):
-    """Image augmentation library for deep neural networks."""
+    """A library for image augmentation in machine learning experiments,
+    particularly convolutional neural networks. Supports the augmentation of
+    images, keypoints/landmarks, bounding boxes, heatmaps and segmentation maps
+    in a variety of different ways."""
 
-    homepage = "https://pypi.org/project/imgaug/"
-    url = "https://files.pythonhosted.org/packages/4f/96/c55f2985b464ea377238e61026dfb1da54d8edc1534c649e70077e94c642/imgaug-0.2.9.tar.gz"
+    homepage = "https://github.com/aleju/imgaug"
+    pypi     = "imgaug/imgaug-0.3.0.tar.gz"
 
-    # The first version below just serves to trigger a rebuild!
-    version('0.2.9.20210902', url=url, sha256='42b0c4c8cbe197d4f5dbd33960a1140f8a0d9c22c0a8851306ecbbc032092de8')
+    version('0.4.0', sha256='46bab63ed38f8980630ff721a09ca2281b7dbd4d8c11258818b6ebcc69ea46c7')
+    version('0.3.0', sha256='e1354d41921f1b306b50c5141b4870f17e81b531cae2f5c3093da9dc4dcb3cf4')
     version('0.2.9', sha256='42b0c4c8cbe197d4f5dbd33960a1140f8a0d9c22c0a8851306ecbbc032092de8')
 
-    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-six', type=('run'))
-    depends_on('py-numpy@1.15:', type=('run'))
-    depends_on('py-scipy', type=('run'))
-    depends_on('py-pillow', type=('run'))
-    depends_on('py-matplotlib', type=('run'))
-    depends_on('py-scikit-image@0.14.2:', type=('run'))
-    depends_on('opencv +python', type=('run'))
-    depends_on('py-imageio', type=('run'))
-    depends_on('py-shapely', type=('run'))
-
-    def patch(self):
-        filter_file(', "opencv-python"', '', 'setup.py')
+    depends_on('py-imageio', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-numpy@1.15:', type=('build', 'run'))
+    depends_on('py-opencv-python', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-shapely', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-scikit-image@0.14.2:', type=('build', 'run'))
+    depends_on('pil', type=('build', 'run'))

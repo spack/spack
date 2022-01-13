@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,12 @@
 
 from __future__ import print_function
 
+import filecmp
 import os
 import shutil
-import filecmp
 
-from llnl.util.filesystem import traverse_tree, mkdirp, touch
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp, touch, traverse_tree
 
 __all__ = ['LinkTree']
 

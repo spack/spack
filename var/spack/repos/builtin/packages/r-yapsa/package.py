@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RYapsa(RPackage):
-    """Yet Another Package for Signature Analysis.
+    """Yet Another Package for Signature Analysis
 
        This package provides functions and routines useful in the analysis of
        somatic signatures (cf. L. Alexandrov et al., Nature 2013). In
@@ -19,6 +19,7 @@ class RYapsa(RPackage):
     homepage = "https://bioconductor.org/packages/YAPSA"
     git      = "https://git.bioconductor.org/packages/YAPSA.git"
 
+    version('1.16.0', commit='f344cdb81bb886c633f9325f811912fb59d58eb1')
     version('1.10.0', commit='06af18e424868eb0f0be6c80e90cbab1eabf3d73')
     version('1.8.0', commit='402f3f7774fdf8afc7883579ad651c26df0f8fdb')
     version('1.6.0', commit='2455d272b076835ddb36ad21c01ef15af66abc36')
@@ -26,9 +27,10 @@ class RYapsa(RPackage):
     version('1.2.0', commit='320809b69e470e30a777a383f8341f93064ec24d')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.6.0:', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-lsei', type=('build', 'run'))
+    depends_on('r-limsolve', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-somaticsignatures', type=('build', 'run'))
     depends_on('r-variantannotation', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
@@ -39,6 +41,14 @@ class RYapsa(RPackage):
     depends_on('r-getoptlong', type=('build', 'run'))
     depends_on('r-circlize', type=('build', 'run'))
     depends_on('r-gtrellis', type=('build', 'run'))
+    depends_on('r-doparallel', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-pmcmr', type=('build', 'run'))
+    depends_on('r-ggbeeswarm', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-complexheatmap', type=('build', 'run'))
     depends_on('r-keggrest', type=('build', 'run'))
+    depends_on('r-biostrings', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-bsgenome-hsapiens-ucsc-hg19', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-magrittr', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-pracma', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-dplyr', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r-lsei', when='@:1.10.0', type=('build', 'run'))

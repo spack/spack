@@ -12,7 +12,7 @@ class PyPooch(PythonPackage):
     and corruption checks."""
 
     homepage = "https://github.com/fatiando/pooch"
-    url      = "https://pypi.io/packages/source/p/pooch/pooch-1.3.0.tar.gz"
+    pypi     = "pooch/pooch-1.3.0.tar.gz"
 
     version('1.3.0', sha256='30d448e825904e2d763bbbe418831a788813c32f636b21c8d60ee5f474532898')
 

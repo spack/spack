@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class Ncurses(AutotoolsPackage, GNUMirrorPackage):
@@ -15,7 +16,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     characters and function-key mapping, and has all the other
     SYSV-curses enhancements over BSD curses."""
 
-    homepage = "http://invisible-island.net/ncurses/ncurses.html"
+    homepage = "https://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
@@ -31,6 +32,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     variant('termlib', default=True,
             description='Enables termlib features. This is an extra '
                         'lib and optional internal dependency.')
+    # Build ncurses with ABI compaitibility.
+    variant('abi', default='none', description='choose abi compatibility', values=('none', '5', '6'), multi=False)
+
+    conflicts('abi=6', when='@:5.9', msg='6 is not compatible with this release')
 
     depends_on('pkgconfig', type='build')
 
@@ -65,6 +70,15 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
                     break
             if usingSymlinks:
                 variants += '+symlinks'
+
+            abiVersion = 'none'
+            output = Executable(exe)('--abi-version', output=str, error=str)
+            if '6' in output:
+                abiVersion = '6'
+            elif '5' in output:
+                abiVersion = '5'
+            variants += ' abi=' + abiVersion
+
             results.append(variants)
         return results
 
@@ -107,6 +121,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
                          '--enable-getcap',
                          '--enable-tcap-names',
                          '--with-versioned-syms'))
+
+        abi = self.spec.variants['abi'].value
+        if abi != 'none':
+            opts.append('--with-abi-version=' + abi)
 
         prefix = '--prefix={0}'.format(prefix)
 

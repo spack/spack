@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,16 @@ class Moab(AutotoolsPackage):
 
     homepage = "https://bitbucket.org/fathomteam/moab"
     git = "https://bitbucket.org/fathomteam/moab.git"
-    url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
+    url = "https://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
+
+    maintainers = ['vijaysm', 'iulian787']
 
     version('develop', branch='develop')
     version('master', branch='master')
-    # Version 5.0.2 disappeared from FTP server. Instead set temporary version
-    # of MoAB to 5.0.2 set to current head of the master branch.
+    version('5.3.0', sha256='51c31ccbcaa76d9658a44452b9a39f076b795b27a1c9f408fc3d0eea97e032ef')
+    version('5.2.1', sha256='60d31762be3f0e5c89416c764e844ec88dac294169b59a5ead3c316b50f85c29')
+    version('5.2.0', sha256='805ed3546deff39e076be4d1f68aba1cf0dda8c34ce43e1fc179d1aff57c5d5d')
+    version('5.1.0', sha256='0371fc25d2594589e95700739f01614f097b6157fb6023ed8995e582726ca658')
     version('5.0.2', commit='01d05b1805236ef44da36f67eb2701095f2e33c7')
     version('5.0.1', commit='6cc12bd4ae3fa7c9ad81c595e4d38fa84f0884be')
     version('5.0.0', sha256='df5d5eb8c0d0dbb046de2e60aa611f276cbf007c9226c44a24ed19c570244e64')

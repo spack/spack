@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RCategory(RPackage):
-    """Category Analysis.
+    """Category Analysis
 
        A collection of tools for performing category (gene set enrichment)
        analysis."""
@@ -15,6 +15,7 @@ class RCategory(RPackage):
     homepage = "https://bioconductor.org/packages/Category"
     git      = "https://git.bioconductor.org/packages/Category.git"
 
+    version('2.56.0', commit='ad478caa9d693dbc2770608e79dd852375b9a223')
     version('2.50.0', commit='d96f0b29cb778f6697b44d7ba7b0abd7086074a9')
     version('2.48.1', commit='941819a3d9dd129f47b4ea00fa74032e405be3a5')
     version('2.46.0', commit='c8aeee4dee3fb120f25e0647dd06e895a3ffbc2a')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,26 +16,26 @@ class Alquimia(CMakePackage):
     maintainers = ['smolins', 'balay']
 
     version('develop')
+    version('1.0.9', commit='2ee3bcfacc63f685864bcac2b6868b48ad235225')  # tag v.1.0.9
     version('xsdk-0.6.0', commit='9a0aedd3a927d4d5e837f8fd18b74ad5a78c3821')
     version('xsdk-0.5.0', commit='8397c3b00a09534c5473ff3ab21f0e32bb159380')
     version('xsdk-0.4.0', commit='2edad6733106142d014bb6e6a73c2b21d5e3cf2d')
     version('xsdk-0.3.0', tag='xsdk-0.3.0')
-    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
     depends_on('mpi')
     depends_on('hdf5')
+    depends_on('pflotran@3.0.2', when='@1.0.9')
     depends_on('pflotran@xsdk-0.6.0', when='@xsdk-0.6.0')
     depends_on('pflotran@xsdk-0.5.0', when='@xsdk-0.5.0')
     depends_on('pflotran@xsdk-0.4.0', when='@xsdk-0.4.0')
     depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
-    depends_on('petsc@3.10.0:3.10.99', when='@xsdk-0.4.0')
-    depends_on('petsc@3.8.0:3.8.99', when='@xsdk-0.3.0')
-    depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
+    depends_on('petsc@3.10.0:3.10', when='@xsdk-0.4.0')
+    depends_on('petsc@3.8.0:3.8', when='@xsdk-0.3.0')
     depends_on('petsc@3.10:', when='@develop')
 
     def cmake_args(self):
@@ -44,8 +44,7 @@ class Alquimia(CMakePackage):
         options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                    '-DUSE_XSDK_DEFAULTS=YES',
-                   '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                       'ON' if '+shared' in spec else 'OFF'),
+                   self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
                    '-DTPL_ENABLE_MPI:BOOL=ON',
                    '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
                    '-DTPL_ENABLE_HDF5:BOOL=ON',

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,17 @@ from __future__ import print_function
 
 import argparse
 import sys
+
 from six import iteritems
 
 import llnl.util.tty as tty
-import spack.compilers
-import spack.config
-import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec, ArchSpec
+
+import spack.compilers
+import spack.config
+import spack.spec
 
 description = "manage compilers"
 section = "system"
@@ -76,24 +77,13 @@ def compiler_find(args):
     # None signals spack.compiler.find_compilers to use its default logic
     paths = args.add_paths or None
 
-    # Don't initialize compilers config via compilers.get_compiler_config.
-    # Just let compiler_find do the
-    # entire process and return an empty config from all_compilers
-    # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(paths)]
-    new_compilers = []
-    for c in compilers:
-        arch_spec = ArchSpec((None, c.operating_system, c.target))
-        same_specs = spack.compilers.compilers_for_spec(
-            c.spec, arch_spec, init_config=False)
-
-        if not same_specs:
-            new_compilers.append(c)
-
+    # Below scope=None because we want new compilers that don't appear
+    # in any other configuration.
+    new_compilers = spack.compilers.find_new_compilers(paths, scope=None)
     if new_compilers:
-        spack.compilers.add_compilers_to_config(new_compilers,
-                                                scope=args.scope,
-                                                init_config=False)
+        spack.compilers.add_compilers_to_config(
+            new_compilers, scope=args.scope, init_config=False
+        )
         n = len(new_compilers)
         s = 's' if n > 1 else ''
 
@@ -108,7 +98,7 @@ def compiler_find(args):
 
 
 def compiler_remove(args):
-    cspec = CompilerSpec(args.compiler_spec)
+    cspec = spack.spec.CompilerSpec(args.compiler_spec)
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
@@ -126,7 +116,7 @@ def compiler_remove(args):
 
 def compiler_info(args):
     """Print info about all compilers matching a spec."""
-    cspec = CompilerSpec(args.compiler_spec)
+    cspec = spack.spec.CompilerSpec(args.compiler_spec)
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
 
     if not compilers:

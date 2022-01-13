@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import re
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.tty.color as color
 
 import spack
 import spack.cmd
@@ -23,28 +24,34 @@ section = 'developer'
 level = 'long'
 
 #: output options
-show_options = ('asp', 'output', 'solutions')
+show_options = ('asp', 'opt', 'output', 'solutions')
 
 
 def setup_parser(subparser):
     # Solver arguments
     subparser.add_argument(
-        '--show', action='store', default=('solutions'),
-        help="outputs: a list with any of: "
-        "%s (default), all" % ', '.join(show_options))
+        '--show', action='store', default='opt,solutions',
+        help="select outputs: comma-separated list of: \n"
+        "  asp          asp program text\n"
+        "  opt          optimization criteria for best model\n"
+        "  output       raw clingo output\n"
+        "  solutions    models found by asp program\n"
+        "  all          all of the above"
+    )
     subparser.add_argument(
         '--models', action='store', type=int, default=0,
         help="number of solutions to search (default 0 for all)")
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status'])
+        subparser, ['long', 'very_long', 'install_status', 'reuse']
+    )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
-        const='yaml', help='print concrete spec as YAML')
+        const='yaml', help='print concrete spec as yaml')
     subparser.add_argument(
         '-j', '--json', action='store_const', dest='format', default=None,
-        const='json', help='print concrete spec as YAML')
+        const='json', help='print concrete spec as json')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -97,36 +104,40 @@ def solve(parser, args):
 
     # dump generated ASP program
     result = asp.solve(
-        specs, dump=dump, models=models, timers=args.timers, stats=args.stats
+        specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
+        reuse=args.reuse,
     )
     if 'solutions' not in dump:
         return
 
     # die if no solution was found
-    # TODO: we need to be able to provide better error messages than this
-    if not result.satisfiable:
-        result.print_cores()
-        tty.die("Unsatisfiable spec.")
+    result.raise_if_unsat()
 
     # dump the solutions as concretized specs
     if 'solutions' in dump:
-        best = min(result.answers)
+        opt, _, _ = min(result.answers)
+        if ("opt" in dump) and (not args.format):
+            tty.msg("Best of %d considered solutions." % result.nmodels)
+            tty.msg("Optimization Criteria:")
 
-        opt, _, answer = best
-        if not args.format:
-            tty.msg("Best of %d answers." % result.nmodels)
-            tty.msg("Optimization: %s" % opt)
+            maxlen = max(len(s[2]) for s in result.criteria)
+            color.cprint(
+                "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
+            )
 
-        # iterate over roots from command line
-        for input_spec in specs:
-            key = input_spec.name
-            if input_spec.virtual:
-                providers = [spec.name for spec in answer.values()
-                             if spec.package.provides(key)]
-                key = providers[0]
+            fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+            for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
+                color.cprint(
+                    fmt % (
+                        i,
+                        name,
+                        "-" if build_idx is None else opt[idx],
+                        opt[idx] if build_idx is None else opt[build_idx],
+                    )
+                )
+            print()
 
-            spec = answer[key]
-
+        for spec in result.specs:
             # With -y, just print YAML to output.
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@
 
 import ordereddict_backport
 
-import spack.util.naming
 import spack.provider_index
+import spack.util.naming
 from spack.dependency import Dependency
 from spack.spec import Spec
 from spack.version import Version
@@ -81,8 +81,8 @@ class MockPackageMultiRepo(object):
 
     def __init__(self):
         self.spec_to_pkg = {}
-        self.namespace = ''
-        self.full_namespace = 'spack.pkg.mock'
+        self.namespace = 'mock'                 # repo namespace
+        self.full_namespace = 'spack.pkg.mock'  # python import namespace
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -92,6 +92,10 @@ class MockPackageMultiRepo(object):
         return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):
+        namespace, _, name = name.rpartition(".")
+        if namespace and namespace != self.namespace:
+            raise spack.repo.InvalidNamespaceError(
+                "bad namespace: %s" % self.namespace)
         return self.spec_to_pkg[name]
 
     def exists(self, name):

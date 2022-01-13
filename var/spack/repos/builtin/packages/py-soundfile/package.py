@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PySoundfile(PythonPackage):
     """SoundFile is an audio library based on libsndfile, CFFI and NumPy."""
 
     homepage = "https://github.com/bastibe/PySoundFile"
-    url      = "https://pypi.io/packages/source/S/SoundFile/SoundFile-0.10.3.post1.tar.gz"
+    pypi = "SoundFile/SoundFile-0.10.3.post1.tar.gz"
 
     version('0.10.3.post1', sha256='490cff42650733d1832728b937fe99fa1802896f5ef4d61bcf78cf7ebecb107b')
 

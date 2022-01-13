@@ -1,16 +1,21 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import fnmatch
+import os
 
-import six
 import pytest
+import six
 
-from llnl.util.filesystem import LibraryList, HeaderList
-from llnl.util.filesystem import find_libraries, find_headers, find
+from llnl.util.filesystem import (
+    HeaderList,
+    LibraryList,
+    find,
+    find_headers,
+    find_libraries,
+)
 
 import spack.paths
 

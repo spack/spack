@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import tarfile
+
+from spack import *
 
 
 class Avizo(Package):
@@ -17,6 +18,8 @@ class Avizo(Package):
     interface."""
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
+
+    manual_download = True
 
     version('2020.1',
             sha256='9321aaa276567eebf116e268353c33a4c930d768d22793f921338e1d8cefe991',

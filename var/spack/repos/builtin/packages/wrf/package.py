@@ -1,19 +1,20 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
-from sys import stdout
 import glob
+import re
+import time
+from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, rename
 from os.path import basename
-from fcntl import fcntl, F_GETFL, F_SETFL
-from subprocess import Popen, PIPE
-import time
+from subprocess import PIPE, Popen
+from sys import stdout
+
 from llnl.util import tty
-import re
+
+from spack import *
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
@@ -105,6 +106,9 @@ class Wrf(Package):
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
+    patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
+    patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
+    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -129,6 +133,10 @@ class Wrf(Package):
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2")
+    patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
+    patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -144,6 +152,7 @@ class Wrf(Package):
     depends_on("libpng")
     depends_on("zlib")
     depends_on("perl")
+    depends_on("jemalloc", when="%aocc")
     # not sure if +fortran is required, but seems like a good idea
     depends_on("hdf5+fortran+hl+mpi")
     # build script use csh
@@ -170,6 +179,11 @@ class Wrf(Package):
             env.set("FCFLAGS", args)
             env.set("FFLAGS", args)
 
+        if self.spec.satisfies("%aocc"):
+            env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
+            env.set("HDF5", self.spec["hdf5"].prefix)
+            env.prepend_path('PATH', ancestor(self.compiler.cc))
+
     def patch(self):
         # Let's not assume csh is intalled in bin
         files = glob.glob("*.csh")
@@ -183,8 +197,8 @@ class Wrf(Package):
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
             comp_pair = "%s/%s" % (
-                basename(self.compiler.fc),
-                basename(self.compiler.cc),
+                basename(self.compiler.fc).split("-")[0],
+                basename(self.compiler.cc).split("-")[0],
             )
             compiler_matches = dict(
                 (x, y) for x, y in options.items() if comp_pair in x.lower()
@@ -232,12 +246,53 @@ class Wrf(Package):
                             )
                         ofh.write(line)
 
+        if self.spec.satisfies("@3.9.1.1 %aocc"):
+            rename(
+                "./arch/configure_new.defaults",
+                "./arch/configure_new.defaults.bak",
+            )
+            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
+                with open("./arch/configure_new.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace(
+                                "mpif90 -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
+                            )
+                            line = line.replace(
+                                "mpicc -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
+                            )
+                        ofh.write(line)
+
+        if self.spec.satisfies("@4.2 %aocc"):
+            # In version 4.2 the file to be patched is called
+            # configure.defaults, while in earlier versions
+            # it's configure_new.defaults
+            rename(
+                "./arch/configure.defaults",
+                "./arch/configure.defaults.bak",
+            )
+            with open("./arch/configure.defaults.bak", "rt") as ifh:
+                with open("./arch/configure.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace(
+                                "mpif90 -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
+                            )
+                            line = line.replace(
+                                "mpicc -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
+                            )
+                        ofh.write(line)
+
     def configure(self, spec, prefix):
 
         # Remove broken default options...
         self.do_configure_fixup()
 
-        if self.spec.compiler.name not in ["intel", "gcc"]:
+        if self.spec.compiler.name not in ["intel", "gcc", "aocc"]:
             raise InstallError(
                 "Compiler %s not currently supported for WRF build."
                 % self.spec.compiler.name
@@ -283,6 +338,12 @@ class Wrf(Package):
 
         if returncode != 0:
             raise InstallError("Configure failed - unknown error")
+
+    @run_after("configure")
+    def patch_for_libmvec(self):
+        if self.spec.satisfies("@3.9.1.1 %aocc"):
+            fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
+            which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
 
     def run_compile_script(self):
         csh_bin = self.spec["tcsh"].prefix.bin.csh

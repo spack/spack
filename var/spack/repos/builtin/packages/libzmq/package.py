@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,12 @@ from spack import *
 class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
 
-    homepage = "http://zguide.zeromq.org/"
+    homepage = "https://zguide.zeromq.org/"
     url      = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
     git      = "https://github.com/zeromq/libzmq.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('4.3.3', sha256='9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2')
     version('4.3.2', sha256='ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763')
     version('4.3.1', sha256='bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb')
     version('4.3.0', sha256='8e9c3af6dc5a8540b356697081303be392ade3f014615028b3c896d0148397fd')
@@ -29,6 +30,9 @@ class Libzmq(AutotoolsPackage):
     variant("libsodium", default=True,
             description="Build with message encryption support via libsodium")
 
+    variant("drafts", default=False,
+            description="Build and install draft classes and methods")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -37,7 +41,13 @@ class Libzmq(AutotoolsPackage):
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
 
+    depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
+    depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
+
     conflicts('%gcc@8:', when='@:4.2.2')
+
+    # Fix aggressive compiler warning false positive
+    patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch', sha256='8ebde83ee148989f9118d36ebaf256532627b8a6e7a486842110623331972edb', when='@4.2.3:4.3.4 %gcc@11:')
 
     def url_for_version(self, version):
         if version <= Version('4.1.4'):
@@ -53,10 +63,11 @@ class Libzmq(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
+
+        config_args.extend(self.enable_or_disable("drafts"))
+
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
-        else:
-            config_args.append('--without-libsodium')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

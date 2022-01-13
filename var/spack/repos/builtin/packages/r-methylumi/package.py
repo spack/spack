@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RMethylumi(RPackage):
-    """This package provides classes for holding and manipulating Illumina
+    """Handle Illumina methylation data
+
+    This package provides classes for holding and manipulating Illumina
     methylation data. Based on eSet, it can contain MIAME information, sample
     information, feature information, and multiple matrices of data. An
     "intelligent" import function, methylumiR can read the Illumina text files
@@ -19,6 +21,7 @@ class RMethylumi(RPackage):
     homepage = "https://bioconductor.org/packages/release/bioc/html/methylumi.html"
     git      = "https://git.bioconductor.org/packages/methylumi"
 
+    version('2.36.0', commit='5fb0b609f9c9181ac99f902745958774e5489606')
     version('2.32.0', commit='e2a29c1b214c0d43c7325d176f9ce41dcf8e2f9d')
 
     depends_on('r@2.13:', type=('build', 'run'))
@@ -30,6 +33,7 @@ class RMethylumi(RPackage):
     depends_on('r-fdb-infiniummethylation-hg19@2.2.0:', type=('build', 'run'))
     depends_on('r-minfi', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-s4vectors', when='@2.36.0:', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))

@@ -1,24 +1,29 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import subprocess
 import sys
+
 import llnl.util.tty as tty
+
+from spack import *
 
 
 class Catalyst(CMakePackage):
-    """Catalyst is an in situ use case library, with an adaptable application
-    programming interface (API), that orchestrates the alliance between
-    simulation and analysis and/or visualization tasks."""
+    """Catalyst is an in situ library, with an adaptable application
+    programming interface (API), that orchestrates the alliance
+    between simulation and analysis and/or visualization tasks. For
+    versions 5.7 and greater use the paraview package.
+
+    """
 
     homepage = 'http://www.paraview.org'
-    url      = "http://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
-    _urlfmt_gz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
-    _urlfmt_xz = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
+    url      = "https://www.paraview.org/files/v5.5/ParaView-v5.5.2.tar.gz"
+    _urlfmt_gz = 'https://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
+    _urlfmt_xz = 'https://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.xz'
 
     maintainers = ['chuckatkins', 'danlipsa']
 
@@ -58,16 +63,20 @@ class Catalyst(CMakePackage):
     # extends('python', when='+python')
     extends('python', when='+python')
     extends('python', when='+python3')
+    # VTK < 8.2.1 can't handle Python 3.8
+    # This affects Paraview <= 5.7 (VTK 8.2.0)
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
+    depends_on('python@3:3.7', when='@:5.7 +python3', type=('build', 'run'))
+    depends_on('python@3:', when='@5.8:+python3', type=('build', 'run'))
+    depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
 
     depends_on('git', type='build')
     depends_on('mpi')
-    depends_on('python@2.7:2.8', when='+python', type=('build', 'link', 'run'))
-    depends_on('python@3:', when='+python3', type=('build', 'link', 'run'))
 
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
-    depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python3', type=('build', 'run'))
 
     depends_on('gl@3.2:', when='+rendering')
     depends_on('osmesa', when='+rendering+osmesa')
@@ -135,9 +144,9 @@ class Catalyst(CMakePackage):
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
         python_path = (os.path.realpath(
-            spec['python3'].command.path if '+python3' in self.spec else
-            spec['python'].command.path if '+python' in self.spec else
-            sys.executable))
+            self.spec['python'].command.path
+            if ('+python3' in self.spec or '+python' in self.spec)
+            else sys.executable))
 
         command = [python_path, catalyst_script,
                    '-r', self.stage.source_path,
@@ -226,12 +235,12 @@ class Catalyst(CMakePackage):
                 '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        if spec.platform == 'linux' and spec.target == 'aarch64':
+        if spec.platform == 'linux' and spec.target.family == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

@@ -1,11 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import glob
 import os
+
+from spack import *
 
 
 class Likwid(Package):
@@ -16,11 +17,14 @@ class Likwid(Package):
     See https://github.com/RRZE-HPC/likwid/wiki/TutorialLikwidPerf#feature-limitations
     for information."""
 
-    homepage = "https://github.com/RRZE-HPC/likwid"
+    homepage = "https://hpc.fau.de/research/tools/likwid/"
     url      = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git      = "https://github.com/RRZE-HPC/likwid.git"
     maintainers = ['TomTheBear']
 
+    version('5.2.0', sha256='aa6dccacfca59e52d8f3be187ffcf292b2a2fa1f51a81bf8912b9d48e5a257e0')
+    version('5.1.1', sha256='faec7c62987967232f476a6ff0ee85af686fd24b5a360126896b7f435d1f943f')
+    version('5.1.0', sha256='5a180702a1656c6315b861a85031ab4cb090424aec42cbbb326b849e29f55571')
     version('5.0.2', sha256='0a1c8984e4b43ea8b99d09456ef05035eb934594af1669432117585c638a2da4')
     version('5.0.1', sha256='3757b0cb66e8af0116f9288c7f90543acbd8e2af8f72f77aef447ca2b3e76453')
     version('5.0.0', sha256='26623f5a1a5fec19d798f0114774a5293d1c93a148538b9591a13e50930fa41e')
@@ -30,31 +34,36 @@ class Likwid(Package):
     version('4.3.1', sha256='4b40a96717da54514274d166f9b71928545468091c939c1d74109733279eaeb1')
     version('4.3.0', sha256='86fc5f82c80fcff1a643394627839ec79f1ca2bcfad30000eb7018da592588b4')
 
-    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch', sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1', when='@5.0.1')
-    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
-    patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt', sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416', when='@5.0.2^lua@5.1')
+    patch('https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch',
+          when='@5.0.1',
+          sha256='c3b8f939a46b425665577ce764d4fba080a23cab5999c53db71655fd54d7e0b1')
+    patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch',
+          when='@4.3.4',
+          sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0')
+    patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt',
+          when='@5.0.2^lua@5.1',
+          sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416')
+    patch('https://github.com/RRZE-HPC/likwid/releases/download/v5.1.0/likwid-mpirun-5.1.0.patch',
+          when='@5.1.0',
+          sha256='62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061')
     variant('fortran', default=True, description='with fortran interface')
+    variant('cuda', default=False, description='with Nvidia GPU profiling support')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
+    # Note: extra functionality was included in upstream hwloc
 
     depends_on('lua', when='@:4')
     depends_on('lua@5.2:', when='@5:5.0.1')
     depends_on('lua', when='@5.0.2:')
+    depends_on('cuda', when='@5: +cuda')
+    depends_on('hwloc', when='@5.2.0:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
 
     depends_on('perl', type=('build', 'run'))
-
-    variant('setgid', default=False, description='enable setgid flag '
-            + 'for likwid-accessD and change its group to LIWKID_GROUP. '
-            + 'Note: set LIWKID_GROUP env variable')
-
-    conflicts('+setgid', when='@:4.0.1')  # accessD was added in 4.1
-
-    supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
 
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
@@ -62,6 +71,13 @@ class Likwid(Package):
         # Allow the scripts to find Spack's perl
         filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
         filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
+
+    def setup_run_environment(self, env):
+        if "+cuda" in self.spec:
+            libs = find_libraries('libcupti', root=self.spec['cuda'].prefix,
+                                  shared=True, recursive=True)
+            for lib in libs.directories:
+                env.append_path('LD_LIBRARY_PATH', lib)
 
     @run_before('install')
     def filter_sbang(self):
@@ -114,13 +130,33 @@ class Likwid(Package):
                         'FORTRAN_INTERFACE = true',
                         'config.mk')
             if self.compiler.name == 'gcc':
-                filter_file('ifort', 'gfortran',
-                            join_path('make', 'include_GCC.mk'))
-                filter_file('-module', '-I', join_path('make',
-                                                       'include_GCC.mk'))
+                makepath = join_path('make', 'include_GCC.mk')
+                filter_file('ifort', 'gfortran', makepath)
+                filter_file('-module', '-I',  makepath)
         else:
             filter_file('^FORTRAN_INTERFACE .*',
                         'FORTRAN_INTERFACE = false',
+                        'config.mk')
+
+        if "+cuda" in self.spec:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = true',
+                        'config.mk')
+            filter_file('^BUILDAPPDAEMON.*',
+                        'BUILDAPPDAEMON = true',
+                        'config.mk')
+            cudainc = spec['cuda'].prefix.include
+            filter_file('^CUDAINCLUDE.*',
+                        'CUDAINCLUDE = {0}'.format(cudainc),
+                        'config.mk')
+            cuptihead = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
+                                        recursive=True))
+            filter_file('^CUPTIINCLUDE.*',
+                        'CUPTIINCLUDE = {0}'.format(cuptihead.directories[0]),
+                        'config.mk')
+        else:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = false',
                         'config.mk')
 
         if spec.satisfies('^lua'):
@@ -140,6 +176,19 @@ class Likwid(Package):
                             spec['lua'].prefix.bin),
                         'config.mk')
 
+        if spec.satisfies('^hwloc'):
+            filter_file('^#HWLOC_INCLUDE_DIR.*',
+                        'HWLOC_INCLUDE_DIR = {0}'.format(
+                            spec['hwloc'].prefix.include),
+                        'config.mk')
+            filter_file('^#HWLOC_LIB_DIR.*',
+                        'HWLOC_LIB_DIR = {0}'.format(
+                            spec['hwloc'].prefix.lib),
+                        'config.mk')
+            filter_file('^#HWLOC_LIB_NAME.*',
+                        'HWLOC_LIB_NAME = hwloc',
+                        'config.mk')
+
         # https://github.com/RRZE-HPC/likwid/issues/287
         if self.spec.satisfies('@:5.0.2 %gcc@10:'):
             filter_file(r'^(CFLAGS.*)',
@@ -149,15 +198,3 @@ class Likwid(Package):
         env['PWD'] = os.getcwd()
         make()
         make('install')
-
-    @run_after('install')
-    def change_group(self):
-        accessD = join_path(self.prefix.sbin, 'likwid-accessD')
-        if self.spec.satisfies('+setgid'):
-            likwid_group = 'likwid'
-            if 'LIKWID_GROUP' in os.environ:
-                likwid_group = os.environ['LIKWID_GROUP']
-            chgrp = which('chgrp')
-            chmod = which('chmod')
-            chgrp(likwid_group, accessD)
-            chmod('g+s', accessD)

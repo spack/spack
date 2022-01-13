@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,11 +106,21 @@ with a high level view of Spack's directory structure:
             external/      <- external libs included in Spack distro
             llnl/          <- some general-use libraries
 
-            spack/         <- spack module; contains Python code
-               cmd/        <- each file in here is a spack subcommand
-               compilers/  <- compiler description files
-               test/       <- unit test modules
-               util/       <- common code
+            spack/                <- spack module; contains Python code
+               analyzers/         <- modules to run analysis on installed packages
+               build_systems/     <- modules for different build systems
+               cmd/               <- each file in here is a spack subcommand
+               compilers/         <- compiler description files
+               container/         <- module for spack containerize
+               hooks/             <- hook modules to run at different points
+               modules/           <- modules for lmod, tcl, etc.
+               operating_systems/ <- operating system modules
+               platforms/         <- different spack platforms
+               reporters/         <- reporters like cdash, junit
+               schema/            <- schemas to validate data structures
+               solver/            <- the spack solver
+               test/              <- unit test modules
+               util/              <- common code
 
 Spack is designed so that it could live within a `standard UNIX
 directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``,
@@ -141,24 +151,22 @@ Package-related modules
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.package`
-  Contains the :class:`Package <spack.package.Package>` class, which
+  Contains the :class:`~spack.package.Package` class, which
   is the superclass for all packages in Spack.  Methods on ``Package``
   implement all phases of the :ref:`package lifecycle
   <package-lifecycle>` and manage the build process.
 
-:mod:`spack.packages`
-  Contains all of the packages in Spack and methods for managing them.
-  Functions like :func:`packages.get <spack.packages.get>` and
-  :func:`class_name_for_package_name
-  <packages.class_name_for_package_name>` handle mapping package module
-  names to class names and dynamically instantiating packages by name
-  from module files.
+:mod:`spack.util.naming`
+  Contains functions for mapping between Spack package names,
+  Python module names, and Python class names. Functions like
+  :func:`~spack.util.naming.mod_to_class` handle mapping package
+  module names to class names.
 
-:mod:`spack.relations`
-  *Relations* are relationships between packages, like
-  :func:`depends_on <spack.relations.depends_on>` and :func:`provides
-  <spack.relations.provides>`.  See :ref:`dependencies` and
-  :ref:`virtual-dependencies`.
+:mod:`spack.directives`
+  *Directives* are functions that can be called inside a package definition
+  to modify the package, like :func:`~spack.directives.depends_on`
+  and :func:`~spack.directives.provides`.  See :ref:`dependencies`
+  and :ref:`virtual-dependencies`.
 
 :mod:`spack.multimethod`
   Implementation of the :func:`@when <spack.multimethod.when>`
@@ -170,31 +178,27 @@ Spec-related modules
 ^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
-  Contains :class:`Spec <spack.spec.Spec>` and :class:`SpecParser
-  <spack.spec.SpecParser>`. Also implements most of the logic for
-  normalization and concretization of specs.
+  Contains :class:`~spack.spec.Spec` and :class:`~spack.spec.SpecParser`.
+  Also implements most of the logic for normalization and concretization
+  of specs.
 
 :mod:`spack.parse`
   Contains some base classes for implementing simple recursive descent
-  parsers: :class:`Parser <spack.parse.Parser>` and :class:`Lexer
-  <spack.parse.Lexer>`.  Used by :class:`SpecParser
-  <spack.spec.SpecParser>`.
+  parsers: :class:`~spack.parse.Parser` and :class:`~spack.parse.Lexer`.
+  Used by :class:`~spack.spec.SpecParser`.
 
 :mod:`spack.concretize`
-  Contains :class:`DefaultConcretizer
-  <spack.concretize.DefaultConcretizer>` implementation, which allows
-  site administrators to change Spack's :ref:`concretization-policies`.
+  Contains :class:`~spack.concretize.Concretizer` implementation,
+  which allows site administrators to change Spack's :ref:`concretization-policies`.
 
 :mod:`spack.version`
-  Implements a simple :class:`Version <spack.version.Version>` class
-  with simple comparison semantics.  Also implements
-  :class:`VersionRange <spack.version.VersionRange>` and
-  :class:`VersionList <spack.version.VersionList>`.  All three are
-  comparable with each other and offer union and intersection
-  operations.  Spack uses these classes to compare versions and to
-  manage version constraints on specs.  Comparison semantics are
-  similar to the ``LooseVersion`` class in ``distutils`` and to the
-  way RPM compares version strings.
+  Implements a simple :class:`~spack.version.Version` class with simple
+  comparison semantics.  Also implements :class:`~spack.version.VersionRange`
+  and :class:`~spack.version.VersionList`. All three are comparable with each
+  other and offer union and intersection operations. Spack uses these classes
+  to compare versions and to manage version constraints on specs. Comparison
+  semantics are similar to the ``LooseVersion`` class in ``distutils`` and to
+  the way RPM compares version strings.
 
 :mod:`spack.compilers`
   Submodules contains descriptors for all valid compilers in Spack.
@@ -206,15 +210,6 @@ Spec-related modules
      but compilers aren't fully integrated with the build process
      yet.
 
-:mod:`spack.architecture`
-  :func:`architecture.sys_type <spack.architecture.sys_type>` is used
-  to determine the host architecture while building.
-
-  .. warning::
-
-     Not yet implemented.  Should eventually have architecture
-     descriptions for cross-compiling.
-
 ^^^^^^^^^^^^^^^^^
 Build environment
 ^^^^^^^^^^^^^^^^^
@@ -222,7 +217,7 @@ Build environment
 :mod:`spack.stage`
   Handles creating temporary directories for builds.
 
-:mod:`spack.compilation`
+:mod:`spack.build_environment`
   This contains utility functions used by the compiler wrapper script,
   ``cc``.
 
@@ -247,9 +242,22 @@ Unit tests
   Implements Spack's test suite.  Add a module and put its name in
   the test suite in ``__init__.py`` to add more unit tests.
 
-:mod:`spack.test.mock_packages`
-  This is a fake package hierarchy used to mock up packages for
-  Spack's test suite.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Research and Monitoring Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:mod:`spack.monitor`
+  Contains :class:`~spack.monitor.SpackMonitorClient`. This is accessed from
+  the ``spack install`` and ``spack analyze`` commands to send build and
+  package metadata up to a `Spack Monitor
+  <https://github.com/spack/spack-monitor>`_ server.
+
+
+:mod:`spack.analyzers`
+  A module folder with a :class:`~spack.analyzers.analyzer_base.AnalyzerBase`
+  that provides base functions to run, save, and (optionally) upload analysis
+  results to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server.
+
 
 ^^^^^^^^^^^^^
 Other Modules
@@ -260,7 +268,7 @@ Other Modules
   tarball URLs.
 
 :mod:`spack.error`
-  :class:`SpackError <spack.error.SpackError>`, the base class for
+  :class:`~spack.error.SpackError`, the base class for
   Spack's exception hierarchy.
 
 :mod:`llnl.util.tty`
@@ -298,6 +306,235 @@ Conceptually, packages are overloaded.  They contain:
 -------------
 Stage objects
 -------------
+
+
+.. _writing-analyzers:
+
+-----------------
+Writing analyzers
+-----------------
+
+To write an analyzer, you should add a new python file to the
+analyzers module directory at ``lib/spack/spack/analyzers`` .
+Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`. For example, if you want
+to add an analyzer class ``Myanalyzer`` you would write to
+``spack/analyzers/myanalyzer.py`` and import and
+use the base as follows:
+
+.. code-block:: python
+
+    from .analyzer_base import AnalyzerBase
+
+    class Myanalyzer(AnalyzerBase):
+
+
+Note that the class name is your module file name, all lowercase
+except for the first capital letter. You can  look at other analyzers in
+that analyzer directory for examples. The guide here will tell you about the basic functions needed.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Analyzer Output Directory
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, when you run ``spack analyze run`` an analyzer output directory will
+be created in your spack user directory in your ``$HOME``. The reason we output here
+is because the install directory might not always be writable.
+
+.. code-block:: console
+
+    ~/.spack/
+      analyzers
+
+Result files will be written here, organized in subfolders in the same structure
+as the package, with each analyzer owning it's own subfolder. for example:
+
+
+.. code-block:: console
+
+    $ tree ~/.spack/analyzers/
+    /home/spackuser/.spack/analyzers/
+    └── linux-ubuntu20.04-skylake
+        └── gcc-9.3.0
+            └── zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2
+                ├── environment_variables
+                │   └── spack-analyzer-environment-variables.json
+                ├── install_files
+                │   └── spack-analyzer-install-files.json
+                └── libabigail
+                    └── lib
+                        └── spack-analyzer-libabigail-libz.so.1.2.11.xml
+
+
+Notice that for the libabigail analyzer, since results are generated per object,
+we honor the object's folder in case there are equivalently named files in
+different folders. The result files are typically written as json so they can be easily read and  uploaded in a future interaction with a monitor.
+
+
+^^^^^^^^^^^^^^^^^
+Analyzer Metadata
+^^^^^^^^^^^^^^^^^
+
+Your analyzer is required to have the class attributes ``name``, ``outfile``,
+and ``description``. These are printed to the user with they use the subcommand
+``spack analyze list-analyzers``.  Here is an example.
+As we mentioned above, note that this analyzer would live in a module named
+``libabigail.py`` in the analyzers folder so that the class can be discovered.
+
+
+.. code-block:: python
+
+    class Libabigail(AnalyzerBase):
+
+        name = "libabigail"
+        outfile = "spack-analyzer-libabigail.json"
+        description = "Application Binary Interface (ABI) features for objects"
+
+
+This means that the name and output file should be unique for your analyzer.
+Note that "all" cannot be the name of an analyzer, as this key is used to indicate
+that the user wants to run all analyzers.
+
+.. _analyzer_run_function:
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+An analyzer run Function
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The core of an analyzer is its ``run()`` function, which should accept no
+arguments. You can assume your analyzer has the package spec of interest at ``self.spec``
+and it's up to the run function to generate whatever analysis data you need,
+and then return the object with a key as the analyzer name. The result data
+should be a list of objects, each with a name, ``analyzer_name``, ``install_file``,
+and one of ``value`` or ``binary_value``. The install file should be for a relative
+path, and not the absolute path. For example, let's say we extract a metric called
+``metric`` for ``bin/wget`` using our analyzer ``thebest-analyzer``.
+We might have data that looks like this:
+
+.. code-block:: python
+
+    result = {"name": "metric", "analyzer_name": "thebest-analyzer", "value": "1", "install_file": "bin/wget"}
+
+
+We'd then return it as follows - note that they key is the analyzer name at ``self.name``.
+
+.. code-block:: python
+
+    return {self.name: result}
+
+This will save the complete result to the analyzer metadata folder, as described
+previously. If you want support for adding a different kind of metadata (e.g.,
+not associated with an install file) then the monitor server would need to be updated
+to support this first.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+An analyzer init Function
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you don't need any extra dependencies or checks, you can skip defining an analyzer
+init function, as the base class will handle it. Typically, it will accept
+a spec, and an optional output directory (if the user does not want the default
+metadata folder for analyzer results). The analyzer init function should call
+it's parent init, and then do any extra checks or validation that are required to
+work. For example:
+
+.. code-block:: python
+
+    def __init__(self, spec, dirname=None):
+        super(Myanalyzer, self).__init__(spec, dirname)
+
+        # install extra dependencies, do extra preparation and checks here
+
+
+At the end of the init, you will have available to you:
+
+ - **self.spec**: the spec object
+ - **self.dirname**: an optional directory name the user as provided at init to save
+ - **self.output_dir**: the analyzer metadata directory, where we save by default
+ - **self.meta_dir**: the path to the package metadata directory (.spack) if you need it
+
+And can proceed to write your analyzer.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Saving Analyzer Results
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The analyzer will have ``save_result`` called, with the result object generated
+to save it to the filesystem, and if the user has added the ``--monitor`` flag
+to upload it to a monitor server. If your result follows an accepted result
+format and you don't need to parse it further, you don't need to add this
+function to your class. However, if your result data is large or otherwise
+needs additional parsing, you can define it. If you define the function, it
+is useful to know about the ``output_dir`` property, which you can join
+with your output file relative path of choice:
+
+.. code-block:: python
+
+    outfile = os.path.join(self.output_dir, "my-output-file.txt")
+
+
+The directory will be provided by the ``output_dir`` property but it won't exist,
+so you should create it:
+
+
+.. code::block:: python
+
+    # Create the output directory
+    if not os.path.exists(self._output_dir):
+        os.makedirs(self._output_dir)
+
+
+If you are generating results that match to specific files in the package
+install directory, you should try to maintain those paths in the case that
+there are equivalently named files in different directories that would
+overwrite one another. As an example of an analyzer with a custom save,
+the Libabigail analyzer saves ``*.xml`` files to the analyzer metadata
+folder in ``run()``, as they are either binaries, or as xml (text) would
+usually be too big to pass in one request. For this reason, the files
+are saved during ``run()`` and the filenames added to the result object,
+and then when the result object is passed back into ``save_result()``,
+we skip saving to the filesystem, and instead read the file and send
+each one (separately) to the monitor:
+
+
+.. code-block:: python
+
+    def save_result(self, result, monitor=None, overwrite=False):
+        """ABI results are saved to individual files, so each one needs to be
+        read and uploaded. Result here should be the lookup generated in run(),
+        the key is the analyzer name, and each value is the result file.
+        We currently upload the entire xml as text because libabigail can't
+        easily read gzipped xml, but this will be updated when it can.
+        """
+        if not monitor:
+            return
+
+        name = self.spec.package.name
+
+        for obj, filename in result.get(self.name, {}).items():
+
+            # Don't include the prefix
+            rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
+
+            # We've already saved the results to file during run
+            content = spack.monitor.read_file(filename)
+
+            # A result needs an analyzer, value or binary_value, and name
+            data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
+            tty.info("Sending result for %s %s to monitor." % (name, rel_path))
+            monitor.send_analyze_metadata(self.spec.package, {"libabigail": [data]})
+
+
+
+Notice that this function, if you define it, requires a result object (generated by
+``run()``, a monitor (if you want to send), and a boolean ``overwrite`` to be used
+to check if a result exists first, and not write to it if the result exists and
+overwrite is False. Also notice that since we already saved these files to the analyzer metadata folder, we return early if a monitor isn't defined, because this function serves to send  results to the monitor. If you haven't saved anything to the analyzer metadata folder
+yet, you might want to do that here. You should also use ``tty.info`` to give
+the user a message of "Writing result to $DIRNAME."
+
 
 .. _writing-commands:
 
@@ -345,6 +582,183 @@ Whenever you add/remove/rename a command or flags for an existing command,
 make sure to update Spack's `Bash tab completion script
 <https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
 
+
+-------------
+Writing Hooks
+-------------
+
+A hook is a callback that makes it easy to design functions that run
+for different events. We do this by way of defining hook types, and then
+inserting them at different places in the spack code base. Whenever a hook
+type triggers by way of a function call, we find all the hooks of that type,
+and run them.
+
+Spack defines hooks by way of a module at ``lib/spack/spack/hooks`` where we can define
+types of hooks in the ``__init__.py``, and then python files in that folder
+can use hook functions. The files are automatically parsed, so if you write
+a new file for some integration (e.g., ``lib/spack/spack/hooks/myintegration.py``
+you can then write hook functions in that file that will be automatically detected,
+and run whenever your hook is called. This section will cover the basic kind
+of hooks, and how to write them.
+
+^^^^^^^^^^^^^^
+Types of Hooks
+^^^^^^^^^^^^^^
+
+The following hooks are currently implemented to make it easy for you,
+the developer, to add hooks at different stages of a spack install or similar.
+If there is a hook that you would like and is missing, you can propose to add a new one.
+
+"""""""""""""""""""""
+``pre_install(spec)``
+"""""""""""""""""""""
+
+A ``pre_install`` hook is run within an install subprocess, directly before
+the install starts. It expects a single argument of a spec, and is run in
+a multiprocessing subprocess. Note that if you see ``pre_install`` functions associated with packages these are not hooks
+as we have defined them here, but rather callback functions associated with
+a package install.
+
+
+""""""""""""""""""""""
+``post_install(spec)``
+""""""""""""""""""""""
+
+A ``post_install`` hook is run within an install subprocess, directly after
+the install finishes, but before the build stage is removed. If you
+write one of these hooks, you should expect it to accept a spec as the only
+argument. This is run in a multiprocessing subprocess. This ``post_install`` is
+also seen in packages, but in this context not related to the hooks described
+here.
+
+
+""""""""""""""""""""""""""
+``on_install_start(spec)``
+""""""""""""""""""""""""""
+
+This hook is run at the beginning of ``lib/spack/spack/installer.py``,
+in the install function of a ``PackageInstaller``,
+and importantly is not part of a build process, but before it. This is when
+we have just newly grabbed the task, and are preparing to install. If you
+write a hook of this type, you should provide the spec to it.
+
+.. code-block:: python
+
+    def on_install_start(spec):
+        """On start of an install, we want to...
+        """
+        print('on_install_start')
+
+
+""""""""""""""""""""""""""""
+``on_install_success(spec)``
+""""""""""""""""""""""""""""
+
+This hook is run on a successful install, and is also run inside the build
+process, akin to ``post_install``. The main difference is that this hook
+is run outside of the context of the stage directory, meaning after the
+build stage has been removed and the user is alerted that the install was
+successful. If you need to write a hook that is run on success of a particular
+phase, you should use ``on_phase_success``.
+
+""""""""""""""""""""""""""""
+``on_install_failure(spec)``
+""""""""""""""""""""""""""""
+
+This hook is run given an install failure that happens outside of the build
+subprocess, but somewhere in ``installer.py`` when something else goes wrong.
+If you need to write a hook that is relevant to a failure within a build
+process, you would want to instead use ``on_phase_failure``.
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""
+``on_phase_success(pkg, phase_name, log_file)``
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+This hook is run within the install subprocess, and specifically when a phase
+successfully finishes. Since we are interested in the package, the name of
+the phase, and any output from it, we require:
+
+ - **pkg**: the package variable, which also has the attached spec at ``pkg.spec``
+ - **phase_name**: the name of the phase that was successful (e.g., configure)
+ - **log_file**: the path to the file with output, in case you need to inspect or otherwise interact with it.
+
+"""""""""""""""""""""""""""""""""""""""""""""
+``on_phase_error(pkg, phase_name, log_file)``
+"""""""""""""""""""""""""""""""""""""""""""""
+
+In the case of an error during a phase, we might want to trigger some event
+with a hook, and this is the purpose of this particular hook. Akin to
+``on_phase_success`` we require the same variables - the package that failed,
+the name of the phase, and the log file where we might find errors.
+
+"""""""""""""""""""""""""""""""""
+``on_analyzer_save(pkg, result)``
+"""""""""""""""""""""""""""""""""
+
+After an analyzer has saved some result for a package, this hook is called,
+and it provides the package that we just ran the analysis for, along with
+the loaded result. Typically, a result is structured to have the name
+of the analyzer as key, and the result object that is defined in detail in
+:ref:`analyzer_run_function`.
+
+.. code-block:: python
+
+    def on_analyzer_save(pkg, result):
+        """given a package and a result...
+        """
+        print('Do something extra with a package analysis result here')
+
+
+^^^^^^^^^^^^^^^^^^^^^^
+Adding a New Hook Type
+^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new hook type is very simple!  In ``lib/spack/spack/hooks/__init__.py``
+you can simply create a new ``HookRunner`` that is named to match your new hook.
+For example, let's say you want to add a new hook called ``post_log_write``
+to trigger after anything is written to a logger. You would add it as follows:
+
+.. code-block:: python
+
+    # pre/post install and run by the install subprocess
+    pre_install = HookRunner('pre_install')
+    post_install = HookRunner('post_install')
+
+    # hooks related to logging
+    post_log_write = HookRunner('post_log_write') # <- here is my new hook!
+
+
+You then need to decide what arguments my hook would expect. Since this is
+related to logging, let's say that you want a message and level. That means
+that when you add a python file to the ``lib/spack/spack/hooks``
+folder with one or more callbacks intended to be triggered by this hook. You might
+use my new hook as follows:
+
+.. code-block:: python
+
+    def post_log_write(message, level):
+        """Do something custom with the messsage and level every time we write
+        to the log
+        """
+        print('running post_log_write!')
+
+
+To use the hook, we would call it as follows somewhere in the logic to do logging.
+In this example, we use it outside of a logger that is already defined:
+
+.. code-block:: python
+
+    import spack.hooks
+
+    # We do something here to generate a logger and message
+    spack.hooks.post_log_write(message, logger.level)
+
+
+This is not to say that this would be the best way to implement an integration
+with the logger (you'd probably want to write a custom logger, or you could
+have the hook defined within the logger) but serves as an example of writing a hook.
+
 ----------
 Unit tests
 ----------
@@ -352,6 +766,38 @@ Unit tests
 ------------
 Unit testing
 ------------
+
+---------------------
+Developer environment
+---------------------
+
+.. warning::
+
+    This is an experimental feature. It is expected to change and you should
+    not use it in a production environment.
+
+
+When installing a package, we currently have support to export environment
+variables to specify adding debug flags to the build. By default, a package
+install will build without any debug flag. However, if you want to add them,
+you can export:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   spack install zlib
+
+
+If you want to add custom flags, you should export an additional variable:
+
+.. code-block:: console
+
+   export SPACK_ADD_DEBUG_FLAGS=true
+   export SPACK_DEBUG_FLAGS="-g"
+   spack install zlib
+
+These environment variables will eventually be integrated into spack so
+they are set from the command line.
 
 ------------------
 Developer commands
@@ -362,6 +808,29 @@ Developer commands
 ^^^^^^^^^^^^^
 ``spack doc``
 ^^^^^^^^^^^^^
+
+.. _cmd-spack-style:
+
+^^^^^^^^^^^^^^^
+``spack style``
+^^^^^^^^^^^^^^^
+
+spack style exists to help the developer user to check imports and style with
+mypy, flake8, isort, and (soon) black. To run all style checks, simply do:
+
+.. code-block:: console
+
+    $ spack style
+
+To run automatic fixes for isort you can do:
+
+.. code-block:: console
+
+    $ spack style --fix
+
+You do not need any of these Python packages installed on your system for
+the checks to work! Spack will bootstrap install them from packages for
+your use.
 
 ^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
@@ -396,22 +865,88 @@ other Spack modules:
    True
    >>>
 
-You can also run a single command:
+If you prefer using an IPython interpreter, given that IPython is installed
+you can specify the interpreter with ``-i``:
+
+.. code-block:: console
+
+   $ spack python -i ipython
+   Python 3.8.3 (default, May 19 2020, 18:47:26)
+   Type 'copyright', 'credits' or 'license' for more information
+   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
+
+
+   Spack version 0.16.0
+   Python 3.8.3, Linux x86_64
+
+   In [1]:
+
+
+With either interpreter you can run a single command:
 
 .. code-block:: console
 
    $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Fedora', '25', 'Workstation Edition')
+   ('Ubuntu', '18.04', 'Bionic Beaver')
+
+   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
+   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
 
 or a file:
 
 .. code-block:: console
 
    $ spack python ~/test_fetching.py
+   $ spack python -i ipython ~/test_fetching.py
 
 just like you would with the normal ``python`` command.
 
+
 .. _cmd-spack-url:
+
+
+^^^^^^^^^^^^^^^
+``spack blame``
+^^^^^^^^^^^^^^^
+
+Spack blame is a way to quickly see contributors to packages or files
+in the spack repository. You should provide a target package name or
+file name to the command. Here is an example asking to see contributions
+for the package "python":
+
+.. code-block:: console
+
+    $ spack blame python
+    LAST_COMMIT  LINES  %      AUTHOR            EMAIL
+    2 weeks ago  3      0.3    Mickey Mouse   <cheddar@gmouse.org>
+    a month ago  927    99.7   Minnie Mouse   <swiss@mouse.org>
+
+    2 weeks ago  930    100.0
+
+
+By default, you will get a table view (shown above) sorted by date of contribution,
+with the most recent contribution at the top.  If you want to sort instead
+by percentage of code contribution, then add ``-p``:
+
+.. code-block:: console
+
+    $ spack blame -p python
+
+
+And to see the git blame view, add ``-g`` instead:
+
+
+.. code-block:: console
+
+    $ spack blame -g python
+
+
+Finally, to get a json export of the data, add ``--json``:
+
+.. code-block:: console
+
+    $ spack blame --json python
+
 
 ^^^^^^^^^^^^^
 ``spack url``
@@ -553,8 +1088,10 @@ develop onto release branches. This is typically done by cherry-picking
 bugfix commits off of ``develop``.
 
 To avoid version churn for users of a release series, minor releases
-should **not** make changes that would change the concretization of
+**should not** make changes that would change the concretization of
 packages. They should generally only contain fixes to the Spack core.
+However, sometimes priorities are such that new functionality needs to
+be added to a minor release.
 
 Both major and minor releases are tagged. After each release, we merge
 the release branch back into ``develop`` so that the version bump and any
@@ -563,50 +1100,51 @@ convenience, we also tag the latest release as ``releases/latest``,
 so that users can easily check it out to get the latest
 stable version. See :ref:`merging-releases` for more details.
 
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Scheduling work for releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We schedule work for releases by creating `GitHub projects
 <https://github.com/spack/spack/projects>`_. At any time, there may be
-several open release projects. For example, here are two releases (from
+several open release projects. For example, below are two releases (from
 some past version of the page linked above):
 
 .. image:: images/projects.png
 
-Here, there's one release in progress for ``0.15.1`` and another for
+This image shows one release in progress for ``0.15.1`` and another for
 ``0.16.0``. Each of these releases has a project board containing issues
 and pull requests. GitHub shows a status bar with completed work in
 green, work in progress in purple, and work not started yet in gray, so
 it's fairly easy to see progress.
 
-Spack's project boards are not firm commitments, and we move work between
+Spack's project boards are not firm commitments so we move work between
 releases frequently. If we need to make a release and some tasks are not
-yet done, we will simply move them to next minor or major release, rather
+yet done, we will simply move them to the next minor or major release, rather
 than delaying the release to complete them.
 
 For more on using GitHub project boards, see `GitHub's documentation
 <https://docs.github.com/en/github/managing-your-work-on-github/about-project-boards>`_.
 
+
 .. _major-releases:
 
 ^^^^^^^^^^^^^^^^^^^^^
-Making Major Releases
+Making major releases
 ^^^^^^^^^^^^^^^^^^^^^
 
-Assuming you've already created a project board and completed the work
-for a major release, the steps to make the release are as follows:
+Assuming a project board has already been created and all required work
+completed, the steps to make the major release are:
 
 #. Create two new project boards:
 
    * One for the next major release
    * One for the next point release
 
-#. Move any tasks that aren't done yet to one of the new project boards.
-   Small bugfixes should go to the next point release. Major features,
-   refactors, and changes that could affect concretization should go in
-   the next major release.
+#. Move any optional tasks that are not done to one of the new project boards.
+
+   In general, small bugfixes should go to the next point release. Major
+   features, refactors, and changes that could affect concretization should
+   go in the next major release.
 
 #. Create a branch for the release, based on ``develop``:
 
@@ -618,11 +1156,14 @@ for a major release, the steps to make the release are as follows:
    ``releases/vX.Y``. That is, you should create a ``releases/vX.Y``
    branch if you are preparing the ``X.Y.0`` release.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.13.0
+#. Bump the version in ``lib/spack/spack/__init__.py``.
+
+   See `this example from 0.13.0
    <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
 
-#. Update ``CHANGELOG.md`` with major highlights in bullet form. Use
-   proper markdown formatting, like `this example from 0.15.0
+#. Update ``CHANGELOG.md`` with major highlights in bullet form.
+
+   Use proper markdown formatting, like `this example from 0.15.0
    <https://github.com/spack/spack/commit/d4bf70d9882fcfe88507e9cb444331d7dd7ba71c>`_.
 
 #. Push the release branch to GitHub.
@@ -646,33 +1187,33 @@ for a major release, the steps to make the release are as follows:
 .. _point-releases:
 
 ^^^^^^^^^^^^^^^^^^^^^
-Making Point Releases
+Making point releases
 ^^^^^^^^^^^^^^^^^^^^^
 
-This assumes you've already created a project board for a point release
-and completed the work to be done for the release. To make a point
-release:
+Assuming a project board has already been created and all required work
+completed, the steps to make the point release are:
 
-#. Create one new project board for the next point release.
+#. Create a new project board for the next point release.
 
-#. Move any cards that aren't done yet to the next project board.
+#. Move any optional tasks that are not done to the next project board.
 
-#. Check out the release branch (it should already exist). For the
-   ``X.Y.Z`` release, the release branch is called ``releases/vX.Y``. For
-   ``v0.15.1``, you would check out ``releases/v0.15``:
+#. Check out the release branch (it should already exist).
+
+    For the ``X.Y.Z`` release, the release branch is called ``releases/vX.Y``.
+    For ``v0.15.1``, you would check out ``releases/v0.15``:
 
    .. code-block:: console
 
       $ git checkout releases/v0.15
 
 #. Cherry-pick each pull request in the ``Done`` column of the release
-   project onto the release branch.
+   project board onto the release branch.
 
    This is **usually** fairly simple since we squash the commits from the
-   vast majority of pull requests, which means there is only one commit
+   vast majority of pull requests. That means there is only one commit
    per pull request to cherry-pick. For example, `this pull request
    <https://github.com/spack/spack/pull/15777>`_ has three commits, but
-   the were squashed into a single commit on merge. You can see the
+   they were squashed into a single commit on merge. You can see the
    commit that was created here:
 
    .. image:: images/pr-commit.png
@@ -684,9 +1225,8 @@ release:
 
       $ git cherry-pick 7e46da7
 
-   For pull requests that were rebased, you'll need to cherry-pick each
-   rebased commit individually. There have not been any rebased PRs like
-   this in recent point releases.
+   For pull requests that were rebased (or not squashed), you'll need to
+   cherry-pick each associated commit individually.
 
    .. warning::
 
@@ -699,30 +1239,35 @@ release:
       cherry-picked all the commits in order. This generally means there
       is some other intervening pull request that the one you're trying
       to pick depends on. In these cases, you'll need to make a judgment
-      call:
+      call regarding those pull requests.  Consider the number of affected
+      files and or the resulting differences.
 
-      1. If the dependency is small, you might just cherry-pick it, too.
-         If you do this, add it to the release board.
+      1. If the dependency changes are small, you might just cherry-pick it,
+         too. If you do this, add the task to the release board.
 
-      2. If it is large, then you may decide that this fix is not worth
-         including in a point release, in which case you should remove it
-         from the release project.
+      2. If the changes are large, then you may decide that this fix is not
+         worth including in a point release, in which case you should remove
+         the task from the release project.
 
       3. You can always decide to manually back-port the fix to the release
          branch if neither of the above options makes sense, but this can
          require a lot of work. It's seldom the right choice.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.14.1
+#. Bump the version in ``lib/spack/spack/__init__.py``.
+
+   See `this example from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
 
-#. Update ``CHANGELOG.md`` with a list of bugfixes. This is typically just a
-   summary of the commits you cherry-picked onto the release branch. See
-   `the changelog from 0.14.1
+#. Update ``CHANGELOG.md`` with a list of the changes.
+
+   This is typically a summary of the commits you cherry-picked onto the
+   release branch. See `the changelog from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
 
 #. Push the release branch to GitHub.
 
 #. Make sure CI passes on the release branch, including:
+
    * Regular unit tests
    * Build tests
    * The E4S pipeline at `gitlab.spack.io <https://gitlab.spack.io>`_
@@ -745,23 +1290,26 @@ release:
 Publishing a release on GitHub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Go to `github.com/spack/spack/releases
-   <https://github.com/spack/spack/releases>`_ and click ``Draft a new
-   release``.  Set the following:
+#. Create the release in GitHub.
 
-   * ``Tag version`` should start with ``v`` and contain *all three*
-     parts of the version, .g. ``v0.15.1``. This is the name of the tag
-     that will be created.
+   * Go to
+     `github.com/spack/spack/releases <https://github.com/spack/spack/releases>`_
+     and click ``Draft a new release``.
 
-   * ``Target`` should be the ``releases/vX.Y`` branch (e.g., ``releases/v0.15``).
+   * Set ``Tag version`` to the name of the tag that will be created.
 
-   * ``Release title`` should be ``vX.Y.Z`` (To match the tag, e.g., ``v0.15.1``).
+     The name should start with ``v`` and contain *all three*
+     parts of the version (e.g. ``v0.15.0`` or ``v0.15.1``).
 
-   * For the text, paste the latest release markdown from your ``CHANGELOG.md``.
+   * Set ``Target`` to the ``releases/vX.Y`` branch (e.g., ``releases/v0.15``).
 
-   You can save the draft and keep coming back to this as you prepare the release.
+   * Set ``Release title`` to ``vX.Y.Z`` to match the tag (e.g., ``v0.15.1``).
 
-#. When you are done, click ``Publish release``.
+   * Paste the latest release markdown from your ``CHANGELOG.md`` file as the text.
+
+   * Save the draft so you can keep coming back to it as you prepare the release.
+
+#. When you are ready to finalize the release, click ``Publish release``.
 
 #. Immediately after publishing, go back to
    `github.com/spack/spack/releases
@@ -769,22 +1317,26 @@ Publishing a release on GitHub
    auto-generated ``.tar.gz`` file for the release. It's the ``Source
    code (tar.gz)`` link.
 
-#. Click ``Edit`` on the release you just did and attach the downloaded
+#. Click ``Edit`` on the release you just made and attach the downloaded
    release tarball as a binary. This does two things:
 
-   #. Makes sure that the hash of our releases doesn't change over time.
-      GitHub sometimes annoyingly changes they way they generate
-      tarballs, and then hashes can change if you rely on the
+   #. Makes sure that the hash of our releases does not change over time.
+
+      GitHub sometimes annoyingly changes the way they generate tarballs
+      that can result in the hashes changing if you rely on the
       auto-generated tarball links.
 
-   #. Gets us download counts on releases visible through the GitHub
-      API. GitHub tracks downloads of artifacts, but *not* the source
+   #. Gets download counts on releases visible through the GitHub API.
+
+      GitHub tracks downloads of artifacts, but *not* the source
       links. See the `releases
       page <https://api.github.com/repos/spack/spack/releases>`_ and search
       for ``download_count`` to see this.
 
-#. Go to `readthedocs.org <https://readthedocs.org/projects/spack>`_ and activate
-   the release tag. This builds the documentation and makes the released version
+#. Go to `readthedocs.org <https://readthedocs.org/projects/spack>`_ and
+   activate the release tag.
+
+   This builds the documentation and makes the released version
    selectable in the versions menu.
 
 
@@ -798,23 +1350,23 @@ If the new release is the **highest** Spack release yet, you should
 also tag it as ``releases/latest``. For example, suppose the highest
 release is currently ``0.15.3``:
 
-     * If you are releasing ``0.15.4`` or ``0.16.0``, then you should tag
-       it with ``releases/latest``, as these are higher than ``0.15.3``.
+* If you are releasing ``0.15.4`` or ``0.16.0``, then you should tag
+  it with ``releases/latest``, as these are higher than ``0.15.3``.
 
-     * If you are making a new release of an **older** major version of
-       Spack, e.g. ``0.14.4``, then you should not tag it as
-       ``releases/latest`` (as there are newer major versions).
+* If you are making a new release of an **older** major version of
+  Spack, e.g. ``0.14.4``, then you should not tag it as
+  ``releases/latest`` (as there are newer major versions).
 
-   To tag ``releases/latest``, do this:
+To tag ``releases/latest``, do this:
 
-   .. code-block:: console
+.. code-block:: console
 
-      $ git checkout releases/vX.Y     # vX.Y is the new release's branch
-      $ git tag --force releases/latest
-      $ git push --tags
+   $ git checkout releases/vX.Y     # vX.Y is the new release's branch
+   $ git tag --force releases/latest
+   $ git push --force --tags
 
-   The ``--force`` argument makes ``git`` overwrite the existing
-   ``releases/latest`` tag with the new one.
+The ``--force`` argument to ``git tag`` makes ``git`` overwrite the existing
+``releases/latest`` tag with the new one.
 
 We also merge each release that we tag as ``releases/latest`` into ``develop``.
 Make sure to do this with a merge commit:
@@ -822,17 +1374,17 @@ Make sure to do this with a merge commit:
 .. code-block:: console
 
    $ git checkout develop
-   $ git merge --no-ff vX.Y.Z  # vX.Y.Z is the new release's tag
+   $ git merge --no-ff -s ours vX.Y.Z  # vX.Y.Z is the new release's tag
    $ git push
 
 We merge back to ``develop`` because it:
 
-  * updates the version and ``CHANGELOG.md`` on ``develop``.
+  * updates the version and ``CHANGELOG.md`` on ``develop``; and
   * ensures that your release tag is reachable from the head of
-    ``develop``
+    ``develop``.
 
-We *must* use a real merge commit (via the ``--no-ff`` option) because it
-ensures that the release tag is reachable from the tip of ``develop``.
+We *must* use a real merge commit (via the ``--no-ff`` option) to
+ensure that the release tag is reachable from the tip of ``develop``.
 This is necessary for ``spack -V`` to work properly -- it uses ``git
 describe --tags`` to find the last reachable tag in the repository and
 reports how far we are from it. For example:
@@ -850,6 +1402,7 @@ the release is complete and tagged. If you do it before you've tagged the
 release and later decide you want to tag some later commit, you'll need
 to merge again.
 
+
 .. _announcing-releases:
 
 ^^^^^^^^^^^^^^^^^^^^
@@ -860,20 +1413,40 @@ We announce releases in all of the major Spack communication channels.
 Publishing the release takes care of GitHub. The remaining channels are
 Twitter, Slack, and the mailing list. Here are the steps:
 
-#. Make a tweet to announce the release. It should link to the release's
-   page on GitHub. You can base it on `this example tweet
-   <https://twitter.com/spackpm/status/1231761858182307840>`_.
+#. Announce the release on Twitter.
 
-#. Ping ``@channel`` in ``#general`` on Slack (`spackpm.slack.com
-   <https://spackpm.slack.com>`_) with a link to the tweet. The tweet
-   will be shown inline so that you do not have to retype your release
-   announcement.
+   * Compose the tweet on the ``@spackpm`` account per the
+     ``spack-twitter`` slack channel.
 
-#. Email the Spack mailing list to let them know about the release. As
-   with the tweet, you likely want to link to the release's page on
-   GitHub. It's also helpful to include some information directly in the
-   email. You can base yours on this `example email
-   <https://groups.google.com/forum/#!topic/spack/WT4CT9i_X4s>`_.
+   * Be sure to include a link to the release's page on GitHub.
 
-Once you've announced the release, congratulations, you're done! You've
-finished making the release!
+     You can base the tweet on `this
+     example <https://twitter.com/spackpm/status/1231761858182307840>`_.
+
+#. Announce the release on Slack.
+
+   * Compose a message in the ``#general`` Slack channel
+     (`spackpm.slack.com <https://spackpm.slack.com>`_).
+
+   * Preface the message with ``@channel`` to notify even those
+     people not currently logged in.
+
+   * Be sure to include a link to the tweet above.
+
+   The tweet will be shown inline so that you do not have to retype
+   your release announcement.
+
+#. Announce the release on the Spack mailing list.
+
+   * Compose an email to the Spack mailing list.
+
+   * Be sure to include a link to the release's page on GitHub.
+
+   * It is also helpful to include some information directly in the
+     email.
+
+   You can base your announcement on this `example
+   email <https://groups.google.com/forum/#!topic/spack/WT4CT9i_X4s>`_.
+
+Once you've completed the above steps, congratulations, you're done!
+You've finished making the release!

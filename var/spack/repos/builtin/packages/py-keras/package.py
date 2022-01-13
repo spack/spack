@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class PyKeras(PythonPackage):
     """Deep Learning library for Python. Convnets, recurrent neural networks,
     and more. Runs on Theano or TensorFlow."""
 
-    homepage = "http://keras.io"
-    url      = "https://pypi.io/packages/source/K/Keras/Keras-1.2.2.tar.gz"
+    homepage = "https://keras.io"
+    pypi = "Keras/Keras-1.2.2.tar.gz"
 
+    version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
     version('2.2.3', sha256='694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de')
     version('2.2.2', sha256='468d98da104ec5c3dbb10c2ef6bb345ab154f6ca2d722d4c250ef4d6105de17a')
@@ -39,9 +40,13 @@ class PyKeras(PythonPackage):
     version('1.1.1', sha256='be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6')
     version('1.1.0', sha256='36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d')
 
-    depends_on('py-keras-applications', type='run', when='@2.2:')
-    depends_on('py-keras-preprocessing', type='run', when='@2.2:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2.4:')
+    depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4:')
+    depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4:')
+    depends_on('py-h5py', type=('build', 'run'), when='@2.4:')
+    depends_on('py-keras-applications', type='run', when='@2.2')
+    depends_on('py-keras-preprocessing', type='run', when='@2.2')
     depends_on('py-setuptools', type='build')
-    depends_on('py-theano', type=('build', 'run'))
+    depends_on('py-theano', type=('build', 'run'), when='@:2.2')
     depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@:2.2')

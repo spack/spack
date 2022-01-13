@@ -1,0 +1,18 @@
+diff --git a/simde/simde-features.h b/simde/simde-features.h
+index 2a3ce9c..5cfcf48 100644
+--- a/simde/simde-features.h
++++ b/simde/simde-features.h
+@@ -252,8 +252,10 @@
+ 
+ #if !defined(SIMDE_ARM_SVE_NATIVE) && !defined(SIMDE_ARM_SVE_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+   #if defined(SIMDE_ARCH_ARM_SVE)
+-    #define SIMDE_ARM_SVE_NATIVE
+-    #include <arm_sve.h>
++    #if !defined(HEDLEY_GCC_VERSION) || HEDLEY_GCC_VERSION_CHECK(10,0,0)
++      #define SIMDE_ARM_SVE_NATIVE
++      #include <arm_sve.h>
++    #endif
+   #endif
+ #endif
+ 
+

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mpt(Package):
     Note: HPE MPI is proprietry software. Spack will search your
     current directory for the download file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://buy.hpe.com/us/en/software/high-performance-computing-software/hpe-message-passing-interface-mpi/p/1010144155"
 

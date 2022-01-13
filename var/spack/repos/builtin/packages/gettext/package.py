@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,10 +73,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             config_args.append('--disable-curses')
 
         if '+libxml2' in spec:
-            config_args.append('CPPFLAGS=-I{0}/include'.format(
+            config_args.append('--with-libxml2-prefix={0}'.format(
                 spec['libxml2'].prefix))
-            config_args.append('LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(
-                spec['libxml2'].libs.directories[0]))
         else:
             config_args.append('--with-included-libxml')
 

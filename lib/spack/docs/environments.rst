@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -248,9 +248,9 @@ Users can add abstract specs to an Environment using the ``spack add``
 command. The most important component of an Environment is a list of
 abstract specs.
 
-Adding a spec adds to the manifest (the ``spack.yaml`` file) and to
-the roots of the Environment, but does not affect the concrete specs
-in the lockfile, nor does it install the spec.
+Adding a spec adds to the manifest (the ``spack.yaml`` file), which is
+used to define the roots of the Environment, but does not affect the
+concrete specs in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
@@ -356,6 +356,18 @@ command also stores a Spack repo containing the ``package.py`` file
 used at install time for each package in the ``repos/`` directory in
 the Environment.
 
+The ``--no-add`` option can be used in a concrete environment to tell
+spack to install specs already present in the environment but not to
+add any new root specs to the environment.  For root specs provided
+to ``spack install`` on the command line, ``--no-add`` is the default,
+while for dependency specs on the other hand, it is optional.  In other
+words, if there is an unambiguous match in the active concrete environment
+for a root spec provided to ``spack install`` on the command line, spack
+does not require you to specify the ``--no-add`` option to prevent the spec
+from being added again.  At the same time, a spec that already exists in the
+environment, but only as a dependency, will be added to the environment as a
+root spec without the ``--no-add`` option.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -399,6 +411,12 @@ There are two ways to include configuration information in a Spack Environment:
 
 #. Included in the ``spack.yaml`` file from another file.
 
+Many Spack commands also affect configuration information in files
+automatically. Those commands take a ``--scope`` argument, and the
+environment can be specified by ``env:NAME`` (to affect environment
+``foo``, set ``--scope env:foo``). These commands will automatically
+manipulate configuration inline in the ``spack.yaml`` file.
+
 """""""""""""""""""""
 Inline configurations
 """""""""""""""""""""
@@ -441,8 +459,8 @@ Environments can include files with either relative or absolute
 paths. Inline configurations take precedence over included
 configurations, so you don't have to change shared configuration files
 to make small changes to an individual Environment. Included configs
-listed later will have higher precedence, as the included configs are
-applied in order.
+listed earlier will have higher precedence, as the included configs are
+applied in reverse order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Manually Editing the Specs List
@@ -705,6 +723,8 @@ Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
 environment and the view are always compatible.
 
+.. _configuring_environment_views:
+
 """""""""""""""""""""""""""""
 Configuring environment views
 """""""""""""""""""""""""""""
@@ -712,13 +732,17 @@ Configuring environment views
 The Spack Environment manifest file has a top-level keyword
 ``view``. Each entry under that heading is a view descriptor, headed
 by a name. The view descriptor contains the root of the view, and
-optionally the projections for the view, and ``select`` and
-``exclude`` lists for the view. For example, in the following manifest
+optionally the projections for the view, ``select`` and
+``exclude`` lists for the view and link information via ``link`` and
+``link_type``. For example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
 package. This view selects all packages that depend on MPI, and
 excludes those built with the PGI compiler at version 18.5.
+All the dependencies of each root spec in the environment will be linked
+in the view due to the command ``link: all`` and the files in the view will
+be symlinks to the spack install directories.
 
 .. code-block:: yaml
 
@@ -731,11 +755,16 @@ excludes those built with the PGI compiler at version 18.5.
          exclude: ['%pgi@18.5']
          projections:
            all: {name}/{version}-{compiler.name}
+         link: all
+         link_type: symlink
 
 For more information on using view projections, see the section on
 :ref:`adding_projections_to_views`. The default for the ``select`` and
 ``exclude`` values is to select everything and exclude nothing. The
-default projection is the default view projection (``{}``).
+default projection is the default view projection (``{}``). The ``link``
+defaults to ``all`` but can also be ``roots`` when only the root specs
+in the environment are desired in the view. The ``link_type`` defaults
+to ``symlink`` but can also take the value of ``hardlink`` or ``copy``.
 
 Any number of views may be defined under the ``view`` heading in a
 Spack Environment.

@@ -1,13 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import hashlib
+import sys
+from typing import Any, Callable, Dict  # novm
 
 import llnl.util.tty as tty
-
 
 #: Set of hash algorithms that Spack can use, mapped to digest size in bytes
 hashes = {
@@ -30,7 +30,7 @@ _deprecated_hash_algorithms = ['md5']
 
 
 #: cache of hash functions generated
-_hash_functions = {}
+_hash_functions = {}  # type: Dict[str, Callable[[], Any]]
 
 
 class DeprecatedHash(object):
@@ -92,6 +92,11 @@ def checksum(hashlib_algo, filename, **kwargs):
     """Returns a hex digest of the filename generated using an
        algorithm from hashlib.
     """
+    if isinstance(hashlib_algo, str):
+        if hashlib_algo not in hashes:
+            raise ValueError("Invalid hash algorithm: ", hashlib_algo)
+        hashlib_algo = hash_fun_for_algo(hashlib_algo)
+
     block_size = kwargs.get('block_size', 2**20)
     hasher = hashlib_algo()
     with open(filename, 'rb') as file:

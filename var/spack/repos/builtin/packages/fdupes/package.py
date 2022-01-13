@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Fdupes(AutotoolsPackage):
     variant('ncurses', default=True, description='ncurses support')
 
     depends_on('ncurses', when='+ncurses')
+    depends_on('pcre2', when='+ncurses')
 
     def configure_args(self):
         return self.with_or_without('ncurses')

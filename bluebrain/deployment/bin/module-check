@@ -1,0 +1,37 @@
+#!/bin/bash -eu
+
+. /etc/profile.d/modules.sh
+
+VENV=$1
+CONFIG=$2
+RELEASE=$3
+MODULE=$4
+
+export MODULEPATH=""
+. ${CONFIG}
+
+# create a sed script to ignore modules that are installed via
+# pip-incompatible ways and don't leave any eggy remnants behind.
+SED_SCRIPT=$(mktemp)
+cat <<EOF >${SED_SCRIPT}
+/requires neuron, which is not installed/d
+/requires tensorflow, which is not installed/d
+EOF
+trap "rm -rf '${SED_SCRIPT}'" EXIT
+
+module purge
+module load "${RELEASE}" "${MODULE}" 2> /dev/null
+source ${VENV}/bin/activate
+PIP_CHECK=$(python -mpip check || true)
+if [[ ${PIP_CHECK} =~ "No broken requirements found." ]]; then
+    exit 0
+elif [[ -z $(echo "${PIP_CHECK}"|sed -f "${SED_SCRIPT}") ]]; then
+    exit 0
+else
+    MSG=$(echo "Module ${MODULE##*x86_64/}")
+    echo "${MSG}"|sed 's/./-/g'
+    echo "${MSG}"
+    echo "${MSG}"|sed 's/./-/g'
+    echo "${PIP_CHECK}"
+    exit 1
+fi

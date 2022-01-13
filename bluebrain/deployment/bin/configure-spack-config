@@ -1,0 +1,60 @@
+#!/bin/bash -eu
+
+set -o nounset
+
+if [[ -z "${SPACK_ROOT:-}" ]]; then
+    echo "need to operate with a sourced Spack!"
+    exit 1
+fi
+
+if [[ -z "${DEPLOYMENT_ROOT:-}" ]]; then
+    echo "need to operate with DEPLOYMENT_ROOT set!"
+    exit 1
+fi
+
+if [[ -z "${MODULE_ROOT:-}" ]]; then
+    echo "need to operate with MODULE_ROOT set!"
+    exit 1
+fi
+
+if [[ "$#" -ne 2 ]]; then
+    echo "usage: ${0} INPUT_DIRECTORY OUTPUT_DIRECTORY"
+    exit 1
+fi
+
+input_dir="$1"
+config_dir="$2"
+
+suffix=""
+additional_upstreams=""
+if [[ -n "${GITHUB_PULL_REQUEST_ID:-}" ]]; then
+    suffix="_$GITHUB_PULL_REQUEST_ID"
+    additional_upstreams=$(tail -n +2 "$input_dir/upstreams.yaml")
+fi
+mkdir -p "$config_dir"
+
+cat <<EOF > "$config_dir/modules.sh"
+export MODULEPATH="\${MODULEPATH:-}\${MODULEPATH:+:}${MODULE_ROOT}/_meta"
+EOF
+
+cp "$input_dir/"{compilers,mirrors,packages}.yaml "$config_dir"
+
+cat <<EOF > "$config_dir/upstreams.yaml"
+upstreams:
+  applications$suffix:
+    install_tree: $DEPLOYMENT_ROOT/stage_applications
+    modules:
+      tcl: $DEPLOYMENT_ROOT/modules/applications
+$additional_upstreams
+EOF
+
+cat <<EOF > "$config_dir/config.yaml"
+config:
+  install_tree:
+    root: \$user_cache_path/software
+  module_roots:
+    tcl: \$user_cache_path/modules
+  source_cache: \$user_cache_path/sources
+  environments:
+    root: \$user_cache_path/environments
+EOF

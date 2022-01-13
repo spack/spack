@@ -1,0 +1,12 @@
+diff -Naur gdbserver/Makefile.in gdbserver/Makefile.in
+--- gdbserver/Makefile.in	2020-10-24 06:23:02.000000000 +0200
++++ gdbserver/Makefile.in	2021-02-15 13:41:31.732000000 +0100
+@@ -388,7 +388,7 @@
+ 	$(SILENCE) rm -f $(IPA_LIB)
+ 	$(ECHO_CXXLD) $(CC_LD) -shared -fPIC -Wl,--soname=$(IPA_LIB) \
+ 		-Wl,--no-undefined $(INTERNAL_CFLAGS) $(INTERNAL_LDFLAGS) \
+-		-o $(IPA_LIB) ${IPA_OBJS} -ldl -pthread
++		-o $(IPA_LIB) ${IPA_OBJS} $(INTL) -ldl -pthread
+ 
+ # Put the proper machine-specific files first, so M-. on a machine
+ # specific routine gets the one for the correct machine.

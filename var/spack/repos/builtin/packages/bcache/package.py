@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Bcache(MakefilePackage):
     """Bcache is a patch for the Linux kernel to use SSDs to cache other block
     devices."""
 
-    homepage = "http://bcache.evilpiepirate.org"
+    homepage = "https://bcache.evilpiepirate.org/"
     url      = "https://github.com/g2p/bcache-tools/archive/v1.0.8.tar.gz"
 
     version('1.0.8', sha256='d56923936f37287efc57a46315679102ef2c86cd0be5874590320acd48c1201c')
@@ -19,6 +19,7 @@ class Bcache(MakefilePackage):
     version('1.0.5', sha256='1449294ef545b3dc6f715f7b063bc2c8656984ad73bcd81a0dc048cbba416ea9')
     version('1.0.4', sha256='102ffc3a8389180f4b491188c3520f8a4b1a84e5a7ca26d2bd6de1821f4d913d')
 
+    depends_on('uuid')
     depends_on('util-linux')
     depends_on('gettext')
     depends_on('pkgconfig', type='build')

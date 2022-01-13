@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,13 @@ import inspect
 import os
 import platform
 import re
+from typing import List  # novm
+
+from llnl.util.filesystem import working_dir
 
 import spack.build_environment
-from llnl.util.filesystem import working_dir
-from spack.util.environment import filter_system_paths
-from spack.directives import depends_on, variant, conflicts
-from spack.package import PackageBase, InstallError, run_after
+from spack.directives import conflicts, depends_on, variant
+from spack.package import InstallError, PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -74,7 +75,7 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
-    build_targets = []
+    build_targets = []  # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']
@@ -184,13 +185,9 @@ class CMakePackage(PackageBase):
             define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
             define('CMAKE_INSTALL_RPATH',
                    spack.build_environment.get_rpaths(pkg)),
+            define('CMAKE_PREFIX_PATH',
+                   spack.build_environment.get_cmake_prefix_path(pkg))
         ])
-        # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
-        # to find immediate link dependencies in right places:
-        deps = [d.prefix for d in
-                pkg.spec.dependencies(deptype=('build', 'link'))]
-        deps = filter_system_paths(deps)
-        args.append(define('CMAKE_PREFIX_PATH', deps))
         return args
 
     @staticmethod
@@ -239,7 +236,7 @@ class CMakePackage(PackageBase):
         of ``cmake_var``.
 
         This utility function is similar to
-        :py:meth:`~.AutotoolsPackage.with_or_without`.
+        :meth:`~spack.build_systems.autotools.AutotoolsPackage.with_or_without`.
 
         Examples:
 
@@ -257,9 +254,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-                 define_from_variant('SWR')]
+                [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 self.define_from_variant('SWR')]
 
             will generate the following configuration options:
 

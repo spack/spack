@@ -1,16 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 import os
+import sys
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.util.environment
-import spack.user_environment as uenv
 import spack.error
+import spack.user_environment as uenv
+import spack.util.environment
 
 description = "remove package from the user environment"
 section = "user environment"

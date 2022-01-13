@@ -1,10 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Bowtie2(Package):
+class Bowtie2(MakefilePackage):
     """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
        sequencing reads to long reference sequences"""
 
@@ -25,49 +25,52 @@ class Bowtie2(Package):
     depends_on('perl', type='run')
     depends_on('python', type='run')
     depends_on('zlib', when='@2.3.1:')
+    depends_on('simde', when='@2.4.0: target=aarch64:', type='link')
+    depends_on('simde', when='@2.4.0: target=ppc64le:', type='link')
 
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
     patch('bowtie2-2.3.0.patch', when='@2.3.0', level=0)
-    resource(name='simde', git="https://github.com/nemequ/simde",
-             destination='.', when='target=aarch64:')
 
     # seems to have trouble with 6's -std=gnu++14
     conflicts('%gcc@6:', when='@:2.3.1')
+    conflicts('^intel-oneapi-tbb', when='@:2.3.5.1')
     conflicts('@:2.3.5.0', when='target=aarch64:')
     conflicts('@2.4.1', when='target=aarch64:')
 
-    def patch(self):
-        if self.spec.target.family == 'aarch64':
-            copy_tree('simde', 'third_party/simde')
-            if self.spec.satisfies('%gcc@:4.8.9'):
-                filter_file('-fopenmp-simd', '', 'Makefile')
+    def edit(self, spec, prefix):
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
-    @run_before('install')
-    def filter_sbang(self):
-        """Run before install so that the standard Spack sbang install hook
-           can fix up the path to the perl|python binary.
-        """
+        match = '^#!/usr/bin/env perl'
+        perl = spec['perl'].command
+        substitute = "#!{perl}".format(perl=perl)
+        files = ['bowtie2', ]
+        filter_file(match, substitute, *files, **kwargs)
 
-        with working_dir(self.stage.source_path):
-            kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+        match = '^#!/usr/bin/env python.*'
+        python = spec['python'].command
+        substitute = "#!{python}".format(python=python)
+        files = ['bowtie2-build', 'bowtie2-inspect']
+        filter_file(match, substitute, *files, **kwargs)
 
-            match = '^#!/usr/bin/env perl'
-            perl = self.spec['perl'].command
-            substitute = "#!{perl}".format(perl=perl)
-            files = ['bowtie2', ]
+        if (self.spec.satisfies('@2.4.0:2.4.2 target=aarch64:') or
+            self.spec.satisfies('@2.4.0:2.4.2 target=ppc64le:')):
+            match = '-Ithird_party/simde'
+            simdepath = spec['simde'].prefix.include
+            substitute = "-I{simdepath}".format(simdepath=simdepath)
+            files = ['Makefile']
             filter_file(match, substitute, *files, **kwargs)
 
-            match = '^#!/usr/bin/env python'
-            python = self.spec['python'].command
-            substitute = "#!{python}".format(python=python)
-            files = ['bowtie2-build', 'bowtie2-inspect']
-            filter_file(match, substitute, *files, **kwargs)
-
-    def install(self, spec, prefix):
-        make_arg = []
-        if self.spec.target.family == 'aarch64':
+    @property
+    def build_targets(self):
+        make_arg = ['PREFIX={0}'.format(self.prefix)]
+        if self.spec.satisfies('target=aarch64:'):
             make_arg.append('POPCNT_CAPABILITY=0')
-        make(*make_arg)
-        mkdirp(prefix.bin)
-        install('bowtie2*', prefix.bin)
+        return make_arg
+
+    @property
+    def install_targets(self):
+        if self.spec.satisfies('@:2.3.9'):
+            return ['prefix={0}'.format(self.prefix), 'install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class PyPyani(PythonPackage):
     available, it takes advantage of multicore systems, and can integrate
     with SGE/OGE-type job schedulers for the sequence comparisons."""
 
-    homepage = "http://widdowquinn.github.io/pyani"
-    url      = "https://pypi.io/packages/source/p/pyani/pyani-0.2.7.tar.gz"
+    homepage = "https://widdowquinn.github.io/pyani"
+    pypi = "pyani/pyani-0.2.7.tar.gz"
 
     version('0.2.7', sha256='dbc6c71c46fbbfeced3f8237b84474221268b51170caf044bec8559987a7deb9')
     version('0.2.6', sha256='e9d899bccfefaabe7bfa17d48eef9c713d321d2d15465f7328c8984807c3dd8d')

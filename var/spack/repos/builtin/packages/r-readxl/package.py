@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RReadxl(RPackage):
     <https://rapidxml.sourceforge.net>. Works on Windows, Mac and Linux
     without external dependencies."""
 
-    homepage = "http://readxl.tidyverse.org/"
+    homepage = "https://readxl.tidyverse.org/"
     url      = "https://cloud.r-project.org/src/contrib/readxl_1.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/readxl"
 

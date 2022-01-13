@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyTatsu(PythonPackage):
     parsers in Python."""
 
     homepage = "https://github.com/neogeny/tatsu"
-    url      = "https://pypi.io/packages/source/T/TatSu/TatSu-4.4.0.zip"
+    pypi = "TatSu/TatSu-4.4.0.zip"
 
     version('4.4.0', sha256='80713413473a009f2081148d0f494884cabaf9d6866b71f2a68a92b6442f343d')
 
@@ -21,7 +21,6 @@ class PyTatsu(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'), when='@4.5:')
     depends_on('py-setuptools', type='build')
     # part of the standard lib in python@3.7.0, required in the current HEAD
-    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6.99')
-    depends_on('py-pytest-mypy', type='test')
+    depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='@4.5:^python@:3.6')
     # optional dependency, otherwise falls back to standard implementation
     depends_on('py-regex@2018.8:', type=('build', 'run'), when='+future_regex')
