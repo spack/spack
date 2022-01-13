@@ -82,6 +82,19 @@ __all__ = [
     'keep_modification_time'
 ]
 
+def path_to_os_path(*pths):
+        ret_pths = []
+        for pth in pths:
+            if sys.platform == 'win32' and type(pth) is str:
+                pth = pth.replace('/', '\\')
+            ret_pths.append(pth)
+        return tuple(ret_pths)
+
+def system_path_filter(f):
+    def path_filter_caller(*args, **kwargs):
+        return f(path_to_os_path(*args), **kwargs)
+    return path_filter_caller
+
 
 def getuid():
     if is_windows:
@@ -93,6 +106,7 @@ def getuid():
         return os.getuid()
 
 
+@system_path_filter
 def rename(src, dst):
     # On Windows, os.rename will fail if the destination file already exists
     if is_windows:
@@ -100,7 +114,7 @@ def rename(src, dst):
             os.remove(dst)
     os.rename(src, dst)
 
-
+@system_path_filter
 def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
@@ -133,6 +147,7 @@ def paths_containing_libs(paths, library_names):
     return rpaths_to_include
 
 
+@system_path_filter
 def same_path(path1, path2):
     norm1 = os.path.abspath(path1).rstrip(os.path.sep)
     norm2 = os.path.abspath(path2).rstrip(os.path.sep)
@@ -300,6 +315,8 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         filter_file(double_quoted, '"%s"' % repl, f)
 
 
+
+@system_path_filter
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
     # If this points to a file maintained in a Spack prefix, it is assumed that
@@ -357,6 +374,7 @@ def chmod_x(entry, perms):
     os.chmod(entry, perms)
 
 
+@system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link.
     """
@@ -373,6 +391,7 @@ def copy_mode(src, dest):
     os.chmod(dest, dest_mode)
 
 
+@system_path_filter
 def unset_executable_mode(path):
     mode = os.stat(path).st_mode
     mode &= ~stat.S_IXUSR
@@ -381,6 +400,7 @@ def unset_executable_mode(path):
     os.chmod(path, mode)
 
 
+@system_path_filter
 def copy(src, dest, _permissions=False):
     """Copy the file(s) *src* to the file or directory *dest*.
 
@@ -425,6 +445,7 @@ def copy(src, dest, _permissions=False):
             copy_mode(src, dst)
 
 
+@system_path_filter
 def install(src, dest):
     """Install the file(s) *src* to the file or directory *dest*.
 
@@ -457,6 +478,7 @@ def resolve_link_target_relative_to_the_link(link):
     return os.path.join(link_dir, target)
 
 
+@system_path_filter
 def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     """Recursively copy an entire directory tree rooted at *src*.
 
@@ -541,6 +563,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                 copy_mode(s, d)
 
 
+@system_path_filter
 def install_tree(src, dest, symlinks=True, ignore=None):
     """Recursively install an entire directory tree rooted at *src*.
 
@@ -560,11 +583,13 @@ def install_tree(src, dest, symlinks=True, ignore=None):
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
 
+@system_path_filter
 def is_exe(path):
     """True if path is an executable file."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
+@system_path_filter
 def get_filetype(path_name):
     """
     Return the output of file path_name as a string to identify file type.
@@ -583,6 +608,7 @@ def chgrp_if_not_world_writable(path, group):
         chgrp(path, group)
 
 
+@system_path_filter
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -666,6 +692,7 @@ def mkdirp(*paths, **kwargs):
             raise OSError(errno.EEXIST, "File already exists", path)
 
 
+@system_path_filter
 def force_remove(*paths):
     """Remove files without printing errors.  Like ``rm -f``, does NOT
        remove directories."""
@@ -677,6 +704,7 @@ def force_remove(*paths):
 
 
 @contextmanager
+@system_path_filter
 def working_dir(dirname, **kwargs):
     if kwargs.get('create', False):
         mkdirp(dirname)
@@ -751,6 +779,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
 
 
+@system_path_filter
 def hash_directory(directory, ignore=[]):
     """Hashes recursively the content of a directory.
 
@@ -779,6 +808,7 @@ def hash_directory(directory, ignore=[]):
 
 
 @contextmanager
+@system_path_filter
 def write_tmp_and_move(filename):
     """Write to a temporary file, then move into place."""
     dirname = os.path.dirname(filename)
@@ -790,6 +820,7 @@ def write_tmp_and_move(filename):
 
 
 @contextmanager
+@system_path_filter
 def open_if_filename(str_or_file, mode='r'):
     """Takes either a path or a file object, and opens it if it is a path.
 
@@ -802,6 +833,7 @@ def open_if_filename(str_or_file, mode='r'):
         yield str_or_file
 
 
+@system_path_filter
 def touch(path):
     """Creates an empty file at the specified path."""
     if is_windows:
@@ -817,6 +849,7 @@ def touch(path):
             os.close(fd)
 
 
+@system_path_filter
 def touchp(path):
     """Like ``touch``, but creates any parent directories needed for the file.
     """
@@ -824,6 +857,7 @@ def touchp(path):
     touch(path)
 
 
+@system_path_filter
 def force_symlink(src, dest):
     try:
         symlink(src, dest)
@@ -832,6 +866,7 @@ def force_symlink(src, dest):
         symlink(src, dest)
 
 
+@system_path_filter
 def join_path(prefix, *args):
     path = str(prefix)
     for elt in args:
@@ -839,6 +874,7 @@ def join_path(prefix, *args):
     return path
 
 
+@system_path_filter
 def ancestor(dir, n=1):
     """Get the nth ancestor of a directory."""
     parent = os.path.abspath(dir)
@@ -847,6 +883,7 @@ def ancestor(dir, n=1):
     return parent.replace("\\", "/")
 
 
+@system_path_filter
 def get_single_file(directory):
     fnames = os.listdir(directory)
     if len(fnames) != 1:
@@ -866,6 +903,7 @@ def temp_cwd():
 
 
 @contextmanager
+@system_path_filter
 def temp_rename(orig_path, temp_path):
     same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
     if not same_path:
@@ -877,11 +915,13 @@ def temp_rename(orig_path, temp_path):
             shutil.move(temp_path, orig_path)
 
 
+@system_path_filter
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK | os.W_OK)
 
 
+@system_path_filter
 def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     """Traverse two filesystem trees simultaneously.
 
@@ -968,6 +1008,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         yield (source_path, dest_path)
 
 
+@system_path_filter
 def set_executable(path):
     mode = os.stat(path).st_mode
     if mode & stat.S_IRUSR:
@@ -979,6 +1020,7 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+@system_path_filter
 def last_modification_time_recursive(path):
     path = os.path.abspath(path)
     times = [os.stat(path).st_mtime]
@@ -988,6 +1030,7 @@ def last_modification_time_recursive(path):
     return max(times)
 
 
+@system_path_filter
 def remove_empty_directories(root):
     """Ascend up from the leaves accessible from `root` and remove empty
     directories.
@@ -1004,6 +1047,7 @@ def remove_empty_directories(root):
                 pass
 
 
+@system_path_filter
 def remove_dead_links(root):
     """Recursively removes any dead link that is present in root.
 
@@ -1016,6 +1060,7 @@ def remove_dead_links(root):
             remove_if_dead_link(path)
 
 
+@system_path_filter
 def remove_if_dead_link(path):
     """Removes the argument if it is a dead link.
 
@@ -1026,6 +1071,7 @@ def remove_if_dead_link(path):
         os.unlink(path)
 
 
+@system_path_filter
 def remove_linked_tree(path):
     """Removes a directory and its contents.
 
@@ -1044,6 +1090,7 @@ def remove_linked_tree(path):
 
 
 @contextmanager
+@system_path_filter
 def safe_remove(*files_or_dirs):
     """Context manager to remove the files passed as input, but restore
     them in case any exception is raised in the context block.
@@ -1090,6 +1137,7 @@ def safe_remove(*files_or_dirs):
         raise
 
 
+@system_path_filter
 def fix_darwin_install_name(path):
     """Fix install name of dynamic libraries on Darwin to have full path.
 
@@ -1124,6 +1172,7 @@ def fix_darwin_install_name(path):
                     break
 
 
+@system_path_filter
 def find(root, files, recursive=True):
     """Search for ``files`` starting from the ``root`` directory.
 
@@ -1176,6 +1225,7 @@ def find(root, files, recursive=True):
         return _find_non_recursive(root, files)
 
 
+@system_path_filter
 def _find_recursive(root, search_files):
 
     # The variable here is **on purpose** a defaultdict. The idea is that
@@ -1205,6 +1255,7 @@ def _find_recursive(root, search_files):
     return answer
 
 
+@system_path_filter
 def _find_non_recursive(root, search_files):
     # The variable here is **on purpose** a defaultdict as os.list_dir
     # can return files in any order (does not preserve stability)
@@ -1502,6 +1553,7 @@ def find_headers(headers, root, recursive=False):
     return HeaderList(find(root, headers, recursive))
 
 
+@system_path_filter
 def find_all_headers(root):
     """Convenience function that returns the list of all headers found
     in the directory passed as argument.
@@ -1723,6 +1775,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     return LibraryList(found_libs)
 
 
+@system_path_filter
 @memoized
 def can_access_dir(path):
     """Returns True if the argument is an accessible directory.
@@ -1736,6 +1789,7 @@ def can_access_dir(path):
     return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
 
 
+@system_path_filter
 @memoized
 def can_write_to_dir(path):
     """Return True if the argument is a directory in which we can write.
@@ -1749,6 +1803,7 @@ def can_write_to_dir(path):
     return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK | os.W_OK)
 
 
+@system_path_filter
 @memoized
 def files_in(*search_paths):
     """Returns all the files in paths passed as arguments.
@@ -1770,6 +1825,7 @@ def files_in(*search_paths):
     return files
 
 
+@system_path_filter
 def search_paths_for_executables(*path_hints):
     """Given a list of path hints returns a list of paths where
     to search for an executable.
@@ -1797,6 +1853,7 @@ def search_paths_for_executables(*path_hints):
     return executable_paths
 
 
+@system_path_filter
 def partition_path(path, entry=None):
     """
     Split the prefixes of the path at the first occurrence of entry and
@@ -1831,6 +1888,7 @@ def partition_path(path, entry=None):
     return paths, '', []
 
 
+@system_path_filter
 def prefixes(path):
     """
     Returns a list containing the path and its ancestors, top-to-bottom.
@@ -1888,6 +1946,7 @@ def prefixes(path):
     return paths
 
 
+@system_path_filter
 def md5sum(file):
     """Compute the MD5 sum of a file.
 
@@ -1903,6 +1962,7 @@ def md5sum(file):
     return md5.digest()
 
 
+@system_path_filter
 def remove_directory_contents(dir):
     """Remove all contents of a directory."""
     if os.path.exists(dir):
@@ -1914,6 +1974,7 @@ def remove_directory_contents(dir):
 
 
 @contextmanager
+@system_path_filter
 def keep_modification_time(*filenames):
     """
     Context manager to keep the modification timestamps of the input files.
@@ -1935,6 +1996,7 @@ def keep_modification_time(*filenames):
 
 
 @contextmanager
+@system_path_filter
 def temporary_dir(*args, **kwargs):
     """Create a temporary directory and cd's into it. Delete the directory
     on exit.
