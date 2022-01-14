@@ -519,6 +519,8 @@ variant(Package, Variant)
 variant_single_value(Package, "dev_path")
   :- variant_set(Package, "dev_path", _).
 
+auto_variant("cmakeflags").
+
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.

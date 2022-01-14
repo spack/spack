@@ -328,6 +328,12 @@ class CMakePackage(PackageBase):
                 self.cmake_flag_args.append(libs_string.format(lang,
                                                                libs_flags))
 
+    def extra_cmake_args(self):
+        cmake_flags = self.spec.variants.get("cmakeflags", None)
+        if not cmake_flags:
+            return []
+        return [entry for entry in cmake_flags.value.split(' ')]
+
     @property
     def build_dirname(self):
         """Returns the directory name to use when building the package
@@ -361,6 +367,7 @@ class CMakePackage(PackageBase):
         """Runs ``cmake`` in the build directory"""
         options = self.std_cmake_args
         options += self.cmake_args()
+        options += self.extra_cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
