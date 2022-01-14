@@ -22,7 +22,7 @@ from spack.pkg.builtin.kokkos import Kokkos
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage, CudaPackage):
+class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -286,6 +286,21 @@ class Trilinos(CMakePackage, CudaPackage):
     # Fortran mangling fails on Apple M1 (see spack/spack#25900)
     conflicts('@:13.0.1 +fortran', when='target=m1')
 
+    amdgpu_arch_map = {
+        'gfx900': 'vega900',
+        'gfx906': 'vega906',
+        'gfx908': 'vega908',
+        'gfx90a': 'vega90A'
+    }
+    amd_support_conflict_msg = (
+        '{0} is not supported; '
+        'Kokkos supports the following AMD GPU targets: '
+        + ', '.join(amdgpu_arch_map.keys()))
+    for arch in ROCmPackage.amdgpu_targets:
+        if arch not in amdgpu_arch_map:
+            conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
+                      msg=amd_support_conflict_msg.format(arch))
+
     # ###################### Dependencies ##########################
 
     depends_on('adios2', when='+adios2')
@@ -410,6 +425,17 @@ class Trilinos(CMakePackage, CudaPackage):
                 env.set('MPICXX_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             else:
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+
+        if '+rocm' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', self.spec['hip'].hipcc)
+                env.set('MPICH_CXX', self.spec['hip'].hipcc)
+                env.set('MPICXX_CXX', self.spec['hip'].hipcc)
+            else:
+                env.set('CXX', self.spec['hip'].hipcc)
+            if '+stk' in spec:
+                # Using CXXFLAGS for hipcc which doesn't use flags in the spack wrappers
+                env.set('CXXFLAGS', '-DSTK_NO_BOOST_STACKTRACE')
 
     def cmake_args(self):
         options = []
@@ -716,6 +742,20 @@ class Trilinos(CMakePackage, CudaPackage):
                     define("Kokkos_ARCH_" + arch_map[arch].upper(), True)
                     for arch in spec.variants['cuda_arch'].value
                 )
+
+            amd_microarches = []
+            if "+rocm" in spec:
+                options.append(define('Kokkos_ENABLE_ROCM', False))
+                options.append(define('Kokkos_ENABLE_HIP', True))
+                if '+tpetra' in spec:
+                    options.append(define('Tpetra_INST_HIP', True))
+                for amdgpu_target in spec.variants['amdgpu_target'].value:
+                    if amdgpu_target != "none":
+                        if amdgpu_target in self.amdgpu_arch_map:
+                            amd_microarches.append(
+                                self.amdgpu_arch_map[amdgpu_target])
+                for arch in amd_microarches:
+                    options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
 
