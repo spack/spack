@@ -11,13 +11,18 @@ class Busco(PythonPackage):
        Universal Single-Copy Orthologs"""
 
     homepage = "https://busco.ezlab.org/"
-    url = "https://gitlab.com/ezlab/busco/-/archive/5.2.2/busco-5.2.2.tar.gz"
-    git = "https://gitlab.com/ezlab/busco.git"
+    url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
+    git      = "https://gitlab.com/ezlab/busco.git"
 
-    version('5.2.2', sha256='6da327a21674d354dccebcaaa9594fcb5a3b40d1917b7786c5212920e724229f')
-    version('4.1.3', sha256='5231de1778d0af278caf43d10d9958ccc2813f533ba40b8e966fbe6d86cdd3ed')
+    version('4.1.3', sha256='08ded26aeb4f6aef791cd88524c3c00792a054c7672ea05219f468d495e7b072')
+
+    # TODO: check the installation procedure for version 3.0.2
+    # and uncomment the following line
+    # version('3.0.2', sha256='dbea093315b766b0f7c4fe3cafbbdf51ade79ec84bde04f1f437b48333200f34')
+
+    # There is no tag for version 3.0.1
     version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
-    version('2.0.1', sha256='9298d72fdf24e7f0f1cbf0435f987730b913dc2d6b9b3e6b340e9792e4cdcf93')
+    version('2.0.1', sha256='bd72a79b880370e9b61b8c722e171818c7c85d46cc1e2f80595df2738a7e220c')
 
     # https://busco.ezlab.org/busco_userguide.html#manual-installation
     depends_on('python@3.3:', when='@4:', type=('build', 'run'))
@@ -29,8 +34,6 @@ class Busco(PythonPackage):
     depends_on('py-biopython', when='@4.1.3', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        if self.spec.satisfies('@5:'):
-            super(self, PythonPackage).install(spec, prefix)
         if self.spec.satisfies('@4.1.3'):
             install_tree('bin', prefix.bin)
             install_tree('config', prefix.config)
