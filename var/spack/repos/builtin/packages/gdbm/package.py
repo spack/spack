@@ -31,7 +31,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("readline")
 
-    patch('macOS.patch', when='@1.21: platform=darwin')
+    patch('macOS.patch', when='@1.21 platform=darwin')
     patch('gdbm.patch', when='@:1.18 %gcc@10:')
     patch('gdbm.patch', when='@:1.18 %clang@11:')
     patch('gdbm.patch', when='@:1.18 %cce@11:')
