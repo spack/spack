@@ -40,7 +40,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Activates boost support for valgrind')
     variant('only64bit', default=True,
             description='Sets --enable-only64bit option for valgrind')
-    variant('ubsan', default=sys.platform != 'darwin',
+    variant('ubsan', default=False,
             description='Activates ubsan support for valgrind')
 
     conflicts('+ubsan', when='%apple-clang',
