@@ -38,10 +38,10 @@ def txt_to_rtf(file_path):
 def setup_parser(subparser):
     spack_source_group = subparser.add_mutually_exclusive_group(required=True)
     spack_source_group.add_argument(
-        '-v', '--spack_version', default="",
+        '-v', '--spack-version', default="",
         help='download given spack version e.g. 0.16.0')
     spack_source_group.add_argument(
-        '-s', '--spack_source', default="",
+        '-s', '--spack-source', default="",
         help='full path to spack source')
 
     subparser.add_argument(
