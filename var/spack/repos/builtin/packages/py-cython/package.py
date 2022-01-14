@@ -38,6 +38,7 @@ class PyCython(PythonPackage):
     depends_on('python@2.6:2,3.3:', when='@0.23:', type=('build', 'link', 'run'))
     depends_on('python@:2', when='@:0.22', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('gdb@7.2:', type='test')
 
     @property
     def command(self):

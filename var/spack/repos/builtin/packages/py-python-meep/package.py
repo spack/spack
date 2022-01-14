@@ -37,7 +37,7 @@ class PyPythonMeep(PythonPackage):
 
     def patch(self):
         if '+mpi' in self.spec:
-            os.rename('setup-mpi.py', 'setup.py')
+            copy('setup-mpi.py', 'setup.py')
 
     def install_options(self, spec, prefix):
         include_dirs = [

@@ -56,10 +56,10 @@ class PyAdios(PythonPackage):
     def patch(self):
         if '+mpi' in self.spec:
             with working_dir(self.build_directory):
-                os.rename('setup_mpi.py', 'setup.py')
+                copy('setup_mpi.py', 'setup.py')
 
     @run_before('install')
-    def build_clib(self, spec, prefix):
+    def build_clib(self):
         # calls: make CYTHON=y [MPI=y] python
         args = ['CYTHON=y']
         if '+mpi' in self.spec:

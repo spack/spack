@@ -37,7 +37,7 @@ class PyCudf(PythonPackage):
         depends_on('libcudf' + v, when=v)
 
     @run_before('install')
-    def cmake(self, spec, prefix):
+    def cmake(self):
         cmake = which('cmake')
 
         build_dir = os.path.join(self.stage.source_path, 'cpp', 'build')
