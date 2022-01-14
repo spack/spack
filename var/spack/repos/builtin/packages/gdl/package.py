@@ -144,7 +144,7 @@ class Gdl(CMakePackage):
             src = os.path.join(
                 self.spec.prefix.lib,
                 'site-python')
-            dst = site_packages_dir
+            dst = python_platlib
             if os.path.isdir(src):
                 if not os.path.isdir(dst):
                     mkdirp(dst)

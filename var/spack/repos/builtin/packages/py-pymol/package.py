@@ -48,10 +48,7 @@ class PyPymol(PythonPackage):
         binpath = self.prefix.bin
         mkdirp(self.prefix.bin)
         fname = join_path(binpath, 'pymol')
-        script = join_path(self.prefix,
-                           self.spec['python'].package.site_packages_dir,
-                           'pymol',
-                           '__init__.py')
+        script = join_path(python_platlib, 'pymol', '__init__.py')
 
         shebang = '#!/bin/sh\n'
         fdata = 'exec {0} {1} \"$@\"'.format(self.spec['python'].command,

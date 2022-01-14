@@ -310,7 +310,7 @@ class PyTensorflow(Package, CudaPackage):
         env.set('PYTHON_BIN_PATH', spec['python'].command.path)
 
         # Please input the desired Python library path to use
-        env.set('PYTHON_LIB_PATH', site_packages_dir)
+        env.set('PYTHON_LIB_PATH', python_platlib)
 
         # Ensure swig is in PATH or set SWIG_PATH
         env.set('SWIG_PATH', spec['swig'].prefix.bin.swig)

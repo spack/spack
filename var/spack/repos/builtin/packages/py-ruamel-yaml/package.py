@@ -31,6 +31,4 @@ class PyRuamelYaml(PythonPackage):
     def fix_import_error(self):
         if str(self.spec['python'].version.up_to(1)) == '2':
             touch = which('touch')
-            touch(self.prefix + '/' +
-                  self.spec['python'].package.site_packages_dir +
-                  '/ruamel/__init__.py')
+            touch(join_path(python_purelib, 'ruamel', '__init__.py'))

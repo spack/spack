@@ -444,7 +444,7 @@ class Conduit(CMakePackage):
             try:
                 cfg.write("# python module install dir\n")
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                          site_packages_dir))
+                          python_platlib))
             except NameError:
                 # spack's  won't exist in a subclass
                 pass

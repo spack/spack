@@ -29,4 +29,4 @@ class PyFlitCore(PythonPackage):
     def install(self, spec, prefix):
         wheel = glob.glob(os.path.join('flit_core', 'dist', '*.whl'))[0]
         with zipfile.ZipFile(wheel) as f:
-            f.extractall(site_packages_dir)
+            f.extractall(python_purelib)

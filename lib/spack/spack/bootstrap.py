@@ -78,13 +78,10 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec['python'].package
-        purelib = pkg.config_vars['python_lib']['false']['false']
-        platlib = pkg.config_vars['python_lib']['true']['false']
-
-        module_paths = [
-            os.path.join(candidate_spec.prefix, purelib),
-            os.path.join(candidate_spec.prefix, platlib),
-        ]
+        module_paths = {
+            os.path.join(candidate_spec.prefix, pkg.purelib),
+            os.path.join(candidate_spec.prefix, pkg.platlib),
+        }
         sys.path.extend(module_paths)
 
         try:

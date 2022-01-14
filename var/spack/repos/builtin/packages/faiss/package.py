@@ -125,4 +125,4 @@ class Faiss(AutotoolsPackage, CudaPackage):
 
     def setup_run_environment(self, env):
         if '+python' in self.spec:
-            env.prepend_path('PYTHONPATH', site_packages_dir)
+            env.prepend_path('PYTHONPATH', python_platlib)

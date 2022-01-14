@@ -639,10 +639,10 @@ class LlvmDoe(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", site_packages_dir)
+            install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
-                install_tree("clang/bindings/python", site_packages_dir)
+                install_tree("clang/bindings/python", python_platlib)
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))

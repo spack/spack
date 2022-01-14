@@ -38,10 +38,8 @@ class PyPyside(PythonPackage):
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
         # Figure out the special RPATH
-        pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(
-            self.prefix, pypkg.site_packages_dir, 'PySide'))
+        rpath.append(os.path.join(python_platlib, 'PySide'))
 
         # Fix subprocess.mswindows check for Python 3.5
         # https://github.com/pyside/pyside-setup/pull/55

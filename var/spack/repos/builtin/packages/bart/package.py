@@ -64,18 +64,15 @@ class Bart(MakefilePackage, CudaPackage):
             env['GPUARCH_FLAGS'] = ' '.join(self.cuda_flags(cuda_arch))
 
     def install(self, spec, prefix):
-        python_dir = join_path(prefix,
-                               spec['python'].package.site_packages_dir)
-
         make('install')
 
         install_tree('scripts', prefix.scripts)
         install_tree('matlab', prefix.matlab)
         install('startup.m', prefix)
 
-        install('python/bart.py', python_dir)
-        install('python/cfl.py', python_dir)
-        install('python/wslsupport.py', python_dir)
+        install('python/bart.py', python_platlib)
+        install('python/cfl.py', python_platlib)
+        install('python/wslsupport.py', python_platlib)
 
         if '^python@3:' in spec:
             install('python/bartview3.py', join_path(prefix.bin, 'bartview'))

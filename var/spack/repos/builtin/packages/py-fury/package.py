@@ -31,7 +31,7 @@ class PyFury(PythonPackage):
     def install_test(self):
         with working_dir('spack-test', create=True):
             pytest = which('pytest')
-            pytest(join_path(self.prefix, site_packages_dir, 'fury'),
+            pytest(join_path(python_purelib, 'fury'),
                    # 'Some warning' is not propagated to __warningregistry__ so
                    # that the test fails, disable it for now
                    # running all tests manually after the package is installed

@@ -27,7 +27,7 @@ class PyNinja(PythonPackage):
                                    'ninja_syntax.py')
         bin_file = os.path.join(self.spec['ninja'].prefix.bin,
                                 'ninja')
-        dst = os.path.join(site_packages_dir,
+        dst = os.path.join(python_platlib,
                            'ninja')
         dstbin = os.path.join(dst, 'data', 'bin')
         mkdirp(dstbin)

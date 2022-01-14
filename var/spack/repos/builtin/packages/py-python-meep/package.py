@@ -41,7 +41,7 @@ class PyPythonMeep(PythonPackage):
             spec['meep'].prefix.include,
             os.path.join(
                 spec['py-numpy'].prefix,
-                spec['python'].package.python_include_dir
+                spec['python'].package.include
             )
         ]
 

@@ -207,14 +207,12 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @property
     def libs(self):
-        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
-                         'torch', 'lib')
+        root = join_path(python_platlib, 'torch', 'lib')
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
-                         'torch', 'include')
+        root = join_path(python_platlib, 'torch', 'include')
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers

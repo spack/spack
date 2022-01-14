@@ -40,8 +40,7 @@ class PyXdot(PythonPackage):
             join_path(spec['atk'].prefix.lib, 'girepository-1.0'),
             join_path(spec['gdk-pixbuf'].prefix.lib, 'girepository-1.0'),
             join_path(spec['gtkplus'].prefix.lib, 'girepository-1.0'))
-        dst = join_path(spec.prefix, spec['python'].package.site_packages_dir,
-                        'xdot/__init__.py')
+        dst = join_path(python_platlib, 'xdot', '__init__.py')
         filter_file("import sys",
                     "import sys\nimport os\nos.environ['GI_TYPELIB_PATH']" +
                     " = '%s'" % repo_paths, dst)
