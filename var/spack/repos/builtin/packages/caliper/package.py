@@ -5,6 +5,7 @@
 
 import os
 import sys
+import llnl.util.tty as tty
 
 from spack import *
 
@@ -155,7 +156,7 @@ class Caliper(CMakePackage, CudaPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
 
         if not os.path.isfile(join_path(test_dir, 'cxx-example.cpp')):
-            print('Skipping caliper test: file does not exist')
+            tty.msg('Skipping caliper test: file does not exist')
             return
 
         exe = 'cxx-example'
