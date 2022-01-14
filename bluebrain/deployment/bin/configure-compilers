@@ -23,7 +23,6 @@ fi
 BINUTILS_DIR=$(spack -E location --install-dir ${BINUTILS_HASH:-binutils})
 LEGACY_GCC_DIR=$(spack -E location --install-dir ${LEGACY_GCC_HASH:-gcc@${LEGACY_GCC_VERSION}})
 DEFAULT_GCC_DIR=$(spack -E location --install-dir ${DEFAULT_GCC_HASH:-gcc@${DEFAULT_GCC_VERSION}})
-log "...got DEFAULT_GCC_DIR=${DEFAULT_GCC_DIR}"
 # Use the Spack configuration to grab the matching module for GCC;
 # requires GCC to be compiler found beforehand.
 GCC_MODULES="$(spack -E config get compilers|sed -n "
@@ -37,11 +36,12 @@ log "...using gcc ${LEGACY_GCC_VERSION} from ${LEGACY_GCC_DIR} for Intel (legacy
 log "...using gcc ${DEFAULT_GCC_VERSION} from ${DEFAULT_GCC_DIR} for modern Intel and NVHPC with module(s) ${GCC_MODULES}"
 # Get the path to the binutils module
 BINUTILS_MODULE=$(spack -E module tcl find --full-path ${BINUTILS_HASH})
-log "...got binutils module ${BINUTILS_MODULE}"
+log "...using binutils module ${BINUTILS_MODULE}"
 
 while read -r line; do
-    sha="${line%% *}"  # Remove everything after and including the first space
-    spec="${line#* }"  # Remove everything up to and including the first space
+    sha="${line%% *}"    # Remove everything after and including the first space
+    spec="${line#* }"    # Remove everything up to and including the first space
+    module_additions=""  # Stuff to append to the module if the base one is incomplete
     set +o nounset
     env_mods=""
 
@@ -94,15 +94,31 @@ while read -r line; do
         # deployment target
         if [[ "${INTEL_DIR}" != "${DEPLOYMENT_ROOT}"* ]]; then
             log "...installation does not match install prefix, skipping modification of files"
+        else
+            for f in $(find ${INTEL_DIR} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
+                if ! grep -q "${GCC_DIR}" $f; then
+                    echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
+                    echo "-Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
+                    echo "-Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
+                    log "updated ${f} with newer GCC"
+                fi
+            done
         fi
-        for f in $(find ${INTEL_DIR} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
-            if ! grep -q "${GCC_DIR}" $f; then
-                echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
-                echo "-Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
-                echo "-Xlinker -rpath=${GCC_DIR}/lib64" >> ${f}
-                log "updated ${f} with newer GCC"
-            fi
-        done
+        if [[ ${spec} = "intel-oneapi-compilers@"* ]]; then
+            module_additions=$(cat <<EOF
+# Somehow these don't get set by Spack…
+setenv CC "$(which icc)"
+setenv CXX "$(which icpc)"
+setenv FC "$(which ifort)"
+setenv F77 "$(which ifort)"
+setenv F90 "$(which ifort)"
+# These are set just like in the "intel" module
+setenv MPICC_CC "icc"
+setenv MPICXX_CXX "icpc"
+setenv MPIF90_F90 "ifort"
+EOF
+            )
+        fi
     elif [[ ${line} = *"nvhpc"* ]]; then
         # Configure NVHPC compilers to use an up to date version of the C++
         # standard library from the deployed version of GCC.
@@ -132,6 +148,11 @@ while read -r line; do
 
     cmd=${cmd/unload/show/}
     full_module_path="$(${cmd}|&sed -ne '2{s/:$// p}')"
+    # First add any potential additions to the module
+    if [[ -n "$module_additions" ]]; then
+        echo "$module_additions" >> "$full_module_path"
+    fi
+    # Then append a bunch of other required modules
     if [[ $line = *"nvhpc"* ]]; then
         if [[ -n $GCC_MODULES ]]; then
             full_module_path="${GCC_MODULES},${full_module_path}"
