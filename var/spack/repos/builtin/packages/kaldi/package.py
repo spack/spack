@@ -41,7 +41,7 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst@1.6.0:', when='@2019-07-29')
     depends_on('openfst@1.6.7:1.7.3', when='@2019-09-29:')
-    depends_on('cub', when='@2019-07-29:^cuda@:10.9.999')
+    depends_on('cub', when='@2019-07-29:^cuda@:10')
 
     patch('openfst-1.4.1.patch', when='@2015-10-07')
     patch('0001_CMakeLists_txt.patch', when='+cuda@11:')
@@ -80,7 +80,7 @@ class Kaldi(Package):    # Does not use Autotools
             configure_args.append('--use-cuda=yes')
             configure_args.append('--cudatk-dir=' + spec['cuda'].prefix)
 
-        if spec.satisfies('@2019-07-29:') and '^cuda@:10.9.999' in spec:
+        if spec.satisfies('@2019-07-29: ^cuda@:10'):
             configure_args.append('--cub-root=' + spec['cub'].prefix.include)
 
         with working_dir("src"):
