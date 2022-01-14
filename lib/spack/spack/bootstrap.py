@@ -16,7 +16,6 @@ import re
 import sys
 import sysconfig
 
-import ruamel.yaml
 import six
 
 import archspec.cpu
@@ -37,6 +36,7 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.path
+import spack.util.spack_yaml
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = 'metadata.yaml'
@@ -994,6 +994,6 @@ def bootstrapping_sources(scope=None):
         metadata_dir = spack.util.path.canonicalize_path(entry['metadata'])
         metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
         with open(metadata_yaml) as f:
-            current.update(ruamel.yaml.load(f))
+            current.update(spack.util.spack_yaml.load(f))
         list_of_sources.append(current)
     return list_of_sources
