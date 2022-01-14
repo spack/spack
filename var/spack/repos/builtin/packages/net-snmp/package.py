@@ -21,3 +21,6 @@ class NetSnmp(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-defaults', 'LIBS=-ltinfo']
         return args
+
+    def install(self, spec, prefix):
+        make('install', parallel=False)
