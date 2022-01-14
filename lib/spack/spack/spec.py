@@ -1140,7 +1140,9 @@ class SpecBuildInterface(lang.ObjectWrapper):
         super(SpecBuildInterface, self).__init__(spec)
         # Adding new attributes goes after super() call since the ObjectWrapper
         # resets __dict__ to behave like the passed object
-        self.token = spec, name, query_parameters
+        original_spec = getattr(spec, 'wrapped_obj', spec)
+        self.wrapped_obj = original_spec
+        self.token = original_spec, name, query_parameters
         is_virtual = spack.repo.path.is_virtual(name)
         self.last_query = QueryState(
             name=name,
@@ -1150,6 +1152,9 @@ class SpecBuildInterface(lang.ObjectWrapper):
 
     def __reduce__(self):
         return SpecBuildInterface, self.token
+
+    def copy(self, *args, **kwargs):
+        return self.wrapped_obj.copy(*args, **kwargs)
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -3776,22 +3781,25 @@ class Spec(object):
         return changed
 
     def _dup_deps(self, other, deptypes, caches):
-        new_specs = {self.name: self}
-        for dspec in other.traverse_edges(cover='edges',
-                                          root=False):
-            if (dspec.deptypes and
-                not any(d in deptypes for d in dspec.deptypes)):
+        def spid(spec):
+            return id(spec)
+
+        new_specs = {spid(other): self}
+        for edge in other.traverse_edges(cover='edges', root=False):
+            if edge.deptypes and not any(d in deptypes for d in edge.deptypes):
                 continue
 
-            if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(
-                    deps=False, caches=caches)
-            if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(
-                    deps=False, caches=caches)
+            if spid(edge.parent) not in new_specs:
+                new_specs[spid(edge.parent)] = edge.parent.copy(
+                    deps=False, caches=caches
+                )
 
-            new_specs[dspec.parent.name]._add_dependency(
-                new_specs[dspec.spec.name], dspec.deptypes)
+            if spid(edge.spec) not in new_specs:
+                new_specs[spid(edge.spec)] = edge.spec.copy(deps=False, caches=caches)
+
+            new_specs[spid(edge.parent)].add_dependency_edge(
+                new_specs[spid(edge.spec)], edge.deptypes
+            )
 
     def copy(self, deps=True, **kwargs):
         """Make a copy of this spec.
