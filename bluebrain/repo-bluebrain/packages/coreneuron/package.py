@@ -31,6 +31,7 @@ class Coreneuron(CMakePackage):
     version('0.22', tag='0.22', submodules=True)
 
     variant('gpu', default=False, description="Enable GPU build")
+    variant('unified', default=False, description="Enable Unified Memory with GPU build")
     variant('knl', default=False, description="Enable KNL specific flags")
     variant('mpi', default=True, description="Enable MPI support")
     variant('openmp', default=False, description="Enable OpenMP support")
@@ -92,6 +93,9 @@ class Coreneuron(CMakePackage):
     conflicts('+sympy', when='~nmodl')
     conflicts('+codegenopt', when='~nmodl')
     conflicts('+ispc', when='~nmodl')
+
+    # Cannot enabled Unified Memory without GPU build
+    conflicts('+unified', when='~gpu')
 
     # Caliper instrumentation is only supported after 1.0.0.20210519
     # Note: The 20210518 date is needed to specify a version before 20210519!
@@ -211,6 +215,8 @@ class Coreneuron(CMakePackage):
             else:
                 options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
                                 '-DCUDA_PROPAGATE_HOST_FLAGS=OFF'])
+            if spec.satisfies('+unified'):
+                options.append('-DCORENRN_ENABLE_CUDA_UNIFIED_MEMORY=ON')
             options.append('-DCORENRN_ENABLE_GPU=ON')
 
         return options
