@@ -586,7 +586,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         self.run_test('make',
                       options=['-f', makefile_dir, 'ex50'],
-                      purpose='make stuff ---',
+                      purpose='test: compile ex50',
                       work_dir=w_dir)
 
         testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
@@ -615,7 +615,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         self.run_test('make',
                       options=['-f', makefile_dir, 'ex7'],
-                      purpose='make stuff ---',
+                      purpose='test: compile ex7',
                       work_dir=w_dir)
 
         testexe = ['ex7', '-mat_type', 'aijcusparse',
@@ -630,17 +630,17 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                       work_dir=w_dir)
 
     def run_ex3k_test(self, runexe, runopt, w_dir, makefile_dir):
-        """Run stand alone test: ex3k with kokkos"""
+        """Run stand alone test: ex3.kokkos with kokkos"""
 
         self.run_test('make',
                       options=['-f', makefile_dir, 'ex3k.kokkos'],
-                      purpose='make stuff ---',
+                      purpose='test: compile ex3k.kokkos',
                       work_dir=w_dir)
 
         testexe = ['ex3k.kokkos', '-view_initial', '-dm_vec_type', 'kokkos',
                    '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
                    '-snes_monitor']
-        purpose_str = 'run ex3k example with +kokkos'
+        purpose_str = 'test: run ex3k.kokkos example with +kokkos'
 
         self.run_test(runexe,
                       options=runopt + testexe,
@@ -664,27 +664,31 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         skip_test = 'Skipping petsc test:'
         makefile_dir = join_path(self.prefix.share.petsc, 'Makefile.user')
 
-        if os.path.exists(w_dir):
+        if os.path.isfile(join_path(w_dir, 'ex50.c')):
             self.run_ex50_test(runexe, runopt, w_dir, makefile_dir)
+        else:
+            print('{0} KSP tutorial example ex50 is missing'
+                  .format(skip_test))
 
+        if os.path.isfile(join_path(w_dir, 'ex7.c')):
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir, makefile_dir)
             else:
                 print('{0} KSP tutorial example ex7 requires +cuda'
                       .format(skip_test))
         else:
-            print('{0} KSP tutorial examples are missing'
+            print('{0} KSP tutorial example ex7 is missing'
                   .format(skip_test))
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
 
-        if os.path.exists(w_dir):
+        if os.path.isfile(join_path(w_dir, 'ex3k.kokkos.cxx')):
             if '+kokkos' in self.spec:
                 self.run_ex3k_test(runexe, runopt, w_dir, makefile_dir)
             else:
                 print('{0} SNES tutorial example ex3k requires +kokkos'
                       .format(skip_test))
         else:
-            print('{0} SNES tutorial examples are missing'
+            print('{0} SNES tutorial example ex3k.kokkos is missing'
                   .format(skip_test))
