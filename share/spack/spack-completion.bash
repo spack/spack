@@ -497,7 +497,7 @@ _spack_bootstrap_add() {
 _spack_bootstrap_remove() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
     fi
