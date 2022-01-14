@@ -76,6 +76,9 @@ class Mesa18(AutotoolsPackage):
     # Backport Mesa MR#6053 to prevent multiply-defined symbols
     patch('multiple-symbols_hash.patch', when='@:20.1.4%gcc@10:')
 
+    def setup_build_environment(self, env):
+        env.set('PYTHON', self.spec['python'].command.path)
+
     def autoreconf(self, spec, prefix):
         which('autoreconf')('--force',  '--verbose', '--install')
 
