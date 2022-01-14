@@ -193,8 +193,9 @@ class RocmOpenmpExtras(Package):
             '{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget'
         flang = '{0}/rocm-openmp-extras/flang/'
 
-        # If not in a git repo the STRIP command will have an empty
-        # argument. This is fixed in later versions.
+        # TODO: Correct condition when fix is presnt in ROCm release.
+        # Estimated release is ROCm 5.0. If not in a git repo the STRIP
+        # command will have an empty argument.
         if self.spec.version >= Version('4.3.0'):
             filter_file('STRIP ${FLANG_SHA}', 'STRIP 0',
                         flang.format(src) + 'CMakeLists.txt', string=True)
