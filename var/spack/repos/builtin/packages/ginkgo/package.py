@@ -167,19 +167,28 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(smoke_test_path):
             make("install")
 
+        # Above installs tests and data needed for running the tests that
+        # adhere to a relative structure to obtain the data. It is generally
+        # safer for tests to run from the test stage so all files are copied
+        # to the install test root. This allows Spack to automatically copy
+        # them to the test stage prior to running test().
+        install_tree(self.prefix.smoke_tests, self.install_test_root)
+
     def test(self):
         """Run the smoke tests."""
         # For now only 1.4.0 and later releases support this scheme.
         if self.spec.satisfies('@:1.3.0'):
             print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
+
+        # Perform the test(s) created by setup_build_tests.
         files = [('test_install', [r'REFERENCE',
                                    r'correctly detected and is complete']),
                  ('test_install_cuda', [r'CUDA',
                                         r'correctly detected and is complete']),
                  ('test_install_hip', [r'HIP',
                                        r'correctly detected and is complete'])]
-        smoke_test_path = join_path(self.prefix, 'smoke_tests')
         for f, expected in files:
-            self.run_test(f, [], expected, skip_missing=True, installed=True,
-                          work_dir=smoke_test_path)
+            self.run_test(f, [], expected, skip_missing=True, installed=False,
+                          purpose="test: Running {0}".format(f),
+                          work_dir=self.test_suite.current_test_cache_dir)
