@@ -16,3 +16,4 @@ class PyJeepney(PythonPackage):
 
     depends_on('python@3.6:', when='@0.5:', type=('build', 'run'))
     depends_on('python@3.5:', when='@:0.4', type=('build', 'run'))
+    depends_on('py-flit-core@2:3', type='build')

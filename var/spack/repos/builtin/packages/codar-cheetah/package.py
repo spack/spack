@@ -23,3 +23,4 @@ class CodarCheetah(PythonPackage):
     version('0.5', sha256='f37a554741eff4bb8407a68f799dd042dfc4df525e84896cad70fccbd6aca6ee')
 
     depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

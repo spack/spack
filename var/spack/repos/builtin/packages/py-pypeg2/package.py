@@ -14,4 +14,6 @@ class PyPypeg2(PythonPackage):
 
     version('2.15.2', sha256='2b2d4f80d8e1a9370b2a91f4a25f4abf7f69b85c8da84cd23ec36451958a1f6d')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-lxml', type=('build', 'run'))

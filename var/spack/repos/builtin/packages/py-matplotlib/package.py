@@ -192,7 +192,7 @@ class PyMatplotlib(PythonPackage):
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library))
 
-    @run_before('build')
+    @run_before('install')
     def configure(self):
         """Set build options with regards to backend GUI libraries."""
 
@@ -213,7 +213,7 @@ class PyMatplotlib(PythonPackage):
                 if self.spec.satisfies('%clang') or self.spec.satisfies('%oneapi'):
                     config.write('enable_lto = False\n')
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which('pytest')

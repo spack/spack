@@ -28,7 +28,7 @@ class PyPyopencl(PythonPackage):
     depends_on('py-pytools@2017.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    @run_before('build')
+    @run_before('install')
     def prepare(self):
         cl_prefix = self.spec['ocl-icd'].prefix
         python('configure.py', '--cl-inc-dir=' + cl_prefix.include,

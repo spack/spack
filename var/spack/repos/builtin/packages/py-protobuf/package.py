@@ -74,13 +74,8 @@ class PyProtobuf(PythonPackage):
         env.prepend_path('LIBRARY_PATH', protobuf_dir)
 
     @when('+cpp')
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--cpp_implementation']
-
-    @when('+cpp')
-    def install_args(self, spec, prefix):
-        args = super(PyProtobuf, self).install_args(spec, prefix)
-        return args + ['--cpp_implementation']
 
     @run_after('install')
     def fix_import_error(self):

@@ -33,7 +33,7 @@ class Mercurial(PythonPackage):
 
     depends_on('python+bz2+ssl+zlib@2.6:2.8', when='@:4.2', type=('build', 'run'))
     depends_on('python+bz2+ssl+zlib@2.7:2.8,3.5.3:3.5,3.6.2:', when='@4.3:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@3.6:', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))

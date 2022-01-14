@@ -20,9 +20,5 @@ class PyPyodbc(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('unixodbc',        type=('build', 'run'))
 
-    phases = ['build_ext', 'install']
-
-    def build_ext_args(self, spec, prefix):
-
-        args = (['--rpath=%s' % (spec['unixodbc'].prefix.lib)])
-        return args
+    def install_options(self, spec, prefix):
+        return ['--rpath=%s' % spec['unixodbc'].prefix.lib]

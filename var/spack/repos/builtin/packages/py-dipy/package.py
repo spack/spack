@@ -30,9 +30,3 @@ class PyDipy(PythonPackage):
     depends_on('py-h5py@2.5.0:', type=('build', 'run'))
     depends_on('py-packaging@19.0:', type=('build', 'run'))
     depends_on('py-tqdm@4.30.0:', type=('build', 'run'))
-
-    # Prevent passing --single-version-externally-managed to
-    # setup.py, to avoid
-    #     error: option --single-version-externally-managed not recognized
-    def install_args(self, spec, prefix):
-        return ['--prefix={0}'.format(prefix), '--root=/']

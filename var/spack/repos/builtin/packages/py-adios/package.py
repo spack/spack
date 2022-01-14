@@ -44,22 +44,22 @@ class PyAdios(PythonPackage):
                    when='@{0} +mpi'.format(v),
                    type=['build', 'link', 'run'])
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=['build', 'run'])
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', type=['run'], when='+mpi')
     depends_on('py-cython', type=['build'])
 
-    phases = ['build_clib', 'install']
     build_directory = 'wrappers/numpy'
 
-    def setup_file(self):
-        """Returns the name of the setup file to use."""
+    def patch(self):
         if '+mpi' in self.spec:
-            return 'setup_mpi.py'
-        else:
-            return 'setup.py'
+            with working_dir(self.build_directory):
+                copy('setup_mpi.py', 'setup.py')
 
-    def build_clib(self, spec, prefix):
+    @run_before('install')
+    def build_clib(self):
         # calls: make CYTHON=y [MPI=y] python
         args = ['CYTHON=y']
         if '+mpi' in self.spec:

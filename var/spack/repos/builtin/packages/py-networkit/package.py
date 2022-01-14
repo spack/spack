@@ -45,9 +45,6 @@ class PyNetworkit(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('python@3:', type=('build', 'run'))
 
-    phases = ['build_ext', 'install']
-
-    # Overwrite build_ext to enable ext. core-library + parallel build
-    def build_ext_args(self, spec, prefix):
-        args = ['--networkit-external-core', '-j{0}'.format(make_jobs)]
-        return args
+    def install_options(self, spec, prefix):
+        # Enable ext. core-library + parallel build
+        return ['--networkit-external-core', '-j{0}'.format(make_jobs)]

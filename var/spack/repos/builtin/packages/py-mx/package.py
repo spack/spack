@@ -17,3 +17,6 @@ class PyMx(PythonPackage):
     url      = "https://downloads.egenix.com/python/egenix-mx-base-3.2.8.tar.gz"
 
     version('3.2.8', sha256='0da55233e45bc3f88870e62e60a79c2c86bad4098b8128343fd7be877f44a3c0')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

@@ -35,4 +35,4 @@ class PyJoblib(PythonPackage):
 
     depends_on('python@3.6:', when='@0.15:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@0.14:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))

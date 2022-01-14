@@ -15,4 +15,5 @@ class PyEntrypoints(PythonPackage):
     version('0.2.3', sha256='d2d587dde06f99545fb13a383d2cd336a8ff1f359c5839ce3a64c917d10c029f')
 
     depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))
+    depends_on('py-flit', type='build')
+    depends_on('py-configparser@3.5:', when='^python@2.7', type=('build', 'run'))

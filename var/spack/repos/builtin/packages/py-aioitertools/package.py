@@ -17,4 +17,5 @@ class PyAioitertools(PythonPackage):
     version('0.7.1', sha256='54a56c7cf3b5290d1cb5e8974353c9f52c677612b5d69a859369a020c53414a3')
 
     depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-flit-core@2:3', type='build')
     depends_on('py-typing-extensions@3.7:', type=('build', 'run'))

@@ -23,6 +23,8 @@ class PyTensorboard(Package):
 
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
     depends_on('py-markdown@2.6.8:', type=('build', 'run'))
@@ -102,6 +104,6 @@ class PyTensorboard(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build'):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(self.tmp_path)

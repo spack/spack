@@ -55,7 +55,7 @@ class PyScipy(PythonPackage):
     depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
     depends_on('python@3.7:3.9', when='@1.6.2:1.7.1', type=('build', 'link', 'run'))
     depends_on('python@3.7:3.10', when='@1.7.2:', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', when='@:1.5', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@:51.0.0', when='@1.6', type='build')
     depends_on('py-setuptools@:57', when='@1.7:', type='build')
     depends_on('py-pybind11@2.2.4:', when='@1.4.0', type=('build', 'link'))
@@ -101,7 +101,7 @@ class PyScipy(PythonPackage):
         if platform.mac_ver()[0][0:2] == '11':
             env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fujitsu'])

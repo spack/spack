@@ -16,4 +16,5 @@ class PySphinxcontribMermaid(PythonPackage):
 
     version('0.4.0', sha256='0ee45ba45b9575505eacdd6212e4e545213f4f93dfa32c7eeca32720dbc3b468')
 
-    depends_on('py-sphinx@1.7:')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx@1.7:', type=('build', 'run'))

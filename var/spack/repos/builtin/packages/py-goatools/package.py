@@ -14,6 +14,7 @@ class PyGoatools(PythonPackage):
 
     version('0.7.11', sha256='753c6fb8c901367aa5d64ce5ad487d82903e424cf8ec7bac50ee069b307f6364')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-nose',        type=('build', 'run'))
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-pandas',      type=('build', 'run'))

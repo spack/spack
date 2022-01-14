@@ -21,6 +21,8 @@ class PyTensorflowHub(Package):
     extends('python')
 
     depends_on('bazel', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('python@3.6:',        type=('build', 'run'))
     depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
@@ -68,8 +70,8 @@ class PyTensorflowHub(Package):
                      join_path(insttmp_path, 'tensorflow_hub'))
 
         with working_dir(insttmp_path):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
 
         remove_linked_tree(tmp_path)
         remove_linked_tree(insttmp_path)

@@ -20,5 +20,6 @@ class PyH5glance(PythonPackage):
     version('0.4', sha256='03babaee0d481991062842796126bc9e6b11e2e6e7daba57c26f2b58bf3bbd32')
 
     depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('py-flit', type='build')
     depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-htmlgen', type=('build', 'run'))

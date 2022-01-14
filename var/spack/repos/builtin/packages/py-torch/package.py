@@ -201,10 +201,6 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
           sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
 
-    # Both build and install run cmake/make/make install
-    # Only run once to speed up build times
-    phases = ['install']
-
     @property
     def libs(self):
         root = join_path(python_platlib, 'torch', 'lib')
@@ -397,8 +393,3 @@ class PyTorch(PythonPackage, CudaPackage):
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

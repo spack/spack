@@ -46,11 +46,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+cuda' + v, when='+cuda' + v)
         depends_on('arrow+orc' + v, when='+orc' + v)
 
-    phases = ['build_ext', 'install']
-
     patch('for_aarch64.patch', when='target=aarch64:')
 
-    def build_ext_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if spec.satisfies('+parquet'):
             args.append('--with-parquet')

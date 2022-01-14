@@ -17,6 +17,4 @@ class PyYolk3k(PythonPackage):
 
     version('0.9', sha256='cf8731dd0a9f7ef50b5dc253fe0174383e3fed295a653672aa918c059eef86ae')
 
-    depends_on('py-pygments')
-    depends_on('py-jinja2')
-    depends_on('py-docutils')
+    depends_on('py-setuptools', type='build')

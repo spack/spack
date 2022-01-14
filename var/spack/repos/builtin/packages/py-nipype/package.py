@@ -40,5 +40,3 @@ class PyNipype(PythonPackage):
     depends_on('py-filelock@3:', type=('build', 'run'))
     depends_on('py-etelemetry@0.2:', when='@1.5:', type=('build', 'run'))
     depends_on('py-etelemetry', type=('build', 'run'))
-
-    depends_on('py-sphinxcontrib-napoleon', type='test')

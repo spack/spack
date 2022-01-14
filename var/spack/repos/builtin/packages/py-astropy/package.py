@@ -72,7 +72,7 @@ class PyAstropy(PythonPackage):
         # cython-ized files
         os.remove('astropy/cython_version.py')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = [
             '--use-system-libraries',
             '--use-system-erfa',

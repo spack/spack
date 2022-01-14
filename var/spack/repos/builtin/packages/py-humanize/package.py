@@ -23,7 +23,6 @@ class PyHumanize(PythonPackage):
     depends_on('python@3.5:', when='@1.1.0:', type=('build', 'run'))
     depends_on('python@2.7:2,3.5:', when='@1.0.0', type=('build', 'run'))
     depends_on('py-setuptools@42:', when='@3.2:', type=('build', 'run'))
-    depends_on('py-setuptools', when='@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm+toml@3.4:', when='@3.2:', type='build')
     depends_on('py-setuptools-scm', when='@1:', type='build')

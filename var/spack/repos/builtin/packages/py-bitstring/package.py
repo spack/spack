@@ -13,3 +13,6 @@ class PyBitstring(PythonPackage):
     pypi = "bitstring/bitstring-3.1.5.zip"
 
     version('3.1.5', sha256='c163a86fcef377c314690051885d86b47419e3e1770990c212e16723c1c08faa')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

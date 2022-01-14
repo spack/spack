@@ -37,6 +37,4 @@ class PyCuml(PythonPackage):
     for v in ('@0.15.0',):
         depends_on('libcuml{0}'.format(v), when=v)
 
-    phases = ['build_ext', 'install']
-
     build_directory = 'python'

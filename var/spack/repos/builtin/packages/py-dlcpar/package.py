@@ -15,4 +15,6 @@ class PyDlcpar(PythonPackage):
 
     version('1.0', sha256='774319caba0f10d1230b8f85b8a147eda5871f9a316d7b3381b91c1bde97aa0a')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

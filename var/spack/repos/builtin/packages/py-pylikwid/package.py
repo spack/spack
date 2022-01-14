@@ -24,6 +24,8 @@ class PyPylikwid(PythonPackage):
             default=False,
             description='with Nvidia GPU profiling support')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('likwid', when='~cuda')
     depends_on('likwid+cuda', when='+cuda')
 

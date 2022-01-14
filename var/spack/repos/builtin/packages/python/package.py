@@ -1061,8 +1061,6 @@ config.update(get_paths())
         """Called before python modules' install() methods."""
 
         module.python = self.command
-        module.setup_py = Executable(
-            self.command.path + ' setup.py --no-user-cfg')
 
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)

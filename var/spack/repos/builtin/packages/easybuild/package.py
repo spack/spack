@@ -20,6 +20,8 @@ class Easybuild(PythonPackage):
 
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
 
     for v in ['@4.0.0', '@3.1.2']:
         depends_on('py-easybuild-framework'   + v, when=v, type='run')

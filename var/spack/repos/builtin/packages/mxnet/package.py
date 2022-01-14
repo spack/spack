@@ -71,6 +71,8 @@ class Mxnet(CMakePackage, CudaPackage):
     extends('python', when='+python')
     depends_on('python@2.7:2.8,3.4:', when='@:1.8.0+python', type=('build', 'run'))
     depends_on('python@3.6:', when='@2.0.0:+python', type=('build', 'run'))
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-contextvars', when='@2.0.0:+python ^python@3.6.0:3.6', type=('build', 'run'))
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('py-cython', when='+python', type='build')
@@ -128,18 +130,12 @@ class Mxnet(CMakePackage, CudaPackage):
 
         return args
 
-    @run_after('build')
-    def build_python(self):
-        if '+python' in self.spec:
-            with working_dir('python'):
-                setup_py('build')
-
     @run_after('install')
     def install_python(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--prefix={0}'.format(self.prefix),
-                         '--single-version-externally-managed', '--root=/')
+                args = std_pip_args + ['--prefix=' + prefix, '.']
+                pip(*args)
 
     def test(self):
         """Attempts to import modules of the installed package."""

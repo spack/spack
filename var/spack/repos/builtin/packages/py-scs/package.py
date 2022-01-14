@@ -25,7 +25,7 @@ class PyScs(PythonPackage):
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-scipy@0.13.2:', type=('build', 'run'))
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if '+cuda' in spec or '+float32' in spec or '+int32' in spec or\
                 '+extra_verbose' in spec or '+blas64' in spec:

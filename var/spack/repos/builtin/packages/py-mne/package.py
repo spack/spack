@@ -26,8 +26,6 @@ class PyMne(PythonPackage):
     depends_on('py-scipy@1.1.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-scipy@0.17.1:', type=('build', 'run'))
 
-    depends_on('py-tqdm', type='test')
-
     with when('+full'):
         # requirements.txt with versions specified in README.rst (marked with *)
         depends_on('py-matplotlib@3.0.3:', type=('build', 'run'))  # *

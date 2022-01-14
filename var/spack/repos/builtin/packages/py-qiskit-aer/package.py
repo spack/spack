@@ -36,7 +36,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
         env.set('DISABLE_DEPENDENCY_INSTALL', '1')
         env.set("CUDAHOSTCXX", spack_cxx)
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         args.append('-DDISABLE_CONAN=ON')
         if '~gdr' in self.spec:

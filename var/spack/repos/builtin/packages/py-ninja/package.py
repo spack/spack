@@ -15,6 +15,7 @@ class PyNinja(PythonPackage):
     version('1.10.2', sha256='bb5e54b9a7343b3a8fc6532ae2c169af387a45b0d4dd5b72c2803e21658c5791')
 
     depends_on('cmake@3.6:', type='build')
+    depends_on('py-setuptools@42:', type='build')
     depends_on('py-scikit-build', type='build')
     depends_on('ninja@1.10.2', type=('build', 'run'), when='@1.10.2')
 

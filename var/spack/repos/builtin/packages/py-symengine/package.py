@@ -12,7 +12,6 @@ class PySymengine(PythonPackage):
     homepage = "https://github.com/symengine/symengine.py"
     pypi = "symengine/symengine-0.2.0.tar.gz"
     git      = "https://github.com/symengine/symengine.py.git"
-    phases = ['install']
 
     version('master', branch='master')
     # pypi source doesn't have necessary files in cmake directory
@@ -31,5 +30,5 @@ class PySymengine(PythonPackage):
     depends_on('symengine@0.2.0', when='@0.2.0')
     depends_on('symengine@0.8.1', when='@0.8.1')
 
-    def install_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--symengine-dir={0}'.format(spec['symengine'].prefix)]

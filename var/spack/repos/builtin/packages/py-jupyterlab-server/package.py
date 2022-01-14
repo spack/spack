@@ -18,6 +18,9 @@ class PyJupyterlabServer(PythonPackage):
     depends_on('python@3.6:', when='@2.5:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    # TODO: replace this after concretizer learns how to concretize separate build deps
+    depends_on('py-jupyter-packaging11', type='build')
+    # depends_on('py-jupyter-packaging@0.9:0', type='build')
 
     depends_on('py-requests', type=('build', 'run'))
     depends_on('py-json5', type=('build', 'run'))

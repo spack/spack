@@ -28,9 +28,7 @@ class PyPymumps(PythonPackage):
     # See https://github.com/PyMumps/pymumps/issues/13
     patch('py-pymumps.setup.patch')
 
-    phases = ['build_ext', 'install']
-
-    def build_ext_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         # Requires --library-dirs,
         # '--libraries', spec['mumps'].prefix.libs, does not cut it
         args = ['--include-dirs',

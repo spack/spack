@@ -17,3 +17,4 @@ class PyThreadpoolctl(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:')
+    depends_on('py-flit', type='build')

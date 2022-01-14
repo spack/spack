@@ -134,6 +134,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('bazel@0.1.1',         type='build', when='@0.5:0.6')
 
     depends_on('swig', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-future', type='build', when='^python@:2')
 
@@ -787,9 +789,8 @@ def protobuf_deps():
         tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
-
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(tmp_path)
 
     def test(self):

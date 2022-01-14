@@ -16,6 +16,8 @@ class PyPythonFmask(PythonPackage):
     version('0.5.4', sha256='a216aa3108de837fec182602b2b4708442746be31fc1585906802437784a63fe')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-rios',       type=('build', 'run'))
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-scipy',      type=('build', 'run'))

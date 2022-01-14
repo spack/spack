@@ -66,7 +66,7 @@ class AwsParallelcluster(PythonPackage):
     depends_on('py-boto3@1.14.3:', when='@2.8:2.9', type=('build', 'run'))
     depends_on('py-boto3@1.10.15:', when='@:2.7', type=('build', 'run'))
 
-    depends_on('py-setuptools', when='@2.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
 
