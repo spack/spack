@@ -584,56 +584,68 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def run_ex50_test(self, runexe, runopt, w_dir, makefile_dir):
         """Run stand alone test: ex50"""
 
-        with working_dir(w_dir):
-            testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
-            testdict = {
-                None: [],
-                '+superlu-dist':
-                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'superlu_dist'],
-                '+mumps':
-                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mumps'],
-                '+hypre':
-                ['-pc_type', 'hypre', '-pc_hypre_type', 'boomeramg'],
-                '+mkl-pardiso':
-                ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mkl_pardiso'],
-            }
-            make('-f', makefile_dir, 'ex50', parallel=False)
-            for feature, featureopt in testdict.items():
-                if not feature or feature in self.spec:
-                    purpose_str = 'test: run ex50 example with {0}'.format(feature)
-                    self.run_test(runexe,
-                                  options=runopt + testexe + featureopt,
-                                  purpose=purpose_str,
-                                  work_dir=w_dir)
+        self.run_test('make',
+                      options=['-f', makefile_dir, 'ex50'],
+                      purpose='make stuff ---',
+                      work_dir=w_dir)
+
+        testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
+        testdict = {
+            None: [],
+            '+superlu-dist':
+            ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'superlu_dist'],
+            '+mumps':
+            ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mumps'],
+            '+hypre':
+            ['-pc_type', 'hypre', '-pc_hypre_type', 'boomeramg'],
+            '+mkl-pardiso':
+            ['-pc_type', 'lu', '-pc_factor_mat_solver_type', 'mkl_pardiso'],
+        }
+
+        for feature, featureopt in testdict.items():
+            if not feature or feature in self.spec:
+                purpose_str = 'test: run ex50 example with {0}'.format(feature)
+                self.run_test(runexe,
+                              options=runopt + testexe + featureopt,
+                              purpose=purpose_str,
+                              work_dir=w_dir)
 
     def run_ex7_test(self, runexe, runopt, w_dir, makefile_dir):
         """Run stand alone test: ex7 with cuda"""
 
-        with working_dir(w_dir):
-            make('-f', makefile_dir, 'ex7', parallel=False)
-            testexe = ['ex7', '-mat_type', 'aijcusparse',
-                       '-sub_pc_factor_mat_solver_type', 'cusparse',
-                       '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
-                       '-use_gpu_aware_mpi', '0']
-            purpose_str = 'test: run ex7 example with +cuda'
-            self.run_test(runexe,
-                          options=runopt + testexe,
-                          purpose=purpose_str,
-                          work_dir=w_dir)
+        self.run_test('make',
+                      options=['-f', makefile_dir, 'ex7'],
+                      purpose='make stuff ---',
+                      work_dir=w_dir)
+
+        testexe = ['ex7', '-mat_type', 'aijcusparse',
+                   '-sub_pc_factor_mat_solver_type', 'cusparse',
+                   '-sub_ksp_type', 'preonly', '-sub_pc_type', 'ilu',
+                   '-use_gpu_aware_mpi', '0']
+        purpose_str = 'test: run ex7 example with +cuda'
+
+        self.run_test(runexe,
+                      options=runopt + testexe,
+                      purpose=purpose_str,
+                      work_dir=w_dir)
 
     def run_ex3k_test(self, runexe, runopt, w_dir, makefile_dir):
         """Run stand alone test: ex3k with kokkos"""
 
-        with working_dir(w_dir):
-            make('-f', makefile_dir, 'ex3k', parallel=False)
-            testexe = ['ex3k', '-view_initial', '-dm_vec_type', 'kokkos',
-                       '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
-                       '-snes_monitor']
-            purpose_str = 'run ex3k example with +kokkos'
-            self.run_test(runexe,
-                          options=runopt + testexe,
-                          purpose=purpose_str,
-                          work_dir=w_dir)
+        self.run_test('make',
+                      options=['-f', makefile_dir, 'ex3k.kokkos'],
+                      purpose='make stuff ---',
+                      work_dir=w_dir)
+
+        testexe = ['ex3k.kokkos', '-view_initial', '-dm_vec_type', 'kokkos',
+                   '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
+                   '-snes_monitor']
+        purpose_str = 'run ex3k example with +kokkos'
+
+        self.run_test(runexe,
+                      options=runopt + testexe,
+                      purpose=purpose_str,
+                      work_dir=w_dir)
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
@@ -642,12 +654,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if ('+mpi' in self.spec):
             runexe = Executable(join_path(self.spec['mpi'].prefix.bin,
                                           'mpiexec')).command
-            runopt = ['-n', '4']
         else:
             runexe = Executable(join_path(self.prefix.lib.petsc.bin,
                                           'petsc-mpiexec.uni')).command
-            runopt = ['-n', '1']
 
+        runopt = ['-n', '1']
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'ksp', 'ksp', 'tutorials')
         skip_test = 'Skipping petsc test:'
