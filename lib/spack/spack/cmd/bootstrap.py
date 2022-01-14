@@ -101,7 +101,6 @@ def setup_parser(subparser):
     remove = sp.add_parser(
         'remove', help='remove a bootstrapping source'
     )
-    _add_scope_option(remove)
     remove.add_argument(
         'name', help='name of the source to be removed'
     )
