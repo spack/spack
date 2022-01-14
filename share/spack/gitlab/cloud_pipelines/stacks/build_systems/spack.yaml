@@ -13,9 +13,7 @@ spack:
     - default_specs:
       - lz4  # MakefilePackage
       - mpich~fortran  # AutotoolsPackage
-      - py-flit-core  # PythonPackage: flit-core backend
-      - py-poetry-core  # PythonPackage: poetry-core backend
-      - py-setuptools  # PythonPackage: setuptools backend
+      - py-setuptools  # PythonPackage
       - openjpeg  # CMakePackage
       - r-rcpp  # RPackage
       - ruby-rake  # RubyPackage
