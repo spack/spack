@@ -95,7 +95,7 @@ def setup_parser(subparser):
         'name', help='name of the new source of software'
     )
     add.add_argument(
-        'metadata', help='location of the metadata file'
+        'metadata_dir', help='directory where to find metadata files'
     )
 
     remove = sp.add_parser(
@@ -275,16 +275,21 @@ def _add(args):
         raise RuntimeError(msg.format(args.name))
 
     # Check that the metadata file exists
-    file = spack.util.path.canonicalize_path(args.metadata)
+    metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
+    if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
+        raise RuntimeError(
+            'the directory "{0}" does not exist'.format(args.metadata_dir)
+        )
+
+    file = os.path.join(metadata_dir, 'metadata.yaml')
     if not os.path.exists(file):
-        msg = 'the file "{0}" does not exist'
-        raise RuntimeError(msg.format(args.metadata))
+        raise RuntimeError('the file "{0}" does not exist'.format(file))
 
     # Insert the new source as the highest priority one
     write_scope = args.scope or spack.config.default_modify_scope(section='bootstrap')
     sources = spack.config.get('bootstrap:sources', scope=write_scope) or []
     sources = [
-        {'name': args.name, 'metadata': args.metadata}
+        {'name': args.name, 'metadata': args.metadata_dir}
     ] + sources
     spack.config.set('bootstrap:sources', sources, scope=write_scope)
 

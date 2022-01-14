@@ -10,9 +10,9 @@ bootstrap:
   # depending on its type.
   sources:
   - name: 'github-actions'
-    metadata: $spack/share/spack/bootstrap/github-actions/metadata.yaml
+    metadata: $spack/share/spack/bootstrap/github-actions
   - name: 'spack-install'
-    metadata: $spack/share/spack/bootstrap/spack-install/metadata.yaml
+    metadata: $spack/share/spack/bootstrap/spack-install
   trusted:
     # By default we trust bootstrapping from sources and from binaries
     # produced on Github via the workflow
