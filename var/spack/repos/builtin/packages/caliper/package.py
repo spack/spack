@@ -161,14 +161,14 @@ class Caliper(CMakePackage, CudaPackage):
         exe = 'cxx-example'
 
         if os.path.exists(self.prefix.lib):
-            lib_dir = 'lib'
+            lib_dir = self.prefix.lib
         else:
-            lib_dir = 'lib64'
+            lib_dir = self.prefix.lib64
 
         self.run_test(exe='gcc',
                       options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
-                               '-L{0}'.format(join_path(self.prefix, lib_dir)),
-                               '-I{0}'.format(join_path(self.prefix, 'include')),
+                               '-L{0}'.format(lib_dir),
+                               '-I{0}'.format(self.prefix.include),
                                '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
