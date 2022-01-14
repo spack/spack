@@ -143,3 +143,36 @@ def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
     with spack.config.override('bootstrap', wrong_config):
         with pytest.raises(RuntimeError, match='more than one'):
             _bootstrap('trust', 'github-actions')
+
+
+@pytest.mark.parametrize('use_existing_dir', [True, False])
+def test_add_failures_for_non_existing_files(mutable_config, tmpdir, use_existing_dir):
+    metadata_dir = str(tmpdir) if use_existing_dir else '/foo/doesnotexist'
+    with pytest.raises(RuntimeError, match='does not exist'):
+        _bootstrap('add', 'mock-mirror', metadata_dir)
+
+
+def test_add_failures_for_already_existing_name(mutable_config, tmpdir):
+    with pytest.raises(RuntimeError, match='already exist'):
+        _bootstrap('add', 'github-actions', str(tmpdir))
+
+
+def test_remove_failure_for_non_existing_names(mutable_config):
+    with pytest.raises(RuntimeError, match='cannot find'):
+        _bootstrap('remove', 'mock-mirror')
+
+
+def test_remove_and_add_a_source(mutable_config):
+    # Check we start with a single bootstrapping source
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert len(sources) == 1
+
+    # Remove it and check the result
+    _bootstrap('remove', 'github-actions')
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert not sources
+
+    # Add it back and check we restored the initial state
+    _bootstrap('add', 'github-actions', '$spack/share/spack/bootstrap/github-actions')
+    sources = spack.bootstrap.bootstrapping_sources()
+    assert len(sources) == 1
