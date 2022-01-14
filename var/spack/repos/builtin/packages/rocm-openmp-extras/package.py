@@ -193,7 +193,7 @@ class RocmOpenmpExtras(Package):
             '{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget'
         flang = '{0}/rocm-openmp-extras/flang/'
 
-        # TODO: Correct condition when fix is presnt in ROCm release.
+        # TODO: Correct condition when fix is present in ROCm release.
         # Estimated release is ROCm 5.0. If not in a git repo the STRIP
         # command will have an empty argument.
         if self.spec.version >= Version('4.3.0'):
