@@ -38,6 +38,9 @@ import spack.user_environment
 import spack.util.executable
 import spack.util.path
 
+#: Name of the file containing metadata about the bootstrapping source
+METADATA_YAML_FILENAME = 'metadata.yaml'
+
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
 
@@ -219,7 +222,7 @@ class _BuildcacheBootstrapper(object):
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
-        self.metadata_file = conf['metadata']
+        self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.last_search = None
 
     @staticmethod
@@ -246,10 +249,8 @@ class _BuildcacheBootstrapper(object):
     def _read_metadata(self, package_name):
         """Return metadata about the given package."""
         json_filename = '{0}.json'.format(package_name)
-        json_dir = os.path.dirname(self.metadata_file)
-        json_path = spack.util.path.canonicalize_path(
-            os.path.join(json_dir, json_filename)
-        )
+        json_dir = self.metadata_dir
+        json_path = os.path.join(json_dir, json_filename)
         with open(json_path) as f:
             data = json.load(f)
         return data
@@ -990,8 +991,9 @@ def bootstrapping_sources(scope=None):
     list_of_sources = []
     for entry in source_configs:
         current = copy.copy(entry)
-        metadata_file = spack.util.path.canonicalize_path(entry['metadata'])
-        with open(metadata_file) as f:
+        metadata_dir = spack.util.path.canonicalize_path(entry['metadata'])
+        metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
+        with open(metadata_yaml) as f:
             current.update(ruamel.yaml.load(f))
         list_of_sources.append(current)
     return list_of_sources
