@@ -624,6 +624,23 @@ class TestSpecDag(object):
         copy_ids = set(id(s) for s in copy.traverse())
         assert not orig_ids.intersection(copy_ids)
 
+    def test_copy_through_spec_build_interface(self):
+        """Check that copying dependencies using id(node) as a fast identifier of the
+        node works when the spec is wrapped in a SpecBuildInterface object.
+        """
+        s = Spec('mpileaks').concretized()
+
+        c0 = s.copy()
+        assert c0 == s
+
+        # Single indirection
+        c1 = s['mpileaks'].copy()
+        assert c0 == c1 == s
+
+        # Double indirection
+        c2 = s['mpileaks']['mpileaks'].copy()
+        assert c0 == c1 == c2 == s
+
     """
     Here is the graph with deptypes labeled (assume all packages have a 'dt'
     prefix). Arrows are marked with the deptypes ('b' for 'build', 'l' for
