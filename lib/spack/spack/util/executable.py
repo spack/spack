@@ -18,7 +18,7 @@ import spack.error
 __all__ = ['Executable', 'which', 'ProcessError']
 
 def path_to_os_path(*pths):
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     ret_pths = []
     for pth in pths:
         if sys.platform == 'win32' and type(pth) is str:
@@ -26,6 +26,9 @@ def path_to_os_path(*pths):
         ret_pths.append(pth)
     return ret_pths
 
+# may want to add ability to filter by arg number position or name
+# maybe add a kwargs check for "keep path sep = true" or something similar
+# need more nuanced handling than blindly just shredding paths
 def system_path_filter(f):
     def path_filter_caller(*args, **kwargs):
         return f(*path_to_os_path(*args), **kwargs)
@@ -34,7 +37,7 @@ def system_path_filter(f):
 
 class Executable(object):
     """Class representing a program that can be run on the command line."""
-    @system_path_filter
+
     def __init__(self, name):
         self.exe = shlex.split(str(name))
         self.default_env = {}
@@ -50,6 +53,7 @@ class Executable(object):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
+    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -59,6 +63,7 @@ class Executable(object):
         """
         self.default_env[key] = value
 
+    @system_path_filter
     def add_default_envmod(self, envmod):
         """Set an EnvironmentModifications to use when the command is run."""
         self.default_envmod.extend(envmod)
@@ -317,7 +322,6 @@ def which_string(*args, **kwargs):
     return None
 
 
-@system_path_filter
 def which(*args, **kwargs):
     """Finds an executable in the path like command-line which.
 
