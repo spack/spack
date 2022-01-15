@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 import sys
 
 
@@ -28,6 +29,7 @@ class Hwloc(AutotoolsPackage):
     git = 'https://github.com/open-mpi/hwloc.git'
 
     maintainers = ['bgoglin']
+    executables = ['^hwloc-bind$']
 
     version('master', branch='master')
     version('2.7.0', sha256='d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374')
@@ -121,6 +123,13 @@ class Hwloc(AutotoolsPackage):
         # Avoid a circular dependency since the openmp
         # variant of llvm-amdgpu depends on hwloc.
         depends_on('llvm-amdgpu~openmp', when='+opencl')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'hwloc-bind (\S+)',
+                          output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
