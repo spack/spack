@@ -26,4 +26,3 @@ In adition Kosh aims to make data access and sharing as simple as possible.
     depends_on("py-sina", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-
