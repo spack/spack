@@ -183,7 +183,7 @@ class DetectablePackageMeta(object):
         # pulling in filenames with unexpected suffixes, but this allows
         # for example detecting "foo.exe" when the package writer specified
         # that "foo" was a possible executable.
-        # If a package has the executables attribute then it's
+        # If a package has the executables or libraries  attribute then it's
         # assumed to be detectable
         if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
             @property
@@ -203,35 +203,37 @@ class DetectablePackageMeta(object):
                 return plat_exe
 
             @classmethod
-            def determine_spec_details(cls, prefix, exes_in_prefix):
+            def determine_spec_details(cls, prefix, objs_in_prefix):
                 """Allow ``spack external find ...`` to locate installations.
 
                 Args:
                     prefix (str): the directory containing the executables
-                    exes_in_prefix (set): the executables that match the regex
+                                  or libraries
+                    objs_in_prefix (set): the executables and libraries that
+                                          match the regex
 
                 Returns:
                     The list of detected specs for this package
                 """
-                exes_by_version = collections.defaultdict(list)
+                objs_by_version = collections.defaultdict(list)
                 # The default filter function is the identity function for the
                 # list of executables
                 filter_fn = getattr(cls, 'filter_detected_exes',
                                     lambda x, exes: exes)
-                exes_in_prefix = filter_fn(prefix, exes_in_prefix)
-                for exe in exes_in_prefix:
+                objs_in_prefix = filter_fn(prefix, objs_in_prefix)
+                for obj in objs_in_prefix:
                     try:
-                        version_str = cls.determine_version(exe)
+                        version_str = cls.determine_version(obj)
                         if version_str:
-                            exes_by_version[version_str].append(exe)
+                            objs_by_version[version_str].append(obj)
                     except Exception as e:
                         msg = ('An error occurred when trying to detect '
                                'the version of "{0}" [{1}]')
-                        tty.debug(msg.format(exe, str(e)))
+                        tty.debug(msg.format(obj, str(e)))
 
                 specs = []
-                for version_str, exes in exes_by_version.items():
-                    variants = cls.determine_variants(exes, version_str)
+                for version_str, objs in objs_by_version.items():
+                    variants = cls.determine_variants(objs, version_str)
                     # Normalize output to list
                     if not isinstance(variants, list):
                         variants = [variants]
@@ -267,7 +269,7 @@ class DetectablePackageMeta(object):
                 return sorted(specs)
 
             @classmethod
-            def determine_variants(cls, exes, version_str):
+            def determine_variants(cls, objs, version_str):
                 return ''
 
             # Register the class as a detectable package
