@@ -17,6 +17,7 @@ class HipifyClang(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
     version('master', branch='master')
+    version('4.5.2', sha256='f0d401e634642a1d6659b9163a38661ee38da1e1aceabb1f16f78f8fce048a4e')
     version('4.5.0', sha256='1f6e1bd4b9d64eed67f519c453fa65b362a20583df1f35fd09d08de831f3c8de')
     version('4.3.1', sha256='c5754f7c2c68ea4f65cc0ffc1e8ccc30634181525b25c10817e07eaa75ca8157')
     version('4.3.0', sha256='182b336a994e3de0dfbce935dc35091388d18a29e3cfdadb2ab7da8a2dc121a2')
@@ -33,5 +34,5 @@ class HipifyClang(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)

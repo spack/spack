@@ -22,6 +22,7 @@ class RocmOpencl(CMakePackage):
         return url.format(version)
     version('master', branch='main')
 
+    version('4.5.2', sha256='96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d')
     version('4.5.0', sha256='3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8')
     version('4.3.1', sha256='7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca')
     version('4.3.0', sha256='d37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9')
@@ -41,6 +42,7 @@ class RocmOpencl(CMakePackage):
     depends_on('numactl', type='link', when='@3.7.0:')
 
     for d_version, d_shasum in [
+        ('4.5.2',  '6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1'),
         ('4.5.0',  'ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
     ]:
         resource(
@@ -57,7 +59,7 @@ class RocmOpencl(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', 'master']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0',  'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2',  'master']:
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 
@@ -95,7 +97,7 @@ class RocmOpencl(CMakePackage):
             '-DROCclr_DIR={0}'.format(self.spec['hip-rocclr'].prefix),
             '-DLIBROCclr_STATIC_DIR={0}/lib'.format
             (self.spec['hip-rocclr'].prefix)
-        if '@4.5.0' in self.spec:
+        if '@4.5.0:' in self.spec:
             args.append(self.define('ROCCLR_PATH', self.stage.source_path + '/rocclr'))
             args.append(self.define('AMD_OPENCL_PATH', self.stage.source_path))
         return args

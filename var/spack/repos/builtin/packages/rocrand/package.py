@@ -15,10 +15,11 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git      = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.5.2', sha256='1523997a21437c3b74d47a319d81f8cc44b8e96ec5174004944f2fb4629900db')
     version('4.5.0', sha256='fd391f81b9ea0b57808d93e8b72d86eec1b4c3529180dfb99ed6d3e2aa1285c2')
     version('4.3.1', sha256='b3d6ae0cdbbdfb56a73035690f8cb9e173fec1ccaaf9a4c5fdbe5e562e50c901')
     version('4.3.0', sha256='a85ced6c155befb7df8d58365518f4d9afc4407ee4e01d4640b5fd94604ca3e0')
@@ -37,7 +38,7 @@ class Rocrand(CMakePackage):
     depends_on('numactl', when='@3.7.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
@@ -63,6 +64,26 @@ class Rocrand(CMakePackage):
             for lib in rocrand_libs:
                 os.symlink(join_path(rocrand_lib_path, lib),
                            join_path(self.prefix.lib, lib))
+        """Fix the rocRAND and hipRAND include path"""
+        # rocRAND installs irocrand*.h* and hiprand*.h* rocrand/include and
+        # hiprand/include, respectively. This confuses spack's RPATH management. We
+        # fix it by adding a symlink to the header files.
+        hiprand_include_path = join_path(self.prefix, 'hiprand', 'include')
+        rocrand_include_path = join_path(self.prefix, 'rocrand', 'include')
+
+        with working_dir(hiprand_include_path):
+            hiprand_includes = glob.glob('*.h*')
+        hiprand_path = join_path(self.prefix, 'hiprand')
+        with working_dir(hiprand_path):
+            for header_file in hiprand_includes:
+                os.symlink(join_path('include', header_file), header_file)
+
+        with working_dir(rocrand_include_path):
+            rocrand_includes = glob.glob('*.h*')
+        rocrand_path = join_path(self.prefix, 'rocrand')
+        with working_dir(rocrand_path):
+            for header_file in rocrand_includes:
+                os.symlink(join_path('include', header_file), header_file)
 
     def cmake_args(self):
         args = [

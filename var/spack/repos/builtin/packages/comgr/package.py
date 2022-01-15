@@ -13,11 +13,12 @@ class Comgr(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
     git      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-4.3.1.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-4.5.2.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
+    version('4.5.2', sha256='e45f387fb6635fc1713714d09364204cd28fea97655b313c857beb1f8524e593')
     version('4.5.0', sha256='03c5880e0922fcff31306f7da2eb9d3a3709d9b5b75b3524dcfae85f4b181678')
     version('4.3.1', sha256='f1d99550383ed7b3a01d304eedc3d86a8e45b271aa5a80b1dd099c22fda3f745')
     version('4.3.0', sha256='f77b505abb474078374701dfc49e651ad3eeec5349ce6edda54549943a3775ee')
@@ -44,7 +45,7 @@ class Comgr(CMakePackage):
     depends_on('ncurses', type='link')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         # llvm libs are linked statically, so this *could* be a build dep
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
 

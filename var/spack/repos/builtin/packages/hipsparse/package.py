@@ -12,10 +12,11 @@ class Hipsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
     git      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.5.2', sha256='81ca24491fbf2bc8e5aa477a6c38776877579ac9f4241ddadeca76a579a7ebb5')
     version('4.5.0', sha256='1049c490fc2008d701a16d14e11004e3bc5b4da993aa48b117e3c44be5677e3c')
     version('4.3.1', sha256='e5757b5213b880237ae0f24616088f79c449c2955cf2133642dbbc9c655f4691')
     version('4.3.0', sha256='194fbd589ce34471f3255f71ea5fca2d27bee47a464558a86d0713b4d26237ea')
@@ -34,12 +35,12 @@ class Hipsparse(CMakePackage):
     depends_on('git', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('rocsparse@' + ver,                when='@' + ver)
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocprim@' + ver, when='@' + ver)
 
     patch('e79985dccde22d826aceb3badfc643a3227979d2.patch', when='@3.5.0')
