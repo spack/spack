@@ -20,6 +20,7 @@ class Votca(CMakePackage):
 
     version('master', branch='master')
     version('stable', branch='stable')
+    version('2022', sha256='7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83')
     version('2022-rc.2', sha256='eefde51470ec1437d0127fb02c2745f33e434deff53cdaee97691c36ce447fb1')
     version('2022-rc.1', sha256='d53ca9fde364a97d91bf3bed15223536ffa598b2dec7bccd459accae265391b1')
 
