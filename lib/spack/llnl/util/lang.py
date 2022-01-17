@@ -13,6 +13,7 @@ import re
 import sys
 from datetime import datetime, timedelta
 
+import six
 from six import string_types
 
 from llnl.util.compat import MutableMapping, zip_longest
@@ -173,18 +174,22 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args, **kwargs):
-        assert isinstance(args, tuple), args
-        key = args + tuple(kwargs.items() if kwargs else [])
+        key = args + tuple(kwargs.items())
 
         try:
-            ret = func.cache[key]
+            return func.cache[key]
         except KeyError:
             ret = func(*args, **kwargs)
             func.cache[key] = ret
-        except TypeError:
-            # Not hashable, so just call the function.
-            ret = func(*args, **kwargs)
-        return ret
+            return ret
+        except TypeError as e:
+            # TypeError is raised when indexing into a dict if the key is unhashable.
+            raise six.raise_from(
+                UnhashableArguments(
+                    "args + kwargs '{}' was not hashable for function '{}'"
+                    .format(key, func.__name__),
+                ),
+                e)
 
     return _memoized_function
 
@@ -934,3 +939,7 @@ def nullcontext(*args, **kwargs):
     TODO: replace with contextlib.nullcontext() if we ever require python 3.7.
     """
     yield
+
+
+class UnhashableArguments(TypeError):
+    """Raise when an @memoized function receives unhashable arg or kwarg values."""

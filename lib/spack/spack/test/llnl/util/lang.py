@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import match_predicate, pretty_date
+from llnl.util.lang import match_predicate, memoized, pretty_date
 
 
 @pytest.fixture()
@@ -205,3 +205,41 @@ def test_key_ordering():
     assert hash(a) == hash(a2)
     assert hash(b) == hash(b)
     assert hash(b) == hash(b2)
+
+
+@pytest.mark.parametrize(
+    "args, kwargs",
+    [
+        ((1,), {}),
+        ((), {'a': 3}),
+        ((1,), {'a': 3}),
+    ],
+)
+def test_memoized(args, kwargs):
+    @memoized
+    def f(*args, **kwargs):
+        return 'return-value'
+    assert f(*args, **kwargs) == 'return-value'
+    key = args + tuple(kwargs.items())
+    assert list(f.cache.keys()) == [key]
+    assert f.cache[key] == 'return-value'
+
+
+@pytest.mark.parametrize(
+    "args, kwargs",
+    [
+        (([1],), {}),
+        ((), {'a': [1]})
+    ],
+)
+def test_memoized_unhashable(args, kwargs):
+    """Check that an exception is raised clearly"""
+    @memoized
+    def f(*args, **kwargs):
+        return None
+    with pytest.raises(llnl.util.lang.UnhashableArguments) as exc_info:
+        f(*args, **kwargs)
+    exc_msg = str(exc_info.value)
+    key = args + tuple(kwargs.items())
+    assert str(key) in exc_msg
+    assert "function 'f'" in exc_msg
