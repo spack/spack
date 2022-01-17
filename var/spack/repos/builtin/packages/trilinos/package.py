@@ -742,19 +742,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     for arch in spec.variants['cuda_arch'].value
                 )
 
-            amd_microarches = []
-            if "+rocm" in spec:
-                options.append(define('Kokkos_ENABLE_ROCM', False))
-                options.append(define('Kokkos_ENABLE_HIP', True))
+              if "+rocm" in spec:
+                define_kok_enable('ROCM', False)
+                define_kok_enable('HIP', True)
                 if '+tpetra' in spec:
                     options.append(define('Tpetra_INST_HIP', True))
-                for amdgpu_target in spec.variants['amdgpu_target'].value:
-                    if amdgpu_target != "none":
-                        if amdgpu_target in self.amdgpu_arch_map:
-                            amd_microarches.append(
-                                self.amdgpu_arch_map[amdgpu_target])
-                for arch in amd_microarches:
-                    options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
+                for tgt in spec.variants['amdgpu_target'].value:
+                    try:
+                        arch = self.amdgpu_arch_map[amdgpu_target]
+                    except KeyError:
+                        pass
+                    else:
+                        options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
 
