@@ -96,7 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        # python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.9]
         concretizer: ['original', 'clingo']
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
@@ -303,6 +304,7 @@ jobs:
   # Run unit tests on MacOS
   build:
     needs: [ validate, style, changes ]
+    if: false
     runs-on: macos-latest
     strategy:
       matrix:

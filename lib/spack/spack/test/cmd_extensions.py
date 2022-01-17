@@ -249,7 +249,8 @@ def test_get_command_paths(config):
     for ext in extensions:
         ext_path = os.path.join('my', 'path', 'to', 'spack-' + ext)
         ext_paths.append(ext_path)
-        expected_cmd_paths.append(os.path.join(ext_path,
+        expected_cmd_paths.append(os.path.join(os.getcwd(),
+                                               ext_path,
                                                spack.cmd.python_name(ext),
                                                'cmd'))
 

@@ -3,6 +3,8 @@ from spack.pkg.builtin.npm import Npm as BuiltinNpm
 
 
 class Npm(BuiltinNpm):
+    __doc__ = BuiltinNpm.__doc__
+
     version('7.0.11', sha256='5ca03029c81af0bcb2de7a7ff05e4d0edda38dcee13f6a4773c1efe810b3378f')
 
     # node did not seem to be able to find all modules in parallel make

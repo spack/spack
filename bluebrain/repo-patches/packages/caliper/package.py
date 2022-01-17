@@ -2,6 +2,8 @@ from spack.pkg.builtin.caliper import Caliper as BuiltinCaliper
 
 
 class Caliper(BuiltinCaliper):
+    __doc__ = BuiltinCaliper.__doc__
+
     def cmake_args(self):
         args = super().cmake_args()
         if '+cuda' in self.spec:

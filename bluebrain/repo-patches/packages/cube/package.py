@@ -3,6 +3,8 @@ from spack.pkg.builtin.cube import Cube as BuiltinCube
 
 
 class Cube(BuiltinCube):
+    __doc__ = BuiltinCube.__doc__
+
     def configure_args():
         configure_args = super().configure_args()
 

@@ -12,7 +12,7 @@ class PyBluepyConfigfile(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bluepy-configfile"
     git      = "git@bbpgitlab.epfl.ch:nse/bluepy-configfile.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('0.1.17', tag='bluepy-configfile-v0.1.17')
     version('0.1.15', tag='bluepy-configfile-v0.1.15')
     version('0.1.14', tag='bluepy-configfile-v0.1.14')

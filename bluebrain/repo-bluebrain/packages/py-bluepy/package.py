@@ -12,7 +12,7 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/bluepy"
     git      = "git@bbpgitlab.epfl.ch:nse/bluepy.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('2.4.3', tag='bluepy-v2.4.3')
     version('2.4.2', tag='bluepy-v2.4.2')
 

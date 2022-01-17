@@ -4,6 +4,8 @@ from spack.pkg.builtin.intel import Intel as BuiltinIntel
 
 
 class Intel(BuiltinIntel):
+    __doc__ = BuiltinIntel.__doc__
+
     def setup_run_environment(self, env):
         super(Intel, self).setup_run_environment(env)
         forbidden = re.compile(r'/(mpi|tbb)(/|$)')

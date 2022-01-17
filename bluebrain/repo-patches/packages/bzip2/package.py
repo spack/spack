@@ -3,6 +3,8 @@ from spack.pkg.builtin.bzip2 import Bzip2 as BuiltinBzip2
 
 
 class Bzip2(BuiltinBzip2):
+    __doc__ = BuiltinBzip2.__doc__
+
     def patch(self):
         super().patch()
         filter_file(r'(-o bzip2 bzip2.o) -L. -lbz2', r'\1 libbz2.a', 'Makefile')

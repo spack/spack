@@ -3,6 +3,8 @@ from spack.pkg.builtin.freeimage import Freeimage as BuiltinFreeimage
 
 
 class Freeimage(BuiltinFreeimage):
+    __doc__ = BuiltinFreeimage.__doc__
+
     def edit(self, spec, prefix):
         super().edit(spec, prefix)
         env["INCDIR"] = prefix.join("include")

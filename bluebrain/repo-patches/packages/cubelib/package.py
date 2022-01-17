@@ -3,6 +3,8 @@ from spack.pkg.builtin.cubelib import Cubelib as BuiltinCubelib
 
 
 class Cubelib(BuiltinCubelib):
+    __doc__ = BuiltinCubelib.__doc__
+
     def configure_args():
         configure_args = super().configure_args()
 

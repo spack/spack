@@ -337,7 +337,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --show-cores --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add analyze arch audit augment blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env export extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -418,6 +418,15 @@ _spack_audit_packages() {
 
 _spack_audit_list() {
     SPACK_COMPREPLY="-h --help"
+}
+
+_spack_augment() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -s --split -N --namespace"
+    else
+        _all_packages
+    fi
 }
 
 _spack_blame() {
@@ -866,7 +875,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs --test --overwrite -y --yes-to-all -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -996,6 +1005,15 @@ _spack_env_revert() {
         SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
+    fi
+}
+
+_spack_export() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -f --format -d --dependencies -m --module --scope -v --variants -t --tag --unbuildable --exclude --explicit"
+    else
+        _installed_packages
     fi
 }
 

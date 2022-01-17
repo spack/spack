@@ -64,5 +64,5 @@ from spack.pkg.{module} import {cls} as {namespace}{cls}
 
 
 class {cls}({namespace}{cls}):
-    pass
+    __doc__ = {namespace}{cls}.__doc__
 """

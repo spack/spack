@@ -3,6 +3,8 @@ from spack.pkg.builtin.cubew import Cubew as BuiltinCubew
 
 
 class Cubew(BuiltinCubew):
+    __doc__ = BuiltinCubew.__doc__
+
     def configure_args(self):
         configure_args = super().configure_args()
 

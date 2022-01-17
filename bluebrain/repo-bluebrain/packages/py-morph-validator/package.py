@@ -12,7 +12,7 @@ class PyMorphValidator(PythonPackage):
 
     homepage = "https://bbpgitlab.epfl.ch/nse/morph-validator"
     git      = "git@bbpgitlab.epfl.ch:nse/morph-validator.git"
-    version('develop')
+    version('develop', branch='main')
     version('0.3.0', tag='morph-validator-v0.3.0')
 
     depends_on('py-setuptools', type=('build', 'run'))

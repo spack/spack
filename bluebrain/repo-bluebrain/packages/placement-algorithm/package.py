@@ -12,7 +12,7 @@ class PlacementAlgorithm(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/placement-algorithm/"
     git      = "git@bbpgitlab.epfl.ch:nse/placement-algorithm.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('2.3.0', tag='placement-algorithm-v2.3.0')
 
     build_directory = 'python'

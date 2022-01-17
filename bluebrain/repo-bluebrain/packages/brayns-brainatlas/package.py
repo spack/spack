@@ -13,7 +13,7 @@ class BraynsBrainatlas(CMakePackage):
 
     generator = 'Ninja'
 
-    version('develop')
+    version('develop', branch='master')
     version('0.1.0', tag='v0.1.0')
 
     depends_on('cmake@3.1:', type='build')

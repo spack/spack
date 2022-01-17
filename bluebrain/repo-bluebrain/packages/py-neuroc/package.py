@@ -13,7 +13,7 @@ class PyNeuroc(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/neuroc"
     git = "git@bbpgitlab.epfl.ch:nse/neuroc.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('0.2.8', tag='neuroc-v0.2.8')
 
     depends_on('py-setuptools', type=('build', 'run'))

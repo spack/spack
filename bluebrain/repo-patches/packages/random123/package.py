@@ -3,6 +3,8 @@ from spack.pkg.builtin.random123 import Random123 as BuiltinRandom123
 
 
 class Random123(BuiltinRandom123):
+    __doc__ = BuiltinRandom123.__doc__
+
     url      = "https://github.com/DEShawResearch/random123/archive/refs/tags/v1.14.0.tar.gz"
 
     version('1.14.0', sha256='effafd8656b18030b2a5b995cd3650c51a7c45052e6e1c21e48b9fa7a59d926e')

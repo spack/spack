@@ -12,7 +12,7 @@ class Brainbuilder(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/brainbuilder/"
     git      = "git@bbpgitlab.epfl.ch:nse/brainbuilder.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('0.17.0', tag='brainbuilder-v0.17.0')
 
     depends_on('py-setuptools', type=('build', 'run'))

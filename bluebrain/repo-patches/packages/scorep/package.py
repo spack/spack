@@ -2,6 +2,8 @@ from spack.pkg.builtin.scorep import Scorep as BuiltinScorep
 
 
 class Scorep(BuiltinScorep):
+    __doc__ = BuiltinScorep.__doc__
+
     def configure_args(self):
         config_args = super().configure_args()
         # new hpe-mpi hmpt version is mpich abi compatible

@@ -3,6 +3,8 @@ from spack.pkg.builtin.likwid import Likwid as BuiltinLikwid
 
 
 class Likwid(BuiltinLikwid):
+    __doc__ = BuiltinLikwid.__doc__
+
     variant('setgid', default=False, description='enable setgid flag '
             + 'for likwid-accessD and change its group to LIWKID_GROUP. '
             + 'Note: set LIWKID_GROUP env variable')

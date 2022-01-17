@@ -12,7 +12,7 @@ class PyTns(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/neuromath/neurots"
     git      = "git@bbpgitlab.epfl.ch:neuromath/neurots.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('2.5.0', tag='NeuroTS-v2.5.0')
 
     depends_on('py-setuptools', type='build')

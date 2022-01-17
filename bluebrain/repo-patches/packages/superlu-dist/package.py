@@ -3,6 +3,8 @@ from spack.pkg.builtin.superlu_dist import SuperluDist as BuiltinSuperluDist
 
 
 class SuperluDist(BuiltinSuperluDist):
+    __doc__ = BuiltinSuperluDist.__doc__
+
     depends_on('parmetis~int64', when='~int64')
     depends_on('parmetis+int64', when='+int64')
     depends_on('metis@5:~int64', when='~int64')

@@ -17,6 +17,7 @@ class PyImgaug(PythonPackage):
 
     version('0.4.0', sha256='46bab63ed38f8980630ff721a09ca2281b7dbd4d8c11258818b6ebcc69ea46c7')
     version('0.3.0', sha256='e1354d41921f1b306b50c5141b4870f17e81b531cae2f5c3093da9dc4dcb3cf4')
+    version('0.2.9', sha256='42b0c4c8cbe197d4f5dbd33960a1140f8a0d9c22c0a8851306ecbbc032092de8')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-imageio', type=('build', 'run'))
@@ -27,5 +28,4 @@ class PyImgaug(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-scikit-image@0.14.2:', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
-    depends_on('opencv+python2', when='^python@2.0:2', type=('build', 'run'))
-    depends_on('opencv+python3', when='^python@3:', type=('build', 'run'))
+    depends_on('py-opencv-python', type=('build', 'run'))

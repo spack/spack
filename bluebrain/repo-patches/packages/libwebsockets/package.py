@@ -3,6 +3,8 @@ from spack.pkg.builtin.libwebsockets import Libwebsockets as BuiltinLibwebsocket
 
 
 class Libwebsockets(BuiltinLibwebsockets):
+    __doc__ = BuiltinLibwebsockets.__doc__
+
     variant('libuv', default=False, description='Build with libuv support')
 
     version('3.1.0', 'db948be74c78fc13f1f1a55e76707d7baae3a1c8f62b625f639e8f2736298324')

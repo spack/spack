@@ -8,4 +8,6 @@ from spack.pkg.builtin.gmsh import Gmsh as BuiltinGmsh
 
 
 class Gmsh(BuiltinGmsh):
+    __doc__ = BuiltinGmsh.__doc__
+
     version('4.9.0', sha256='b8ef133c9b66ffe12df1747e72d4acf19f1eb1e9cd95eb0f577cbc4081d9bea3')

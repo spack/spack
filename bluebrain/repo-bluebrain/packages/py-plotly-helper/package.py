@@ -14,7 +14,7 @@ class PyPlotlyHelper(PythonPackage):
     git = "https://github.com/BlueBrain/plotly-helper.git"
     url = "https://pypi.io/packages/source/p/plotly-helper/plotly-helper-0.0.7.tar.gz"
 
-    version('develop')
+    version('develop', branch='master')
     version('0.0.8', sha256='fda9f3c744c679b74ef2f34fa0e0fd00426a95b6e8604a57904c7438628f9233')
 
     depends_on('py-setuptools', type=('build', 'run'))

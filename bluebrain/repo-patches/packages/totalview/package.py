@@ -5,6 +5,8 @@ from spack.pkg.builtin.totalview import Totalview as BuiltinTotalview
 
 
 class Totalview(BuiltinTotalview):
+    __doc__ = BuiltinTotalview.__doc__
+
     version('2021.1.16',
             sha256='4c51c7b6ab6b6afa7635ba2e9fc3b0ef833806f775a0ad0da26b13d6320625dd')
 

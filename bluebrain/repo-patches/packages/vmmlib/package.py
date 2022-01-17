@@ -13,7 +13,7 @@ class Vmmlib(CMakePackage):
     git = "https://github.com/Eyescale/vmmlib.git"
     generator = 'Ninja'
 
-    version('develop')
+    version('develop', branch='master')
     version('1.14.0', tag='1.14.0', submodules=True, preferred=True)
 
     depends_on('cmake@3.1:', type='build')

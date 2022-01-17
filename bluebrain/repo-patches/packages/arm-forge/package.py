@@ -3,6 +3,8 @@ from spack.pkg.builtin.arm_forge import ArmForge as BuiltinArmForge
 
 
 class ArmForge(BuiltinArmForge):
+    __doc__ = BuiltinArmForge.__doc__
+
     version(
         "21.1.2-Linux-x86_64",
         sha256="ebc99fa3461d2cd968e4d304c11b70cc8d9c5a2acd68681cec2067c128255cd5",

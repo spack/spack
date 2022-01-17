@@ -3,6 +3,8 @@ from spack.pkg.builtin.ior import Ior as BuiltinIor
 
 
 class Ior(BuiltinIor):
+    __doc__ = BuiltinIor.__doc__
+
     variant('ime',   default=False, description='support IO with IME backend')
 
     def configure_args(self):
