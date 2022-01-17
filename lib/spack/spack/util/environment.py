@@ -59,7 +59,7 @@ def is_system_path(path):
     Returns:
         True or False
     """
-    return os.path.normpath(path) in system_dirs
+    return path and os.path.normpath(path) in system_dirs
 
 
 def filter_system_paths(paths):
