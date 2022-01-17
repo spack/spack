@@ -2615,7 +2615,11 @@ class Spec(object):
         if self._concrete:
             return
 
-        result = spack.solver.asp.solve([self], tests=tests, reuse=reuse)
+        solver = spack.solver.asp.Solver()
+        solver.reuse = reuse
+        solver.tests = tests
+
+        result = solver.solve([self])
         result.raise_if_unsat()
 
         # take the best answer
