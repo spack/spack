@@ -962,26 +962,36 @@ impose(Hash) :- hash(Package, Hash).
 % if we haven't selected a hash for a package, we'll be building it
 build(Package) :- not hash(Package, _), node(Package).
 
-% Minimizing builds is tricky. We want a minimizing criterion
-
-% because we want to reuse what is avaialble, but
-% we also want things that are built to stick to *default preferences* from
-% the package and from the user. We therefore treat built specs differently and apply
-% a different set of optimization criteria to them. Spack's *first* priority is to
-% reuse what it *can*, but if it builds something, the built specs will respect
-% defaults and preferences.  This is implemented by bumping the priority of optimization
-% criteria for built specs -- so that they take precedence over the otherwise
-% topmost-priority criterion to reuse what is installed.
+% Minimizing builds is tricky. We want a minimizing criterion because we want to reuse
+% what is avaialble, but we also want things that are built to stick to *default
+% preferences* from the package and from the user. We therefore treat built specs
+% differently and apply a different set of optimization criteria to them. Spack's first
+% priority is to reuse what it can, but if it builds something, the built specs will
+% respect defaults and preferences.
+%
+% This is implemented by bumping the priority of optimization criteria for built specs
+% -- so that they take precedence over the otherwise topmost-priority criterion to reuse
+% what is installed.
+%
+% If the user explicitly asks for *minimal* installs, we don't differentiate between
+% built and reused specs - the top priority is just minimizing builds.
 %
 % The priority ranges are:
 %   200+        Shifted priorities for build nodes; correspond to priorities 0 - 99.
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds.
 %   0   -  99   Priorities for non-built nodes.
-build_priority(Package, 200) :- build(Package), node(Package), optimize_for_reuse().
-build_priority(Package, 0)   :- not build(Package), node(Package), optimize_for_reuse().
+build_priority(Package, 200) :- node(Package), build(Package), optimize_for_reuse(),
+                                not minimal_installs().
+build_priority(Package, 0)   :- node(Package), not build(Package), optimize_for_reuse().
 
-% don't adjust build priorities if reuse is not enabled
+% Don't adjust build priorities if reusing, or if doing minimal installs
+% With minimal, minimizing builds is the TOP priority
 build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
+build_priority(Package, 0)   :- node(Package), minimal_installs().
+
+% Minimize builds with both --reuse and with --minimal
+minimize_builds() :- optimize_for_reuse().
+minimize_builds() :- minimal_installs().
 
 % don't assign versions from installed packages unless reuse is enabled
 % NOTE: that "installed" means the declared version was only included because
@@ -1000,6 +1010,7 @@ build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
    not optimize_for_reuse().
 
 #defined installed_hash/2.
+#defined minimal_installs/0.
 
 %-----------------------------------------------------------------
 % Optimization to avoid errors
@@ -1029,7 +1040,7 @@ build_priority(Package, 0)   :- node(Package), not optimize_for_reuse().
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 0@100: #true }.
-#minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
+#minimize { 1@100,Package : build(Package), minimize_builds() }.
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used
