@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,7 +66,7 @@ class AwsParallelcluster(PythonPackage):
     depends_on('py-boto3@1.14.3:', when='@2.8:2.9', type=('build', 'run'))
     depends_on('py-boto3@1.10.15:', when='@:2.7', type=('build', 'run'))
 
-    depends_on('py-setuptools', when='@2.6:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,6 +117,8 @@ class Fenics(CMakePackage):
     depends_on('py-pybind11@2.2.4', type=('build', 'run'))
     depends_on('cmake@3.17.3:', type='build')
 
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-pkgconfig', type=('build', 'run'), when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
@@ -164,5 +166,5 @@ class Fenics(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--single-version-externally-managed',
-                         '--root=/', '--prefix={0}'.format(self.prefix))
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
+                pip(*args)

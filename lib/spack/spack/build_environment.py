@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -177,6 +177,7 @@ def clean_environment():
     env.unset('OBJC_INCLUDE_PATH')
 
     env.unset('CMAKE_PREFIX_PATH')
+    env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     env.unset('MAKEFLAGS')
@@ -525,9 +526,10 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
-    # Standard CMake arguments
+    # Standard build system arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path

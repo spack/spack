@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -128,9 +128,11 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('benchmark', when='@1.6:+test')
 
     # Optional dependencies
-    depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9:', when='@1.1:+cuda', type=('build', 'link', 'run'))
-    depends_on('cuda@9.2:', when='@1.6:+cuda', type=('build', 'link', 'run'))
+    # https://discuss.pytorch.org/t/compiling-1-10-1-from-source-with-gcc-11-and-cuda-11-5/140971
+    depends_on('cuda@9.2:', when='@1.11:+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9.2:11.4', when='@1.6:+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@9:11.4', when='@1.1:+cuda', type=('build', 'link', 'run'))
+    depends_on('cuda@7.5:11.4', when='+cuda', type=('build', 'link', 'run'))
     depends_on('cudnn@6:7', when='@:1.0+cudnn')
     depends_on('cudnn@7.0:7', when='@1.1:1.5+cudnn')
     depends_on('cudnn@7:', when='@1.6:+cudnn')
@@ -201,20 +203,14 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
           sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
 
-    # Both build and install run cmake/make/make install
-    # Only run once to speed up build times
-    phases = ['install']
-
     @property
     def libs(self):
-        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
-                         'torch', 'lib')
+        root = join_path(python_platlib, 'torch', 'lib')
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(self.prefix, self.spec['python'].package.site_packages_dir,
-                         'torch', 'include')
+        root = join_path(python_platlib, 'torch', 'include')
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers
@@ -399,8 +395,3 @@ class PyTorch(PythonPackage, CudaPackage):
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,6 @@ class PyPyyaml(PythonPackage):
     pypi = "PyYAML/PyYAML-5.3.1.tar.gz"
     git      = "https://github.com/yaml/pyyaml.git"
 
-    maintainers = ['adamjstewart']
-
     version('6.0',   sha256='68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2')
     version('5.3.1', sha256='b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d')
     version('5.2', sha256='c0ee8eca2c582d29c3c2ec6e2c4f703d1b7f1fb10bc72317355a746057e7346c')
@@ -26,13 +24,11 @@ class PyPyyaml(PythonPackage):
 
     variant('libyaml', default=True, description='Use libYAML bindings')
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'), when='@6.0:')
-    depends_on('libyaml', when='+libyaml')
-    depends_on('py-setuptools', when='@6.0:')
-    depends_on('py-cython', when='@6.0: +libyaml')
-
-    phases = ['build_ext', 'install']
+    depends_on('python@2.7,3.5:', type=('build', 'link', 'run'))
+    depends_on('python@3.6:', when='@6:', type=('build', 'link', 'run'))
+    depends_on('libyaml', when='+libyaml', type='link')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', when='@6:+libyaml', type='build')
 
     @property
     def import_modules(self):
@@ -43,30 +39,12 @@ class PyPyyaml(PythonPackage):
 
         return modules
 
-    def setup_py(self, *args, **kwargs):
-        if self.spec.satisfies('@:5'):
-            # Cast from tuple to list
-            args = list(args)
-
-            if '+libyaml' in self.spec:
-                args.insert(0, '--with-libyaml')
-            else:
-                args.insert(0, '--without-libyaml')
-
-        super(PyPyyaml, self).setup_py(*args, **kwargs)
-
-    def build_ext_args(self, spec, prefix):
+    def global_options(self, spec, prefix):
         args = []
 
-        if spec.satisfies('@:5 +libyaml'):
-            args.extend([
-                spec['libyaml'].libs.search_flags,
-                spec['libyaml'].headers.include_flags,
-            ])
+        if '+libyaml' in self.spec:
+            args.append('--with-libyaml')
+        else:
+            args.append('--without-libyaml')
 
         return args
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

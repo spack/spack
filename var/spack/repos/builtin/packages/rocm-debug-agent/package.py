@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,13 @@ class RocmDebugAgent(CMakePackage):
     version('4.3.1', sha256='7bee6be6c29883f03f47a8944c0d50b7cf43a6b5eeed734602f521c3c40a18d0')
     version('4.3.0', sha256='0cdee5792b808e03b839070da0d1b08dc4078a7d1fc295f0c99c6a5ae7d636a6')
     version('4.2.0', sha256='ce02a5b752291882daa0a2befa23944e59087ce9fe65a91061476c3c399e4a0c')
-    version('4.1.0', sha256='b1ae874887e5ee037070f1dd46b145ad02ec9fd8a724c6b6ae194b534f01acdb')
-    version('4.0.0', sha256='a9e64834d56a9221c242e71aa110c2cef0087aa8f86f50428dd618e5e623cc3c')
-    version('3.10.0', sha256='675b8d3cc4aecc4428a93553abf664bbe6a2cb153f1f480e6cadeeb4d24ef4b1')
-    version('3.9.0', sha256='3e56bf8b2b53d9102e8709b6259deea52257dc6210df16996b71a7d677952b1b')
-    version('3.8.0', sha256='55243331ac4b0d90e88882eb29fd06fad354e278f8a34ac7f0680b2c895ca2ac')
-    version('3.7.0', sha256='d0f442a2b224a734b0080c906f0fc3066a698e5cde9ff97ffeb485b36d2caba1')
-    version('3.5.0', sha256='203ccb18d2ac508aae40bf364923f67375a08798b20057e574a0c5be8039f133')
+    version('4.1.0', sha256='b1ae874887e5ee037070f1dd46b145ad02ec9fd8a724c6b6ae194b534f01acdb', deprecated=True)
+    version('4.0.0', sha256='a9e64834d56a9221c242e71aa110c2cef0087aa8f86f50428dd618e5e623cc3c', deprecated=True)
+    version('3.10.0', sha256='675b8d3cc4aecc4428a93553abf664bbe6a2cb153f1f480e6cadeeb4d24ef4b1', deprecated=True)
+    version('3.9.0', sha256='3e56bf8b2b53d9102e8709b6259deea52257dc6210df16996b71a7d677952b1b', deprecated=True)
+    version('3.8.0', sha256='55243331ac4b0d90e88882eb29fd06fad354e278f8a34ac7f0680b2c895ca2ac', deprecated=True)
+    version('3.7.0', sha256='d0f442a2b224a734b0080c906f0fc3066a698e5cde9ff97ffeb485b36d2caba1', deprecated=True)
+    version('3.5.0', sha256='203ccb18d2ac508aae40bf364923f67375a08798b20057e574a0c5be8039f133', deprecated=True)
 
     def url_for_version(self, version):
         url = "https://github.com/ROCm-Developer-Tools/rocr_debug_agent/archive/"

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,15 +119,12 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
 
     depends_on('py-cinemasci', when='+cinema')
 
-    paraview_base_spec = 'paraview +mpi +python3 +kits'
+    dav_sdk_depends_on('paraview +mpi +python3 +kits',
+                       when='+paraview',
+                       propagate=['hdf5', 'adios2'] + cuda_arch_variants)
     # Want +shared when not using cuda
-    dav_sdk_depends_on(paraview_base_spec + '+shared ~cuda',
-                       when='+paraview ~cuda',
-                       propagate=['hdf5', 'adios2'])
-    # Can't have +shared when using cuda, propagate cuda_arch_variants
-    dav_sdk_depends_on(paraview_base_spec + '~shared +cuda',
-                       when='+paraview +cuda',
-                       propagate=cuda_arch_variants)
+    dav_sdk_depends_on('paraview ~shared +cuda', when='+paraview +cuda')
+    dav_sdk_depends_on('paraview +shared ~cuda', when='+paraview ~cuda')
 
     dav_sdk_depends_on('visit', when='+visit')
 

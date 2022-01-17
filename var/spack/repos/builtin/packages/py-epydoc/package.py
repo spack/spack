@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,3 +12,6 @@ class PyEpydoc(PythonPackage):
     pypi = "epydoc/epydoc-3.0.1.tar.gz"
 
     version('3.0.1', sha256='c81469b853fab06ec42b39e35dd7cccbe9938dfddef324683d89c1e5176e48f2')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

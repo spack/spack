@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,8 +34,7 @@ class PyTomopy(PythonPackage):
     depends_on('py-scikit-image@0.17:',         type=('build', 'run'))
     depends_on('py-numpy+blas',                 type=('build', 'run'))
     depends_on('py-pyfftw',                     type=('build', 'run'), when='@1.0:1.9')
-    depends_on('py-numexpr',                    type=('test'))
-    depends_on('py-scipy',                      type=('build', 'test', 'run'))
+    depends_on('py-scipy',                      type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
@@ -43,7 +42,7 @@ class PyTomopy(PythonPackage):
     depends_on('py-dxchange', type=('build', 'run'))
 
     @when('@1.10:')
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = ['--enable-arch']
         if 'avx512' in self.spec.target:
             args.append('--enable-avx512')

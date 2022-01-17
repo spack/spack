@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class PyLineProfiler(PythonPackage):
     depends_on('py-ipython@0.13:',  type=('build', 'run'))
 
     # See https://github.com/rkern/line_profiler/issues/166
-    @run_before('build')
+    @run_before('install')
     def fix_cython(self):
         # TODO: Replace the check with a `@when('^python@3.7:')` decorator once
         # https://github.com/spack/spack/issues/12736 is resolved

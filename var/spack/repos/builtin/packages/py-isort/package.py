@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyIsort(PythonPackage):
     depends_on('python@3.6.1:3', type=('build', 'run'), when='@5:')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@4.3:')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-poetry-core@1:', type='build')
     depends_on('py-futures', type=('build', 'run'), when='@4.3:4 ^python@:3.1')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10:4 ^python@:3.1')
     depends_on('py-colorama@0.4.3:0.4', type=('build', 'run'), when='+colors')

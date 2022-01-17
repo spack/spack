@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,5 @@ class PyCssselect(PythonPackage):
     version('1.0.2', sha256='ee16bbb99b0a1f593ed4cd822f20bffefa4a4676d19d7dd1f231b4c1cc1cc1e2')
     version('1.0.1', sha256='cdfa17ab5dc8818209f310a930b18d3035a4585ddd2c179e833036e2dde511c6')
     version('1.0.0', sha256='2f757203e03aedcc1b31a452cf2752728b843351b7819ea2d4cd9ef38df7b324')
+
+    depends_on('py-setuptools', type='build')

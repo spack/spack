@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyNinja(PythonPackage):
     version('1.10.2', sha256='bb5e54b9a7343b3a8fc6532ae2c169af387a45b0d4dd5b72c2803e21658c5791')
 
     depends_on('cmake@3.6:', type='build')
+    depends_on('py-setuptools@42:', type='build')
     depends_on('py-scikit-build', type='build')
     depends_on('ninja@1.10.2', type=('build', 'run'), when='@1.10.2')
 
@@ -27,7 +28,7 @@ class PyNinja(PythonPackage):
                                    'ninja_syntax.py')
         bin_file = os.path.join(self.spec['ninja'].prefix.bin,
                                 'ninja')
-        dst = os.path.join(site_packages_dir,
+        dst = os.path.join(python_platlib,
                            'ninja')
         dstbin = os.path.join(dst, 'data', 'bin')
         mkdirp(dstbin)

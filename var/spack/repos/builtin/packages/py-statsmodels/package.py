@@ -1,9 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import glob
 
 from spack import *
 
@@ -51,7 +49,7 @@ class PyStatsmodels(PythonPackage):
 
     depends_on('py-pytest', type='test')
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         dirs = glob.glob("build/lib*")  # There can be only one...

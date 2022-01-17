@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class PyPymol(PythonPackage):
 
     depends_on('python+tkinter@2.7:', type=('build', 'run'), when='@2.3.0:2.4.0')
     depends_on('python+tkinter@3.6:', type=('build', 'run'), when='@2.5.0:')
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('gl')
     depends_on('glew')
     depends_on('libpng')
@@ -38,20 +40,15 @@ class PyPymol(PythonPackage):
     depends_on('libpng', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
 
-    def install_args(self, spec, prefix):
-        args = super(PyPymol, self).install_args(spec, prefix)
-        args.append('--no-launcher')
-        return args
+    def install_options(self, spec, prefix):
+        return ['--no-launcher']
 
     @run_after('install')
     def install_launcher(self):
         binpath = self.prefix.bin
         mkdirp(self.prefix.bin)
         fname = join_path(binpath, 'pymol')
-        script = join_path(self.prefix,
-                           self.spec['python'].package.site_packages_dir,
-                           'pymol',
-                           '__init__.py')
+        script = join_path(python_platlib, 'pymol', '__init__.py')
 
         shebang = '#!/bin/sh\n'
         fdata = 'exec {0} {1} \"$@\"'.format(self.spec['python'].command,
