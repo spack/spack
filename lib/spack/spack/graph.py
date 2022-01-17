@@ -42,70 +42,72 @@ Note that ``graph_ascii`` assumes a single spec while ``graph_dot``
 can take a number of specs as input.
 
 """
+import heapq
 import itertools
 import sys
-from heapq import heapify, heappop, heappush
 
-from llnl.util.tty.color import ColorStream
+import llnl.util.tty.color
 
-from spack.dependency import all_deptypes, canonical_deptype
+import spack.dependency
 
-__all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
+__all__ = ['graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
-def topological_sort(spec, reverse=False, deptype='all'):
-    """Topological sort for specs.
+def node_label(spec):
+    return spec.format('{name}{@version}{/hash:7}')
 
-    Return a list of dependency specs sorted topologically.  The spec
-    argument is not modified in the process.
 
+def topological_sort(spec, deptype='all'):
+    """Return a list of dependency specs in topological sorting order.
+
+    The spec argument is not modified in by the function.
+
+    This function assumes specs don't have cycles, i.e. that we are really
+    operating with a DAG.
+
+    Args:
+        spec (spack.spec.Spec): the spec to be analyzed
+        deptype (str or tuple): dependency types to account for when
+            constructing the list
     """
-    deptype = canonical_deptype(deptype)
+    deptype = spack.dependency.canonical_deptype(deptype)
 
     # Work on a copy so this is nondestructive.
     spec = spec.copy(deps=deptype)
     nodes = spec.index(deptype=deptype)
 
-    def all_dependencies(specs):
+    def dependencies(specs):
         return list(set(itertools.chain.from_iterable(
             s.dependencies(deptype=deptype) for s in specs
         )))
 
-    def all_dependents(specs):
+    def dependents(specs):
         candidates = list(set(itertools.chain.from_iterable(
             s.dependents(deptype=deptype) for s in specs
         )))
         return [x for x in candidates if x.name in nodes]
 
-    parents = all_dependents
-    children = all_dependencies
+    topological_order, children = [], {}
+    for spec in itertools.chain.from_iterable(nodes.values()):
+        children[(id(spec), spec.name)] = [
+            x for x in dependencies([spec]) if x.name in nodes
+        ]
 
-    if reverse:
-        parents, children = children, parents
-
-    topological_order = []
-    par = {}
-    for name, specs in nodes.items():
-        par[name] = [x for x in parents(specs) if x.name in nodes]
-    remaining = [specs for name, specs in nodes.items() if not parents(specs)]
-    remaining = [x for x in itertools.chain.from_iterable(remaining)]
-    heapify(remaining)
+    remaining = [
+        spec for spec in itertools.chain.from_iterable(nodes.values())
+        if not dependencies([spec])
+    ]
+    heapq.heapify(remaining)
 
     while remaining:
-        s = heappop(remaining)
+        s = heapq.heappop(remaining)
         topological_order.append(s)
 
-        # FIXME: node = nodes[spec.name]
-        for dep in children([s]):
-            par[dep.name].remove(s)
-            if not par[dep.name]:
-                heappush(remaining, dep)
+        for dep in dependents([s]):
+            children[(id(dep), dep.name)].remove(s)
+            if not children[(id(dep), dep.name)]:
+                heapq.heappush(remaining, dep)
 
-    if any(par.get(s.name, []) for s in spec.traverse()):
-        raise ValueError("Spec has cycles!")
-
-    # TODO: At the moment return just names to be backward compatible
-    topological_order = [s.name for s in topological_order]
     return topological_order
 
 
@@ -137,7 +139,7 @@ class AsciiGraph(object):
         self.node_character = 'o'
         self.debug = False
         self.indent = 0
-        self.deptype = all_deptypes
+        self.deptype = spack.dependency.all_deptypes
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
@@ -148,7 +150,6 @@ class AsciiGraph(object):
         self._name_to_color = None    # Node name to color
         self._out = None              # Output stream
         self._frontier = None         # frontier
-        self._nodes = None            # dict from name -> node
         self._prev_state = None       # State of previous line
         self._prev_index = None       # Index of expansion point of prev line
 
@@ -307,7 +308,10 @@ class AsciiGraph(object):
         self._set_state(BACK_EDGE, end, label)
         self._out.write("\n")
 
-    def _node_line(self, index, name):
+    def _node_label(self, node):
+        return node.format('{name}@@{version}{/hash:7}')
+
+    def _node_line(self, index, node):
         """Writes a line with a node at index."""
         self._indent()
         for c in range(index):
@@ -318,7 +322,7 @@ class AsciiGraph(object):
         for c in range(index + 1, len(self._frontier)):
             self._write_edge("| ", c)
 
-        self._out.write(" %s" % name)
+        self._out.write(self._node_label(node))
         self._set_state(NODE, index)
         self._out.write("\n")
 
@@ -380,29 +384,29 @@ class AsciiGraph(object):
         if color is None:
             color = out.isatty()
 
-        self._out = ColorStream(out, color=color)
+        self._out = llnl.util.tty.color.ColorStream(out, color=color)
 
-        # We'll traverse the spec in topo order as we graph it.
-        topo_order = topological_sort(spec, reverse=True, deptype=self.deptype)
+        # We'll traverse the spec in topological order as we graph it.
+        nodes_in_topological_order = topological_sort(spec, deptype=self.deptype)
 
         # Work on a copy to be nondestructive
         spec = spec.copy()
-        self._nodes = spec.index()
 
         # Colors associated with each node in the DAG.
         # Edges are colored by the node they point to.
-        self._name_to_color = dict((name, self.colors[i % len(self.colors)])
-                                   for i, name in enumerate(topo_order))
+        self._name_to_color = {
+            spec.full_hash(): self.colors[i % len(self.colors)]
+            for i, spec in enumerate(nodes_in_topological_order)
+        }
 
         # Frontier tracks open edges of the graph as it's written out.
-        self._frontier = [[spec.name]]
+        self._frontier = [[spec.full_hash()]]
         while self._frontier:
             # Find an unexpanded part of frontier
             i = find(self._frontier, lambda f: len(f) > 1)
 
             if i >= 0:
-                # Expand frontier until there are enough columns for all
-                # children.
+                # Expand frontier until there are enough columns for all children.
 
                 # Figure out how many back connections there are and
                 # sort them so we do them in order
@@ -453,8 +457,8 @@ class AsciiGraph(object):
 
                     else:
                         # Just allow the expansion here.
-                        name = self._frontier[i].pop(0)
-                        deps = [name]
+                        dep_hash = self._frontier[i].pop(0)
+                        deps = [dep_hash]
                         self._frontier.insert(i, deps)
                         self._expand_right_line(i)
 
@@ -470,19 +474,17 @@ class AsciiGraph(object):
 
             else:
                 # Nothing to expand; add dependencies for a node.
-                name = topo_order.pop()
-                node = self._nodes[name]
+                node = nodes_in_topological_order.pop()
 
                 # Find the named node in the frontier and draw it.
-                i = find(self._frontier, lambda f: name in f)
-                self._node_line(i, name)
+                i = find(self._frontier, lambda f: node.full_hash() in f)
+                self._node_line(i, node)
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                # TODO: Generalize later to multiple nodes
-                deps = node[0].dependencies(deptype=self.deptype)
+                deps = node.dependencies(deptype=self.deptype)
                 if deps:
-                    deps = sorted((d.name for d in deps), reverse=True)
+                    deps = sorted((d.full_hash() for d in deps), reverse=True)
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:
@@ -496,7 +498,7 @@ def graph_ascii(spec, node='o', out=None, debug=False,
     graph.indent = indent
     graph.node_character = node
     if deptype:
-        graph.deptype = canonical_deptype(deptype)
+        graph.deptype = spack.dependency.canonical_deptype(deptype)
 
     graph.write(spec, color=color, out=out)
 
@@ -517,7 +519,7 @@ def graph_dot(specs, deptype='all', static=False, out=None):
 
     if out is None:
         out = sys.stdout
-    deptype = canonical_deptype(deptype)
+    deptype = spack.dependency.canonical_deptype(deptype)
 
     def static_graph(spec, deptype):
         pkg = spec.package
@@ -535,7 +537,7 @@ def graph_dot(specs, deptype='all', static=False, out=None):
         nodes = set()  # elements are (node key, node label)
         edges = set()  # elements are (src key, dest key)
         for s in spec.traverse(deptype=deptype):
-            nodes.add((s.dag_hash(), s.name))
+            nodes.add((s.dag_hash(), node_label(s)))
             for d in s.dependencies(deptype=deptype):
                 edge = (s.dag_hash(), d.dag_hash())
                 edges.add(edge)
