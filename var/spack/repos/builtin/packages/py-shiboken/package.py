@@ -18,9 +18,12 @@ class PyShiboken(PythonPackage):
     depends_on('cmake', type='build')
 
     depends_on("py-setuptools", type='build')
-    depends_on("py-sphinx", type=('build', 'run'))
+    depends_on("py-sphinx@:3.4", type=('build', 'run'))
     depends_on("libxml2")
     depends_on("qt@:4.8")
+
+    # subprocess.mswindows was renamed to subprocess._mswindows in Python 3.5
+    patch('python-3.5.patch', when='^python@3.5:')
 
     def patch(self):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
