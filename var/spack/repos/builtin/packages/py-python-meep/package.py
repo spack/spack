@@ -38,31 +38,3 @@ class PyPythonMeep(PythonPackage):
     def patch(self):
         if '+mpi' in self.spec:
             copy('setup-mpi.py', 'setup.py')
-
-    def install_options(self, spec, prefix):
-        include_dirs = [
-            spec['meep'].prefix.include,
-            os.path.join(
-                spec['py-numpy'].prefix,
-                spec['python'].package.include
-            )
-        ]
-
-        library_dirs = [
-            spec['meep'].prefix.lib
-        ]
-
-        if '+mpi' in spec:
-            include_dirs.append(spec['mpi'].prefix.include)
-            library_dirs.append(spec['mpi'].prefix.lib)
-
-        include_flags = '-I{0}'.format(','.join(include_dirs))
-        library_flags = '-L{0}'.format(','.join(library_dirs))
-
-        # FIXME: For some reason, this stopped working.
-        # The -I and -L are no longer being properly forwarded to setup.py:
-        # meep_common.i:87: Error: Unable to find 'meep/mympi.hpp'
-        # meep_common.i:88: Error: Unable to find 'meep/vec.hpp'
-        # meep_common.i:89: Error: Unable to find 'meep.hpp'
-
-        return [include_flags, library_flags]
