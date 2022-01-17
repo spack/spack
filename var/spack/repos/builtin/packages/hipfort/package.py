@@ -20,11 +20,11 @@ class Hipfort(CMakePackage):
     version('4.3.1', sha256='279a35edbc0c22fa930a4355e663a86adf4d0316c5b1b6b9ccc6ee5c19c8c2e4')
     version('4.3.0', sha256='fd0ffdafdc17ac42c7dae3f89991651f15affdef9b2354da05c7493d09d8974e')
     version('4.2.0', sha256='b411cb32bf87927eba4c5573b412c56d75d15165e2f1c8ac5ac18e624ed3a4b4')
-    version('4.1.0', sha256='2d335ae068d0cbb480575de7d3ea4868362af32cb195f911ee1aeced499f3974')
-    version('4.0.0', sha256='a497645c33e0eff39abd5344756de63424733cde2837b7376c924b44ed5ae9c9')
-    version('3.10.0', sha256='44173522d9eb2a18ec1cea2d9b00b237fe70501f0849bd6be3decbb73389487a')
-    version('3.9.0', sha256='a3c4e125a9b56820446a65bd76b8caa196fddb0e0723eb513f0bcde9abd6a0c0')
-    version('3.8.0', sha256='0132e9949f758dd8b8a462d133b3316101440cd503aa6c53bea9e34e61bbb3cc')
+    version('4.1.0', sha256='2d335ae068d0cbb480575de7d3ea4868362af32cb195f911ee1aeced499f3974', deprecated=True)
+    version('4.0.0', sha256='a497645c33e0eff39abd5344756de63424733cde2837b7376c924b44ed5ae9c9', deprecated=True)
+    version('3.10.0', sha256='44173522d9eb2a18ec1cea2d9b00b237fe70501f0849bd6be3decbb73389487a', deprecated=True)
+    version('3.9.0', sha256='a3c4e125a9b56820446a65bd76b8caa196fddb0e0723eb513f0bcde9abd6a0c0', deprecated=True)
+    version('3.8.0', sha256='0132e9949f758dd8b8a462d133b3316101440cd503aa6c53bea9e34e61bbb3cc', deprecated=True)
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
