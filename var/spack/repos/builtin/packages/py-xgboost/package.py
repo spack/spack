@@ -18,22 +18,18 @@ class PyXgboost(PythonPackage):
     maintainers = ['adamjstewart']
     import_modules = ['xgboost']
 
+    version('1.5.2', sha256='404dc09dca887ef5a9bc0268f882c54b33bfc16ac365a859a11e7b24d49da387')
     version('1.3.3', sha256='397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43')
-    version('0.90',  sha256='d69f90d61a63e8889fd39a31ad00c629bac1ca627f8406b9b6d4594c9e29ab84', deprecated=True)
 
     variant('pandas',       default=False, description='Enable Pandas extensions for training.')
     variant('scikit-learn', default=False, description='Enable scikit-learn extensions for training.')
     variant('dask',         default=False, description='Enables Dask extensions for distributed training.')
     variant('plotting',     default=False, description='Enables tree and importance plotting.')
 
-    for ver in ['1.3.3']:
+    for ver in ['1.3.3', '1.5.2']:
         depends_on('xgboost@' + ver, when='@' + ver)
 
-    depends_on('cmake@3.12:', when='@1.0:1.2', type='build')
-    depends_on('llvm-openmp', when='@:1.2 %apple-clang')
-    depends_on('python@3.6:', when='@1.2:', type=('build', 'run'))
-    depends_on('python@3.5:', when='@1.0:', type=('build', 'run'))
-    depends_on('python@3.4:',   type=('build', 'run'))
+    depends_on('python@3.6:',   type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-scipy',      type=('build', 'run'))
@@ -49,19 +45,6 @@ class PyXgboost(PythonPackage):
     depends_on('py-graphviz',   when='+plotting', type=('build', 'run'))
     depends_on('py-matplotlib', when='+plotting', type=('build', 'run'))
 
-    conflicts('+pandas', when='@:0')
-    conflicts('+scikit-learn', when='@:0')
-    conflicts('+dask', when='@:0')
-    conflicts('+plotting', when='@:0')
-
-    @when('@:0.90')
-    def patch(self):
-        # Fix OpenMP support on macOS
-        filter_file("OPENMP_FLAGS = -fopenmp",
-                    "OPENMP_FLAGS = {0}".format(self.compiler.openmp_flag),
-                    os.path.join("xgboost", "Makefile"), string=True)
-
-    @when('@1.3:')
     def patch(self):
         # https://github.com/dmlc/xgboost/issues/6706
         # 'setup.py' is hard-coded to search in Python installation prefix
@@ -74,6 +57,5 @@ class PyXgboost(PythonPackage):
                     "'{0}',".format(self.spec['xgboost'].libs.directories[0]),
                     os.path.join('xgboost', 'libpath.py'), string=True)
 
-    @when('@1.3:')
     def install_options(self, spec, prefix):
         return ['--use-system-libxgboost']
