@@ -55,7 +55,8 @@ class Libfabric(AutotoolsPackage):
                'udp',
                'usnic',
                'verbs',
-               'xpmem')
+               'xpmem',
+               'cxi')
 
     variant('fabrics',
             default='sockets,tcp,udp',
