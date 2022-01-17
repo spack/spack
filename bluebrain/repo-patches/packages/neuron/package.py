@@ -31,6 +31,8 @@ class Neuron(CMakePackage):
     # Patch which reverts d9605cb for not hanging on ExperimentalMechComplex
     patch("apply_79a4d2af_load_balance_fix.patch", when="@7.8.0b")
     patch("fix_brew_py_18e97a2d.patch", when="@7.8.0c")
+    # Patch for recent CMake versions that don't identify NVHPC as PGI
+    patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
     version("8.0.0", tag="8.0.0", preferred=True)

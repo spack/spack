@@ -31,6 +31,10 @@ spack:
         +plasticity: '{name}-plasticity/{version}'
   specs:
     - asciitoh5@1.0
+    - coreneuron%intel+tests
+    - coreneuron%intel+tests+nmodl+sympy
+    - coreneuron%nvhpc+tests+gpu+openmp
+    - coreneuron%nvhpc+tests+gpu+openmp+nmodl+sympy
     - model-neocortex%intel
     - nest@2.20.1
     - neurodamus-core~common%intel
@@ -43,6 +47,9 @@ spack:
     - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
+    - neuron%intel+coreneuron+tests
+    - neuron%nvhpc+coreneuron+tests ^coreneuron+gpu
+    - nmodl
     - parquet-converters
     - py-basalt@0.2.9
     - py-neurodamus+all_deps

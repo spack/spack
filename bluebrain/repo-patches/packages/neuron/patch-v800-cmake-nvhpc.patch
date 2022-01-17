@@ -1,0 +1,13 @@
+diff --git a/cmake/CompilerHelper.cmake b/cmake/CompilerHelper.cmake
+index e80e93d..19e69d7 100644
+--- a/cmake/CompilerHelper.cmake
++++ b/cmake/CompilerHelper.cmake
+@@ -9,7 +9,7 @@ else()
+   set(UNDEFINED_SYMBOLS_IGNORE_FLAG "--unresolved-symbols=ignore-all")
+ endif()
+ 
+-if(CMAKE_C_COMPILER_ID MATCHES "PGI")
++if(CMAKE_C_COMPILER_ID MATCHES "PGI" OR CMAKE_C_COMPILER_ID MATCHES "NVHPC")
+   set(USING_PGI_COMPILER_TRUE "")
+   set(USING_PGI_COMPILER_FALSE "#")
+ else()

@@ -13,9 +13,11 @@ class Nmodl(CMakePackage):
     url      = "https://github.com/BlueBrain/nmodl.git"
     git      = "https://github.com/BlueBrain/nmodl.git"
 
+    # 0.3.1 > 0.3.0.20220110 > 0.3.0 > 0.3b > 0.3 to Spack
     version('develop', branch='master', submodules=True)
-    # 0.3.0 > 0.3b > 0.3 as far as Spack is concerned
-    version('0.3.0', tag='0.3', preferred=True)
+    # For deployment; nmodl@0.3.0%nvhpc@21.11 doesn't build with eigen/intrinsics errors
+    version('0.3.0.20220110', commit='9e0a6f260ac2e6fad068a39ea3bdf7aa7a6f4ee0')
+    version('0.3.0', tag='0.3')
     version('0.3b', commit="c30ea06", submodules=True)
     version('0.3a', commit="86fc52d", submodules=True)
     version('0.2', tag='0.2', submodules=True)
@@ -27,8 +29,9 @@ class Nmodl(CMakePackage):
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
-    depends_on('bison@3.0:3.4.99', when='@:0.3', type='build')
-    depends_on('bison@3.0.5:', when='@0.3.1:', type='build')
+    # 0.3b includes #270 and #318 so should work with bison 3.6+
+    depends_on('bison@3.0:3.4.99', when='@:0.3a', type='build')
+    depends_on('bison@3.0.5:', when='@0.3b:', type='build')
     depends_on('cmake@3.3.0:', type='build')
     depends_on('flex@2.6:', type='build')
     depends_on('python@3.6.0:')
