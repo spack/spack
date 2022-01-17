@@ -102,11 +102,15 @@ def solve(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs)
 
-    # dump generated ASP program
-    result = asp.solve(
-        specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        reuse=args.reuse,
-    )
+    # set up solver parameters
+    solver = asp.Solver()
+    solver.reuse = args.reuse
+    solver.dump = dump
+    solver.models = models
+    solver.timers = args.timers
+    solver.stats = args.stats
+
+    result = solver.solve(specs)
     if 'solutions' not in dump:
         return
 

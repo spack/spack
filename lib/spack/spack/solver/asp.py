@@ -529,7 +529,7 @@ class PyclingoDriver(object):
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
-            timers=False, stats=False, tests=False, reuse=False,
+            timers=False, stats=False,
     ):
         timer = spack.util.timer.Timer()
 
@@ -545,7 +545,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs, tests=tests, reuse=reuse)
+            solver_setup.setup(self, specs)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -640,7 +640,7 @@ class PyclingoDriver(object):
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self):
+    def __init__(self, reuse=False, tests=False):
         self.gen = None  # set by setup()
 
         self.declared_versions = {}
@@ -664,6 +664,12 @@ class SpackSolverSetup(object):
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
+
+        # whether to add installed/binary hashes to the solve
+        self.reuse = reuse
+
+        # whether to add installed/binary hashes to the solve
+        self.tests = tests
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -866,7 +872,7 @@ class SpackSolverSetup(object):
         self.package_provider_rules(pkg)
 
         # dependencies
-        self.package_dependencies_rules(pkg, tests)
+        self.package_dependencies_rules(pkg)
 
         # virtual preferences
         self.virtual_preferences(
@@ -932,17 +938,17 @@ class SpackSolverSetup(object):
                 ))
             self.gen.newline()
 
-    def package_dependencies_rules(self, pkg, tests):
+    def package_dependencies_rules(self, pkg):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
                 deptypes = dep.type.copy()
                 # Skip test dependencies if they're not requested
-                if not tests:
+                if not self.tests:
                     deptypes.discard("test")
 
                 # ... or if they are requested only for certain packages
-                if not isinstance(tests, bool) and pkg.name not in tests:
+                if not isinstance(self.tests, bool) and pkg.name not in self.tests:
                     deptypes.discard("test")
 
                 # if there are no dependency types to be considered
@@ -1642,7 +1648,7 @@ class SpackSolverSetup(object):
             # TODO: (or any mirror really) doesn't have binaries.
             pass
 
-    def setup(self, driver, specs, tests=False, reuse=False):
+    def setup(self, driver, specs):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1689,7 +1695,7 @@ class SpackSolverSetup(object):
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
-        if reuse:
+        if self.reuse:
             self.gen.h1("Installed packages")
             self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
@@ -1713,7 +1719,7 @@ class SpackSolverSetup(object):
         self.gen.h1('Package Constraints')
         for pkg in sorted(pkgs):
             self.gen.h2('Package rules: %s' % pkg)
-            self.pkg_rules(pkg, tests=tests)
+            self.pkg_rules(pkg, tests=self.tests)
             self.gen.h2('Package preferences: %s' % pkg)
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
@@ -2016,33 +2022,67 @@ def _develop_specs_from_env(spec, env):
     spec.constrain(dev_info['spec'])
 
 
-#
-# These are handwritten parts for the Spack ASP model.
-#
-def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
-          reuse=False):
-    """Solve for a stable model of specs.
+class Solver(object):
+    """This is the main external interface class for solving.
 
-    Arguments:
-        specs (list): list of Specs to solve.
-        dump (tuple): what to dump
-        models (int): number of models to search (default: 0)
+    It manages solver configuration and preferences in once place. It sets up the solve
+    and passes the setup method to the driver, as well.
+
+    Properties of interest:
+
+      ``reuse (bool)``
+        Whether to try to reuse existing installs/binaries
+
+      ``show (tuple)``
+        What information to print to the console while running. Options are:
+        * asp: asp program text
+        * opt: optimization criteria for best model
+        * output: raw clingo output
+        * solutions: models found by asp program
+        * all: all of the above
+
+      ``models (int)``
+        Number of models to search (default: 0 for unlimited)
+
+      ``timers (bool)``
+        Print out coarse fimers for different solve phases.
+
+      ``stats (bool)``
+        Print out detailed stats from clingo
+
+      ``tests (bool or tuple)``
+        If ``True``, concretize test dependencies for all packages. If
+        a tuple of package names, concretize test dependencies for named
+        packages. If ``False``, do not concretize test dependencies.
+
     """
-    driver = PyclingoDriver()
-    if "asp" in dump:
-        driver.out = sys.stdout
+    def __init__(self):
+        self.set_default_configuration()
 
-    # Check upfront that the variants are admissible
-    for root in specs:
-        for s in root.traverse():
-            if s.virtual:
-                continue
-            spack.spec.Spec.ensure_valid_variants(s)
+    def set_default_configuration(self):
+        self.reuse = False
+        self.dump = ()
+        self.models = 0
+        self.timers = False
+        self.stats = False
+        self.tests = False
 
-    setup = SpackSolverSetup()
-    return driver.solve(
-        setup, specs, dump, models, timers, stats, tests, reuse
-    )
+    def solve(self, specs):
+        driver = PyclingoDriver()
+        if "asp" in self.dump:
+            driver.out = sys.stdout
+
+        # Check upfront that the variants are admissible
+        for root in specs:
+            for s in root.traverse():
+                if s.virtual:
+                    continue
+                spack.spec.Spec.ensure_valid_variants(s)
+
+        setup = SpackSolverSetup(reuse=self.reuse, tests=self.tests)
+        return driver.solve(
+            setup, specs, self.dump, self.models, self.timers, self.stats
+        )
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):

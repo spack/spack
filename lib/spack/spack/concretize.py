@@ -748,11 +748,12 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
-    concretization_kwargs = {
-        'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
-    }
-    result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
+
+    solver = spack.solver.asp.Solver()
+    solver.tests = kwargs.get('tests', False)
+    solver.reuse = kwargs.get('reuse', False)
+
+    result = solver.solve(abstract_specs)
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
