@@ -287,6 +287,22 @@ class Wrf(Package):
                             )
                         ofh.write(line)
 
+        if self.spec.satisfies("@4.2 %intel"):
+            # In version 4.2 the file to be patched is called
+            # configure.defaults, while in earlier versions
+            # it's configure_new.defaults
+            rename(
+                "./arch/configure.defaults",
+                "./arch/configure.defaults.bak",
+            )
+            with open("./arch/configure.defaults.bak", "rt") as ifh:
+                with open("./arch/configure.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace("mpif90", self.spec['mpi'].mpifc)
+                            line = line.replace("mpicc", self.spec['mpi'].mpicc)
+                        ofh.write(line)
+
     def configure(self, spec, prefix):
 
         # Remove broken default options...
