@@ -2060,7 +2060,11 @@ class Solver(object):
         self.set_default_configuration()
 
     def set_default_configuration(self):
-        self.reuse = False
+        # These properties are settable via spack configuration. `None`
+        # means go with the configuration setting; user can override.
+        self.reuse = None
+
+        # these are concretizer settings
         self.dump = ()
         self.models = 0
         self.timers = False
@@ -2078,6 +2082,9 @@ class Solver(object):
                 if s.virtual:
                     continue
                 spack.spec.Spec.ensure_valid_variants(s)
+
+        if self.reuse is None:
+            self.reuse = spack.config.get("concretizer:reuse", False)
 
         setup = SpackSolverSetup(reuse=self.reuse, tests=self.tests)
         return driver.solve(
