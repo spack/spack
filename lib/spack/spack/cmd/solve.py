@@ -44,7 +44,7 @@ def setup_parser(subparser):
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status', 'reuse']
+        subparser, ['long', 'very_long', 'install_status']
     )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
@@ -70,6 +70,8 @@ def setup_parser(subparser):
         help='print out statistics from clingo')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def solve(parser, args):
@@ -104,7 +106,6 @@ def solve(parser, args):
 
     # set up solver parameters
     solver = asp.Solver()
-    solver.reuse = args.reuse
     solver.dump = dump
     solver.models = models
     solver.timers = args.timers

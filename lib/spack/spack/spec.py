@@ -2605,7 +2605,7 @@ class Spec(object):
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False, reuse=False):
+    def _new_concretize(self, tests=False, reuse=None):
         import spack.solver.asp
 
         if not self.name:
@@ -2637,7 +2637,7 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    def concretize(self, tests=False, reuse=False):
+    def concretize(self, tests=False, reuse=None):
         """Concretize the current spec.
 
         Args:
@@ -2678,7 +2678,7 @@ class Spec(object):
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
 
-    def concretized(self, tests=False, reuse=False):
+    def concretized(self, tests=False, reuse=None):
         """This is a non-destructive version of concretize().
 
         First clones, then returns a concrete version of this package

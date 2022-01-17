@@ -1083,7 +1083,7 @@ class Environment(object):
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def concretize(self, force=False, tests=False, reuse=False):
+    def concretize(self, force=False, tests=False, reuse=None):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1120,7 +1120,7 @@ class Environment(object):
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self, tests=False, reuse=False):
+    def _concretize_together(self, tests=False, reuse=None):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1160,7 +1160,7 @@ class Environment(object):
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self, tests=False, reuse=False):
+    def _concretize_separately(self, tests=False, reuse=None):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -2009,7 +2009,7 @@ def display_specs(concretized_specs):
         print('')
 
 
-def _concretize_from_constraints(spec_constraints, tests=False, reuse=False):
+def _concretize_from_constraints(spec_constraints, tests=False, reuse=None):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
