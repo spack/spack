@@ -296,10 +296,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         '{0} is not supported; '
         'Kokkos supports the following AMD GPU targets: '
         + ', '.join(amdgpu_arch_map.keys()))
-    for arch in ROCmPackage.amdgpu_targets:
-        if arch not in amdgpu_arch_map:
-            conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
-                      msg=amd_support_conflict_msg.format(arch))
+    for _arch in set(ROCmPackage.amdgpu_targets) - set(amdgpu_arch_map):
+        conflicts('+rocm', when='amdgpu_target=' + _arch,
+                  msg=amd_support_conflict_msg.format(_arch))
 
     # ###################### Dependencies ##########################
 
