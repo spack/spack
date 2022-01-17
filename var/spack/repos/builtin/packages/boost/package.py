@@ -311,7 +311,7 @@ class Boost(Package):
           working_dir="tools/build")
 
     # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
-    # See https:://github.com/spack/spack/issues/28273
+    # See https://github.com/spack/spack/issues/28273
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     def patch(self):
