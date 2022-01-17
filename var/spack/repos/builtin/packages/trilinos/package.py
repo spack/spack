@@ -192,6 +192,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Tpetra packages
     with when('~kokkos'):
         conflicts('+cuda')
+        conflicts('+rocm')
         conflicts('+tpetra')
         conflicts('+intrepid2')
         conflicts('+phalanx')
@@ -285,20 +286,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Fortran mangling fails on Apple M1 (see spack/spack#25900)
     conflicts('@:13.0.1 +fortran', when='target=m1')
-
-    amdgpu_arch_map = {
-        'gfx900': 'vega900',
-        'gfx906': 'vega906',
-        'gfx908': 'vega908',
-        'gfx90a': 'vega90A'
-    }
-    amd_support_conflict_msg = (
-        '{0} is not supported; '
-        'Kokkos supports the following AMD GPU targets: '
-        + ', '.join(amdgpu_arch_map.keys()))
-    for _arch in set(ROCmPackage.amdgpu_targets) - set(amdgpu_arch_map):
-        conflicts('+rocm', when='amdgpu_target=' + _arch,
-                  msg=amd_support_conflict_msg.format(_arch))
 
     # ###################### Dependencies ##########################
 
@@ -742,14 +729,17 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                     for arch in spec.variants['cuda_arch'].value
                 )
 
-              if "+rocm" in spec:
-                define_kok_enable('ROCM', False)
-                define_kok_enable('HIP', True)
+            if '+rocm' in spec:
+                options.extend([
+                    define_kok_enable('ROCM', False),
+                    define_kok_enable('HIP', True)
+                ])
                 if '+tpetra' in spec:
                     options.append(define('Tpetra_INST_HIP', True))
-                for tgt in spec.variants['amdgpu_target'].value:
+                amdgpu_arch_map = Kokkos.amdgpu_arch_map
+                for amd_target in spec.variants['amdgpu_target'].value:
                     try:
-                        arch = self.amdgpu_arch_map[amdgpu_target]
+                        arch = amdgpu_arch_map[amd_target]
                     except KeyError:
                         pass
                     else:

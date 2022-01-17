@@ -137,7 +137,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     amdgpu_arch_map = {
         'gfx900': 'vega900',
         'gfx906': 'vega906',
-        'gfx908': 'vega908'
+        'gfx908': 'vega908',
+        'gfx90a': 'vega90A'
     }
     amd_support_conflict_msg = (
         '{0} is not supported; '
