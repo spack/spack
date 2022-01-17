@@ -28,8 +28,8 @@ class Swftools(AutotoolsPackage):
     # The patches below are needed for swftools to compile on newer GCC
     # versions. These are derived from:
     # https://aur.archlinux.org/packages/swftools/#comment-839523
-    patch('extern.patch', level=0)
-    patch('pointer_compare.patch', level=0)
+    patch('extern.patch', level=0, when='%gcc@10:')
+    patch('pointer_compare.patch', level=0, when='%gcc@11:')
 
     depends_on('giflib')
     depends_on('lame')
