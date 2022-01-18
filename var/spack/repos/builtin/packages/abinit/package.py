@@ -101,9 +101,9 @@ class Abinit(AutotoolsPackage):
     # TODO: The logic here can be reversed with the new concretizer. Instead of
     # using `conflicts`, `depends_on` could be used instead.
     mkl_message = 'Need to set dependent variant to threads=openmp'
-    conflicts('+openmp',
-              when='^fftw-api~openmp',
-              msg='Need to request fftw +openmp')
+    for fftw in ['amdfftw', 'cray-fftw', 'fujitsu-fftw', 'fftw']:
+        conflicts('+openmp', when='^{0}~openmp'.format(fftw),
+                  msg='Need to request fftw +openmp')
     conflicts('+openmp',
               when='^intel-mkl threads=none',
               msg=mkl_message)
