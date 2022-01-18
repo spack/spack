@@ -15,7 +15,9 @@ class Op2Dsl(MakefilePackage):
     git      = "https://github.com/OP-DSL/OP2-Common.git"
 
     maintainers = ['gihanmudalige', 'reguly', 'bozbez']
+
     version('master', branch='master')
+    version('1.1.0', tag='v1.1.0')
 
     build_directory = 'op2'
 
