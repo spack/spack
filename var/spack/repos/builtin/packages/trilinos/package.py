@@ -22,7 +22,7 @@ from spack.pkg.builtin.kokkos import Kokkos
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage, CudaPackage):
+class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -192,6 +192,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # Tpetra packages
     with when('~kokkos'):
         conflicts('+cuda')
+        conflicts('+rocm')
         conflicts('+tpetra')
         conflicts('+intrepid2')
         conflicts('+phalanx')
@@ -410,6 +411,17 @@ class Trilinos(CMakePackage, CudaPackage):
                 env.set('MPICXX_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             else:
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+
+        if '+rocm' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', self.spec['hip'].hipcc)
+                env.set('MPICH_CXX', self.spec['hip'].hipcc)
+                env.set('MPICXX_CXX', self.spec['hip'].hipcc)
+            else:
+                env.set('CXX', self.spec['hip'].hipcc)
+            if '+stk' in spec:
+                # Using CXXFLAGS for hipcc which doesn't use flags in the spack wrappers
+                env.set('CXXFLAGS', '-DSTK_NO_BOOST_STACKTRACE')
 
     def cmake_args(self):
         options = []
@@ -716,6 +728,22 @@ class Trilinos(CMakePackage, CudaPackage):
                     define("Kokkos_ARCH_" + arch_map[arch].upper(), True)
                     for arch in spec.variants['cuda_arch'].value
                 )
+
+            if '+rocm' in spec:
+                options.extend([
+                    define_kok_enable('ROCM', False),
+                    define_kok_enable('HIP', True)
+                ])
+                if '+tpetra' in spec:
+                    options.append(define('Tpetra_INST_HIP', True))
+                amdgpu_arch_map = Kokkos.amdgpu_arch_map
+                for amd_target in spec.variants['amdgpu_target'].value:
+                    try:
+                        arch = amdgpu_arch_map[amd_target]
+                    except KeyError:
+                        pass
+                    else:
+                        options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
 
