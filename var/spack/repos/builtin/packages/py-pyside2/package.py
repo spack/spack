@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ class PyPyside2(PythonPackage):
     depends_on('libxslt@1.1.19:', when='+doc', type='build')
     depends_on('py-sphinx', when='+doc', type='build')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = [
             '--parallel={0}'.format(make_jobs),
             '--ignore-git',
@@ -48,7 +48,7 @@ class PyPyside2(PythonPackage):
             args.append('--build-tests')
         return args
 
-    @run_after('build')
-    def build_docs(self):
+    @run_after('install')
+    def install_docs(self):
         if '+doc' in self.spec:
             make('apidoc')

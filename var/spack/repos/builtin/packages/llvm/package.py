@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -169,6 +169,18 @@ class Llvm(CMakePackage, CudaPackage):
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
+
+    provides('libllvm@13', when='@13.0.0:13')
+    provides('libllvm@12', when='@12.0.0:12')
+    provides('libllvm@11', when='@11.0.0:11')
+    provides('libllvm@10', when='@10.0.0:10')
+    provides('libllvm@9', when='@9.0.0:9')
+    provides('libllvm@8', when='@8.0.0:8')
+    provides('libllvm@7', when='@7.0.0:7')
+    provides('libllvm@6', when='@6.0.0:6')
+    provides('libllvm@5', when='@5.0.0:5')
+    provides('libllvm@4', when='@4.0.0:4')
+    provides('libllvm@3', when='@3.0.0:3')
 
     extends("python", when="+python")
 
@@ -690,10 +702,10 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", site_packages_dir)
+            install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
-                install_tree("clang/bindings/python", site_packages_dir)
+                install_tree("clang/bindings/python", python_platlib)
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class PyScs(PythonPackage):
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-scipy@0.13.2:', type=('build', 'run'))
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if '+cuda' in spec or '+float32' in spec or '+int32' in spec or\
                 '+extra_verbose' in spec or '+blas64' in spec:

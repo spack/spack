@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class PyGosam(PythonPackage):
     depends_on('gosam-contrib', type='link')
     depends_on('python@2.7.0:2.7', type=('build', 'run'), when='@:2.0.4')
     depends_on('python@3:', type=('build', 'run'), when='@2.1.1:')
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
 
     def setup_run_environment(self, env):
         gosam_contrib_lib_dir = self.spec['gosam-contrib'].prefix.lib

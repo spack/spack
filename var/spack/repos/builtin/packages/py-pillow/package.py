@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,8 +54,6 @@ class PyPillowBase(PythonPackage):
     conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
     conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
 
-    phases = ['build_ext', 'install']
-
     def patch(self):
         """Patch setup.py to provide library and include directories
         for dependencies."""
@@ -94,11 +92,6 @@ class PyPillowBase(PythonPackage):
 
     def setup_build_environment(self, env):
         env.set('MAX_CONCURRENCY', str(make_jobs))
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)
 
 
 class PyPillow(PyPillowBase):

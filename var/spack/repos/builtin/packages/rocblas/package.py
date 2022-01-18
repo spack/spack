@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,17 +15,19 @@ class Rocblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+
+    version('4.5.2', sha256='15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4')
     version('4.5.0', sha256='22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf')
     version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')
     version('4.3.0', sha256='b15a66c861b3394cb83c56b64530b2c7e57b2b4c50f55d0e66bb3d1483b50ec4')
     version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
-    version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4')
-    version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401')
-    version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8')
-    version('3.9.0', sha256='3ecd2d9fd2be0e1697a191d143a2d447b53a91ae01afb50231d591136ad5e2fe')
-    version('3.8.0', sha256='568a9da0360349b1b134d74cc67cbb69b43c06eeca7c33b50072cd26cd3d8900')
-    version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
-    version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
+    version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4', deprecated=True)
+    version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401', deprecated=True)
+    version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8', deprecated=True)
+    version('3.9.0', sha256='3ecd2d9fd2be0e1697a191d143a2d447b53a91ae01afb50231d591136ad5e2fe', deprecated=True)
+    version('3.8.0', sha256='568a9da0360349b1b134d74cc67cbb69b43c06eeca7c33b50072cd26cd3d8900', deprecated=True)
+    version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642', deprecated=True)
+    version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0', deprecated=True)
 
     tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900',
                             'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
@@ -52,7 +54,7 @@ class Rocblas(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -61,7 +63,7 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -86,7 +88,8 @@ class Rocblas(CMakePackage):
         ('@4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b'),
         ('@4.3.0',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
         ('@4.3.1',  '9cbabb07f81e932b9c98bf5ae48fbd7fcef615cf'),
-        ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0')
+        ('@4.5.0',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0'),
+        ('@4.5.2',  '0f6a6d1557868d6d563cb1edf167c32c2e34fda0')
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',

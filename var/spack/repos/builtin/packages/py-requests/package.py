@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,8 @@ class PyRequests(PythonPackage):
     depends_on('python@2.7:2.8,3.6:', type=('build', 'run'), when='@2.26.0:')
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-chardet@3.0.2:4', type=('build', 'run'), when='@2.25.1: ^python@2:2')
+    depends_on('py-chardet@3.0.2:4', type=('build', 'run'), when='@2.26: ^python@2:2')
+    depends_on('py-chardet@3.0.2:4', type=('build', 'run'), when='@2.25.1:2.25')
     depends_on('py-chardet@3.0.2:3', type=('build', 'run'), when='@2.23.0:2.25.0')
     depends_on('py-chardet@3.0.2:3.0', type=('build', 'run'), when='@2.16.0:2.22')
     depends_on('py-charset-normalizer@2.0.0:2.0', type=('build', 'run'), when='@2.26.0: ^python@3:')

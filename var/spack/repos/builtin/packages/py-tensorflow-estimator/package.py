@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class PyTensorflowEstimator(Package):
     depends_on('py-tensorflow@1.13.1', type=('build', 'run'), when='@1.13.0')
 
     depends_on('bazel@0.19.0:', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-funcsigs@1.0.2:', type=('build', 'run'))
 
     def install(self, spec, prefix):
@@ -74,6 +76,6 @@ class PyTensorflowEstimator(Package):
         buildpath = join_path(self.stage.source_path, 'spack-build')
         build_pip_package('--src', buildpath)
         with working_dir(buildpath):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(self.tmp_path)

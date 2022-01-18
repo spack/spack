@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,5 +32,5 @@ class PyBrian2(PythonPackage):
     depends_on('py-setuptools@21:', type=('build', 'run'))
     depends_on('py-setuptools@24.2:', type=('build', 'run'), when='@2.4:')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--with-cython']

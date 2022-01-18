@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyOpencensusContext(Package):
+class PyOpencensusContext(PythonPackage):
     """OpenCensus Runtime Context."""
 
     homepage = "https://github.com/census-instrumentation/opencensus-python/tree/master/context/opencensus-context"
@@ -12,10 +12,4 @@ class PyOpencensusContext(Package):
 
     version('0.1.1', sha256='1a3fdf6bec537031efcc93d51b04f1edee5201f8c9a0c85681d63308b76f5702', expand=False)
 
-    extends('python')
-    depends_on('py-pip', type='build')
     depends_on('py-contextvars', when='^python@3.6.0:3.6', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

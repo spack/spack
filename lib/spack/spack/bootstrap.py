@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -78,13 +78,10 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec['python'].package
-        purelib = pkg.config_vars['python_lib']['false']['false']
-        platlib = pkg.config_vars['python_lib']['true']['false']
-
-        module_paths = [
-            os.path.join(candidate_spec.prefix, purelib),
-            os.path.join(candidate_spec.prefix, platlib),
-        ]
+        module_paths = {
+            os.path.join(candidate_spec.prefix, pkg.purelib),
+            os.path.join(candidate_spec.prefix, pkg.platlib),
+        }
         sys.path.extend(module_paths)
 
         try:
@@ -575,7 +572,9 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                         root=True, order='post', deptype=('link', 'run')
                 ):
                     env_mods.extend(
-                        spack.user_environment.environment_modifications_for_spec(dep)
+                        spack.user_environment.environment_modifications_for_spec(
+                            dep, set_package_py_globals=False
+                        )
                     )
                 cmd.add_default_envmod(env_mods)
                 return cmd

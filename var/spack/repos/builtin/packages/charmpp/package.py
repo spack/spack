@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -101,6 +101,10 @@ class Charmpp(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
+    # Versions 7.0.0+ use CMake by default when it's available. It's more
+    # robust.
+    depends_on('cmake@3.4:', when='@7.0.0:', type='build')
+
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
     depends_on("cuda", when="+cuda")
@@ -130,6 +134,16 @@ class Charmpp(Package):
     # Shared-lib builds with GCC are broken on macOS:
     # https://github.com/UIUC-PPL/charm/issues/3181
     conflicts("+shared", when="platform=darwin %gcc")
+
+    # Charm++ versions below 7.0.0 have build issues on macOS, mainly due to the
+    # pre-7.0.0 `VERSION` file conflicting with other version files on the
+    # system: https://github.com/UIUC-PPL/charm/issues/2844. Specifically, it
+    # conflicts with LLVM's `<version>` header that was added in llvm@7.0.0 to
+    # comply with the C++20 standard:
+    # https://en.cppreference.com/w/cpp/header/version. The conflict only occurs
+    # on case-insensitive file systems, as typically used on macOS machines.
+    conflicts("@:6", when="platform=darwin %apple-clang@7:")
+    conflicts("@:6", when="platform=darwin %clang@7:")
 
     @property
     def charmarch(self):

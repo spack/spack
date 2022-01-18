@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,10 +26,8 @@ class PyShiboken(PythonPackage):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
-        pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(
-            self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+        rpath.append(os.path.join(python_platlib, 'Shiboken'))
 
         filter_file(
             r'OPTION_CMAKE,',
@@ -45,5 +43,5 @@ class PyShiboken(PythonPackage):
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--jobs={0}'.format(make_jobs)]
