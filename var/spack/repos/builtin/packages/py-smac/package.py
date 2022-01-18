@@ -23,7 +23,7 @@ class PySmac(PythonPackage):
     depends_on('py-scipy@1.7.0:', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
     depends_on('py-pynisher@0.4.1:', type=('build', 'run'))
-    depends_on('py-configspace@0.4.14:0.4.999', type=('build', 'run'))
+    depends_on('py-configspace@0.4.14:0.4', type=('build', 'run'))
     depends_on('py-joblib', type=('build', 'run'))
     depends_on('py-scikit-learn@0.22.0:', type=('build', 'run'))
     depends_on('py-pyrfr@0.8.0:', type=('build', 'run'))
