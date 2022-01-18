@@ -23,13 +23,16 @@ from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
-from spack.util.executable import Executable, path_to_os_path, system_path_filter
+from spack.util.executable import Executable
+from spack.util.path import system_path_filter
 
 is_windows  = _platform == 'win32'
 
 if not is_windows:
     import grp
     import pwd
+else:
+    import win32security
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
@@ -100,6 +103,7 @@ def rename(src, dst):
         if os.path.exists(dst):
             os.remove(dst)
     os.rename(src, dst)
+
 
 @system_path_filter
 def path_contains_subdirectory(path, root):
@@ -301,6 +305,30 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         filter_file(single_quoted, "'%s'" % repl, f)
         filter_file(double_quoted, '"%s"' % repl, f)
 
+
+@system_path_filter
+def get_owner_uid(path, err_msg=None):
+    if not os.path.exists(path):
+        mkdirp(path, mode=stat.S_IRWXU)
+
+        p_stat = os.stat(path)
+        if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
+            tty.error("Expected {0} to support mode {1}, but it is {2}"
+                      .format(path, stat.S_IRWXU, p_stat.st_mode))
+
+            raise OSError(errno.EACCES,
+                          err_msg.format(path, path) if err_msg else "")
+    else:
+        p_stat = os.stat(path)
+
+    if _platform != "win32":
+        owner_uid = p_stat.st_uid
+    else:
+        sid = win32security.GetFileSecurity(
+            path, win32security.OWNER_SECURITY_INFORMATION) \
+            .GetSecurityDescriptorOwner()
+        owner_uid = win32security.LookupAccountSid(None, sid)[0]
+    return owner_uid
 
 
 @system_path_filter
@@ -867,7 +895,7 @@ def ancestor(dir, n=1):
     parent = os.path.abspath(dir)
     for i in range(n):
         parent = os.path.dirname(parent)
-    return parent.replace("\\", "/")
+    return parent
 
 
 @system_path_filter
@@ -1159,7 +1187,6 @@ def fix_darwin_install_name(path):
                     break
 
 
-@system_path_filter
 def find(root, files, recursive=True):
     """Search for ``files`` starting from the ``root`` directory.
 
@@ -1212,7 +1239,10 @@ def find(root, files, recursive=True):
         return _find_non_recursive(root, files)
 
 
-@system_path_filter
+# here and in _find_non_recursive below we only take the first
+# index to check for system path saftey as glob handles this
+# w.r.t. search_files
+@system_path_filter(arg_slice=slice(1))
 def _find_recursive(root, search_files):
 
     # The variable here is **on purpose** a defaultdict. The idea is that
@@ -1223,16 +1253,10 @@ def _find_recursive(root, search_files):
 
     # Make the path absolute to have os.walk also return an absolute path
     root = os.path.abspath(root)
-    if is_windows:
-        root = root.replace("\\", "/")
     for path, _, list_files in os.walk(root):
-        if is_windows:
-            path = path.replace("\\", "/")
         for search_file in search_files:
             matches = glob.glob(os.path.join(path, search_file))
             matches = [os.path.join(path, x) for x in matches]
-            if is_windows:
-                matches = [x.replace("\\", "/") for x in matches]
             found_files[search_file].extend(matches)
 
     answer = []
@@ -1242,7 +1266,7 @@ def _find_recursive(root, search_files):
     return answer
 
 
-@system_path_filter
+@system_path_filter(arg_slice=slice(1))
 def _find_non_recursive(root, search_files):
     # The variable here is **on purpose** a defaultdict as os.list_dir
     # can return files in any order (does not preserve stability)
@@ -1250,14 +1274,9 @@ def _find_non_recursive(root, search_files):
 
     # Make the path absolute to have absolute path returned
     root = os.path.abspath(root)
-    if is_windows:
-        root = root.replace("\\", "/")
-
     for search_file in search_files:
         matches = glob.glob(os.path.join(root, search_file))
         matches = [os.path.join(root, x) for x in matches]
-        if is_windows:
-            matches = [x.replace("\\", "/") for x in matches]
         found_files[search_file].extend(matches)
 
     answer = []
@@ -1857,10 +1876,7 @@ def partition_path(path, entry=None):
         # Derive the index of entry within paths, which will correspond to
         # the location of the entry in within the path.
         try:
-            if is_windows:
-                sep = "/"
-            else:
-                sep = os.sep
+            sep = os.sep
             entries = path.split(sep)
             if entries[0].endswith(":"):
                 # Handle drive letters e.g. C:/ on Windows

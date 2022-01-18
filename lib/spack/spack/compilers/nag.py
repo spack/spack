@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 from typing import List  # novm
 
 import spack.compiler
@@ -24,10 +25,10 @@ class Nag(spack.compiler.Compiler):
     # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
-        'cc': 'cc',
-        'cxx': 'c++',
-        'f77': ('nag', 'nagfor'),
-        'fc': ('nag', 'nagfor')}
+        'cc': pathlib.Path('cc'),
+        'cxx': pathlib.Path('c++'),
+        'f77': pathlib.Path('nag', 'nagfor'),
+        'fc': pathlib.Path('nag', 'nagfor')}
 
     version_argument = '-V'
     version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 import spack.compiler
 
 
@@ -20,10 +22,10 @@ class Fj(spack.compiler.Compiler):
     fc_names = ['frt']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': ('fj', 'fcc'),
-                  'cxx': ('fj', 'case-insensitive', 'FCC'),
-                  'f77': ('fj', 'frt'),
-                  'fc': ('fj', 'frt')}
+    link_paths = {'cc': pathlib.Path('fj', 'fcc'),
+                  'cxx': pathlib.Path('fj', 'case-insensitive', 'FCC'),
+                  'f77': pathlib.Path('fj', 'frt'),
+                  'fc': pathlib.Path('fj', 'frt')}
 
     version_argument = '--version'
     version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'

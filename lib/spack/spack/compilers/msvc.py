@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import re
 import subprocess
 import sys
@@ -51,10 +52,10 @@ class Msvc(Compiler):
     fc_names = ['ifx.exe']  # type: List[str]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': '',
-                  'cxx': '',
-                  'f77': '',
-                  'fc': ''}
+    link_paths = {'cc': pathlib.Path(''),
+                  'cxx': pathlib.Path(''),
+                  'f77': pathlib.Path(''),
+                  'fc': pathlib.Path('')}
 
     #: Compiler argument that produces version information
     version_argument = ''

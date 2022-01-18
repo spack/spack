@@ -10,7 +10,6 @@ import functools
 import inspect
 import itertools
 import os
-import posixpath
 import re
 import shutil
 import stat
@@ -142,8 +141,6 @@ class FastPackageChecker(Mapping):
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
         self.packages_path = packages_path
-        if sys.platform == 'win32':
-            self.packages_path = self.packages_path.replace("\\", "/")
 
         # If the cache we need is not there yet, then build it appropriately
         if packages_path not in self._paths_cache:
@@ -170,7 +167,7 @@ class FastPackageChecker(Mapping):
         cache = {}  # type: Dict[str, os.stat_result]
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
-            pkg_dir = posixpath.join(self.packages_path, pkg_name)
+            pkg_dir = os.path.join(self.packages_path, pkg_name)
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
@@ -181,7 +178,7 @@ class FastPackageChecker(Mapping):
                 continue
 
             # Construct the file name from the directory
-            pkg_file = posixpath.join(
+            pkg_file = os.path.join(
                 self.packages_path, pkg_name, package_file_name
             )
 
@@ -335,8 +332,6 @@ class RepoIndex(object):
     def __init__(self, package_checker, namespace):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
-        if sys.platform == 'win32':
-            self.packages_path = self.packages_path.replace("\\", "/")
         self.namespace = namespace
 
         self.indexers = {}
@@ -714,8 +709,6 @@ class Repo(object):
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
         self.root = spack.util.path.canonicalize_path(root)
-        if sys.platform == 'win32':
-            self.root = self.root.replace("\\", "/")
 
         # check and raise BadRepoError on fail.
         def check(condition, msg):
@@ -723,18 +716,18 @@ class Repo(object):
                 raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file = posixpath.join(self.root, repo_config_name)
+        self.config_file = os.path.join(self.root, repo_config_name)
         check(os.path.isfile(self.config_file),
               "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = posixpath.join(self.root, packages_dir_name)
+        self.packages_path = os.path.join(self.root, packages_dir_name)
         check(os.path.isdir(self.packages_path),
               "No directory '%s' found in '%s'" % (packages_dir_name, root))
 
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
-              % posixpath.join(root, repo_config_name))
+              % os.path.join(root, repo_config_name))
 
         self.namespace = config['namespace']
         check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
@@ -983,7 +976,7 @@ class Repo(object):
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
-        return posixpath.join(self.packages_path, pkg_name)
+        return os.path.join(self.packages_path, pkg_name)
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
@@ -995,7 +988,7 @@ class Repo(object):
            the package exists before importing.
         """
         pkg_dir = self.dirname_for_package_name(pkg_name)
-        return posixpath.join(pkg_dir, package_file_name)
+        return os.path.join(pkg_dir, package_file_name)
 
     @property
     def _pkg_checker(self):
@@ -1166,8 +1159,8 @@ def create_repo(root, namespace=None):
             "Cannot create repository in %s: can't access parent!" % root)
 
     try:
-        config_path = posixpath.join(root, repo_config_name)
-        packages_path = posixpath.join(root, packages_dir_name)
+        config_path = os.path.join(root, repo_config_name)
+        packages_path = os.path.join(root, packages_dir_name)
 
         fs.mkdirp(packages_path)
         with open(config_path, 'w') as config:

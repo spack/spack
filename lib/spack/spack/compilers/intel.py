@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
 import sys
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
@@ -23,10 +24,10 @@ class Intel(Compiler):
     fc_names = ['ifort']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': ('intel', 'icc'),
-                  'cxx': ('intel', 'icpc'),
-                  'f77': ('intel', 'ifort'),
-                  'fc': ('intel', 'ifort')}
+    link_paths = {'cc': pathlib.Path('intel', 'icc'),
+                  'cxx': pathlib.Path('intel', 'icpc'),
+                  'f77': pathlib.Path('intel', 'ifort'),
+                  'fc': pathlib.Path('intel', 'ifort')}
 
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'

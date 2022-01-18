@@ -22,8 +22,8 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
-    getuid,
     get_owner_uid,
+    getuid,
     install,
     install_tree,
     mkdirp,

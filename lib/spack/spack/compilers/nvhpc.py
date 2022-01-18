@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import pathlib
+
 from spack.compiler import Compiler
 
 
@@ -20,10 +22,10 @@ class Nvhpc(Compiler):
     fc_names = ['nvfortran']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc':  ('nvhpc', 'nvc'),
-                  'cxx': ('nvhpc', 'nvc++'),
-                  'f77': ('nvhpc', 'nvfortran'),
-                  'fc':  ('nvhpc', 'nvfortran')}
+    link_paths = {'cc': pathlib.Path('nvhpc', 'nvc'),
+                  'cxx': pathlib.Path('nvhpc', 'nvc++'),
+                  'f77': pathlib.Path('nvhpc', 'nvfortran'),
+                  'fc': pathlib.Path('nvhpc', 'nvfortran')}
 
     PrgEnv = 'PrgEnv-nvhpc'
     PrgEnv_compiler = 'nvhpc'

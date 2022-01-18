@@ -8,31 +8,39 @@
 TODO: this is really part of spack.config. Consolidate it.
 """
 import contextlib
+import functools
 import getpass
 import os
 import re
 import subprocess
+import sys
 import tempfile
+
+from six.moves.urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 
-import spack.paths
 import spack.util.spack_yaml as syaml
 
+is_windows = sys.platform == 'win32'
 
 __all__ = [
     'substitute_config_variables',
     'substitute_path_variables',
     'canonicalize_path']
 
+
 # Substitutions to perform
-replacements = {
-    'spack': spack.paths.prefix,
-    'user': getpass.getuser(),
-    'tempdir': tempfile.gettempdir(),
-    'user_cache_path': spack.paths.user_cache_path,
-}
+def replacements():
+    # break circular import from spack.util.executable
+    import spack.paths
+    return {
+        'spack': spack.paths.prefix,
+        'user': getpass.getuser(),
+        'tempdir': tempfile.gettempdir(),
+        'user_cache_path': spack.paths.user_cache_path}
+
 
 # This is intended to be longer than the part of the install path
 # spack generates from the root path we give it.  Included in the
@@ -54,6 +62,49 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 
+def is_path_url(path):
+    url_tuple = urlparse(path)
+    if not url_tuple.scheme and not url_tuple.netloc:
+        return False
+    return True
+
+
+def path_to_os_path(*pths):
+    # import pdb; pdb.set_trace()
+    ret_pths = []
+    for pth in pths:
+        if sys.platform == 'win32' and\
+            type(pth) is str and\
+            not is_path_url(pth):
+            pth = pth.replace('/', '\\')
+        ret_pths.append(pth)
+    return ret_pths
+
+
+# may want to add ability to filter by arg number position or name
+# maybe add a kwargs check for "keep path sep = true" or something similar
+# need more nuanced handling than blindly just shredding paths
+def system_path_filter(_func=None, *, arg_slice=None):
+    """
+    Filters function arguments to account
+    for platform path seperators.
+    Optional slicing range for arguments
+    """
+    def holder_func(func):
+        @functools.wraps(func)
+        def path_filter_caller(*args, **kwargs):
+            args = list(args)
+            if arg_slice:
+                args[arg_slice] = path_to_os_path(*args[arg_slice])
+            else:
+                args = path_to_os_path(*args)
+            return func(*args, **kwargs)
+        return path_filter_caller
+    if _func:
+        return holder_func(_func)
+    return holder_func
+
+
 @memoized
 def get_system_path_max():
     # Choose a conservative default
@@ -70,28 +121,15 @@ def get_system_path_max():
 
     return sys_max_path_length
 
+
 class Path:
-    _unix = 0
-    _windows = 1
-    _mac_os = 2
-
-    @property
-    @staticmethod
-    def unix():
-        return Path._unix
-
-    @property
-    @staticmethod
-    def windows():
-        return Path._windows
-
-    @property
-    @staticmethod
-    def mac_os():
-        return Path._mac_os
+    unix = 0
+    windows = 1
+    platform_path = windows if is_windows\
+        else unix
 
 
-def normalize(path, mode=Path.unix):
+def normalize_path(path, mode=Path.unix):
     if mode == Path.windows:
         path = path.replace('/', '\\')
     else:
@@ -116,17 +154,18 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
+    _replacements = replacements()
     env = ev.active_environment()
     if env:
-        replacements.update({'env': env.path})
+        _replacements.update({'env': env.path})
     else:
         # If a previous invocation added env, remove it
-        replacements.pop('env', None)
+        _replacements.pop('env', None)
 
     # Look up replacements
     def repl(match):
         m = match.group(0).strip('${}')
-        return replacements.get(m.lower(), match.group(0))
+        return _replacements.get(m.lower(), match.group(0))
 
     # Replace $var or ${var}.
     return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
@@ -245,7 +284,7 @@ def padding_filter(string):
     """
     global _filter_re
 
-    pad = spack.util.path.SPACK_PATH_PADDING_CHARS
+    pad = SPACK_PATH_PADDING_CHARS
     if not _filter_re:
         longest_prefix = longest_prefix_re(pad)
         regex = (
@@ -273,6 +312,7 @@ def filter_padding():
     This is needed because Spack's debug output gets extremely long when we use a
     long padded installation path.
     """
+    import spack.config
     padding = spack.config.get("config:install_tree:padded_length", None)
     if padding:
         # filter out all padding from the intsall command output

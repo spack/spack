@@ -92,9 +92,6 @@ def test_changed_files(flake8_package):
         for path in changed_files()
     ]
 
-    if sys.platform == "win32":
-        files = [f.replace("\\", "/") for f in files]
-
     # There will likely be other files that have changed
     # when these tests are run
     assert flake8_package in files

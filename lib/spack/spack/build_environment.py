@@ -373,7 +373,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(os.path.join(pkg.compiler.link_paths['cc'])))
+        spack.paths.build_env_path,
+        os.path.dirname(os.path.join(pkg.compiler.link_paths['cc'])))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')

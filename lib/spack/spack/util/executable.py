@@ -8,38 +8,30 @@ import re
 import shlex
 import subprocess
 import sys
+from sys import platform as _platform
 
 from six import string_types, text_type
 
 import llnl.util.tty as tty
 
 import spack.error
+from spack.util.path import Path, normalize_path, system_path_filter
+
+is_windows = _platform == 'win32'
+
 
 __all__ = ['Executable', 'which', 'ProcessError']
-
-def path_to_os_path(*pths):
-    # import pdb; pdb.set_trace()
-    ret_pths = []
-    for pth in pths:
-        if sys.platform == 'win32' and type(pth) is str:
-            pth = pth.replace('/', '\\')
-        ret_pths.append(pth)
-    return ret_pths
-
-# may want to add ability to filter by arg number position or name
-# maybe add a kwargs check for "keep path sep = true" or something similar
-# need more nuanced handling than blindly just shredding paths
-def system_path_filter(f):
-    def path_filter_caller(*args, **kwargs):
-        return f(*path_to_os_path(*args), **kwargs)
-    return path_filter_caller
 
 
 class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
+        # neccesary here for the shlex call to succeed
+        name = normalize_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
+        # filter back to platform dependent path
+        self.exe = [normalize_path(i, mode=Path.platform_path) for i in self.exe]
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
