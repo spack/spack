@@ -26,6 +26,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
     version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
@@ -216,26 +217,26 @@ class Hpctoolkit(AutotoolsPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             with working_dir('tests'):
                 make('check')
         else:
-            tty.warn('spack test for hpctoolkit requires branch master')
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')
 
     # Post-Install tests (spack test run).  These are the same tests
     # but with a different Makefile that works outside the build
     # directory.
     @run_after('install')
     def copy_test_files(self):
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             self.cache_extra_test_sources(['tests'])
 
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests')
-        if self.spec.satisfies('@master'):
+        if self.spec.satisfies('@2022:'):
             with working_dir(test_dir):
                 make('-f', 'Makefile.spack', 'all')
                 self.run_test('./run-sort', status=[0], installed=False,
                               purpose='selection sort unit test')
         else:
-            tty.warn('spack test for hpctoolkit requires branch master')
+            tty.warn('spack test for hpctoolkit requires 2022.01.15 or later')
