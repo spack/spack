@@ -615,44 +615,39 @@ modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 Autoload dependencies
 """""""""""""""""""""
 
-In some cases it can be useful to have module files that automatically load
-their dependencies.  This may be the case for Python extensions, if not
-activated using ``spack activate``:
+Often it is required for a module to have its (transient) dependencies loaded as well.
+One example where this is useful is when one package needs to use executables provided
+by its dependency; when the dependency is autoloaded, the executable will be in the
+PATH. Similarly for scripting languages such as Python, packages and their dependencies
+have to be loaded together.
+
+Autoloading is enabled by default for LMod, as it has great builtin support for through
+the ``depends_on`` function. For Environment Modules it is disabled by default.
+
+Autoloading can also be enabled conditionally:
 
 .. code-block:: yaml
 
-   modules:
-     default:
-       tcl:
-         ^python:
-           autoload: 'direct'
+    modules:
+      default:
+        tcl:
+          all:
+            autoload: none
+          ^python:
+            autoload: direct
 
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.  The default is ``none``.
-
-.. tip::
-  Building external software
-     Setting ``autoload`` to ``direct`` for all packages can be useful
-     when building software outside of a Spack installation that depends on
-     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
-     as appropriate):
-
-  .. code-block:: yaml
-
-     modules:
-       default:
-         lmod:
-           all:
-             autoload: 'direct'
+``direct`` or ``all``.
 
 .. note::
   TCL prerequisites
      In the ``tcl`` section of the configuration file it is possible to use
      the ``prerequisites`` directive that accepts the same values as
      ``autoload``. It will produce module files that have a ``prereq``
-     statement instead of automatically loading other modules.
+     statement, which can be used to autoload dependencies in some versions
+     of Environment Modules.
 
 ------------------------
 Maintaining Module Files
