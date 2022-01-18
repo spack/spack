@@ -69,7 +69,6 @@ def is_path_url(path):
 
 
 def path_to_os_path(*pths):
-    # import pdb; pdb.set_trace()
     ret_pths = []
     for pth in pths:
         if sys.platform == 'win32' and\
@@ -83,13 +82,14 @@ def path_to_os_path(*pths):
 # may want to add ability to filter by arg number position or name
 # maybe add a kwargs check for "keep path sep = true" or something similar
 # need more nuanced handling than blindly just shredding paths
-def system_path_filter(_func=None, *, arg_slice=None):
+def system_path_filter(_func=None, arg_slice=None):
     """
     Filters function arguments to account
     for platform path seperators.
     Optional slicing range for arguments
     """
     from functools import wraps
+
     def holder_func(func):
         @wraps(func)
         def path_filter_caller(*args, **kwargs):
