@@ -64,6 +64,7 @@ spack:
     - nvhpc@21.2 install_type=network
     - nvhpc@21.9
     - nvhpc@21.11
+    - nvhpc@22.1
     - arm-forge
     - bison
     - blender

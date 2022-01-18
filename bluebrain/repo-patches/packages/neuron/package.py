@@ -171,10 +171,11 @@ class Neuron(CMakePackage):
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
         if "+coreneuron" in self.spec:
             args.append('-DCORENEURON_DIR=' + self.spec["coreneuron"].prefix)
-        # NVHPC 21.11 detects ABM support and defines __ABM__, which breaks
-        # Random123 compilation
-        if self.spec.satisfies('%nvhpc@21.11'):
-            compilation_flags.append('-mno-abm')
+        # NVHPC 21.11 and newer detect ABM support and define __ABM__, which
+        # breaks Random123 compilation. NEURON inserts a workaround for this in
+        # https://github.com/neuronsimulator/nrn/pull/1587.
+        if self.spec.satisfies('@:8.0.0%nvhpc@21.11:'):
+            compilation_flags.append('-DR123_USE_INTRIN_H=0')
         compilation_flags = ' '.join(compilation_flags)
         args.append("-DCMAKE_C_FLAGS=" + compilation_flags)
         args.append("-DCMAKE_CXX_FLAGS=" + compilation_flags)
