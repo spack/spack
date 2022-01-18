@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -100,6 +100,10 @@ class Charmpp(Package):
     variant("shared", default=True, description="Enable shared link support")
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
+
+    # Versions 7.0.0+ use CMake by default when it's available. It's more
+    # robust.
+    depends_on('cmake@3.4:', when='@7.0.0:', type='build')
 
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")

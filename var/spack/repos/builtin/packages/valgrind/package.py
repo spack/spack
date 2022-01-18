@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Activates boost support for valgrind')
     variant('only64bit', default=True,
             description='Sets --enable-only64bit option for valgrind')
-    variant('ubsan', default=sys.platform != 'darwin',
+    variant('ubsan', default=False,
             description='Activates ubsan support for valgrind')
 
     conflicts('+ubsan', when='%apple-clang',

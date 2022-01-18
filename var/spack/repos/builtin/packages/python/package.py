@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import json
 import os
 import platform
@@ -156,12 +157,13 @@ class Python(AutotoolsPackage):
     variant('nis',      default=False, description='Build nis module')
     variant('zlib',     default=True,  description='Build zlib module')
     variant('bz2',      default=True,  description='Build bz2 module')
-    variant('lzma',     default=True,  description='Build lzma module')
+    variant('lzma',     default=True,  description='Build lzma module', when='@3.3:')
     variant('pyexpat',  default=True,  description='Build pyexpat module')
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
+    variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('gettext +libxml2', when='+libxml2')
@@ -281,7 +283,7 @@ class Python(AutotoolsPackage):
             variants += '~pythoncmd'
 
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
-                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+                       'zlib', 'bz2', 'ctypes', 'uuid']:
             try:
                 python('-c', 'import ' + module, error=os.devnull)
                 variants += '+' + module
@@ -303,7 +305,23 @@ class Python(AutotoolsPackage):
         except ProcessError:
             variants += '~pyexpat'
 
-        # Some modules changed names in Python 3
+        # Some modules are version-dependent
+        if Version(version_str) >= Version('3.3'):
+            try:
+                python('-c', 'import lzma', error=os.devnull)
+                variants += '+lzma'
+            except ProcessError:
+                variants += '~lzma'
+
+        if Version(version_str) in ver('2.7.9:2,3.4:'):
+            # The ensurepip module is always available, but won't work if built with
+            # --without-ensurepip. A more reliable check to see if the package was built
+            # with --with-ensurepip is to check for the presence of a pip executable.
+            if glob.glob(os.path.join(os.path.dirname(exes[0]), 'pip*')):
+                variants += '+ensurepip'
+            else:
+                variants += '~ensurepip'
+
         if Version(version_str) >= Version('3'):
             try:
                 python('-c', 'import tkinter', error=os.devnull)
@@ -472,8 +490,11 @@ class Python(AutotoolsPackage):
                 raise ValueError(
                     '+ucs4 variant not compatible with Python 3.3 and beyond')
 
-        if spec.satisfies('@3:'):
-            config_args.append('--without-ensurepip')
+        if spec.satisfies('@2.7.9:2,3.4:'):
+            if '+ensurepip' in spec:
+                config_args.append('--with-ensurepip')
+            else:
+                config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -649,6 +670,10 @@ class Python(AutotoolsPackage):
                     self.command('-c', 'import tkinter.tix')
                 else:
                     self.command('-c', 'import Tix')
+
+            # Ensure that ensurepip module works
+            if '+ensurepip' in spec:
+                self.command('-c', 'import ensurepip')
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('main', branch='main')
+    version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
     version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
     version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
     version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')

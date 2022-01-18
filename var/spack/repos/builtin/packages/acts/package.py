@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,7 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('16.0.0', commit='9bd86921155e708189417b5a8019add10fd5b273', submodules=True)
     version('15.1.0', commit='a96e6db7de6075e85b6d5346bc89845eeb89b324', submodules=True)
     version('15.0.0', commit='0fef9e0831a90e946745390882aac871b211eaac', submodules=True)
     version('14.1.0', commit='e883ab6acfe5033509ad1c27e8e2ba980dfa59f6', submodules=True)
@@ -142,7 +143,7 @@ class Acts(CMakePackage, CudaPackage):
     # Build dependencies
     # FIXME: Use spack's vecmem package once there is one
     # (https://github.com/acts-project/acts/pull/998)
-    depends_on('autodiff @0.5.11:', when='@1.2: +autodiff')
+    depends_on('autodiff @0.5.11:0.5.99', when='@1.2: +autodiff')
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
