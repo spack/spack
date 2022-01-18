@@ -455,7 +455,7 @@ if sys.platform == "win32":
     paths = [
         ('C:/user/root', None,
          (['C:/', 'C:/user', 'C:/user/root'], '', [])),
-        ('C:/user/root', 'C:/', (['C:/user', 'C:/user/root'], 'C:/', [])),
+        ('C:/user/root', 'C:/', ([], 'C:/', ['C:/user', 'C:/user/root'])),
         ('C:/user/root', 'user', (['C:/'], 'C:/user', ['C:/user/root'])),
         ('C:/user/root', 'root', (['C:/', 'C:/user'], 'C:/user/root', [])),
         ('relative/path', None, (['relative', 'relative/path'], '', [])),
@@ -477,13 +477,27 @@ else:
 
 @pytest.mark.parametrize('path,entry,expected', paths)
 def test_partition_path(path, entry, expected):
+    is_windows = sys.platform == 'win32'
+    if is_windows:
+        path = path.replace('/', '\\')
+        if entry:
+            entry = entry.replace('/', '\\')
+        n_expected = []
+        for n in range(len(expected)):
+            if expected[n]:
+                if type(expected[n]) is list:
+                    n_expected.append([tmp.replace('/', '\\') for tmp in expected[n]])
+                else:
+                    n_expected.append(expected[n].replace('/', '\\'))
+            else:
+                n_expected.append(expected[n])
+        expected = tuple(n_expected)
     assert fs.partition_path(path, entry) == expected
 
 
 if sys.platform == "win32":
     path_list = [
         ('', []),
-        ('C:\\user\\dir', ['C:/', 'C:/user', 'C:/user/dir']),
         ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
         ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
     ]
@@ -498,6 +512,12 @@ else:
 
 @pytest.mark.parametrize('path,expected', path_list)
 def test_prefixes(path, expected):
+    is_windows = sys.platform == 'win32'
+    if is_windows:
+        path = path.replace('/', '\\')
+        for n in range(len(expected)):
+            if expected[n]:
+                expected[n] = expected[n].replace('/', '\\')
     assert fs.prefixes(path) == expected
 
 

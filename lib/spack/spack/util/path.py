@@ -8,7 +8,6 @@
 TODO: this is really part of spack.config. Consolidate it.
 """
 import contextlib
-import functools
 import getpass
 import os
 import re
@@ -90,8 +89,9 @@ def system_path_filter(_func=None, *, arg_slice=None):
     for platform path seperators.
     Optional slicing range for arguments
     """
+    from functools import wraps
     def holder_func(func):
-        @functools.wraps(func)
+        @wraps(func)
         def path_filter_caller(*args, **kwargs):
             args = list(args)
             if arg_slice:

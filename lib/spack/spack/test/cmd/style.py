@@ -5,7 +5,6 @@
 
 import filecmp
 import os
-import posixpath
 import shutil
 import sys
 
@@ -130,13 +129,13 @@ def test_changed_files_all_files(flake8_package):
     assert zlib.module.__file__ in files
 
     # a core spack file
-    assert posixpath.join(spack.paths.module_path, "spec.py") in files
+    assert os.path.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
     assert flake8_package in files
 
     # this test
-    assert __file__.replace("\\", "/") in files
+    assert __file__ in files
 
     # ensure externals are excluded
     assert not any(f.startswith(spack.paths.external_path) for f in files)
