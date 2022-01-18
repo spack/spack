@@ -7,7 +7,7 @@
 from spack import *
 
 
-class PySina(PythonPackage):
+class PyLlnlSina(PythonPackage):
     """Sina allows codes to store, query, and visualize their data through an
     easy-to-use Python API. Data that fits its recognized schema can be ingested
     into one or more supported backends.

@@ -14,7 +14,7 @@ In adition Kosh aims to make data access and sharing as simple as possible.
 """
 
     homepage = "https://github.com/LLNL/kosh"
-    git = "https://github.com/LLNL/kosh.git"
+    url = "https://github.com/LLNL/kosh/archive/refs/tags/v2.0.tar.gz"
 
     # notify when the package is updated.
     maintainers = ['doutriaux1', ]
