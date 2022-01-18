@@ -94,7 +94,7 @@ Spack has to install it on initial use, which is called bootstrapping.
 
 Spack provides two ways of bootstrapping ``clingo``: from pre-built binaries
 (default), or from sources. The fastest way to get started is to bootstrap from
-pre-built binaries.
+pre-built binaries downloaded from Spack mirrors. Bootstrapping from sources makes it possible to use Spack even in the presence of restrictions on the internet access (e.g., when the host is accessible only over SSH or if hosts have to be explicitly whitelisted).
 
 .. note::
 
@@ -143,9 +143,9 @@ Subsequent calls to the concretizer will then be much faster:
    sys	0m0.041s
 
 
-If for security concerns you cannot bootstrap ``clingo`` from pre-built
-binaries, you have to mark this bootstrapping method as untrusted. This makes
-Spack fall back to bootstrapping from sources:
+If pre-built ``clingo`` binaries cannot be used, you have to mark this
+bootstrapping method as untrusted. This makes Spack fall back to bootstrapping
+from sources:
 
 .. code-block:: console
 
@@ -183,7 +183,8 @@ You can verify that the new settings are effective with:
    When bootstrapping from sources, Spack requires a full install of Python
    including header files (e.g. ``python3-dev`` on Debian), and a compiler
    with support for C++14 (GCC on Linux, Apple Clang on macOS) and static C++
-   standard libraries on Linux.
+   standard libraries on Linux. Ensure to load Python modules *before* sourcing
+   the Spack ``setup-env`` script.
 
 Spack will build the required software on the first request to concretize a spec:
 
@@ -196,6 +197,25 @@ Spack will build the required software on the first request to concretize a spec
    ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
    [ ... ]
    zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+If the internet access is restricted, Spack's source cache can be used. For this procedure you need a computer with an internet connection and the ability to connect over SSH to the host where Spack will be installed (in the following, this host will be called the *target host*). On the computer with the internet access, clone the Spack repository. After marking bootstrapping from binaries as untrusted (see above), bootstrap ``clingo`` on the computer with internet access and avoid re-using an existing Spack installation. The shell instructions below could be used on a single-user machine:
+
+.. code-block:: shell
+
+   cd /tmp
+   git clone -- 'https://github.com/spack/spack.git'
+   . spack/share/spack/setup-env.sh
+   env SPACK_USER_CACHE_PATH=/tmp/spack-cache spack bootstrap untrust github-actions
+   env SPACK_USER_CACHE_PATH=/tmp/spack-cache spack spec zlib
+   scp -r spack/ target-host:/path/to/spack/
+
+After uploading the Spack directory with its package cache to the target host, ``clingo`` can be bootstrapped there as described above. If the operating systems of the hosts differ, then it may be necessary to manually download missing packages. This can be achieved with ``spack mirror create`` followed by an upload of the updated cache with ``scp`` or ``rsync``. The example below is for the case of a target host running Rocky Linux 8 and an internet-connected host running Ubuntu 20:
+
+.. code-block:: shell
+
+   env SPACK_USER_CACHE_PATH=/tmp/spack-cache spack mirror create --dependencies gnuconfig openssl cmake@3.21.4
+   rsync -av -- spack/var/spack/cache target-host:/path/to/spack/var/spack/cache
+
 
 """""""""""""""""""
 The Bootstrap Store
