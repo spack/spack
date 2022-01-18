@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ class PyLuigiTools(PythonPackage):
     '''Tools to work with luigi.'''
 
     homepage = 'https://github.com/BlueBrain/luigi-tools'
-    url      = 'https://pypi.io/packages/source/l/luigi-tools/luigi-tools-0.0.15.tar.gz'
+    pypi     = 'luigi-tools/luigi-tools-0.0.16.tar.gz'
 
-    version('0.0.15', sha256='4ba9b2877fed76bfb70d5b203cd47c5d805e5dbeb7760a1c0771d892e8567fcf')
+    version('0.0.16', sha256='c0cc4c220dd6604671234614378082596825416da630735763f7fc6f6ef853bb')
 
     depends_on('py-setuptools', type=('build'))
 
