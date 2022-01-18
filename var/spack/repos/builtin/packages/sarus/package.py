@@ -60,7 +60,8 @@ class Sarus(CMakePackage):
         default=False,
         description="Build and install the SSH hook and custom SSH software "
         "to enable connections inside containers."
-        "Requires a static version of the glibc libraries (including libcrypt) to be available on the system",
+        "Requires a static version of the glibc libraries "
+        "(including libcrypt) to be available on the system",
     )
 
     depends_on("expat", type="build")
