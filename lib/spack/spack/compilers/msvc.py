@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import os
 import re
 import subprocess
 import sys

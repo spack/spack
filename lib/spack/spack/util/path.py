@@ -75,7 +75,7 @@ def path_to_os_path(*pths):
     for pth in pths:
         if sys.platform == 'win32' and\
             type(pth) is str and\
-            not is_path_url(pth):
+                not is_path_url(pth):
             pth = pth.replace('/', '\\')
         ret_pths.append(pth)
     return ret_pths

@@ -205,7 +205,7 @@ def test_spack_paths_before_module_paths(
     s.concretize()
     pkg = s.package
 
-    module_path = os.path.join('path','to','module')
+    module_path = os.path.join('path', 'to', 'module')
 
     def _set_wrong_cc(x):
         os.environ['PATH'] = module_path + os.pathsep + os.environ['PATH']
