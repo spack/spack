@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pathlib
+import os
 import re
 import sys
 
@@ -61,8 +61,8 @@ class Clang(Compiler):
     @property
     def link_paths(self):
         # clang links are always the same
-        link_paths = {'cc': pathlib.Path('clang', 'clang'),
-                      'cxx': pathlib.Path('clang', 'clang++')}
+        link_paths = {'cc': os.path.join('clang', 'clang'),
+                      'cxx': os.path.join('clang', 'clang++')}
 
         # fortran links need to look at the actual compiler names from
         # compilers.yaml to figure out which named symlink to use

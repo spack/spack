@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pathlib
+import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
@@ -23,10 +23,10 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': pathlib.Path('pgi', 'pgcc'),
-                  'cxx': pathlib.Path('pgi', 'pgc++'),
-                  'f77': pathlib.Path('pgi', 'pgfortran'),
-                  'fc': pathlib.Path('pgi', 'pgfortran')}
+    link_paths = {'cc': os.path.join('pgi', 'pgcc'),
+                  'cxx': os.path.join('pgi', 'pgc++'),
+                  'f77': os.path.join('pgi', 'pgfortran'),
+                  'fc': os.path.join('pgi', 'pgfortran')}
 
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'

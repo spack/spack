@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pathlib
+import os
 from os.path import dirname
 
 from spack.compiler import Compiler
@@ -23,10 +23,10 @@ class Oneapi(Compiler):
     fc_names = ['ifx']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': pathlib.Path('oneapi', 'icx'),
-                  'cxx': pathlib.Path('oneapi', 'icpx'),
-                  'f77': pathlib.Path('oneapi', 'ifx'),
-                  'fc': pathlib.Path('oneapi', 'ifx')}
+    link_paths = {'cc': os.path.join('oneapi', 'icx'),
+                  'cxx': os.path.join('oneapi', 'icpx'),
+                  'f77': os.path.join('oneapi', 'ifx'),
+                  'fc': os.path.join('oneapi', 'ifx')}
 
     PrgEnv = 'PrgEnv-oneapi'
     PrgEnv_compiler = 'oneapi'
