@@ -1905,9 +1905,6 @@ def prefixes(path):
     For example, path ``./hi/jkl/mn`` results in a list with the following
     paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
 
-    On Windows, paths will be normalized to use ``/`` and ``/`` will always
-    be used as the separator instead of ``os.sep``.
-
     Parameters:
         path (str): the string used to derive ancestor paths
 
@@ -1916,15 +1913,7 @@ def prefixes(path):
     """
     if not path:
         return []
-
-    if is_windows:
-        sep = "/"
-    else:
-        sep = os.sep
-
-    if is_windows:
-        path = path.replace("\\", "/")
-
+    sep = os.sep
     parts = path.strip(sep).split(sep)
     if path.startswith(sep):
         parts.insert(0, sep)
@@ -1932,9 +1921,6 @@ def prefixes(path):
         # Handle drive letters e.g. C:/ on Windows
         parts[0] = parts[0] + sep
     paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
-
-    if is_windows:
-        paths = [path.replace("\\", "/") for path in paths]
 
     try:
         paths.remove(sep)

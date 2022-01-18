@@ -122,9 +122,6 @@ def test_changed_files_all_files(flake8_package):
         for path in changed_files(all_files=True)
     ])
 
-    if sys.platform == "win32":
-        files = [f.replace("\\", "/") for f in files]
-
     # spack has a lot of files -- check that we're in the right ballpark
     assert len(files) > 6000
 

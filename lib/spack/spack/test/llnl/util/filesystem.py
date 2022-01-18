@@ -455,7 +455,7 @@ if sys.platform == "win32":
     paths = [
         ('C:/user/root', None,
          (['C:/', 'C:/user', 'C:/user/root'], '', [])),
-        ('C:/user/root', 'C:/', ([], 'C:/', ['C:/user', 'C:/user/root'])),
+        ('C:/user/root', 'C:/', (['C:/user', 'C:/user/root'], 'C:/', [])),
         ('C:/user/root', 'user', (['C:/'], 'C:/user', ['C:/user/root'])),
         ('C:/user/root', 'root', (['C:/', 'C:/user'], 'C:/user/root', [])),
         ('relative/path', None, (['relative', 'relative/path'], '', [])),
