@@ -30,7 +30,7 @@ class Vbfnlo(AutotoolsPackage):
     # See https://github.com/vbfnlo/vbfnlo/issues/2
     variant('doc', default=False,
             description='Build documentation')
-    patch('vbfnlo_no_docs.patch', when='~doc')
+    patch('vbfnlo_no_docs.patch', when='@3.0.0beta5~doc')
 
     depends_on('hepmc')
     depends_on('gsl')
