@@ -65,7 +65,7 @@ class Mgis(CMakePackage):
     depends_on('boost+python+numpy', when='+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python',
-               type=('build', 'link', 'run')) 
+               type=('build', 'link', 'run'))
     extends('python', when='+python')
 
     def patch(self):
