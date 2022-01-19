@@ -51,8 +51,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', type='link', when='@4.3.3: platform=linux +libbsd')
-    depends_on('libbsd', type='link', when='@4.3.3: platform=cray +libbsd')
+    depends_on('libbsd', when='@4.3.3: platform=linux +libbsd')
+    depends_on('libbsd', when='@4.3.3: platform=cray +libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
