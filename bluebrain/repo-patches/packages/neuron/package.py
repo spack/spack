@@ -176,6 +176,10 @@ class Neuron(CMakePackage):
         # https://github.com/neuronsimulator/nrn/pull/1587.
         if self.spec.satisfies('@:8.0.0%nvhpc@21.11:'):
             compilation_flags.append('-DR123_USE_INTRIN_H=0')
+        # Added in https://github.com/neuronsimulator/nrn/pull/1574, this
+        # improves ccache performance in CI builds.
+        if self.spec.satisfies('@develop'):
+            compilation_flags.append('-DNRN_AVOID_ABSOLUTE_PATHS=ON')
         compilation_flags = ' '.join(compilation_flags)
         args.append("-DCMAKE_C_FLAGS=" + compilation_flags)
         args.append("-DCMAKE_CXX_FLAGS=" + compilation_flags)
