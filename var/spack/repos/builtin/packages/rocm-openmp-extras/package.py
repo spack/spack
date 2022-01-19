@@ -179,7 +179,7 @@ class RocmOpenmpExtras(Package):
             url='https://github.com/llvm/llvm-project.git',
             destination='rocm-openmp-extras',
             placement='llvm-project',
-            when='master')
+            when='@master')
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec['llvm-amdgpu'].prefix
