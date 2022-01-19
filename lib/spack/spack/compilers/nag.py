@@ -25,8 +25,8 @@ class Nag(spack.compiler.Compiler):
     # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
-        'cc': os.path.join('cc'),
-        'cxx': os.path.join('c++'),
+        'cc': 'cc',
+        'cxx': 'c++',
         'f77': os.path.join('nag', 'nagfor'),
         'fc': os.path.join('nag', 'nagfor')}
 

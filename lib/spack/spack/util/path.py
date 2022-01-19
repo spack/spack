@@ -63,30 +63,42 @@ SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 def is_path_url(path):
     url_tuple = urlparse(path)
-    if not url_tuple.scheme and not url_tuple.netloc:
+    if not url_tuple.netloc:
         return False
     return True
 
 
 def path_to_os_path(*pths):
+    """
+    Takes an arbitrary number of postional parameters
+    converts each arguemnt of type string to use a normalized
+    filepath separator, and returns a list of all values
+    """
     ret_pths = []
     for pth in pths:
-        if sys.platform == 'win32' and\
-            type(pth) is str and\
+        if type(pth) is str and\
                 not is_path_url(pth):
-            pth = pth.replace('/', '\\')
+            pth = normalize_path(pth, mode=Path.platform_path)
         ret_pths.append(pth)
     return ret_pths
 
 
-# may want to add ability to filter by arg number position or name
-# maybe add a kwargs check for "keep path sep = true" or something similar
-# need more nuanced handling than blindly just shredding paths
 def system_path_filter(_func=None, arg_slice=None):
     """
-    Filters function arguments to account
-    for platform path separators.
-    Optional slicing range for arguments
+    Filters function arguments to account for platform path separators.
+    Optional slicing range can be specified to select specific arguments
+
+    This decorator takes all (or a slice) of a method's positional arguments
+    and normalizes useage of filepath separators on a per platform basis.
+
+    Note: **kwargs, urls, and any type that is not a string are ignored
+    so in such cases where path normalization is required, that should be
+    handled by calling path_to_os_path directly as needed.
+
+    Parameters:
+        arg_slice (slice): a slice object specifying the slice of arguments
+            in the decorated method over which filepath separators are
+            normalized
     """
     from functools import wraps
 
@@ -123,6 +135,13 @@ def get_system_path_max():
 
 
 class Path:
+    """
+    Describes the filepath separator types
+    in an enum style
+    with a helper attribute
+    exposing the path type of
+    the current platform.
+    """
     unix = 0
     windows = 1
     platform_path = windows if is_windows\
@@ -130,6 +149,17 @@ class Path:
 
 
 def normalize_path(path, mode=Path.unix):
+    """
+    Normalize path to use consistent, platform specific
+    separators.
+
+    Parameters:
+        path (str): the path to be normalized, must be a string
+            or expose the replace method.
+        mode (Path): the path filesperator style to normalize the
+            passed path to. Default is unix style, i.e. '/'
+
+    """
     if mode == Path.windows:
         path = path.replace('/', '\\')
     else:

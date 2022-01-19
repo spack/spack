@@ -8,17 +8,13 @@ import re
 import shlex
 import subprocess
 import sys
-from sys import platform as _platform
 
 from six import string_types, text_type
 
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, normalize_path, system_path_filter
-
-is_windows = _platform == 'win32'
-
+from spack.util.path import Path, normalize_path, path_to_os_path, system_path_filter
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -31,7 +27,7 @@ class Executable(object):
         name = normalize_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
         # filter back to platform dependent path
-        self.exe = [normalize_path(i, mode=Path.platform_path) for i in self.exe]
+        self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
@@ -55,9 +51,9 @@ class Executable(object):
         """
         self.default_env[key] = value
 
-    @system_path_filter
     def add_default_envmod(self, envmod):
         """Set an EnvironmentModifications to use when the command is run."""
+        envmod.env_modifications = path_to_os_path(*envmod.env_modifications)
         self.default_envmod.extend(envmod)
 
     @property
@@ -283,7 +279,7 @@ class Executable(object):
 @system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
-    path = kwargs.get('path', os.environ.get('PATH', ''))
+    path = path_to_os_path(kwargs.get('path', os.environ.get('PATH', ''))).pop()
     required = kwargs.get('required', False)
 
     if isinstance(path, string_types):

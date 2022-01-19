@@ -24,7 +24,7 @@ from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
-from spack.util.path import system_path_filter
+from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows  = _platform == 'win32'
 
@@ -130,6 +130,7 @@ def paths_containing_libs(paths, library_names):
     required_lib_fnames = possible_library_filenames(library_names)
 
     rpaths_to_include = []
+    paths = path_to_os_path(*paths)
     for path in paths:
         fnames = set(os.listdir(path))
         if fnames & required_lib_fnames:
@@ -189,7 +190,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
     if string:
         regex = re.escape(regex)
-
+    filenames = path_to_os_path(*filenames)
     for filename in filenames:
 
         msg = 'FILTER FILE: {0} [replacing "{1}"]'
@@ -299,7 +300,7 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 
     repl = r's@\1@\2@g'
     repl = repl.replace('@', new_delim)
-
+    filenames = path_to_os_path(*filenames)
     for f in filenames:
         filter_file(whole_lines, repl, f)
         filter_file(single_quoted, "'%s'" % repl, f)
@@ -364,6 +365,7 @@ def group_ids(uid=None):
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
 
+@system_path_filter(arg_slice=slice(1))
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
     if is_windows:
@@ -376,6 +378,7 @@ def chgrp(path, group):
     os.chown(path, -1, gid)
 
 
+@system_path_filter(arg_slice=slice(1))
 def chmod_x(entry, perms):
     """Implements chmod, treating all executable bits as set using the chmod
     utility's `+X` option.
@@ -479,6 +482,7 @@ def install(src, dest):
     copy(src, dest, _permissions=True)
 
 
+@system_path_filter
 def resolve_link_target_relative_to_the_link(link):
     """
     os.path.isdir uses os.path.exists, which for links will check
@@ -616,6 +620,7 @@ def get_filetype(path_name):
     return output.strip()
 
 
+@system_path_filter(arg_slice=slice(1))
 def chgrp_if_not_world_writable(path, group):
     """chgrp path to group if path is not world writable"""
     mode = os.stat(path).st_mode
@@ -623,7 +628,6 @@ def chgrp_if_not_world_writable(path, group):
         chgrp(path, group)
 
 
-@system_path_filter
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -646,7 +650,7 @@ def mkdirp(*paths, **kwargs):
     mode = kwargs.get('mode', None)
     group = kwargs.get('group', None)
     default_perms = kwargs.get('default_perms', 'args')
-
+    paths = path_to_os_path(*paths)
     for path in paths:
         if not os.path.exists(path):
             try:
@@ -739,6 +743,7 @@ class CouldNotRestoreDirectoryBackup(RuntimeError):
 
 
 @contextmanager
+@system_path_filter
 def replace_directory_transaction(directory_name, tmp_root=None):
     """Moves a directory to a temporary space. If the operations executed
     within the context manager don't raise an exception, the directory is
@@ -995,10 +1000,6 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
-        if is_windows:
-            source_child = source_child.replace("\\", "/")
-            dest_child = dest_child.replace("\\", "/")
-            rel_child = rel_child.replace("\\", "/")
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
@@ -1242,7 +1243,7 @@ def find(root, files, recursive=True):
 # here and in _find_non_recursive below we only take the first
 # index to check for system path safety as glob handles this
 # w.r.t. search_files
-@system_path_filter(arg_slice=slice(1))
+@system_path_filter
 def _find_recursive(root, search_files):
 
     # The variable here is **on purpose** a defaultdict. The idea is that
@@ -1266,7 +1267,7 @@ def _find_recursive(root, search_files):
     return answer
 
 
-@system_path_filter(arg_slice=slice(1))
+@system_path_filter
 def _find_non_recursive(root, search_files):
     # The variable here is **on purpose** a defaultdict as os.list_dir
     # can return files in any order (does not preserve stability)
@@ -1397,9 +1398,7 @@ class HeaderList(FileList):
         if isinstance(value, six.string_types):
             value = [value]
 
-        self._directories = [os.path.normpath(x) for x in value]
-        if is_windows:
-            self._directories = [d.replace("\\", "/") for d in self._directories]
+        self._directories = [path_to_os_path(os.path.normpath(x))[0] for x in value]
 
     def _default_directories(self):
         """Default computation of directories based on the list of
@@ -1412,8 +1411,6 @@ class HeaderList(FileList):
             # there and don't add anything else to the path.
             m = self.include_regex.match(d)
             value = os.path.join(*m.group(1, 2)) if m else d
-            if is_windows:
-                value = value.replace("\\", "/")
             values.append(value)
         return values
 
@@ -1985,7 +1982,6 @@ def keep_modification_time(*filenames):
 
 
 @contextmanager
-@system_path_filter
 def temporary_dir(*args, **kwargs):
     """Create a temporary directory and cd's into it. Delete the directory
     on exit.

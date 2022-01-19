@@ -71,14 +71,14 @@ class Clang(Compiler):
                 link_paths['f77'] = link_path
                 break
         else:
-            link_paths['f77'] = ('clang', 'flang')
+            link_paths['f77'] = os.path.join('clang', 'flang')
 
         for compiler_name, link_path in fc_mapping:
             if self.fc and compiler_name in self.fc:
                 link_paths['fc'] = link_path
                 break
         else:
-            link_paths['fc'] = ('clang', 'flang')
+            link_paths['fc'] = os.path.join('clang', 'flang')
 
         return link_paths
 
