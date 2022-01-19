@@ -85,7 +85,7 @@ def path_to_os_path(*pths):
 def system_path_filter(_func=None, arg_slice=None):
     """
     Filters function arguments to account
-    for platform path seperators.
+    for platform path separators.
     Optional slicing range for arguments
     """
     from functools import wraps

@@ -87,7 +87,7 @@ class Executable(object):
         """
         return self.exe[0]
 
-    # needs a small fixup tp better handle URLS and the like
+    # needs a small fixup to better handle URLS and the like
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 
