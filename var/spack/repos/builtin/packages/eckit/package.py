@@ -137,7 +137,7 @@ class Eckit(CMakePackage):
             self.define('ENABLE_SANDBOX', False)
         ]
 
-        if '+mpi' in self.spec and self.spec.satisfies('platform=darwin'):
+        if '+mpi' in self.spec:
             args += [
                 '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
