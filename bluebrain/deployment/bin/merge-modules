@@ -23,13 +23,14 @@ def run():
         stage = stagedir.name.split('_', 1)[1]
         outdir = module_root / stage
         outdir.mkdir(parents=True, exist_ok=True)
-        index = {}
+        index = {'module_index': {}}
         copied = set()
         print("Processing", stage)
         for moduledir in stagedir.glob('modules_tcl*'):
+            print("  Reading {}".format(moduledir))
             with (moduledir / 'module-index.yaml').open() as fd:
                 data = syaml.load(fd)['module_index']
-                index.update(data)
+                index['module_index'].update(data)
             for path in moduledir.glob('**/*'):
                 if path.is_file() and path.suffix != '.yaml':
                     fragment = path.relative_to(moduledir)
@@ -39,7 +40,7 @@ def run():
                     copied.add(target)
         print("  Writing new module index")
         with (outdir / 'module-index.yaml').open('w') as fd:
-            syaml.dump(index, fd)
+            syaml.dump(index, stream=fd)
         print("  Cleaning up obsolete modules")
         for path in outdir.glob('**/*'):
             if path.is_file() and path.suffix != '.yaml' and path not in copied:
