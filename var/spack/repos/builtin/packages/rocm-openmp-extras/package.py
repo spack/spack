@@ -10,6 +10,7 @@ from spack import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
+git = "https://github.com/ROCm-Developer-Tools/aomp.git"
 
 # Arrays of hashes are in order of the versions array below
 # For example array[0] = 3.9.0, array[1] = 3.10.0, etc.
@@ -101,7 +102,6 @@ class RocmOpenmpExtras(Package):
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} ~openmp'.format(ver),
                    when='@' + ver)
-    git = "https://github.com/ROCm-Developer-Tools/aomp.git"
     if ver == 'master':
         depends_on('hsakmt-roct@master')
         depends_on('comgr@master')
