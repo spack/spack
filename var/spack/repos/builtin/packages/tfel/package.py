@@ -128,6 +128,8 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
+    depends_on('py-numpy', when='+python_bindings',
+               type=('build', 'link', 'run'))
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
     depends_on('boost+python+numpy', when='+python_bindings',
                type=('build', 'link', 'run'))
