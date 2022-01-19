@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ def is_system_path(path):
     Returns:
         True or False
     """
-    return os.path.normpath(path) in system_dirs
+    return path and os.path.normpath(path) in system_dirs
 
 
 def filter_system_paths(paths):
@@ -611,7 +611,6 @@ class EnvironmentModifications(object):
     def shell_modifications(self, shell='sh', explicit=False, env=None):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
-        new_env = os.environ.copy()
 
         if env is None:
             env = os.environ
@@ -621,6 +620,9 @@ class EnvironmentModifications(object):
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(new_env)
+
+        if 'MANPATH' in new_env and not new_env.get('MANPATH').endswith(':'):
+            new_env['MANPATH'] += ':'
 
         cmds = ''
 

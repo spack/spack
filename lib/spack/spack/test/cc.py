@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,7 +102,7 @@ common_compile_args = (
 )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def wrapper_environment():
     with set_env(
             SPACK_CC=real_cc,

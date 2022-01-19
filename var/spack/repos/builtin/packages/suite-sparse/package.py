@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,6 +70,42 @@ class SuiteSparse(Package):
 
     conflicts('%gcc@:4.8', when='@5.2.0:', msg='gcc version must be at least 4.9 for suite-sparse@5.2.0:')
 
+    # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
+    # related stuff (which have long been deprecated).  This appears to be
+    # rather problematic for suite-sparse (see e.g.
+    # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
+    # Have Spack complain if +tbb and trying to use a 2021.x version of tbb
+    conflicts('+tbb', when='^intel-oneapi-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
+    conflicts('+tbb', when='^intel-tbb@2021:',
+              msg='suite-sparse needs task_scheduler_init.h dropped in '
+              'recent tbb libs')
+
+    def symbol_suffix_blas(self, spec, args):
+        """When using BLAS with a special symbol suffix we use defines to
+        replace blas symbols, e.g. dgemm_ becomes dgemm_64_ when
+        symbol_suffix=64_."""
+
+        # Currently only OpenBLAS does this.
+        if not spec.satisfies('^openblas'):
+            return
+
+        suffix = spec['openblas'].variants['symbol_suffix'].value
+        if suffix == 'none':
+            return
+
+        symbols = (
+            'dtrsv_', 'dgemv_', 'dtrsm_', 'dgemm_', 'dsyrk_', 'dger_', 'dscal_',
+            'dpotrf_', 'ztrsv_', 'zgemv_', 'ztrsm_', 'zgemm_', 'zherk_',
+            'zgeru_', 'zscal_', 'zpotrf_',
+            'dnrm2_', 'dlarf_', 'dlarfg_', 'dlarft_', 'dlarfb_', 'dznrm2_',
+            'zlarf_', 'zlarfg_', 'zlarft_', 'zlarfb_'
+        )
+
+        for symbol in symbols:
+            args.append('CFLAGS+=-D{0}={1}{2}'.format(symbol, symbol, suffix))
+
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
         # It's basically a plain Makefile which include an header
@@ -125,6 +161,9 @@ class SuiteSparse(Package):
             spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
+        # Handle symbol suffix of some BLAS'es (e.g. 64_ or _64 for ilp64)
+        self.symbol_suffix_blas(spec, make_args)
+
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
@@ -138,7 +177,7 @@ class SuiteSparse(Package):
             make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
-        if 'tbb' in spec:
+        if '+tbb' in spec:
             make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=%s' % spec['tbb'].libs.ld_flags,
@@ -163,10 +202,12 @@ class SuiteSparse(Package):
             'CCOLAMD',
             'COLAMD',
             'CHOLMOD',
+            'CXSparse',
             'LDL',
             'KLU',
             'UMFPACK',
-            'RBio'
+            'RBio',
+            'SPQR'
         ]
         if spec.satisfies('+cuda'):
             targets.extend([

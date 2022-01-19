@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,10 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onevpl.html'
 
     if platform.system() == 'Linux':
+        version('2022.0.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18375/l_oneVPL_p_2022.0.0.58_offline.sh',
+                sha256='600b8566e1aa523b97291bed6b08f69a04bc7c4c75c035942a64a38f45a1a7f0',
+                expand=False)
         version('2021.6.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18190/l_oneVPL_p_2021.6.0.458_offline.sh',
                 sha256='40c50008be3f03d17cc8c0c34324593c1d419ee4c45af5543aa5a2d5fb11071f',

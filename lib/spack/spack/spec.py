@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1862,6 +1862,15 @@ class Spec(object):
 
     def to_json(self, stream=None, hash=ht.dag_hash):
         return sjson.dump(self.to_dict(hash), stream)
+
+    @staticmethod
+    def from_specfile(path):
+        """Construct a spec from aJSON or YAML spec file path"""
+        with open(path, 'r') as fd:
+            file_content = fd.read()
+            if path.endswith('.json'):
+                return Spec.from_json(file_content)
+            return Spec.from_yaml(file_content)
 
     @staticmethod
     def from_node_dict(node):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -677,8 +676,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
-                      'parallel', 'make_jobs']
+    metadata_attrs = [
+        "homepage",
+        "url",
+        "urls",
+        "list_url",
+        "extendable",
+        "parallel",
+        "make_jobs",
+        "maintainers",
+        "tags",
+    ]
 
     #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
     #: This is currently used by smoke tests to ensure a compiler is available
@@ -902,7 +910,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
@@ -1555,7 +1563,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             hash_content.append(source_id.encode('utf-8'))
         hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
                             for p in self.spec.patches)
-        hash_content.append(package_hash(self.spec, content))
+        hash_content.append(package_hash(self.spec, source=content).encode('utf-8'))
+
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()

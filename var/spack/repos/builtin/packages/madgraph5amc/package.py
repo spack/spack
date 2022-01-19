@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Madgraph5amc(Package):
             url="https://launchpad.net/mg5amcnlo/2.0/2.8.x/+download/MG5_aMC_v2.8.0.tar.gz")
     version('2.7.3.py3', sha256='400c26f9b15b07baaad9bd62091ceea785c2d3a59618fdc27cad213816bc7225')
     version('2.7.3.py2', sha256='0b665356f4d9359e6e382e0f408dc11db594734567c6b2f0ec0e0697f2dbe099',
-            url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz")
+            url="https://launchpad.net/mg5amcnlo/2.0/2.7.x/+download/MG5_aMC_v2.7.3.tar.gz", deprecated=True)
 
     variant('atlas', default=False, description='Apply changes requested by ' +
             "the ATLAS experimenent on LHC")
@@ -90,6 +90,9 @@ class Madgraph5amc(Package):
             make(parallel=False)
 
         with working_dir(join_path('vendor', 'StdHEP')):
+            for m in ['mcfio/arch_mcfio', 'src/stdhep_arch']:
+                arch = FileFilter(m)
+                arch.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
             make(parallel=False)
 
         if '+atlas' in spec:

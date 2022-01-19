@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,6 @@ class Citcoms(AutotoolsPackage):
     # Required dependencies
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('python@:2', type='run')  # needed for post-processing scripts
     depends_on('automake', when='@master', type='build')
     depends_on('autoconf', when='@master', type='build')
     depends_on('libtool',  when='@master', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -168,7 +168,7 @@ class Rivet(AutotoolsPackage):
         if self.spec.variants['hepmc'].value == '2':
             args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
         else:
-            args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]
+            args += ['--with-hepmc3=' + self.spec['hepmc3'].prefix]
 
         if self.spec.satisfies('@:1'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]

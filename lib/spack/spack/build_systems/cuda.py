@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,8 @@ class CudaPackage(PackageBase):
 
     variant('cuda_arch',
             description='CUDA architecture',
-            values=spack.variant.any_combination_of(*cuda_arch_values))
+            values=spack.variant.any_combination_of(*cuda_arch_values),
+            when='+cuda')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code

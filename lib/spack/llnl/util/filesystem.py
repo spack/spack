@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -141,7 +141,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file.
     """
     string = kwargs.get('string', False)
-    backup = kwargs.get('backup', True)
+    backup = kwargs.get('backup', False)
     ignore_absent = kwargs.get('ignore_absent', False)
     stop_at = kwargs.get('stop_at', None)
 

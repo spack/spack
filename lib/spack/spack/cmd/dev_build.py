@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['jobs'])
+    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -86,7 +86,7 @@ def dev_build(self, args):
     # Forces the build to run out of the source directory.
     spec.constrain('dev_path=%s' % source_path)
 
-    spec.concretize()
+    spec.concretize(reuse=args.reuse)
     package = spack.repo.get(spec)
 
     if package.installed:

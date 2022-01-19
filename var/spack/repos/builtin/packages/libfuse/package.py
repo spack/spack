@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack import *
@@ -37,6 +38,11 @@ class Libfuse(MesonPackage):
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
 
+    depends_on('autoconf', type='build', when='@:2')
+    depends_on('automake', type='build', when='@:2')
+    depends_on('libtool', type='build', when='@:2')
+    depends_on('gettext', type='build', when='@:2')
+
     provides('fuse')
     conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
     conflicts('platform=darwin', msg='libfuse does not support OS-X, use macfuse instead')
@@ -44,6 +50,11 @@ class Libfuse(MesonPackage):
     # Drops the install script which does system configuration
     patch('0001-Do-not-run-install-script.patch', when='@3: ~system_install')
     patch('https://src.fedoraproject.org/rpms/fuse3/raw/0519b7bf17c4dd1b31ee704d49f8ed94aa5ba6ab/f/fuse3-gcc11.patch', sha256='3ad6719d2393b46615b5787e71778917a7a6aaa189ba3c3e0fc16d110a8414ec', when='@3: %gcc@11:')
+
+    patch('https://github.com/libfuse/libfuse/commit/6d55007027dfe7b75a74899f497f075046cc5404.patch', sha256='d8c54ae932f2e7179dd05081a4a8e7aefd23553a0ef354fa25b1456386d96932', when='@:2')
+    patch('https://github.com/libfuse/libfuse/commit/5d38afc8a5b4a2a6e27aad7a1840046e99cd826d.patch', sha256='7f3e8e54966aca8cb64096bea2cbd4d2679b47f9c1355fe9d442ba8464d74372', when='@:2')
+    # https://bugs.gentoo.org/803923
+    patch('https://github.com/libfuse/libfuse/commit/5a43d0f724c56f8836f3f92411e0de1b5f82db32.patch', sha256='1e8b0a1b2bbaa335d92a3c46e31c928dcd53abe011214a0cbbfa7c11a3a68f1a', when='@:2')
 
     executables = ['^fusermount3?$']
 
@@ -73,6 +84,12 @@ class Libfuse(MesonPackage):
     # Before libfuse 3.x this was an autotools package
     @when('@:2')
     def meson(self, spec, prefix):
+        ar_args = ['-ivf']
+        for dep in self.spec.dependencies(deptype='build'):
+            if os.path.exists(dep.prefix.share.aclocal):
+                ar_args.extend(['-I', dep.prefix.share.aclocal])
+        autoreconf(*ar_args)
+
         args = [
             "--prefix={0}".format(prefix),
             "MOUNT_FUSE_PATH={0}".format(self.prefix.sbin),

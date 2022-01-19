@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPyaml(PythonPackage):
     """PyYAML-based python module to produce pretty and readable
        YAML-serialized data."""
 
-    maintainers = ['Kerilk']
+    maintainers = ['Kerilk', 'liuyangzhuan']
 
     homepage = "https://github.com/mk-fg/pretty-yaml"
     pypi     = "pyaml/pyaml-21.8.3.tar.gz"

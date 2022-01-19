@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
+import re
 
 from spack import *
 
@@ -16,6 +17,7 @@ class StarCcmPlus(Package):
     url      = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd())
     manual_download = True
 
+    version('16.06.008_01', sha256='64577ec0e9a98d971114e68c4eec05bb746e061dfbf77b8d8919583c796c9e4b')
     version('11.06.010_02', 'd349c6ac8293d8e6e7a53533d695588f')
 
     variant('doc', default=False, description='Install the documentation')
@@ -47,12 +49,29 @@ class StarCcmPlus(Package):
         env['PS1'] = '>'
         env['PROMPT_COMMAND'] = ''
 
-        installer = Executable(glob.glob('*.bin')[0])
+        if '@:12' in spec:
+            file_pattern = '*.bin'
+        else:
+            file_pattern = '*.sh'
+
+        installer = Executable(join_path(self.stage.source_path,
+                                         glob.glob(file_pattern)[0]))
 
         installer(
             '-i', 'silent',
             '-DINSTALLDIR={0}'.format(prefix),
             '-DINSTALLFLEX=false',
             '-DADDSYSTEMPATH=false',
+            '-DCOMPUTE_NODE=false',
             '-DNODOC={0}'.format('false' if '+docs' in spec else 'true')
         )
+
+    def setup_run_environment(self, env):
+        # using Version.up_to strips out the 0 padding
+        version = re.sub('_.*$', '', format(self.spec.version))
+        env.prepend_path('PATH', join_path(self.prefix, version,
+                                           'STAR-View+{0}'.format(version),
+                                           'bin'))
+        env.prepend_path('PATH', join_path(self.prefix, version,
+                                           'STAR-CCM+{0}'.format(version),
+                                           'star', 'bin'))

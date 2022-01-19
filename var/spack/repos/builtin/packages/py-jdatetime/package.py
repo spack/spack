@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,3 +13,6 @@ class PyJdatetime(PythonPackage):
     pypi = "jdatetime/jdatetime-3.6.2.tar.gz"
 
     version('3.6.2', sha256='a589e35f0dab89283c1a3de9d70ed6cf657932aaed8e8ce1b0e5801aaab1da67')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

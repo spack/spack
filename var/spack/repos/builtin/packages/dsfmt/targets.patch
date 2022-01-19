@@ -1,0 +1,25 @@
+diff --git a/Makefile b/Makefile
+index 5cc4ed6..adc09c5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -196,3 +196,20 @@ test-sse2-M216091: test.c dSFMT.c dSFMT.h
+ 
+ clean:
+ 	rm -f *.o *~ test-*-M*
++
++ifeq ($(OS), WINNT)
++  SHLIB_EXT := dll
++else ifeq ($(OS), Darwin)
++  SHLIB_EXT := dylib
++else
++  SHLIB_EXT := so
++endif
++
++build-library: dSFMT.c
++	$(CC) $(CCFLAGS) -shared -fPIC -DDSFMT_MEXP=19937 -DDSFMT_DO_NOT_USE_OLD_NAMES -DDSFMT_SHLIB $< -o libdSFMT.$(SHLIB_EXT)
++	echo 1 > $@
++
++install: build-library
++	install -d $(PREFIX)/lib/
++	install -m 644 libdSFMT.so $(PREFIX)/lib/
++

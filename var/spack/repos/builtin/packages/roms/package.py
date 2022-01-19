@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,8 @@ class Roms(MakefilePackage):
         """
         Edit Linux-flang.mk makefile to support AOCC compiler
         """
-        fflags = ['-fveclib=AMDLIBM', '-O3', '-ffast-math']
+        fflags = ['-fveclib=AMDLIBM', '-O3', '-ffast-math',
+                  '-funroll-loops', '-Mstack_arrays', '-std=f2008']
         make_aocc = join_path('Compilers',
                               '{0}-{1}.mk'.format(self.arch, lib))
 

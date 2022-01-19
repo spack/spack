@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -498,6 +498,9 @@ To resolve this problem, please try the following:
 
             for ``<spec-name> foo=x +bar``
 
+        Note: returns an empty list when the variant is conditional and its condition
+              is not met.
+
         Returns:
             list: list of strings that corresponds to the activation/deactivation
             of the variant that has been processed
@@ -518,6 +521,9 @@ To resolve this problem, please try the following:
         if variant not in self.variants:
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(variant, self.name))
+
+        if variant not in spec.variants:
+            return []
 
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated

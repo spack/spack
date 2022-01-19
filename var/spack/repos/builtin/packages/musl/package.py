@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,10 @@ class Musl(Package):
     homepage = "https://www.musl-libc.org"
     url      = "https://www.musl-libc.org/releases/musl-1.1.23.tar.gz"
 
+    version('1.2.2',  sha256='9b969322012d796dc23dda27a35866034fa67d8fb67e0e2c45c913c3d43219dd')
+    version('1.2.1',  sha256='68af6e18539f646f9c41a3a2bb25be4a5cfa5a8f65f0bb647fd2bbfdf877e84b')
+    version('1.2.0',  sha256='c6de7b191139142d3f9a7b5b702c9cae1b5ee6e7f57e582da9328629408fd4e8')
+    version('1.1.24', sha256='1370c9a812b2cf2a7d92802510cca0058cc37e66a7bedd70051f0a34015022a3')
     version('1.1.23', sha256='8a0feb41cef26c97dde382c014e68b9bb335c094bbc1356f6edaaf6b79bd14aa')
     version('1.1.22', sha256='8b0941a48d2f980fd7036cfbd24aa1d414f03d9a0652ecbd5ec5c7ff1bee29e3')
     version('1.1.21', sha256='c742b66f6f49c9e5f52f64d8b79fecb5a0f6e0203fca176c70ca20f6be285f44')
@@ -50,6 +54,7 @@ class Musl(Package):
             args.append('--enable-wrapper=clang')
         else:
             args.append('--enable-wrapper=no')
+        args.append('--syslibdir={0}'.format(self.prefix.lib))
         return args
 
     def configure(self, spec, prefix):

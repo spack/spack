@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,12 @@ class Librsvg(AutotoolsPackage):
     version('2.50.0', sha256='b3fadba240f09b9c9898ab20cb7311467243e607cf8f928b7c5f842474ee3df4')
     version('2.44.14', sha256='6a85a7868639cdd4aa064245cc8e9d864dad8b8e9a4a8031bb09a4796bc4e303')
 
+    variant('doc', default=False, description='Build documentation with gtk-doc')
+
     depends_on("gobject-introspection", type='build')
     depends_on("pkgconfig", type='build')
     depends_on("rust", type='build')
-    depends_on('gtk-doc', type='build')
+    depends_on('gtk-doc', type='build', when='+doc')
     depends_on("cairo+gobject")
     depends_on("gdk-pixbuf")
     depends_on("glib")
@@ -48,3 +50,8 @@ class Librsvg(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def configure_args(self):
+        return [
+            '--enable-gtk-doc=' + ('yes' if self.spec.variants['doc'].value else 'no')
+        ]

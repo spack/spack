@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class OpenIscsi(MakefilePackage):
 
     depends_on('gettext')
     depends_on('uuid')
-    depends_on('util-linux+libmount')
+    depends_on('util-linux')
     depends_on('kmod')
     depends_on('open-isns')
     depends_on('libtool', type='build')

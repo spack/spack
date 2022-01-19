@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,9 @@ class Julia(Package):
     maintainers = ['glennpj', 'vchuravy']
 
     version('master', branch='master')
-    version('1.7.0-rc2', sha256='178f5531bdbd379bd376f3cccf9a6a1e1215a678b70c93bdc41edb7239c76dc2')
-    version('1.6.3', sha256='29aad934582fb4c6dd9f9dd558ad649921f43bc7320eab54407fdf6dd3270a33', preferred=True)
+    version('1.7.0', sha256='d40d83944f8e1709de1d6f7544e1a6721e091f70ba06b44c25b89bdba754dfa6', preferred=True)
+    version('1.6.4', sha256='954578b973fdb891c88fa1eedd931129e215ab928ecc416dd0bdf6c70549d2fc')
+    version('1.6.3', sha256='29aad934582fb4c6dd9f9dd558ad649921f43bc7320eab54407fdf6dd3270a33')
     version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
     version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
     version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')
@@ -34,16 +35,16 @@ class Julia(Package):
     version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
     version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
-    version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
-    version('1.0.0', sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1')
-    version('0.6.2', sha256='1e34c13091c9ddb47cf87a51566d94a06613f3db3c483b8f63b276e416dd621b')
-    version('0.5.2', sha256='f5ef56d79ed55eacba9fe968bb175317be3f61668ef93e747d76607678cc01dd')
-    version('0.5.1', sha256='533b6427a1b01bd38ea0601f58a32d15bf403f491b8415e9ce4305b8bc83bb21')
-    version('0.5.0', sha256='732478536b6dccecbf56e541eef0aed04de0e6d63ae631b136e033dda2e418a9')
-    version('0.4.7', sha256='d658d5bd5fb79b19f3c01cadb9aba8622ca8a12a4b687acc7d99c21413623570')
-    version('0.4.6', sha256='4c23c9fc72398014bd39327c2f7efd3a301884567d4cb2a89105c984d4d633ba')
-    version('0.4.5', sha256='cbf361c23a77e7647040e8070371691083e92aa93c8a318afcc495ad1c3a71d9')
-    version('0.4.3', sha256='2b9df25a8f58df8e43038ec30bae195dfb160abdf925f3fa193b59d40e4113c5')
+    version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2', deprecated=True)
+    version('1.0.0', sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1', deprecated=True)
+    version('0.6.2', sha256='1e34c13091c9ddb47cf87a51566d94a06613f3db3c483b8f63b276e416dd621b', deprecated=True)
+    version('0.5.2', sha256='f5ef56d79ed55eacba9fe968bb175317be3f61668ef93e747d76607678cc01dd', deprecated=True)
+    version('0.5.1', sha256='533b6427a1b01bd38ea0601f58a32d15bf403f491b8415e9ce4305b8bc83bb21', deprecated=True)
+    version('0.5.0', sha256='732478536b6dccecbf56e541eef0aed04de0e6d63ae631b136e033dda2e418a9', deprecated=True)
+    version('0.4.7', sha256='d658d5bd5fb79b19f3c01cadb9aba8622ca8a12a4b687acc7d99c21413623570', deprecated=True)
+    version('0.4.6', sha256='4c23c9fc72398014bd39327c2f7efd3a301884567d4cb2a89105c984d4d633ba', deprecated=True)
+    version('0.4.5', sha256='cbf361c23a77e7647040e8070371691083e92aa93c8a318afcc495ad1c3a71d9', deprecated=True)
+    version('0.4.3', sha256='2b9df25a8f58df8e43038ec30bae195dfb160abdf925f3fa193b59d40e4113c5', deprecated=True)
 
     variant('cxx', default=False, description='Prepare for Julia Cxx package')
     variant('mkl', default=False, description='Use Intel MKL')
@@ -176,6 +177,12 @@ class Julia(Package):
                     target_str = "znver1"
                 if target_str == "zen2":
                     target_str = "znver2"
+                if target_str == "zen3":
+                    if spec.satisfies('@1.7.0:'):
+                        target_str = "znver3"
+                    else:
+                        # The LLVM in @1.6.4 doesn't support znver3.
+                        target_str = "znver2"
                 options += [
                     'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]

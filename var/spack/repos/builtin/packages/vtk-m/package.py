@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,8 +28,8 @@ class VtkM(CMakePackage, CudaPackage):
 
     version('master', branch='master')
     version('release', branch='release')
-    version('1.7.0-rc1', sha256="e9cedc21f0ad326317acc7689ee0c7719a6cb8af41e87fd232aee5ab8d0620e4")
-    version('1.6.0', sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76", preferred=True)
+    version('1.7.0', sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4", preferred=True)
+    version('1.6.0', sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76")
     version('1.5.5', commit="d2d1c854adc8c0518802f153b48afd17646b6252")
     version('1.5.4', commit="bbba2a1967b271cc393abd043716d957bca97972")
     version('1.5.3', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
@@ -55,6 +55,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("rendering", default=True, description="build rendering support")
     variant("64bitids", default=False,
             description="enable 64 bits ids")
+    variant("testlib", default=False, description="build test library")
 
     # Device variants
     variant("cuda", default=False, description="build cuda support")
@@ -88,6 +89,9 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("hip@3.7:", when="+hip")
 
     conflicts("+hip", when="+cuda")
+
+    conflicts("+cuda", when="cuda_arch=none",
+              msg="vtk-m +cuda requires that cuda_arch be set")
 
     def cmake_args(self):
         spec = self.spec
@@ -157,6 +161,10 @@ class VtkM(CMakePackage, CudaPackage):
                 print("64 bit ids enabled")
             else:
                 options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
+
+            # Support for the testing header files
+            if "+testlib" in spec and spec.satisfies('@1.7.0:'):
+                options.append("-DVTKm_ENABLE_TESTING_LIBRARY:BOOL=ON")
 
             if spec.variants["build_type"].value != 'Release':
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")

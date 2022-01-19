@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,8 @@ import shutil
 import llnl.util.tty
 import llnl.util.tty.color
 
+import spack
+import spack.bootstrap
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -31,6 +33,16 @@ def _add_scope_option(parser):
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest='subcommand')
+
+    status = sp.add_parser('status', help='get the status of Spack')
+    status.add_argument(
+        '--optional', action='store_true', default=False,
+        help='show the status of rarely used optional dependencies'
+    )
+    status.add_argument(
+        '--dev', action='store_true', default=False,
+        help='show the status of dependencies needed to develop Spack'
+    )
 
     enable = sp.add_parser('enable', help='enable bootstrapping')
     _add_scope_option(enable)
@@ -207,8 +219,39 @@ def _untrust(args):
     llnl.util.tty.msg(msg.format(args.name))
 
 
+def _status(args):
+    sections = ['core', 'buildcache']
+    if args.optional:
+        sections.append('optional')
+    if args.dev:
+        sections.append('develop')
+
+    header = "@*b{{Spack v{0} - {1}}}".format(
+        spack.spack_version, spack.bootstrap.spec_for_current_python()
+    )
+    print(llnl.util.tty.color.colorize(header))
+    print()
+    # Use the context manager here to avoid swapping between user and
+    # bootstrap config many times
+    missing = False
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        for current_section in sections:
+            status_msg, fail = spack.bootstrap.status_message(section=current_section)
+            missing = missing or fail
+            if status_msg:
+                print(llnl.util.tty.color.colorize(status_msg))
+        print()
+    legend = ('Spack will take care of bootstrapping any missing dependency marked'
+              ' as [@*y{B}]. Dependencies marked as [@*y{-}] are instead required'
+              ' to be found on the system.')
+    if missing:
+        print(llnl.util.tty.color.colorize(legend))
+        print()
+
+
 def bootstrap(parser, args):
     callbacks = {
+        'status': _status,
         'enable': _enable_or_disable,
         'disable': _enable_or_disable,
         'reset': _reset,

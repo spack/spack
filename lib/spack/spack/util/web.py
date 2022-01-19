@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -193,7 +193,8 @@ def push_to_url(
         while remote_path.startswith('/'):
             remote_path = remote_path[1:]
 
-        s3 = s3_util.create_s3_session(remote_url)
+        s3 = s3_util.create_s3_session(remote_url,
+                                       connection=s3_util.get_mirror_connection(remote_url))   # noqa: E501
         s3.upload_file(local_file_path, remote_url.netloc,
                        remote_path, ExtraArgs=extra_args)
 
@@ -219,7 +220,9 @@ def url_exists(url):
         return os.path.exists(local_path)
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        # Check for URL specific connection information
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
+
         try:
             s3.get_object(Bucket=url.netloc, Key=url.path.lstrip('/'))
             return True
@@ -263,7 +266,8 @@ def remove_url(url, recursive=False):
         return
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        # Try to find a mirror for potential connection information
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
         bucket = url.netloc
         if recursive:
             # Because list_objects_v2 can only return up to 1000 items

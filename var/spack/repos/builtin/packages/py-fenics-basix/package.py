@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,5 @@ class PyFenicsBasix(PythonPackage):
     depends_on("xtl@0.7.2:", type="build")
     depends_on("xtensor@0.23.10:", type="build")
     depends_on("py-pybind11@2.6.2:", type="build")
-
-    phases = ['build_ext', 'build', 'install']
 
     build_directory = 'python'

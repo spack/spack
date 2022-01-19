@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class FluxCore(AutotoolsPackage):
     maintainers = ['grondo']
 
     version('master', branch='master')
+
+    version('0.31.0', sha256='a18251de2ca3522484cacfa986df934ba8f98c54586e18940ce5d2c6147a8a7f')
     version('0.30.0', sha256='e51fde4464140367ae4bc1b44f960675ea0a6f58eede3a561cacd8a11ca3e776')
     version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
     version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
@@ -55,11 +57,12 @@ class FluxCore(AutotoolsPackage):
     depends_on("lua@5.1:5.3", when="@0.18.0:,master")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
-    depends_on("python@3.6:", type=('build', 'run', 'link'))
-    depends_on("py-cffi", type=('build', 'run'))
-    depends_on("py-six", type=('build', 'run'))
-    depends_on("py-pyyaml")
-    depends_on("py-jsonschema")
+    depends_on("python@3.6:", when='@0.17:', type=('build', 'link', 'run'))
+    depends_on("python@2.7:", type=('build', 'link', 'run'))
+    depends_on("py-cffi@1.1:", type=('build', 'run'))
+    depends_on("py-six@1.9:", when='@:0.24', type=('build', 'run'))
+    depends_on("py-pyyaml@3.10:", type=('build', 'run'))
+    depends_on("py-jsonschema@2.3:", type=('build', 'run'))
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")

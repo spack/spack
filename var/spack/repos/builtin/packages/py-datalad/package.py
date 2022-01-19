@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -113,7 +113,6 @@ class PyDatalad(PythonPackage):
         # duecredit
         depends_on('py-duecredit', type=('build', 'run'))
 
-    depends_on('py-nose', type=('test'))
     install_time_test_callbacks = ['test', 'installtest']
 
     def installtest(self):

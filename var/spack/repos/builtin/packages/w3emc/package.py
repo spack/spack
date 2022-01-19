@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,3 +28,10 @@ class W3emc(CMakePackage):
     depends_on('nemsio', when='@2.7.3')
     depends_on('sigio', when='@2.7.3')
     depends_on('netcdf-fortran', when='@2.7.3')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', '8', 'd'):
+            lib = find_libraries('libw3emc_' + suffix, root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('W3EMC_LIB' + suffix, lib[0])
+            env.set('W3EMC_INC' + suffix, join_path(self.prefix, 'include_' + suffix))

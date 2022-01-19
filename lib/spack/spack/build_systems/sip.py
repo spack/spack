@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,7 +67,7 @@ class SIPPackage(PackageBase):
         modules = []
         root = os.path.join(
             self.prefix,
-            self.spec['python'].package.config_vars['python_lib']['true']['false'],
+            self.spec['python'].package.platlib,
         )
 
         # Some Python libraries are packages: collections of modules
@@ -114,7 +114,7 @@ class SIPPackage(PackageBase):
             '--sip-incdir', join_path(spec['py-sip'].prefix.include,
                                       python_include_dir),
             '--bindir', prefix.bin,
-            '--destdir', inspect.getmodule(self).site_packages_dir,
+            '--destdir', inspect.getmodule(self).python_platlib,
         ])
 
         self.python(configure, *args)
@@ -167,7 +167,7 @@ class SIPPackage(PackageBase):
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
             module = module.split('.')[0]
-            with working_dir(inspect.getmodule(self).site_packages_dir):
+            with working_dir(inspect.getmodule(self).python_platlib):
                 with open(os.path.join(module, '__init__.py'), 'a') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')

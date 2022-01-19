@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import os
 
-import ordereddict_backport
 import pytest
 
 import llnl.util.tty as tty
@@ -152,7 +152,7 @@ def test_get_header():
     # If lookup has to fallback to fuzzy matching and there are more than one
     # fuzzy match, the result depends on the internal ordering of the given
     # mapping
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['Content-type'] = 'text/plain'
     headers['contentType'] = 'text/html'
 
@@ -161,7 +161,7 @@ def test_get_header():
     assert(spack.util.web.get_header(headers, 'CONTENT_TYPE') == 'text/html')
 
     # Same as above, but different ordering
-    headers = ordereddict_backport.OrderedDict()
+    headers = collections.OrderedDict()
     headers['contentType'] = 'text/html'
     headers['Content-type'] = 'text/plain'
 
@@ -246,10 +246,33 @@ class MockS3Client(object):
         raise self.ClientError
 
 
+def test_gather_s3_information(monkeypatch, capfd):
+    mock_connection_data = {"access_token": "AAAAAAA",
+                            "profile": "SPacKDeV",
+                            "access_pair": ("SPA", "CK"),
+                            "endpoint_url": "https://127.0.0.1:8888"}
+
+    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mock_connection_data)  # noqa: E501
+
+    # Session args are used to create the S3 Session object
+    assert "aws_session_token" in session_args
+    assert session_args.get("aws_session_token") == "AAAAAAA"
+    assert "aws_access_key_id" in session_args
+    assert session_args.get("aws_access_key_id") == "SPA"
+    assert "aws_secret_access_key" in session_args
+    assert session_args.get("aws_secret_access_key") == "CK"
+    assert "profile_name" in session_args
+    assert session_args.get("profile_name") == "SPacKDeV"
+
+    # In addition to the session object, use the client_args to create the s3
+    # Client object
+    assert "endpoint_url" in client_args
+
+
 def test_remove_s3_url(monkeypatch, capfd):
     fake_s3_url = 's3://my-bucket/subdirectory/mirror'
 
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
 
     monkeypatch.setattr(
@@ -269,7 +292,7 @@ def test_remove_s3_url(monkeypatch, capfd):
 
 
 def test_s3_url_exists(monkeypatch, capfd):
-    def mock_create_s3_session(url):
+    def mock_create_s3_session(url, connection={}):
         return MockS3Client()
     monkeypatch.setattr(
         spack.util.s3, 'create_s3_session', mock_create_s3_session)

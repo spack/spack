@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
     version('1.7.2',  sha256='fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711')
     version('1.7.1',  sha256='6b47d5fa7ea651054362561a28b1ccc8da9368a39514c1bbf6c0977a1c376764')
     version('1.7.0',  sha256='998c5e6ea649489302de2c0bc026ed34284f531df89d2bdc8df3a0d44d165739')
@@ -54,13 +55,14 @@ class PyScipy(PythonPackage):
     depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
     depends_on('python@3.7:3.9', when='@1.6.2:1.7.1', type=('build', 'link', 'run'))
     depends_on('python@3.7:3.10', when='@1.7.2:', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', when='@:1.5', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('py-setuptools@:51.0.0', when='@1.6', type='build')
     depends_on('py-setuptools@:57', when='@1.7:', type='build')
     depends_on('py-pybind11@2.2.4:', when='@1.4.0', type=('build', 'link'))
     depends_on('py-pybind11@2.4.0:', when='@1.4.1:1.4', type=('build', 'link'))
     depends_on('py-pybind11@2.4.3:', when='@1.5:1.6.1', type=('build', 'link'))
-    depends_on('py-pybind11@2.4.3:2.6', when='@1.6.2:', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.3:2.6', when='@1.6.2:1.7.1', type=('build', 'link'))
+    depends_on('py-pybind11@2.4.3:2.7', when='@1.7.2:', type=('build', 'link'))
     depends_on('py-numpy@1.5.1:+blas+lapack', when='@:0.15', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:0.17', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18.0:0.18', type=('build', 'link', 'run'))
@@ -99,7 +101,7 @@ class PyScipy(PythonPackage):
         if platform.mac_ver()[0][0:2] == '11':
             env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fujitsu'])

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,20 +14,22 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     homepage = 'https://elpa.mpcdf.mpg.de/'
     url = 'https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2015.11.001/elpa-2015.11.001.tar.gz'
 
+    version('2021.11.001', sha256='fb361da6c59946661b73e51538d419028f763d7cb9dacf9d8cd5c9cd3fb7802f')
+    version('2021.05.002_bugfix', sha256='deabc48de5b9e4b2f073d749d335c8f354a7ce4245b643a23b7951cd6c90224b')
     version('2021.05.001', sha256='a4f1a4e3964f2473a5f8177f2091a9da5c6b5ef9280b8272dfefcbc3aad44d41')
-    version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5')
-    version('2019.11.001', sha256='10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357')
-    version('2019.05.002', sha256='d2eab5e5d74f53601220b00d18185670da8c00c13e1c1559ecfb0cd7cb2c4e8d')
-    version('2018.11.001', sha256='cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16')
-    version('2018.05.001.rc1', sha256='598c01da20600a4514ea4d503b93e977ac0367e797cab7a7c1b0e0e3e86490db')
-    version('2017.11.001', sha256='59f99c3abe2190fac0db8a301d0b9581ee134f438669dbc92551a54f6f861820')
-    version('2017.05.003', sha256='bccd49ce35a323bd734b17642aed8f2588fea4cc78ee8133d88554753bc3bf1b')
-    version('2017.05.002', sha256='568b71024c094d667b5cbb23045ad197ed5434071152ac608dae490ace5eb0aa')
-    version('2017.05.001', sha256='28f7edad60984d93da299016ad33571dc6db1cdc9fab0ceaef05dc07de2c7dfd')
-    version('2016.11.001.pre', sha256='69b67f0f6faaa2b3b5fd848127b632be32771636d2ad04583c5269d550956f92')
-    version('2016.05.004', sha256='08c59dc9da458bab856f489d779152e5506e04f0d4b8d6dcf114ca5fbbe46c58')
-    version('2016.05.003', sha256='c8da50c987351514e61491e14390cdea4bdbf5b09045261991876ed5b433fca4')
-    version('2015.11.001', sha256='c0761a92a31c08a4009c9688c85fc3fc8fde9b6ce05e514c3e1587cf045e9eba')
+    version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5', deprecated=True)
+    version('2019.11.001', sha256='10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357', deprecated=True)
+    version('2019.05.002', sha256='d2eab5e5d74f53601220b00d18185670da8c00c13e1c1559ecfb0cd7cb2c4e8d', deprecated=True)
+    version('2018.11.001', sha256='cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16', deprecated=True)
+    version('2018.05.001.rc1', sha256='598c01da20600a4514ea4d503b93e977ac0367e797cab7a7c1b0e0e3e86490db', deprecated=True)
+    version('2017.11.001', sha256='59f99c3abe2190fac0db8a301d0b9581ee134f438669dbc92551a54f6f861820', deprecated=True)
+    version('2017.05.003', sha256='bccd49ce35a323bd734b17642aed8f2588fea4cc78ee8133d88554753bc3bf1b', deprecated=True)
+    version('2017.05.002', sha256='568b71024c094d667b5cbb23045ad197ed5434071152ac608dae490ace5eb0aa', deprecated=True)
+    version('2017.05.001', sha256='28f7edad60984d93da299016ad33571dc6db1cdc9fab0ceaef05dc07de2c7dfd', deprecated=True)
+    version('2016.11.001.pre', sha256='69b67f0f6faaa2b3b5fd848127b632be32771636d2ad04583c5269d550956f92', deprecated=True)
+    version('2016.05.004', sha256='08c59dc9da458bab856f489d779152e5506e04f0d4b8d6dcf114ca5fbbe46c58', deprecated=True)
+    version('2016.05.003', sha256='c8da50c987351514e61491e14390cdea4bdbf5b09045261991876ed5b433fca4', deprecated=True)
+    version('2015.11.001', sha256='c0761a92a31c08a4009c9688c85fc3fc8fde9b6ce05e514c3e1587cf045e9eba', deprecated=True)
 
     variant('openmp', default=True, description='Activates OpenMP support')
     variant('mpi', default=True, description='Activates MPI support')
@@ -40,6 +42,11 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on('libtool', type='build')
     depends_on('python@:2', type='build', when='@:2020.05.001')
     depends_on('python@3:', type='build', when='@2020.11.001:')
+
+    with when('@2021.11.01:'):
+        variant('autotune', default=False,
+                description='Enables autotuning for matrix restribution')
+        depends_on('scalapack', when='+autotune')
 
     patch('python_shebang.patch', when='@:2020.05.001')
 
@@ -66,10 +73,17 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
     @property
     def headers(self):
         suffix = '_openmp' if self.spec.satisfies('+openmp') else ''
+
+        # upstream sometimes adds tarball suffixes not part of the internal version
+        elpa_version = str(self.spec.version)
+        for vsuffix in ("_bugfix", ):
+            if elpa_version.endswith(vsuffix):  # implementation of py3.9 removesuffix
+                elpa_version = elpa_version[:-len(vsuffix)]
+
         incdir = os.path.join(
             self.spec.prefix.include,
-            'elpa{suffix}-{version!s}'.format(
-                suffix=suffix, version=self.spec.version))
+            'elpa{suffix}-{version}'.format(
+                suffix=suffix, version=elpa_version))
 
         hlist = find_all_headers(incdir)
         hlist.directories = [incdir]
@@ -159,6 +173,10 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                 'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
             ]
 
+        if '+autotune' in self.spec:
+            options.append('--enable-autotune-redistribute-matrix')
+
         options.append('--disable-silent-rules')
+        options.append('--without-threading-support-check-during-build')
 
         return options

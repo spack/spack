@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,7 +50,6 @@ def containerize(parser, args):
     # If we have a monitor request, add monitor metadata to config
     if args.use_monitor:
         config['spack']['monitor'] = {
-            "disable_auth": args.monitor_disable_auth,
             "host": args.monitor_host,
             "keep_going": args.monitor_keep_going,
             "prefix": args.monitor_prefix,

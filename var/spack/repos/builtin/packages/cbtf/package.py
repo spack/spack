@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,6 @@ class Cbtf(CMakePackage):
     version('1.9.4', branch='1.9.4')
     version('1.9.3', branch='1.9.3')
 
-    variant('cti', default=False,
-            description="Build MRNet with the CTI startup option")
-
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
 
@@ -42,9 +39,7 @@ class Cbtf(CMakePackage):
     depends_on("boost@1.70.0:")
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.3:9999+cti')
     depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.3:9999')
 
     # For Xerces-C

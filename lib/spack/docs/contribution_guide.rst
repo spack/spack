@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ locally to speed up the review process.
    new release that is causing problems. If this is the case, please file an issue.
 
 
-We currently test against Python 2.6, 2.7, and 3.5-3.7 on both macOS and Linux and
+We currently test against Python 2.7 and 3.5-3.9 on both macOS and Linux and
 perform 3 types of tests:
 
 .. _cmd-spack-unit-test:

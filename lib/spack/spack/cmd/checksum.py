@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,17 +25,17 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '--keep-stage', action='store_true',
+        '--keep-stage', action='store_true', default=False,
         help="don't clean up staging area when command completes")
     sp = subparser.add_mutually_exclusive_group()
     sp.add_argument(
-        '-b', '--batch', action='store_true',
+        '-b', '--batch', action='store_true', default=False,
         help="don't ask which versions to checksum")
     sp.add_argument(
-        '-l', '--latest', action='store_true',
+        '-l', '--latest', action='store_true', default=False,
         help="checksum the latest available version only")
     sp.add_argument(
-        '-p', '--preferred', action='store_true',
+        '-p', '--preferred', action='store_true', default=False,
         help="checksum the preferred version only")
     arguments.add_common_arguments(subparser, ['package'])
     subparser.add_argument(

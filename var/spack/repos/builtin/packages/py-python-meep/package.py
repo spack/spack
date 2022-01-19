@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack import *
 
@@ -13,10 +15,13 @@ class PyPythonMeep(PythonPackage):
     homepage = "https://launchpad.net/python-meep"
     url      = "https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.tar"
 
-    version('1.4.2', sha256='d91428aa4727c308383cea31ca9cdacee409320c686e9a8368769933e56c8762')
+    version('1.4.2', sha256='d91428aa4727c308383cea31ca9cdacee409320c686e9a8368769933e56c8762', deprecated=True)
 
     variant('mpi', default=True, description='Enable MPI support')
 
+    depends_on('python@2.6:2.7', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
@@ -30,17 +35,16 @@ class PyPythonMeep(PythonPackage):
     # or else it can't handle newer C++ compilers and flags.
     depends_on('swig@1.3.39:3.0.2')
 
-    phases = ['clean', 'build_ext', 'install', 'bdist']
+    def patch(self):
+        if '+mpi' in self.spec:
+            copy('setup-mpi.py', 'setup.py')
 
-    def setup_file(self):
-        return 'setup-mpi.py' if '+mpi' in self.spec else 'setup.py'
-
-    def common_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
             os.path.join(
                 spec['py-numpy'].prefix,
-                spec['python'].package.python_include_dir
+                spec['python'].package.include
             )
         ]
 
@@ -62,12 +66,3 @@ class PyPythonMeep(PythonPackage):
         # meep_common.i:89: Error: Unable to find 'meep.hpp'
 
         return [include_flags, library_flags]
-
-    def clean_args(self, spec, prefix):
-        return ['--all']
-
-    def build_ext_args(self, spec, prefix):
-        return self.common_args(spec, prefix)
-
-    def bdist_args(self, spec, prefix):
-        return self.common_args(spec, prefix)

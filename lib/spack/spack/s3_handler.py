@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,8 @@ class WrapStream(BufferedReader):
 
 def _s3_open(url):
     parsed = url_util.parse(url)
-    s3 = s3_util.create_s3_session(parsed)
+    s3 = s3_util.create_s3_session(parsed,
+                                   connection=s3_util.get_mirror_connection(parsed))  # noqa: E501
 
     bucket = parsed.netloc
     key = parsed.path

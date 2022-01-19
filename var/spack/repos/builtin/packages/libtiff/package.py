@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,18 @@ class Libtiff(AutotoolsPackage):
     conflicts('+lzma', when='@:3')
     conflicts('+zstd', when='@:4.0.9')
     conflicts('+webp', when='@:4.0.9')
+
+    # https://gitlab.com/libtiff/libtiff/-/merge_requests/243
+    patch('no-include-root.patch', when='@4.3.0')
+
+    depends_on('automake', when='@4.3.0', type='build')
+    depends_on('autoconf', when='@4.3.0', type='build')
+    depends_on('libtool', when='@4.3.0', type='build')
+    depends_on('m4', when='@4.3.0', type='build')
+
+    @property
+    def force_autoreconf(self):
+        return self.spec.satisfies('@4.3.0')
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler

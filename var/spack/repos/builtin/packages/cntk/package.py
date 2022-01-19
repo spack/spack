@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Cntk(Package):
     depends_on('protobuf')
     # CNTK depends on kaldi@c02e8.
     # See https://github.com/Microsoft/CNTK/blob/master/Tools/docker/CNTK-CPUOnly-Image/Dockerfile#L105-L125
-    depends_on('kaldi@c024e8', when='+kaldi')
+    depends_on('kaldi@2015-10-07', when='+kaldi')
     depends_on('opencv', when='+opencv')
     depends_on('cuda', when='+cuda')
     depends_on('cub@1.4.1', when='+cuda')

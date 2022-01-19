@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     depends_on('texinfo', type='build', when='@1.22.4:')
     # configure complains when there is no uchardet that enhances preconv
     depends_on('uchardet', when='@1.22.4:')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libice', when='+x')
     depends_on('libxaw', when='+x')

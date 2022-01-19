@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,13 @@
   default unorderd dict.
 
 """
+import collections
 import ctypes
 import re
 import sys
 from typing import List  # novm
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
 from six import StringIO, string_types
 
@@ -39,7 +39,7 @@ __all__ = ['load', 'dump', 'SpackYAMLError']
 # Also, use OrderedDict instead of just dict.
 
 
-class syaml_dict(OrderedDict):
+class syaml_dict(collections.OrderedDict):
     def __repr__(self):
         mappings = ('%r: %r' % (k, v) for k, v in self.items())
         return '{%s}' % ', '.join(mappings)

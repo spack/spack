@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -123,18 +123,11 @@ class UnsatisfiableSpecError(SpecError):
     For original concretizer, provide the requirement that was violated when
     raising.
     """
-    def __init__(self, provided, required=None, constraint_type=None, conflicts=None):
-        # required is only set by the original concretizer.
-        # clingo concretizer handles error messages differently.
-        if required is not None:
-            assert not conflicts  # can't mix formats
-            super(UnsatisfiableSpecError, self).__init__(
-                "%s does not satisfy %s" % (provided, required))
-        else:
-            indented = ['  %s\n' % conflict for conflict in conflicts]
-            conflict_msg = ''.join(indented)
-            msg = '%s is unsatisfiable, conflicts are:\n%s' % (provided, conflict_msg)
-            super(UnsatisfiableSpecError, self).__init__(msg)
+    def __init__(self, provided, required, constraint_type):
+        # This is only the entrypoint for old concretizer errors
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
+
         self.provided = provided
         self.required = required
         self.constraint_type = constraint_type

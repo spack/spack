@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,6 @@ from contextlib import contextmanager
 from typing import List  # novm
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from ruamel.yaml.error import MarkedYAMLError
 from six import iteritems
 
@@ -401,7 +400,7 @@ class Configuration(object):
                 Configuration, ordered from lowest to highest precedence
 
         """
-        self.scopes = OrderedDict()
+        self.scopes = collections.OrderedDict()
         for scope in scopes:
             self.push_scope(scope)
         self.format_updates = collections.defaultdict(list)
