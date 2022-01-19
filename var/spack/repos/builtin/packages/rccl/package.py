@@ -65,6 +65,6 @@ class Rccl(CMakePackage):
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 
-        if self.spec.satisfies('@4.5.0:') :
+        if self.spec.satisfies('@4.5.0:'):
             args.append(self.define('ROCM_SMI_DIR', self.spec['rocm-smi-lib'].prefix))
         return args
