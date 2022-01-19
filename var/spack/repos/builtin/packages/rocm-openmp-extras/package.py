@@ -163,7 +163,7 @@ class RocmOpenmpExtras(Package):
             url='https://github.com/ROCm-Developer-Tools/aomp-extras.git',
             destination='rocm-openmp-extras',
             placement='aomp-extras',
-            when='master')
+            when='@master')
 
         resource(
             name='llvm-project',
