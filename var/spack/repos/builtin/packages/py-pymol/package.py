@@ -19,10 +19,8 @@ class PyPymol(PythonPackage):
     version('2.4.0', sha256='5ede4ce2e8f53713c5ee64f5905b2d29bf01e4391da7e536ce8909d6b9116581')
     version('2.3.0', sha256='62aa21fafd1db805c876f89466e47513809f8198395e1f00a5f5cc40d6f40ed0')
 
-    depends_on('python+tkinter@2.7:', type=('build', 'run'), when='@2.3.0:2.4.0')
-    depends_on('python+tkinter@3.6:', type=('build', 'run'), when='@2.5.0:')
-    # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on('python+tkinter@2.7:', type=('build', 'link', 'run'), when='@2.3.0:2.4.0')
+    depends_on('python+tkinter@3.6:', type=('build', 'link', 'run'), when='@2.5.0:')
     depends_on('gl')
     depends_on('glew')
     depends_on('libpng')
@@ -38,10 +36,18 @@ class PyPymol(PythonPackage):
     depends_on('libmmtf-cpp', type=('build', 'run', 'link'))
     depends_on('msgpack-c', type=('build', 'run'))
     depends_on('libpng', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'link', 'run'))
+    depends_on('py-msgpack', type=('build', 'run'))
 
     def install_options(self, spec, prefix):
         return ['--no-launcher']
+
+    def install(self, spec, prefix):
+        # Note: pymol monkeypatches distutils which breaks pip install, use deprecated
+        # `python setup.py install` and distutils instead of `pip install` and
+        # setuptools. See: https://github.com/schrodinger/pymol-open-source/issues/217
+        python('setup.py', 'install', '--prefix=' + prefix,
+               *self.install_options(spec, prefix))
 
     @run_after('install')
     def install_launcher(self):
