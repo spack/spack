@@ -1803,12 +1803,19 @@ class Spec(object):
     def dag_hash(self, length=None):
         """This is Spack's default hash, used to identify installations.
 
-        At the moment, it excludes build dependencies to avoid rebuilding
-        packages whenever build dependency versions change. We will
-        revise this to include more detailed provenance when the
-        concretizer can more aggressievly reuse installed dependencies.
+        Same as the full hash (includes package hash and build/link/run deps).
+
+        NOTE: Versions of Spack prior to 0.18 only included link and run deps.
         """
         return self._cached_hash(ht.dag_hash, length)
+
+    def full_hash(self, length=None):
+        """Hash that includes all build and run inputs for a spec.
+
+        Inputs are: the package hash (to identify the package.py),
+        build, link, and run dependencies.
+        """
+        return self._cached_hash(ht.full_hash, length)
 
     def build_hash(self, length=None):
         """Hash used to store specs in environments.
@@ -1819,20 +1826,12 @@ class Spec(object):
         return self._cached_hash(ht.build_hash, length)
 
     def process_hash(self, length=None):
-        """Hash used to store specs in environments.
+        """Hash used to transfer specs among processes.
 
         This hash includes build and test dependencies and is only used to
         serialize a spec and pass it around among processes.
         """
         return self._cached_hash(ht.process_hash, length)
-
-    def full_hash(self, length=None):
-        """Hash  to determine when to rebuild packages in the build pipeline.
-
-        This hash includes the package hash, so that we know when package
-        files has changed between builds.
-        """
-        return self._cached_hash(ht.full_hash, length)
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
@@ -1931,7 +1930,7 @@ class Spec(object):
             if hasattr(variant, '_patches_in_order_of_appearance'):
                 d['patches'] = variant._patches_in_order_of_appearance
 
-        if hash.package_hash:
+        if self._concrete and hash.package_hash:
             package_hash = self.package_hash()
 
             # Full hashes are in bytes
@@ -2845,13 +2844,13 @@ class Spec(object):
 
     @staticmethod
     def ensure_no_deprecated(root):
-        """Raise is a deprecated spec is in the dag.
+        """Raise if a deprecated spec is in the dag.
 
         Args:
             root (Spec): root spec to be analyzed
 
         Raises:
-            SpecDeprecatedError: is any deprecated spec is found
+            SpecDeprecatedError: if any deprecated spec is found
         """
         deprecated = []
         with spack.store.db.read_transaction():
@@ -3683,7 +3682,6 @@ class Spec(object):
         return [spec for spec in self.traverse() if spec.virtual]
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
-    @lang.memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -3696,21 +3694,21 @@ class Spec(object):
         if not self.concrete:
             raise spack.error.SpecError("Spec is not concrete: " + str(self))
 
-        if 'patches' not in self.variants:
-            return []
+        if not hasattr(self, "_patches"):
+            self._patches = []
+            if 'patches' in self.variants:
+                # FIXME: _patches_in_order_of_appearance is attached after
+                # FIXME: concretization to store the order of patches somewhere.
+                # FIXME: Needs to be refactored in a cleaner way.
 
-        # FIXME: _patches_in_order_of_appearance is attached after
-        # FIXME: concretization to store the order of patches somewhere.
-        # FIXME: Needs to be refactored in a cleaner way.
+                # translate patch sha256sums to patch objects by consulting the index
+                self._patches = []
+                for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+                    index = spack.repo.path.patch_index
+                    patch = index.patch_for_package(sha256, self.package)
+                    self._patches.append(patch)
 
-        # translate patch sha256sums to patch objects by consulting the index
-        patches = []
-        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            index = spack.repo.path.patch_index
-            patch = index.patch_for_package(sha256, self.package)
-            patches.append(patch)
-
-        return patches
+        return self._patches
 
     def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting

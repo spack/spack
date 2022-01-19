@@ -34,9 +34,14 @@ class SpecHashDescriptor(object):
         return '_' + self.name
 
 
-#: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
+#: Spack's deployment hash. Includes all inputs that can affect how a package is built.
 dag_hash = SpecHashDescriptor(
-    deptype=('link', 'run'), package_hash=False, name='hash')
+    deptype=('build', 'link', 'run'), package_hash=True, name='hash')
+
+
+#: Same as dag_hash; old name.
+full_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
 
 
 #: Hash descriptor that includes build dependencies.
@@ -50,10 +55,6 @@ process_hash = SpecHashDescriptor(
     package_hash=False,
     name='process_hash'
 )
-
-#: Full hash used in build pipelines to determine when to rebuild packages.
-full_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
 
 
 #: Package hash used as part of full hash

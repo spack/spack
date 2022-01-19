@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Test YAML serialization for specs.
+"""Test YAML and JSON serialization for specs.
 
-YAML format preserves DAG information in the spec.
+The YAML and JSON formats preserve DAG information in the spec.
 
 """
 import ast
