@@ -6,6 +6,7 @@ import errno
 import os
 import shutil
 import tempfile
+from collections import namedtuple
 from os.path import exists, join
 from sys import platform as _platform
 
@@ -45,11 +46,13 @@ def readlink(path):
 # the (older) DOTNET implementation of same found here:
 # https://www.codeproject.com/Articles/21202/Reparse-Points-in-Vista
 def read_win32_junction(path):
+    # first open a file handle
     pass
 
 
 def read_win32_reparse_point(path):
     pass
+
 
 # '_win32' functions based on
 # https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py

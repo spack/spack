@@ -19,6 +19,7 @@ from six.moves import cPickle
 from six.moves import shlex_quote as cmd_quote
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 from llnl.util.lang import dedupe
 
 import spack.config
@@ -135,7 +136,7 @@ def dump_environment(path, environment=None):
     hidden_vars = set(['PS1', 'PWD', 'OLDPWD', 'TERM_SESSION_ID'])
 
     if os.path.dirname(path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        mkdirp(os.path.dirname(path), exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0o600)
     with os.fdopen(fd, 'w') as env_file:
         for var, val in sorted(use_env.items()):

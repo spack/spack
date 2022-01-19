@@ -329,10 +329,9 @@ def instantiate_compiler_env(pkg):
     build_wrapper = lambda x: [op(x) for op in (cc, cxx, fc, f77, env_path)]
 
     with open(join(metadata_root, 'load'), 'w+') as f:
-        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(metadata_root), sep))
-
+        f.write(COMPILER_LOAD_FILE.format(*(build_wrapper(metadata_root) + [sep])))
     with open(join(stage_metadata_root, 'load'), 'w+') as f:
-        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root), sep))
+        f.write(COMPILER_LOAD_FILE.format(*build_wrapper(stage_metadata_root) + [sep]))
 
 
 def set_compiler_environment_variables(pkg, env):
