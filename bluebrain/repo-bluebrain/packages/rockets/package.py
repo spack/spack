@@ -21,5 +21,7 @@ class Rockets(CMakePackage):
 
     depends_on('libwebsockets@3.0.1 +libuv')
 
+    patch('the_forgotten_headers.patch')
+
     def cmake_args(self):
         return ['-DDISABLE_SUBPROJECTS=ON']

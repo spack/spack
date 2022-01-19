@@ -14,7 +14,6 @@ class Brayns(CMakePackage):
     generator = 'Ninja'
 
     version('develop', submodules=True)
-    version('0.8.0', tag='0.8.0', submodules=True)
     version('1.0.1', tag='1.0.1', submodules=True)
     version('1.1.0', tag='1.1.0', submodules=True)
     version('2.0.0', tag='2.0.0', submodules=False)
@@ -63,7 +62,7 @@ class Brayns(CMakePackage):
     depends_on('cuda', when='@:1.1.0 +optix')
 
     # patch('brion.patch', when='@develop')
-    patch('fix_forgotten_algorithm.patch', when='@0.8.0')
+    patch('the_forgotten_headers.patch', when='@1.1.0')
 
     patch('https://patch-diff.githubusercontent.com/raw/BlueBrain/Brayns/pull/938.patch',
           sha256='e1ace3dc7c3dcbea05ea1be90173e0f8ae8401b92b2554114d20b2c6da40eca7',

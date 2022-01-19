@@ -1,0 +1,49 @@
+diff --git a/rockets/http/registry.cpp b/rockets/http/registry.cpp
+index c0ea24d..d313d8b 100644
+--- a/rockets/http/registry.cpp
++++ b/rockets/http/registry.cpp
+@@ -20,6 +20,7 @@
+  */
+ 
+ #include "registry.h"
++#include "response.h"
+ 
+ #include "../json.hpp"
+ 
+diff --git a/rockets/utils.cpp b/rockets/utils.cpp
+index 4f5ad25..7e8f364 100644
+--- a/rockets/utils.cpp
++++ b/rockets/utils.cpp
+@@ -36,6 +36,7 @@
+ #include <sys/socket.h>
+ #endif
+ 
++#include <stdexcept>
+ #include <vector>
+ 
+ namespace rockets
+diff --git a/tests/jsonRpcClientServer.cpp b/tests/jsonRpcClientServer.cpp
+index 5b467cc..27ba8bb 100644
+--- a/tests/jsonRpcClientServer.cpp
++++ b/tests/jsonRpcClientServer.cpp
+@@ -21,6 +21,8 @@
+ 
+ #include <boost/test/unit_test.hpp>
+ 
++#include <thread>
++
+ #include "json_utils.h"
+ 
+ template <typename T>
+diff --git a/tests/websockets.cpp b/tests/websockets.cpp
+index 342d0d5..6e7fc2f 100644
+--- a/tests/websockets.cpp
++++ b/tests/websockets.cpp
+@@ -24,6 +24,7 @@
+ #include <rockets/ws/client.h>
+ 
+ #include <iostream>
++#include <thread>
+ 
+ #include <boost/mpl/vector.hpp>
+ #include <boost/test/unit_test.hpp>

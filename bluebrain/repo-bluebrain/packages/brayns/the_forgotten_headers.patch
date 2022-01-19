@@ -1,0 +1,36 @@
+diff --git a/brayns/Brayns.cpp b/brayns/Brayns.cpp
+index caf6d095..b004f518 100644
+--- a/brayns/Brayns.cpp
++++ b/brayns/Brayns.cpp
+@@ -56,6 +56,7 @@
+ 
+ #include <brayns/pluginapi/PluginAPI.h>
+ 
++#include <mutex>
+ #include <thread>
+ 
+ namespace
+diff --git a/brayns/engine/Scene.cpp b/brayns/engine/Scene.cpp
+index df15f9e3..e36011a8 100644
+--- a/brayns/engine/Scene.cpp
++++ b/brayns/engine/Scene.cpp
+@@ -34,6 +34,7 @@
+ #include <brayns/common/utils/filesystem.h>
+ 
+ #include <fstream>
++#include <mutex>
+ 
+ namespace
+ {
+diff --git a/tests/throttle.cpp b/tests/throttle.cpp
+index 6a5cb4d4..2d04ad2e 100644
+--- a/tests/throttle.cpp
++++ b/tests/throttle.cpp
+@@ -20,6 +20,7 @@
+ 
+ #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+ #include "doctest.h"
++#include <thread>
+ 
+ #include <brayns/common/Timer.h>
+ 
