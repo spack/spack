@@ -129,7 +129,7 @@ class RocmOpenmpExtras(Package):
             url='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
             destination='rocm-openmp-extras',
             placement='rocm-device-libs',
-            when='master')
+            when='@master')
 
 
         resource(
