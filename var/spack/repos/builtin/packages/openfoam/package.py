@@ -459,7 +459,7 @@ class Openfoam(Package):
 
                 env.extend(mods)
                 minimal = False
-                tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
+                tty.debug('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
                 minimal = True
 
