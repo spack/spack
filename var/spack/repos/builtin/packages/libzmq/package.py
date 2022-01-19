@@ -38,7 +38,7 @@ class Libzmq(AutotoolsPackage):
             description="Build documentation")
     
     variant("libbsd", default=True,
-            description="Use strcpl from libbsd (will use own implementation if false)")
+            description="Use strlcpy from libbsd (will use own implementation if false)")
 
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
