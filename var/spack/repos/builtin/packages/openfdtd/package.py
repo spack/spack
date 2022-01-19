@@ -14,10 +14,9 @@ class Openfdtd(MakefilePackage):
        by the difference method."""
 
     homepage = "http://www.e-em.co.jp/OpenFDTD/"
-    url      = "http://www.e-em.co.jp/OpenFDTD/old/OpenFDTD_230.zip"
+    url      = "http://www.e-em.co.jp/OpenFDTD/OpenFDTD.zip"
 
-    version('2.7.3', sha256='22171d1dd74b4e48299b0d0c69ca933aac89d4eb77c59f579af35861eaca0faa',
-            url='http://www.e-em.co.jp/OpenFDTD/OpenFDTD.zip')
+    version('2.7.3', sha256='22171d1dd74b4e48299b0d0c69ca933aac89d4eb77c59f579af35861eaca0faa')
     version('2.7.1', sha256='3fb5fbeca3dc63243a6dc116d0f3ce3d1a854b4813f3928812ae99e07575ab1a')
     version('2.6.3', sha256='1551cce7f96c1c53ad5d5e676bce2b26fd1593dd5f492a801e976a8a65a42a00')
     version('2.6.0', sha256='92f7b92dc55ff6d8fc8c31eda77ca10fe25a5f54b002f2523a3d67f485d77e9f')
@@ -26,6 +25,12 @@ class Openfdtd(MakefilePackage):
     variant('mpi', default=False, description='Build with MPI Support')
 
     depends_on('mpi', when='+mpi')
+
+    def url_for_version(self, version):
+        url = self.url
+        if version < Version('2.7.3'):
+            url = 'http://www.e-em.co.jp/OpenFDTD/old/OpenFDTD_{0}.zip'
+        return url.format(version.joined)
 
     def edit(self, spec, prefix):
         makefiles = [join_path('src', 'Makefile_gcc')]
