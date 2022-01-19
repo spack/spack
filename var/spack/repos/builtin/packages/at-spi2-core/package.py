@@ -37,7 +37,7 @@ class AtSpi2Core(MesonPackage):
 
     @when('@2.40.1:')
     def patch(self):
-        filter_file('dbus_broker.found\(\)', 'false','bus/meson.build')
+        filter_file(r'dbus_broker.found\(\)', 'false', 'bus/meson.build')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
