@@ -26,11 +26,8 @@ class Folly(CMakePackage):
 
     # folly requires gcc 5+ and a version of boost compiled with >= C++14
     variant('cxxstd', default='14', values=('14', '17'), multi=False, description='Use the specified C++ standard when building.')
-    # Boost library dependencies:
-    # CMake threw errors when program_options and thread were not included.
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on('boost+container+context+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=14', when='cxxstd=14')
-    depends_on('boost+container+context+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=17', when='cxxstd=17')
+    depends_on('boost+context+container+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=14', when='cxxstd=14')
+    depends_on('boost+context+container+exception+filesystem+program_options+regex+serialization+system+thread cxxstd=17', when='cxxstd=17')
 
     # required dependencies
     depends_on('gflags')

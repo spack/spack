@@ -17,10 +17,9 @@ class Bridger(MakefilePackage, SourceforgePackage):
     sourceforge_mirror_path = "rnaseqassembly/Bridger_r2014-12-01.tar.gz"
 
     version('2014-12-01', sha256='8fbec8603ea8ad2162cbd0c658e4e0a4af6453bdb53310b4b7e0d112e40b5737')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
+    #Maintainers: It looks like the following is the dependency here but needs to be verified by maintainers
+    #depends_on('boost + exception + filesystem + system + serialization + graph')
+    #If sp, then have to uncomment the previous line and remove the "Boost" package references from this file
     depends_on(Boost.with_default_variants)
     depends_on('perl', type='run')
 
