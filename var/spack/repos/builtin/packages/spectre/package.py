@@ -80,10 +80,7 @@ class Spectre(CMakePackage):
     depends_on('boost@1.60:+math+program_options')
     depends_on('brigand@master')
     depends_on('gsl')
-    # Require HDF5 without MPI, because the SpECTRE build system doesn't try to
-    # find and include MPI when CMake reports `HDF5_IS_PARALLEL`, so HDF5 will
-    # fail to include MPI headers (as of version 2022.01.03).
-    depends_on('hdf5~mpi')
+    depends_on('hdf5')
     depends_on('jemalloc', when='memory_allocator=jemalloc')
     depends_on('libsharp~mpi~openmp')
     depends_on('libxsmm@1.16.1:')
@@ -140,9 +137,24 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/82ff2c39cdae0ecc1e42bdf4564506a4ca869818.patch',
         sha256='5a5a3abf102e92812933e7318daabe2ca0a5a00d81d9663731c527e5dc6c8ced',
         when='@:2022.01.03 ^python@3.10:')
+    # - Backport patch for hdf5+mpi
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/eb887635f5e2b394ae2c7e96170e9d907eb315cf.patch',
+        sha256='eb50b31af79d1e6b6535503bc30a9c5efd2ce36bd3638a2b3ab02af44bac6de3',
+        when='@:2022.01.03 ^hdf5+mpi')
     # - Backport `BUILD_TESTING` toggle, based on upstream patch:
     #   https://github.com/sxs-collaboration/spectre/commit/79bed6cad6e95efadf48a5846f389e90801202d4
     patch('build-testing-pre-2022.01.03.patch', when='@:2022.01.03')
+    # - Backport `PYTHONPATH` in CTest environment
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/ada1d15d5963bd22581dd8966599e1529a99645d.patch',
+        sha256='160d55bb2537ea8f3937cea59a9a0fd56a2bfef856bb7fd8e9dceb504c04836c',
+        when='@:2022.01.03')
+    # - Backport executable name CTest labels
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/1b61e62a27b02b658cc6a74c4d46af1f5b5d0a4d.patch',
+        sha256='07be176ca4dda74a2dd8e71c31dab638a9f3567c3a58eb7fddbfde001646fb8c',
+        when='@:2022.01.03')
 
     def cmake_args(self):
         args = [
@@ -161,7 +173,14 @@ class Spectre(CMakePackage):
         ]
         # Allow for more time on slower machines
         if self.run_tests:
-            args.append(self.define('SPECTRE_TEST_TIMEOUT_FACTOR', '10'))
+            if self.spec.satisfies('@:2022.01.03'):
+                args.extend([
+                    self.define('SPECTRE_INPUT_FILE_TEST_TIMEOUT_FACTOR', '10'),
+                    self.define('SPECTRE_UNIT_TEST_TIMEOUT_FACTOR', '10'),
+                    self.define('SPECTRE_PYTHON_TEST_TIMEOUT_FACTOR', '10'),
+                ])
+            else:
+                args.append(self.define('SPECTRE_TEST_TIMEOUT_FACTOR', '10'))
         return args
 
     @property
