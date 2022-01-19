@@ -47,6 +47,15 @@ class Spectre(CMakePackage):
             description="Executables to install")
     variant('python', default=False, description="Build Python bindings")
     variant('doc', default=False, description="Build documentation")
+    # Build type and debug symbols:
+    # - Both Debug and Release builds have debug symbols enabled by default in
+    #   the SpECTRE build system, so we can view backtraces, etc., when
+    #   production code fails.
+    variant('build_type', values=('Debug', 'Release'),
+            default='Release', description='CMake build type')
+    # - Allow disabling debug symbols to reduce memory usage and executable size
+    variant('debug_symbols', default=True,
+            description="Build with debug symbols")
     # TODO: support installation of executables with shared libs
     # variant('shared',
     #         default=False,
@@ -170,6 +179,7 @@ class Spectre(CMakePackage):
             self.define_from_variant('ENABLE_PROFILING', 'profiling'),
             # TODO: Fix PCH builds to reduce compile time
             self.define('USE_PCH', False),
+            self.define_from_variant('DEBUG_SYMBOLS'),
         ]
         # Allow for more time on slower machines
         if self.run_tests:
