@@ -15,6 +15,7 @@ class Migraphx(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.2', sha256='ecfd9a8e7967076f056d5b6a90b22f8919b82226443769b181193f16ebf58b83')
     version('4.5.0', sha256='8d243a48406af7f960c03bc28a16fad931de8e008ae848799adae504cc5f1355')
     version('4.3.1', sha256='e0b04da37aed937a2b2218059c189559a15460c191b5e9b00c7366c81c90b06e')
@@ -53,7 +54,7 @@ class Migraphx(CMakePackage):
     depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver,                      when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,              when='@' + ver)

@@ -33,7 +33,7 @@ class Hipfft(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+    for ver in ['4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocfft@' + ver, when='@' + ver)

@@ -21,6 +21,7 @@ class Rocsparse(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    version('master', branch='master')
     version('4.5.2', sha256='e37af2cd097e239a55a278df534183b5591ef4d985fe1a268a229bd11ada6599')
     version('4.5.0', sha256='b120e9e17e7e141caee4c8c4288c9d1902bad0cec2ea76458d3ba11343376938')
     version('4.3.1', sha256='fa5ea64f71e1cfbebe41618cc183f501b387824a6dc58486ab1214d7af5cbef2')
@@ -37,7 +38,7 @@ class Rocsparse(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2','master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocprim@' + ver, when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)

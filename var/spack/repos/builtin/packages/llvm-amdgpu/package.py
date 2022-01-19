@@ -20,7 +20,6 @@ class LlvmAmdgpu(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
-
     version('4.5.2', sha256='36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f')
     version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
     version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
@@ -111,7 +110,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
-        if self.spec.satisfies('@4.3.0:4.5.0'):
+        if self.spec.satisfies('@4.3.0:4.5.0') or self.spec.satisfies('@master'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
