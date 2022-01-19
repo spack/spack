@@ -34,6 +34,9 @@ class Libzmq(AutotoolsPackage):
     variant("drafts", default=False,
             description="Build and install draft classes and methods")
 
+    variant("docs", default=True,
+            description="Build documentation")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -41,8 +44,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
-    depends_on('docbook-xml', type='build')
-    depends_on('docbook-xsl', type='build')
+    depends_on('docbook-xml', type='build +docs')
+    depends_on('docbook-xsl', type='build +docs')
 
     depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
     depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
@@ -71,6 +74,8 @@ class Libzmq(AutotoolsPackage):
 
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
+        if '~docs' in self.spec:
+            config_args.append('--without-docs')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")
