@@ -60,7 +60,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('adios2', default=False, description='Enable ADIOS2 support')
+    variant('adios2', default=False,
+            description='Enable ADIOS2 support',
+            when='@5.8:')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
     variant('build_edition', default='canonical', multi=False,
