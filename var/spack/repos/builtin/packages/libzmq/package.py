@@ -75,6 +75,7 @@ class Libzmq(AutotoolsPackage):
         config_args = []
 
         config_args.extend(self.enable_or_disable("drafts"))
+        config_args.append(self.enable_or_disable("libbsd"))
 
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
