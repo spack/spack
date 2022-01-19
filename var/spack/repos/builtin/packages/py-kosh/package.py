@@ -8,7 +8,7 @@ from spack import *
 
 
 class PyKosh(PythonPackage):
-    """i
+    """
     Kosh allows codes to store, query, share data via an easy-to-use Python API.
     Kosh lies on top of Sina and can use any database backend supported by Sina.
     In adition Kosh aims to make data access and sharing as simple as possible.
@@ -23,6 +23,6 @@ class PyKosh(PythonPackage):
     version('2.0', sha256='059e431e3d3219b53956cb464d9e10933ca141dc89662f55d9c633e35c8b3a1e')
 
     depends_on('py-setuptools', type='build')
-    depends_on("py-llnl-sina", type=("build", "run"))
+    depends_on("py-llnl-sina@1.11", type=("build", "run"))
     depends_on("py-networkx", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
