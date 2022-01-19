@@ -4,7 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from llnl.util import tty
+
 from spack import *
+
+import os
 
 
 class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
@@ -160,31 +163,32 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_bin(self, set=True):
         """(Hack) Set/get cmake dependency path."""
         filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
-        if set:
-            with open(filepath, 'w') as out_file:
-                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
-                out_file.write('{0}\n'.format(cmake_bin))
+        if os.path.isfile(filepath):
+            if set:
+                mkdirp(self.install_test_root)
+                with open(filepath, 'w') as out_file:
+                    cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                    out_file.write('{0}\n'.format(cmake_bin))
+            else:
+                with open(filepath, 'r') as in_file:
+                    return in_file.read().strip()
         else:
-            with open(filepath, 'r') as in_file:
-                return in_file.read().strip()
+            tty.msg('Skipping tasmanian test: cmake_bin_path.txt not found')
 
     @run_after('install')
     def setup_smoke_test(self):
-        self.cmake_bin(set=True)
+        if self.spec['cmake'].satisfies('@3.22:'):
+            self.cmake_bin(set=True)
 
     def test(self):
         cmake_bin = self.cmake_bin(set=False)
 
-        if self.spec['cmake'].satisfies('@3.22:'):
-            self.run_test(cmake_bin,
-                          options=self.cmake_args(),
-                          purpose='Build with same CMake version as install')
+        self.run_test(cmake_bin,
+                      purpose='Build with same CMake version as install')
 
-            # using the tests installed in <prefix>/share/Tasmanian/testing
-            cmake_dir = join_path(self.prefix, 'share', 'Tasmanian', 'testing')
-            with working_dir(self.test_suite.current_test_cache_dir, create=True):
-                cmake(cmake_dir)
-                make()
-                make('test')
-        else:
-            tty.msg('Skipping tasmanian test: CMake 3.21 or higher is required')
+        # using the tests installed in <prefix>/share/Tasmanian/testing
+        cmake_dir = join_path(self.prefix, 'share', 'Tasmanian', 'testing')
+        with working_dir(self.test_suite.current_test_cache_dir, create=True):
+            cmake(cmake_dir)
+            make()
+            make('test')
