@@ -36,6 +36,9 @@ class Libzmq(AutotoolsPackage):
 
     variant("docs", default=True,
             description="Build documentation")
+    
+    variant("libbsd", default=True,
+            description="Use strcpl from libbsd (will use own implementation if false)")
 
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
@@ -47,8 +50,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
-    depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
+    depends_on('libbsd', type='link', when='@4.3.3: platform=linux +libbsd')
+    depends_on('libbsd', type='link', when='@4.3.3: platform=cray +libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
