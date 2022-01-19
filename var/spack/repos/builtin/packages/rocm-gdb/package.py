@@ -15,6 +15,7 @@ class RocmGdb(AutotoolsPackage):
     url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    version('master', branch='master')
     version('4.5.2', sha256='e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203')
     version('4.5.0', sha256='dd37c8b1ea6bb41b1263183637575d7bf4746cabc573dbff888e23b0379877b0')
     version('4.3.1', sha256='995756a24b1e1510647dac1476a3a9a8e3af8e9fd9f4af1d00dd2db28e7a4ef2')
@@ -40,7 +41,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on('gmp',      type=('build', 'link'), when='@4.5.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 

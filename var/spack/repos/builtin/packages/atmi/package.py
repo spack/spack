@@ -19,6 +19,7 @@ class Atmi(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
     version('4.5.2', sha256='c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e')
     version('4.5.0', sha256='64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf')
     version('4.3.1', sha256='4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650')
@@ -38,7 +39,7 @@ class Atmi(CMakePackage):
     depends_on('rsync')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('comgr@' + ver, type='link', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('libelf@0.8:', type='link', when='@' + ver)
@@ -49,9 +50,12 @@ class Atmi(CMakePackage):
     patch('0002-Remove-usr-bin-rsync-reference.patch', when='@4.0.0:')
 
     def cmake_args(self):
-        return [
+        if not self.spec.satisfies('@master'):
+             return [
             '-DROCM_VERSION={0}'.format(self.spec.version)
-        ]
+             ]
+        else :
+             return std_cmake_args
 
     @run_after('install')
     def install_stub(self):
