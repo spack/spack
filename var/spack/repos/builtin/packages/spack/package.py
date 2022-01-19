@@ -58,6 +58,12 @@ class Spack(Package):
     depends_on('mercurial', type='run')
     depends_on('subversion', type='run')
 
+    # Modules
+    depends_on('tcl', type='run')
+    depends_on('lmod', type='run')
+    # Spack 0.18 uses lmod's depends_on function, which was introduced in v7.5.12
+    depends_on('lmod@7.5.12:', type='run', when='@0.18:')
+
     # Buildcache
     # We just need the 'strings' executable, we don't want to install
     # binutil's linkers.
