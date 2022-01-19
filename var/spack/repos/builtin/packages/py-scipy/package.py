@@ -105,14 +105,6 @@ class PyScipy(PythonPackage):
         args = []
         if spec.satisfies('%fj'):
             args.extend(['config_fc', '--fcompiler=fujitsu'])
-
-        # Build in parallel
-        # Known problems with Python 3.5+
-        # https://github.com/spack/spack/issues/7927
-        # https://github.com/scipy/scipy/issues/7112
-        if not spec.satisfies('^python@3.5:'):
-            args.extend(['-j', str(make_jobs)])
-
         return args
 
     @run_after('install')
