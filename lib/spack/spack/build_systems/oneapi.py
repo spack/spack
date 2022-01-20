@@ -10,7 +10,8 @@
 import getpass
 import platform
 import shutil
-from os.path import basename, dirname, isdir
+from os import getenv
+from os.path import basename, dirname, isdir, exists
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
 
@@ -49,6 +50,12 @@ class IntelOneApiPackage(Package):
             installer_path = basename(self.url_for_version(spec.version))
 
         if platform.system() == 'Linux':
+            
+            bash = Executable('bash')
+            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file
+            bash.add_default_env('XDG_RUNTIME_DIR',
+                                 join_path(self.stage.path, 'runtime'))
+            
             # Intel installer assumes and enforces that all components
             # are installed into a single prefix. Spack wants to
             # install each component in a separate prefix. The
@@ -62,24 +69,33 @@ class IntelOneApiPackage(Package):
             # with other install depends on the userid. For root, we
             # delete the installercache before and after install. For
             # non root we redefine the HOME environment variable.
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+            if "2021" in str(spec.version):
+                if getpass.getuser() == 'root':
+                    if exists('/var/intel/installercache'):
+                        shutil.move('/var/intel/installercache', '/tmp/installercache')
 
-            bash = Executable('bash')
+                # Installer writes files in ~/intel set HOME so it goes to prefix
+                bash.add_default_env('HOME', prefix)
 
-            # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env('HOME', prefix)
-            # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
-            bash.add_default_env('XDG_RUNTIME_DIR',
-                                 join_path(self.stage.path, 'runtime'))
+                bash(installer_path,
+                     '-s', '-a', '-s', '--action', 'install',
+                     '--eula', 'accept',
+                     '--install-dir', prefix)
 
-            bash(installer_path,
-                 '-s', '-a', '-s', '--action', 'install',
-                 '--eula', 'accept',
-                 '--install-dir', prefix)
-
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+                if getpass.getuser() == 'root':
+                    shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+                    if exists('/tmp/installercache'):
+                        shutil.move('/tmp/installercache', '/var/intel/installercache')
+            else:
+                # Since 2022.1 release oneAPI installer supports multi-instance
+                # installation and it doesn't need all manipulations with 
+                # installercache. 
+                instance = prefix.split('/')[-1]
+                bash(installer_path,
+                     '-s', '-a', '-s', '--action', 'install',
+                     '--eula', 'accept',
+                     '--instance', instance,
+                     '--install-dir', prefix)
 
         # Some installers have a bug and do not return an error code when failing
         if not isdir(join_path(prefix, self.component_dir)):
