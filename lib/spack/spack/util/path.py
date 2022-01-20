@@ -65,7 +65,7 @@ def is_path_url(path):
     if '\\' in path:
         return False
     url_tuple = urlparse(path)
-    return bool(url_tuple.scheme)
+    return bool(url_tuple.scheme) and url_tuple.scheme != 'c'
 
 
 def path_to_os_path(*pths):

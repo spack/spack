@@ -295,13 +295,13 @@ def which_string(*args, **kwargs):
             if os.path.sep in candidate_name:
                 exe = os.path.abspath(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    return exe.replace('\\', '/')
+                    return exe
             else:
                 for directory in path:
                     directory = path_to_os_path(directory).pop()
                     exe = os.path.join(directory, candidate_name)
                     if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                        return exe.replace('\\', '/')
+                        return exe
 
     if required:
         raise CommandNotFoundError(
