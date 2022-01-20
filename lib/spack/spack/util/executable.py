@@ -53,7 +53,6 @@ class Executable(object):
 
     def add_default_envmod(self, envmod):
         """Set an EnvironmentModifications to use when the command is run."""
-        envmod.env_modifications = path_to_os_path(*envmod.env_modifications)
         self.default_envmod.extend(envmod)
 
     @property
