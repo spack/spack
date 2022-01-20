@@ -78,7 +78,6 @@ class NaluWind(CMakePackage, CudaPackage):
         args = [
             self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
             self.define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
-            self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
             self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
             self.define('Trilinos_DIR', spec['trilinos'].prefix),
             self.define('YAML_DIR', spec['yaml-cpp'].prefix),
