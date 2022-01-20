@@ -71,9 +71,9 @@ class Cabana(CMakePackage):
 
         # Enable Cabana submodules based on flags above
         if '+hypre' in self.spec:
-            options.append('-DCabana_ENABLE_HYPRE=ON')
+            options.append('-DCabana_REQUIRE_HYPRE=ON')
         if '+heffte' in self.spec:
-            options.append('-DCabana_ENABLE_HEFFTE=ON')
+            options.append('-DCabana_REQUIRE_HEFFTE=ON')
 
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
