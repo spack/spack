@@ -14,7 +14,7 @@ from six import string_types, text_type
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, normalize_path, path_to_os_path, system_path_filter
+from spack.util.path import Path, marshall_path, path_to_os_path, system_path_filter
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -23,8 +23,8 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        # neccesary here for the shlex call to succeed
-        name = normalize_path(name, mode=Path.unix)
+        # necesary here for the shlex call to succeed
+        name = marshall_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
         # filter back to platform dependent path
         self.exe = path_to_os_path(*self.exe)

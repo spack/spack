@@ -63,7 +63,9 @@ SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 def is_path_url(path):
     url_tuple = urlparse(path)
-    if not url_tuple.netloc:
+    if not url_tuple.netloc and \
+        url_tuple.scheme and \
+         url_tuple.scheme != 'file':
         return False
     return True
 
@@ -78,7 +80,7 @@ def path_to_os_path(*pths):
     for pth in pths:
         if type(pth) is str and\
                 not is_path_url(pth):
-            pth = normalize_path(pth, mode=Path.platform_path)
+            pth = marshall_path(pth, mode=Path.platform_path)
         ret_pths.append(pth)
     return ret_pths
 
@@ -148,9 +150,9 @@ class Path:
         else unix
 
 
-def normalize_path(path, mode=Path.unix):
+def marshall_path(path, mode=Path.unix):
     """
-    Normalize path to use consistent, platform specific
+    Format path to use consistent, platform specific
     separators.
 
     Parameters:

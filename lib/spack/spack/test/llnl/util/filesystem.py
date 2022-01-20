@@ -455,11 +455,11 @@ if sys.platform == "win32":
         (r'C:\user\root', None,
          (['C:\\', r'C:\user', r'C:\user\root'], '', [])),
         (r'C:\user\root', 'C:\\', ([], 'C:\\', [r'C:\user', r'C:\user\root'])),
-        (r'C:\user\root', 'user', (['C:\\'], r'C:\user', [r'C:\user\root'])),
-        (r'C:\user\root', 'root', (['C:\\', r'C:\user'], r'C:\user\root', [])),
-        (r'relative\path', None, (['relative', r'relative\path'], '', [])),
-        (r'relative\path', 'relative', ([], 'relative', [r'relative\path'])),
-        (r'relative\path', 'path', (['relative'], r'relative\path', []))
+        (r'C:\user\root', r'user', (['C:\\'], r'C:\user', [r'C:\user\root'])),
+        (r'C:\user\root', r'root', (['C:\\', r'C:\user'], r'C:\user\root', [])),
+        (r'relative\path', None, ([r'relative', r'relative\path'], '', [])),
+        (r'relative\path', r'relative', ([], r'relative', [r'relative\path'])),
+        (r'relative\path', r'path', ([r'relative'], r'relative\path', []))
     ]
 else:
     paths = [

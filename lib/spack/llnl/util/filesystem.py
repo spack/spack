@@ -307,7 +307,7 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         filter_file(double_quoted, '"%s"' % repl, f)
 
 
-@system_path_filter
+@system_path_filter(arg_slice=slice(1))
 def get_owner_uid(path, err_msg=None):
     if not os.path.exists(path):
         mkdirp(path, mode=stat.S_IRWXU)
