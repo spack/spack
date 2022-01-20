@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class Chill(AutotoolsPackage):
 
     maintainers = ['dhuth']
 
-    version('master', branch='master')
-    version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3')
+    version('master', branch='master', deprecated=True)
+    version('0.3', sha256='574b622368a6bfaadbe9c1fa02fabefdc6c006069246f67d299f943b7e1d8aa3', deprecated=True)
 
     depends_on('boost@1.66.0 cxxstd=11', type='build')
     depends_on('rose@0.9.13.0: +cxx11', type=('build', 'run'))

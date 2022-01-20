@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers = ['xjrc']
 
+    version('4.4.1', sha256='8fc9f20ac5ed95115a9e285647add0eedd5cc1a98a039ada14c132452f98ac42')
     version('4.3.2',  sha256='ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a')
     version('4.2.2',  sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
     version('4.1.1',  sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')

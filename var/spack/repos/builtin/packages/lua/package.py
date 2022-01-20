@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,10 +63,10 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -L%s' % (
-                 spec['readline'].prefix.lib,
-                 spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncursesw -ltinfow',
+             'MYLDFLAGS=' + ' '.join((
+                 spec['readline'].libs.search_flags,
+                 spec['ncurses'].libs.search_flags)),
+             'MYLIBS=%s' % spec['ncurses'].libs.link_flags,
              'CC=%s -std=gnu99 %s' % (spack_cc,
                                       self.compiler.cc_pic_flag),
              target)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,17 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.12/amrex-21.12.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.01/amrex-22.01.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
+
+    test_requires_compiler = True
 
     tags = ['ecp', 'e4s']
 
     maintainers = ['WeiqunZhang', 'asalmgren']
 
     version('develop', branch='development')
+    version('22.01', sha256='857df5b2fa8e3010b8856b81879a5be32ba7cc2e575474256eae7ef815b8354d')
     version('21.12', sha256='439f9ebf2b440fc739a7976f3ade188ec3e1de5f51a0b151e6b8dda36fa67278')
     version('21.11', sha256='2edb72d7cf7e86340fcaceb325368560957bcd952fd34cd501bfdf038e1338a4')
     version('21.10', sha256='a11954c03b1ec26c26b676460dc5de5195469e813b70fbcea6dfdefeafaf5407')
@@ -243,3 +246,57 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
+    @run_after('build')
+    def setup_smoke_test(self):
+        """Skip setup smoke tests for AMReX versions less than 21.12."""
+        if self.spec.satisfies('@:21.11'):
+            return
+
+        self.cache_extra_test_sources(['Tests'])
+
+        # TODO: Remove once self.spec['cmake'] is available here
+        self.cmake_bin(set=True)
+
+    def test(self):
+        """Skip smoke tests for AMReX versions less than 21.12."""
+        if self.spec.satisfies('@:21.11'):
+            print("SKIPPED: Stand-alone tests not supported for this version of AMReX.")
+            return
+
+        """Perform smoke tests on installed package."""
+        # TODO: Remove/replace once self.spec['cmake'] is available here
+        cmake_bin = self.cmake_bin(set=False)
+
+        args = []
+        args.append('-S./cache/amrex/Tests/SpackSmokeTest')
+        args.append('-DAMReX_ROOT=' + self.prefix)
+        args.append('-DMPI_C_COMPILER=' + self.spec['mpi'].mpicc)
+        args.append('-DMPI_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+        args.extend(self.cmake_args())
+        self.run_test(cmake_bin,
+                      args,
+                      purpose='Build with same CMake version as install')
+
+        make()
+
+        self.run_test('install_test',
+                      ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],
+                      ['finalized'],
+                      installed=False,
+                      purpose='AMReX Stand-Alone Smoke Test -- AmrCore',
+                      skip_missing=False)

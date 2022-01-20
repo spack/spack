@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,7 +57,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
-    patch('superlu-cray-ftn-case.patch', when='@:7.1.1 %cce')
+    patch('superlu-cray-ftn-case.patch', when='@7.1.1 %cce')
 
     def cmake_args(self):
         spec = self.spec

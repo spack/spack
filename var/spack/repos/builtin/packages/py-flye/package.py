@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,12 @@ class PyFlye(PythonPackage):
     url      = "https://github.com/fenderglass/Flye/archive/2.6.tar.gz"
 
     version('2.6',   sha256='5bdc44b84712794fa4264eed690d8c65c0d72f495c7bbf2cd15b634254809131')
-    version('2.4.2', sha256='5b74d4463b860c9e1614ef655ab6f6f3a5e84a7a4d33faf3b29c7696b542c51a')
+    version('2.4.2', sha256='5b74d4463b860c9e1614ef655ab6f6f3a5e84a7a4d33faf3b29c7696b542c51a', deprecated=True)
 
     # https://github.com/fenderglass/Flye/blob/flye/docs/INSTALL.md
     depends_on('python@2.7:2.8,3.5:', when='@2.6:', type=('build', 'run'))
     depends_on('python@2.7:2.8',      when='@:2.5', type=('build', 'run'))
-    depends_on('py-setuptools', when='@2.6:', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('gmake', type='build')
     depends_on('zlib')
 

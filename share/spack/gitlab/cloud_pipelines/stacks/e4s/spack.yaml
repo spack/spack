@@ -108,7 +108,7 @@ spack:
     - archer
     - argobots
     - ascent
-    - axom ^umpire@5.0.1 ^raja@0.13.0
+    - axom
     - bolt
     - cabana
     - caliper
@@ -139,7 +139,7 @@ spack:
     - libnrm
     - libquo
     - libunwind
-    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall

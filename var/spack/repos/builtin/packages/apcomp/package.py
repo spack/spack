@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,9 +32,10 @@ class Apcomp(Package):
     git      = 'https://github.com/Alpine-DAV/ap_compositor.git'
     url      = "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
 
-    maintainers = ['mclarsen', 'cyrush']
+    maintainers = ['cyrush']
 
     version('master', branch='master', submodules='True')
+    version('0.0.4', sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")
     version('0.0.3', sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
     version('0.0.2', sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
     version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
@@ -42,6 +43,8 @@ class Apcomp(Package):
     variant('openmp', default=True, description='Build with openmp support')
     variant('mpi', default=True, description='Build with MPI support')
     variant('shared', default=True, description='Build Shared Library')
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
 
     depends_on('cmake@3.9:', type='build')
     depends_on("mpi", when="+mpi")
@@ -150,7 +153,6 @@ class Apcomp(Package):
         if "+mpi" in spec:
             mpicc_path = spec['mpi'].mpicc
             mpicxx_path = spec['mpi'].mpicxx
-            mpifc_path = spec['mpi'].mpifc
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
@@ -158,11 +160,13 @@ class Apcomp(Package):
             if cpp_compiler == "CC":
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
-                mpifc_path = "ftn"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE

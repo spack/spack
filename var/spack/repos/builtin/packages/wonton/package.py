@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,7 +115,7 @@ class Wonton(CMakePackage):
             options.append('-DWONTON_ENABLE_Jali=OFF')
 
         # BROKEN DEPENDENCY!!!!!!
-        options.append(define_from_variant('WONTON_ENABLE_FleCSI', 'flecsi'))
+        options.append(self.define_from_variant('WONTON_ENABLE_FleCSI', 'flecsi'))
 
         # Unit test variant
         if self.run_tests:

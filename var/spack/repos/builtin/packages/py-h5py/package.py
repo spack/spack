@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,8 +69,6 @@ class PyH5py(PythonPackage):
     depends_on('py-mpi4py@3.0.2:', when='@3.3.0:+mpi^python@3.0.0:3.7', type=('build', 'run'))
     depends_on('py-mpi4py@3.0.3:', when='@3.0.0:+mpi^python@3.8.0:', type=('build', 'run'))
 
-    phases = ['configure', 'install']
-
     def setup_build_environment(self, env):
         env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         if '+mpi' in self.spec:
@@ -80,14 +78,3 @@ class PyH5py(PythonPackage):
         # Disable build requirements meant for Python build tools, which pin
         # versions of numpy & mpi4py.
         env.set('H5PY_SETUP_REQUIRES', '0')
-
-    @when('@3.0.0:')
-    def configure(self, spec, prefix):
-        pass
-
-    @when('@:2')
-    def configure(self, spec, prefix):
-        self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix),
-                      '--hdf5-version={0}'.format(spec['hdf5'].version))
-        if '+mpi' in spec:
-            self.setup_py('configure', '--mpi')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,15 @@ import os
 import re
 
 
-class SpectrumMpi(Package):
+class SpectrumMpi(BundlePackage):
     """IBM MPI implementation from Spectrum MPI."""
 
     has_code = False
 
     homepage = "https://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+
+    # https://www.ibm.com/docs/en/smpi/10.4
+    version('10.4')
 
     provides('mpi')
 
@@ -90,9 +93,6 @@ class SpectrumMpi(Package):
             else:
                 results.append('')
         return results
-
-    def install(self, spec, prefix):
-        raise InstallError('IBM MPI is not installable; it is vendor supplied')
 
     def setup_dependent_package(self, module, dependent_spec):
         # get the compiler names

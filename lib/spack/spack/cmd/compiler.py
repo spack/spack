@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,7 +120,7 @@ def compiler_info(args):
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
 
     if not compilers:
-        tty.error("No compilers match spec %s" % cspec)
+        tty.die("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
             print(str(c.spec) + ":")
@@ -146,9 +146,22 @@ def compiler_info(args):
 
 
 def compiler_list(args):
+    compilers = spack.compilers.all_compilers(scope=args.scope, init_config=False)
+
+    # If there are no compilers in any scope, and we're outputting to a tty, give a
+    # hint to the user.
+    if len(compilers) == 0:
+        if not sys.stdout.isatty():
+            return
+        msg = "No compilers available"
+        if args.scope is None:
+            msg += ". Run `spack compiler find` to autodetect compilers"
+        tty.msg(msg)
+        return
+
+    index = index_by(compilers, lambda c: (c.spec.name, c.operating_system, c.target))
+
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope),
-                     lambda c: (c.spec.name, c.operating_system, c.target))
 
     # For a container, take each element which does not evaluate to false and
     # convert it to a string. For elements which evaluate to False (e.g. None)

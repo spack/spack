@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,7 +90,9 @@ class Mirror(object):
 
     def to_dict(self):
         if self._push_url is None:
-            return self._fetch_url
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._fetch_url)])
         else:
             return syaml_dict([
                 ('fetch', self._fetch_url),
@@ -105,12 +107,12 @@ class Mirror(object):
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self._fetch_url)
+            _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
             _display_mirror_entry(
-                max_len, self._name, self._fetch_url, "fetch")
+                max_len, self._name, self.fetch_url, "fetch")
             _display_mirror_entry(
-                max_len, self._name, self._push_url, "push")
+                max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
@@ -145,8 +147,8 @@ class Mirror(object):
     def get_profile(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['profile']
-            return self._fetch_url['profile']
+                return self._push_url.get('profile', None)
+            return self._fetch_url.get('profile', None)
         else:
             return None
 
@@ -159,8 +161,8 @@ class Mirror(object):
     def get_access_pair(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['access_pair']
-            return self._fetch_url['access_pair']
+                return self._push_url.get('access_pair', None)
+            return self._fetch_url.get('access_pair', None)
         else:
             return None
 
@@ -173,8 +175,8 @@ class Mirror(object):
     def get_endpoint_url(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['endpoint_url']
-            return self._fetch_url['endpoint_url']
+                return self._push_url.get('endpoint_url', None)
+            return self._fetch_url.get('endpoint_url', None)
         else:
             return None
 
@@ -187,8 +189,8 @@ class Mirror(object):
     def get_access_token(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url['access_token']
-            return self._fetch_url['access_token']
+                return self._push_url.get('access_token', None)
+            return self._fetch_url.get('access_token', None)
         else:
             return None
 

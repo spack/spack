@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,10 @@ __all__ = ['DirectiveError', 'DirectiveMeta']
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
 
+#: Names of possible directives. This list is populated elsewhere in the file and then
+#: added to `__all__` at the bottom.
+directive_names = []
+
 _patch_order_index = 0
 
 
@@ -113,7 +117,7 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()  # type: Set[str]
+    _directive_dict_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
     _when_constraints_from_context = []  # type: List[str]
 
@@ -156,7 +160,7 @@ class DirectiveMeta(type):
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in DirectiveMeta._directive_names:
+            for d in DirectiveMeta._directive_dict_names:
                 setattr(cls, d, {})
 
             # Lazily execute directives
@@ -222,7 +226,7 @@ class DirectiveMeta(type):
         Package class, and it's how Spack gets information from the
         packages to the core.
         """
-        global __all__
+        global directive_names
 
         if isinstance(dicts, six.string_types):
             dicts = (dicts, )
@@ -232,11 +236,11 @@ class DirectiveMeta(type):
             raise TypeError(message.format(type(dicts)))
 
         # Add the dictionary names if not already there
-        DirectiveMeta._directive_names |= set(dicts)
+        DirectiveMeta._directive_dict_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
-            __all__.append(decorated_function.__name__)
+            directive_names.append(decorated_function.__name__)
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
@@ -730,3 +734,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+#: add all directive names to __all__
+__all__.extend(directive_names)

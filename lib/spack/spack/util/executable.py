@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,6 @@ class Executable(object):
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
         self.returncode = None
-        self.error = None  # saved ProcessError when fail_on_error
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
@@ -91,8 +90,7 @@ class Executable(object):
                 the environment (neither requires nor precludes env)
             fail_on_error (bool): Raise an exception if the subprocess returns
                 an error. Default is True. The return code is available as
-                ``exe.returncode``, and a saved ``ProcessError`` that would
-                have been raised is in ``exe.error``.
+                ``exe.returncode``
             ignore_errors (int or list): A list of error codes to ignore.
                 If these codes are returned, this process will not raise
                 an exception even if ``fail_on_error`` is set to ``True``
@@ -215,7 +213,7 @@ class Executable(object):
                         sys.stderr.write(errstr)
 
             rc = self.returncode = proc.returncode
-            if rc != 0:
+            if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string
                 if result:
                     # If the output is not captured in the result, it will have
@@ -224,11 +222,8 @@ class Executable(object):
                     # stdout/stderr (e.g. if 'output' is not specified)
                     long_msg += '\n' + result
 
-                self.error = ProcessError(
-                    'Command exited with status %d:' % proc.returncode, long_msg
-                )
-                if fail_on_error and (rc not in ignore_errors):
-                    raise self.error
+                raise ProcessError('Command exited with status %d:' %
+                                   proc.returncode, long_msg)
 
             return result
 
@@ -237,15 +232,10 @@ class Executable(object):
                 '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line_string)
 
         except subprocess.CalledProcessError as e:
-            self.error = ProcessError(
-                str(e),
-                '\nExit status %d when invoking command: %s' % (
-                    proc.returncode,
-                    cmd_line_string,
-                ),
-            )
             if fail_on_error:
-                raise self.error
+                raise ProcessError(
+                    str(e), '\nExit status %d when invoking command: %s' %
+                    (proc.returncode, cmd_line_string))
 
         finally:
             if close_ostream:

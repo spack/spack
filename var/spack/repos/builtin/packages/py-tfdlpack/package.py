@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyTfdlpack(CMakePackage):
+class PyTfdlpack(CMakePackage, PythonPackage):
     """Tensorflow plugin for DLPack."""
 
     homepage = "https://github.com/VoVAllen/tf-dlpack"
@@ -37,8 +37,8 @@ class PyTfdlpack(CMakePackage):
 
     def install(self, spec, prefix):
         with working_dir('python'):
-            setup_py('install', '--prefix=' + prefix,
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
 
     def setup_run_environment(self, env):
         # Prevent TensorFlow from taking over the whole GPU

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1515,10 +1515,8 @@ class Environment(object):
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
-            return
-
-        tty.debug('Processing {0} uninstalled specs'.format(
-            len(specs_to_install)))
+        else:
+            tty.debug('Processing {0} uninstalled specs'.format(len(specs_to_install)))
 
         specs_to_overwrite = self._get_overwrite_specs()
         tty.debug('{0} specs need to be overwritten'.format(
