@@ -58,6 +58,7 @@ class Julia(MakefilePackage):
         depends_on('libuv@1.42.0')
         depends_on('mbedtls@2.24.0:2.24')
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
+        depends_on('libblastrampoline@3.0.0:3')
 
     with when('@1.6.0:1.6'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
