@@ -69,7 +69,7 @@ class Cabana(CMakePackage):
                 'On' if '+shared'  in self.spec else 'Off')
         ]
 
-	# Enable Cabana submodules based on flags above
+        # Enable Cabana submodules based on flags above
         if '+hypre' in self.spec:
             options.append('-DCabana_ENABLE_HYPRE=ON')
         if '+heffte' in self.spec:
