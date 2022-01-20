@@ -47,9 +47,8 @@ class Rccl(CMakePackage):
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('numactl@2:', when='@' + ver)
-    for ver in ['4.5.0','4.5.2','master']:
+    for ver in ['4.5.0', '4.5.2', 'master']:
         depends_on('rocm-smi-lib@' + ver, when='@' + ver)
-
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

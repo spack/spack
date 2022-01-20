@@ -49,7 +49,7 @@ class Rocalution(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2','master']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocrand@' + ver, when='@' + ver)
 
     def setup_build_environment(self, env):

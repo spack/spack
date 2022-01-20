@@ -43,7 +43,7 @@ class Hip(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2','master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -97,11 +97,11 @@ class Hip(CMakePackage):
             when='@{0}'.format(d_version)
         )
     resource(
-            name='rocclr',
-            placement='rocclr',
-            git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
-            branch='master',
-            when='@master'
+        name='rocclr',
+        placement='rocclr',
+        git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
+        branch='master',
+        when='@master'
     )
 
     resource(

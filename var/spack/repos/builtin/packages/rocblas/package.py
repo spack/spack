@@ -54,7 +54,7 @@ class Rocblas(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2','master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('llvm-amdgpu@' + ver,               when='@' + ver)
         depends_on('rocm-cmake@' + ver,  type='build', when='@' + ver)
@@ -63,7 +63,8 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0',
+                '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     # This is the default library format since 3.7.0
@@ -96,10 +97,10 @@ class Rocblas(CMakePackage):
                  commit=t_commit,
                  when=t_version)
 
-    resource(name='Tensile',
+        resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-                 branch ='master',
-                 placement = 'Tensile',
+                 branch='master',
+                 placement='Tensile',
                  when='@master')
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087

@@ -131,7 +131,6 @@ class RocmOpenmpExtras(Package):
             placement='rocm-device-libs',
             when='@master')
 
-
         resource(
             name='flang',
             url=tools_url + '/flang/archive/' + tag + ver + '.tar.gz',
@@ -140,7 +139,6 @@ class RocmOpenmpExtras(Package):
             destination='rocm-openmp-extras',
             placement='flang',
             when='@' + ver)
-
 
         resource(
             name='flang',

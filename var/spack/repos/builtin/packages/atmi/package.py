@@ -51,11 +51,9 @@ class Atmi(CMakePackage):
 
     def cmake_args(self):
         if not self.spec.satisfies('@master'):
-             return [
-            '-DROCM_VERSION={0}'.format(self.spec.version)
-             ]
-        else :
-             return std_cmake_args
+            return ['-DROCM_VERSION={0}'.format(self.spec.version)]
+        else:
+            return std_cmake_args
 
     @run_after('install')
     def install_stub(self):
