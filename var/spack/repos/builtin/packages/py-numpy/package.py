@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('main', branch='main')
+    version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
     version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
     version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
     version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')
@@ -164,7 +165,7 @@ class PyNumpy(PythonPackage):
 
         return (flags, None, None)
 
-    @run_before('build')
+    @run_before('install')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
         # https://github.com/numpy/numpy/blob/master/site.cfg.example
@@ -340,20 +341,6 @@ class PyNumpy(PythonPackage):
             lapack = 'lapack'
 
         env.set('NPY_LAPACK_ORDER', lapack)
-
-    def build_args(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # https://numpy.org/devdocs/user/building.html#parallel-builds
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

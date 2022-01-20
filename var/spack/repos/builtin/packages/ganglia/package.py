@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Ganglia(AutotoolsPackage):
     list_url = "http://jaist.dl.sourceforge.net/project/ganglia/ganglia%20monitoring%20core"
     list_depth = 1
 
-    version('3.7.2', sha256='042dbcaf580a661b55ae4d9f9b3566230b2232169a0898e91a797a4c61888409')
+    version('3.7.2', sha256='042dbcaf580a661b55ae4d9f9b3566230b2232169a0898e91a797a4c61888409', deprecated=True)
 
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')

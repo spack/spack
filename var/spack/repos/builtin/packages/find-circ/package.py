@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class FindCirc(Package):
     homepage = "https://github.com/marvin-jens/find_circ"
     url      = "https://github.com/marvin-jens/find_circ/archive/v1.2.tar.gz"
 
-    version('1.2', sha256='f88bf9b5d0cc818313074982d4460c96706f555d924e2821832c3d03bf67743e')
+    version('1.2', sha256='f88bf9b5d0cc818313074982d4460c96706f555d924e2821832c3d03bf67743e', deprecated=True)
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))

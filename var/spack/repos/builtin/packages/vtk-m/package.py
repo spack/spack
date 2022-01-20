@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("rendering", default=True, description="build rendering support")
     variant("64bitids", default=False,
             description="enable 64 bits ids")
+    variant("testlib", default=False, description="build test library")
 
     # Device variants
     variant("cuda", default=False, description="build cuda support")
@@ -160,6 +161,10 @@ class VtkM(CMakePackage, CudaPackage):
                 print("64 bit ids enabled")
             else:
                 options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
+
+            # Support for the testing header files
+            if "+testlib" in spec and spec.satisfies('@1.7.0:'):
+                options.append("-DVTKm_ENABLE_TESTING_LIBRARY:BOOL=ON")
 
             if spec.variants["build_type"].value != 'Release':
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")

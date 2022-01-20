@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,3 +16,9 @@ class PerlTk(PerlPackage):
     version('804.033', sha256='84756e9b07a2555c8eecf88e63d5cbbba9b1aa97b1e71a3d4aa524a7995a88ad')
 
     depends_on('perl-extutils-makemaker', type='build')
+    depends_on('libx11')
+    depends_on('libxcb')
+    depends_on('libxft')
+    depends_on('jpeg')
+    depends_on('libpng')
+    depends_on('freetype')

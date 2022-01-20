@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Nwchem(Package):
     version('7.0.0', sha256='e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0',
             url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
-            url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
+            url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2', deprecated=True)
 
     variant('openmp', default=False, description='Enables OpenMP support')
     variant('mpipr', default=False, description='Enables ARMCI with progress rank')

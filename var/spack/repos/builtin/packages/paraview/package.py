@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,7 +60,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('adios2', default=False, description='Enable ADIOS2 support')
+    variant('adios2', default=False,
+            description='Enable ADIOS2 support',
+            when='@5.8:')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
     variant('build_edition', default='canonical', multi=False,
@@ -205,7 +207,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch('vtk-adios2-module-no-kit.patch', when='@:5.10')
+    patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'

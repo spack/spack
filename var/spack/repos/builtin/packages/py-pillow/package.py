@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,8 +54,6 @@ class PyPillowBase(PythonPackage):
     conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
     conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
 
-    phases = ['build_ext', 'install']
-
     def patch(self):
         """Patch setup.py to provide library and include directories
         for dependencies."""
@@ -95,11 +93,6 @@ class PyPillowBase(PythonPackage):
     def setup_build_environment(self, env):
         env.set('MAX_CONCURRENCY', str(make_jobs))
 
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)
-
 
 class PyPillow(PyPillowBase):
     """Pillow is a fork of the Python Imaging Library (PIL). It adds image
@@ -119,9 +112,9 @@ class PyPillow(PyPillowBase):
     version('6.2.0', sha256='4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df')
     version('6.0.0', sha256='809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5')
     version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
-    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
-    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
-    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
+    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef', deprecated=True)
+    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a', deprecated=True)
+    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb', deprecated=True)
 
     for ver in [
         '8.4.0', '8.0.0',

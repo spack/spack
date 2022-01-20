@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1444,7 +1444,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed"
+        SPACK_COMPREPLY="add list diff added changed removed source hash"
     fi
 }
 
@@ -1499,6 +1499,24 @@ _spack_pkg_removed() {
         SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_source() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -c --canonical"
+    else
+        _all_packages
+    fi
+}
+
+_spack_pkg_hash() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
     fi
 }
 

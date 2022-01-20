@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,10 +25,10 @@ class Openspeedshop(CMakePackage):
     homepage = "http://www.openspeedshop.org"
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    version('develop', branch='master')
-    version('2.4.2.1', branch='2.4.2.1')
-    version('2.4.2', branch='2.4.2')
-    version('2.4.1', branch='2.4.1')
+    version('develop', branch='master', deprecated=True)
+    version('2.4.2.1', branch='2.4.2.1', deprecated=True)
+    version('2.4.2', branch='2.4.2', deprecated=True)
+    version('2.4.1', branch='2.4.1', deprecated=True)
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
