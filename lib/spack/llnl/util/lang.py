@@ -171,9 +171,8 @@ def union_dicts(*dicts):
 _kwargs_separator = (object(),)
 
 
-def equal_args(*args, **kwargs):
-    """A memoized key factory that compares the equality (`==`) of a stable sort of the
-    parameters."""
+def stable_args(*args, **kwargs):
+    """A key factory that performs a stable sort of the parameters."""
     key = args
     if kwargs:
         key += _kwargs_separator + tuple(sorted(kwargs.items()))
@@ -188,7 +187,7 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args, **kwargs):
-        key = equal_args(*args, **kwargs)
+        key = stable_args(*args, **kwargs)
 
         try:
             return func.cache[key]
