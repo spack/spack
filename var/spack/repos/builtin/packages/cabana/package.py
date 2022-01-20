@@ -55,8 +55,8 @@ class Cabana(CMakePackage):
                 _kk_spec = 'kokkos{0}+{1}'.format(_kk_version, _backend)
             depends_on(_kk_spec, when='@{0}+{1}'.format(_version, _backend))
     depends_on("arborx", when="@0.3.0:+arborx")
-    depends_on("heffte@2.0:", when="@0.4.0:+heffte")
-    depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
+    depends_on("heffte+shared@2.0:", when="@0.4.0:+heffte")
+    depends_on("hypre-cmake+shared@2.22.0:", when="@0.4.0:+hypre")
     depends_on('mpi', when='+mpi')
 
     conflicts("+rocm", when="@:0.2.0")
