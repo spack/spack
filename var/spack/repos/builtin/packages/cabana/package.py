@@ -60,7 +60,8 @@ class Cabana(CMakePackage):
     # compatibilty from 2.0.0 to later minor versions and cabana cmakefiles are
     # currently requesting version 2.0.0. Will be fixed for later cabana versions
     # as cabana requested version number and heffte version compatibility changes
-    depends_on("heffte@2.0.0", when="@0.4.0:+heffte")
+    depends_on("heffte@2.0.0", when="@0.4.0+heffte")
+    depends_on("heffte@2.1.0", when="@master+heffte")
     depends_on('mpi', when='+mpi')
 
     conflicts("+rocm", when="@:0.2.0")
