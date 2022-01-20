@@ -110,7 +110,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
-        if self.spec.satisfies('@4.3.0:4.5.0,master'):
+        if self.spec.satisfies('@4.3.0:'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
