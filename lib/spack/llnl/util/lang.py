@@ -166,6 +166,20 @@ def union_dicts(*dicts):
     return result
 
 
+# Used as a sentinel that disambiguates tuples passed in *args from coincidentally
+# matching tuples formed from kwargs item pairs.
+_kwargs_separator = (object(),)
+
+
+def equal_args(*args, **kwargs):
+    """A memoized key factory that compares the equality (`==`) of a stable sort of the
+    parameters."""
+    key = args
+    if kwargs:
+        key += _kwargs_separator + tuple(sorted(kwargs.items()))
+    return key
+
+
 def memoized(func):
     """Decorator that caches the results of a function, storing them in
     an attribute of that function.
@@ -174,7 +188,7 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args, **kwargs):
-        key = args + tuple(kwargs.items())
+        key = equal_args(*args, **kwargs)
 
         try:
             return func.cache[key]

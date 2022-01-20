@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import match_predicate, memoized, pretty_date
+from llnl.util.lang import equal_args, match_predicate, memoized, pretty_date
 
 
 @pytest.fixture()
@@ -208,6 +208,28 @@ def test_key_ordering():
 
 
 @pytest.mark.parametrize(
+    "args1,kwargs1,args2,kwargs2",
+    [
+        # Ensure tuples passed in args are disambiguated from equivalent kwarg items.
+        (('a', 3), {}, (), {'a': 3})
+    ],
+)
+def test_unequal_args(args1, kwargs1, args2, kwargs2):
+    assert equal_args(*args1, **kwargs1) != equal_args(*args2, **kwargs2)
+
+
+@pytest.mark.parametrize(
+    "args1,kwargs1,args2,kwargs2",
+    [
+        # Ensure that kwargs are stably sorted.
+        ((), {'a': 3, 'b': 4}, (), {'b': 4, 'a': 3}),
+    ],
+)
+def test_equal_args(args1, kwargs1, args2, kwargs2):
+    assert equal_args(*args1, **kwargs1) == equal_args(*args2, **kwargs2)
+
+
+@pytest.mark.parametrize(
     "args, kwargs",
     [
         ((1,), {}),
@@ -220,7 +242,7 @@ def test_memoized(args, kwargs):
     def f(*args, **kwargs):
         return 'return-value'
     assert f(*args, **kwargs) == 'return-value'
-    key = args + tuple(kwargs.items())
+    key = equal_args(*args, **kwargs)
     assert list(f.cache.keys()) == [key]
     assert f.cache[key] == 'return-value'
 
@@ -240,6 +262,6 @@ def test_memoized_unhashable(args, kwargs):
     with pytest.raises(llnl.util.lang.UnhashableArguments) as exc_info:
         f(*args, **kwargs)
     exc_msg = str(exc_info.value)
-    key = args + tuple(kwargs.items())
+    key = equal_args(*args, **kwargs)
     assert str(key) in exc_msg
     assert "function 'f'" in exc_msg
