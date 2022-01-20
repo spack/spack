@@ -62,11 +62,10 @@ SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 
 
 def is_path_url(path):
-    url_tuple = urlparse(path)
-    if not url_tuple.netloc or \
-            (url_tuple.scheme and url_tuple.scheme != 'file'):
+    if '\\' in path:
         return False
-    return True
+    url_tuple = urlparse(path)
+    return bool(url_tuple.scheme)
 
 
 def path_to_os_path(*pths):
