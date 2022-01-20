@@ -12,6 +12,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import (
     filter_file,
     find,
+    find_all_headers,
+    find_libraries,
+    get_filetype,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
@@ -20,6 +23,7 @@ from llnl.util.filesystem import (
 from llnl.util.lang import match_predicate
 
 from spack.directives import depends_on, extends
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.package_base import PackageBase, run_after
 
 
@@ -177,6 +181,33 @@ class PythonPackage(PackageBase):
         pip = inspect.getmodule(self).pip
         with working_dir(self.build_directory):
             pip(*args)
+
+    def headers(self):
+        """Discover header files in platlib."""
+
+        root = inspect.getmodule(self).platlib
+        headers = find_all_headers(root)
+
+        if headers:
+            return headers
+
+        msg = 'Unable to locate {} headers in {}'
+        raise NoHeadersError(msg.format(self.spec.name, root))
+
+    def libs(self):
+        """Discover libraries in platlib."""
+
+        # Remove py- prefix in package name
+        library = 'lib' + self.spec.name[3:].replace('-', '?')
+        root = inspect.getmodule(self).platlib
+
+        for shared in [True, False]:
+            libs = find_libraries(library, root, shared=shared, recursive=True)
+            if libs:
+                return libs
+
+        msg = 'Unable to recursively locate {} libraries in {}'
+        raise NoLibrariesError(msg.format(self.spec.name, root))
 
     # Testing
 
