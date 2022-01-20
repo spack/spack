@@ -10,7 +10,6 @@ from spack import *
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
-git = "https://github.com/ROCm-Developer-Tools/aomp.git"
 
 # Arrays of hashes are in order of the versions array below
 # For example array[0] = 3.9.0, array[1] = 3.10.0, etc.
@@ -77,6 +76,7 @@ class RocmOpenmpExtras(Package):
 
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-4.3.0.tar.gz"
+    git = "https://github.com/ROCm-Developer-Tools/aomp.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
     version('master', branch='master')

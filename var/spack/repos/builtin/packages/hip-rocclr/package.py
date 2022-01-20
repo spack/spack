@@ -25,7 +25,7 @@ class HipRocclr(CMakePackage):
         url = "https://github.com/ROCm-Developer-Tools/ROCclr/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
-    version('master', branch='main')
+    version('master', branch='master')
     version('4.5.2', sha256='6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1')
     version('4.5.0', sha256='ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
     version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79')

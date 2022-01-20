@@ -20,7 +20,7 @@ class RocmOpencl(CMakePackage):
 
         url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
         return url.format(version)
-    version('master', branch='main')
+    version('master', branch='master')
 
     version('4.5.2', sha256='96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d')
     version('4.5.0', sha256='3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8')
