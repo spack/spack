@@ -279,7 +279,7 @@ class Executable(object):
 @system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
-    path = path_to_os_path(kwargs.get('path', os.environ.get('PATH', ''))).pop()
+    path = kwargs.get('path', os.environ.get('PATH', ''))
     required = kwargs.get('required', False)
 
     if isinstance(path, string_types):
@@ -299,6 +299,7 @@ def which_string(*args, **kwargs):
                     return exe.replace('\\', '/')
             else:
                 for directory in path:
+                    directory = path_to_os_path(directory).pop()
                     exe = os.path.join(directory, candidate_name)
                     if os.path.isfile(exe) and os.access(exe, os.X_OK):
                         return exe.replace('\\', '/')

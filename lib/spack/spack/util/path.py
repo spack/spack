@@ -64,8 +64,7 @@ SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
 def is_path_url(path):
     url_tuple = urlparse(path)
     if not url_tuple.netloc and \
-        url_tuple.scheme and \
-         url_tuple.scheme != 'file':
+            url_tuple.scheme and url_tuple.scheme != 'file':
         return False
     return True
 
