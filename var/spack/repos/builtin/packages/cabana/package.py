@@ -37,6 +37,7 @@ class Cabana(CMakePackage):
     variant('hypre', default=False, description='Build with HYPRE support')
 
     depends_on("cmake@3.9:", type='build')
+    depends_on("googletest", type='build')
     _versions = {
         ":0.2.0": "-legacy",
         "0.3.0": "@3.1:",
@@ -67,6 +68,13 @@ class Cabana(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % (
                 'On' if '+shared'  in self.spec else 'Off')
         ]
+
+	# Enable Cabana submodules based on flags above
+        if '+hypre' in self.spec:
+            options.append('-DCabana_ENABLE_HYPRE=ON')
+        if '+heffte' in self.spec:
+            options.append('-DCabana_ENABLE_HEFFTE=ON')
+
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
         if self.spec.satisfies('@:0.2.0'):
