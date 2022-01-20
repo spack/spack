@@ -55,8 +55,12 @@ class Cabana(CMakePackage):
                 _kk_spec = 'kokkos{0}+{1}'.format(_kk_version, _backend)
             depends_on(_kk_spec, when='@{0}+{1}'.format(_version, _backend))
     depends_on("arborx", when="@0.3.0:+arborx")
-    depends_on("heffte+shared@2.0:", when="@0.4.0:+heffte")
-    depends_on("hypre-cmake+shared@2.22.0:", when="@0.4.0:+hypre")
+    depends_on("hypre-cmake@2.22:", when="@0.4.0:+hypre")
+    # Heffte pinned at 2.0.0 for now because its cmakefiles can't roll forward
+    # compatibilty from 2.0.0 to later minor versions and cabana cmakefiles are
+    # currently requesting version 2.0.0. Will be fixed for later cabana versions
+    # as cabana requested version number and heffte version compatibility changes
+    depends_on("heffte@2.0.0", when="@0.4.0:+heffte")
     depends_on('mpi', when='+mpi')
 
     conflicts("+rocm", when="@:0.2.0")
