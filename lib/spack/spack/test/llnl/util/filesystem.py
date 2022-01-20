@@ -453,8 +453,8 @@ if sys.platform == "win32":
     # TODO: Test \\s
     paths = [
         (r'C:\user\root', None,
-        (['C:\\', r'C:\user', r'C:\user\root'], '', [])),
-        (r'C:\user\root', 'C:\\' , ([], 'C:\\', [r'C:\user', r'C:\user\root'])),
+         (['C:\\', r'C:\user', r'C:\user\root'], '', [])),
+        (r'C:\user\root', 'C:\\', ([], 'C:\\', [r'C:\user', r'C:\user\root'])),
         (r'C:\user\root', 'user', (['C:\\'], r'C:\user', [r'C:\user\root'])),
         (r'C:\user\root', 'root', (['C:\\', r'C:\user'], r'C:\user\root', [])),
         (r'relative\path', None, (['relative', r'relative\path'], '', [])),
