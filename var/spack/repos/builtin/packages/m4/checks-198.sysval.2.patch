@@ -1,0 +1,31 @@
+From cd7f4d153ccccf601751e9fa82424412f6ecfc96 Mon Sep 17 00:00:00 2001
+From: Eric Blake <eblake@redhat.com>
+Date: Tue, 1 Jun 2021 08:10:51 -0500
+Subject: tests: Fix 198.sysval
+
+In my attempt to avoid test failures on Haiku, I caused test failures
+on platforms where sh is noisy when reporting a killed sub-process.
+
+* doc/m4.texi (Sysval): Avoid stderr noise during test.
+Fixes: 17011ea76a (tests: Skip signal detection on Haiku)
+Fixes: https://lists.gnu.org/archive/html/bug-m4/2021-05/msg00029.html
+---
+ doc/m4.texi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/m4.texi b/doc/m4.texi
+index 247f2be5..3b833b2a 100644
+--- a/doc/m4.texi
++++ b/doc/m4.texi
+@@ -6756,7 +6756,7 @@ ifdef(`__unix__', ,
+ ')m4exit(`77')')dnl
+ changequote(`[', `]')
+ @result{}
+-syscmd([/bin/sh -c 'kill -9 $$'; st=$?;
++syscmd([@{ /bin/sh -c 'kill -9 $$'; @} 2>/dev/null; st=$?;
+ test $st = 137 || test $st = 265])
+ @result{}
+ ifelse(sysval, [0], , [errprint([ skipping: shell does not send signal 9
+-- 
+cgit v1.2.1
+
