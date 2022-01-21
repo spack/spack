@@ -5,6 +5,7 @@
 
 from io import BufferedReader
 
+import six
 import six.moves.urllib.error as urllib_error
 import six.moves.urllib.request as urllib_request
 import six.moves.urllib.response as urllib_response
@@ -79,11 +80,11 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
                 except ClientError as err2:
                     if err.response['Error']['Code'] == 'NoSuchKey':
                         # raise original error
-                        raise urllib_error.URLError(err)
+                        raise six.raise_from(urllib_error.URLError(err), err)
 
-                    raise urllib_error.URLError(err2)
+                    raise six.raise_from(urllib_error.URLError(err2), err2)
 
-            raise urllib_error.URLError(err)
+            raise six.raise_from(urllib_error.URLError(err), err)
 
 
 S3OpenerDirector = urllib_request.build_opener(UrllibS3Handler())
