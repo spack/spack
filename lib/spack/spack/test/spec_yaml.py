@@ -11,9 +11,10 @@ YAML format preserves DAG information in the spec.
 import ast
 import inspect
 import os
-import sys
 
 import pytest
+
+from llnl.util.compat import Iterable, Mapping
 
 import spack.hash_types as ht
 import spack.spec
@@ -24,11 +25,6 @@ from spack import repo
 from spack.spec import Spec, save_dependency_specfiles
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Iterable, Mapping  # novm
-else:
-    from collections import Iterable, Mapping
 
 
 def check_yaml_round_trip(spec):

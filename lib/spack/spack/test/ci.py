@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import itertools as it
 import json
 import os
@@ -23,12 +22,6 @@ import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-
-try:
-    # dynamically import to keep vermin from complaining
-    collections_abc = __import__('collections.abc')
-except ImportError:
-    collections_abc = collections
 
 
 @pytest.fixture

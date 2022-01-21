@@ -63,7 +63,7 @@ def _s3_open(url):
 class UrllibS3Handler(urllib_request.HTTPSHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        from botocore.exceptions import ClientError
+        from botocore.exceptions import ClientError  # type: ignore[import]
         try:
             url, headers, stream = _s3_open(orig_url)
             return urllib_response.addinfourl(stream, headers, url)

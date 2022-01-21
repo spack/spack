@@ -18,18 +18,13 @@ import traceback
 import types
 from typing import Dict  # novm
 
-import six
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 
 import spack.caches
 import spack.config

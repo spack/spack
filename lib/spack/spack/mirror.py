@@ -21,12 +21,8 @@ import traceback
 import ruamel.yaml.error as yaml_error
 import six
 
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config

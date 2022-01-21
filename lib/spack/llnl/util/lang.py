@@ -14,17 +14,7 @@ from datetime import datetime, timedelta
 
 from six import string_types
 
-if sys.version_info < (3, 0):
-    from itertools import izip_longest  # novm
-    zip_longest = izip_longest
-else:
-    from itertools import zip_longest  # novm
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Hashable, MutableMapping  # novm
-else:
-    from collections import Hashable, MutableMapping
-
+from llnl.util.compat import Hashable, MutableMapping, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']

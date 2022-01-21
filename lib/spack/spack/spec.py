@@ -81,7 +81,6 @@ import itertools
 import operator
 import os
 import re
-import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -91,6 +90,7 @@ import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.util.compat import Mapping
 
 import spack.compiler
 import spack.compilers
@@ -116,12 +116,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 
 __all__ = [
     'CompilerSpec',
