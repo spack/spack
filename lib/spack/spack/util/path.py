@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import re
 
 from six.moves.urllib.parse import urlparse
 
@@ -65,7 +66,7 @@ def is_path_url(path):
     if '\\' in path:
         return False
     url_tuple = urlparse(path)
-    return bool(url_tuple.scheme) and url_tuple.scheme != 'c'
+    return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
 
 
 def path_to_os_path(*pths):
