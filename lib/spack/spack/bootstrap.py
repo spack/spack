@@ -833,6 +833,19 @@ def ensure_flake8_in_path_or_raise():
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
 
 
+def all_root_specs(development=False):
+    """Return a list of all the root specs that may be used to bootstrap Spack.
+
+    Args:
+        development (bool): if True include dev dependencies
+    """
+    specs = [clingo_root_spec(), gnupg_root_spec(), patchelf_root_spec()]
+    if development:
+        specs += [isort_root_spec(), mypy_root_spec(),
+                  black_root_spec(), flake8_root_spec()]
+    return specs
+
+
 def _missing(name, purpose, system_only=True):
     """Message to be printed if an executable is not found"""
     msg = '[{2}] MISSING "{0}": {1}'

@@ -6,7 +6,9 @@ from __future__ import print_function
 
 import os.path
 import shutil
+import tempfile
 
+import llnl.util.filesystem
 import llnl.util.tty
 import llnl.util.tty.color
 
@@ -15,11 +17,43 @@ import spack.bootstrap
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
+import spack.mirror
+import spack.spec
+import spack.stage
 import spack.util.path
 
 description = "manage bootstrap configuration"
 section = "system"
 level = "long"
+
+
+# Tarball to be downloaded if binary packages are requested in a local mirror
+BINARY_TARBALL = 'https://github.com/alalazo/spack-bootstrap-mirrors/releases/download/v0.1-rc.2/bootstrap-buildcache.tar.gz'
+
+# Metadata for a generated binary mirror
+BINARY_METADATA = {
+    'type': 'buildcache',
+    'description': ('Buildcache copied from a public tarball available on Github.'
+                    'The sha256 checksum of binaries is checked before installation.'),
+    'info': {
+        'url': None,
+        'homepage': 'https://github.com/alalazo/spack-bootstrap-mirrors',
+        'releases': 'https://github.com/alalazo/spack-bootstrap-mirrors/releases',
+        'tarball': BINARY_TARBALL
+    }
+}
+
+CLINGO_JSON = '$spack/share/spack/bootstrap/github-actions/clingo.json'
+GNUPG_JSON = '$spack/share/spack/bootstrap/github-actions/gnupg.json'
+
+# Metadata for a generated source mirror
+SOURCE_METADATA = {
+    'type': 'install',
+    'description': 'Mirror with software needed to bootstrap Spack',
+    'info': {
+        'url': None
+    }
+}
 
 
 def _add_scope_option(parser):
@@ -106,6 +140,22 @@ def setup_parser(subparser):
     )
     remove.add_argument(
         'name', help='name of the source to be removed'
+    )
+
+    mirror = sp.add_parser(
+        'mirror', help='create a local mirror to bootstrap Spack'
+    )
+    mirror.add_argument(
+        '--binary-packages', action='store_true',
+        help='download public binaries in the mirror'
+    )
+    mirror.add_argument(
+        '--dev', action='store_true',
+        help='download dev dependencies too'
+    )
+    mirror.add_argument(
+        metavar='DIRECTORY', dest='root_dir',
+        help='root directory where to create the mirror and metadata'
     )
 
 
@@ -325,6 +375,54 @@ def _remove(args):
             llnl.util.tty.msg(msg.format(args.name))
 
 
+def _mirror(args):
+    mirror_dir = os.path.join(args.root_dir, 'local-mirror')
+
+    for spec_str in spack.bootstrap.all_root_specs(development=args.dev):
+        msg = 'Adding "{0}" and dependencies to the mirror at {1}'
+        llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
+        # Suppress tty from the call below for terser messages
+        llnl.util.tty.set_msg_enabled(False)
+        spec = spack.spec.Spec(spec_str).concretized()
+        for node in spec.traverse():
+            spack.mirror.create(mirror_dir, [node])
+        llnl.util.tty.set_msg_enabled(True)
+
+    if args.binary_packages:
+        msg = 'Adding binary packages from "{0}" to the mirror at {1}'
+        llnl.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        llnl.util.tty.set_msg_enabled(False)
+        stage = spack.stage.Stage(BINARY_TARBALL, path=tempfile.mkdtemp())
+        stage.create()
+        stage.fetch()
+        stage.expand_archive()
+        build_cache_dir = os.path.join(stage.source_path, 'build_cache')
+        shutil.move(build_cache_dir, mirror_dir)
+        llnl.util.tty.set_msg_enabled(True)
+
+    def write_metadata(subdir, metadata):
+        metadata_yaml = os.path.join(
+            args.root_dir, 'metadata', subdir, 'metadata.yaml'
+        )
+        metadata['info']['url'] = 'file://' + os.path.abspath(mirror_dir)
+        llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        with open(metadata_yaml, mode='w') as f:
+            spack.util.spack_yaml.dump(metadata, stream=f)
+        return os.path.dirname(metadata_yaml)
+
+    instructions = ("\nTo register the mirror on the platform where it's supposed "
+                    "to be used run the following command(s):\n")
+    cmd = '  % spack bootstrap add --trust {0} {1}\n'
+    directory = write_metadata(subdir='sources', metadata=SOURCE_METADATA)
+    instructions += cmd.format('local-sources', directory)
+    if args.binary_packages:
+        directory = write_metadata(subdir='binaries', metadata=BINARY_METADATA)
+        shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), directory)
+        shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), directory)
+        instructions += cmd.format('local-binaries', directory)
+    print(instructions)
+
+
 def bootstrap(parser, args):
     callbacks = {
         'status': _status,
@@ -336,6 +434,7 @@ def bootstrap(parser, args):
         'trust': _trust,
         'untrust': _untrust,
         'add': _add,
-        'remove': _remove
+        'remove': _remove,
+        'mirror': _mirror
     }
     callbacks[args.subcommand](args)
