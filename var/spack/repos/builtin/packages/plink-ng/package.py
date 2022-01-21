@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PlinkNg(Package):
     depends_on('blas')
     depends_on('lapack')
 
-    conflicts('%gcc@:4.99')
+    conflicts('%gcc@:4')
 
     def url_for_version(self, ver):
         template = 'https://www.cog-genomics.org/static/bin/plink2_src_{0}.zip'

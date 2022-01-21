@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class Itsx(Package):
        ribosomal ITS sequences of fungi and other eukaryotes for use in
        environmental sequencing"""
 
-    homepage = "http://microbiology.se/software/itsx/"
-    url      = "http://microbiology.se/sw/ITSx_1.0.11.tar.gz"
+    homepage = "https://microbiology.se/software/itsx/"
+    url      = "https://microbiology.se/sw/ITSx_1.0.11.tar.gz"
 
     version('1.0.11', sha256='8f4f76fc9c43b61f4dd4cd8dc4e495e9687943e15515396583f7a757651d435e')
 

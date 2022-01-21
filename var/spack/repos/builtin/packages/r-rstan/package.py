@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RRstan(RPackage):
     quickly and accurately evaluate gradients without burdening the user with
     the need to derive the partial derivatives."""
 
-    homepage = "http://mc-stan.org/"
+    homepage = "https://mc-stan.org/users/interfaces/rstan"
     url      = "https://cloud.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstan"
 

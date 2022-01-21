@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Brltty(AutotoolsPackage):
     Linux/Unix console (when in text mode) for a blind person using
     a refreshable braille display."""
 
-    homepage = "http://brltty.app/"
+    homepage = "https://brltty.app/"
     url      = "https://github.com/brltty/brltty/archive/BRLTTY-6.0.tar.gz"
 
     version('6.0', sha256='acfea5274bdc9230b0ea1a87f8796e241615d4d2c1ba08d87601b9d116c7804c')

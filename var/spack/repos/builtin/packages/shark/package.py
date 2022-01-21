@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Shark(CMakePackage):
     """Shark is a fast, modular, general open-source C++ machine
     learning library. """
 
-    homepage = "http://www.shark-ml.org/"
+    homepage = "https://www.shark-ml.org/"
     url      = "https://github.com/Shark-ML/Shark/archive/v4.0.1.tar.gz"
 
     version('4.0.1', sha256='1caf9c73c5ebf54f9543a090e2b05ac646f95559aa1de483cd7662c378c1ec21')

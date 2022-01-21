@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RSeqinr(RPackage):
     management under the ACNUC system described in Gouy, M. et al. (1984)
     Nucleic Acids Res. 12:121-127 <doi:10.1093/nar/12.1Part1.121>."""
 
-    homepage = "http://seqinr.r-forge.r-project.org"
+    homepage = "https://seqinr.r-forge.r-project.org"
     url      = "https://cloud.r-project.org/src/contrib/seqinr_3.3-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/seqinr"
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@
 import sys
 
 import llnl.util.tty as tty
-import llnl.util.tty.color as color
+from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -46,22 +46,7 @@ def setup_parser(subparser):
     )
 
 
-def boldblue(string):
-    """
-    Make a header string bold and blue we can easily see it
-    """
-    return color.colorize("@*b{%s}" % string)
-
-
-def green(string):
-    return color.colorize("@G{%s}" % string)
-
-
-def red(string):
-    return color.colorize("@R{%s}" % string)
-
-
-def compare_specs(a, b, to_string=False, colorful=True):
+def compare_specs(a, b, to_string=False, color=None):
     """
     Generate a comparison, including diffs (for each side) and an intersection.
 
@@ -75,13 +60,16 @@ def compare_specs(a, b, to_string=False, colorful=True):
         a_name (str): the name of spec a
         b_name (str): the name of spec b
         to_string (bool): return an object that can be json dumped
-        colorful (bool): do not format the names for the console
+        color (bool): whether to format the names for the console
     """
+    if color is None:
+        color = get_color_when()
+
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
-    a_facts = set(t for t in setup.spec_clauses(a, body=True))
-    b_facts = set(t for t in setup.spec_clauses(b, body=True))
+    a_facts = set(t for t in setup.spec_clauses(a, body=True, expand_hashes=True))
+    b_facts = set(t for t in setup.spec_clauses(b, body=True, expand_hashes=True))
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))
@@ -90,16 +78,16 @@ def compare_specs(a, b, to_string=False, colorful=True):
 
     # Format the spec names to be colored
     fmt = "{name}{@version}{/hash}"
-    a_name = a.format(fmt, color=color.get_color_when())
-    b_name = b.format(fmt, color=color.get_color_when())
+    a_name = a.format(fmt, color=color)
+    b_name = b.format(fmt, color=color)
 
     # We want to show what is the same, and then difference for each
     return {
         "intersect": flatten(intersect) if to_string else intersect,
         "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
         "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name if colorful else a.format("{name}{@version}{/hash}"),
-        "b_name": b_name if colorful else b.format("{name}{@version}{/hash}")
+        "a_name": a_name,
+        "b_name": b_name,
     }
 
 
@@ -129,8 +117,8 @@ def print_difference(c, attributes="all", out=None):
     A = c['b_not_a']
     B = c['a_not_b']
 
-    out.write(red("--- %s\n" % c["a_name"]))
-    out.write(green("+++ %s\n" % c["b_name"]))
+    cprint("@R{--- %s}" % c["a_name"])  # bright red
+    cprint("@G{+++ %s}" % c["b_name"])  # bright green
 
     # Cut out early if we don't have any differences!
     if not A and not B:
@@ -173,21 +161,21 @@ def print_difference(c, attributes="all", out=None):
             category = key
 
             # print category in bold, colorized
-            out.write(boldblue("@@ %s @@\n" % category))
+            cprint("@*b{@@ %s @@}" % category)  # bold blue
 
         # Print subtractions first
         while subtraction:
-            out.write(red("-  %s\n" % subtraction.pop(0)))
+            cprint("@R{-  %s}" % subtraction.pop(0))  # bright red
             if addition:
-                out.write(green("+  %s\n" % addition.pop(0)))
+                cprint("@G{+  %s}" % addition.pop(0))  # bright green
 
         # Any additions left?
         while addition:
-            out.write(green("+  %s\n" % addition.pop(0)))
+            cprint("@G{+  %s}" % addition.pop(0))
 
 
 def diff(parser, args):
-    env = ev.get_env(args, 'diff')
+    env = ev.active_environment()
 
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")
@@ -196,8 +184,8 @@ def diff(parser, args):
              for spec in spack.cmd.parse_specs(args.specs)]
 
     # Calculate the comparison (c)
-    c = compare_specs(specs[0], specs[1], to_string=True,
-                      colorful=not args.dump_json)
+    color = False if args.dump_json else get_color_when()
+    c = compare_specs(specs[0], specs[1], to_string=True, color=color)
 
     # Default to all attributes
     attributes = args.attribute or ["all"]

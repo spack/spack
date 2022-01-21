@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Pvm(MakefilePackage):
     heterogeneous collection of Unix and/or Windows computers hooked together
     by a network to be used as a single large parallel computer."""
 
-    homepage = "http://www.csm.ornl.gov/pvm/pvm_home.html"
-    url      = "http://www.netlib.org/pvm3/pvm3.4.6.tgz"
+    homepage = "https://www.csm.ornl.gov/pvm/pvm_home.html"
+    url      = "https://www.netlib.org/pvm3/pvm3.4.6.tgz"
 
     version('3.4.6', sha256='482665e9bc975d826bcdacf1df1d42e43deda9585a2c430fd3b7b7ed08eada44')
 

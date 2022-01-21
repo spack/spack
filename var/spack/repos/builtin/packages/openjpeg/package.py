@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Openjpeg(CMakePackage):
     homepage = 'https://github.com/uclouvain/openjpeg'
     url = 'https://github.com/uclouvain/openjpeg/archive/v2.3.1.tar.gz'
 
+    version('2.4.0', sha256='8702ba68b442657f11aaeb2b338443ca8d5fb95b0d845757968a7be31ef7f16d')
     version('2.3.1', sha256='63f5a4713ecafc86de51bfad89cc07bb788e9bba24ebbf0c4ca637621aadb6a9')
     version('2.3.0', sha256='3dc787c1bb6023ba846c2a0d9b1f6e179f1cd255172bde9eb75b01f1e6c7d71a')
     version('2.2.0', sha256='6fddbce5a618e910e03ad00d66e7fcd09cc6ee307ce69932666d54c73b7c6e7b')
@@ -30,7 +31,12 @@ class Openjpeg(CMakePackage):
     version('1.5.2', sha256='3734e95edd0bef6e056815591755efd822228dc3cd866894e00a2c929026b16d')
     version('1.5.1', sha256='6a42fcc23cb179f69a1e94429089e5a5926aee1ffe582a0a6bd91299d297e61a')
 
-    depends_on('zlib')
+    variant('codec', default=False, description='Build the CODEC executables')
+
+    depends_on('zlib', when='+codec')
+    depends_on('libpng', when='+codec')
+    depends_on('libtiff', when='+codec')
+    depends_on('lcms', when='+codec')
 
     # The problem with install name of the library on MacOs was fixed starting
     # version 2.1.1: https://github.com/uclouvain/openjpeg/commit/b9a247b559e62e55f5561624cf4a19aee3c8afdc
@@ -55,3 +61,18 @@ class Openjpeg(CMakePackage):
     def libs(self):
         return find_libraries('libopenjp{0}'.format(self.version.up_to(1)),
                               root=self.prefix, recursive=True)
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('BUILD_CODEC', 'codec'),
+            # MJ2 executables are disabled by default and we just make it
+            # explicit. Note that the executables require additional libraries
+            # as in the case '+codec', therefore, we will need to update the
+            # 'depends_on' directives when/if we introduce a variant that
+            # enables them.
+            self.define('BUILD_MJ2', False),
+            # Note that if the list of dependencies is incomplete, there is
+            # still a chance that the bundled third-party libraries get built.
+            self.define('BUILD_THIRDPARTY', False)
+        ]
+        return args

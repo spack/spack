@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Freebayes(MesonPackage):
 
     # Deps for @1.3.5 and beyond
     depends_on('ninja', type='build', when='@1.3.5:')
+    depends_on('pkgconfig', type='build', when='@1.3.5:')
     depends_on('htslib', when='@1.3.5:')
     depends_on('zlib', when='@1.3.5:')
     depends_on('xz', when='@1.3.5:')
@@ -56,3 +57,22 @@ class Freebayes(MesonPackage):
     @when('@:1.1.0')
     def install(self, spec, prefix):
         make('install')
+
+    @property
+    def vcflib_builddir(self):
+        return join_path(self.build_directory, 'vcflib')
+
+    @when('@1.3.4:')
+    def setup_build_environment(self, env):
+        if self.run_tests:
+            env.prepend_path('PATH', self.vcflib_builddir)
+            env.prepend_path('PATH', self.build_directory)
+
+    @when('@1.3.4:')
+    def check(self):
+        mkdir(self.vcflib_builddir)
+        with working_dir(self.vcflib_builddir):
+            cmake('../../vcflib')
+            make()
+        with working_dir(self.build_directory):
+            ninja('test')

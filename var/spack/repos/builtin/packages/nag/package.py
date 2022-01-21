@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ import spack.compiler
 
 class Nag(Package):
     """The NAG Fortran Compiler."""
-    homepage = "http://www.nag.com/nagware/np.asp"
+    homepage = "https://www.nag.com/nagware/np.asp"
     maintainers = ['ThemosTsikas']
 
     version('7.0', sha256='6d509208533d79139e5a9f879b7b93e7b58372b78d404d51f35e491ecbaa54c7')

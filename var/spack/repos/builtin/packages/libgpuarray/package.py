@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libgpuarray(CMakePackage):
     projects that is as future proof as possible, while keeping it easy to use
     for simple need/quick test."""
 
-    homepage = "http://deeplearning.net/software/libgpuarray/"
+    homepage = "https://github.com/Theano/libgpuarray"
     url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
 
     version('0.7.6', sha256='ad1c00dd47c3d36ee1708e5167377edbfcdb7226e837ef9c68b841afbb4a4f6a')

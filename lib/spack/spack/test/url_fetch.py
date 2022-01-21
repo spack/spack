@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -160,13 +160,21 @@ def test_fetch(
 
 
 @pytest.mark.parametrize('spec,url,digest', [
-    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', 'abc000'),
-    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', 'abc100'),
-    ('url-list-test @3.0', 'foo-3.0.tar.gz', 'abc30'),
-    ('url-list-test @4.5', 'foo-4.5.tar.gz', 'abc45'),
-    ('url-list-test @2.0.0b2', 'foo-2.0.0b2.tar.gz', 'abc200b2'),
-    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', 'abc30a1'),
-    ('url-list-test @4.5-rc5', 'foo-4.5-rc5.tar.gz', 'abc45rc5'),
+    ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', '00000000000000000000000000000000'),
+    ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', '00000000000000000000000000000100'),
+    ('url-list-test @3.0', 'foo-3.0.tar.gz', '00000000000000000000000000000030'),
+    ('url-list-test @4.5', 'foo-4.5.tar.gz', '00000000000000000000000000000450'),
+    (
+        'url-list-test @2.0.0b2',
+        'foo-2.0.0b2.tar.gz',
+        '000000000000000000000000000200b2'
+    ),
+    ('url-list-test @3.0a1', 'foo-3.0a1.tar.gz', '000000000000000000000000000030a1'),
+    (
+        'url-list-test @4.5-rc5',
+        'foo-4.5-rc5.tar.gz',
+        '000000000000000000000000000045c5'
+    ),
 ])
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):

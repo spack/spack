@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RUuid(RPackage):
     Tools for generating and handling of UUIDs (Universally Unique
     Identifiers)."""
 
-    homepage = "http://www.rforge.net/uuid"
+    homepage = "https://www.rforge.net/uuid"
     url      = "https://cloud.r-project.org/src/contrib/uuid_0.1-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/uuid"
 

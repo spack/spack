@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Gccxml(CMakePackage):
     """gccxml dumps an XML description of C++ source code using an extension of
     the GCC C++ compiler."""
 
-    homepage = "http://gccxml.github.io"
+    homepage = "https://gccxml.github.io"
     git      = "https://github.com/gccxml/gccxml.git"
 
     version('develop', branch='master')

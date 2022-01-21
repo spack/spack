@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RAde4(RPackage):
     STATIS, multiple coinertia analysis). The philosophy of the package is
     described in Dray and Dufour (2007) <doi:10.18637/jss.v022.i04>."""
 
-    homepage = "http://pbil.univ-lyon1.fr/ADE-4"
+    homepage = "https://pbil.univ-lyon1.fr/ADE-4"
     url      = "https://cloud.r-project.org/src/contrib/ade4_1.7-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ade4"
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RCovr(RPackage):
 
     Track and report code coverage for your package and (optionally)
     upload the results to a coverage service like 'Codecov'
-    <http://codecov.io> or 'Coveralls' <http://coveralls.io>. Code
+    <http://codecov.io> or 'Coveralls' <https://coveralls.io/>. Code
     coverage is a measure of the amount of code being exercised by a
     set of tests. It is an indirect measure of test quality and
     completeness. This package is compatible with any testing methodology

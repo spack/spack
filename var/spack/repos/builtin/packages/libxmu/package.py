@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libxmu(AutotoolsPackage, XorgPackage):
     that it may be layered on top of any proprietary implementation of Xlib
     or Xt."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXmu"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXmu"
     xorg_mirror_path = "lib/libXmu-1.1.2.tar.gz"
 
     version('1.1.2', sha256='e5fd4bacef068f9509b8226017205040e38d3fba8d2de55037200e7176c13dba')

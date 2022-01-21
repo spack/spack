@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ from spack import *
 class Mfem(Package, CudaPackage, ROCmPackage):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
-    tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
+    tags = ['fem', 'finite-elements', 'high-order', 'amr', 'hpc', 'radiuss', 'e4s']
 
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'
@@ -36,7 +36,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # 1. Verify that no checksums on old versions have changed.
     #
     # 2. Verify that the shortened URL for the new version is listed at:
-    #    http://mfem.org/download/
+    #    https://mfem.org/download/
     #
     # 3. Use http://getlinkinfo.com or similar to verify that the
     #    underling download link for the latest version comes has the
@@ -49,10 +49,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # other version.
     version('develop', branch='master')
 
+    version('4.3.0',
+            sha256='3a495602121b986049286ea0b23512279cdbdfb43c15c42a1511b521051fbe38',
+            url='https://bit.ly/mfem-4-3', extension='tar.gz')
+
     version('4.2.0',
             '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
-            url='https://bit.ly/mfem-4-2', extension='tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-2', extension='tar.gz')
 
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
@@ -157,35 +160,36 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     conflicts('+shared', when='@:3.3.2')
     conflicts('~static~shared')
-    conflicts('~threadsafe', when='@:3.99.99+openmp')
+    conflicts('~threadsafe', when='@:3+openmp')
 
-    conflicts('+cuda', when='@:3.99.99')
-    conflicts('+rocm', when='@:4.1.99')
+    conflicts('+cuda', when='@:3')
+    conflicts('+rocm', when='@:4.1')
     conflicts('+cuda+rocm')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
     # strumpack v3+ support for which is available starting with mfem v4.0:
-    conflicts('+strumpack', when='@:3.99.99')
+    conflicts('+strumpack', when='@:3')
     conflicts('+gnutls', when='@:3.1')
     conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
-    conflicts('+slepc', when='@:4.1.99')
+    conflicts('+slepc', when='@:4.1')
     conflicts('+sundials', when='@:3.2')
     conflicts('+pumi', when='@:3.3.2')
-    conflicts('+gslib', when='@:4.0.99')
+    conflicts('+gslib', when='@:4.0')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
     conflicts('+metis~mpi', when='@:3.3.0')
     conflicts('+conduit', when='@:3.3.2')
-    conflicts('+occa', when='mfem@:3.99.99')
-    conflicts('+raja', when='mfem@:3.99.99')
-    conflicts('+libceed', when='mfem@:4.0.99')
-    conflicts('+umpire', when='mfem@:4.0.99')
-    conflicts('+amgx', when='mfem@:4.1.99')
+    conflicts('+occa', when='mfem@:3')
+    conflicts('+raja', when='mfem@:3')
+    conflicts('+libceed', when='mfem@:4.0')
+    conflicts('+umpire', when='mfem@:4.0')
+    conflicts('+amgx', when='mfem@:4.1')
     conflicts('+amgx', when='~cuda')
+    conflicts('+mpi~cuda ^hypre+cuda')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -195,9 +199,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts('timer=mpi', when='~mpi')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
-    depends_on('hypre@:2.20.0', when='@3.4:4.2.99+mpi')
-    depends_on('hypre', when='@4.3.0:+mpi')
+    depends_on('hypre@2.10.0:2.13', when='@:3.3+mpi')
+    depends_on('hypre@:2.20.0', when='@3.4:4.2+mpi')
+    depends_on('hypre@:2.23.0', when='@4.3.0+mpi')
+    depends_on('hypre', when='+mpi')
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
@@ -244,14 +249,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
     # This issue was resolved in v4.1.
     conflicts('+superlu-dist',
-              when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
+              when='mfem@:4.0 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
     # when using hypre version >= 2.16.0.
     # This issue is resolved in v4.2.
-    conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
+    conflicts('+strumpack', when='mfem@4.0.0:4.1 ^hypre@2.16.0:')
     conflicts('+strumpack ^strumpack+cuda', when='~cuda')
 
-    depends_on('occa@1.0.8:', when='@:4.1.99+occa')
+    depends_on('occa@1.0.8:', when='@:4.1+occa')
     depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     # TODO: propagate '+rocm' variant to occa when it is supported
@@ -265,7 +270,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('raja+rocm amdgpu_target={0}'.format(gfx),
                    when='+raja+rocm amdgpu_target={0}'.format(gfx))
 
-    depends_on('libceed@0.6:', when='@:4.1.99+libceed')
+    depends_on('libceed@0.6:', when='@:4.1+libceed')
     depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('libceed+cuda cuda_arch={0}'.format(sm_),
@@ -296,6 +301,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
     patch('mfem-4.2-slepc.patch', when='@4.2.0+slepc')
     patch('mfem-4.2-petsc-3.15.0.patch', when='@4.2.0+petsc ^petsc@3.15.0:')
+    patch('mfem-4.3-hypre-2.23.0.patch', when='@4.3.0')
+    patch('mfem-4.3-cusparse-11.4.patch', when='@4.3.0+cuda')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
@@ -338,7 +345,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             xcompiler = '-Xcompiler='
             xlinker = '-Xlinker='
-        cuda_arch = spec.variants['cuda_arch'].value
+        cuda_arch = None if '~cuda' in spec else spec.variants['cuda_arch'].value
 
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
@@ -803,20 +810,39 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                                        self.examples_data_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        with working_dir(test_dir, create=False):
-            # MFEM has many examples to serve as a suitable smoke check. ex10
-            # was chosen arbitrarily among the examples that work both with
-            # MPI and without it
-            test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
-            make('CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
-                 test_exe, parallel=False)
-            self.run_test('./{0}'.format(test_exe),
-                          ['--mesh', '../{0}/beam-quad.mesh'.format(
-                              self.examples_data_dir)],
-                          [], installed=True, purpose='Smoke test for mfem',
-                          skip_missing=False, work_dir='.')
-            make('clean')
+        test_dir = join_path(
+            self.test_suite.current_test_cache_dir,
+            self.examples_src_dir
+        )
+
+        # MFEM has many examples to serve as a suitable smoke check. ex10
+        # was chosen arbitrarily among the examples that work both with
+        # MPI and without it
+        test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
+        self.run_test(
+            'make',
+            [
+                'CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
+                test_exe,
+                'parallel=False'
+            ],
+            purpose='test: building {0}'.format(test_exe),
+            skip_missing=False,
+            work_dir=test_dir,
+        )
+
+        self.run_test(
+            './{0}'.format(test_exe),
+            [
+                '--mesh',
+                '../{0}/beam-quad.mesh'.format(self.examples_data_dir)
+            ],
+            [],
+            installed=False,
+            purpose='test: running {0}'.format(test_exe),
+            skip_missing=False,
+            work_dir=test_dir,
+        )
 
     # this patch is only needed for mfem 4.1, where a few
     # released files include byte order marks

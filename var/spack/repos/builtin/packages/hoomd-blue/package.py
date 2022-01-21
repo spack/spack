@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class HoomdBlue(CMakePackage):
     to create custom initialization routines, control simulation parameters,
     and perform in situ analysis."""
 
-    homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
+    homepage = "https://glotzerlab.engin.umich.edu/hoomd-blue/"
     git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
     version('develop', submodules=True)
@@ -60,12 +60,10 @@ class HoomdBlue(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        install_dir = spec['python'].package.site_packages_dir
-        install_path = os.path.join(spec.prefix, install_dir)
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-            '-DCMAKE_INSTALL_PREFIX={0}'.format(install_path)
+            '-DCMAKE_INSTALL_PREFIX={0}'.format(python_platlib)
         ]
 
         # MPI support

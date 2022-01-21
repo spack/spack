@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -550,11 +550,21 @@ def graph_dot(specs, deptype='all', static=False, out=None):
     out.write('     style="rounded,filled"')
     out.write('  ]\n')
 
+    # write nodes
     out.write('\n')
     for key, label in nodes:
         out.write('  "%s" [label="%s"]\n' % (key, label))
 
+    # write edges
     out.write('\n')
     for src, dest in edges:
         out.write('  "%s" -> "%s"\n' % (src, dest))
+
+    # ensure that roots are all at the top of the plot
+    dests = set([d for _, d in edges])
+    roots = ['"%s"' % k for k, _ in nodes if k not in dests]
+    out.write('\n')
+    out.write('  { rank=min; %s; }' % "; ".join(roots))
+
+    out.write('\n')
     out.write('}\n')

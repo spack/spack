@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libwindowswm(AutotoolsPackage, XorgPackage):
     better interact with the Cygwin XWin server when running X11 in a
     rootless mode."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libWindowsWM"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libWindowsWM"
     xorg_mirror_path = "lib/libWindowsWM-1.0.1.tar.gz"
 
     version('1.0.1', sha256='94f9c0add3bad38ebd84bc43d854207c4deaaa74fb15339276e022546124b98a')

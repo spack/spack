@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ class Jchronoss(CMakePackage):
     """ JCHRONOSS aims to help HPC application testing process
      to scale as much as the application does. """
 
-    homepage = "http://jchronoss.hpcframework.com"
-    url      = "http://fs.paratools.com/mpc/contrib/apps/jchronoss/JCHRONOSS-1.2.tar.gz"
+    homepage = "https://jchronoss.hpcframework.com"
+    url      = "https://fs.paratools.com/mpc/contrib/apps/jchronoss/JCHRONOSS-1.2.tar.gz"
 
     version('1.2',   sha256='52a565a28c0b83b433065060863d29f2b3e4b05f4f26b7a5893a21a2c66d6eba')
     version('1.1.1', sha256='5a11463b7295817f503c58dda1a82c0d3568bdee5e9d13d59e00d337ba84dc45')

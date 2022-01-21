@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -116,9 +116,9 @@ class IntelPackage(PackageBase):
     # that satisfies self.spec will be used.
     version_years = {
         # intel-daal is versioned 2016 and later, no divining is needed
-        'intel-ipp@9.0:9.99':         2016,
-        'intel-mkl@11.3.0:11.3.999':  2016,
-        'intel-mpi@5.1:5.99':         2016,
+        'intel-ipp@9.0:9':         2016,
+        'intel-mkl@11.3.0:11.3':   2016,
+        'intel-mpi@5.1:5':         2016,
     }
 
     # Below is the list of possible values for setting auto dispatch functions
@@ -690,6 +690,12 @@ class IntelPackage(PackageBase):
                 '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
+        elif '%clang' in self.spec:
+            clang = Executable(self.compiler.cc)
+            omp_lib_path = clang(
+                '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
+            omp_libs = LibraryList(omp_lib_path.strip())
+
         if len(omp_libs) < 1:
             raise_lib_error('Cannot locate OpenMP libraries:', omp_libnames)
 
@@ -772,7 +778,7 @@ class IntelPackage(PackageBase):
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
                 mkl_threading = 'libmkl_intel_thread'
-            elif '%gcc' in self.spec:
+            elif '%gcc' in self.spec or '%clang' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
             threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):
@@ -994,6 +1000,16 @@ class IntelPackage(PackageBase):
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True) + result
+            # Intel MPI since 2019 depends on libfabric which is not in the
+            # lib directory but in a directory of its own which should be
+            # included in the rpath
+            if self.version_yearlike >= ver('2019'):
+                d = ancestor(self.component_lib_dir('mpi'))
+                if '+external-libfabric' in self.spec:
+                    result += self.spec['libfabric'].libs
+                else:
+                    result += find_libraries(['libfabric'],
+                                             os.path.join(d, 'libfabric', 'lib'))
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):
@@ -1091,15 +1107,6 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
-
-                # Intel MPI since 2019 depends on libfabric which is not in the
-                # lib directory but in a directory of its own which should be
-                # included in the rpath
-                if self.version_yearlike >= ver('2019'):
-                    d = ancestor(self.component_lib_dir('mpi'))
-                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
-                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 

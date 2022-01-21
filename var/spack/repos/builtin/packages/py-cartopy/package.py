@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,8 +52,6 @@ class PyCartopy(PythonPackage):
 
     patch('proj6.patch', when='@0.17.0')
 
-    phases = ['build_ext', 'install']
-
     def setup_build_environment(self, env):
         # Needed for `spack install --test=root py-cartopy`
         library_dirs = []
@@ -75,24 +73,3 @@ class PyCartopy(PythonPackage):
     # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
-
-    def build_ext_args(self, spec, prefix):
-        args = [
-            spec['geos'].headers.include_flags,
-            spec['geos'].libs.search_flags,
-            spec['proj'].headers.include_flags,
-            spec['proj'].libs.search_flags,
-        ]
-
-        if '+plotting' in spec:
-            args.extend([
-                spec['gdal'].headers.include_flags,
-                spec['gdal'].libs.search_flags,
-            ])
-
-        return args
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

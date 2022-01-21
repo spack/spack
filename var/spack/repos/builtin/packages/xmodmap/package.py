@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
     session startup script to configure the keyboard according to personal
     tastes."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xmodmap"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xmodmap"
     xorg_mirror_path = "app/xmodmap-1.0.9.tar.gz"
 
     version('1.0.9', sha256='73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef')

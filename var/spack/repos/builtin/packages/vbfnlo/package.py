@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,12 @@ class Vbfnlo(AutotoolsPackage):
     version('3.0.0beta1', sha256='19f0bf7e4c93b0f287d2531d6802c114a78eb46cde28ea820b2a074a5819c7ca')
     version('2.7.1',      sha256='13e33d73d8a8ef64094621f87e6f94e01712e76cc19a86298d0b52cfcb9decca', preferred=True)
     # version('2.7.0',      sha256='0e96c0912599e3000fffec5305700b947b604a7b06c7975851503f445311e4ef')
+
+    # Documentation is broken on some systems:
+    # See https://github.com/vbfnlo/vbfnlo/issues/2
+    variant('doc', default=False,
+            description='Build documentation')
+    patch('vbfnlo_no_docs.patch', when='~doc')
 
     depends_on('hepmc')
     depends_on('gsl')

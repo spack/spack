@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class RRgexf(RPackage):
     through "sigmajs" (a javascript library) and interact with the igraph
     package."""
 
-    homepage = "http://bitbucket.org/gvegayon/rgexf"
+    homepage = "https://bitbucket.org/gvegayon/rgexf"
     url      = "https://cloud.r-project.org/src/contrib/rgexf_0.15.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgexf"
 

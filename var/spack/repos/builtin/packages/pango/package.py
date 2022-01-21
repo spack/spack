@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,14 @@ class Pango(AutotoolsPackage):
        an emphasis on internationalization. It can be used anywhere
        that text layout is needed, though most of the work on Pango so
        far has been done in the context of the GTK+ widget toolkit."""
-    homepage = "http://www.pango.org"
+    homepage = "https://www.pango.org"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 1
 
+    # These are the last pango versions which can be built using autotools,
+    # Using Meson instead has some hurdles ahead, see PR #25472
+    version('1.42.0', sha256='9924d88a3dcedff753f0763814a1605307c5c9c931413b8b47ea7267d1b19446')
     version('1.41.0', sha256='1f76ef95953dc58ee5d6a53e5f1cb6db913f3e0eb489713ee9266695cae580ba')
     version('1.40.3', sha256='abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
     version('1.40.1', sha256='e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
@@ -33,6 +36,7 @@ class Pango(AutotoolsPackage):
     depends_on('gobject-introspection')
     depends_on('fontconfig')
     depends_on('freetype@2:')
+    depends_on('fribidi', when='@1.42:')
     depends_on('libffi')
 
     depends_on('harfbuzz@1.2.3:', when='@1.41.0')

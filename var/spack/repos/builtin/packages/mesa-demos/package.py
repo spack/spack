@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class MesaDemos(AutotoolsPackage):
     """This package provides some demo applications for testing Mesa."""
 
-    homepage = "http://www.mesa3d.org"
+    homepage = "https://www.mesa3d.org"
     url      = "https://github.com/freedesktop/mesa-demos/archive/mesa-demos-8.3.0.tar.gz"
 
     version('8.3.0', sha256='9bc1b37f4fc7bfc3f818f2d3851ffde28e8167ef11dca87f4781e9ef6206901f')

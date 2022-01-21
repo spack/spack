@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class ScanForMatches(Package):
     """scan_for_matches is a utility written in C for locating patterns in DNA
        or protein FASTA files."""
 
-    homepage = "http://blog.theseed.org/servers/2010/07/scan-for-matches.html"
-    url      = "http://www.theseed.org/servers/downloads/scan_for_matches.tgz"
+    homepage = "https://blog.theseed.org/servers/2010/07/scan-for-matches.html"
+    url      = "https://www.theseed.org/servers/downloads/scan_for_matches.tgz"
 
     version('2010-7-16', sha256='c6b17930efbdfbac28b57c3a0b4f8c26effb36c48988d82e41c81c6962e2d68f')
 

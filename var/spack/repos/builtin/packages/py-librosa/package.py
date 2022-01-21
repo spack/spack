@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyLibrosa(PythonPackage):
     """A python package for music and audio analysis."""
 
-    homepage = "http://github.com/librosa/librosa"
+    homepage = "https://github.com/librosa/librosa"
     pypi = "librosa/librosa-0.7.2.tar.gz"
 
     version('0.7.2', sha256='656bbda80e98e6330db1ead79cd084b13a762284834d7603fcf7cf7c0dc65f3c')
@@ -18,7 +18,7 @@ class PyLibrosa(PythonPackage):
     depends_on('py-audioread@2.0.0:', type=('build', 'run'))
     depends_on('py-numpy@1.15.0:', type=('build', 'run'))
     depends_on('py-scipy@1.0.0:', type=('build', 'run'))
-    depends_on('py-scikit-learn@0.14.0:0.18.999,0.19.1:', type=('build', 'run'))
+    depends_on('py-scikit-learn@0.14.0:0.18,0.19.1:', type=('build', 'run'))
     depends_on('py-joblib@0.12:', type=('build', 'run'))
     depends_on('py-decorator@3.0.0:', type=('build', 'run'))
     depends_on('py-six@1.3:', type=('build', 'run'))

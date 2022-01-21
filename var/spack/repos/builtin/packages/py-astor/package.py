@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,9 @@ class PyAstor(PythonPackage):
     astor is designed to allow easy manipulation of Python source via the AST.
     """
 
-    pypi = "astor/astor-0.8.0.tar.gz"
+    pypi = "astor/astor-0.8.1.tar.gz"
 
+    version('0.8.1', sha256='6a6effda93f4e1ce9f618779b2dd1d9d84f1e32812c23a29b3fff6fd7f63fa5e')
     version('0.8.0', sha256='37a6eed8b371f1228db08234ed7f6cfdc7817a3ed3824797e20cbb11dc2a7862')
     version('0.6',   sha256='175ec395cde36aa0178c5a3120d03954c65d1ef4bb19ec4aa30e9d7a7cc426c4')
 

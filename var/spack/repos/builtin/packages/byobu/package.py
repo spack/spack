@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 class Byobu(AutotoolsPackage):
     """Byobu: Text-based window manager and terminal multiplexer."""
 
-    homepage = "http://www.byobu.co"
+    homepage = "https://www.byobu.co/"
     url      = "https://launchpad.net/byobu/trunk/5.123/+download/byobu_5.123.orig.tar.gz"
 
     maintainers = ['matthiasdiener']

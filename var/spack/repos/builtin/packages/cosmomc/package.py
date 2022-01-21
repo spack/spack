@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Cosmomc(Package):
        importance sampling (plus a suite of scripts for building grids
        of runs, plotting and presenting results)."""
 
-    homepage = "http://cosmologist.info/cosmomc/"
+    homepage = "https://cosmologist.info/cosmomc/"
     url      = "https://github.com/cmbant/CosmoMC/archive/Nov2016.tar.gz"
 
     version('2016.11', sha256='b83edbf043ff83a4dde9bc14c56a09737dbc41ffe247a8e9c9a26892ed8745ba')
@@ -43,7 +43,7 @@ class Cosmomc(Package):
     depends_on('py-pandas', type=('build', 'run'), when='+python')
     depends_on('py-scipy', type=('build', 'run'), when='+python')
     depends_on('py-six', type=('build', 'run'), when='+python')
-    depends_on('python @2.7:2.999,3.4:', type=('build', 'run'), when='+python')
+    depends_on('python @2.7:2,3.4:', type=('build', 'run'), when='+python')
 
     patch('Makefile.patch')
     patch('errorstop.patch')

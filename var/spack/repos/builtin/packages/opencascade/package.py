@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,12 @@ class Opencascade(CMakePackage):
     homepage = "https://www.opencascade.com"
     url      = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
 
+    maintainers = ['wdconinc']
+
+    version('7.6.0', extension='tar.gz',
+            sha256='e7f989d52348c3b3acb7eb4ee001bb5c2eed5250cdcceaa6ae97edc294f2cabd')
+    version('7.5.3', extension='tar.gz',
+            sha256='cc3d3fd9f76526502c3d9025b651f45b034187430f231414c97dda756572410b')
     version('7.5.2', extension='tar.gz',
             sha256='1a32d2b0d6d3c236163cb45139221fb198f0f3cdad56606c5b1c9a2a8869b3ac')
     version('7.4.0p2', extension='tar.gz',
@@ -48,7 +54,7 @@ class Opencascade(CMakePackage):
     depends_on('gl')
 
     def url_for_version(self, version):
-        url = "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V{0};sf=tgz"
+        url = "https://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V{0};sf=tgz"
         return url.format(version.underscored)
 
     def cmake_args(self):
@@ -65,6 +71,8 @@ class Opencascade(CMakePackage):
             args.append('-DUSE_VTK=ON')
             args.append('-D3RDPARTY_VTK_DIR=%s' %
                         self.spec['vtk'].prefix)
+            args.append('-D3RDPARTY_VTK_INCLUDE_DIR=%s' %
+                        self.spec['vtk'].prefix.include)
         else:
             args.append('-DUSE_VTK=OFF')
 

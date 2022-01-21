@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,6 @@ class PyPreCommit(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
     depends_on('py-virtualenv@15.2:', type=('build', 'run'))
-    depends_on('py-futures', type=('build', 'run'), when='^python@:3.1.99')
-    depends_on('py-importlib-metadata', type=('build', 'run'), when='^python@:3.7.99')
-    depends_on('py-importlib-resources', type=('build', 'run'), when='^python@:3.6.99')
+    depends_on('py-futures', type=('build', 'run'), when='^python@:3.1')
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='^python@:3.7')
+    depends_on('py-importlib-resources', type=('build', 'run'), when='^python@:3.6')

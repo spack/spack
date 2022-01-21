@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -177,6 +177,13 @@ def test_intel_version_detection(version_str, expected_version):
         'InstalledDir: /made/up/path',
         '2021.3.0'
     ),
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++/C++ Compiler 2021.4.0 (2021.4.0.20210924)\n'
+        'Target: x86_64-unknown-linux-gnu\n'
+        'Thread model: posix\n'
+        'InstalledDir: /made/up/path',
+        '2021.4.0'
+    ),
     (  # IFX
         'ifx (IFORT) 2021.1.2 Beta 20201214\n'
         'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
@@ -191,6 +198,16 @@ def test_intel_version_detection(version_str, expected_version):
         'ifx (IFORT) 2021.3.0 Beta 20210619\n'
         'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
         '2021.3.0'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2021.4.0 Beta 20210924\n'
+        'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
+        '2021.4.0'
+    ),
+    (  # IFX
+        'ifx (IFORT) 2022.0.0 20211123\n'
+        'Copyright (C) 1985-2021 Intel Corporation. All rights reserved.',
+        '2022.0.0'
     ),
 ])
 def test_oneapi_version_detection(version_str, expected_version):
@@ -345,6 +362,11 @@ def test_cray_frontend_compiler_detection(
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 12.0.0 (CLANG: AOCC_3_1_0-Build#126 2021_06_07)'
+     '(based on LLVM Mirror.Version.12.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '3.1.0'
+     ),
     ('AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10)'
      '(based on LLVM Mirror.Version.12.0.0)\n'
      'Target: x86_64-unknown-linux-gnu\n'

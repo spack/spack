@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Openmx(MakefilePackage):
        localized basis functions."""
 
     homepage = "http://www.openmx-square.org/index.html"
-    url      = "http://t-ozaki.issp.u-tokyo.ac.jp/openmx3.8.tar.gz"
+    url      = "https://t-ozaki.issp.u-tokyo.ac.jp/openmx3.8.tar.gz"
 
     version('3.8', sha256='36ee10d8b1587b25a2ca1d57f110111be65c4fb4dc820e6d93e1ed2b562634a1')
 

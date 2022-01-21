@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class PyAzuremlTrainCore(Package):
+class PyAzuremlTrainCore(PythonPackage):
     """The azureml-train-core contains functionality used by azureml-train
     metapackage."""
 
@@ -15,23 +15,17 @@ class PyAzuremlTrainCore(Package):
     version('1.11.0', sha256='1b5fd813d21e75cd522d3a078eba779333980a309bcff6fc72b74ddc8e7a26f1', expand=False)
     version('1.8.0',  sha256='5a8d90a08d4477527049d793feb40d07dc32fafc0e4e57b4f0729d3c50b408a2', expand=False)
 
-    extends('python')
-    depends_on('python@3.5:3.999', type=('build', 'run'))
-    depends_on('py-pip', type='build')
+    depends_on('python@3.5:3', type=('build', 'run'))
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.23.0:1.23.999', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.23.0:1.23', when='@1.23.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.11.0:1.11.999', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.11.0:1.11', when='@1.11.0', type=('build', 'run'))
 
-    depends_on('py-azureml-train-restclients-hyperdrive@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-core@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
-    depends_on('py-azureml-telemetry@1.8.0:1.8.999', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-train-restclients-hyperdrive@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-core@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
+    depends_on('py-azureml-telemetry@1.8.0:1.8', when='@1.8.0', type=('build', 'run'))
     depends_on('py-flake8@3.1.0:3.7.9', when='@1.8.0 ^python@3.6:', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

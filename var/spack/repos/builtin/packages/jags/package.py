@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Jags(AutotoolsPackage):
        Bayesian hierarchical models using Markov Chain Monte Carlo (MCMC)
        simulation not wholly unlike BUGS"""
 
-    tags = ['mcmc', 'Gibbs sampler']
+    tags = ['mcmc', 'Gibbs-sampler']
 
     homepage = "http://mcmc-jags.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"

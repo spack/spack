@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RQtl(RPackage):
     trait loci, QTLs) contributing to variation in quantitative traits. Broman
     et al. (2003) <doi:10.1093/bioinformatics/btg112>."""
 
-    homepage = "http://rqtl.org"
+    homepage = "https://rqtl.org"
     url      = "https://cloud.r-project.org/src/contrib/qtl_1.44-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/qtl"
 

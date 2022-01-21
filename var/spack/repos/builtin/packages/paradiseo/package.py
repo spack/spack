@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Paradiseo(CMakePackage):
     """A C++ white-box object-oriented framework dedicated to the reusable
        design of metaheuristics."""
 
-    homepage = "http://paradiseo.gforge.inria.fr/"
+    homepage = "https://paradiseo.gforge.inria.fr/"
     git      = "https://gforge.inria.fr/git/paradiseo/paradiseo.git"
 
     # Installing from the development version is a better option at this

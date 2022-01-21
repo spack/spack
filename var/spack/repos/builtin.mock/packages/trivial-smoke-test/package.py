@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class TrivialSmokeTest(Package):
     homepage = "http://www.example.com/trivial_test"
     url      = "http://www.unit-test-should-replace-this-url/trivial_test-1.0.tar.gz"
 
-    version('1.0', 'foobarbaz')
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     test_source_filename = 'cached_file.in'
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RWhisker(RPackage):
 
     Implements 'Mustache' logicless templating."""
 
-    homepage = "http://github.com/edwindj/whisker"
+    homepage = "https://github.com/edwindj/whisker"
     url      = "https://cloud.r-project.org/src/contrib/whisker_0.3-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/whisker"
 

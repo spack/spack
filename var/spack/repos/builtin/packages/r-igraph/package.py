@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RIgraph(RPackage):
     graphs very well and provides functions for generating random and regular
     graphs, graph visualization, centrality methods and much more."""
 
-    homepage = "http://igraph.org/"
+    homepage = "https://igraph.org/"
     url      = "https://cloud.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/igraph"
 

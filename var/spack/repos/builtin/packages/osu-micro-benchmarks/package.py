@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class OsuMicroBenchmarks(AutotoolsPackage):
     performance measures such as latency, bandwidth and host overhead
     and can be used for both traditional and GPU-enhanced nodes."""
 
-    homepage = "http://mvapich.cse.ohio-state.edu/benchmarks/"
-    url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.3.tar.gz"
+    homepage = "https://mvapich.cse.ohio-state.edu/benchmarks/"
+    url      = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.3.tar.gz"
 
     version('5.7.1', sha256='cb5ce4e2e68ed012d9952e96ef880a802058c87a1d840a2093b19bddc7faa165')
     version('5.7',   sha256='1470ebe00eb6ca7f160b2c1efda57ca0fb26b5c4c61148a3f17e8e79fbf34590')

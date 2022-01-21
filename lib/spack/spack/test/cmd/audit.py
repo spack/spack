@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,3 +31,23 @@ def test_audit_configs(mutable_config, mock_packages):
     audit('configs', fail_on_error=False)
     # The mock configuration has duplicate definitions of some compilers
     assert audit.returncode == 1
+
+
+def test_audit_packages_https(mutable_config, mock_packages):
+
+    # Without providing --all should fail
+    audit('packages-https', fail_on_error=False)
+    # The mock configuration has duplicate definitions of some compilers
+    assert audit.returncode == 1
+
+    # This uses http and should fail
+    audit('packages-https', "test-dependency", fail_on_error=False)
+    assert audit.returncode == 1
+
+    # providing one or more package names with https should work
+    audit('packages-https', "cmake", fail_on_error=True)
+    assert audit.returncode == 0
+
+    # providing one or more package names with https should work
+    audit('packages-https', "cmake", "conflict", fail_on_error=True)
+    assert audit.returncode == 0

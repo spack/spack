@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Couchdb(AutotoolsPackage):
     for reading and updating (add, edit, delete) database documents."""
 
     homepage = "https://couchdb.apache.org/"
-    url      = "http://archive.apache.org/dist/couchdb/source/3.1.0/apache-couchdb-3.1.0.tar.gz"
+    url      = "https://archive.apache.org/dist/couchdb/source/3.1.0/apache-couchdb-3.1.0.tar.gz"
 
     version('3.1.0', sha256='4867c796a1ff6f0794b7bd3863089ea6397bd5c47544f9b97db8cdacff90f8ed')
     version('3.0.1', sha256='08d61d5c779957d074d5097f28a2dfc9eb518af3c479d5318135ff31212cc522')
@@ -26,7 +26,7 @@ class Couchdb(AutotoolsPackage):
     depends_on('gmake',    type='build')
     depends_on('help2man', type='build')
     depends_on('python',   type=('build', 'run'))
-    depends_on('erlang@:22.99', type=('build', 'run'))
+    depends_on('erlang@:22', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         env.set('CPATH', self.spec['mozjs'].prefix.include.js)

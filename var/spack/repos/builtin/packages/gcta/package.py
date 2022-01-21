@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Gcta(Package):
     for many other analyses to better understand the genetic architecture of
     complex traits. GCTA currently supports the following analyses."""
 
-    homepage = "http://cnsgenomics.com/software/gcta/#Overview"
+    homepage = "https://cnsgenomics.com/software/gcta/#Overview"
     url      = "http://cnsgenomics.com/software/gcta/gcta_1.91.2beta.zip"
 
     version('1.91.2beta_mac', 'ce0882ad35dd9474ffe40911da369274700af1ecb9916c0a355b7bad14850234')

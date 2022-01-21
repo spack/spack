@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Workrave(AutotoolsPackage):
        The program runs on GNU/Linux and Microsoft Windows.
     """
 
-    homepage = "http://www.workrave.org/"
+    homepage = "https://www.workrave.org/"
     url      = "https://github.com/rcaelers/workrave/archive/v1_10_20.tar.gz"
 
     version('1_10_20', sha256='a89c6e82d5bbbaae5e171100b87c4efd8316ab8a18d82b83714035e1116983ec')
@@ -55,13 +55,13 @@ class Workrave(AutotoolsPackage):
     # https://github.com/rcaelers/workrave/issues/95
     m4files = ['ax_cxx_compile_stdcxx_11', 'ax_cxx_compile_stdcxx']
     resource(name=m4files[0],
-             url='http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx_11.m4',
+             url='https://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx_11.m4',
              sha256='d75fc9fe4502eea02e8c5bfb61b88a04cd08aa6d5bd757fe66e9a9a1e4781b46',
              expand=False,
              destination='',
              placement=m4files[0])
     resource(name=m4files[1],
-             url='http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx.m4',
+             url='https://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_cxx_compile_stdcxx.m4',
              sha256='0c08d2f64147f65eb7e255019102c1042ab695c60fd49add19793951a1279a1a',
              expand=False,
              destination='',

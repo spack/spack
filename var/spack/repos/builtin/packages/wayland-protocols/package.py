@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class WaylandProtocols(AutotoolsPackage):
     protocol either in Wayland core, or some other protocol i
     n wayland-protocols."""
 
-    homepage = "http://wayland.freedesktop.org/"
+    homepage = "https://wayland.freedesktop.org/"
     url      = "https://github.com/wayland-project/wayland-protocols/archive/1.20.tar.gz"
 
     version('1.20',  sha256='b59cf0949aeb1f71f7db46b63b1c5a6705ffde8cb5bd194f843fbd9b41308dda')

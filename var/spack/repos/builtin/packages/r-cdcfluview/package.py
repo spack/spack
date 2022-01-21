@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RCdcfluview(RPackage):
     Control and Prevention ('CDC') 'FluView' Portal
 
     The 'U.S.' Centers for Disease Control ('CDC') maintains a portal
-    <http://gis.cdc.gov/grasp/fluview/fluportaldashboard.html> for accessing
+    <https://gis.cdc.gov/grasp/fluview/fluportaldashboard.html> for accessing
     state, regional and national influenza statistics as well as Mortality
     Surveillance Data. The web interface makes it difficult and time-consuming
     to select and retrieve influenza data. Tools are provided to access the

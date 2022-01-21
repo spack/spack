@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,16 +37,16 @@ class PyPyproj(PythonPackage):
     # https://pyproj4.github.io/pyproj/stable/installation.html#installing-from-source
     depends_on('proj')
     depends_on('proj@7.2:', when='@3.0.1:')
-    depends_on('proj@7.2.0:7.2.999',  when='@3.0.0')
+    depends_on('proj@7.2.0:7.2',  when='@3.0.0')
     depends_on('proj@6.2:7.0', when='@2.4:2.6')
     depends_on('proj@6.1:7.0', when='@2.2:2.3')
-    depends_on('proj@6.0:6.999', when='@2.0:2.1')
+    depends_on('proj@6.0:6', when='@2.0:2.1')
     depends_on('proj@:5.2', when='@:1.9')
 
     # In setup.py
     depends_on('py-setuptools', type='build')
     depends_on('py-certifi', when='@3.0:', type=('build', 'run'))
-    depends_on('py-aenum', when='@2.2.0:2.2.999 ^python@:3.5.999', type=('build', 'run'))
+    depends_on('py-aenum', when='@2.2.0:2.2 ^python@:3.5', type=('build', 'run'))
 
     # In pyproject.toml
     depends_on('py-cython@0.28.4:', when='@2.0:')

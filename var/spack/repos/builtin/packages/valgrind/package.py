@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,13 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     Valgrind is Open Source / Free Software, and is freely available
     under the GNU General Public License, version 2.
     """
-    homepage = "http://valgrind.org/"
+    homepage = "https://valgrind.org/"
     sourceware_mirror_path = "valgrind/valgrind-3.13.0.tar.bz2"
     git      = "git://sourceware.org/git/valgrind.git"
 
     version('develop', branch='master')
+    version('3.18.1', sha256='00859aa13a772eddf7822225f4b46ee0d39afbe071d32778da4d99984081f7f5')
+    version('3.18.0', sha256='8da880f76592fe8284db98e68f6dc9095485bc2ecc88bc05b7df1f278ae7f657')
     version('3.17.0', sha256='ad3aec668e813e40f238995f60796d9590eee64a16dff88421430630e69285a2')
     version('3.16.1', sha256='c91f3a2f7b02db0f3bc99479861656154d241d2fdb265614ba918cc6720a33ca')
     version('3.15.0', sha256='417c7a9da8f60dd05698b3a7bc6002e4ef996f14c13f0ff96679a16873e78ab1')
@@ -40,7 +42,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Activates boost support for valgrind')
     variant('only64bit', default=True,
             description='Sets --enable-only64bit option for valgrind')
-    variant('ubsan', default=sys.platform != 'darwin',
+    variant('ubsan', default=False,
             description='Activates ubsan support for valgrind')
 
     conflicts('+ubsan', when='%apple-clang',

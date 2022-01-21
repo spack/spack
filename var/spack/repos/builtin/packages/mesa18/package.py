@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Mesa18(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL specification
      - a system for rendering interactive 3D graphics."""
 
-    homepage = "http://www.mesa3d.org"
+    homepage = "https://www.mesa3d.org"
     maintainers = ['v-dobrev', 'chuckatkins', 'ChristianTackeGSI']
 
     # Note that we always want to build from the git repo instead of a
@@ -76,6 +76,9 @@ class Mesa18(AutotoolsPackage):
     # Backport Mesa MR#6053 to prevent multiply-defined symbols
     patch('multiple-symbols_hash.patch', when='@:20.1.4%gcc@10:')
 
+    def setup_build_environment(self, env):
+        env.set('PYTHON', self.spec['python'].command.path)
+
     def autoreconf(self, spec, prefix):
         which('autoreconf')('--force',  '--verbose', '--install')
 
@@ -136,7 +139,7 @@ class Mesa18(AutotoolsPackage):
         if '+llvm' in spec:
             args.append('--enable-llvm')
             args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-            if '+link_dylib' in spec['llvm']:
+            if '+llvm_dylib' in spec['llvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Ligra(MakefilePackage):
     """A Lightweight Graph Processing Framework for Shared Memory"""
 
-    homepage = "http://jshun.github.io/ligra/"
+    homepage = "https://jshun.github.io/ligra/"
     url      = "https://github.com/jshun/ligra/archive/v.1.5.tar.gz"
 
     version('1.5', sha256='74113a5a3c19a0e319a5b9ebefc8a67c5d18d4d2a9670363092a966f4163f6b7')

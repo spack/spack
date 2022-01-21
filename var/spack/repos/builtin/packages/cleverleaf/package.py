@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cleverleaf(CMakePackage):
        hydrodynamics scheme used by CloverLeaf.
     """
 
-    homepage = "http://uk-mac.github.io/CleverLeaf/"
+    homepage = "https://uk-mac.github.io/CleverLeaf/"
     git      = "https://github.com/UK-MAC/CleverLeaf_ref.git"
 
     version('develop', branch='develop')

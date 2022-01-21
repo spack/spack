@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class EtsfIo(Package):
     quantum-chemical applications relying upon Density Functional Theory (DFT).
     """
 
-    homepage = "http://www.etsf.eu/resources/software/libraries_and_tools"
+    homepage = "https://github.com/ElectronicStructureLibrary/libetsf_io"
     url = "https://launchpad.net/etsf-io/1.0/1.0.4/+download/etsf_io-1.0.4.tar.gz"
 
     version('1.0.4', sha256='3140c2cde17f578a0e6b63acb27a5f6e9352257a1371a17b9c15c3d0ef078fa4')

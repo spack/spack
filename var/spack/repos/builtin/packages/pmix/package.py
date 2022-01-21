@@ -1,12 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import os
 
-import spack.architecture
 from spack import *
 
 
@@ -67,7 +64,7 @@ class Pmix(AutotoolsPackage):
             description='Build manpages')
 
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
+    depends_on('hwloc@1.11.0:1.11,2.0.1:', when='@3.0.0:')
     depends_on("m4", type=("build"), when="@master")
     depends_on("autoconf", type=("build"), when="@master")
     depends_on("automake", type=("build"), when="@master")
@@ -111,8 +108,8 @@ class Pmix(AutotoolsPackage):
         # Versions < 2.1.1 have a bug in the test code that *sometimes*
         # causes problems on strict alignment architectures such as
         # aarch64.  Work-around is to just not build the test code.
-        if 'aarch64' in spack.architecture.sys_type() and \
-           self.spec.version < Version('2.1.1'):
+        if (self.spec.satisfies('target=aarch64:') and
+                self.spec.version < Version('2.1.1')):
             config_args.append('--without-tests-examples')
 
         # Versions >= 3.0 also use hwloc

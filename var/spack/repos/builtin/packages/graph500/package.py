@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,15 @@ class Graph500(MakefilePackage):
     depends_on('mpi@2.0:')
 
     build_directory = 'src'
+
+    def flag_handler(self, name, flags):
+        wrapper_flags = None
+
+        if name == 'cflags':
+            if self.spec.satisfies('%gcc@10:'):
+                wrapper_flags = ['-fcommon']
+
+        return (wrapper_flags, None, flags)
 
     def edit(self, spec, prefix):
         makefile = FileFilter(join_path(self.build_directory, 'Makefile'))

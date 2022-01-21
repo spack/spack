@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.4.2', sha256='e57c75e1318133951d32a83bcdc4aff17fed28722c4e71f2305cfc2ae1cae7ba')
     version('5.2.8', sha256='60a6764ccf404a1668c140f11cc1f699290ab70daa1151bb58fed6139a28ac37')
     version('5.2.7', sha256='97fe503ff3b2e356fe2ae32203fc7fd2cf9cef1f46b60fe46dc501a228b9f4ed')
     version('5.2.5', sha256='039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')

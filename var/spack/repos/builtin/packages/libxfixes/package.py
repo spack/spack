@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Libxfixes(AutotoolsPackage, XorgPackage):
     """This package contains header files and documentation for the XFIXES
     extension.  Library and server implementations are separate."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfixes"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXfixes"
     xorg_mirror_path = "lib/libXfixes-5.0.2.tar.gz"
 
     version('5.0.2', sha256='ad8df1ecf3324512b80ed12a9ca07556e561b14256d94216e67a68345b23c981')

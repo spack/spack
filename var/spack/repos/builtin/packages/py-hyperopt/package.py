@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyHyperopt(PythonPackage):
     awkward search spaces, which may include real-valued, discrete, and
     conditional dimensions."""
 
-    homepage = "http://hyperopt.github.io/hyperopt/"
+    homepage = "https://hyperopt.github.io/hyperopt/"
     pypi     = "hyperopt/hyperopt-0.2.5.tar.gz"
 
     version('0.2.5', sha256='bc6047d50f956ae64eebcb34b1fd40f186a93e214957f20e87af2f10195295cc')

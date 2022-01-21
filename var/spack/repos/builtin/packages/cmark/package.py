@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Cmark(CMakePackage):
     """cmark is the C reference implementation of CommonMark,
     a rationalized version of Markdown syntax with a spec."""
 
-    homepage = "http://commonmark.org/"
+    homepage = "https://commonmark.org/"
     url      = "https://github.com/commonmark/cmark/archive/0.29.0.tar.gz"
 
     version('0.29.0', sha256='2558ace3cbeff85610de3bda32858f722b359acdadf0c4691851865bb84924a6')

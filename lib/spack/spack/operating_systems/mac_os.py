@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform as py_platform
 
-from spack.architecture import OperatingSystem
 from spack.util.executable import Executable
 from spack.version import Version
+
+from ._operating_system import OperatingSystem
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string

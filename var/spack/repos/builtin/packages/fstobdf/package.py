@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Fstobdf(AutotoolsPackage, XorgPackage):
     This is useful in testing servers, debugging font metrics, and
     reproducing lost BDF files."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/fstobdf"
+    homepage = "https://cgit.freedesktop.org/xorg/app/fstobdf"
     xorg_mirror_path = "app/fstobdf-1.0.6.tar.gz"
 
     version('1.0.6', sha256='bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d')

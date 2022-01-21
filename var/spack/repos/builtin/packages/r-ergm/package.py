@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RErgm(RPackage):
     exponential-family random graph models (ERGM). "ergm" is a part of the
     "statnet" suite of packages for network analysis."""
 
-    homepage = "http://statnet.org"
+    homepage = "https://statnet.org"
     url      = "https://cloud.r-project.org/src/contrib/ergm_3.7.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ergm"
 

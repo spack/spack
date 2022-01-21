@@ -23,29 +23,29 @@ spack:
     
     # Note skipping spot since no spack package for it
     - radiuss:
-      #- ascent  # ^conduit@0.6.0
-      #- axom
+      - ascent  # ^conduit@0.6.0
+      - axom
       - blt
       - caliper
-      #- care
-      #- chai
+      #- care  ## ~benchmarks ~examples ~tests
+      #- chai  ## ~benchmarks ~examples ~tests
       - conduit  # ^hdf5+shared
       - flux-core
       #- flux-sched
-      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm
+      #- glvis   # ^mesa-glu@9.0.0 ^mesa18~llvm  # same issue w/chai
       - hypre
       - lbann
-      #- lvarray ^raja~openmp  # per Ben Corbett Issue #23192
+      - lvarray ~tests  # per Spack issue #23192  # ~examples
       - mfem
-      #- py-hatchet
-      #- py-maestrowf
-      #- py-merlin
-      #- py-shroud
-      #- raja
-      #- samrai
+      - py-hatchet
+      - py-maestrowf
+      - py-merlin
+      - py-shroud
+      - raja # ~examples  # ~tests
+      - samrai
       - scr
-      #- sundials
-      #- umpire ~openmp
+      - sundials
+      - umpire # ~openmp
       #- visit   # ^mesa-glu@9.0.0
       - xbraid
       - zfp
@@ -59,7 +59,7 @@ spack:
     - [$compilers]
 
   gitlab-ci:
-    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -71,7 +71,7 @@ spack:
       - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
           tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['@:']
+      - match: ['os=ubuntu18.04']
         runner-attributes:
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
@@ -79,14 +79,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2021-05-15", "entrypoint": [""] }
-      #before_script:
-      #  - . "./share/spack/setup-env.sh"
-      #  - spack --version
-      #  - cd share/spack/gitlab/cloud_pipelines/stacks/radiuss
-      #  - spack env activate --without-view .
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:

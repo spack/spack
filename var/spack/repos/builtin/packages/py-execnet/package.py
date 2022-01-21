@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyExecnet(PythonPackage):
     communication for distributing execution across many Python interpreters
     across version, platform and network barriers."""
 
-    homepage = "http://codespeak.net/execnet"
+    homepage = "https://codespeak.net/execnet"
     pypi = "execnet/execnet-1.7.1.tar.gz"
 
     version('1.7.1', sha256='cacb9df31c9680ec5f95553976c4da484d407e85e41c83cb812aa014f0eddc50')

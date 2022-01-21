@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,9 +35,9 @@ class _3dtk(CMakePackage):
     generator = 'Ninja'
 
     depends_on('cmake@3.5:', when='@trunk', type='build')
-    depends_on('cmake@2.6.1:2.999', when='@1.2', type='build')
+    depends_on('cmake@2.6.1:2', when='@1.2', type='build')
     depends_on('ninja', type='build')
-    depends_on('boost+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
+    depends_on('boost@:1.75+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
     depends_on('suite-sparse')
     depends_on('zlib')
     depends_on('libpng')

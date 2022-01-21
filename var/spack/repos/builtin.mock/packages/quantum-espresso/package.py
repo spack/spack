@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class QuantumEspresso(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/qe-1.0.tar.gz"
 
-    version(1.0, 'foobar')
+    version(1.0, '1234567890abcdef1234567890abcdef')
 
     variant('invino', default=True, description='?')
     variant('veritas', default=True, description='?')

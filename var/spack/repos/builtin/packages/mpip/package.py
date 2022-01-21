@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Mpip(AutotoolsPackage):
     version('3.5',
             sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")
     version("3.4.1",
-            sha256="66a86dafde61546be80a130c46e4295f47fb764cf312ae62c70a6dc456a59dac")
+            sha256="66a86dafde61546be80a130c46e4295f47fb764cf312ae62c70a6dc456a59dac", deprecated=True)
 
     variant('demangling', default=True,
             description="Build with demangling support")
@@ -59,9 +59,8 @@ class Mpip(AutotoolsPackage):
     depends_on('python@:2', when='@3.4.1', type='build')
     depends_on('mpi')
 
-    #  Ideally would use libunwind, but provide backtrace and
-    #    setjmp functionality, if needed
-    #  depends_on('unwind')
+    #  '+setjmp' adds '--disable-libunwind' to the confiure args
+    depends_on('unwind', when='@3.5: +libunwind ~setjmp')
 
     @when('@3.5:')
     def configure_args(self):

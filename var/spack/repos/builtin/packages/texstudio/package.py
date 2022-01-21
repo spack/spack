@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Texstudio(QMakePackage):
     """TeXstudio is a fully featured LaTeX editor, whose goal is to make
     writing LaTeX documents as easy and comfortable as possible."""
 
-    homepage = "http://www.texstudio.org"
+    homepage = "https://www.texstudio.org"
     url      = "https://github.com/texstudio-org/texstudio/archive/2.12.16.tar.gz"
     git      = "https://github.com/texstudio-org/texstudio.git"
 
@@ -29,7 +29,7 @@ class Texstudio(QMakePackage):
     depends_on('poppler+qt', when="+poppler")
     # There is a known issue with QT 5.10
     # See https://github.com/texstudio-org/texstudio/wiki/Compiling
-    depends_on('qt@4.4.4:5.9.999,5.11.0:')
+    depends_on('qt@4.4.4:5.9,5.11.0:')
 
     conflicts('target=aarch64:', when='@:2.12.22')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 class PyCheroot(PythonPackage):
     """ Highly-optimized, pure-python HTTP server """
 
-    homepage = "https://cheroot.cherrypy.org/"
+    homepage = "https://cheroot.readthedocs.io/en/latest/"
     pypi = "cheroot/cheroot-6.5.5.tar.gz"
 
     version('8.3.0', sha256='a0577e1f28661727d472671a7cc4e0c12ea0cbc5220265e70f00a8b8cb628931')

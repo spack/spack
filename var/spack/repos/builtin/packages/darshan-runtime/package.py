@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,13 @@ class DarshanRuntime(AutotoolsPackage):
     minimum overhead. DarshanRuntime package should be installed on
     systems where you intend to instrument MPI applications."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
+    tags = ['e4s']
     test_requires_compiler = True
 
     version('main', branch='main', submodules=True)

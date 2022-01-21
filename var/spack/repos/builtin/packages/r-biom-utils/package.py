@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RBiomUtils(RPackage):
     """Provides utilities to facilitate import, export and computation with
-    the BIOM (Biological Observation Matrix) format (http://biom-format.org).
+    the BIOM (Biological Observation Matrix) format (https://biom-format.org/).
     """
 
     homepage = "https://github.com/braithwaite/BIOM.utils/"

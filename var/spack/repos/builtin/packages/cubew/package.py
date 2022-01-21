@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Cubew(AutotoolsPackage):
     """Component of CubeBundle: High performance C Writer library """
 
-    homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
-    url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
+    homepage = "https://www.scalasca.org/software/cube-4.x/download.html"
+    url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubew-4.4.tar.gz"
 
     version('4.6', sha256='99fe58ce7ab13061ebfbc360aedaecc28099a30636c5269a42c0cbaf57149aa8')
     version('4.5', sha256='16bd8fd864197a74ca65f7325761ad75d73d555072326e95e1338cff39f28a5c')

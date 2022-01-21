@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,4 +22,4 @@ class PyGsd(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
-    depends_on('py-numpy@1.9.3:1.999999', type=('build', 'run'))
+    depends_on('py-numpy@1.9.3:19', type=('build', 'run'))

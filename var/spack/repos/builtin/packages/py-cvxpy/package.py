@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,4 +27,4 @@ class PyCvxpy(PythonPackage):
     depends_on('py-scs@1.1.6:',        type=('build', 'run'), when='@1.1.13:')
     depends_on('py-osqp@0.4.1:',        type=('build', 'run'))
     depends_on('py-multiprocess', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'), when='@:1.0.99')
+    depends_on('py-six', type=('build', 'run'), when='@:1.0')

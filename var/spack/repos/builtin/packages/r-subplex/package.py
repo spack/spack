@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class RSubplex(RPackage):
     """Unconstrained Optimization using the Subplex Algorithm
 
     The subplex algorithm for unconstrained optimization, developed by Tom
-    Rowan <http://www.netlib.org/opt/subplex.tgz>."""
+    Rowan <https://www.netlib.org/opt/subplex.tgz>."""
 
     homepage = "https://cloud.r-project.org/package=subplex"
     url      = "https://cloud.r-project.org/src/contrib/subplex_1.4-1.tar.gz"

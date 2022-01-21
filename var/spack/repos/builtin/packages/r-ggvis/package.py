@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RGgvis(RPackage):
     parts of 'ggplot2', combining them with the reactive framework from 'shiny'
     and web graphics from 'vega'."""
 
-    homepage = "http://ggvis.rstudio.com/"
+    homepage = "https://ggvis.rstudio.com/"
     url      = "https://cloud.r-project.org/src/contrib/ggvis_0.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggvis"
 

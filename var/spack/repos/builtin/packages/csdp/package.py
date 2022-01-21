@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Csdp(MakefilePackage):
        Vanderbei, and Wolkowicz"""
 
     homepage = "https://projects.coin-or.org/Csdp"
-    url      = "http://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
+    url      = "https://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
 
     version('6.1.1', sha256='0558a46ac534e846bf866b76a9a44e8a854d84558efa50988ffc092f99a138b9')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyBreakseq2(PythonPackage):
     """nucleotide-resolution analysis of structural variants"""
 
-    homepage = "http://bioinform.github.io/breakseq2/"
+    homepage = "https://bioinform.github.io/breakseq2/"
     url      = "https://github.com/bioinform/breakseq2/archive/2.2.tar.gz"
 
     version('2.2', sha256='d149e803191e6bb0b749abfba2c258716d94a38e942aaed40eb1630ae84f91ee')

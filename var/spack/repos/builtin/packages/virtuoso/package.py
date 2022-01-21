@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class Virtuoso(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('gperf')
     depends_on('readline')
-    depends_on('openssl@0.9.8:1.1.99')
+    depends_on('openssl@0.9.8:1.1')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

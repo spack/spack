@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Iegenlib(CMakePackage):
     """Inspector/Executor Generation Library for manipulating sets
        and relations with uninterpreted function symbols. """
 
-    homepage = "http://github.com/CompOpt4Apps/IEGenLib"
+    homepage = "https://github.com/CompOpt4Apps/IEGenLib"
     git      = "https://github.com/CompOpt4Apps/IEGenLib.git"
     url      = "https://github.com/CompOpt4Apps/IEGenLib/archive/fc479ee6ff01dba26beffc1dc6bacdba03262138.zip"
 

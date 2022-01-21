@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,10 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
     depends_on('subversion', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('java', type='build')
+    depends_on('opencl', when='+opencl')
 
     cuda_arch_values = CudaPackage.cuda_arch_values
+    variant('opencl', default=False, description='Include OpenCL (GPU) support')
     variant(
         'cuda_arch',
         description='CUDA architecture',
@@ -54,6 +56,9 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
             filter_file('-L$with_cuda/lib', '-L$with_cuda/lib64/stubs',
                         'configure.ac', string=True)
 
+    def autoreconf(self, spec, prefix):
+        which('bash')('autogen.sh')
+
     def configure_args(self):
         args = [
             # Since spack will inject architecture flags turn off -march=native
@@ -62,8 +67,13 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
         ]
 
         if '+cuda' in self.spec:
-            args.append('--with-cuda=%s' % self.spec['cuda'].prefix)
+            args.append('--with-cuda={0}'.format(self.spec['cuda'].prefix))
         else:
             args.append('--without-cuda')
+
+        if '+opencl' in self.spec:
+            args.append('--with-opencl={0}'.format(self.spec['opencl'].prefix))
+        else:
+            args.append('--without-opencl')
 
         return args

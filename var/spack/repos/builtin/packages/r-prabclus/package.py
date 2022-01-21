@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RPrabclus(RPackage):
     between communities. Tests whether various distance-based regressions are
     equal. Try package?prabclus for on overview."""
 
-    homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
+    homepage = "https://www.homepages.ucl.ac.uk/~ucakche"
     url      = "https://cloud.r-project.org/src/contrib/prabclus_2.2-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/prabclus"
 

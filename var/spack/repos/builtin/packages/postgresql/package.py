@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,13 @@ class Postgresql(AutotoolsPackage):
     that has earned it a strong reputation for reliability, data integrity, and
     correctness."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://www.postgresql.org/"
+    url      = "https://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
+    version('14.0',   sha256='ee2ad79126a7375e9102c4db77c4acae6ae6ffe3e082403b88826d96d927a122')
+    version('12.2',   sha256='ad1dcc4c4fc500786b745635a9e1eba950195ce20b8913f50345bb7d5369b5de')
     version('11.2',   sha256='2676b9ce09c21978032070b6794696e0aa5a476e3d21d60afc036dc0a9c09405')
     version('11.1',   sha256='90815e812874831e9a4bf6e1136bf73bc2c5a0464ef142e2dfea40cda206db08')
     version('11.0',   sha256='bf9bba03d0c3902c188af12e454b35343c4a9bf9e377ec2fe50132efb44ef36b')

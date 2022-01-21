@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,21 +23,23 @@ class PyTensorboard(Package):
 
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
     depends_on('py-markdown@2.6.8:', type=('build', 'run'))
-    depends_on('py-requests@2.21.0:2.999', type=('build', 'run'))
+    depends_on('py-requests@2.21.0:2', type=('build', 'run'))
     depends_on('py-futures@3.1.1:', type=('build', 'run'), when='^python@:2')
     depends_on('py-grpcio@1.24.3:', type=('build', 'run'), when='@2.3:')
     depends_on('py-grpcio@1.23.3:', type=('build', 'run'), when='@2.2')
-    depends_on('py-google-auth@1.6.3:1.99.99', type=('build', 'run'))
+    depends_on('py-google-auth@1.6.3:1', type=('build', 'run'))
     depends_on('py-numpy@1.12.0:', type=('build', 'run'))
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
     depends_on('py-wheel', type=('build', 'run'))
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
-    depends_on('py-google-auth-oauthlib@0.4.1:0.4.999', type=('build', 'run'))
+    depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
     depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'), when='@2.2.0:')
 
     extends('python')
@@ -102,6 +104,6 @@ class PyTensorboard(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build'):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(self.tmp_path)

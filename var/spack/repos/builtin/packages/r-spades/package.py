@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RSpades(RPackage):
     focus on spatially explicit models. These include raster-based,
     event-based, and agent-based models."""
 
-    homepage = "http://spades.predictiveecology.org/"
+    homepage = "https://spades.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES_2.0.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SpaDES"
 

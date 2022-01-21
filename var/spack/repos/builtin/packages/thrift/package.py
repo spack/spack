@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Thrift(Package):
 
     """
 
-    homepage = "http://thrift.apache.org"
+    homepage = "https://thrift.apache.org"
     url      = "http://apache.mirrors.ionfish.org/thrift/0.11.0/thrift-0.11.0.tar.gz"
 
     version('0.13.0', sha256='7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179')

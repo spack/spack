@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,7 +82,7 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
 
     if args.installed:
-        env = ev.get_env(args, 'dependents')
+        env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = '{name}{@version}{%compiler}{/hash:7}'

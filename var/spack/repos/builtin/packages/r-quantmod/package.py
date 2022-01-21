@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RQuantmod(RPackage):
     Specify, build, trade, and analyse quantitative financial trading
     strategies."""
 
-    homepage = "http://www.quantmod.com/"
+    homepage = "https://www.quantmod.com/"
     url      = "https://cloud.r-project.org/src/contrib/quantmod_0.4-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quantmod"
 

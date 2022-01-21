@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,13 @@ class Amber(Package, CudaPackage):
        A manual download is required for Ambers. Spack will search your current
        directory for the download files. Alternatively, add the files to a mirror
        so that Spack can find them. For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html
+       https://spack.readthedocs.io/en/latest/mirrors.html
 
        Note: Only certain versions of ambertools are compatible with amber.
        Only the latter version of ambertools for each amber version is supported.
        """
 
-    homepage = "http://ambermd.org/"
+    homepage = "https://ambermd.org/"
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
     manual_download = True
 
@@ -38,15 +38,16 @@ class Amber(Package, CudaPackage):
 
     resources = {
         # [version amber, version ambertools , sha256sum]
-        '20': ('20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
+        '20': ('21', 'f55fa930598d5a8e9749e8a22d1f25cab7fcf911d98570e35365dd7f262aaafd'),
+        # '20': ('20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
         '18': ('19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
         '16': ('16', '7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa'),
     }
     for ver, (ambertools_ver, ambertools_checksum) in resources.items():
         resource(when='@{0}'.format(ver),
                  name='AmberTools',
-                 url='http://ambermd.org/downloads/AmberTools{0}.tar.bz2'.format(
-                      ambertools_ver),
+                 url='file://{0}/AmberTools{1}.tar.bz2'.format(
+                      os.getcwd(), ambertools_ver),
                  sha256=ambertools_checksum,
                  destination='',
                  placement='ambertools_tmpdir',
@@ -62,6 +63,9 @@ class Amber(Package, CudaPackage):
         ('20', '7', '143b6a09f774aeae8b002afffb00839212020139a11873a3a1a34d4a63fa995d'),
         ('20', '8', 'a6fc6d5c8ba0aad3a8afe44d1539cc299ef78ab53721e28244198fd5425d14ad'),
         ('20', '9', '5ce6b534bab869b1e9bfefa353d7f578750e54fa72c8c9d74ddf129d993e78cf'),
+        ('20', '10', '76a683435be7cbb860f5bd26f09a0548c2e77c5a481fc6d64b55a3a443ce481d'),
+        ('20', '11', 'f40b3612bd3e59efa2fa1ec06ed6fd92446ee0f1d5d99d0f7796f66b18e64060'),
+        ('20', '12', '194119aed03f80677c4bab78a20fc09b0b3dc17c41a57c5eb3c912b2d73b18ab'),
         ('18', '1', '3cefac9a24ece99176d5d2d58fea2722de3e235be5138a128428b9260fe922ad'),
         ('18', '2', '3a0707a9a59dcbffa765dcf87b68001450095c51b96ec39d21260ba548a2f66a'),
         ('18', '3', '24c2e06f71ae553a408caa3f722254db2cbf1ca4db274542302184e3d6ca7015'),
@@ -101,10 +105,10 @@ class Amber(Package, CudaPackage):
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
     # Patch to add ppc64le in config.guess
-    patch('ppc64le.patch', when='@18: target=ppc64le')
+    patch('ppc64le.patch', when='@18: target=ppc64le:')
 
     # Patch to add aarch64 in config.guess
-    patch('aarch64.patch', when='@18: target=aarch64')
+    patch('aarch64.patch', when='@18: target=aarch64:')
 
     # Workaround to modify the AmberTools script when using the NVIDIA
     # compilers
@@ -127,12 +131,15 @@ class Amber(Package, CudaPackage):
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('netcdf-fortran')
+    depends_on('parallel-netcdf', when='@20:')  # when='AmberTools@21:'
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
     depends_on('mpi', when='+mpi')
 
     # Cuda dependencies
-    depends_on('cuda@:10.2.89', when='@18:+cuda')
+    # /AmberTools/src/configure2:1329
+    depends_on('cuda@:11.1', when='@20:+cuda')  # when='AmberTools@21:'
+    depends_on('cuda@:10.2.89', when='@18+cuda')
     depends_on('cuda@7.5.18', when='@:16+cuda')
 
     # conflicts

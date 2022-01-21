@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Mvapich2x(AutotoolsPackage):
     http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/
     """
 
-    homepage = "http://mvapich.cse.ohio-state.edu"
+    homepage = "https://mvapich.cse.ohio-state.edu"
     url      = "http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2x/mvapich2x-2.3.tar.gz"
 
     maintainers = ['natshineman', 'harisubramoni', 'ndcontini']

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,20 +19,26 @@ class Simulationio(CMakePackage):
     version('master', branch='master')
     version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
 
+    variant('asdf', default=True, description="Enable ASDF bindings")
     variant('julia', default=False, description="Enable Julia bindings")
     variant('python', default=True, description="Enable Python bindings")
+    variant('hdf5', default=True, description="Enable HDF5 bindings")
+    variant('rnpl', default=False, description="Enable RNPL bindings")
+    variant('silo', default=False, description="Enable Silo bindings")
 
     variant('pic', default=True,
             description="Produce position-independent code")
 
-    depends_on("asdf-cxx ~python", when='~python')
-    depends_on("asdf-cxx +python", when='+python')
-    depends_on('hdf5 +cxx @1.10.1:')
+    depends_on("asdf-cxx ~python", when='+asdf ~python')
+    depends_on("asdf-cxx +python", when='+asdf +python')
+    depends_on('hdf5 +cxx @1.10.1:', when='+hdf5')
     depends_on('julia', when='+julia', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('python@3:', when='@9: +python', type=('build', 'run'))
     depends_on('python@2.7:2.8', when='@:8 +python', type=('build', 'run'))
+    depends_on('rnpletal', when='+rnpl')
+    depends_on('silo', when='+silo')
     depends_on('swig', type='build')
 
     extends('python')

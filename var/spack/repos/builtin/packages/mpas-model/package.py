@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class MpasModel(MakefilePackage):
     url = "https://github.com/MPAS-Dev/MPAS-Model/archive/v7.0.tar.gz"
     maintainers = ['t-brown']
 
+    version('7.1', sha256='9b5c181b7d0163ae33d24d7a79ede6990495134b58cf4500ba5c8c94192102bc')
     version('7.0', sha256='f898ce257e66cff9e29320458870570e55721d16cb000de7f2cc27de7fdef14f')
     version('6.3', sha256='e7f1d9ebfeb6ada37d42a286aaedb2e69335cbc857049dc5c5544bb51e7a8db8')
     version('6.2', sha256='2a81825a62a468bf5c56ef9d9677aa2eb88acf78d4f996cb49a7db98b94a6b16')
@@ -31,7 +32,7 @@ class MpasModel(MakefilePackage):
              name='MPAS-Data',
              git='https://github.com/MPAS-Dev/MPAS-Data.git',
              commit='33561790de8b43087ab850be833f51a4e605f1bb')
-    resource(when='@7.0',
+    resource(when='@7.0:',
              name='MPAS-Data',
              git='https://github.com/MPAS-Dev/MPAS-Data.git',
              tag='v7.0')

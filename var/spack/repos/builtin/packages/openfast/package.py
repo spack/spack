@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,21 @@ from spack import *
 class Openfast(CMakePackage):
     """Wind turbine simulation package from NREL"""
 
-    homepage = "http://openfast.readthedocs.io/en/latest/"
+    homepage = "https://openfast.readthedocs.io/en/latest/"
     git      = "https://github.com/OpenFAST/openfast.git"
 
     maintainers = ['jrood-nrel']
 
     version('develop', branch='dev')
     version('master', branch='main')
+    version('2.6.0', tag='v2.6.0')
+    version('2.5.0', tag='v2.5.0')
+    version('2.4.0', tag='v2.4.0')
+    version('2.3.0', tag='v2.3.0')
+    version('2.2.0', tag='v2.2.0')
+    version('2.1.0', tag='v2.1.0')
+    version('2.0.0', tag='v2.0.0')
+    version('1.0.0', tag='v1.0.0')
 
     variant('shared', default=True,
             description="Build shared libraries")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Grace(AutotoolsPackage):
     """Grace is a WYSIWYG 2D plotting tool for the X Window System and M*tif."""
 
-    homepage = "http://plasma-gate.weizmann.ac.il/Grace"
+    homepage = "https://plasma-gate.weizmann.ac.il/Grace"
     # The main site (ftp://plasma-gate.weizmann.ac.il/pub/grace/)
     # is currently unavailable so we use one of the mirrors instead.
     url      = "ftp://ftp.fu-berlin.de/unix/graphics/grace/src/grace5/grace-5.1.25.tar.gz"
@@ -28,7 +28,7 @@ class Grace(AutotoolsPackage):
     depends_on('motif')
     depends_on('jpeg')
     depends_on('libpng')
-    depends_on('fftw@2:2.999')
+    depends_on('fftw@2.0:2')
     depends_on('netcdf-c')
 
     def patch(self):
@@ -37,6 +37,14 @@ class Grace(AutotoolsPackage):
         # currently and would require to run "autoreconf".
         filter_file('<fftw.h>', '<dfftw.h>',
                     'configure', 'src/fourier.c')
+        filter_file('char   filename[128];',
+                    'char   filename[4096];',
+                    'T1lib/type1/scanfont.c',
+                    string=True)
+        filter_file('char CurFontName[120];',
+                    'char CurFontName[4096];',
+                    'T1lib/type1/fontfcn.c',
+                    string=True)
 
     def configure_args(self):
         args = []

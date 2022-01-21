@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RPbkrtest(RPackage):
     paper by Halehoh and Hojsgaard, (2012, <doi:10.18637/jss.v059.i09>).
     Please see 'citation("pbkrtest")' for citation details."""
 
-    homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
+    homepage = "https://cran.r-project.org/web/packages/pbkrtest/index.html"
     url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
@@ -33,7 +33,7 @@ class RPbkrtest(RPackage):
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@0.5-0.1:', type=('build', 'run'))
-    depends_on('r-lme4@1.1.10:', type=('build', 'run'))
+    depends_on('r-lme4@1.1-10:', type=('build', 'run'))
     depends_on('r-broom', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-dplyr', when='@0.5-0.1:', type=('build', 'run'))
     depends_on('r-magrittr', when='@0.5-0.1:', type=('build', 'run'))

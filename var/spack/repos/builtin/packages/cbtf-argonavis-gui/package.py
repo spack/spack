@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class CbtfArgonavisGui(QMakePackage):
     """CBTF Argo Navis GUI project contains the GUI that views OpenSpeedShop
        performance information by loading in the Sqlite database files.
     """
-    homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
+    homepage = "https://sourceforge.net/p/cbtf/wiki/Home/"
     git      = "https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git"
 
     version('develop', branch='master')

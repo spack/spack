@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ from __future__ import division
 
 import functools
 import inspect
-import multiprocessing
 import os
 import re
 import sys
@@ -29,23 +28,6 @@ else:
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
-# method. Spack cannot currently handle this, so force the process to start
-# using the 'fork' start method.
-#
-# TODO: This solution is not ideal, as the 'fork' start method can lead to
-# crashes of the subprocess. Figure out how to make 'spawn' work.
-#
-# See:
-# * https://github.com/spack/spack/pull/18124
-# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
-# * https://bugs.python.org/issue33725
-if sys.version_info >= (3,):  # novm
-    fork_context = multiprocessing.get_context('fork')
-else:
-    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
@@ -933,3 +915,19 @@ class Devnull(object):
     """
     def write(self, *_):
         pass
+
+
+def elide_list(line_list, max_num=10):
+    """Takes a long list and limits it to a smaller number of elements,
+       replacing intervening elements with '...'.  For example::
+
+           elide_list([1,2,3,4,5,6], 4)
+
+       gives::
+
+           [1, 2, 3, '...', 6]
+    """
+    if len(line_list) > max_num:
+        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
+    else:
+        return line_list

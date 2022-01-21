@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Pixman(AutotoolsPackage):
     trapezoid rasterization."""
 
     homepage = "http://www.pixman.org"
-    url      = "http://cairographics.org/releases/pixman-0.32.6.tar.gz"
+    url      = "https://cairographics.org/releases/pixman-0.32.6.tar.gz"
 
     version('0.40.0', sha256='6d200dec3740d9ec4ec8d1180e25779c00bc749f94278c8b9021f5534db223fc')
     version('0.38.4', sha256='da66d6fd6e40aee70f7bd02e4f8f76fc3f006ec879d346bae6a723025cfbdde7')

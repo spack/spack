@@ -1,13 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 class Redis(MakefilePackage):
     """Redis is an open source (BSD licensed), in-memory data structure store,
     used as a database, cache and message broker.
-
     It supports data structures such as strings, hashes, lists, sets, sorted
     sets with range queries, bitmaps, hyperloglogs, geospatial indexes with
     radius queries and streams. Redis has built-in replication, Lua scripting,
@@ -15,10 +13,17 @@ class Redis(MakefilePackage):
     and provides high availability via Redis Sentinel and automatic
     partitioning with Redis Cluster
     """
-
     homepage = "https://redis.io"
-    url = "http://download.redis.io/releases/redis-5.0.3.tar.gz"
+    url = "https://download.redis.io/releases/redis-6.2.5.tar.gz"
 
+    version('6.2.5',   sha256='4b9a75709a1b74b3785e20a6c158cab94cf52298aa381eea947a678a60d551ae')
+    version('6.2.4',   sha256='ba32c406a10fc2c09426e2be2787d74ff204eb3a2e496d87cff76a476b6ae16e')
+    version('6.2.3',   sha256='98ed7d532b5e9671f5df0825bb71f0f37483a16546364049384c63db8764512b')
+    version('6.2.2',   sha256='7a260bb74860f1b88c3d5942bf8ba60ca59f121c6dce42d3017bed6add0b9535')
+    version('6.2.1',   sha256='cd222505012cce20b25682fca931ec93bd21ae92cb4abfe742cf7b76aa907520')
+    version('6.2.0',   sha256='67d624c25d962bd68aff8812a135df85bad07556b8825f3bcd5b522a9932dbca')
+    version('6.0.15',  sha256='4bc295264a95bc94423c162a9eee66135a24a51eefe5f53f18fc9bde5c3a9f74')
+    version('6.0.5',   sha256='42cf86a114d2a451b898fcda96acd4d01062a7dbaaad2801d9164a36f898f596')
     version('5.0.3',   sha256='e290b4ddf817b26254a74d5d564095b11f9cd20d8f165459efa53eb63cd93e02')
     version('5.0.2',   sha256='937dde6164001c083e87316aa20dad2f8542af089dfcb1cbb64f9c8300cd00ed')
     version('5.0.1',   sha256='82a67c0eec97f9ad379384c30ec391b269e17a3e4596393c808f02db7595abcb')

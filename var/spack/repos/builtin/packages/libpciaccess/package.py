@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Libpciaccess(AutotoolsPackage, XorgPackage):
     """Generic PCI access library."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libpciaccess/"
     xorg_mirror_path = "lib/libpciaccess-0.13.5.tar.gz"
 
     version('0.16', sha256='84413553994aef0070cf420050aa5c0a51b1956b404920e21b81e96db6a61a27')

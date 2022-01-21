@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Bitmap(AutotoolsPackage, XorgPackage):
     """bitmap, bmtoa, atobm - X bitmap (XBM) editor and converter utilities."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/bitmap"
+    homepage = "https://cgit.freedesktop.org/xorg/app/bitmap"
     xorg_mirror_path = "app/bitmap-1.0.8.tar.gz"
 
     version('1.0.8', sha256='1a2fbd10a2ca5cd93f7b77bbb0555b86d8b35e0fc18d036b1607c761755006fc')

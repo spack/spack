@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Mpe2(AutotoolsPackage):
     """Message Passing Extensions (MPE): Parallel, shared X window graphics"""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/perfvis/software/MPE/"
-    url      = "http://ftp.mcs.anl.gov/pub/mpi/mpe/mpe2-1.3.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/research/projects/perfvis/software/MPE/"
+    url      = "https://ftp.mcs.anl.gov/pub/mpi/mpe/mpe2-1.3.0.tar.gz"
 
     version('1.3.0', sha256='0faf32f9adab6fd882be30be913089ebf75272f8b5e4a012bb20c54abc21c0be')
 

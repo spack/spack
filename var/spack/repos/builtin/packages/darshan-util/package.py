@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,13 @@ class DarshanUtil(AutotoolsPackage):
     typically installed on systems (front-end) where you intend to analyze
     log files produced by Darshan (runtime)."""
 
-    homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url      = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    homepage = "https://www.mcs.anl.gov/research/projects/darshan/"
+    url      = "https://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
+
+    tags = ['e4s']
 
     version('main', branch='main', submodules='True')
     version('3.3.1', sha256='281d871335977d0592a49d053df93d68ce1840f6fdec27fea7a59586a84395f7')

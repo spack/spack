@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RRrblup(RPackage):
     calculated based on an additive relationship matrix or a Gaussian
     kernel."""
 
-    homepage = "http://potatobreeding.cals.wisc.edu/software"
+    homepage = "https://potatobreeding.cals.wisc.edu/software"
     url      = "https://cloud.r-project.org/src/contrib/rrBLUP_4.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rrBLUP"
 

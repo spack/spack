@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev._active_environment
+        env = ev.active_environment()
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 
@@ -320,3 +320,30 @@ the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
         default=None,
         help=cdash_help['buildstamp']
     )
+
+
+@arg
+def reuse():
+    return Args(
+        '--reuse', action='store_true', default=False,
+        help='reuse installed dependencies'
+    )
+
+
+def add_s3_connection_args(subparser, add_help):
+    subparser.add_argument(
+        '--s3-access-key-id',
+        help="ID string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-key-secret',
+        help="Secret string to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-access-token',
+        help="Access Token to use to connect to this S3 mirror")
+    subparser.add_argument(
+        '--s3-profile',
+        help="S3 profile name to use to connect to this S3 mirror",
+        default=None)
+    subparser.add_argument(
+        '--s3-endpoint-url',
+        help="Access Token to use to connect to this S3 mirror")

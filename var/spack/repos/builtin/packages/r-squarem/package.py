@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RSquarem(RPackage):
     vignette("SQUAREM"). Refer to the J Stat Software article:
     <doi:10.18637/jss.v092.i07>."""
 
-    homepage = "http://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
+    homepage = "https://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
     url      = "https://cloud.r-project.org/src/contrib/SQUAREM_2017.10-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SQUAREM"
 

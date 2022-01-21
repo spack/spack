@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyZict(PythonPackage):
     """Mutable mapping tools"""
 
-    homepage = "http://zict.readthedocs.io/en/latest/"
+    homepage = "https://zict.readthedocs.io/en/latest/"
     pypi = "zict/zict-1.0.0.tar.gz"
 
     version('1.0.0', sha256='e34dd25ea97def518fb4c77f2c27078f3a7d6c965b0a3ac8fe5bdb0a8011a310')

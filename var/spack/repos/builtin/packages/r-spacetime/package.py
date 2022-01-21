@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RSpacetime(RPackage):
     subsetting, as well as for spatial/temporal/spatio-temporal matching or
     aggregation, retrieving coordinates, print, summary, etc."""
 
-    homepage = "http://github.com/edzer/spacetime"
+    homepage = "https://github.com/edzer/spacetime"
     url      = "https://cloud.r-project.org/src/contrib/spacetime_1.2-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spacetime"
 

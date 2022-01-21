@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class UtilMacros(AutotoolsPackage, XorgPackage):
     other Xorg modular packages, and is needed to generate new versions
     of their configure scripts with autoconf."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/util/macros/"
+    homepage = "https://cgit.freedesktop.org/xorg/util/macros/"
     xorg_mirror_path = "util/util-macros-1.19.1.tar.bz2"
 
     maintainers = ['robert-mijakovic']

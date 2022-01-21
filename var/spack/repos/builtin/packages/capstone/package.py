@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Capstone(CMakePackage):
     """Capstone is a lightweight multi-platform,
        multi-architecture disassembly framework."""
 
-    homepage = "http://www.capstone-engine.org/"
+    homepage = "https://www.capstone-engine.org/"
     url      = "https://github.com/aquynh/capstone/archive/4.0.1.tar.gz"
     git      = "https://github.com/aquynh/capstone.git"
 

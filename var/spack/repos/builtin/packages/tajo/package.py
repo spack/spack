@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Tajo(Package):
     and and its optimizer.
     """
 
-    homepage = "http://tajo.apache.org/"
+    homepage = "https://tajo.apache.org/"
     url      = "https://www-eu.apache.org/dist/tajo/tajo-0.11.3/tajo-0.11.3.tar.gz"
     list_url = "https://www-eu.apache.org/dist/tajo/"
     list_depth = 1

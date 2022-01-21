@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RAmap(RPackage):
     Tools for Clustering and Principal Component Analysis (With robust methods,
     and parallelized functions)."""
 
-    homepage = "http://mulcyber.toulouse.inra.fr/projects/amap/"
+    homepage = "https://cran.r-project.org/web/packages/amap/index.html"
     url      = "https://cloud.r-project.org/src/contrib/amap_0.8-16.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/amap/"
 

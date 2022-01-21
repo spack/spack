@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -254,9 +254,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-                 define_from_variant('SWR')]
+                [self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 self.define_from_variant('SWR')]
 
             will generate the following configuration options:
 
@@ -267,6 +267,10 @@ class CMakePackage(PackageBase):
                  "-DSWR:STRING=avx;avx2]
 
             for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+
+        Note: if the provided variant is conditional, and the condition is not met,
+                this function returns an empty string. CMake discards empty strings
+                provided on the command line.
         """
 
         if variant is None:
@@ -275,6 +279,9 @@ class CMakePackage(PackageBase):
         if variant not in self.variants:
             raise KeyError(
                 '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+
+        if variant not in self.spec.variants:
+            return ''
 
         value = self.spec.variants[variant].value
         if isinstance(value, (tuple, list)):

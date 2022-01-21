@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Xtensor(CMakePackage):
     """Multi-dimensional arrays with broadcasting and lazy computing"""
 
-    homepage = "http://quantstack.net/xtensor"
+    homepage = "https://github.com/xtensor-stack/xtensor-io"
     url      = "https://github.com/QuantStack/xtensor/archive/0.13.1.tar.gz"
     git      = "https://github.com/QuantStack/xtensor.git"
 
@@ -29,16 +29,16 @@ class Xtensor(CMakePackage):
             description='Enable TBB parallelization')
 
     depends_on('xtl', when='@develop')
-    depends_on('xtl@0.7.2:0.7.99', when='@0.23.2:')
-    depends_on('xtl@0.6.4:0.6.99', when='@0.20.7')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1')
-    depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
+    depends_on('xtl@0.7.2:0.7', when='@0.23.2:')
+    depends_on('xtl@0.6.4:0.6', when='@0.20.7')
+    depends_on('xtl@0.4.0:0.4', when='@0.15.1')
+    depends_on('xtl@0.3.3:0.3', when='@0.13.1')
     depends_on('xsimd', when='@develop')
-    depends_on('xsimd@7.4.10:7.99', when='@0.23.4: +xsimd')
-    depends_on('xsimd@7.4.9:7.99', when='@0.23.2 +xsimd')
-    depends_on('xsimd@7.2.3:7.99', when='@0.20.7 +xsimd')
-    depends_on('xsimd@4.0.0:4.99', when='@0.15.1 +xsimd')
-    depends_on('xsimd@3.1.0:3.99', when='@0.13.1 +xsimd')
+    depends_on('xsimd@7.4.10:7', when='@0.23.4: +xsimd')
+    depends_on('xsimd@7.4.9:7', when='@0.23.2 +xsimd')
+    depends_on('xsimd@7.2.3:7', when='@0.20.7 +xsimd')
+    depends_on('xsimd@4.0.0:4', when='@0.15.1 +xsimd')
+    depends_on('xsimd@3.1.0:3', when='@0.13.1 +xsimd')
     depends_on('intel-tbb', when='+tbb')
 
     # C++14 support

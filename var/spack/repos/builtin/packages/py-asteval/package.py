@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyAsteval(PythonPackage):
     """Safe, minimalistic evaluator of python expression using ast module"""
 
-    homepage = "http://github.com/newville/asteval"
+    homepage = "https://github.com/newville/asteval"
     pypi = "asteval/asteval-0.9.18.tar.gz"
 
     version('0.9.25', sha256='bea22b7d8fa16bcba95ebc72052ae5d8ca97114c9959bb47f8b8eebf30e4342f')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class Dbus(Package):
        by any two applications to communicate directly (without going
        through the message bus daemon)."""
 
-    homepage = "http://dbus.freedesktop.org/"
-    url      = "http://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
+    homepage = "https://dbus.freedesktop.org/"
+    url      = "https://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
 
     version('1.12.8', sha256='e2dc99e7338303393b6663a98320aba6a63421bcdaaf571c8022f815e5896eb3')
     version('1.11.2', sha256='5abc4c57686fa82669ad0039830788f9b03fdc4fff487f0ccf6c9d56ba2645c9')
@@ -28,6 +28,8 @@ class Dbus(Package):
     version('1.8.2', sha256='5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08')
 
     depends_on('pkgconfig', type='build')
+    depends_on('docbook-xml@4.4', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('expat')
     depends_on('glib')
     depends_on('libsm')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Libmesh(AutotoolsPackage):
        partial differential equations using arbitrary unstructured
        discretizations on serial and parallel platforms."""
 
-    homepage = "http://libmesh.github.io/"
+    homepage = "https://libmesh.github.io/"
     url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
     git      = "https://github.com/libMesh/libmesh.git"
 
@@ -73,7 +73,7 @@ class Libmesh(AutotoolsPackage):
             'scheduler, in the case of openmp and tbb)',
             values=('none', 'pthreads', 'tbb', 'openmp'), multi=False)
 
-    conflicts('+metaphysicl', when='@:1.2.999',
+    conflicts('+metaphysicl', when='@:1.2',
               msg='The interface to metaphysicl is not available in libMesh '
               'versions older than 1.3.0. Please explicitly disable this '
               'variant.')

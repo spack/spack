@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyInvoke(PythonPackage):
     """Pythonic task execution"""
 
-    homepage = "http://www.pyinvoke.org/"
+    homepage = "https://www.pyinvoke.org/"
     pypi = "invoke/invoke-1.4.1.tar.gz"
 
     version('1.4.1', sha256='de3f23bfe669e3db1085789fd859eb8ca8e0c5d9c20811e2407fa042e8a5e15d')

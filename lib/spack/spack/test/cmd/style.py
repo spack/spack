@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,13 +24,25 @@ style_data = os.path.join(spack.paths.test_path, 'data', 'style')
 
 style = spack.main.SpackCommand("style")
 
+
+def has_develop_branch():
+    git = which('git')
+    if not git:
+        return False
+    git("show-ref", "--verify", "--quiet",
+        "refs/heads/develop", fail_on_error=False)
+    return git.returncode == 0
+
+
 # spack style requires git to run -- skip the tests if it's not there
-pytestmark = pytest.mark.skipif(not which('git'), reason='requires git')
+pytestmark = pytest.mark.skipif(not has_develop_branch(),
+                                reason='requires git with develop branch')
 
 # The style tools have requirements to use newer Python versions.  We simplify by
 # requiring Python 3.6 or higher to run spack style.
 skip_old_python = pytest.mark.skipif(
-    sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
+    sys.version_info < (3, 6), reason='requires Python 3.6 or higher'
+)
 
 
 @pytest.fixture(scope="function")
@@ -129,14 +141,15 @@ def test_changed_files_all_files(flake8_package):
 @pytest.mark.skipif(sys.version_info >= (3, 6), reason="doesn't apply to newer python")
 def test_fail_on_old_python():
     """Ensure that `spack style` runs but fails with older python."""
-    style(fail_on_error=False)
-    assert style.returncode != 0
+    output = style(fail_on_error=False)
+    assert "spack style requires Python 3.6" in output
 
 
 @skip_old_python
 def test_bad_root(tmpdir):
     """Ensure that `spack style` doesn't run on non-spack directories."""
-    style("--root", str(tmpdir), fail_on_error=False)
+    output = style("--root", str(tmpdir), fail_on_error=False)
+    assert "This does not look like a valid spack root" in output
     assert style.returncode != 0
 
 
@@ -150,16 +163,6 @@ def test_style_is_package(tmpdir):
     )
     assert not spack.cmd.style.is_package("lib/spack/spack/spec.py")
     assert not spack.cmd.style.is_package("lib/spack/external/pytest.py")
-
-
-@skip_old_python
-def test_bad_bootstrap(monkeypatch):
-    """Ensure we fail gracefully when we can't bootstrap spack style."""
-    monkeypatch.setattr(spack.cmd.style, "tool_order", [
-        ("foobartool", "foobartool"),  # bad package to force concretization failure
-    ])
-    style(fail_on_error=False)
-    assert style.returncode != 0
 
 
 @pytest.fixture

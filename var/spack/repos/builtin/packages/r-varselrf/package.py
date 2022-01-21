@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RVarselrf(RPackage):
     . Main applications in high-dimensional data (e.g., microarray data,
     and other genomics and proteomics applications)."""
 
-    homepage = "http://ligarto.org/rdiaz/Software/Software.html"
+    homepage = "https://ligarto.org/rdiaz/Software/Software.html"
     url      = "https://cloud.r-project.org/src/contrib/varSelRF_0.7-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/varSelRF"
 

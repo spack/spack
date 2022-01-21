@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RLibcoin(RPackage):
 
     Basic infrastructure for linear test statistics and permutation
     inference in the framework of Strasser and Weber (1999)
-    <http://epub.wu.ac.at/102/>. This package must not be used by end-users.
+    <https://epub.wu.ac.at/102/>. This package must not be used by end-users.
     CRAN package 'coin' implements all user interfaces and is ready to be used
     by anyone."""
 

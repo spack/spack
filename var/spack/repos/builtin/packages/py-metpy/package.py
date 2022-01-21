@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,10 @@ class PyMetpy(PythonPackage):
     pypi     = "MetPy/MetPy-1.0.1.tar.gz"
     maintainers = ['dopplershift']
 
+    # Importing 'metpy.io' results in downloads, so skip it.
+    # https://github.com/Unidata/MetPy/issues/1888
+    import_modules = ['metpy', 'metpy._vendor', 'metpy.calc', 'metpy.interpolate']
+
     version('1.0.1', sha256='16fa9806facc24f31f454b898741ec5639a72ba9d4ff8a19ad0e94629d93cb95')
     version('1.0', sha256='11b043aaa4e3d35db319e96bb9967eb9f73da653e155bca2d62f838108b100dc',
             deprecated=True)
@@ -21,8 +25,8 @@ class PyMetpy(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('py-importlib-metadata@1.0.0:', when='^python@:3.7.999', type=('build', 'run'))
-    depends_on('py-importlib-resources@1.3.0:', when='^python@:3.8.999', type=('build', 'run'))
+    depends_on('py-importlib-metadata@1.0.0:', when='^python@:3.7', type=('build', 'run'))
+    depends_on('py-importlib-resources@1.3.0:', when='^python@:3.8', type=('build', 'run'))
     depends_on('py-matplotlib@2.1.0:', type=('build', 'run'))
     depends_on('py-numpy@1.16.0:', type=('build', 'run'))
     depends_on('py-pandas@0.22.0:', when='@1.0', type=('build', 'run'))

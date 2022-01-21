@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Dateutils(AutotoolsPackage):
     and times in the command line with a strong focus on use cases that arise
     when dealing with large amounts of financial data."""
 
-    homepage = "http://www.fresse.org/dateutils/"
+    homepage = "https://www.fresse.org/dateutils/"
     url      = "https://github.com/hroptatyr/dateutils/releases/download/v0.4.6/dateutils-0.4.6.tar.xz"
 
     version('0.4.7', sha256='49725457f5bef45ea424baade8999a6e54496e357f64280474ff7134a54f599a')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,12 @@ from spack import *
 
 class Icedtea(AutotoolsPackage):
     """The IcedTea project provides a harness to build the source code from
-    http://openjdk.java.net using Free Software build tools and adds a number
+    https://openjdk.java.net/ using Free Software build tools and adds a number
     of key features to the upstream OpenJDK codebase. IcedTea requires an
     existing IcedTea or OpenJDK install to build."""
 
-    homepage = "http://icedtea.classpath.org/wiki/Main_Page"
-    url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
+    homepage = "https://openjdk.java.net/projects/icedtea/"
+    url      = "https://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
 
     version('3.9.0', sha256='84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88')
     version('3.8.0', sha256='ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0')
@@ -69,45 +69,45 @@ class Icedtea(AutotoolsPackage):
     depends_on('zlib')
     depends_on('alsa-lib', when='platform=linux')
 
-    provides('java@8', when='@3.4.0:3.99.99')
+    provides('java@8', when='@3.4.0:3')
 
     force_autoreconf = True
 
     resource(name='corba', placement='corba_src',
              sha256='47210b6c69dcc6193b9bf0a3d61b75b48f4fa56e8ca348e40200cfa14eca3fd1',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/corba.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/corba.tar.xz',
              when='@3.4.0')
     resource(name='hotspot', placement='hotspot_src',
              sha256='973d668f312b869184665def8abe4037dcd78562bf0dda40367102aca647fd76',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/hotspot.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/hotspot.tar.xz',
              when='@3.4.0')
     resource(name='jaxp', placement='jaxp_src',
              sha256='c74a8a27f1d2dfeaabfce3b5b46623e367fb0fbd5938a3aca8fcd23eb2ce1d53',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxp.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxp.tar.xz',
              when='@3.4.0')
     resource(name='jaxws', placement='jaxws_src',
              sha256='90642e9131f4c8922576305224278fcae72d8363956b76d4cdbf813027836cac',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxws.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxws.tar.xz',
              when='@3.4.0')
     resource(name='jdk', placement='jdk_src',
              sha256='ec71e37b98b4baa6831c5cb30bcc1ab18cd95993744dbc4d37a28b2dc5049896',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jdk.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jdk.tar.xz',
              when='@3.4.0')
     resource(name='langtools', placement='langtools_src',
              sha256='489799c6a86fbfb7da2f2c0ec48e44970a152ea38b97bb40cc04bc09155ab39f',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/langtools.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/langtools.tar.xz',
              when='@3.4.0')
     resource(name='openjdk', placement='openjdk_src',
              sha256='f1eb8c8e45965adcaa1e9cc70df043a825d52409e96712d266167994ff88456d',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/openjdk.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/openjdk.tar.xz',
              when='@3.4.0')
     resource(name='nashorn', placement='nashorn_src',
              sha256='3f3861e7268a3986fa8d5c940b85a0de1003f7ebb212df157a9b421ac621d6ae',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/nashorn.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/nashorn.tar.xz',
              when='@3.4.0')
     resource(name='shenandoah', placement='shenandoah_src',
              sha256='61f7cc5896791ae564aa365cb3de80b16426b42f07e5734ebd30c4483fa2fd3a',
-             url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/shenandoah.tar.xz',
+             url='https://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/shenandoah.tar.xz',
              when='@3.4.0')
 
     # FIXME:

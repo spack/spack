@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class RRcppeigen(RPackage):
     'RcppEigen' (the 'Rcpp' bindings/bridge to 'Eigen') is licensed under the
     GNU GPL version 2 or later, as is the rest of 'Rcpp'."""
 
-    homepage = "http://eigen.tuxfamily.org/"
+    homepage = "https://eigen.tuxfamily.org/"
     url      = "https://cloud.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppEigen"
 

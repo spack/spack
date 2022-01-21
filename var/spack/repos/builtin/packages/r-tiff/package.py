@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RTiff(RPackage):
     bitmap images stored in the TIFF format. It can read and write both files
     and in-memory raw vectors."""
 
-    homepage = "http://www.rforge.net/tiff/"
+    homepage = "https://www.rforge.net/tiff/"
     url      = "https://cloud.r-project.org/src/contrib/tiff_0.1-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tiff"
 

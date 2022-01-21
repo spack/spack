@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
+from spack.package import preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -56,7 +57,7 @@ def variant(s):
 class VariantFormatter(object):
     def __init__(self, variants):
         self.variants = variants
-        self.headers = ('Name [Default]', 'Allowed values', 'Description')
+        self.headers = ('Name [Default]', 'When', 'Allowed values', 'Description')
 
         # Formats
         fmt_name = '{0} [{1}]'
@@ -67,9 +68,11 @@ class VariantFormatter(object):
         self.column_widths = [len(x) for x in self.headers]
 
         # Expand columns based on max line lengths
-        for k, v in variants.items():
+        for k, e in variants.items():
+            v, w = e
             candidate_max_widths = (
                 len(fmt_name.format(k, self.default(v))),  # Name [Default]
+                len(str(w)),
                 len(v.allowed_values),  # Allowed values
                 len(v.description)  # Description
             )
@@ -77,26 +80,29 @@ class VariantFormatter(object):
             self.column_widths = (
                 max(self.column_widths[0], candidate_max_widths[0]),
                 max(self.column_widths[1], candidate_max_widths[1]),
-                max(self.column_widths[2], candidate_max_widths[2])
+                max(self.column_widths[2], candidate_max_widths[2]),
+                max(self.column_widths[3], candidate_max_widths[3])
             )
 
         # Don't let name or possible values be less than max widths
         _, cols = tty.terminal_size()
         max_name = min(self.column_widths[0], 30)
-        max_vals = min(self.column_widths[1], 20)
+        max_when = min(self.column_widths[1], 30)
+        max_vals = min(self.column_widths[2], 20)
 
         # allow the description column to extend as wide as the terminal.
         max_description = min(
-            self.column_widths[2],
+            self.column_widths[3],
             # min width 70 cols, 14 cols of margins and column spacing
             max(cols, 70) - max_name - max_vals - 14,
         )
-        self.column_widths = (max_name, max_vals, max_description)
+        self.column_widths = (max_name, max_when, max_vals, max_description)
 
         # Compute the format
-        self.fmt = "%%-%ss%%-%ss%%s" % (
+        self.fmt = "%%-%ss%%-%ss%%-%ss%%s" % (
             self.column_widths[0] + 4,
-            self.column_widths[1] + 4
+            self.column_widths[1] + 4,
+            self.column_widths[2] + 4
         )
 
     def default(self, v):
@@ -114,21 +120,27 @@ class VariantFormatter(object):
             underline = tuple([w * "=" for w in self.column_widths])
             yield '    ' + self.fmt % underline
             yield ''
-            for k, v in sorted(self.variants.items()):
+            for k, e in sorted(self.variants.items()):
+                v, w = e
                 name = textwrap.wrap(
                     '{0} [{1}]'.format(k, self.default(v)),
                     width=self.column_widths[0]
                 )
+                if len(w) == 1:
+                    w = w[0]
+                    if w == spack.spec.Spec():
+                        w = '--'
+                when = textwrap.wrap(str(w), width=self.column_widths[1])
                 allowed = v.allowed_values.replace('True, False', 'on, off')
-                allowed = textwrap.wrap(allowed, width=self.column_widths[1])
+                allowed = textwrap.wrap(allowed, width=self.column_widths[2])
                 description = []
                 for d_line in v.description.split('\n'):
                     description += textwrap.wrap(
                         d_line,
-                        width=self.column_widths[2]
+                        width=self.column_widths[3]
                     )
                 for t in zip_longest(
-                        name, allowed, description, fillvalue=''
+                        name, when, allowed, description, fillvalue=''
                 ):
                     yield "    " + self.fmt % t
 
@@ -191,29 +203,38 @@ def print_text_info(pkg):
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
         color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Deprecated versions:  '))
+        color.cprint(version('    None'))
     else:
         pad = padder(pkg.versions, 4)
 
-        # Here we sort first on the fact that a version is marked
-        # as preferred in the package, then on the fact that the
-        # version is not develop, then lexicographically
-        key_fn = lambda v: (pkg.versions[v].get('preferred', False),
-                            not v.isdevelop(),
-                            v)
-        preferred = sorted(pkg.versions, key=key_fn).pop()
+        preferred = preferred_version(pkg)
         url = ''
         if pkg.has_code:
             url = fs.for_package_version(pkg, preferred)
 
         line = version('    {0}'.format(pad(preferred))) + color.cescape(url)
         color.cprint(line)
-        color.cprint('')
-        color.cprint(section_title('Safe versions:  '))
 
+        safe = []
+        deprecated = []
         for v in reversed(sorted(pkg.versions)):
-            if not pkg.versions[v].get('deprecated', False):
-                if pkg.has_code:
-                    url = fs.for_package_version(pkg, v)
+            if pkg.has_code:
+                url = fs.for_package_version(pkg, v)
+            if pkg.versions[v].get('deprecated', False):
+                deprecated.append((v, url))
+            else:
+                safe.append((v, url))
+
+        for title, vers in [('Safe', safe), ('Deprecated', deprecated)]:
+            color.cprint('')
+            color.cprint(section_title('{0} versions:  '.format(title)))
+            if not vers:
+                color.cprint(version('    None'))
+                continue
+
+            for v, url in vers:
                 line = version('    {0}'.format(pad(v))) + color.cescape(url)
                 color.cprint(line)
 
@@ -222,7 +243,7 @@ def print_text_info(pkg):
 
     formatter = VariantFormatter(pkg.variants)
     for line in formatter.lines:
-        color.cprint(line)
+        color.cprint(color.cescape(line))
 
     if hasattr(pkg, 'phases') and pkg.phases:
         color.cprint('')

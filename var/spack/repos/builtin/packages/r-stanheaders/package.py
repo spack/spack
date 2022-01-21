@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class RStanheaders(RPackage):
     'rstan' package provides user-facing R functions to parse, compile, test,
     estimate, and analyze Stan models."""
 
-    homepage = "http://mc-stan.org/"
+    homepage = "https://mc-stan.org/"
     url      = "https://cloud.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/StanHeaders"
 

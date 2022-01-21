@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,3 +29,7 @@ class Figlet(MakefilePackage):
             install(f, prefix.man6)
 
         install_tree('./fonts', prefix.share.figlet)
+
+    @property
+    def build_targets(self):
+        return ['DEFAULTFONTDIR=' + self.prefix.share.figlet]

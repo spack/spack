@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RDss(RPackage):
     shrinkage method for estimating the dispersion parameter from Gamma-Poisson
     or Beta-Binomial distributions."""
 
-    homepage = "http://bioconductor.org/packages/DSS/"
+    homepage = "https://bioconductor.org/packages/DSS/"
     git      = "https://git.bioconductor.org/packages/DSS"
 
     version('2.38.0', commit='82e65b92e6e227f1f99620362db8b03059e07e98')

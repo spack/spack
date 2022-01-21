@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Flint(Package):
     """FLINT (Fast Library for Number Theory)."""
 
-    homepage = "http://www.flintlib.org"
-    url      = "http://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
+    homepage = "https://www.flintlib.org"
+    url      = "https://mirrors.mit.edu/sage/spkg/upstream/flint/flint-2.5.2.tar.gz"
     git      = "https://github.com/wbhart/flint2.git"
 
     version('develop', branch='trunk')

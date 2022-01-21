@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,12 @@ class Bolt(CMakePackage):
     runtime in LLVM, and thus it can be used with LLVM/Clang, Intel
     OpenMP compiler, and GCC."""
 
-    homepage = "http://www.bolt-omp.org/"
+    homepage = "https://www.bolt-omp.org/"
     url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/bolt.git"
     maintainers = ['shintaro-iwasaki']
+
+    tags = ['e4s']
 
     version("main", branch="main")
     version("2.0", sha256="f84b6a525953edbaa5d28748ef3ab172a3b6f6899b07092065ba7d1ccc6eb5ac")

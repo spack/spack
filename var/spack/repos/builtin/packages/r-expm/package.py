@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RExpm(RPackage):
     Computation of the matrix exponential, logarithm, sqrt, and related
     quantities."""
 
-    homepage = "http://r-forge.r-project.org/projects/expm"
+    homepage = "https://r-forge.r-project.org/projects/expm"
     url      = "https://cloud.r-project.org/src/contrib/expm_0.999-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/expm"
 

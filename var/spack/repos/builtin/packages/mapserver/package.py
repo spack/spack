@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mapserver(CMakePackage):
        "geographic image maps", that is, maps that can direct users
        to content"""
 
-    homepage = "http://www.mapserver.org/"
+    homepage = "https://www.mapserver.org/"
     url      = "https://download.osgeo.org/mapserver/mapserver-7.2.1.tar.gz"
 
     version('7.2.1', sha256='9459a7057d5a85be66a41096a5d804f74665381186c37077c94b56e784db6102')
@@ -35,9 +35,11 @@ class Mapserver(CMakePackage):
     depends_on('curl', when='+curl')
     depends_on('geos')
     depends_on('libxml2')
+    depends_on('giflib')
     depends_on('gdal')
     depends_on('swig', type='build')
     depends_on('python', when='+python')
+    depends_on('postgresql')
     depends_on('ruby', when='+ruby')
     depends_on('java', when='+java')
     depends_on('perl', when='+perl')

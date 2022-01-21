@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Sambamba(Package):
     """Sambamba: process your BAM data faster (bioinformatics)"""
 
-    homepage = "http://lomereiter.github.io/sambamba/"
+    homepage = "https://lomereiter.github.io/sambamba/"
     git      = "https://github.com/lomereiter/sambamba.git"
 
     version('0.6.6', tag='v0.6.6', submodules=True)

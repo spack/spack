@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Xpmem(AutotoolsPackage):
     of another process into its virtual address space."""
 
     # The README file of the repository says that the development was
-    # transferred to a new repository on GitLab: http://gitlab.com/hjelmn/xpmem
+    # transferred to a new repository on GitLab: https://gitlab.com/hjelmn/xpmem
     # However, it looks like that the repository on GitHub has a more recent
     # version of the codebase.
     homepage = "https://github.com/hjelmn/xpmem"

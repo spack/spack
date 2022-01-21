@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RTrust(RPackage):
     Does local optimization using two derivatives and trust regions.
     Guaranteed to converge to local minimum of objective function."""
 
-    homepage = "http://www.stat.umn.edu/geyer/trust"
+    homepage = "https://www.stat.umn.edu/geyer/trust"
     url      = "https://cloud.r-project.org/src/contrib/trust_0.1-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/trust"
 

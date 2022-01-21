@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class Sqoop(MavenPackage):
     data between Apache Hadoop and structured datastores such as relational
     databases."""
 
-    homepage = "http://sqoop.apache.org/"
+    homepage = "https://sqoop.apache.org/"
     url      = "https://downloads.apache.org/sqoop/1.99.7/sqoop-1.99.7.tar.gz"
     list_url = "https://downloads.apache.org/sqoop/"
     list_depth = 1

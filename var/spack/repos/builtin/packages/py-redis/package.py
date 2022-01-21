@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class PyRedis(PythonPackage):
 
     variant("hiredis", default=False, description="Support for hiredis which speeds up parsing of multi bulk replies")
 
-    depends_on('python@2.7:2.8,3.4:', when="@3.3.0:3.3.99", type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when="@3.3.0:3.3", type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when="@3.4.0:", type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-hiredis@0.1.3:', when="+hiredis", type=('build', 'run'))

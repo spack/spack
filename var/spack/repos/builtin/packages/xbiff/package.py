@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Xbiff(AutotoolsPackage, XorgPackage):
     It only handles mail stored in a filesystem accessible file,
     not via IMAP, POP or other remote access protocols."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/xbiff"
+    homepage = "https://cgit.freedesktop.org/xorg/app/xbiff"
     xorg_mirror_path = "app/xbiff-1.0.3.tar.gz"
 
     version('1.0.3', sha256='b4b702348674985741685e3ec7fcb5640ffb7bf20e753fc2d708f70f2e4c304d')

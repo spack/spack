@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyPybedtools(PythonPackage):
     """Python wrapper -- and more -- for Aaron Quinlan's BEDTools"""
 
-    homepage = "http://daler.github.io/pybedtools"
+    homepage = "https://daler.github.io/pybedtools"
     url      = "https://github.com/daler/pybedtools/archive/v0.6.9.tar.gz"
 
     version('0.8.0', sha256='f0d9f24135d13d6d02d5c0d1bded771848d3642b00a2d3c3d86b2a1fcd5ce532')

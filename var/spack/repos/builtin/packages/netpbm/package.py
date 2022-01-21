@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,9 +120,9 @@ class Netpbm(MakefilePackage):
             if 'platform=darwin' in spec:
                 # https://github.com/macports/macports-ports/blob/master/graphics/netpbm/Portfile
                 cflags.append('-D_DARWIN_C_SOURCE')
-                # http://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/
+                # https://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/
                 # cflags.append('-U_XOPEN_SOURCE')
-                # http://www.mistys-internet.website/blog/blog/2013/10/19/no-cpp-precomp-the-compiler-flag-that-time-forgot/
+                # https://www.mistys-internet.website/blog/blog/2013/10/19/no-cpp-precomp-the-compiler-flag-that-time-forgot/
                 # cflags.append('-no-cpp-precomp')
             config.append('CFLAGS = {0}'.format(' '.join(cflags)))
             config.append('CFLAGS_SHLIB += -fno-common')

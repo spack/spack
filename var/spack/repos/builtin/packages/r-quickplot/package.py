@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RQuickplot(RPackage):
     for quick visualizations when testing code, with the key benefit
     that visualizations are updated independently of one another."""
 
-    homepage = "http://quickplot.predictiveecology.org/"
+    homepage = "https://quickplot.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/quickPlot_0.1.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quickPlot"
 

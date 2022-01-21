@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Wxparaver(AutotoolsPackage):
 
         args.append('--with-boost=%s' % spec['boost'].prefix)
         args.append('--with-wx-config=%s/wx-config' % spec['wxwidgets'].prefix.bin)
-        if spec['wxwidgets'].satisfies('@:2.999'):
+        if spec['wxwidgets'].satisfies('@:2'):
             args.append('--with-wxpropgrid=%s' % spec['wxpropgrid'].prefix)
 
         return args

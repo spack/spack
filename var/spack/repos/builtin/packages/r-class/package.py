@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RClass(RPackage):
     Various functions for classification, including k-nearest neighbour,
     Learning Vector Quantization and Self-Organizing Maps."""
 
-    homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
+    homepage = "https://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cloud.r-project.org/src/contrib/class_7.3-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/class"
 

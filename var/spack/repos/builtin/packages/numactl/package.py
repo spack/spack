@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Numactl(AutotoolsPackage):
     """NUMA support for Linux"""
 
-    homepage = "http://oss.sgi.com/projects/libnuma/"
+    homepage = "https://github.com/numactl/numactl"
     url      = "https://github.com/numactl/numactl/archive/v2.0.11.tar.gz"
 
     force_autoreconf = True
@@ -22,11 +22,16 @@ class Numactl(AutotoolsPackage):
     # https://github.com/numactl/numactl/issues/94
     patch('numactl-2.0.14-symver.patch', when="@2.0.14")
     patch('fix-empty-block.patch', when="@2.0.10:2.0.14")
+    patch('link-with-latomic-if-needed.patch', when="@2.0.14")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+
+    # Numactl has hardcoded minimum versions for libtool,
+    # libtool@develop returns UNKOWN as a version tag and fails
+    conflicts('libtool@develop')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

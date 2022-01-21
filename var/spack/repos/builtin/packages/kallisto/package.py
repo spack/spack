@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Kallisto(CMakePackage):
     """kallisto is a program for quantifying abundances of transcripts from
        RNA-Seq data."""
 
-    homepage = "http://pachterlab.github.io/kallisto"
+    homepage = "https://pachterlab.github.io/kallisto"
     url      = "https://github.com/pachterlab/kallisto/archive/v0.43.1.tar.gz"
 
     version('0.46.2', sha256='c447ca8ddc40fcbd7d877d7c868bc8b72807aa8823a8a8d659e19bdd515baaf2')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Mapsplice2(MakefilePackage):
        and not on any further annotations."""
 
     homepage = "http://www.netlab.uky.edu/p/bioinfo/MapSplice2"
-    url = "http://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"
+    url = "https://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"
 
     version(
         "2.2.1",

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyKeras(PythonPackage):
     """Deep Learning library for Python. Convnets, recurrent neural networks,
     and more. Runs on Theano or TensorFlow."""
 
-    homepage = "http://keras.io"
+    homepage = "https://keras.io"
     pypi = "Keras/Keras-1.2.2.tar.gz"
 
     version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')

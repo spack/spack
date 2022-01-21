@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RRzmq(RPackage):
     Interface to the 'ZeroMQ' lightweight messaging kernel (see
     <http://www.zeromq.org/> for more information)."""
 
-    homepage = "http://github.com/armstrtw/rzmq"
+    homepage = "https://github.com/armstrtw/rzmq"
     url      = "https://cloud.r-project.org/src/contrib/rzmq_0.7.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rzmq"
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RStabledist(RPackage):
     generation for (skew) stable distributions, using the parametrizations of
     Nolan."""
 
-    homepage = "http://www.rmetrics.org/"
+    homepage = "https://www.rmetrics.org/"
     url      = "https://cloud.r-project.org/src/contrib/stabledist_0.7-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/stabledist"
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class PyTornado(PythonPackage):
     depends_on('python@3.5.2:', when='@6:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-backports-ssl-match-hostname', when='@:4 ^python@:2.7.8', type=('build', 'run'))
-    depends_on('py-singledispatch', when='@:5.99 ^python@:3.3', type=('build', 'run'))
+    depends_on('py-singledispatch', when='@:5 ^python@:3.3', type=('build', 'run'))
     depends_on('py-certifi', when='@:4 ^python@:3.3', type=('build', 'run'))
-    depends_on('py-backports-abc@0.4:5.99', when='^python@:3.4', type=('build', 'run'))
-    depends_on('py-futures', when='@5:5.99 ^python@:3.1', type=('build', 'run'))
+    depends_on('py-backports-abc@0.4:5', when='^python@:3.4', type=('build', 'run'))
+    depends_on('py-futures', when='@5:5 ^python@:3.1', type=('build', 'run'))

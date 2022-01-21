@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,12 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.8.0/modules-4.8.0.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v5.0.1/modules-5.0.1.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('5.0.1', sha256='33a598eaff0713de09e479c2636ecde188b982584e56377f234e5065a61be7ba')
+    version('5.0.0', sha256='428e23ac51a6006605de65ed9114d544a5506cb4b6bfb03d8522778f13e4f7ea')
     version('4.8.0', sha256='d6b45cadc2146ed5e0b25a96d44643ad516054eb7745acb14a1dc7bf30744f6e')
     version('4.7.1', sha256='ee7ecd62bbbde6d51e30788a97800c39e72515b6a910839fb84041b35ba42b4d')
     version('4.7.0', sha256='3ab0a649e23b4dd00963e4cae60e573b449194ecb4035c5ce487330b272b4d06')
@@ -48,19 +50,16 @@ class EnvironmentModules(Package):
 
     # Dependencies:
     depends_on('tcl', type=('build', 'link', 'run'))
-    depends_on('tcl@8.4:', type=('build', 'link', 'run'), when='@4.0.0:')
+    depends_on('tcl@8.4:', type=('build', 'link', 'run'), when='@4.0.0:4.8')
+    depends_on('tcl@8.5:', type=('build', 'link', 'run'), when='@5.0.0:')
 
     def install(self, spec, prefix):
         tcl = spec['tcl']
 
         config_args = [
             "--prefix=" + prefix,
-            "--without-tclx",
-            "--with-tclx-ver=0.0",
             # It looks for tclConfig.sh
             "--with-tcl=" + tcl.libs.directories[0],
-            "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
-            '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]
 
@@ -75,19 +74,19 @@ class EnvironmentModules(Package):
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
 
-        if '@4.4.0:' in self.spec:
+        if '@4.4.0:4.8' in self.spec:
             config_args.extend([
                 '--with-icase=search',
                 '--enable-extended-default',
                 '--enable-advanced-version-spec'
             ])
 
-        if '@4.3.0:' in self.spec:
+        if '@4.3.0:4.8' in self.spec:
             config_args.extend([
                 '--enable-color'
             ])
 
-        if '@4.2.0:' in self.spec:
+        if '@4.2.0:4.8' in self.spec:
             config_args.extend([
                 '--enable-auto-handling'
             ])
@@ -100,9 +99,13 @@ class EnvironmentModules(Package):
                 '--with-quarantine-vars=LD_LIBRARY_PATH LD_PRELOAD'
             ])
 
+        if '@4.0.0:4.8' in self.spec:
+            config_args.extend([
+                '--disable-compat-version'
+            ])
+
         if '@4.0.0:' in self.spec:
             config_args.extend([
-                '--disable-compat-version',
                 '--with-tclsh={0}'.format(tcl.prefix.bin.tclsh)
             ])
 
@@ -111,6 +114,14 @@ class EnvironmentModules(Package):
             config_args.extend([
                 '--disable-debug',
                 'CPPFLAGS=-DUSE_INTERP_ERRORLINE'
+            ])
+
+        if '@:3.2' in self.spec:
+            config_args.extend([
+                "--without-tclx",
+                "--with-tclx-ver=0.0",
+                "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
+                '--disable-versioning'
             ])
 
         configure(*config_args)

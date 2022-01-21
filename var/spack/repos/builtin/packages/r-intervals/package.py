@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RIntervals(RPackage):
 
     Tools for working with and comparing sets of points and intervals."""
 
-    homepage = "http://github.com/edzer/intervals"
+    homepage = "https://github.com/edzer/intervals"
     url      = "https://cloud.r-project.org/src/contrib/intervals_0.15.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/intervals"
 

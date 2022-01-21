@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,5 +17,5 @@ class PyFreezegun(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-python-dateutil@1.0:1.999', type=('build', 'run'), when='^python@:2')
+    depends_on('py-python-dateutil@1.0:1', type=('build', 'run'), when='^python@:2')
     depends_on('py-python-dateutil@2:', type=('build', 'run'), when='^python@3:')

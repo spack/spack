@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Liblbfgs(AutotoolsPackage):
            minimize F(x), x = (x1, x2, ..., xN),
        only if the objective function F(x) and its gradient G(x) are computable."""
 
-    homepage = "http://www.chokkan.org/software/liblbfgs/"
+    homepage = "https://www.chokkan.org/software/liblbfgs/"
     url      = "https://github.com/downloads/chokkan/liblbfgs/liblbfgs-1.10.tar.gz"
     git      = "https://github.com/chokkan/liblbfgs.git"
 

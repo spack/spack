@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RJpeg(RPackage):
     bitmap images stored in the JPEG format. It can read and write both files
     and in-memory raw vectors."""
 
-    homepage = "http://www.rforge.net/jpeg/"
+    homepage = "https://www.rforge.net/jpeg/"
     url      = "https://cloud.r-project.org/src/contrib/jpeg_0.1-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/jpeg"
 

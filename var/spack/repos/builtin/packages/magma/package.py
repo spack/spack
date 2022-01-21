@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,12 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
        current "Multicore+GPU" systems.
     """
 
-    homepage = "http://icl.cs.utk.edu/magma/"
+    homepage = "https://icl.cs.utk.edu/magma/"
     git = 'https://bitbucket.org/icl/magma'
-    url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    url = "https://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
     maintainers = ['stomov', 'luszczek', 'G-Ragghianti']
+
+    tags = ['e4s']
 
     test_requires_compiler = True
 
@@ -128,6 +130,9 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         if '+rocm' in spec:
             options.extend(['-DMAGMA_ENABLE_HIP=ON'])
             options.extend(['-DCMAKE_CXX_COMPILER=hipcc'])
+            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            if spec.satisfies('^cmake@3.21.0:3.21.2'):
+                options.extend(['-D__skip_rocmclang=ON'])
         else:
             options.extend(['-DMAGMA_ENABLE_CUDA=ON'])
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RSeurat(RPackage):
     R, et al (2015) <doi:10.1016/j.cell.2015.05.002>, and Stuart T, Butler A,
     et al (2019) <doi:10.1016/j.cell.2019.05.031> for more details."""
 
-    homepage = "http://satijalab.org/seurat/"
+    homepage = "https://satijalab.org/seurat/"
     url      = "https://cloud.r-project.org/src/contrib/Seurat_2.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Seurat"
 

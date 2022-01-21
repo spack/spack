@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Canu(MakefilePackage):
     """A single molecule sequence assembler for genomes large and
        small."""
 
-    homepage = "http://canu.readthedocs.io/"
+    homepage = "https://canu.readthedocs.io/"
     url      = "https://github.com/marbl/canu/archive/v1.5.tar.gz"
 
     version('2.0', sha256='e2e6e8b5ec4dd4cfba5e372f4a64b2c01fbd544d4b5867746021f10771a6f4ef')

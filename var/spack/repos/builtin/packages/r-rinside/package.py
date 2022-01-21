@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class RRinside(RPackage):
     automatically). Doxygen-generated documentation of the C++ classes is
     available at the 'RInside' website as well."""
 
-    homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
+    homepage = "https://dirk.eddelbuettel.com/code/rinside.html"
     url      = "https://cloud.r-project.org/src/contrib/RInside_0.2.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RInside"
 

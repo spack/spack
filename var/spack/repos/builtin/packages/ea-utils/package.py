@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class EaUtils(MakefilePackage):
        demultiplexing, adapter trimming, etc. Primarily written to support an
        Illumina based pipeline - but should work with any FASTQs."""
 
-    homepage = "http://expressionanalysis.github.io/ea-utils/"
+    homepage = "https://expressionanalysis.github.io/ea-utils/"
     url = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
 
     version('1.04.807', sha256='aa09d25e6aa7ae71d2ce4198a98e58d563f151f8ff248e4602fa437f12b8d05f')

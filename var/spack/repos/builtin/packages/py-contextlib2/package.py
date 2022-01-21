@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ class PyContextlib2(PythonPackage):
     earlier Python versions."""
 
     homepage = "https://contextlib2.readthedocs.io/en/stable/"
-    url      = "https://github.com/jazzband/contextlib2/archive/v0.6.0.tar.gz"
+    pypi     = "contextlib2/contextlib2-21.6.0.tar.gz"
 
-    version('0.6.0', sha256='4f18e2f28bb642aae9447aacec93b1319c8ee838711553c0a2bd906753f2ad33')
-    version('0.5.5', sha256='613569263db0271f34c8484792360272a731f2185567c31c8118e9c994412170')
+    version('21.6.0',      sha256='ab1e2bfe1d01d968e1b7e8d9023bc51ef3509bba217bb730cee3827e1ee82869')
+    version('0.6.0',       sha256='7197aa736777caac513dbd800944c209a49765bf1979b12b037dce0277077ed3')
+    version('0.5.5',       sha256='509f9419ee91cdd00ba34443217d5ca51f5a364a404e1dce9e8979cea969ca48')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'), when='@21.6.0:')

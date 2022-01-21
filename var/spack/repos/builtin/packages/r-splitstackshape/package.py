@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class RSplitstackshape(RPackage):
     and which melt and dcast from reshape2 do not easily handle.
     """
 
-    homepage = "http://github.com/mrdwab/splitstackshape"
+    homepage = "https://github.com/mrdwab/splitstackshape"
     url      = "https://cloud.r-project.org/src/contrib/splitstackshape_1.4.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/splitstackshape"
 

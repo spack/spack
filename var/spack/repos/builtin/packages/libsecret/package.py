@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Libsecret(AutotoolsPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/libsecret'
         return url + '/%s/libsecret-%s.tar.xz' % (version.up_to(2), version)
 
-    # http://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
+    # https://www.linuxfromscratch.org/blfs/view/svn/gnome/libsecret.html
     def configure_args(self):
         args = []
         args.append('--disable-static')

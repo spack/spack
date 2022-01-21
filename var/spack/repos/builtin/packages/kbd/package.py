@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Kbd(AutotoolsPackage):
     (Linux console, virtual terminals, keyboard, etc.) - mainly,
     what they do is loading console fonts and keyboard maps."""
 
-    homepage = "http://kbd-project.org/"
+    homepage = "https://kbd-project.org/"
     url      = "https://github.com/legionus/kbd/archive/v2.3.0.tar.gz"
 
     version('2.3.0',  sha256='28f05450cfde08259341b9641d222027844c075f77a2bac6ce143b3f33a6eb4e')

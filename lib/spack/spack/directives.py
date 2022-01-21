@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,10 @@ __all__ = ['DirectiveError', 'DirectiveMeta']
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
 
+#: Names of possible directives. This list is populated elsewhere in the file and then
+#: added to `__all__` at the bottom.
+directive_names = []
+
 _patch_order_index = 0
 
 
@@ -89,6 +93,9 @@ def make_when_spec(value):
            value indicating when a directive should be applied.
 
     """
+    if isinstance(value, spack.spec.Spec):
+        return value
+
     # Unsatisfiable conditions are discarded by the caller, and never
     # added to the package class
     if value is False:
@@ -110,7 +117,7 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()  # type: Set[str]
+    _directive_dict_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
     _when_constraints_from_context = []  # type: List[str]
 
@@ -153,7 +160,7 @@ class DirectiveMeta(type):
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in DirectiveMeta._directive_names:
+            for d in DirectiveMeta._directive_dict_names:
                 setattr(cls, d, {})
 
             # Lazily execute directives
@@ -219,7 +226,7 @@ class DirectiveMeta(type):
         Package class, and it's how Spack gets information from the
         packages to the core.
         """
-        global __all__
+        global directive_names
 
         if isinstance(dicts, six.string_types):
             dicts = (dicts, )
@@ -229,11 +236,11 @@ class DirectiveMeta(type):
             raise TypeError(message.format(type(dicts)))
 
         # Add the dictionary names if not already there
-        DirectiveMeta._directive_names |= set(dicts)
+        DirectiveMeta._directive_dict_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
-            __all__.append(decorated_function.__name__)
+            directive_names.append(decorated_function.__name__)
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
@@ -241,17 +248,23 @@ class DirectiveMeta(type):
                 if DirectiveMeta._when_constraints_from_context:
                     # Check that directives not yet supporting the when= argument
                     # are not used inside the context manager
-                    if decorated_function.__name__ in ('version', 'variant'):
+                    if decorated_function.__name__ == 'version':
                         msg = ('directive "{0}" cannot be used within a "when"'
                                ' context since it does not support a "when=" '
                                'argument')
                         msg = msg.format(decorated_function.__name__)
                         raise DirectiveError(msg)
 
-                    when_spec_from_context = ' '.join(
+                    when_constraints = [
+                        spack.spec.Spec(x) for x in
                         DirectiveMeta._when_constraints_from_context
+                    ]
+                    if kwargs.get('when'):
+                        when_constraints.append(spack.spec.Spec(kwargs['when']))
+                    when_spec = spack.spec.merge_abstract_anonymous_specs(
+                        *when_constraints
                     )
-                    when_spec = kwargs.get('when', '') + ' ' + when_spec_from_context
+
                     kwargs['when'] = when_spec
 
                 # If any of the arguments are executors returned by a
@@ -457,7 +470,8 @@ def extends(spec, type=('build', 'run'), **kwargs):
             return
 
         _depends_on(pkg, spec, when=when, type=type)
-        pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
+        spec_obj = spack.spec.Spec(spec)
+        pkg.extendees[spec_obj.name] = (spec_obj, kwargs)
     return _execute_extends
 
 
@@ -553,7 +567,8 @@ def variant(
         description='',
         values=None,
         multi=None,
-        validator=None):
+        validator=None,
+        when=None):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -572,6 +587,8 @@ def variant(
             logic. It receives the package name, the variant name and a tuple
             of values and should raise an instance of SpackError if the group
             doesn't meet the additional constraints
+        when (spack.spec.Spec, bool): optional condition on which the
+            variant applies
 
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
@@ -631,14 +648,23 @@ def variant(
     description = str(description).strip()
 
     def _execute_variant(pkg):
+        when_spec = make_when_spec(when)
+        when_specs = [when_spec]
+
         if not re.match(spack.spec.identifier_re, name):
             directive = 'variant'
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = spack.variant.Variant(
+        if name in pkg.variants:
+            # We accumulate when specs, but replace the rest of the variant
+            # with the newer values
+            _, orig_when = pkg.variants[name]
+            when_specs += orig_when
+
+        pkg.variants[name] = (spack.variant.Variant(
             name, default, description, values, multi, validator
-        )
+        ), when_specs)
     return _execute_variant
 
 
@@ -708,3 +734,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+#: add all directive names to __all__
+__all__.extend(directive_names)

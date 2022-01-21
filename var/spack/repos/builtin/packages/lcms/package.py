@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Lcms(AutotoolsPackage):
        transforms between ICC profiles. It is focused on speed, and is
        portable across several platforms (MIT license)."""
 
-    homepage = "http://www.littlecms.com"
+    homepage = "https://www.littlecms.com"
     url      = "http://downloads.sourceforge.net/project/lcms/lcms/2.9/lcms2-2.9.tar.gz"
 
     version('2.9', sha256='48c6fdf98396fa245ed86e622028caf49b96fa22f3e5734f853f806fbc8e7d20')

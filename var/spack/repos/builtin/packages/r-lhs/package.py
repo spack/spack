@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RLhs(RPackage):
     Provides a number of methods for creating and augmenting Latin Hypercube
     Samples."""
 
-    homepage = "http://lhs.r-forge.r-project.org/"
+    homepage = "https://lhs.r-forge.r-project.org/"
     url      = "https://cloud.r-project.org/src/contrib/lhs_0.16.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/lhs"
 

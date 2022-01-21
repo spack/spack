@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -108,6 +108,7 @@ class Wrf(Package):
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
+    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -133,7 +134,8 @@ class Wrf(Package):
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
     depends_on("pkgconfig", type=("build"))
@@ -195,8 +197,8 @@ class Wrf(Package):
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
             comp_pair = "%s/%s" % (
-                basename(self.compiler.fc),
-                basename(self.compiler.cc),
+                basename(self.compiler.fc).split("-")[0],
+                basename(self.compiler.cc).split("-")[0],
             )
             compiler_matches = dict(
                 (x, y) for x, y in options.items() if comp_pair in x.lower()
@@ -285,6 +287,22 @@ class Wrf(Package):
                             )
                         ofh.write(line)
 
+        if self.spec.satisfies("@4.2 %intel"):
+            # In version 4.2 the file to be patched is called
+            # configure.defaults, while in earlier versions
+            # it's configure_new.defaults
+            rename(
+                "./arch/configure.defaults",
+                "./arch/configure.defaults.bak",
+            )
+            with open("./arch/configure.defaults.bak", "rt") as ifh:
+                with open("./arch/configure.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace("mpif90", self.spec['mpi'].mpifc)
+                            line = line.replace("mpicc", self.spec['mpi'].mpicc)
+                        ofh.write(line)
+
     def configure(self, spec, prefix):
 
         # Remove broken default options...
@@ -339,7 +357,7 @@ class Wrf(Package):
 
     @run_after("configure")
     def patch_for_libmvec(self):
-        if self.spec.satisfies("@3.9.1.1 %aocc@:3.0"):
+        if self.spec.satisfies("@3.9.1.1 %aocc"):
             fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
             which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
 

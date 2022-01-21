@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RMaptools(RPackage):
     exchanging spatial objects with packages such as PBSmapping, spatstat,
     maps, RArcInfo, Stata tmap, WinBUGS, Mondrian, and others."""
 
-    homepage = "http://r-forge.r-project.org/projects/maptools/"
+    homepage = "https://r-forge.r-project.org/projects/maptools/"
     url      = "https://cloud.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/maptools"
 

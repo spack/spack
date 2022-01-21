@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/xserver"
+    homepage = "https://cgit.freedesktop.org/xorg/xserver"
     xorg_mirror_path = "xserver/xorg-server-1.18.99.901.tar.gz"
 
     version('1.18.99.901', sha256='c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Pindel(MakefilePackage):
     """Pindel can detect breakpoints from next-gen sequence data."""
 
-    homepage = "http://gmt.genome.wustl.edu/packages/pindel/"
+    homepage = "https://gmt.genome.wustl.edu/packages/pindel/"
     url      = "https://github.com/genome/pindel/archive/v0.2.5.tar.gz"
 
     version('0.2.5b8', sha256='7f21fda0b751d420831724d96e60873ce332139cfd24396e81c7f1ae2f707a19')

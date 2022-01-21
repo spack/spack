@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,10 @@ class Dire(Package):
     radiative corrections to scattering processes in high-energy particle
     collisions."""
 
-    homepage = "http://dire.gitlab.io/"
-    url      = "http://dire.gitlab.io/Downloads/DIRE-2.004.tar.gz"
-    git      = "http://gitlab.com/dire/direforpythia"
-    list_url = "http://dire.gitlab.io/Downloads.html"
+    homepage = "https://dire.gitlab.io/"
+    url      = "https://dire.gitlab.io/Downloads/DIRE-2.004.tar.gz"
+    git      = "https://gitlab.com/dire/direforpythia"
+    list_url = "https://dire.gitlab.io/Downloads.html"
 
     tags = ['hep']
 
@@ -26,7 +26,9 @@ class Dire(Package):
     depends_on('boost')
     depends_on('lhapdf')
     depends_on('hepmc')
-    depends_on('pythia8@8226:8244')
+    depends_on('pythia8@8.226:')
+
+    conflicts('pythia8@8.301:', msg='Dire is included in Pythia8 since version 8.301')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix={0}'.format(prefix)]

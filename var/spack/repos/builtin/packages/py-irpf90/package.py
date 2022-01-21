@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class PyIrpf90(PythonPackage):
 
     maintainers = ['scemama']
 
-    version('1.7.7', sha256='c6b2eecb9180f1feaab9644bbed806637a4a30a0fad2c4775a985fcc01a99530')
+    version('1.7.7', sha256='c6b2eecb9180f1feaab9644bbed806637a4a30a0fad2c4775a985fcc01a99530', deprecated=True)
 
-    depends_on('python@2.7.0:2.8.999', type=('build', 'run'))
+    depends_on('python@2.7.0:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

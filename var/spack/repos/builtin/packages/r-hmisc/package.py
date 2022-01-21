@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RHmisc(RPackage):
     string manipulation, conversion of R objects to LaTeX and html
     code, and recoding variables."""
 
-    homepage = "http://biostat.mc.vanderbilt.edu/Hmisc"
+    homepage = "https://cran.r-project.org/web/packages/Hmisc/index.html"
     url      = "https://cloud.r-project.org/src/contrib/Hmisc_4.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Hmisc"
 

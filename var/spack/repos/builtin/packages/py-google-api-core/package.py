@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,10 @@ class PyGoogleApiCore(PythonPackage):
     version('1.14.2', sha256='2c23fbc81c76b941ffb71301bb975ed66a610e9b03f918feacd1ed59cf43a6ec')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-googleapis-common-protos@1.6:1.999', type=('build', 'run'))
+    depends_on('py-googleapis-common-protos@1.6:1', type=('build', 'run'))
     depends_on('py-protobuf@3.4.0:', type=('build', 'run'))
-    depends_on('py-google-auth@0.4:1.999', type=('build', 'run'))
-    depends_on('py-requests@2.18:2.999', type=('build', 'run'))
+    depends_on('py-google-auth@0.4:1', type=('build', 'run'))
+    depends_on('py-requests@2.18:2', type=('build', 'run'))
     depends_on('py-setuptools@34.0.0:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))

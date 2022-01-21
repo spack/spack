@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Bamutil(MakefilePackage):
        are built into a single executable, bam.
     """
 
-    homepage = "http://genome.sph.umich.edu/wiki/BamUtil"
-    url      = "http://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
+    homepage = "https://genome.sph.umich.edu/wiki/BamUtil"
+    url      = "https://genome.sph.umich.edu/w/images/7/70/BamUtilLibStatGen.1.0.13.tgz"
 
     version('1.0.13', sha256='16c1d01c37d1f98b98c144f3dd0fda6068c1902f06bd0989f36ce425eb0c592b')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Libsakura(CMakePackage):
     depends_on('cmake@2.8:', type='build')
 
     depends_on('eigen@3.2:')
-    depends_on('fftw@3.3.2: precision=float', when='@:3.99')
+    depends_on('fftw@3.3.2: precision=float', when='@:3')
     depends_on('fftw@3.3.2: precision=double', when='@4.0.0:')
     depends_on('log4cxx')
 

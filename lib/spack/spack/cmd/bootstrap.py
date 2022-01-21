@@ -1,12 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from __future__ import print_function
+
 import os.path
 import shutil
 
 import llnl.util.tty
+import llnl.util.tty.color
 
+import spack
+import spack.bootstrap
 import spack.cmd.common.arguments
 import spack.config
 import spack.main
@@ -29,6 +34,16 @@ def _add_scope_option(parser):
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest='subcommand')
 
+    status = sp.add_parser('status', help='get the status of Spack')
+    status.add_argument(
+        '--optional', action='store_true', default=False,
+        help='show the status of rarely used optional dependencies'
+    )
+    status.add_argument(
+        '--dev', action='store_true', default=False,
+        help='show the status of dependencies needed to develop Spack'
+    )
+
     enable = sp.add_parser('enable', help='enable bootstrapping')
     _add_scope_option(enable)
 
@@ -49,6 +64,27 @@ def setup_parser(subparser):
     root.add_argument(
         'path', nargs='?', default=None,
         help='set the bootstrap directory to this value'
+    )
+
+    list = sp.add_parser(
+        'list', help='list the methods available for bootstrapping'
+    )
+    _add_scope_option(list)
+
+    trust = sp.add_parser(
+        'trust', help='trust a bootstrapping method'
+    )
+    _add_scope_option(trust)
+    trust.add_argument(
+        'name', help='name of the method to be trusted'
+    )
+
+    untrust = sp.add_parser(
+        'untrust', help='untrust a bootstrapping method'
+    )
+    _add_scope_option(untrust)
+    untrust.add_argument(
+        'name', help='name of the method to be untrusted'
     )
 
 
@@ -100,11 +136,128 @@ def _root(args):
     print(root)
 
 
+def _list(args):
+    sources = spack.config.get(
+        'bootstrap:sources', default=None, scope=args.scope
+    )
+
+    if not sources:
+        llnl.util.tty.msg(
+            "No method available for bootstrapping Spack's dependencies"
+        )
+        return
+
+    def _print_method(source, trusted):
+        color = llnl.util.tty.color
+
+        def fmt(header, content):
+            header_fmt = "@*b{{{0}:}} {1}"
+            color.cprint(header_fmt.format(header, content))
+
+        trust_str = "@*y{UNKNOWN}"
+        if trusted is True:
+            trust_str = "@*g{TRUSTED}"
+        elif trusted is False:
+            trust_str = "@*r{UNTRUSTED}"
+
+        fmt("Name", source['name'] + ' ' + trust_str)
+        print()
+        fmt("  Type", source['type'])
+        print()
+
+        info_lines = ['\n']
+        for key, value in source.get('info', {}).items():
+            info_lines.append(' ' * 4 + '@*{{{0}}}: {1}\n'.format(key, value))
+        if len(info_lines) > 1:
+            fmt("  Info", ''.join(info_lines))
+
+        description_lines = ['\n']
+        for line in source['description'].split('\n'):
+            description_lines.append(' ' * 4 + line + '\n')
+
+        fmt("  Description", ''.join(description_lines))
+
+    trusted = spack.config.get('bootstrap:trusted', {})
+    for s in sources:
+        _print_method(s, trusted.get(s['name'], None))
+
+
+def _write_trust_state(args, value):
+    name = args.name
+    sources = spack.config.get('bootstrap:sources')
+
+    matches = [s for s in sources if s['name'] == name]
+    if not matches:
+        names = [s['name'] for s in sources]
+        msg = ('there is no bootstrapping method named "{0}". Valid '
+               'method names are: {1}'.format(name, ', '.join(names)))
+        raise RuntimeError(msg)
+
+    if len(matches) > 1:
+        msg = ('there is more than one bootstrapping method named "{0}". '
+               'Please delete all methods but one from bootstrap.yaml '
+               'before proceeding').format(name)
+        raise RuntimeError(msg)
+
+    # Setting the scope explicitly is needed to not copy over to a new scope
+    # the entire default configuration for bootstrap.yaml
+    scope = args.scope or spack.config.default_modify_scope('bootstrap')
+    spack.config.add(
+        'bootstrap:trusted:{0}:{1}'.format(name, str(value)), scope=scope
+    )
+
+
+def _trust(args):
+    _write_trust_state(args, value=True)
+    msg = '"{0}" is now trusted for bootstrapping'
+    llnl.util.tty.msg(msg.format(args.name))
+
+
+def _untrust(args):
+    _write_trust_state(args, value=False)
+    msg = '"{0}" is now untrusted and will not be used for bootstrapping'
+    llnl.util.tty.msg(msg.format(args.name))
+
+
+def _status(args):
+    sections = ['core', 'buildcache']
+    if args.optional:
+        sections.append('optional')
+    if args.dev:
+        sections.append('develop')
+
+    header = "@*b{{Spack v{0} - {1}}}".format(
+        spack.spack_version, spack.bootstrap.spec_for_current_python()
+    )
+    print(llnl.util.tty.color.colorize(header))
+    print()
+    # Use the context manager here to avoid swapping between user and
+    # bootstrap config many times
+    missing = False
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        for current_section in sections:
+            status_msg, fail = spack.bootstrap.status_message(section=current_section)
+            missing = missing or fail
+            if status_msg:
+                print(llnl.util.tty.color.colorize(status_msg))
+        print()
+    legend = ('Spack will take care of bootstrapping any missing dependency marked'
+              ' as [@*y{B}]. Dependencies marked as [@*y{-}] are instead required'
+              ' to be found on the system.')
+    if missing:
+        print(llnl.util.tty.color.colorize(legend))
+        print()
+
+
 def bootstrap(parser, args):
     callbacks = {
+        'status': _status,
         'enable': _enable_or_disable,
         'disable': _enable_or_disable,
         'reset': _reset,
-        'root': _root
+        'root': _root,
+        'list': _list,
+        'trust': _trust,
+        'untrust': _untrust
     }
     callbacks[args.subcommand](args)

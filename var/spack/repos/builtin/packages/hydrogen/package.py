@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
        and optimization library. Based on the Elemental library."""
 
-    homepage = "http://libelemental.org"
+    homepage = "https://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
 
@@ -94,14 +94,14 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cray-libsci +openmp', when='blas=libsci +openmp_blas')
 
     # Specify the correct version of Aluminum
-    depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
-    depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
-    depends_on('aluminum@0.6.0:0.6.99', when='@1.5.0:1.5.1 +al')
+    depends_on('aluminum@:0.3', when='@:1.3 +al')
+    depends_on('aluminum@0.4.0:0.4', when='@1.4.0:1.4 +al')
+    depends_on('aluminum@0.6.0:0.6', when='@1.5.0:1.5.1 +al')
     depends_on('aluminum@0.7.0:', when='@:1.0,1.5.2: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +nccl +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl', when='+al +rocm')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
@@ -120,7 +120,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpfr', when='+mpfr')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cub', when='^cuda@:10.99')
+    depends_on('cub', when='^cuda@:10')
     depends_on('hipcub', when='+rocm')
     depends_on('half', when='+half')
 
@@ -146,6 +146,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         args = [
             '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),
@@ -172,6 +173,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
         if '+rocm' in spec:
             args.extend([
+                '-DCMAKE_CXX_FLAGS=-std=c++17',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
                 '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
             archs = self.spec.variants['amdgpu_target'].value
@@ -180,7 +182,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 cxxflags_str = " ".join(self.spec.compiler_flags['cxxflags'])
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC {1}'.format(arch_str, cxxflags_str)
+                    ' -g -fsized-deallocation -fPIC {1}'
+                    ' -std=c++17'.format(arch_str, cxxflags_str)
                 )
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)

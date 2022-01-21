@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -365,6 +365,31 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits,
     assert('Unable to merge {0}'.format(c1) in err)
 
 
+@pytest.mark.parametrize(
+    "obj, proto",
+    [
+        ({}, []),
+    ],
+)
+def test_ci_opt_argument_checking(obj, proto):
+    """Check that matches() and subkeys() return False when `proto` is not a dict."""
+    assert not ci_opt.matches(obj, proto)
+    assert not ci_opt.subkeys(obj, proto)
+
+
+@pytest.mark.parametrize(
+    "yaml",
+    [
+        {'extends': 1},
+    ],
+)
+def test_ci_opt_add_extends_non_sequence(yaml):
+    """Check that add_extends() exits if 'extends' is not a sequence."""
+    yaml_copy = yaml.copy()
+    ci_opt.add_extends(yaml, None)
+    assert yaml == yaml_copy
+
+
 def test_ci_workarounds():
     fake_root_spec = 'x' * 544
     fake_spack_ref = 'x' * 40
@@ -395,7 +420,7 @@ def test_ci_workarounds():
                 'paths': [
                     'jobs_scratch_dir',
                     'cdash_report',
-                    name + '.spec.yaml',
+                    name + '.spec.json',
                     name + '.cdashid',
                     name
                 ],

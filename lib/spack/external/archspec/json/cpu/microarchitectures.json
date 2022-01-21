@@ -2017,6 +2017,44 @@
       "features": [],
       "compilers": {
       }
+    },
+    "riscv64": {
+      "from": [],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "7.1:",
+            "flags" : "-march=rv64gc"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "9.0:",
+            "flags" : "-march=rv64gc"
+          }
+        ]
+      }
+    },
+    "u74mc": {
+      "from": ["riscv64"],
+      "vendor": "SiFive",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "10.2:",
+            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "12.0:",
+            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+          }
+        ]
+      }
     }
   },
   "feature_aliases": {

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class PyEspresso(CMakePackage):
        Boltzmann solver for hydrodynamic interactions, and allows several
        particle couplings to the LB fluid.
     """
-    homepage = "http://espressomd.org/"
+    homepage = "https://espressomd.org/"
     git      = "https://github.com/espressomd/espresso.git"
     url      = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 

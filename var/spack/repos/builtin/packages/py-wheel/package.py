@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,24 +6,33 @@
 from spack import *
 
 
-class PyWheel(PythonPackage):
+class PyWheel(Package):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    pypi = "wheel/wheel-0.34.2.tar.gz"
+    url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
+    list_url = "https://pypi.org/simple/wheel/"
 
-    version('0.36.2', sha256='e11eefd162658ea59a60a0f6c7d493a7190ea4b9a85e335b33489d9f17e0245e')
-    version('0.35.1', sha256='99a22d87add3f634ff917310a3d87e499f19e663413a52eb9232c447aa646c9f')
-    version('0.34.2', sha256='8788e9155fe14f54164c1b9eb0a319d98ef02c160725587ad60f14ddc57b6f96')
-    version('0.33.4', sha256='62fcfa03d45b5b722539ccbc07b190e4bfff4bb9e3a4d470dd9f6a0981002565')
-    version('0.33.1', sha256='66a8fd76f28977bb664b098372daef2b27f60dc4d1688cfab7b37a09448f0e9d')
-    version('0.32.3', sha256='029703bf514e16c8271c3821806a1c171220cc5bdd325cbf4e7da1e056a01db6')
-    version('0.29.0', sha256='1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648')
-    version('0.26.0', sha256='eaad353805c180a47545a256e6508835b65a8e830ba1093ed8162f19a50a530c')
+    version('0.37.0', sha256='21014b2bd93c6d0034b6ba5d35e4eb284340e09d63c59aef6fc14b0f346146fd', expand=False)
+    version('0.36.2', sha256='78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e', expand=False)
+    version('0.35.1', sha256='497add53525d16c173c2c1c733b8f655510e909ea78cc0e29d374243544b77a2', expand=False)
+    version('0.34.2', sha256='df277cb51e61359aba502208d680f90c0493adec6f0e848af94948778aed386e', expand=False)
+    version('0.33.6', sha256='f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28', expand=False)
+    version('0.33.4', sha256='5e79117472686ac0c4aef5bad5172ea73a1c2d1646b808c35926bd26bdfb0c08', expand=False)
+    version('0.33.1', sha256='8eb4a788b3aec8abf5ff68d4165441bc57420c9f64ca5f471f58c3969fe08668', expand=False)
+    version('0.32.3', sha256='1e53cdb3f808d5ccd0df57f964263752aa74ea7359526d3da6c02114ec1e1d44', expand=False)
+    version('0.29.0', sha256='ea8033fc9905804e652f75474d33410a07404c1a78dd3c949a66863bd1050ebd', expand=False)
+    version('0.26.0', sha256='c92ed3a2dd87c54a9e20024fb0a206fe591c352c745fff21e8f8c6cdac2086ea', expand=False)
 
+    extends('python')
     depends_on('python@2.7:2.8,3.5:', when='@0.34:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@0.30:', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
-    depends_on('py-setuptools@40.9.0:', when='@0.34.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm@3.4:', when='@0.34.0', type='build')
+    depends_on('py-pip', type='build')
+
+    def install(self, spec, prefix):
+        # To build wheel from source, you need setuptools and wheel already installed.
+        # We get around this by using a pre-built wheel, see:
+        # https://discuss.python.org/t/bootstrapping-a-specific-version-of-pip/12306
+        args = std_pip_args + ['--prefix=' + prefix, self.stage.archive_file]
+        pip(*args)

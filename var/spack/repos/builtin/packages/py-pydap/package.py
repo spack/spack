@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,4 +21,4 @@ class PyPydap(PythonPackage):
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-six@1.4.0:', type=('build', 'run'))
     depends_on('py-beautifulsoup4', type=('build', 'run'))
-    depends_on('py-singledispatch', when='^python@:3.4.999', type=('build', 'run'))
+    depends_on('py-singledispatch', when='^python@:3.4', type=('build', 'run'))

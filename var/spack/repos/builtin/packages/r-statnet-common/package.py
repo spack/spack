@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RStatnetCommon(RPackage):
     Non-statistical utilities used by the software developed by the Statnet
     Project. They may also be of use to others."""
 
-    homepage = "http://www.statnet.org"
+    homepage = "https://www.statnet.org"
     url      = "https://cloud.r-project.org/src/contrib/statnet.common_3.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/statnet.common"
 

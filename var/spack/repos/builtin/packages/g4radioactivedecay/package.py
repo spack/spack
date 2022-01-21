@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 
 class G4radioactivedecay(Package):
     """Geant4 data files for radio-active decay hadronic processes"""
-    homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.5.1.1.tar.gz"
+    homepage = "https://geant4.web.cern.ch"
+    url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4RadioactiveDecay.5.1.1.tar.gz"
 
     tags = ['hep']
 

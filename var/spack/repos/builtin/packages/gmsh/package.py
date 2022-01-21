@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,8 +71,9 @@ class Gmsh(CMakePackage):
     depends_on('cmake@2.8:', type='build')
     depends_on('gmp',     when='+gmp')
     depends_on('mpi',     when='+mpi')
-    # Assumes OpenGL with GLU is already provided by the system:
     depends_on('fltk+gl', when='+fltk')
+    depends_on('gl',      when='+fltk')
+    depends_on('glu',     when='+fltk')
     depends_on('cairo',   when='+cairo')
     depends_on('hdf5',    when='+hdf5')
     depends_on('hdf5',    when='+med')
@@ -89,7 +90,10 @@ class Gmsh(CMakePackage):
     depends_on('metis',   when='+metis+external')
     depends_on('cgns',    when='+cgns')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
-    depends_on('gl2ps')
+    # But Gmsh ships with its own version of this library, so it is not a
+    # dependency of this package.
+    # See https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.h
+    # and https://gitlab.onelab.info/gmsh/gmsh/-/blob/master/Graphics/gl2ps.cpp
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')

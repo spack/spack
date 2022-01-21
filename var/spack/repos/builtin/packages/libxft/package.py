@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libxft(AutotoolsPackage, XorgPackage):
     connects X applications with the FreeType font rasterization library. Xft
     uses fontconfig to locate fonts so it has no configuration files."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXft"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXft"
     xorg_mirror_path = "lib/libXft-2.3.2.tar.gz"
 
     version('2.3.2', sha256='26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507')

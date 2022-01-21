@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Fstrack(MakefilePackage):
 
     variant('flow', default=True, description='Build the flow tracker')
 
-    depends_on('gmt@4.0:4.999', when='+flow')
+    depends_on('gmt@4.0:4', when='+flow')
     depends_on('netcdf-c', when='+flow')
 
     parallel = False

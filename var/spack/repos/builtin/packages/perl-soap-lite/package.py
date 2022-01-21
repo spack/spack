@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PerlSoapLite(PerlPackage):
     """Perl's Web Services Toolkit"""
 
-    homepage = "http://search.cpan.org/~phred/SOAP-Lite-1.20/lib/SOAP/Lite.pm"
+    homepage = "https://metacpan.org/pod/SOAP::Lite"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
 
     version('1.22', sha256='92f492f8722cb3002cd1dce11238cee5599bb5bd451a062966df45223d33693a')

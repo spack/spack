@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,8 @@ from spack import *
 class Prng(AutotoolsPackage):
     """Pseudo-Random Number Generator library."""
 
-    homepage = "http://statmath.wu.ac.at/prng/"
-    url      = "http://statmath.wu.ac.at/prng/prng-3.0.2.tar.gz"
+    homepage = "https://statmath.wu.ac.at/prng/"
+    url      = "https://statmath.wu.ac.at/prng/prng-3.0.2.tar.gz"
 
     version('3.0.2', sha256='8299182b97c24b7891d74590a8a8438641a6c681ce34d6c3f7bc98a0649da48b')
 

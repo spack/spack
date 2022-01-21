@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,13 +96,7 @@ class TestLmod(object):
         module_configuration('autoload_direct')
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if 'if not isloaded(' in x]) == 2
-        assert len([x for x in content if 'load(' in x]) == 2
-
-        # The configuration file doesn't set the verbose keyword
-        # that defaults to False
-        messages = [x for x in content if 'LmodMessage("Autoloading' in x]
-        assert len(messages) == 0
+        assert len([x for x in content if 'depends_on(' in x]) == 2
 
     def test_autoload_all(self, modulefile_content, module_configuration):
         """Tests the automatic loading of all dependencies."""
@@ -110,12 +104,7 @@ class TestLmod(object):
         module_configuration('autoload_all')
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if 'if not isloaded(' in x]) == 5
-        assert len([x for x in content if 'load(' in x]) == 5
-
-        # The configuration file sets the verbose keyword to True
-        messages = [x for x in content if 'LmodMessage("Autoloading' in x]
-        assert len(messages) == 5
+        assert len([x for x in content if 'depends_on(' in x]) == 5
 
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
@@ -158,8 +147,7 @@ class TestLmod(object):
         module_configuration('blacklist')
         content = modulefile_content(mpileaks_spec_string)
 
-        assert len([x for x in content if 'if not isloaded(' in x]) == 1
-        assert len([x for x in content if 'load(' in x]) == 1
+        assert len([x for x in content if 'depends_on(' in x]) == 1
 
     def test_no_hash(self, factory, module_configuration):
         """Makes sure that virtual providers (in the hierarchy) always
@@ -339,7 +327,9 @@ class TestLmod(object):
         assert old_format == settings['lmod']
 
     def test_modules_relative_to_view(
-            self, tmpdir, modulefile_content, module_configuration, install_mockery):
+        self, tmpdir, modulefile_content, module_configuration, install_mockery,
+        mock_fetch
+    ):
         with ev.Environment(str(tmpdir), with_view=True) as e:
             module_configuration('with_view')
             install('cmake')
@@ -352,3 +342,10 @@ class TestLmod(object):
             # point to the right one
             assert any(expected in line for line in content)
             assert not any(spec.prefix in line for line in content)
+
+    def test_modules_no_arch(self, factory, module_configuration):
+        module_configuration('no_arch')
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
+
+        assert str(spec.os) not in path

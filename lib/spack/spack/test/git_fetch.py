@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -212,7 +212,7 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert(nbranches == 5)
+            assert(nbranches >= 5)
             assert(ncommits == 2)
         else:
             assert(nbranches == 2)

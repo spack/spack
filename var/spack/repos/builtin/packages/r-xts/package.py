@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RXts(RPackage):
     allowing for user level customization and extension, while simplifying
     cross-class interoperability."""
 
-    homepage = "http://r-forge.r-project.org/projects/xts/"
+    homepage = "https://r-forge.r-project.org/projects/xts/"
     url      = "https://cloud.r-project.org/src/contrib/xts_0.11-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/xts"
 

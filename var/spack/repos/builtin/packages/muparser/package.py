@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class Muparser(Package):
     """C++ math expression parser library."""
-    homepage = "http://muparser.beltoforion.de/"
+    homepage = "https://beltoforion.de/en/muparser/"
     url      = "https://github.com/beltoforion/muparser/archive/v2.2.5.tar.gz"
 
     version('2.2.6.1', sha256='d2562853d972b6ddb07af47ce8a1cdeeb8bb3fa9e8da308746de391db67897b3')

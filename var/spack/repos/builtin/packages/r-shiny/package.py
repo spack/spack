@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RShiny(RPackage):
     pre-built widgets make it possible to build beautiful, responsive, and
     powerful applications with minimal effort."""
 
-    homepage = "http://shiny.rstudio.com/"
+    homepage = "https://shiny.rstudio.com/"
     url      = "https://cloud.r-project.org/src/contrib/shiny_1.0.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/shiny"
 

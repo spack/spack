@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RProc(RPackage):
     compared with statistical tests based on U-statistics or bootstrap.
     Confidence intervals can be computed for (p)AUC or ROC curves."""
 
-    homepage = "http://expasy.org/tools/pROC/"
+    homepage = "https://expasy.org/tools/pROC/"
     url      = "https://cloud.r-project.org/src/contrib/pROC_1.17.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pROC"
 

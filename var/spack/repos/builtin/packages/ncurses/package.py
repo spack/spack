@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     characters and function-key mapping, and has all the other
     SYSV-curses enhancements over BSD curses."""
 
-    homepage = "http://invisible-island.net/ncurses/ncurses.html"
+    homepage = "https://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
-    executables = [r'^ncursesw?\d*-config$']
+    executables = [r'^ncursesw?(?:\d+(?:\.\d+)*)?-config$']
 
     version('6.2', sha256='30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d')
     version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
@@ -101,7 +101,8 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             '--enable-overwrite',
             '--without-ada',
             '--enable-pc-files',
-            '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix)
+            '--with-pkg-config-libdir={0}/lib/pkgconfig'.format(self.prefix),
+            '--disable-overwrite'
         ]
 
         nwide_opts = ['--disable-widec',
@@ -148,14 +149,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         with working_dir('build_ncursesw'):
             make('install')
 
-        # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-        headers = glob.glob(os.path.join(prefix.include, '*'))
-        for p_dir in ['ncurses', 'ncursesw']:
-            path = os.path.join(prefix.include, p_dir)
-            if not os.path.exists(path):
-                os.makedirs(path)
-            for header in headers:
-                install(header, path)
+        # fix for packages that use "#include <ncurses.h>" (use wide by default)
+        headers = glob.glob(os.path.join(prefix.include, 'ncursesw', '*.h'))
+        for header in headers:
+            h = os.path.basename(header)
+            os.symlink(os.path.join('ncursesw', h), os.path.join(prefix.include, h))
 
     @property
     def libs(self):

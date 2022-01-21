@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Inputproto(AutotoolsPackage, XorgPackage):
     This extension defines a protocol to provide additional input devices
     management such as graphic tablets."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/proto/inputproto"
+    homepage = "https://cgit.freedesktop.org/xorg/proto/inputproto"
     xorg_mirror_path = "proto/inputproto-2.3.2.tar.gz"
 
     version('2.3.2', sha256='10eaadd531f38f7c92ab59ef0708ca195caf3164a75c4ed99f0c04f2913f6ef3')

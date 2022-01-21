@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,8 @@ class Jbigkit(MakefilePackage):
     """JBIG-Kit is a software implementation of
     the JBIG1 data compression standard."""
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
+    homepage = "https://www.cl.cam.ac.uk/~mgk25/jbigkit/"
+    url      = "https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
 
     version('2.1', sha256='de7106b6bfaf495d6865c7dd7ac6ca1381bd12e0d81405ea81e7f2167263d932')
     version('1.6', sha256='d841b6d0723c1082450967f3ea500be01810a34ec4a97ad10985ae7071a6150b')

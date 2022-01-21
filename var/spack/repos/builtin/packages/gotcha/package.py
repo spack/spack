@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,10 @@ class Gotcha(CMakePackage):
     """C software library for shared library function wrapping,
     enables tools to intercept calls into shared libraries"""
 
-    homepage = "http://github.com/LLNL/gotcha"
+    homepage = "https://github.com/LLNL/gotcha"
     git      = "https://github.com/LLNL/gotcha.git"
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('master', branch='master')

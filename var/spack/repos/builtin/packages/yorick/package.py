@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Yorick(Package):
        most operating systems (*nix systems, MacOS X, Windows).
     """
 
-    homepage = "http://dhmunro.github.io/yorick-doc/"
+    homepage = "https://dhmunro.github.io/yorick-doc/"
     url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
     git      = "https://github.com/dhmunro/yorick.git"
 

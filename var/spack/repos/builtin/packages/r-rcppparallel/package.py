@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class RRcppparallel(RPackage):
     serial "for" loop into a parallel one and the 'parallelReduce()' function
     can be used for accumulating aggregate or other values."""
 
-    homepage = "http://rcppcore.github.io/RcppParallel"
+    homepage = "https://rcppcore.github.io/RcppParallel"
     url      = "https://cloud.r-project.org/src/contrib/RcppParallel_4.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppParallel"
 

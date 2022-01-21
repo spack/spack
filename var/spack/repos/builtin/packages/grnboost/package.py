@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Grnboost(Package):
 
     depends_on('sbt', type='build')
     depends_on('java', type=('build', 'run'))
-    depends_on('xgboost+jvm-packages', type='run')
+    depends_on('xgboost', type='run')
     depends_on('spark+hadoop', type='run')
 
     def setup_run_environment(self, env):

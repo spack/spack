@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Librelp(AutotoolsPackage):
     (stands for Reliable Event Logging Protocol) is a general-purpose,
     extensible logging protocol."""
 
-    homepage = "http://www.rsyslog.com/librelp/"
+    homepage = "https://www.rsyslog.com/librelp/"
     url      = "https://github.com/rsyslog/librelp/archive/v1.7.0.tar.gz"
 
     version('1.7.0', sha256='ff46bdd74798934663d1388d010270325dc6a6ed6d44358ca69b280a8304b1e9')

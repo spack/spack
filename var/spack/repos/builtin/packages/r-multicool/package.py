@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class RMulticool(RPackage):
     conditions. The package also generates the integer partitions of a
     positive, non-zero integer n. The C++ code for this is based on Python code
     from Jerome Kelleher which can be found here
-    <http://jeromekelleher.net/tag/integer-partitions.html>. The C++ code and
+    <https://jeromekelleher.net/tag/integer-partitions.html>. The C++ code and
     Python code are distributed without conditions."""
 
     homepage = "https://cloud.r-project.org/package=multicool"

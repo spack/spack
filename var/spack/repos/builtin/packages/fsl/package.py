@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 
 from spack import *
@@ -16,12 +17,13 @@ class Fsl(Package, CudaPackage):
     # NOTE: A manual download is required for FSL.  Spack will search your
     # current directory for the download file.  Alternatively, add this file to
     # a mirror so that Spack can find it.  For instructions on how to set up a
-    # mirror, see http://spack.readthedocs.io/en/latest/mirrors.html
+    # mirror, see https://spack.readthedocs.io/en/latest/mirrors.html
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
     url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())
     manual_download = True
 
+    version('6.0.5', sha256='df12b0b1161a26470ddf04e4c5d5d81580a04493890226207667ed8fd2b4b83f')
     version('6.0.4', sha256='58b88f38e080b05d70724d57342f58e1baf56e2bd3b98506a72b4446cad5033e')
     version('5.0.10', sha256='ca183e489320de0e502a7ba63230a7f55098917a519e8c738b005d526e700842')
 
@@ -33,18 +35,25 @@ class Fsl(Package, CudaPackage):
     depends_on('openblas', when='@6:')
     depends_on('vtk@:8')
 
-    conflicts('%gcc@:4.7,5.5:')
-    conflicts('^cuda@9.2:')
     conflicts('cuda_arch=none', when='+cuda',
               msg='must select a CUDA architecture')
     conflicts('platform=darwin',
               msg='currently only packaged for linux')
 
     patch('build_log.patch')
-    patch('eddy_Makefile.patch', when='@6:')
+    patch('eddy_Makefile.patch', when='@6.0.4')
     patch('iconv.patch')
     patch('fslpython_install_v5.patch', when='@:5')
-    patch('fslpython_install_v6.patch', when='@6:')
+    patch('fslpython_install_v604.patch', when='@6.0.4')
+    patch('fslpython_install_v605.patch', when='@6.0.5')
+
+    # Allow fsl to use newer versions of cuda
+    patch('https://aur.archlinux.org/cgit/aur.git/plain/005-fix_cuda_thrust_include.patch?h=fsl',
+          sha256='9471addfc2f880350eedadcb99cb8b350abf42be1c0652ccddf49e34e5e48734',
+          level=2)
+
+    # allow newer compilers
+    patch('libxmlpp_bool.patch')
 
     # These patches disable FSL's attempts to try to submit a subset of FSL
     # computations to an SGE queue system. That auto-submit mechanism only
@@ -161,9 +170,25 @@ class Fsl(Package, CudaPackage):
                 build_settings.filter(r'(^ptx2_MASTERBUILD)\s*=.*',
                                       r'\1 = COMPILE_GPU=0')
 
+        filter_file(r'(configure_opts=".*)"',
+                    r'\1 --x-includes={0} --x-libraries={1}"'.format(
+                        self.spec['libx11'].prefix.include,
+                        self.spec['libx11'].prefix.lib),
+                    join_path('extras', 'src', 'tk', 'unix', 'fslconfigure'))
+        filter_file(r' -L/lib64',
+                    r'',
+                    join_path('src', 'fabber_core', 'Makefile'))
+
     def install(self, spec, prefix):
-        build = Executable('./build')
+        build = Executable(join_path(self.stage.source_path, 'build'))
         build()
+
+        rm = which('rm')
+        for file in glob.glob('build*'):
+            rm('-f', file)
+        rm('-r', '-f', 'src')
+        rm('-r', '-f', join_path('extras', 'src'))
+        rm('-r', '-f', join_path('extras', 'include'))
 
         install_tree('.', prefix)
 

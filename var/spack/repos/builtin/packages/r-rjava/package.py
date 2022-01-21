@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class RRjava(RPackage):
     Low-level interface to Java VM very much like .C/.Call and friends.
     Allows creation of objects, calling methods and accessing fields."""
 
-    homepage = "http://www.rforge.net/rJava/"
+    homepage = "https://www.rforge.net/rJava/"
     url      = "https://cloud.r-project.org/src/contrib/rJava_0.9-8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rJava"
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Geos(CMakePackage):
        Simple Features for SQL spatial predicate functions and spatial
        operators, as well as specific JTS enhanced topology functions."""
 
-    homepage = "http://trac.osgeo.org/geos/"
+    homepage = "https://trac.osgeo.org/geos/"
     url      = "https://download.osgeo.org/geos/geos-3.8.1.tar.bz2"
 
     maintainers = ['adamjstewart']
@@ -45,7 +45,7 @@ class Geos(CMakePackage):
 
     patch('https://patch-diff.githubusercontent.com/raw/libgeos/geos/pull/461.patch',
           sha256='58795ae79f168851f27aa488a589796f9a7563d368ffa32e1fe315eb71699877',
-          when='@3.7:')
+          when='@3.8:')
 
     def cmake_args(self):
         args = []

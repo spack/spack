@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class RPsych(RPackage):
     research.  For more information, see the <http://personality-project.org/r>
     web page."""
 
-    homepage = "http://personality-project.org/r/psych"
+    homepage = "https://personality-project.org/r/psych"
     url      = "https://cloud.r-project.org/src/contrib/psych_1.7.8.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/psych"
 

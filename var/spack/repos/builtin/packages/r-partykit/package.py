@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class RPartykit(RPackage):
     published by Hothorn and Zeileis (2015)
     <https://jmlr.org/papers/v16/hothorn15a.html>."""
 
-    homepage = "http://partykit.r-forge.r-project.org/partykit"
+    homepage = "https://partykit.r-forge.r-project.org/partykit"
     url      = "https://cloud.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/partykit"
 

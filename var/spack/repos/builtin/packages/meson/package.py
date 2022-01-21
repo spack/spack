@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,16 @@ class Meson(PythonPackage):
     """Meson is a portable open source build system meant to be both
        extremely fast, and as user friendly as possible."""
 
-    homepage = "http://mesonbuild.com/"
+    homepage = "https://mesonbuild.com/"
     url      = "https://github.com/mesonbuild/meson/archive/0.49.0.tar.gz"
 
     maintainers = ['michaelkuhn']
 
+    version('0.60.0', sha256='5672a560fc4094c88ca5b8be0487e099fe84357e5045f5aecf1113084800e6fd')
+    version('0.59.2', sha256='e6d5ccd503d41f938f6cfc4dc9e7326ffe28acabe091b1ff0c6535bdf09732dd')
+    version('0.59.1', sha256='f256eb15329a6064f8cc1f23b29de1fa8d21e324f939041e1a4efe77cf1362ef')
     version('0.59.0', sha256='fdbbe8ea8a47f9e21cf4f578f85be8ec3d9c030df3d8cb17df1ae59d8683813a')
+    version('0.58.2', sha256='58115604dea9c1f70811578df3c210f4d67cf795d21a4418f6e9bb35406953f5')
     version('0.58.1', sha256='78e0f553dd3bc632d5f96ab943b1bbccb599c2c84ff27c5fb7f7fff9c8a3f6b4')
     version('0.58.0', sha256='991b882bfe4d37acc23c064a29ca209458764a580d52f044f3d50055a132bed4')
     version('0.57.2', sha256='cd3773625253df4fd1c380faf03ffae3d02198d6301e7c8bc7bba6c66af66096')

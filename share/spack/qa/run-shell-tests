@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,8 +38,8 @@ cd "$SPACK_ROOT"
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov seems to undo the script's redirection
 if [ "$COVERAGE" = true ]; then
-    "$QA_DIR/bashcov" "$QA_DIR/setup-env-test.sh" &> /dev/null
-    "$QA_DIR/bashcov" "$QA_DIR/completion-test.sh" &> /dev/null
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
 else
     bash "$QA_DIR/setup-env-test.sh"
     bash "$QA_DIR/completion-test.sh"

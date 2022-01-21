@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Jansi(MavenPackage):
     ANSI escape codes to format your console output which
     works even on Windows."""
 
-    homepage = "http://fusesource.github.io/jansi/"
+    homepage = "https://fusesource.github.io/jansi/"
     url      = "https://github.com/fusesource/jansi/archive/jansi-project-1.18.tar.gz"
 
     version('1.18',   sha256='73cd47ecf370a33c6e76afb5d9a8abf99489361d7bd191781dbd9b7efd082aa5')

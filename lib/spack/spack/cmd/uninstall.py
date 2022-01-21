@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -311,7 +311,7 @@ def get_uninstall_list(args, specs, env):
 
 
 def uninstall_specs(args, specs):
-    env = ev.get_env(args, 'uninstall')
+    env = ev.active_environment()
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
     anything_to_do = set(uninstall_list).union(set(remove_list))

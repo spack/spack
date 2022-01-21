@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class H5zZfp(MakefilePackage):
     """A highly flexible floating point and integer compression plugin for the
        HDF5 library using ZFP compression."""
 
-    homepage = "http://h5z-zfp.readthedocs.io/en/latest"
+    homepage = "https://h5z-zfp.readthedocs.io/en/latest"
     git      = "https://github.com/LLNL/H5Z-ZFP.git"
 
     version('develop', branch='master')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
+import contextlib
 import getpass
 import os
 import re
@@ -29,6 +30,7 @@ replacements = {
     'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'user_cache_path': spack.paths.user_cache_path,
 }
 
 # This is intended to be longer than the part of the install path
@@ -73,10 +75,11 @@ def substitute_config_variables(path):
 
     Spack allows paths in configs to have some placeholders, as follows:
 
-    - $spack     The Spack instance's prefix
-    - $user      The current user's username
-    - $tempdir   Default temporary directory returned by tempfile.gettempdir()
-    - $env       The active Spack environment.
+    - $env               The active Spack environment.
+    - $spack             The Spack instance's prefix
+    - $tempdir           Default temporary directory returned by tempfile.gettempdir()
+    - $user              The current user's username
+    - $user_cache_path   The user cache directory (~/.spack, unless overridden)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
@@ -84,7 +87,7 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
-    env = ev.get_env({}, '')
+    env = ev.active_environment()
     if env:
         replacements.update({'env': env.path})
     else:
@@ -232,3 +235,19 @@ def padding_filter(string):
             len(match.group(0))
         )
     return _filter_re.sub(replacer, string)
+
+
+@contextlib.contextmanager
+def filter_padding():
+    """Context manager to safely disable path padding in all Spack output.
+
+    This is needed because Spack's debug output gets extremely long when we use a
+    long padded installation path.
+    """
+    padding = spack.config.get("config:install_tree:padded_length", None)
+    if padding:
+        # filter out all padding from the intsall command output
+        with tty.output_filter(padding_filter):
+            yield
+    else:
+        yield  # no-op: don't filter unless padding is actually enabled

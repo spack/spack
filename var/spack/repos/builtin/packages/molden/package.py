@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,15 +52,20 @@ class Molden(MakefilePackage):
         cflags = '-O2 -funroll-loops'
         fflags = cflags
 
-        if '%gcc@10:' in self.spec:
-            fflags += '-fallow-argument-mismatch'
-
         makefile.filter(r'CFLAGS = (.*)', r'CFLAGS = {0} \1'.format(cflags))
         makefile.filter(r'FFLAGS = (.*)', r'FFLAGS = {0} \1'.format(fflags))
 
         if spec.target.family == 'aarch64':
             makefile.filter(r'AFLAG=*', r'AFLAG=')
             makefile.filter(r'rm -f src/', r'rm -f ')
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)

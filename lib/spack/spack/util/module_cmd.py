@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,7 +47,7 @@ def module(*args):
         module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
 
         # Execute the python command
-        module_cmd += '%s -c "%s";' % (sys.executable, py_cmd)
+        module_cmd += '%s -E -c "%s";' % (sys.executable, py_cmd)
 
         # If LD_LIBRARY_PATH was set after `module`, dump the old value because
         # we have since corrupted it to ensure python would run.

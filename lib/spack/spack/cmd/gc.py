@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import llnl.util.tty as tty
 
 import spack.cmd.common.arguments
 import spack.cmd.uninstall
-import spack.environment
+import spack.environment as ev
 import spack.store
 
 description = "remove specs that are now no longer needed"
@@ -24,7 +24,7 @@ def gc(parser, args):
 
     # Restrict garbage collection to the active environment
     # speculating over roots that are yet to be installed
-    env = spack.environment.get_env(args=None, cmd_name='gc')
+    env = ev.active_environment()
     if env:
         msg = 'Restricting the garbage collection to the "{0}" environment'
         tty.msg(msg.format(env.name))

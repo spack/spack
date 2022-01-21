@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import sys
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.cmd.find
 import spack.environment as ev
 import spack.store
 import spack.user_environment as uenv
@@ -20,8 +21,7 @@ level = "short"
 def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
-    arguments.add_common_arguments(
-        subparser, ['recurse_dependencies', 'installed_specs'])
+    arguments.add_common_arguments(subparser, ['constraint'])
 
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
@@ -53,14 +53,29 @@ alternatively one can decide to load only the package or only
 the dependencies"""
     )
 
+    subparser.add_argument(
+        '--list',
+        action='store_true',
+        default=False,
+        help="show loaded packages: same as `spack find --loaded`"
+    )
+
 
 def load(parser, args):
-    env = ev.get_env(args, 'load')
+    env = ev.active_environment()
+
+    if args.list:
+        results = spack.cmd.filter_loaded_specs(args.specs())
+        if sys.stdout.isatty():
+            spack.cmd.print_how_many_pkgs(results, "loaded")
+        spack.cmd.display_specs(results)
+        return
+
     specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-             for spec in spack.cmd.parse_specs(args.specs)]
+             for spec in spack.cmd.parse_specs(args.constraint)]
 
     if not args.shell:
-        specs_str = ' '.join(args.specs) or "SPECS"
+        specs_str = ' '.join(args.constraint) or "SPECS"
         spack.cmd.common.shell_init_instructions(
             "spack load",
             "    eval `spack load {sh_arg} %s`" % specs_str,

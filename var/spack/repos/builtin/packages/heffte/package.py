@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,10 +14,12 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     git      = "https://bitbucket.org/icl/heffte.git"
 
     maintainers = ['mkstoyanov']
+    tags = ['e4s', 'ecp']
 
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.2.0', sha256='aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58')
     version('2.1.0', sha256='527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9')
     version('2.0.0', sha256='12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6')
     version('1.0', sha256='0902479fb5b1bad01438ca0a72efd577a3529c3d8bad0028f3c18d3a4935ca74')
@@ -26,6 +28,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
     patch('threads10.patch', when='@1.0')
     patch('fortran200.patch', when='@2.0.0')
+
+    depends_on('cmake@3.10:', type=('build', 'run'))
 
     variant('shared', default=True, description='Builds with shared libraries')
     variant('fftw', default=False, description='Builds with support for FFTW backend')
@@ -43,7 +47,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~fftw', when='@:2.1.0~mkl~cuda')  # requires at least one backend
     conflicts('+fftw', when='+mkl@:1.0')  # old API supports at most one CPU backend
     conflicts('^openmpi~cuda', when='+cuda')  # +cuda requires CUDA enabled OpenMPI
-    conflicts('~cuda', when='+magma')  # magma requires CUDA or HIP
+    conflicts('~cuda~rocm', when='+magma')  # magma requires CUDA or HIP
     conflicts('+rocm', when='@:2.1.0')  # heffte+rocm is in in development in spack
     conflicts('+python', when="@:1.0")  # python support was added post v1.0
     conflicts('+fortran', when="@:1.0")  # fortran support was added post v1.0
@@ -57,6 +61,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hip@3.8.0:', when='+rocm')
     depends_on('rocfft@3.8.0:', when='+rocm')
     depends_on('magma@2.5.3:', when="+cuda+magma", type=('build', 'run'))
+    depends_on('magma+rocm@2.6.1:',
+               when='+magma+rocm @2.1:', type=('build', 'run'))
+    depends_on('hipblas@3.8:', when='+magma+rocm', type=('build', 'run'))
+    depends_on('hipsparse@3.8:', when='+magma+rocm', type=('build', 'run'))
 
     examples_src_dir = 'examples'
 
@@ -90,61 +98,18 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             if 'none' not in rocm_arch:
                 args.append('-DCMAKE_CXX_FLAGS={0}'.format(self.hip_flags(rocm_arch)))
 
+            # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
+                args.append(self.define('__skip_rocmclang', 'ON'))
+
         return args
 
-    @run_after('install')
-    def cache_test_sources(self):
-        """Copy the example source files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([self.examples_src_dir])
-
     def test(self):
-        cmake_file = join_path(self.install_test_root, 'CMakeLists.txt')
-        test_bld_dir = join_path(self.install_test_root, '_build')
-        exe_files = []
-        mpi_procs = []
-
-        with open(cmake_file, 'w') as cmkf:
-            cmkf.write('cmake_minimum_required(VERSION 3.13)\n\n')
-            cmkf.write('project(heffte_example LANGUAGES CXX)\n\n')
-            cmkf.write('find_package(Heffte REQUIRED)\n\n')
-            if '+fftw' in self.spec:
-                src_file = '{0}/heffte_example_fftw.cpp'.format(
-                    self.examples_src_dir)
-                cmkf.write(
-                    'add_executable(hf_fftw {0})\n'.format(src_file))
-                cmkf.write(
-                    'target_link_libraries(hf_fftw Heffte::Heffte)\n')
-                exe_files.append('./hf_fftw')
-                mpi_procs.append(4)
-            if '+cuda' in self.spec:
-                src_file = '{0}/heffte_example_cuda.cpp'.format(
-                    self.examples_src_dir)
-                cmkf.write(
-                    'add_executable(hf_cuda {0})\n'.format(src_file))
-                cmkf.write(
-                    'target_link_libraries(hf_cuda Heffte::Heffte)\n')
-                exe_files.append('./hf_cuda')
-                mpi_procs.append(4)
-            if '+fortran' in self.spec:
-                src_file = '{0}/heffte_example_fftw.f90'.format(
-                    self.examples_src_dir)
-                cmkf.write(
-                    'add_executable(hf_fort {0})\n'.format(src_file))
-                cmkf.write(
-                    'target_link_libraries(hf_fort Heffte::Fortran)\n')
-                exe_files.append('./hf_fort')
-                mpi_procs.append(2)
-
-        with working_dir(test_bld_dir, create=True):
-            cmake('..')
+        # using the tests installed in <prefix>/share/heffte/testing
+        cmake_dir = join_path(self.prefix, 'share', 'heffte', 'testing')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'test_install')
+        with working_dir(test_dir, create=True):
+            cmake(cmake_dir)
             make()
-            test_args = ['-n', '4', ' ']
-            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
-            if mpiexe_f:
-                for exf, procs in zip(exe_files, mpi_procs):
-                    test_args[-1] = exf
-                    test_args[-2] = str(procs)
-                    reason_str = 'Heffte smoke test, exe: {0}'.format(exf)
-                    self.run_test(mpiexe_f.command, test_args,
-                                  purpose=reason_str)
+            make('test')

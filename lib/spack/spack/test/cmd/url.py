@@ -1,9 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
-import sys
 
 import pytest
 
@@ -69,13 +68,7 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
-@pytest.mark.maybeslow
-@pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where "
-           "networking is super slow"
-)
-def test_url_list():
+def test_url_list(mock_packages):
     out = url('list')
     total_urls = len(out.split('\n'))
 
@@ -104,13 +97,7 @@ def test_url_list():
     assert 0 < correct_version_urls < total_urls
 
 
-@pytest.mark.maybeslow
-@pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where "
-           "networking is super slow"
-)
-def test_url_summary():
+def test_url_summary(mock_packages):
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
     (total_urls, correct_names, correct_versions,
@@ -136,12 +123,7 @@ def test_url_summary():
     assert out_correct_versions == correct_versions
 
 
-@pytest.mark.skipif(
-    sys.version_info < (2, 7),
-    reason="Python 2.6 tests are run in a container, where "
-           "networking is super slow"
-)
-def test_url_stats(capfd):
+def test_url_stats(capfd, mock_packages):
     with capfd.disabled():
         output = url('stats')
         npkgs = '%d packages' % len(spack.repo.all_package_names())
@@ -151,3 +133,20 @@ def test_url_stats(capfd):
         assert 'schemes' in output
         assert 'versions' in output
         assert 'resources' in output
+
+        output = url('stats', '--show-issues')
+        npkgs = '%d packages' % len(spack.repo.all_package_names())
+        assert npkgs in output
+        assert 'url' in output
+        assert 'git' in output
+        assert 'schemes' in output
+        assert 'versions' in output
+        assert 'resources' in output
+
+        assert 'Package URLs with md5 hashes' in output
+        assert 'needs-relocation' in output
+        assert 'https://cmake.org/files/v3.4/cmake-0.0.0.tar.gz' in output
+
+        assert 'Package URLs with http urls' in output
+        assert 'zmpi' in output
+        assert 'http://www.spack-fake-zmpi.org/downloads/zmpi-1.0.tar.gz' in output

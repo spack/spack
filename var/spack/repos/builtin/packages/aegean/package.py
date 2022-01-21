@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Aegean(MakefilePackage):
        as well as a C library whose API provides access to AEGeAn's core
        functions and data structures."""
 
-    homepage = "http://brendelgroup.github.io/AEGeAn/"
+    homepage = "https://brendelgroup.github.io/AEGeAn/"
     url      = "https://github.com/BrendelGroup/AEGeAn/archive/v0.15.2.tar.gz"
 
     version('0.15.2', sha256='734c9dd23ab3415c3966083bfde5fb72c81e6ace84e08ee3fe0d4c338331d975')

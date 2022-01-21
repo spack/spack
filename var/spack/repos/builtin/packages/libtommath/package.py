@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Libtommath(MakefilePackage):
     """A portable number theoretic multiple-precision integer library."""
 
-    homepage = "http://www.libtom.net/"
+    homepage = "https://www.libtom.net/"
     url      = "https://github.com/libtom/libtommath/archive/v1.2.0.tar.gz"
 
     version('1.2.0', sha256='f3c20ab5df600d8d89e054d096c116417197827d12732e678525667aa724e30f')

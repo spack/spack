@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,7 +48,7 @@ class Bowtie(MakefilePackage):
 
     # correspond to 'aarch64' architecture
     # reference: https://github.com/BenLangmead/bowtie/pull/13
-    patch('for_aarch64.patch', when='@1.2:1.2.999 target=aarch64:')
+    patch('for_aarch64.patch', when='@1.2.0:1.2 target=aarch64:')
 
     # measures for narrowing error
     patch('fix_narrowing_err.patch', when='@1.2.1:1.2.3')

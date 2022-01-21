@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,11 @@ from spack import *
 class PyThirdorder(PythonPackage):
     """It helps ShengBTE users create FORCE_CONSTANTS_3RD files efficiently"""
 
-    homepage = "http://www.shengbte.org"
+    homepage = "https://www.shengbte.org"
     url      = "http://www.shengbte.org/downloads/thirdorder-v1.1.1-8526f47.tar.bz2"
 
-    version('1.1.1-8526f47', '5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e')
+    # Deprecated because download doesn't work
+    version('1.1.1-8526f47', '5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e', deprecated=True)
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))

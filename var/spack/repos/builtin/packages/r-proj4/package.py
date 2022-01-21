@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class RProj4(RPackage):
     the PROJ.4 cartographic projections library. It allows transformation of
     geographic coordinates from one projection and/or datum to another."""
 
-    homepage = "http://www.rforge.net/proj4/"
+    homepage = "https://www.rforge.net/proj4/"
     url      = "https://cloud.r-project.org/src/contrib/proj4_1.0-8.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/proj4"
 

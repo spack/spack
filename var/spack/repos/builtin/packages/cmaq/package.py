@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class Cmaq(Package):
     """Code base for the U.S. EPA's Community Multiscale Air Quality Model
     (CMAQ)."""
-    homepage = "http://www.epa.gov/CMAQ"
+    homepage = "https://www.epa.gov/CMAQ"
     url      = "https://github.com/USEPA/CMAQ/archive/CMAQv5.3.1_19Dec2019.tar.gz"
 
     version('5.3.1', sha256='659156bba27f33010e0fdc157a8d33f3b5b779b95511e2ade870284b6bcb4bc8',
