@@ -3,4 +3,6 @@
 # from sources by "untrusting" it.
 type: install
 description: |
-  Specs built from sources by Spack. May take a long time.
+  Specs built from sources downloaded from the Spack public mirror.
+info:
+  url: https://mirror.spack.io
