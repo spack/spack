@@ -1010,14 +1010,8 @@ class PackageInstaller(object):
         msg = '{0} a {1} on {2} with timeout {3}'
         err = 'Failed to {0} a {1} for {2} due to {3}: {4}'
 
-        if lock_type == 'read':
-            # Wait until the other process finishes if there are no more
-            # build tasks with priority 0 (i.e., with no uninstalled
-            # dependencies).
-            no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
-            timeout = None if no_p0 else 3
-        else:
-            timeout = 1e-9  # Near 0 to iterate through install specs quickly
+        # Near 0 to iterate through install specs quickly
+        timeout = 3 if lock_type == 'read' else 1e-9
 
         try:
             if lock is None:
