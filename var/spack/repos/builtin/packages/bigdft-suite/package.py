@@ -6,7 +6,7 @@
 from spack import *
 
 
-class BigdftSuite(Package):
+class BigdftSuite(BundlePackage):
     """BigDFT-suite: the complete suite of BigDFT for electronic structure calculation
        based on Daubechies wavelets."""
 
@@ -37,17 +37,3 @@ class BigdftSuite(Package):
         depends_on('bigdft-atlab@{0}'.format(vers),     when='@{0}'.format(vers))
     for vers in ['1.9.0', '1.9.1', '1.9.2', 'develop']:
         depends_on('py-bigdft@{0}'.format(vers),        when='@{0}'.format(vers))
-
-    phases = ['install']
-
-    def install(self, spec, prefix):
-        install_tree(spec['bigdft-futile'].prefix,    prefix)
-        install_tree(spec['bigdft-psolver'].prefix,   prefix)
-        install_tree(spec['bigdft-libabinit'].prefix, prefix)
-        install_tree(spec['bigdft-chess'].prefix,     prefix)
-        install_tree(spec['bigdft-core'].prefix,      prefix)
-        install_tree(spec['bigdft-spred'].prefix,     prefix)
-        if spec.satisfies('@1.9.0:') or spec.satisfies('@develop'):
-            install_tree(spec['py-bigdft'].prefix,    prefix)
-        if spec.satisfies('@1.8.3:') or spec.satisfies('@develop'):
-            install_tree(spec['bigdft-atlab'].prefix, prefix)
