@@ -23,6 +23,7 @@ import spack.util.executable
 import spack.util.module_cmd
 import spack.version
 from spack.util.environment import filter_system_paths
+from spack.util.path import system_path_filter
 
 __all__ = ['Compiler']
 
@@ -157,6 +158,7 @@ def _parse_link_paths(string):
     return implicit_link_dirs
 
 
+@system_path_filter
 def _parse_non_system_link_dirs(string):
     """Parses link paths out of compiler debug output.
 

@@ -218,6 +218,8 @@ def compute_windows_program_path_for_package(pkg):
         pkg (spack.package.Package): package for which
                            Program Files location is to be computed
     """
+    # note windows paths are fine here as this method should only ever be invoked
+    # to interact with Windows
     program_files = 'C:\\Program Files {}\\{}'
 
     return[program_files.format(arch, name) for

@@ -265,16 +265,16 @@ def set_compiler_environment_variables(pkg, env):
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
-        env.set('CC', os.path.join(link_dir, compiler.link_paths['cc']))
+        env.set('CC', os.path.join(link_dir, os.path.join(compiler.link_paths['cc'])))
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
-        env.set('CXX', os.path.join(link_dir, compiler.link_paths['cxx']))
+        env.set('CXX', os.path.join(link_dir, os.path.join(compiler.link_paths['cxx'])))
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
-        env.set('F77', os.path.join(link_dir, compiler.link_paths['f77']))
+        env.set('F77', os.path.join(link_dir, os.path.join(compiler.link_paths['f77'])))
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
-        env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
+        env.set('FC', os.path.join(link_dir, os.path.join(compiler.link_paths['fc'])))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
@@ -374,7 +374,8 @@ def set_wrapper_variables(pkg, env):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
+        spack.paths.build_env_path,
+        os.path.dirname(os.path.join(pkg.compiler.link_paths['cc'])))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -537,10 +538,10 @@ def _set_variables_for_single_module(pkg, module):
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
+    m.spack_cc = os.path.join(link_dir, os.path.join(pkg.compiler.link_paths['cc']))
+    m.spack_cxx = os.path.join(link_dir, os.path.join(pkg.compiler.link_paths['cxx']))
+    m.spack_f77 = os.path.join(link_dir, os.path.join(pkg.compiler.link_paths['f77']))
+    m.spack_fc = os.path.join(link_dir, os.path.join(pkg.compiler.link_paths['fc']))
 
     # Emulate some shell commands for convenience
     m.pwd = os.getcwd

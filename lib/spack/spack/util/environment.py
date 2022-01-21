@@ -26,6 +26,7 @@ import spack.platforms
 import spack.spec
 import spack.util.executable as executable
 import spack.util.spack_json as sjson
+from spack.util.path import path_to_os_path, system_path_filter
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -130,6 +131,7 @@ def env_var_to_source_line(var, val):
     return source_line
 
 
+@system_path_filter(arg_slice=slice(1))
 def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
     use_env = environment or os.environ
@@ -143,6 +145,7 @@ def dump_environment(path, environment=None):
                                     '\n']))
 
 
+@system_path_filter(arg_slice=slice(1))
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
     cPickle.dump(dict(environment if environment else os.environ),
@@ -307,7 +310,7 @@ class AppendPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories.append(os.path.normpath(self.value))
+        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
 
@@ -319,7 +322,8 @@ class PrependPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(self.value)] + directories
+        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] \
+            + directories
         env[self.name] = self.separator.join(directories)
 
 
@@ -331,8 +335,9 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
+        directories = [path_to_os_path(os.path.normpath(x)).pop()
+                       for x in directories
+                       if x != path_to_os_path(os.path.normpath(self.value)).pop()]
         env[self.name] = self.separator.join(directories)
 
 
@@ -343,8 +348,8 @@ class DeprioritizeSystemPaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = deprioritize_system_paths([os.path.normpath(x)
-                                                 for x in directories])
+        directories = deprioritize_system_paths(
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -356,7 +361,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = prune_duplicate_paths([os.path.normpath(x)
+        directories = prune_duplicate_paths([path_to_os_path(os.path.normpath(x)).pop()
                                              for x in directories])
         env[self.name] = self.separator.join(directories)
 
