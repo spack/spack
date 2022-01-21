@@ -14,6 +14,7 @@ from six import string_types, text_type
 import llnl.util.tty as tty
 
 import spack.error
+from spack.util.path import Path, marshall_path, path_to_os_path, system_path_filter
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -22,9 +23,11 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        if sys.platform == 'win32':
-            name = name.replace('\\', '/')
+        # necesary here for the shlex call to succeed
+        name = marshall_path(name, mode=Path.unix)
         self.exe = shlex.split(str(name))
+        # filter back to platform dependent path
+        self.exe = path_to_os_path(*self.exe)
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
@@ -33,10 +36,12 @@ class Executable(object):
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
+    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
+    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -75,11 +80,9 @@ class Executable(object):
         Returns:
             str: The path to the executable
         """
-        if sys.platform == "win32":
-            return self.exe[0].replace('/', '\\')
-        else:
-            return self.exe[0]
+        return self.exe[0]
 
+    # needs a small fixup to better handle URLS and the like
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 
@@ -272,6 +275,7 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
+@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get('path', os.environ.get('PATH', ''))
@@ -291,12 +295,13 @@ def which_string(*args, **kwargs):
             if os.path.sep in candidate_name:
                 exe = os.path.abspath(candidate_name)
                 if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                    return exe.replace('\\', '/')
+                    return exe
             else:
                 for directory in path:
+                    directory = path_to_os_path(directory).pop()
                     exe = os.path.join(directory, candidate_name)
                     if os.path.isfile(exe) and os.access(exe, os.X_OK):
-                        return exe.replace('\\', '/')
+                        return exe
 
     if required:
         raise CommandNotFoundError(

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 import sys
 
@@ -13,20 +14,20 @@ from spack.version import ver
 
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
-    ('gfortran', 'clang/gfortran'),
-    ('xlf_r', 'xl_r/xlf_r'),
-    ('xlf', 'xl/xlf'),
-    ('pgfortran', 'pgi/pgfortran'),
-    ('ifort', 'intel/ifort')
+    ('gfortran', ('clang', 'gfortran')),
+    ('xlf_r', ('xl_r', 'xlf_r')),
+    ('xlf', ('xl', 'xlf')),
+    ('pgfortran', ('pgi', 'pgfortran')),
+    ('ifort', ('intel', 'ifort'))
 ]
 
 #: compiler symlink mappings for mixed f90/fc compilers
 fc_mapping = [
-    ('gfortran', 'clang/gfortran'),
-    ('xlf90_r', 'xl_r/xlf90_r'),
-    ('xlf90', 'xl/xlf90'),
-    ('pgfortran', 'pgi/pgfortran'),
-    ('ifort', 'intel/ifort')
+    ('gfortran', ('clang', 'gfortran')),
+    ('xlf90_r', ('xl_r', 'xlf90_r')),
+    ('xlf90', ('xl', 'xlf90')),
+    ('pgfortran', ('pgi', 'pgfortran')),
+    ('ifort', ('intel', 'ifort'))
 ]
 
 
@@ -60,8 +61,8 @@ class Clang(Compiler):
     @property
     def link_paths(self):
         # clang links are always the same
-        link_paths = {'cc': 'clang/clang',
-                      'cxx': 'clang/clang++'}
+        link_paths = {'cc': os.path.join('clang', 'clang'),
+                      'cxx': os.path.join('clang', 'clang++')}
 
         # fortran links need to look at the actual compiler names from
         # compilers.yaml to figure out which named symlink to use
@@ -70,14 +71,14 @@ class Clang(Compiler):
                 link_paths['f77'] = link_path
                 break
         else:
-            link_paths['f77'] = 'clang/flang'
+            link_paths['f77'] = os.path.join('clang', 'flang')
 
         for compiler_name, link_path in fc_mapping:
             if self.fc and compiler_name in self.fc:
                 link_paths['fc'] = link_path
                 break
         else:
-            link_paths['fc'] = 'clang/flang'
+            link_paths['fc'] = os.path.join('clang', 'flang')
 
         return link_paths
 

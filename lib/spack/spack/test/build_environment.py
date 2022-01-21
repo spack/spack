@@ -205,7 +205,7 @@ def test_spack_paths_before_module_paths(
     s.concretize()
     pkg = s.package
 
-    module_path = '/path/to/module'
+    module_path = os.path.join('path', 'to', 'module')
 
     def _set_wrong_cc(x):
         os.environ['PATH'] = module_path + os.pathsep + os.environ['PATH']
@@ -219,11 +219,9 @@ def test_spack_paths_before_module_paths(
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = posixpath.join(spack.paths.prefix, 'lib/spack/env')
+    spack_path = os.path.join(spack.paths.prefix, os.path.join('lib', 'spack', 'env'))
 
     paths = os.environ['PATH'].split(os.pathsep)
-    if sys.platform == 'win32':
-        paths = [p.replace("\\", "/") for p in paths]
 
     assert paths.index(spack_path) < paths.index(module_path)
 

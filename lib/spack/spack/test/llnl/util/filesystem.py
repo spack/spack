@@ -415,8 +415,7 @@ def test_computation_of_header_directories(
 
 def test_headers_directory_setter():
     if sys.platform == "win32":
-        # TODO: Test with \\'s
-        root = "C:/pfx/include/subdir"
+        root = r'C:\pfx\include\subdir'
     else:
         root = "/pfx/include/subdir"
     hl = fs.HeaderList(
@@ -453,14 +452,14 @@ def test_headers_directory_setter():
 if sys.platform == "win32":
     # TODO: Test \\s
     paths = [
-        ('C:/user/root', None,
-         (['C:/', 'C:/user', 'C:/user/root'], '', [])),
-        ('C:/user/root', 'C:/', ([], 'C:/', ['C:/user', 'C:/user/root'])),
-        ('C:/user/root', 'user', (['C:/'], 'C:/user', ['C:/user/root'])),
-        ('C:/user/root', 'root', (['C:/', 'C:/user'], 'C:/user/root', [])),
-        ('relative/path', None, (['relative', 'relative/path'], '', [])),
-        ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
-        ('relative/path', 'path', (['relative'], 'relative/path', []))
+        (r'C:\user\root', None,
+         (['C:\\', r'C:\user', r'C:\user\root'], '', [])),
+        (r'C:\user\root', 'C:\\', ([], 'C:\\', [r'C:\user', r'C:\user\root'])),
+        (r'C:\user\root', r'user', (['C:\\'], r'C:\user', [r'C:\user\root'])),
+        (r'C:\user\root', r'root', (['C:\\', r'C:\user'], r'C:\user\root', [])),
+        (r'relative\path', None, ([r'relative', r'relative\path'], '', [])),
+        (r'relative\path', r'relative', ([], r'relative', [r'relative\path'])),
+        (r'relative\path', r'path', ([r'relative'], r'relative\path', []))
     ]
 else:
     paths = [
@@ -483,9 +482,8 @@ def test_partition_path(path, entry, expected):
 if sys.platform == "win32":
     path_list = [
         ('', []),
-        ('C:\\user\\dir', ['C:/', 'C:/user', 'C:/user/dir']),
-        ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
-        ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+        (r'.\some\sub\dir', [r'.\some', r'.\some\sub', r'.\some\sub\dir']),
+        (r'another\sub\dir', [r'another', r'another\sub', r'another\sub\dir'])
     ]
 else:
     path_list = [

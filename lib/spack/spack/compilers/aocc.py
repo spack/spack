@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 import sys
 
@@ -42,10 +43,10 @@ class Aocc(Compiler):
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'aocc/clang',
-                      'cxx': 'aocc/clang++',
-                      'f77': 'aocc/flang',
-                      'fc': 'aocc/flang'}
+        link_paths = {'cc': os.path.join('aocc', 'clang'),
+                      'cxx': os.path.join('aocc', 'clang++'),
+                      'f77': os.path.join('aocc', 'flang'),
+                      'fc': os.path.join('aocc', 'flang')}
 
         return link_paths
 

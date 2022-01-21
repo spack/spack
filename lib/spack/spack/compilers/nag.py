@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from typing import List  # novm
 
 import spack.compiler
@@ -26,8 +27,8 @@ class Nag(spack.compiler.Compiler):
     link_paths = {
         'cc': 'cc',
         'cxx': 'c++',
-        'f77': 'nag/nagfor',
-        'fc': 'nag/nagfor'}
+        'f77': os.path.join('nag', 'nagfor'),
+        'fc': os.path.join('nag', 'nagfor')}
 
     version_argument = '-V'
     version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'

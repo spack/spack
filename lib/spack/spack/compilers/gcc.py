@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 import spack.compiler
@@ -29,10 +30,10 @@ class Gcc(spack.compiler.Compiler):
     suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'gcc/gcc',
-                  'cxx': 'gcc/g++',
-                  'f77': 'gcc/gfortran',
-                  'fc': 'gcc/gfortran'}
+    link_paths = {'cc': os.path.join('gcc', 'gcc'),
+                  'cxx': os.path.join('gcc', 'g++'),
+                  'f77': os.path.join('gcc', 'gfortran'),
+                  'fc': os.path.join('gcc', 'gfortran')}
 
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
