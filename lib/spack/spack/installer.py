@@ -648,6 +648,30 @@ class TermTitle(object):
         sys.stdout.flush()
 
 
+class WaitingForOtherProcessStatusMessage(object):
+    def __init__(self, enabled):
+        self.enabled = enabled
+        self.waiting_for = set()
+
+    def add(self, pkg):
+        if not self.enabled or pkg.name in self.waiting_for:
+            return
+
+        self.waiting_for.add(pkg.name)
+        sys.stdout.write('\r\x1b[K')
+        tty.msg('Waiting for another process to install {0}...'.format(
+                ', '.join(self.waiting_for)), newline=False)
+        sys.stdout.flush()
+
+    def clear(self):
+        if not self.enabled:
+            return
+
+        sys.stdout.write('\r\x1b[K')
+        sys.stdout.flush()
+        self.waiting_for.clear()
+
+
 class PackageInstaller(object):
     '''
     Class for managing the install process for a Spack instance based on a
@@ -1500,6 +1524,11 @@ class PackageInstaller(object):
 
         term_title = TermTitle(len(self.build_pq))
 
+        # Only print `waiting for another process to install x, y, z...` when we're in
+        # interactive mode and the terminal is not cluttered by debug messages.
+        enable_wait_status = sys.stdout.isatty() and not tty.is_debug()
+        wait_status = WaitingForOtherProcessStatusMessage(enabled=enable_wait_status)
+
         while self.build_pq:
             term_title.next_pkg()
 
@@ -1523,6 +1552,7 @@ class PackageInstaller(object):
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
             if task.priority != 0:
+                wait_status.clear()
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
                 left = [dep_id for dep_id in task.uninstalled_deps if
@@ -1545,12 +1575,14 @@ class PackageInstaller(object):
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
+                    wait_status.clear()
                     self._flag_installed(pkg, task.dependents)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
+                wait_status.clear()
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
 
@@ -1580,8 +1612,11 @@ class PackageInstaller(object):
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
             if lock is None:
+                wait_status.add(pkg)
                 self._requeue_task(task)
                 continue
+            else:
+                wait_status.clear()
 
             # Take a timestamp with the overwrite argument to allow checking
             # whether another process has already overridden the package.
