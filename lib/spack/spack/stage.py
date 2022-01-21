@@ -22,6 +22,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     can_access,
+    get_owner_uid,
     getuid,
     install,
     install_tree,
@@ -90,7 +91,7 @@ def create_stage_root(path):
     for p in user_paths:
         # Ensure access controls of subdirs from `$user` on down are
         # restricted to the user.
-        owner_uid = sup.get_owner_uid(p)
+        owner_uid = get_owner_uid(p)
         if user_uid != owner_uid:
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, owner_uid))
