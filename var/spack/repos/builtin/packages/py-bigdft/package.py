@@ -28,18 +28,4 @@ class PyBigdft(PythonPackage):
     for vers in ['1.9.0', '1.9.1', '1.9.2', 'develop']:
         depends_on('bigdft-futile@{0}'.format(vers), type='run', when='@{0}'.format(vers))
 
-    phases = ['build', 'install']
-
     build_directory = "PyBigDFT"
-
-    def build(self, spec, prefix):
-        python = which('python')
-
-        with working_dir(self.build_directory):
-            python('setup.py', 'build')
-
-    def install(self, spec, prefix):
-        python = which('python')
-
-        with working_dir(self.build_directory):
-            python('setup.py', 'install', '--prefix=%s' % prefix)
