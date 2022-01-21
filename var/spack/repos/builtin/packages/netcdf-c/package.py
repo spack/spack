@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -17,7 +19,7 @@ class NetcdfC(AutotoolsPackage):
 
     maintainers = ['skosukhin', 'WardF']
 
-    version('master', branch='master')
+    version('main', branch='main')
     version('4.8.1',   sha256='bc018cc30d5da402622bf76462480664c6668b55eb16ba205a0dfb8647161dd0')
     version('4.8.0',   sha256='aff58f02b1c3e91dc68f989746f652fe51ff39e6270764e484920cb8db5ad092')
     version('4.7.4',   sha256='99930ad7b3c4c1a8e8831fb061cb02b2170fc8e5ccaeda733bd99c3b9d31666b')
@@ -75,9 +77,9 @@ class NetcdfC(AutotoolsPackage):
     #         description='Enable CDM Remote support')
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
-    depends_on('autoconf', type='build', when='@4.7.0')
-    depends_on('automake', type='build', when='@4.7.0')
-    depends_on('libtool', type='build', when='@4.7.0')
+    depends_on('autoconf', type='build', when='@4.7.0,main')
+    depends_on('automake', type='build', when='@4.7.0,main')
+    depends_on('libtool', type='build', when='@4.7.0,main')
 
     depends_on("m4", type='build')
     depends_on("hdf~netcdf", when='+hdf4')
@@ -127,6 +129,11 @@ class NetcdfC(AutotoolsPackage):
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
         return self.spec.satisfies('@4.7.0')
+
+    @when('@4.6.3:')
+    def autoreconf(self, spec, prefix):
+        if not os.path.exists(self.configure_abs_path):
+            Executable('./bootstrap')()
 
     def configure_args(self):
         cflags = []
