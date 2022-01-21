@@ -92,6 +92,9 @@ def setup_parser(subparser):
     )
     _add_scope_option(add)
     add.add_argument(
+        '--trust', action='store_true',
+        help='trust the source immediately upon addition')
+    add.add_argument(
         'name', help='name of the new source of software'
     )
     add.add_argument(
@@ -294,6 +297,8 @@ def _add(args):
 
     msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
     llnl.util.tty.msg(msg.format(args.name, write_scope))
+    if args.trust:
+        _trust(args)
 
 
 def _remove(args):

@@ -488,7 +488,7 @@ _spack_bootstrap_untrust() {
 _spack_bootstrap_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --scope --trust"
     else
         SPACK_COMPREPLY=""
     fi
