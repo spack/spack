@@ -12,7 +12,11 @@ The following commands are a good way to get started:
     $ module load spack unstable git
     $ git clone -c feature.manyFiles=true https://github.com/BlueBrain/spack.git
     $ . spack/share/spack/setup-env.sh
-    $ cp ${SPACK_ROOT}/bluebrain/sysconfig/bluebrain5/*.yaml ${SPACK_ROOT}/etc/spack
+
+To be fully independent of the module, export the system configuration
+path:
+
+    $ export SPACK_SYSTEM_CONFIG_PATH=/gpfs/bbp.cscs.ch/ssd/apps/bsd/config
 
 Note that the `git clone` should be executed in a subdirectory of the home
 directory on GPFS.

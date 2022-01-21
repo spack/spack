@@ -92,8 +92,6 @@ setup_spack:
           cd "$LICENSE_ROOT"
       fi
       git log --oneline -n5
-    # Global values that are even appropriate for end-users
-    - cp "${DEPLOYMENT_ROOT}/spack/bluebrain/sysconfig/bluebrain5/"*.yaml "${DEPLOYMENT_ROOT}/spack/etc/spack"
   # Just loop this stuff through…
   artifacts:
     when: always
@@ -134,10 +132,14 @@ setup_spack:
       if [[ "$CI_JOB_STAGE" != "$CI_JOB_NAME" ]]; then
           DEPLOYMENT_SUFFIX="_$CI_JOB_NAME"
       fi
+      # config:install_tree:projections:all needs to match, see
+      # 'configure-spack-config'
       cat <<EOF > "spack_config/config.yaml"
       config:
         install_tree:
           root: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}
+          projections:
+            all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
         module_roots:
           tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
       EOF
@@ -160,6 +162,9 @@ setup_spack:
     -     spack mirror add --scope=user my_proprietary_mirror "file://${DEPLOYMENT_PROPRIETARY_MIRROR}"
     -     mkdir -p "${DEPLOYMENT_PROPRIETARY_MIRROR}"
     -     rsync -av "${DEPLOYMENT_DATA}/" "${DEPLOYMENT_PROPRIETARY_MIRROR}"
+    -     cp "${DEPLOYMENT_ROOT}/spack/bluebrain/sysconfig/bluebrain5/"*.yaml "spack_config"
+    -     mkdir -p "spack_config/linux"
+    -     mv "spack_config/compilers.yaml" "spack_config/linux"
     - elif [[ "${CI_JOB_STAGE}" == "applications" ]]; then
     -     module use "$DEPLOYMENT_ROOT/stage_compilers/modules_tcl/linux-"*
     -     module use "$DEPLOYMENT_ROOT/stage_externals/modules_tcl/linux-"*
@@ -230,7 +235,11 @@ setup_spack:
     -     configure-compilers < specs.txt
     # Make all explicitly installed software available to following stages
     # without considering the full dependency DAG
-    -     spack export --scope=user --module tcl --explicit --unbuildable intel-mkl llvm openscenegraph optix --exclude 'allinea|neuron|hdf5|intel-parallel-studio|pgi|nvhpc' ${shas} > "spack_config/packages.yaml"
+    #
+    # As we're using the underlying config, create a temporary file and
+    # move afterwards
+    -     spack export --scope=user --module tcl --explicit --unbuildable intel-mkl llvm openscenegraph optix --exclude 'neuron|hdf5|nvhpc' ${shas} > "spack_config/packages.yaml.tmp"
+    -     sed -e "/:':/{s/'//g}" "spack_config/packages.yaml.tmp" > "spack_config/packages.yaml"
     - fi
   artifacts:
     when: always

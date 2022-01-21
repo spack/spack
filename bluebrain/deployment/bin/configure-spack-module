@@ -45,7 +45,6 @@ if [ module-info mode load ] {
     puts stderr "--------------------------------------------"
     puts stderr "To create a modifiable version of Spack, use\n"
     puts stderr "\tspack clone \$\{NEW_SPACK_DIR\}"
-    puts stderr "\tcp \$\{NEW_SPACK_DIR\}/{bluebrain/sysconfig/bluebrain5/*.yaml,etc/spack}"
     puts stderr "\t. \$\{NEW_SPACK_DIR\}/share/spack/setup-env.sh\n"
     puts stderr "To use the configuration of this module please either use the following"
     puts stderr "commands or keep loading this module before sourcing the cloned Spack:\n"

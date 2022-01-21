@@ -37,7 +37,7 @@ cat <<EOF > "$config_dir/modules.sh"
 export MODULEPATH="\${MODULEPATH:-}\${MODULEPATH:+:}${MODULE_ROOT}/_meta"
 EOF
 
-cp "$input_dir/"{compilers,mirrors,packages}.yaml "$config_dir"
+cp "$input_dir/"{compilers,mirrors,modules,packages}.yaml "$config_dir"
 
 cat <<EOF > "$config_dir/upstreams.yaml"
 upstreams:
@@ -52,9 +52,13 @@ cat <<EOF > "$config_dir/config.yaml"
 config:
   install_tree:
     root: \$user_cache_path/software
+    projections:
+      all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
   module_roots:
     tcl: \$user_cache_path/modules
   source_cache: \$user_cache_path/sources
   environments:
     root: \$user_cache_path/environments
+  # This seems to be the optimum for GPFS, according to @olupton
+  build_jobs: 8
 EOF

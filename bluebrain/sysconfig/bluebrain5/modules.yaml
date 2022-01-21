@@ -7,11 +7,11 @@ modules:
     verbose: True
     hash_length: 0
     blacklist:
+      - '%clang'
       - '%gcc'
       - '%intel'
-      - '%clang'
       - '%nvhpc'
-      - '%pgi'
+      - '%oneapi'
     projections:
       all: '{name}/{version}'
     all:
@@ -23,24 +23,18 @@ modules:
           MPICC_CC: 'gcc'
           MPICXX_CXX: 'g++'
           MPIF90_F90: 'gfortran'
-    intel-parallel-studio:
-      environment:
-        set:
-          MPICC_CC: 'icc'
-          MPICXX_CXX: 'icpc'
-          MPIF90_F90: 'ifort'
     intel:
       environment:
         set:
           MPICC_CC: 'icc'
           MPICXX_CXX: 'icpc'
           MPIF90_F90: 'ifort'
-    pgi:
+    intel-oneapi-compilers:
       environment:
         set:
-          MPICC_CC: 'pgcc'
-          MPICXX_CXX: 'pgc++'
-          MPIF90_F90: 'pgfortran'
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
     llvm:
       environment:
         set:
