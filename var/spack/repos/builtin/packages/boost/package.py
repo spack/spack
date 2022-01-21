@@ -481,6 +481,12 @@ class Boost(Package):
         if '+pic' in self.spec:
             cxxflags.append(self.compiler.cxx_pic_flag)
 
+        if sys.platform == 'darwin':
+            cxxflags.append('-D_GNU_SOURCE')
+
+        if not spec.satisfies('@:1.70 %intel'):
+            cxxflags.append('-DBOOST_PARAMETER_DISABLE_PERFECT_FORWARDING')
+
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build
         #   https://www.boost.org/build/doc/html/bbv2/reference/precompiled_headers.html
@@ -501,7 +507,7 @@ class Boost(Package):
                 cxxflags.append('-std=c++11')
 
         if cxxflags:
-            options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
+            options.append('cxxflags={0}'.format(' '.join(cxxflags)))
 
         # Visibility was added in 1.69.0.
         if spec.satisfies('@1.69.0:'):
