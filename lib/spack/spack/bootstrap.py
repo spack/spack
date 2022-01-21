@@ -362,8 +362,16 @@ class _BuildcacheBootstrapper(object):
 class _SourceBootstrapper(object):
     """Install the software needed during bootstrapping from sources."""
     def __init__(self, conf):
+        self.name = conf['name']
+        self.url = conf['info']['url']
         self.conf = conf
         self.last_search = None
+
+    @property
+    def mirror_scope(self):
+        return spack.config.InternalConfigScope(
+            'bootstrap_source', {'mirrors:': {self.name: self.url}}
+        )
 
     def try_import(self, module, abstract_spec_str):
         info = {}
@@ -397,7 +405,8 @@ class _SourceBootstrapper(object):
         tty.debug(msg.format(module, abstract_spec_str))
 
         # Install the spec that should make the module importable
-        concrete_spec.package.do_install(fail_fast=True)
+        with spack.config.override(self.mirror_scope):
+            concrete_spec.package.do_install(fail_fast=True)
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
             self.last_search = info
@@ -426,7 +435,8 @@ class _SourceBootstrapper(object):
 
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
-        concrete_spec.package.do_install()
+        with spack.config.override(self.mirror_scope):
+            concrete_spec.package.do_install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True
