@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,10 @@ from spack import *
 
 
 class IntelGtpin(Package):
-    """Intel GtPin is a dynamic binary instrumentation framework for GEN
-    (Intel graphics) Architecture. It is a unique SW platform for
+    """Intel(R) GtPin is a dynamic binary instrumentation framework for GEN
+    (Intel(R) graphics) Architecture. It is a unique SW platform for
     profiling a code running on GEN Execution Units (EUs). GTPin
-    includes a binary instrumentation engine for Intel GPUs EUs, along
+    includes a binary instrumentation engine for Intel(R) GPUs EUs, along
     with an API for developing analysis tools, and many sample
     tools. GTPin allows you to capture a range of dynamic profiling
     data at the finest granularity of the specific GPU EU instruction.
@@ -19,10 +19,10 @@ class IntelGtpin(Package):
     API streams. The technology enables fast and accurate dynamic
     analysis of the code that is executing on the GPU EUs. GTPin opens
     up new opportunities to perform dynamic, low level workload and HW
-    analysis on an Intel GPU, with greater efficiency than other
+    analysis on an Intel(R) GPU, with greater efficiency than other
     current solutions. Some of the GTPin capabilities are integrated
-    into Intel® VTun(TM) Profiler, Intel® Advisor, and the Intel®
-    Graphics Performance Analyzers (Intel® GPA).
+    into Intel(R) VTune(TM) Profiler, Intel(R) Advisor, and the Intel(R)
+    Graphics Performance Analyzers (Intel(R) GPA).
 
     GTPin is available, along with a set of analysis tools based on
     the GTPin framework. It also enables more advanced users to
