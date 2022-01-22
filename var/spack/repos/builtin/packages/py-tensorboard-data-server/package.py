@@ -22,6 +22,8 @@ class PyTensorboardDataServer(PythonPackage):
     depends_on('py-pip', type='build')
     depends_on('rust', type='build')
 
+    phases = ['build', 'install']
+
     def setup_build_environment(self, env):
         env.set('CARGO_HOME', self.stage.source_path)
 
@@ -32,15 +34,16 @@ class PyTensorboardDataServer(PythonPackage):
 
         with working_dir(join_path('tensorboard', 'data', 'server',
                                    'pip_package')):
-            self.python('build.py',
-                        '--out-dir={0}'.format(self.stage.source_path),
-                        '--server-binary={0}'.format(join_path(self.stage.source_path,
-                                                               'tensorboard',
-                                                               'data',
-                                                               'server',
-                                                               'target',
-                                                               'release',
-                                                               'rustboard')))
+            python = which('python')
+            python('build.py',
+                   '--out-dir={0}'.format(self.stage.source_path),
+                   '--server-binary={0}'.format(join_path(self.stage.source_path,
+                                                          'tensorboard',
+                                                          'data',
+                                                          'server',
+                                                          'target',
+                                                          'release',
+                                                          'rustboard')))
 
     def install(self, spec, prefix):
         pip = which('pip')
