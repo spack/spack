@@ -257,7 +257,6 @@ class Hypre(AutotoolsPackage, CudaPackage):
             print('Skipping: HYPRE must be installed with +mpi to run tests')
             return
 
-        print(self._cached_tests_work_dir)
         # Build copied and cached test examples
         self.run_test('make',
                       ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],
