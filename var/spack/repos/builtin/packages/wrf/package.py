@@ -7,7 +7,7 @@ import glob
 import re
 import time
 from fcntl import F_GETFL, F_SETFL, fcntl
-from os import O_NONBLOCK, rename
+from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
 from sys import stdout
@@ -65,6 +65,7 @@ class Wrf(Package):
     url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
+    version("4.3.3", sha256='1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86')
     version("4.3.2", sha256='2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec')
     version("4.3.1", sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
@@ -250,79 +251,36 @@ class Wrf(Package):
 
     def do_configure_fixup(self):
         # Fix mpi compiler wrapper aliases
+
+        # In version 4.2 the file to be patched is called
+        # configure.defaults, while in earlier versions
+        # it's configure_new.defaults
+        if self.spec.satisfies("@3.9.1.1"):
+            config = FileFilter(join_path('arch', 'configure_new.defaults'))
+        else:
+            config = FileFilter(join_path('arch', 'configure.defaults'))
+
         if self.spec.satisfies("@3.9.1.1 %gcc"):
-            rename(
-                "./arch/configure_new.defaults",
-                "./arch/configure_new.defaults.bak",
-            )
-            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
-                with open("./arch/configure_new.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpifc
-                            )
-                            line = line.replace(
-                                "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
-                            )
-                        ofh.write(line)
+            config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
+                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
+            config.filter('^DM_CC.*mpicc -cc=$(SCC))',
+                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
-        if self.spec.satisfies("@3.9.1.1 %aocc"):
-            rename(
-                "./arch/configure_new.defaults",
-                "./arch/configure_new.defaults.bak",
+        if self.spec.satisfies("%aocc"):
+            config.filter(
+                '^DM_FC.*mpif90 -DMPI2SUPPORT',
+                'DM_FC = {0}'.format(self.spec['mpi'].mpifc + ' -DMPI2_SUPPORT')
             )
-            with open("./arch/configure_new.defaults.bak", "rt") as ifh:
-                with open("./arch/configure_new.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
-                            )
-                            line = line.replace(
-                                "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
-                            )
-                        ofh.write(line)
+            config.filter(
+                '^DM_.CC*mpicc -DMPI2SUPPORT',
+                'DM_CC = {0}'.format(self.spec['mpi'].mpicc) + ' -DMPI2_SUPPORT'
+            )
 
-        if self.spec.satisfies("@4.2 %aocc"):
-            # In version 4.2 the file to be patched is called
-            # configure.defaults, while in earlier versions
-            # it's configure_new.defaults
-            rename(
-                "./arch/configure.defaults",
-                "./arch/configure.defaults.bak",
-            )
-            with open("./arch/configure.defaults.bak", "rt") as ifh:
-                with open("./arch/configure.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace(
-                                "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
-                            )
-                            line = line.replace(
-                                "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
-                            )
-                        ofh.write(line)
-
-        if self.spec.satisfies("@4.2 %intel"):
-            # In version 4.2 the file to be patched is called
-            # configure.defaults, while in earlier versions
-            # it's configure_new.defaults
-            rename(
-                "./arch/configure.defaults",
-                "./arch/configure.defaults.bak",
-            )
-            with open("./arch/configure.defaults.bak", "rt") as ifh:
-                with open("./arch/configure.defaults", "wt") as ofh:
-                    for line in ifh:
-                        if line.startswith("DM_"):
-                            line = line.replace("mpif90", self.spec['mpi'].mpifc)
-                            line = line.replace("mpicc", self.spec['mpi'].mpicc)
-                        ofh.write(line)
+        if self.spec.satisfies("@4.2: %intel"):
+            config.filter('^DM_FC.*mpif90',
+                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
+            config.filter('^DM_CC.*mpicc',
+                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
     def configure(self, spec, prefix):
 
