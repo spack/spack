@@ -15,12 +15,14 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
-    homepage = 'https://github.com/LLNL/Umpire'
-    git      = 'https://github.com/LLNL/Umpire.git'
+    homepage = 'https://github.com/asarkar-parsys/Umpire/'
+    git      = 'https://github.com/asarkar-parsys/Umpire.git'
     tags     = ['radiuss', 'e4s']
 
     maintainers = ['davidbeckingsale']
 
+    #version('develop', branch='feature/integrate_umap', submodules=True)
+    version('umap_ver', branch='feature/integrate_umap', submodules=True)
     version('develop', branch='develop', submodules=True)
     version('main', branch='main', submodules=True)
     version('6.0.0', tag='v6.0.0', submodules=True)
@@ -56,24 +58,25 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     patch('missing_header_for_numeric_limits.patch', when='@4.1:5.0.1')
 
     # export targets when building pre-6.0.0 release with BLT 0.4.0+
-    patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch',
-          sha256='f5c691752e4833a936bce224bbe0fe884d3afa84c5e5a4a481f59a12840159c9',
-          when='@:5.0.1 ^blt@0.4:')
+    #patch('https://github.com/LLNL/Umpire/commit/5773ce9af88952c8d23f9bcdcb2e503ceda40763.patch',
+    #      sha256='f5c691752e4833a936bce224bbe0fe884d3afa84c5e5a4a481f59a12840159c9',
+    #      when='@:5.0.1 ^blt@0.4:')
 
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
     variant('shared', default=True, description='Enable Shared libs')
     variant('openmp', default=False, description='Build with OpenMP support')
+    variant('umap', default=False, description='Build with UMap support')
     variant('deviceconst', default=False,
             description='Enables support for constant device memory')
     variant('examples', default=True, description='Build Umpire Examples')
     variant('tests', default='none', values=('none', 'basic', 'benchmarks'),
             multi=False, description='Tests to run')
-
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
     depends_on('cmake@:3.20', when='+rocm', type='build')
+    depends_on('umap@zero_file_map', when='+umap', type='build')
 
     depends_on('blt@0.4.1:', type='build', when='@6.0.0:')
     depends_on('blt@0.4.0:', type='build', when='@4.1.3:5.0.1')
@@ -173,6 +176,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
+
         return entries
 
     def initconfig_package_entries(self):
@@ -195,6 +199,13 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("ENABLE_DOCS", False))
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", '+shared' in spec))
         entries.append(cmake_cache_option("ENABLE_TESTS", 'tests=none' not in spec))
+        if '+umap' in spec:
+            entries.append(cmake_cache_option("UMPIRE_ENABLE_UMAP", True))
+            entries.append(cmake_cache_option("UMPIRE_ENABLE_FILE_RESOURCE", True))
+#            entries.append(cmake_cache_path(
+#                "UMAP_ROOT", '{0}'.format(spec['umap'].prefix)))
+        else:
+            entries.append(cmake_cache_option("UMPIRE_ENABLE_UMAP", False))
 
         return entries
 
@@ -232,3 +243,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             self.run_test(exe, [], expected, 0, installed=False,
                           purpose=reason, skip_missing=True,
                           work_dir=self.prefix.bin)
+    
+    def setup_build_environment(self, env):
+        if '+umap' in self.spec: 
+            env.set("UMAP_ROOT",'{0}'.format(self.spec['umap'].prefix)) 

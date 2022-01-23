@@ -12,12 +12,12 @@ class Umap(CMakePackage):
     feature (starting with 4.3 linux kernel)."""
 
     homepage = "https://github.com/LLNL/umap"
-    url      = "https://github.com/LLNL/umap/archive/v2.1.0.tar.gz"
+#    url      = "https://github.com/LLNL/umap"
     git      = "https://github.com/LLNL/umap.git"
 
     tags = ['e4s']
 
-    version('develop', branch='develop')
+    version('zero_file_map', branch='zero_file_map')
     version('2.1.0', sha256='dfdc5b717aecdbfbb0da22e8567b9f2ffbc3607000a31122bf7c5ab3b85cecd9')
     version('2.0.0', sha256='85c4bc68e8790393847a84eb54eaf6fc321acade382a399a2679d541b0e34150')
     version('1.0.0', sha256='c746de3fae5bfc5bbf36234d5e888ea45eeba374c26cd8b5a817d0c08e454ed5')
