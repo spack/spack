@@ -16,7 +16,7 @@ class PyBuild(PythonPackage):
 
     variant('virtualenv', default=False, description='Install optional virtualenv dependency')
 
-    depends_on('python@3.6:+ensurepip', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-packaging@19:', type=('build', 'run'))
     depends_on('py-pep517@0.9.1:', type=('build', 'run'))
