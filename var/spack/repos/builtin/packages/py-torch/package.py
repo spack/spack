@@ -205,12 +205,18 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @property
     def libs(self):
-        root = join_path(python_platlib, 'torch', 'lib')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'lib'
+        )
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(python_platlib, 'torch', 'include')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'include'
+        )
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers
