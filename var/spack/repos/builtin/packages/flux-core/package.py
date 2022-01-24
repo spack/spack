@@ -20,6 +20,8 @@ class FluxCore(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('0.33.0', sha256='b6f07fb6c0fc36bf300852d71df527778c46517bf61e26c7f54c6978898df2f1')
+    version('0.32.0', sha256='fabe4450ce805db547de2675afebc077e4f833d86e00a8c0dd4cd0727b374e30')
     version('0.31.0', sha256='a18251de2ca3522484cacfa986df934ba8f98c54586e18940ce5d2c6147a8a7f')
     version('0.30.0', sha256='e51fde4464140367ae4bc1b44f960675ea0a6f58eede3a561cacd8a11ca3e776')
     version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
@@ -45,6 +47,7 @@ class FluxCore(AutotoolsPackage):
     variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
+    depends_on("ncurses@6.2", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")
@@ -54,7 +57,7 @@ class FluxCore(AutotoolsPackage):
     # explicit flux-core version is given. See issue #10000 for details
     depends_on("lua", type=('build', 'run', 'link'))
     depends_on("lua@5.1:5.2", when="@:0.17.0")
-    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
+    depends_on("lua@5.1:5.3", when="@0.18.0:")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
     depends_on("python@3.6:", when='@0.17:', type=('build', 'link', 'run'))
@@ -70,6 +73,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("lz4")
 
     depends_on("asciidoc", type='build', when="+docs")
+    depends_on("py-docutils", type='build', when="@0.32.0:")
 
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
@@ -88,7 +92,7 @@ class FluxCore(AutotoolsPackage):
     def url_for_version(self, version):
         '''
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
-        (https://github.com/flux-framework/rfc/blob/master/spec_1.adoc).
+        (https://flux-framework.readthedocs.io/projects/flux-rfc/en/latest/spec_1.html).
         This model requires a repository fork for every stable release that has
         patch releases.  For example, 0.8.0 and 0.9.0 are both tags within the
         main repository, but 0.8.1 and 0.9.5 would be releases on the v0.8 and
@@ -160,10 +164,6 @@ class FluxCore(AutotoolsPackage):
         env.prepend_path(
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
-        )
-        env.set_path(
-            'FLUX_PMI_LIBRARY_PATH',
-            os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
 
     def configure_args(self):

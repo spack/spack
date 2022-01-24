@@ -41,7 +41,7 @@ def test_remote_versions_only():
 @pytest.mark.usefixtures('mock_packages')
 def test_new_versions_only(monkeypatch):
     """Test a package for which new versions should be available."""
-    from spack.pkg.builtin.mock.brillig import Brillig
+    from spack.pkg.builtin.mock.brillig import Brillig  # type: ignore[import]
 
     def mock_fetch_remote_versions(*args, **kwargs):
         mock_remote_versions = {
