@@ -5,6 +5,8 @@
 
 from spack import *
 
+import os
+
 
 class Cntk(Package):
     """The Microsoft Cognitive Toolkit is a unified deep-learning toolkit
@@ -29,11 +31,11 @@ class Cntk(Package):
     depends_on('openblas')
     depends_on('mpi')
     depends_on('boost')
-    depends_on('protobuf')
+    depends_on('protobuf@:3.10')
     # CNTK depends on kaldi@c02e8.
     # See https://github.com/Microsoft/CNTK/blob/master/Tools/docker/CNTK-CPUOnly-Image/Dockerfile#L105-L125
     depends_on('kaldi@c024e8', when='+kaldi')
-    depends_on('opencv@:3', when='+opencv')
+    depends_on('opencv@:3+imgcodecs+imgproc', when='+opencv')
     depends_on('cuda', when='+cuda')
     depends_on('cub@1.4.1', when='+cuda')
     depends_on('cudnn@5.1', when='+cuda')
@@ -55,9 +57,15 @@ class Cntk(Package):
         else:
             library_suffix = 'a'
 
+        protobuf_libdir = os.path.basename(self.spec['protobuf'].libs.directories[0])
+        protobuf_ld_flags = self.spec['protobuf'].libs.ld_flags
+
         filter_file(r'(protobuf_check=)lib/(libprotobuf\.)a',
-                    r'\1lib64/\2{0}'.format(library_suffix),
+                    r'\1{0}/\2{1}'.format(protobuf_libdir, library_suffix),
                     'configure')
+        filter_file(r'\$\(PROTOBUF_PATH\)/lib/libprotobuf.a',
+                    protobuf_ld_flags,
+                    'Makefile')
 
     def install(self, spec, prefix):
         args = []
