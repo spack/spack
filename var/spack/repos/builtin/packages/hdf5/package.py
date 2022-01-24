@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 import shutil
 import sys
 
@@ -27,6 +28,8 @@ class Hdf5(CMakePackage):
     tags = ['e4s']
 
     test_requires_compiler = True
+
+    executables = [r'^h5p?cc$', r'^h5p?c\+\+$']
 
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
@@ -76,9 +79,10 @@ class Hdf5(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
     # Build HDF5 with API compatibility.
+    api_compatibilities = ('v114', 'v112', 'v110', 'v18', 'v16')
     variant('api', default='default',
             description='Choose api compatibility for earlier version',
-            values=('default', 'v114', 'v112', 'v110', 'v18', 'v16'),
+            values=('default',) + api_compatibilities,
             multi=False)
 
     depends_on('cmake@3.12:', type='build')
@@ -195,6 +199,51 @@ class Hdf5(CMakePackage):
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-showconfig', output=str, error=str)
+        match = re.search(r'HDF5 Version: ([\d.]+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)('-showconfig', output=str, error='str')
+
+            def determine_boolean_feature(feature, feature_variant):
+                match = re.search(re.escape(feature) +
+                                  r': (yes|YES|ON|no|NO|OFF)', output)
+                if not match:
+                    return ''
+                return (('+' if match.group(1) in ['yes', 'YES', 'ON'] else '~') + feature_variant)
+
+            def get_feature_value(feature):
+                match = re.search(re.escape(feature) + r': (.+)', output)
+                return match.group(1).strip() if match else None
+
+            variants += determine_boolean_feature('C++', 'cxx')
+            variants += determine_boolean_feature('Fortran', 'fortran')
+            variants += determine_boolean_feature('Java', 'java')
+            variants += determine_boolean_feature('Parallel HDF5', 'mpi')
+            variants += determine_boolean_feature('High-level library', 'hl')
+            variants += determine_boolean_feature('Threadsafety', 'threadsafe')
+            variants += determine_boolean_feature('Build HDF5 Tools', 'tools')
+            variants += determine_boolean_feature('Shared C Library', 'shared')
+
+            # API compatibility
+            api_value = get_feature_value('Default API mapping')
+            if api_value in cls.api_compatibilities:
+                variants += ' api=' + api_value + ' '
+
+            # szip support
+            io_filters_value = get_feature_value('I/O filters (external)')
+            if io_filters_value:
+                variants += (('+' if 'szip' in io_filters_value.lower()
+                             else '~') + 'szip')
+
+            return variants
 
     def flag_handler(self, name, flags):
         spec = self.spec
