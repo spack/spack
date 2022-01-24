@@ -15,6 +15,10 @@ class PyTensorboardPluginWit(PythonPackage):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
+    # py-tensorboard-plugin-wit only builds with versions of bazel older than
+    # what is needed for py-tensorboard-2.5 and greater. Work around that for
+    # now by using a wheel.
+
     homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
     url      = "https://pypi.io/packages/py3/t/tensorboard_plugin_wit/tensorboard_plugin_wit-1.8.0-py3-none-any.whl"
 
