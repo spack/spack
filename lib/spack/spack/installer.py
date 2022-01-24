@@ -649,18 +649,25 @@ class TermTitle(object):
         sys.stdout.flush()
 
 
-class WaitingForOtherProcessStatusMessage(object):
+class TermStatusLine(object):
+    """
+    This class is used in distributed builds to inform the user other packages are
+    being installed by another process.
+    """
     def __init__(self, enabled):
         self.enabled = enabled
         self.pkg_set = set()
         self.pkg_list = []
 
-    def add(self, pkg):
-        if not self.enabled or pkg.name in self.pkg_set:
+    def add(self, name):
+        """
+        Add a package to the waiting list, and if it is new, update the status line.
+        """
+        if not self.enabled or name in self.pkg_set:
             return
 
-        self.pkg_set.add(pkg.name)
-        self.pkg_list.append(pkg.name)
+        self.pkg_set.add(name)
+        self.pkg_list.append(name)
 
         wait_list = ', '.join(elide_list(self.pkg_list, max_num=6))
 
@@ -669,6 +676,9 @@ class WaitingForOtherProcessStatusMessage(object):
         sys.stdout.flush()
 
     def clear(self):
+        """
+        Clear the status line.
+        """
         if not self.enabled:
             return
 
@@ -1531,10 +1541,9 @@ class PackageInstaller(object):
 
         term_title = TermTitle(len(self.build_pq))
 
-        # Only print `waiting for another process to install x, y, z...` when we're in
-        # interactive mode and the terminal is not cluttered by debug messages.
-        enable_wait_status = sys.stdout.isatty() and not tty.is_debug()
-        wait_status = WaitingForOtherProcessStatusMessage(enabled=enable_wait_status)
+        # Only enable the terminal status line when we're in a tty without debug info
+        # enabled, so that the output does not get cluttered.
+        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
 
         while self.build_pq:
             term_title.next_pkg()
@@ -1559,7 +1568,7 @@ class PackageInstaller(object):
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
             if task.priority != 0:
-                wait_status.clear()
+                term_status.clear()
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
                 left = [dep_id for dep_id in task.uninstalled_deps if
@@ -1582,14 +1591,14 @@ class PackageInstaller(object):
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
-                    wait_status.clear()
+                    term_status.clear()
                     self._flag_installed(pkg, task.dependents)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
-                wait_status.clear()
+                term_status.clear()
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
 
@@ -1608,7 +1617,7 @@ class PackageInstaller(object):
             # determined the spec has already been installed (though the
             # other process may be hung).
             term_title.set('Acquiring lock for {0}'.format(pkg.name))
-            wait_status.add(pkg)
+            term_status.add(pkg.name)
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1623,7 +1632,7 @@ class PackageInstaller(object):
                 self._requeue_task(task)
                 continue
 
-            wait_status.clear()
+            term_status.clear()
 
             # Take a timestamp with the overwrite argument to allow checking
             # whether another process has already overridden the package.
