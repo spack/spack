@@ -18,8 +18,6 @@ class PyTensorboardDataServer(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-pip', type='build')
     depends_on('rust', type='build')
 
     phases = ['build', 'install']
@@ -34,7 +32,6 @@ class PyTensorboardDataServer(PythonPackage):
 
         with working_dir(join_path('tensorboard', 'data', 'server',
                                    'pip_package')):
-            python = which('python')
             python('build.py',
                    '--out-dir={0}'.format(self.stage.source_path),
                    '--server-binary={0}'.format(join_path(self.stage.source_path,
