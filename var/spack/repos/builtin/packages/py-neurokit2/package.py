@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class PyNeurokit2(PythonPackage):
     homepage = "https://github.com/neuropsychology/NeuroKit"
     pypi     = "neurokit2/neurokit2-0.1.2.tar.gz"
 
+    version('0.1.5', sha256='4df48c0ce8971e32e32f36c2263986b00fd83da5eadaaa98e4bb5ab6bcd930e5')
     version('0.1.4.1', sha256='226bb04bb369d8bb87d99831f0a93cd8d0ed96fdc500f63de0b3550082876f6e')
     version('0.1.2', sha256='5ef40037c2d7078ecb713ab0b77b850267babf133856b59595de9613f29787bc')
 

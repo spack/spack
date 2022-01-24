@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,6 @@ class Portage(CMakePackage):
     variant('mpi', default=True, description='Support MPI')
     variant('tangram', default=False, description='Use Tangram interface reconstruction package')
     variant('jali', default=False, description='Include support for Jali mesh framework')
-    variant('flecsisp', default=False, description='Include support for FleCSI mesh framework')
     variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
     variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
@@ -34,23 +33,23 @@ class Portage(CMakePackage):
     depends_on("cmake@3.13:", type='build')
 
     depends_on('mpi', when='+mpi')
+    depends_on('kokkos', when='+kokkos')
+    depends_on('thrust', when='+thrust')
+    depends_on('jali', when='+jali')
 
     depends_on('tangram', when='+tangram')
-    depends_on('tangram+mpi', when='+tangram+mpi')
-    depends_on('tangram+jali', when='+tangram+jali')
-    depends_on('tangram+flecsisp', when='+tangram+flecsisp')
-    depends_on('tangram+thrust', when='+tangram+thrust')
-    depends_on('tangram+kokkos', when='+tangram+kokkos')
-    depends_on('tangram+cuda', when='+tangram+cuda')
+
+    for _variant in ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']:
+        depends_on('tangram+' + _variant, when='+tangram+' + _variant)
+        depends_on('tangram~' + _variant, when='+tangram~' + _variant)
 
     depends_on('wonton')
-    depends_on('wonton+mpi', when='+mpi')
-    depends_on('wonton+jali', when='+jali')
-    depends_on('wonton+flecsisp', when='+flecsisp')
-    depends_on('wonton+thrust', when='+thrust')
-    depends_on('wonton+kokkos', when='+kokkos')
-    depends_on('wonton+openmp', when='+openmp')
-    depends_on('wonton+cuda', when='+cuda')
+    # Wonton depends array
+    wonton_variant = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
+
+    for _variant in wonton_variant:
+        depends_on('wonton+' + _variant, when='+' + _variant)
+        depends_on('wonton~' + _variant, when='~' + _variant)
 
     # Jali needs MPI
     conflicts('+jali ~mpi')
@@ -84,7 +83,7 @@ class Portage(CMakePackage):
         else:
             options.append('-DPORTAGE_ENABLE_Jali=OFF')
 
-        if '+flecsi' in self.spec:
+        if '+flecsisp' in self.spec:
             options.append('-DPORTAGE_ENABLE_FleCSI=ON')
         else:
             options.append('-DPORTAGE_ENABLE_FleCSI=OFF')
@@ -103,3 +102,8 @@ class Portage(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")

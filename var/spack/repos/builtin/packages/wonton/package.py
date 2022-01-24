@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Wonton(CMakePackage):
     variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
     variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
     variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
-
+    variant('flecsi', default=False, description="Enable FlecSI")
     # wrappers to external mesh/state libraries
     variant('jali', default=False, description='Enable Jali mesh wrappers')
 
@@ -47,6 +47,7 @@ class Wonton(CMakePackage):
     depends_on('netlib-lapack +lapacke', when='+lapacke')
 
     depends_on('mpi', when='+mpi')
+    depends_on('flecsi', when='+flecsi')
 
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
@@ -113,10 +114,8 @@ class Wonton(CMakePackage):
         else:
             options.append('-DWONTON_ENABLE_Jali=OFF')
 
-        if '+flecsi' in self.spec:
-            options.append('-DWONTON_ENABLE_FleCSI=ON')
-        else:
-            options.append('-DWONTON_ENABLE_FleCSI=OFF')
+        # BROKEN DEPENDENCY!!!!!!
+        options.append(self.define_from_variant('WONTON_ENABLE_FleCSI', 'flecsi'))
 
         # Unit test variant
         if self.run_tests:
@@ -127,3 +126,8 @@ class Wonton(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")

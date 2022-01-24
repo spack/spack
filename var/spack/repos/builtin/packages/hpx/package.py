@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -145,6 +145,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('hwloc@1.6:')
 
     # Patches and one-off conflicts
+
+    # Boost and HIP don't work together in certain versions:
+    # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
+    # both include a fix.
+    conflicts("boost@:1.77.0", when="@:1.7 +rocm")
 
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308

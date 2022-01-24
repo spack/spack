@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 
 from spack import *
@@ -31,6 +32,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
     variant('openmp', default=sys.platform != 'darwin',  description='Build with OpenMP')
+    variant('oneapi', default=False, description='Build with oneAPI support')
     variant('develtools', default=False, description='Compile with develtools enabled')
     variant('hwloc', default=False, description='Enable HWLOC support')
     variant('build_type', default='Release',
@@ -49,9 +51,13 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('googletest', type="test")
     depends_on('numactl',    type="test", when="+hwloc")
 
+    depends_on('intel-oneapi-mkl', when="+oneapi")
+    depends_on('intel-oneapi-dpl', when="+oneapi")
+
     conflicts('%gcc@:5.2.9')
     conflicts("+rocm", when="@:1.1.1")
     conflicts("+cuda", when="+rocm")
+    conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     conflicts("^hip@4.1.0:", when="@:1.3.0")
@@ -63,18 +69,39 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     patch('1.4.0_skip_invalid_smoke_tests.patch', when='@master')
     patch('1.4.0_skip_invalid_smoke_tests.patch', when='@1.4.0')
 
+    # Newer DPC++ compilers use the updated SYCL 2020 standard which change
+    # kernel attribute propagation rules. This doesn't work well with the
+    # initial Ginkgo oneAPI support.
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @master')
+    patch('1.4.0_dpcpp_use_old_standard.patch', when='+oneapi @1.4.0')
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        if '+oneapi' in spec:
+            env.set('MKLROOT',
+                    join_path(spec['intel-oneapi-mkl'].prefix,
+                              'mkl', 'latest'))
+            env.set('DPL_ROOT',
+                    join_path(spec['intel-oneapi-dpl'].prefix,
+                              'dpl', 'latest'))
+
     def cmake_args(self):
         # Check that the have the correct C++ standard is available
         if self.spec.satisfies('@:1.2.0'):
             try:
                 self.compiler.cxx11_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++11-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++11-compliant C++ compiler')
         else:
             try:
                 self.compiler.cxx14_flag
             except UnsupportedCompilerFlag:
-                InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+                raise InstallError('Ginkgo requires a C++14-compliant C++ compiler')
+
+        cxx_is_dpcpp = os.path.basename(self.compiler.cxx) == "dpcpp"
+        if self.spec.satisfies('+oneapi') and not cxx_is_dpcpp:
+            raise InstallError("Ginkgo's oneAPI backend requires the" +
+                               "DPC++ compiler as main CXX compiler.")
 
         spec = self.spec
         from_variant = self.define_from_variant
@@ -85,6 +112,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant('BUILD_SHARED_LIBS', 'shared'),
             from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
             from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            from_variant('GINKGO_BUILD_DPCPP', 'oneapi'),
             from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.

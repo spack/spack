@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class Pgplot(MakefilePackage):
-    """PGPLOT Graphics Subroutine Library
+    """PGPLOT Graphics Subroutine Library.
 
     The PGPLOT Graphics Subroutine Library is a Fortran- or
     C-callable, device-independent graphics package for making
@@ -51,6 +51,12 @@ class Pgplot(MakefilePackage):
 
     def edit(self, spec, prefix):
 
+        libs = ''
+        if '+X' in spec:
+            libs += ' ' + self.spec['X11'].libs.ld_flags
+        if '+png' in spec:
+            libs += ' ' + self.spec['libpng'].libs.ld_flags
+
         if spec.satisfies('%gcc'):
             fib = " -fallow-invalid-boz" if spec.satisfies('%gcc@10:') else ""
 
@@ -61,9 +67,10 @@ class Pgplot(MakefilePackage):
                 '@CFLAGD@': "-O2",
                 '@FCOMPL@': spack_fc,
                 '@FFLAGC@': "-Wall -fPIC -O -ffixed-line-length-none" + fib,
-                '@FFLAGD@': "-fno-backslash",
-                '@LIBS@': "-lgfortran",
-                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB -lgfortran"
+                '@FFLAGD@': libs + " -fno-backslash",
+                '@LIBS@': libs + " -lgfortran",
+                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB",
+                '@SHARED_LIB_LIBS@': libs + " -lgfortran",
             }
         elif spec.satisfies('%intel'):
             sub = {
@@ -72,9 +79,10 @@ class Pgplot(MakefilePackage):
                 '@CFLAGD@': "-O2 -lifcore -lifport",
                 '@FCOMPL@': spack_fc,
                 '@FFLAGC@': "-fPIC",
-                '@FFLAGD@': "-nofor-main",
-                '@LIBS@': "-nofor-main -lifcore -lifport",
-                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB"
+                '@FFLAGD@': libs + " -nofor-main",
+                '@LIBS@': libs + " -nofor-main -lifcore -lifport",
+                '@SHARED_LD@': spack_cc + " -shared -o $SHARED_LIB",
+                '@SHARED_LIB_LIBS@': libs + " -nofor-main -lifcore -lifport",
             }
 
         conf = join_path(
@@ -91,14 +99,12 @@ class Pgplot(MakefilePackage):
             enable_driver('! XWDRIV 1 /XWINDOW')
             enable_driver('! XWDRIV 2 /XSERVE')
 
-            sub['@FFLAGD@'] += ' -L{0} -lX11'.format(self.spec['libx11'].prefix.lib)
-            sub['@LIBS@'] += ' -L{0} -lX11'.format(self.spec['libx11'].prefix.lib)
-
         if '+png' in spec:
             enable_driver('! PNDRIV 1 /PNG')
 
             filter_file('pndriv.o : ./png.h ./pngconf.h ./zlib.h ./zconf.h',
-                        'pndriv.o :', 'makemake')
+                        'pndriv.o :',
+                        'makemake')
 
         # Alwasy enable PS and LATEX since they are not depending on other libraries.
         enable_driver('! PSDRIV 1 /PS')
@@ -115,8 +121,10 @@ class Pgplot(MakefilePackage):
             filter_file(key, value, conf)
 
     def setup_build_environment(self, env):
+        if '+X' in self.spec:
+            env.append_flags('LIBS', self.spec['X11'].libs.ld_flags)
         if '+png' in self.spec:
-            env.set('LIBS', self.spec['libpng'].libs.ld_flags)
+            env.append_flags('LIBS', self.spec['libpng'].libs.ld_flags)
 
     def build(self, spec, prefix):
         makemake = which('./makemake')

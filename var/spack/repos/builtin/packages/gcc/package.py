@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -261,7 +261,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
-        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
+        patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:11')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:7')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
@@ -291,6 +291,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85835
     patch('sys_ustat.h.patch', when='@5.0:6.4,7.0:7.3,8.1')
     patch('sys_ustat-4.9.patch', when='@4.9')
+
+    # this patch removes cylades support from gcc-5 and allows gcc-5 to be built
+    # with newer glibc versions.
+    patch('glibc-2.31-libsanitizer-3-gcc-5.patch', when='@5.3.0:5.5.0')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
     patch('zstd.patch', when='@10')

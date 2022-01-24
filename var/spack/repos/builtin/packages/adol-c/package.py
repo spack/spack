@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class AdolC(AutotoolsPackage):
             description='Enable advanced branching to reduce retaping')
     variant('atrig_erf', default=True,
             description='Enable arc-trig and error functions')
+    variant('stdczero', default=True,
+            description='Enable default initialization for the adouble datatype')
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
@@ -70,25 +72,17 @@ class AdolC(AutotoolsPackage):
                 '--with-boost=no'
             )
 
-        if '+advanced_branching' in spec:
-            configure_args.append(
-                '--enable-advanced-branching'
-            )
-
-        if '+atrig_erf' in spec:
-            configure_args.append(
-                '--enable-atrig-erf'
-            )
-
         if '+openmp' in spec:
             configure_args.append(
                 '--with-openmp-flag={0}'.format(self.compiler.openmp_flag)
             )
 
-        if '+sparse' in spec:
-            configure_args.append(
-                '--enable-sparse'
-            )
+        configure_args.extend(self.enable_or_disable('advanced-branching',
+                                                     variant='advanced_branching'))
+
+        configure_args.extend(self.enable_or_disable('atrig-erf', variant='atrig_erf'))
+        configure_args.extend(self.enable_or_disable('sparse'))
+        configure_args.extend(self.enable_or_disable('stdczero'))
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected

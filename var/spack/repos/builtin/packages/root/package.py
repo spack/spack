@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -245,6 +245,7 @@ class Root(CMakePackage):
     depends_on('davix @0.7.1:', when='+davix')
     depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
+    depends_on('fcgi',      when='+http')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
@@ -292,10 +293,6 @@ class Root(CMakePackage):
 
     # ROOT <6.14 was incompatible with Python 3.7+
     conflicts('^python@3.7:', when='@:6.13 +python')
-
-    # See README.md
-    conflicts('+http',
-              msg='HTTP server currently unsupported due to dependency issues')
 
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
@@ -605,6 +602,11 @@ class Root(CMakePackage):
         if '+opengl' in spec:
             add_include_path('glew')
             add_include_path('mesa-glu')
+        if 'platform=darwin' in spec:
+            # Newer deployment targets cause fatal errors in rootcling, so
+            # override with an empty value even though it may lead to link
+            # warnings when building against ROOT
+            env.unset('MACOSX_DEPLOYMENT_TARGET')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,14 @@ from spack import *
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.6.0': {
+        'Linux-aarch64': ('5898579f5e59b708520883cb161089f5e4f3426158d1e9f973c49d224085d1d2', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux_sbsa.run'),
+        'Linux-x86_64': ('1783da6d63970786040980b57fa3cb6420142159fc7d0e66f8f05c4905d98c83', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run'),
+        'Linux-ppc64le': ('c86b866a42baf59ddc6f1f4a79e6d77213c90749e77e574f0e0d796a749ab7d0', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux_ppc64le.run')},
+    '11.5.1': {
+        'Linux-aarch64': ('73e1d0e97c7fa686efe7e00fb1e5f179372c4eec8e14d4f44ab58d5f6cf57f63', 'https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux_sbsa.run'),
+        'Linux-x86_64': ('60bea2fc0fac95574015f865355afbf599422ec2c85554f5f052b292711a4bca', 'https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux.run'),
+        'Linux-ppc64le': ('9e0e494d945634fe8ad3e12d7b91806aa4220ed27487bb211030d651b27c67a9', 'https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux_ppc64le.run')},
     '11.5.0': {
         'Linux-aarch64': ('6ea9d520cc956cc751a5ac54f4acc39109627f4e614dd0b1a82cc86f2aa7d8c4', 'https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux_sbsa.run'),
         'Linux-x86_64': ('ae0a1693d9497cf3d81e6948943e3794636900db71c98d58eefdacaf7f1a1e4c', 'https://developer.download.nvidia.com/compute/cuda/11.5.0/local_installers/cuda_11.5.0_495.29.05_linux.run'),
@@ -99,6 +107,8 @@ _versions = {
         'Linux-x86_64': ('08411d536741075131a1858a68615b8b73c51988e616e83b835e4632eea75eec', 'https://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run')},
     '6.5.14': {
         'Linux-x86_64': ('f3e527f34f317314fe8fcd8c85f10560729069298c0f73105ba89225db69da48', 'https://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run')},
+    '6.0.37': {
+        'Linux-x86_64': ('991e436c7a6c94ec67cf44204d136adfef87baa3ded270544fa211179779bc40', '//developer.download.nvidia.com/compute/cuda/6_0/rel/installers/cuda_6.0.37_linux_64.run')},
 }
 
 

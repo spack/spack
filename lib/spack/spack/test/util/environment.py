@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ def prepare_environment_for_tests():
 def test_is_system_path():
     assert(envutil.is_system_path('/usr/bin'))
     assert(not envutil.is_system_path('/nonsense_path/bin'))
+    assert(not envutil.is_system_path(''))
+    assert(not envutil.is_system_path(None))
 
 
 test_paths = ['/usr/bin',

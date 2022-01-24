@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyPytest(PythonPackage):
     homepage = "https://pytest.org/"
     pypi      = "pytest/pytest-5.2.1.tar.gz"
 
+    version('6.2.5', sha256='131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89')
     version('6.2.4', sha256='50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b')
     version('6.2.1', sha256='66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306')
     version('6.1.1', sha256='8f593023c1a0f916110285b6efd7f99db07d59546e3d8c36fc60e2ab05d3be92')
@@ -40,7 +41,7 @@ class PyPytest(PythonPackage):
     depends_on('py-setuptools@40.0:', when='@3.9.2:6.1', type=('build', 'run'))
     depends_on('py-setuptools@30.3:', when='@3.9.0:3.9.1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-setuptools-scm@3.4:', when='@6.2:', type='build')
+    depends_on('py-setuptools-scm@3.4: +toml', when='@6.2:', type='build')
     depends_on('py-setuptools-scm', when='@3.1:', type='build')
 
     # install_requires
@@ -49,7 +50,8 @@ class PyPytest(PythonPackage):
     depends_on('py-attrs@17.2.0:', when='@3.3:3.4', type=('build', 'run'))
     depends_on('py-iniconfig', when='@6.0:', type=('build', 'run'))
     depends_on('py-packaging', when='@4.6:', type=('build', 'run'))
-    depends_on('py-pluggy@0.12:0', when='@4.6:', type=('build', 'run'))
+    depends_on('py-pluggy@0.12:1', when='@6.2:', type=('build', 'run'))
+    depends_on('py-pluggy@0.12:0', when='@4.6:6.1', type=('build', 'run'))
     depends_on('py-pluggy@0.9.0:0.9,0.11:0', when='@4.5.0:4.5', type=('build', 'run'))
     depends_on('py-pluggy@0.11:', when='@4.4.2:4.4', type=('build', 'run'))
     depends_on('py-pluggy@0.9:', when='@4.4.0:4.4.1', type=('build', 'run'))
@@ -62,9 +64,9 @@ class PyPytest(PythonPackage):
     depends_on('py-py@1.4.33:1.4', when='@3.2.4', type=('build', 'run'))
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
     depends_on('py-toml', when='@6.0:', type=('build', 'run'))
-    depends_on('py-atomicwrites@1.0:', when='@5.3: platform=win32', type=('build', 'run'))
+    depends_on('py-atomicwrites@1.0:', when='@5.3: platform=windows', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@3.6:5.2', type=('build', 'run'))
-    depends_on('py-colorama', when='platform=win32', type=('build', 'run'))
+    depends_on('py-colorama', when='platform=windows', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.12:', when='@4.6:5.0', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.12:', when='@5.1: ^python@:3.7', type=('build', 'run'))
 

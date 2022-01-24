@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,13 +25,15 @@ class PyPillowBase(PythonPackage):
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
-    depends_on('python@3.6:3.9',         when='@8:',          type=('build', 'run'))
+    depends_on('python@3.7:3.10',        when='@9:',          type=('build', 'run'))
+    depends_on('python@3.6:3.10',        when='@8.3.2:8.4',   type=('build', 'run'))
+    depends_on('python@3.6:3.9',         when='@8:8.3.1',     type=('build', 'run'))
     depends_on('python@3.5:3.8',         when='@7.0:7.2',     type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:3.8', when='@6.2.1:6.2.2', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:3.7', when='@6.0:6.2.0',   type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:3.7', when='@5.2:5.4',     type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:3.6', when='@5.0:5.1',     type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.3:3.6', when='@4.0:4',   type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:3.6', when='@4.0:4',       type=('build', 'run'))
     depends_on('python@2.6:2.8,3.2:3.5', when='@2:3',         type=('build', 'run'))
     depends_on('python@2.4:2.7',         when='@:1',          type=('build', 'run'))
     depends_on('py-setuptools', type='build')
@@ -51,8 +53,6 @@ class PyPillowBase(PythonPackage):
     conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
     conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
     conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
-
-    phases = ['build_ext', 'install']
 
     def patch(self):
         """Patch setup.py to provide library and include directories
@@ -93,11 +93,6 @@ class PyPillowBase(PythonPackage):
     def setup_build_environment(self, env):
         env.set('MAX_CONCURRENCY', str(make_jobs))
 
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)
-
 
 class PyPillow(PyPillowBase):
     """Pillow is a fork of the Python Imaging Library (PIL). It adds image
@@ -108,6 +103,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version('8.4.0', sha256='b8e2f83c56e141920c39464b852de3719dfbfb6e3c99a2d8da0edf4fb33176ed')
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
     version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
@@ -116,12 +112,15 @@ class PyPillow(PyPillowBase):
     version('6.2.0', sha256='4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df')
     version('6.0.0', sha256='809c0a2ce9032cbcd7b5313f71af4bdc5c8c771cb86eb7559afd954cab82ebb5')
     version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
-    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
-    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
-    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
+    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef', deprecated=True)
+    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a', deprecated=True)
+    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb', deprecated=True)
 
     for ver in [
-        '7.2.0', '7.0.0', '6.2.2', '6.2.1', '6.2.0', '6.0.0',
-        '5.4.1', '5.1.0', '3.2.0', '3.0.0'
+        '8.4.0', '8.0.0',
+        '7.2.0', '7.0.0',
+        '6.2.2', '6.2.1', '6.2.0', '6.0.0',
+        '5.4.1', '5.1.0',
+        '3.2.0', '3.0.0'
     ]:
         provides('pil@' + ver, when='@' + ver)

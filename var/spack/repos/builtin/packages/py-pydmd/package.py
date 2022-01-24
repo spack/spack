@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,18 +32,14 @@ class PyPydmd(PythonPackage):
     # https://github.com/mathLab/PyDMD/pull/133
     patch('isuue-133.patch', when='@0.3')
 
-    @run_after('build')
-    def build_docs(self):
-        if '+docs' in self.spec:
-            with working_dir('docs'):
-                make('html')
-
     @run_after('install')
     def install_docs(self):
         if '+docs' in self.spec:
+            with working_dir('docs'):
+                make('html')
             install_tree('docs', self.prefix.docs)
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         python('test.py')

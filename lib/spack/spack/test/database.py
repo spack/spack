@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -909,3 +909,18 @@ def test_database_works_with_empty_dir(tmpdir):
         db.query()
     # Check that reading an empty directory didn't create a new index.json
     assert not os.path.exists(db._index_path)
+
+
+@pytest.mark.parametrize('query_arg,exc_type,msg_str', [
+    (['callpath'], spack.store.MatchError, 'matches multiple packages'),
+    (['tensorflow'], spack.store.MatchError, 'does not match any')
+])
+def test_store_find_failures(database, query_arg, exc_type, msg_str):
+    with pytest.raises(exc_type) as exc_info:
+        spack.store.find(query_arg, multiple=False)
+    assert msg_str in str(exc_info.value)
+
+
+def test_store_find_accept_string(database):
+    result = spack.store.find('callpath', multiple=True)
+    assert len(result) == 3

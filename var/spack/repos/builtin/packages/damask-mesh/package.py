@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@
 class DamaskMesh(CMakePackage):
     """Mesh solver for DAMASK"""
 
-    homepage = "https://damask3.mpie.de"
-    url      = "https://damask3.mpie.de/download/damask-3.0.0.tar.xz"
+    homepage = "https://damask.mpie.de"
+    url      = "https://damask.mpie.de/download/damask-3.0.0.tar.xz"
 
     maintainers = ['MarDiehl']
 
@@ -17,9 +17,10 @@ class DamaskMesh(CMakePackage):
 
     depends_on('pkgconfig', type='build')
     depends_on('cmake@3.10:', type='build')
+    depends_on('petsc+mpi+hdf5')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.15', when='@3.0.0-alpha4')
     depends_on('petsc@3.14.0:3.14,3.15.1:3.16', when='@3.0.0-alpha5')
-    depends_on('hdf5+fortran')
+    depends_on('hdf5@1.10:+mpi+fortran')
 
     patch('CMakeDebugRelease.patch', when='@3.0.0-alpha4')
 
@@ -27,12 +28,8 @@ class DamaskMesh(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'DebugRelease'))
 
-    def patch(self):
-        filter_file(' -lhdf5 ', ' -lhdf5_fortran -lhdf5 ', 'CMakeLists.txt')
-
     def cmake_args(self):
-        args = ['-DDAMASK_SOLVER:STRING=mesh']
-        return args
+        return [self.define('DAMASK_SOLVER', 'mesh')]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -1,8 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections
 import os.path
 import re
 import shutil
@@ -71,47 +70,6 @@ def source_file(tmpdir, is_relocatable):
         src.write(text)
 
     return src
-
-
-@pytest.fixture(params=['which_found', 'installed', 'to_be_installed'])
-def expected_patchelf_path(request, mutable_database, monkeypatch):
-    """Prepare the stage to tests different cases that can occur
-    when searching for patchelf.
-    """
-    case = request.param
-
-    # Mock the which function
-    which_fn = {
-        'which_found': lambda x: collections.namedtuple(
-            '_', ['path']
-        )('/usr/bin/patchelf')
-    }
-    monkeypatch.setattr(
-        spack.util.executable, 'which',
-        which_fn.setdefault(case, lambda x: None)
-    )
-    if case == 'which_found':
-        return '/usr/bin/patchelf'
-
-    # TODO: Mock a case for Darwin architecture
-
-    spec = spack.spec.Spec('patchelf')
-    spec.concretize()
-
-    patchelf_cls = type(spec.package)
-    do_install = patchelf_cls.do_install
-    expected_path = os.path.join(spec.prefix.bin, 'patchelf')
-
-    def do_install_mock(self, **kwargs):
-        do_install(self, fake=True)
-        with open(expected_path):
-            pass
-
-    monkeypatch.setattr(patchelf_cls, 'do_install', do_install_mock)
-    if case == 'installed':
-        spec.package.do_install()
-
-    return expected_path
 
 
 @pytest.fixture()
@@ -227,6 +185,7 @@ def copy_binary():
 @pytest.mark.requires_executables(
     '/usr/bin/gcc', 'patchelf', 'strings', 'file'
 )
+@skip_unless_linux
 def test_file_is_relocatable(source_file, is_relocatable):
     compiler = spack.util.executable.Executable('/usr/bin/gcc')
     executable = str(source_file).replace('.c', '.x')
@@ -240,8 +199,9 @@ def test_file_is_relocatable(source_file, is_relocatable):
 
 
 @pytest.mark.requires_executables('patchelf', 'strings', 'file')
+@skip_unless_linux
 def test_patchelf_is_relocatable():
-    patchelf = spack.relocate._patchelf()
+    patchelf = os.path.realpath(spack.relocate._patchelf())
     assert llnl.util.filesystem.is_exe(patchelf)
     assert spack.relocate.file_is_relocatable(patchelf)
 
@@ -261,12 +221,6 @@ def test_file_is_relocatable_errors(tmpdir):
         with pytest.raises(ValueError) as exc_info:
             spack.relocate.file_is_relocatable('delete.me')
         assert 'is not an absolute path' in str(exc_info.value)
-
-
-@skip_unless_linux
-def test_search_patchelf(expected_patchelf_path):
-    current = spack.relocate._patchelf()
-    assert current == expected_patchelf_path
 
 
 @pytest.mark.parametrize('patchelf_behavior,expected', [

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,14 @@ class Gnupg(AutotoolsPackage):
     """GNU Pretty Good Privacy (PGP) package."""
 
     homepage = "https://gnupg.org/index.html"
-    url      = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.19.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.4.tar.bz2"
 
     maintainers = ['alalazo']
 
-    version('2.3.1',  sha256='c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec')
+    version('2.3.4', sha256='f3468ecafb1d7f9ad7b51fd1db7aebf17ceb89d2efa8a05cf2f39b4d405402ae')
+    version('2.3.3', sha256='5789b86da6a1a6752efb38598f16a77af51170a8494039c3842b085032e8e937')
+    version('2.3.2', sha256='e1d953e0e296072fca284215103ef168885eaac596c4660c5039a36a83e3041b')
+    version('2.3.1', sha256='c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec')
     version('2.2.27', sha256='34e60009014ea16402069136e0a5f63d9b65f90096244975db5cea74b3d02399')
     version('2.2.25', sha256='c55307b247af4b6f44d2916a25ffd1fb64ce2e509c3c3d028dbe7fbf309dc30a')
     version('2.2.24', sha256='9090b400faae34f08469d78000cfec1cee5b9c553ce11347cc96ef16eab98c46')

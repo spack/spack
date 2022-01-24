@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Xyce(CMakePackage):
     maintainers = ['kuberry']
 
     version('github.master',  branch='master', preferred=True)
+    version('7.4.0', '2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91')
     version('7.3.0', '43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446')
     version('7.2.0', 'cf49705278ecda46373784bb24925cb97f9017b6adff49e4416de146bdd6a4b5')
 
@@ -36,6 +37,8 @@ class Xyce(CMakePackage):
 
     variant('mpi', default=True, description='Enable MPI support')
     depends_on('mpi', when='+mpi')
+
+    variant('shared', default=False, description='Enable shared libraries for Xyce')
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
@@ -78,10 +81,7 @@ class Xyce(CMakePackage):
         else:
             options.append('-DCMAKE_CXX_COMPILER:STRING={0}'.format(self.compiler.cxx))
 
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
 
         if '+pymi' in spec:
             pybind11 = spec['py-pybind11']

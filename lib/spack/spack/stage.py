@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -437,11 +437,20 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = []
+            mirror_urls = {}
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    mirror_urls.append(
-                        url_util.join(mirror.fetch_url, rel_path))
+                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
+                    mirror_urls[mirror_url] = {}
+                    if mirror.get_access_pair("fetch") or \
+                       mirror.get_access_token("fetch") or \
+                       mirror.get_profile("fetch"):
+                        mirror_urls[mirror_url] = {
+                            "access_token": mirror.get_access_token("fetch"),
+                            "access_pair": mirror.get_access_pair("fetch"),
+                            "access_profile": mirror.get_profile("fetch"),
+                            "endpoint_url": mirror.get_endpoint_url("fetch")
+                        }
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -460,10 +469,11 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
+            for url in reversed(list(mirror_urls.keys())):
                 fetchers.insert(
                     0, fs.from_url_scheme(
-                        url, digest, expand=expand, extension=extension))
+                        url, digest, expand=expand, extension=extension,
+                        connection=mirror_urls[url]))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
@@ -533,7 +543,7 @@ class Stage(object):
         for entry in hidden_entries + entries:
             if os.path.isdir(entry):
                 d = os.path.join(dest, os.path.basename(entry))
-                shutil.copytree(entry, d)
+                shutil.copytree(entry, d, symlinks=True)
             else:
                 shutil.copy2(entry, dest)
 
@@ -887,6 +897,10 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     i = 0
     errors = []
     for url, version in zip(urls, versions):
+        # Wheels should not be expanded during staging
+        expand_arg = ''
+        if url.endswith('.whl') or '.whl#' in url:
+            expand_arg = ', expand=False'
         try:
             if fetch_options:
                 url_or_fs = fs.URLFetchStrategy(
@@ -921,8 +935,8 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join([
-        "    version('{0}', {1}sha256='{2}')".format(
-            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+        "    version('{0}', {1}sha256='{2}'{3})".format(
+            v, ' ' * (max_len - len(str(v))), h, expand_arg) for v, h in version_hashes
     ])
 
     num_hash = len(version_hashes)

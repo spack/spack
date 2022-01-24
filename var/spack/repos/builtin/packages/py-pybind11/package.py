@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,7 @@ class PyPybind11(CMakePackage, PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest', type='test')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('cmake@3.13:', type='build')
 
     # compiler support
     conflicts('%gcc@:4.7')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import sys
 
 from spack import *
 from spack.build_environment import dso_suffix
+from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
 
@@ -21,7 +22,7 @@ from spack.pkg.builtin.kokkos import Kokkos
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage, CudaPackage):
+class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -191,6 +192,7 @@ class Trilinos(CMakePackage, CudaPackage):
     # Tpetra packages
     with when('~kokkos'):
         conflicts('+cuda')
+        conflicts('+rocm')
         conflicts('+tpetra')
         conflicts('+intrepid2')
         conflicts('+phalanx')
@@ -277,6 +279,12 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
+
+    # See discussion on the PR adding cuda@11.6 for details.
+    #
+    #     https://github.com/spack/spack/pull/28439
+    #
+    conflicts('+cuda', when='^cuda@11.6.0:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -409,6 +417,17 @@ class Trilinos(CMakePackage, CudaPackage):
                 env.set('MPICXX_CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
             else:
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
+
+        if '+rocm' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', self.spec['hip'].hipcc)
+                env.set('MPICH_CXX', self.spec['hip'].hipcc)
+                env.set('MPICXX_CXX', self.spec['hip'].hipcc)
+            else:
+                env.set('CXX', self.spec['hip'].hipcc)
+            if '+stk' in spec:
+                # Using CXXFLAGS for hipcc which doesn't use flags in the spack wrappers
+                env.set('CXXFLAGS', '-DSTK_NO_BOOST_STACKTRACE')
 
     def cmake_args(self):
         options = []
@@ -561,31 +580,40 @@ class Trilinos(CMakePackage, CudaPackage):
                 return
             depspec = spec[spack_name]
             libs = depspec.libs
+            try:
+                options.extend([
+                    define(trilinos_name + '_INCLUDE_DIRS',
+                           depspec.headers.directories),
+                ])
+            except NoHeadersError:
+                # Handle case were depspec does not have headers
+                pass
+
             options.extend([
-                define(trilinos_name + '_INCLUDE_DIRS', depspec.prefix.include),
                 define(trilinos_name + '_ROOT', depspec.prefix),
                 define(trilinos_name + '_LIBRARY_NAMES', libs.names),
                 define(trilinos_name + '_LIBRARY_DIRS', libs.directories),
             ])
 
         # Enable these TPLs explicitly from variant options.
+        # Format is (TPL name, variant name, Spack spec name)
         tpl_variant_map = [
-            ('ADIOS2', 'adios2'),
-            ('Boost', 'boost'),
-            ('CUDA', 'cuda'),
-            ('HDF5', 'hdf5'),
-            ('HYPRE', 'hypre'),
-            ('MUMPS', 'mumps'),
-            ('UMFPACK', 'suite-sparse'),
-            ('SuperLU', 'superlu'),
-            ('SuperLUDist', 'superlu-dist'),
-            ('X11', 'x11'),
+            ('ADIOS2', 'adios2', 'adios2'),
+            ('Boost', 'boost', 'boost'),
+            ('CUDA', 'cuda', 'cuda'),
+            ('HDF5', 'hdf5', 'hdf5'),
+            ('HYPRE', 'hypre', 'hypre'),
+            ('MUMPS', 'mumps', 'mumps'),
+            ('UMFPACK', 'suite-sparse', 'suite-sparse'),
+            ('SuperLU', 'superlu', 'superlu'),
+            ('SuperLUDist', 'superlu-dist', 'superlu-dist'),
+            ('X11', 'x11', 'libx11'),
         ]
         if spec.satisfies('@13.0.2:'):
-            tpl_variant_map.append(('STRUMPACK', 'strumpack'))
+            tpl_variant_map.append(('STRUMPACK', 'strumpack', 'strumpack'))
 
-        for tpl_name, var_name in tpl_variant_map:
-            define_tpl(tpl_name, var_name, spec.variants[var_name].value)
+        for tpl_name, var_name, spec_name in tpl_variant_map:
+            define_tpl(tpl_name, spec_name, spec.variants[var_name].value)
 
         # Enable these TPLs based on whether they're in our spec; prefer to
         # require this way so that packages/features disable availability
@@ -630,10 +658,9 @@ class Trilinos(CMakePackage, CudaPackage):
                     spec['parmetis'].prefix.lib, spec['metis'].prefix.lib
                 ]),
                 define('ParMETIS_LIBRARY_NAMES', ['parmetis', 'metis']),
-                define('TPL_ParMETIS_INCLUDE_DIRS', [
-                    spec['parmetis'].prefix.include,
-                    spec['metis'].prefix.include
-                ]),
+                define('TPL_ParMETIS_INCLUDE_DIRS',
+                       spec['parmetis'].headers.directories +
+                       spec['metis'].headers.directories),
             ])
 
         if spec.satisfies('^superlu-dist@4.0:'):
@@ -707,6 +734,22 @@ class Trilinos(CMakePackage, CudaPackage):
                     define("Kokkos_ARCH_" + arch_map[arch].upper(), True)
                     for arch in spec.variants['cuda_arch'].value
                 )
+
+            if '+rocm' in spec:
+                options.extend([
+                    define_kok_enable('ROCM', False),
+                    define_kok_enable('HIP', True)
+                ])
+                if '+tpetra' in spec:
+                    options.append(define('Tpetra_INST_HIP', True))
+                amdgpu_arch_map = Kokkos.amdgpu_arch_map
+                for amd_target in spec.variants['amdgpu_target'].value:
+                    try:
+                        arch = amdgpu_arch_map[amd_target]
+                    except KeyError:
+                        pass
+                    else:
+                        options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
 

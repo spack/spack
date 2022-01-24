@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 
 class Zip(MakefilePackage):
@@ -26,6 +28,14 @@ class Zip(MakefilePackage):
     patch('08-hardening-build-fix-1.patch')
     patch('09-hardening-build-fix-2.patch')
     patch('10-remove-build-date.patch')
+
+    executables = ['^zip$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'This is Zip (\S+)', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/zip{0}.tar.gz'.format(version.joined)

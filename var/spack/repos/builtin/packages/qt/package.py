@@ -1,17 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
+import platform
 import sys
 
 import llnl.util.tty as tty
 
 from spack import *
+from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
+LINUX_VERSION = kernel_version() if platform.system() == 'Linux' else None
 
 
 class Qt(Package):
@@ -129,6 +132,8 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-84037
+    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -171,11 +176,13 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
+    depends_on("assimp@5.0.0:5.0", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
     depends_on("pcre2+multibyte", when='@5.9:')
     depends_on("llvm", when='@5.11: +doc')
+    depends_on("zstd@1.3:", when='@5.13:')
 
     with when('+webkit'):
         patch(
@@ -191,10 +198,25 @@ class Qt(Package):
         depends_on("flex", type='build')
         depends_on("bison", type='build')
         depends_on("gperf")
-        depends_on("python@2.7.5:2", type='build')
+
+        # qtwebengine@5.7:5.15 are based on Google Chromium versions which depend on Py2
+        with when('@5.7:5.15'):
+            depends_on('python@2.7.5:2', type='build')
+            # mesa inherits MesonPackage (since October 2020) which depends on Py@3.
+            # The conflicts('mesa') enables a regular build of `qt@5.7:5.15+webkit`
+            # without having to specify the exact version by causing the concretizer
+            # to select mesa18 which does not depend on python@3.
+            conflicts('mesa')
+
+        with when('@5.10:'):
+            depends_on('nss@3.62:')
 
         with when('@5.7:'):
-            depends_on("nss")
+            # https://www.linuxfromscratch.org/blfs/view/svn/x/qtwebengine.html
+            depends_on('ninja', type='build')
+
+        # https://doc.qt.io/qt-5.15/qtwebengine-platform-notes.html
+        with when('@5.7: platform=linux'):
             depends_on("libdrm")
             depends_on("libxcomposite")
             depends_on("libxcursor")
@@ -535,6 +557,12 @@ class Qt(Package):
                 '-no-nis',
             ])
 
+        if '+opengl' in spec:
+            if version >= Version('5.14'):
+                use_spack_dep('assimp')
+            else:
+                config_args.append('-no-assimp')
+
         # COMPONENTS
 
         if '~examples' in spec:
@@ -636,6 +664,20 @@ class Qt(Package):
             if '+opengl' in spec:
                 config_args.append('-I{0}/include'.format(spec['libx11'].prefix))
                 config_args.append('-I{0}/include'.format(spec['xproto'].prefix))
+
+        # If the version of glibc is new enough Qt will configure features that
+        # may not be supported by the kernel version on the system. This will
+        # cause errors like:
+        #   error while loading shared libraries: libQt5Core.so.5: cannot open
+        #   shared object file: No such file or directory
+        # Test the kernel version and disable features that Qt detects in glibc
+        # but that are not supported in the kernel as determined by information
+        # in: qtbase/src/corelib/global/minimum-linux_p.h.
+        if LINUX_VERSION and version >= Version('5.10'):
+            if LINUX_VERSION < Version('3.16'):
+                config_args.append('-no-feature-renameat2')
+            if LINUX_VERSION < Version('3.17'):
+                config_args.append('-no-feature-getentropy')
 
         if '~webkit' in spec:
             config_args.extend([

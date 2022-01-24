@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from os.path import dirname
 
 from spack.compiler import Compiler
 
@@ -105,3 +107,11 @@ class Oneapi(Compiler):
     @property
     def stdcxx_libs(self):
         return ('-cxxlib', )
+
+    def setup_custom_environment(self, pkg, env):
+        # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
+        # It is located in the same directory as the driver. Error message:
+        #   clang++: error: unable to execute command:
+        #   Executable "sycl-post-link" doesn't exist!
+        if self.cxx:
+            env.prepend_path('PATH', dirname(self.cxx))

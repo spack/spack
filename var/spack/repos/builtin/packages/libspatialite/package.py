@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,8 @@ class Libspatialite(AutotoolsPackage):
     url      = "https://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
     manual_download = True
 
-    version('5.0.0', preferred=True, sha256='7b7fd70243f5a0b175696d87c46dde0ace030eacc27f39241c24bac5dfac6dac')
+    version('5.0.1', sha256='eecbc94311c78012d059ebc0fae86ea5ef6eecb13303e6e82b3753c1b3409e98')
+    version('5.0.0', sha256='7b7fd70243f5a0b175696d87c46dde0ace030eacc27f39241c24bac5dfac6dac')
     # Must download manually from:
     #     https://www.gaia-gis.it/fossil/libspatialite/info/c7f67038bf06d98d
     # For instructions on the file:// below..
@@ -41,3 +42,4 @@ class Libspatialite(AutotoolsPackage):
     depends_on('iconv')
     depends_on('libxml2')
     depends_on('minizip', when='@5.0.0:')
+    depends_on('librttopo', when='@5.0.1:')

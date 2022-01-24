@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -556,6 +556,19 @@ class TestConcretize(object):
         s = Spec(conflict_spec)
         with pytest.raises(spack.error.SpackError):
             s.concretize()
+
+    def test_conflicts_show_cores(self, conflict_spec, monkeypatch):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Testing debug statements specific to new concretizer')
+
+        monkeypatch.setattr(spack.solver.asp, 'full_cores', True)
+        monkeypatch.setattr(spack.solver.asp, 'minimize_cores', False)
+
+        s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError) as e:
+            s.concretize()
+
+        assert "conflict_trigger(" in e.value.message
 
     def test_conflict_in_all_directives_true(self):
         s = Spec('when-directives-true')
