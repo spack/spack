@@ -17,8 +17,11 @@ class Cntk(Package):
     url      = "https://github.com/Microsoft/CNTK/archive/v2.0.tar.gz"
     git      = "https://github.com/Microsoft/CNTK.git"
 
-    version('master', branch='master')
-    version('2.0', sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c')
+    # CNTK is not an active project since April 2019.
+    version('master', branch='master', deprecated=True)
+    version('2.0',
+            sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c',
+            deprecated=True)
 
     variant('opencv', default=False, description="Enable OpenCV support.")
     variant('kaldi', default=False, description="Enable Kaldi support.")
@@ -50,6 +53,10 @@ class Cntk(Package):
     patch('kaldireader-openblas.patch')
     # Patch to change behaviour of lock file - https://github.com/Microsoft/CNTK/issues/62
     patch('lock-file.patch')
+
+    # It seems that cntk, at least version 2.0, can not be built with GCC
+    # beyond 4.8.5.
+    conflicts('%gcc@5:')
 
     def patch(self):
         if 'protobuf+shared' in self.spec:
