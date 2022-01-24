@@ -49,6 +49,7 @@ spack:
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
     - neuron%intel+coreneuron+tests
     - neuron%nvhpc+coreneuron+tests ^coreneuron+gpu
+    - neuron%intel+debug
     - nmodl
     - parquet-converters
     - py-basalt@0.2.9
