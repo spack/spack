@@ -417,6 +417,13 @@ class Opencv(CMakePackage, CudaPackage):
         conflicts("~highgui")
         conflicts("~imgproc")
 
+    with when("+cublas"):
+        conflicts("~cuda")
+        conflicts("~cudev")
+
+    with when("+cuda"):
+        conflicts("~cudev")
+
     with when("+cudaarithm"):
         conflicts("~cuda")
         conflicts("~cublas")
@@ -709,7 +716,6 @@ class Opencv(CMakePackage, CudaPackage):
         "opengl",
         "openjpeg",
         "openmp",
-        "openvx",
         "plaidml",
         "png",
         "protobuf",
@@ -745,6 +751,7 @@ class Opencv(CMakePackage, CudaPackage):
         "openclamdfft",
         "openni",
         "openni2",
+        "openvx",
         "pvapi",
         "ueye",
         "va",
