@@ -42,6 +42,7 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.lang import elide_list
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 
@@ -651,25 +652,31 @@ class TermTitle(object):
 class WaitingForOtherProcessStatusMessage(object):
     def __init__(self, enabled):
         self.enabled = enabled
-        self.waiting_for = set()
+        self.pkg_set = set()
+        self.pkg_list = []
 
     def add(self, pkg):
-        if not self.enabled or pkg.name in self.waiting_for:
+        if not self.enabled or pkg.name in self.pkg_set:
             return
 
-        self.waiting_for.add(pkg.name)
+        self.pkg_set.add(pkg.name)
+        self.pkg_list.append(pkg.name)
+
+        wait_list = ', '.join(elide_list(self.pkg_list, max_num=6))
+
         sys.stdout.write('\r\x1b[K')
-        tty.msg('Waiting for another process to install {0}...'.format(
-                ', '.join(self.waiting_for)), newline=False)
+        tty.msg('Waiting for {0}...'.format(wait_list), newline=False)
         sys.stdout.flush()
 
     def clear(self):
         if not self.enabled:
             return
 
+        self.pkg_set.clear()
+        self.pkg_list.clear()
+
         sys.stdout.write('\r\x1b[K')
         sys.stdout.flush()
-        self.waiting_for.clear()
 
 
 class PackageInstaller(object):
@@ -1601,6 +1608,7 @@ class PackageInstaller(object):
             # determined the spec has already been installed (though the
             # other process may be hung).
             term_title.set('Acquiring lock for {0}'.format(pkg.name))
+            wait_status.add(pkg)
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1612,11 +1620,10 @@ class PackageInstaller(object):
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
             if lock is None:
-                wait_status.add(pkg)
                 self._requeue_task(task)
                 continue
-            else:
-                wait_status.clear()
+
+            wait_status.clear()
 
             # Take a timestamp with the overwrite argument to allow checking
             # whether another process has already overridden the package.
