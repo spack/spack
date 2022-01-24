@@ -443,7 +443,7 @@ a single configuration is installed for each package in the environment.
 Software developers tend to favor this approach for deployment.
 
 We will defer discussion of how to configure the environment to choose
-the non-default option to :ref:`<environment-configuration>`.
+the non-default option to :ref:`environment-configuration`.
 
 Entering the following command will ensure all of the root specs are
 concretized according to the constraints prescribed in the configuration:
@@ -508,9 +508,9 @@ that contains the ``package.py`` file used at install time.
 .. note::
 
    If the environment's specs have not been concretized,
-  ``spack install`` will do so before it installs them.
+   ``spack install`` will do so before it installs them.
 
-.. todo::
+.. note::
 
    RESUME HERE
 
