@@ -48,6 +48,8 @@ import spack.util.spack_yaml as syaml
 from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
 
+is_windows = sys.platform == 'win32'
+
 
 #
 # Return list of shas for latest two git commits in local spack repo
@@ -532,6 +534,11 @@ def linux_os():
     return LinuxOS(name=name, version=version)
 
 
+@pytest.fixture(autouse=is_windows, scope='session')
+def platform_config():
+    spack.config.add_default_platform_scope(spack.platforms.real_host().name)
+
+
 @pytest.fixture(scope='session')
 def default_config():
     """Isolates the default configuration from the user configs.
@@ -539,6 +546,8 @@ def default_config():
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
     defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
+    if is_windows:
+        defaults_path = os.path.join(defaults_path, "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
 
@@ -592,17 +601,19 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
-    if os.name == 'nt':
+    if is_windows:
         solver = 'original'
+        locks = False
     else:
         solver = os.environ.get('SPACK_TEST_SOLVER', 'clingo')
+        locks = True
 
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)
     lmod_root = modules_root.ensure('lmod', dir=True)
     content = ''.join(config_yaml.read()).format(
-        solver, str(tcl_root), str(lmod_root)
+        solver, locks, str(tcl_root), str(lmod_root)
     )
     t = tmpdir.join('site', 'config.yaml')
     t.write(content)

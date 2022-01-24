@@ -813,7 +813,7 @@ fi
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Bash scripting unsupported on Windows (for now)")
 def test_compiler_flags_use_real_version(working_env, monkeypatch, tmpdir):
     # Create compiler
     gcc = str(tmpdir.join('gcc'))
@@ -850,7 +850,7 @@ echo "4.4.4"
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+                    reason="Apple Clang and XCode unsupported on Windows")
 def test_apple_clang_setup_environment(mock_executable, monkeypatch):
     """Test a code path that is taken only if the package uses
     Xcode on MacOS.

@@ -6,6 +6,7 @@
 import collections
 import os
 import stat
+import sys
 
 import pytest
 
@@ -14,6 +15,9 @@ import spack.modules.tcl
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -78,7 +82,6 @@ def mock_package_perms(monkeypatch):
     yield perms
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 def test_modules_written_with_proper_permissions(mock_module_filename,
                                                  mock_package_perms,
                                                  mock_packages, config):
@@ -93,8 +96,6 @@ def test_modules_written_with_proper_permissions(mock_module_filename,
         mock_module_filename).st_mode == mock_package_perms
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == "windows",
-                    reason="test unsupported on Windows")
 @pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
 def test_modules_default_symlink(
         module_type, mock_packages, mock_module_filename, mock_module_defaults, config
@@ -220,7 +221,6 @@ module_index:
         spack.modules.common.upstream_module_index = old_index
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
                                             monkeypatch):
     # Get a basic concrete spec for the trivial install package.

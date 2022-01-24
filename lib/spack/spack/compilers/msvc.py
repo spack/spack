@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -83,18 +83,17 @@ class Msvc(Compiler):
             self.setvarsfile = os.path.join(
                 os.getenv("ONEAPI_ROOT"), "setvars.bat")
         else:
+            # The long relative path below points six directories up
+            # to the root of the MSVC tree associated with this (self)
+            # vesion of MSVC, so that we can then find the relevant
+            # VCVARS file. Note: This is done in the opposite order
+            # that this procedure typically goes on Windows
+            # However it is done this way here with great intent to conform
+            # with how Spack discovers compilers.
             self.setvarsfile = os.path.abspath(
                 os.path.join(self.cc, '../../../../../../..'))
             self.setvarsfile = os.path.join(
                 self.setvarsfile, 'Auxiliary', 'Build', 'vcvars64.bat')
-
-    @property
-    def verbose_flag(self):
-        return ""
-
-    @property
-    def pic_flag(self):
-        return ""
 
     @property
     def msvc_version(self):

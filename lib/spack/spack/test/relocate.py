@@ -284,8 +284,7 @@ def test_set_elf_rpaths(mock_patchelf):
     assert patchelf in output
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+@skip_unless_linux
 def test_set_elf_rpaths_warning(mock_patchelf):
     # Mock a failing patchelf command and ensure it warns users
     patchelf = mock_patchelf('exit 1')

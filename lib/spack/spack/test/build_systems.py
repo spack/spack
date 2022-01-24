@@ -12,7 +12,6 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.environment
-import spack.error as serr
 import spack.platforms
 import spack.repo
 from spack.build_environment import ChildError, get_std_cmake_args, setup_package
@@ -125,9 +124,12 @@ def test_cmake_std_args(config, mock_packages):
 
 
 def test_cmake_bad_generator(config, mock_packages):
-    with pytest.raises(serr.SpackError):
-        s = Spec('cmake-client generator="Yellow Sticky Note"')
-        s.concretize()
+    s = Spec('cmake-client')
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.generator = 'Yellow Sticky Notes'
+    with pytest.raises(spack.package.InstallError):
+        get_std_cmake_args(pkg)
 
 
 def test_cmake_secondary_generator(config, mock_packages):
@@ -141,8 +143,6 @@ def test_cmake_secondary_generator(config, mock_packages):
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestAutotoolsPackage(object):
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_with_or_without(self):
         s = Spec('a')
         s.concretize()
@@ -178,8 +178,6 @@ class TestAutotoolsPackage(object):
         options = pkg.with_or_without('lorem-ipsum', variant='lorem_ipsum')
         assert '--without-lorem-ipsum' in options
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_none_is_allowed(self):
         s = Spec('a foo=none')
         s.concretize()
@@ -194,8 +192,6 @@ class TestAutotoolsPackage(object):
         assert '--without-baz' in options
         assert '--no-fee' in options
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_libtool_archive_files_are_deleted_by_default(
             self, mutable_database
     ):
@@ -213,8 +209,6 @@ class TestAutotoolsPackage(object):
         )
         assert libtool_deletion_log
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_libtool_archive_files_might_be_installed_on_demand(
             self, mutable_database, monkeypatch
     ):
@@ -228,8 +222,6 @@ class TestAutotoolsPackage(object):
         # Assert libtool archives are installed
         assert os.path.exists(s.package.libtool_archive_file)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_autotools_gnuconfig_replacement(self, mutable_database):
         """
         Tests whether only broken config.sub and config.guess are replaced with
@@ -251,8 +243,6 @@ class TestAutotoolsPackage(object):
         with open(os.path.join(s.prefix.working, 'config.guess')) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     def test_autotools_gnuconfig_replacement_disabled(self, mutable_database):
         """
         Tests whether disabling patch_config_files
@@ -273,8 +263,6 @@ class TestAutotoolsPackage(object):
         with open(os.path.join(s.prefix.working, 'config.guess')) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.disable_clean_stage_check
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database):
         """
@@ -288,8 +276,6 @@ class TestAutotoolsPackage(object):
         with pytest.raises(ChildError, match=msg):
             s.package.do_install()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.disable_clean_stage_check
     def test_broken_external_gnuconfig(self, mutable_database, tmpdir):
         """

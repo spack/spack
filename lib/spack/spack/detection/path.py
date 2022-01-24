@@ -6,7 +6,6 @@
 and running executables.
 """
 import collections
-from distutils.spawn import find_executable
 import os
 import os.path
 import re
@@ -27,33 +26,6 @@ from .common import (
     find_win32_additional_install_paths,
     is_executable,
 )
-
-
-def find_executables(path_hints):
-    """Get the paths of all executables available from provided hints
-
-    For convenience, this is constructed as a dictionary where the keys are
-    the executable paths and the values are the names of the executables
-    (i.e. the basename of the executable path).
-
-    There may be multiple paths with the same basename. In this case it is
-    assumed there are two different instances of the executable.
-
-    Args:
-        path_hints (list): list of paths to be searched. If None the list will be
-            constructed based on the PATH environment variable.
-    """
-    search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
-
-    path_to_exe = {}
-    # Reverse order of search directories so that an exe in the first PATH
-    # entry overrides later entries
-    for search_path in reversed(search_paths):
-        for exe in os.listdir(search_path):
-            exe_path = os.path.join(search_path, exe)
-            if is_executable(exe_path):
-                path_to_exe[exe_path] = exe
-    return path_to_exe
 
 
 def executables_in_path(path_hints=None):
@@ -87,7 +59,17 @@ def executables_in_path(path_hints=None):
             for path in msvc_paths]
         path_hints = msvc_ninja_paths + path_hints
         path_hints.extend(find_win32_additional_install_paths())
-    return find_executables(path_hints)
+    search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
+
+    path_to_exe = {}
+    # Reverse order of search directories so that an exe in the first PATH
+    # entry overrides later entries
+    for search_path in reversed(search_paths):
+        for exe in os.listdir(search_path):
+            exe_path = os.path.join(search_path, exe)
+            if is_executable(exe_path):
+                path_to_exe[exe_path] = exe
+    return path_to_exe
 
 
 def _group_by_prefix(paths):
@@ -106,21 +88,15 @@ def by_executable(packages_to_check, path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    path_to_exe_name = executables_in_path(path_hints=path_hints)
+    path_hints = [] if path_hints is None else path_hints
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
-        if hasattr(pkg, 'executables'):
-            for exe in pkg.executables:
-                if sys.platform == 'win32':
-                    exe = exe.replace('$', r'\.exe$')
-                exe_pattern_to_pkgs[exe].append(pkg)
+        for exe in pkg.platform_executables:
+            exe_pattern_to_pkgs[exe].append(pkg)
+        # Add Windows specific, package related paths to the search paths
+        path_hints.extend(compute_windows_program_path_for_package(pkg))
 
-        path_to_exe_name.update(
-            find_executables(
-                compute_windows_program_path_for_package(pkg)
-            )
-        )
-
+    path_to_exe_name = executables_in_path(path_hints=path_hints)
     pkg_to_found_exes = collections.defaultdict(set)
     for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
         compiled_re = re.compile(exe_pattern)

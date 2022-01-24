@@ -57,8 +57,6 @@ def set_dependency(saved_deps, monkeypatch):
     return _mock
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_test_deptype():
     """Ensure that test-only dependencies are only included for specified
@@ -90,8 +88,6 @@ w->y deptypes are (link, build), w->x and y->z deptypes are (test)
         assert ('z' not in spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_installed_deps():
     """Preinstall a package P with a constrained build dependency D, then
@@ -140,8 +136,6 @@ def test_installed_deps():
         assert a_spec['e'].version == spack.version.Version('2')
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 def test_specify_preinstalled_dep():
     """Specify the use of a preinstalled package during concretization with a
@@ -167,8 +161,6 @@ def test_specify_preinstalled_dep():
         assert set(x.name for x in a_spec.traverse()) == set(['a', 'b', 'c'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('config')
 @pytest.mark.parametrize('spec_str,expr_str,expected', [
     ('x ^y@2', 'y@2', True),
@@ -207,8 +199,6 @@ def test_conditional_dep_with_user_constraints(spec_str, expr_str, expected):
     assert result is expected, '{0} in {1}'.format(expr_str, spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):
     def test_conflicting_package_constraints(self, set_dependency):

@@ -1241,7 +1241,7 @@ _spack_maintainers() {
 _spack_make_installer() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -v --spack_version -s --spack_source -g --git-installer-verbosity"
+        SPACK_COMPREPLY="-h --help -v --spack-version -s --spack-source -g --git-installer-verbosity"
     else
         SPACK_COMPREPLY=""
     fi

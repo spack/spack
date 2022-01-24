@@ -34,11 +34,11 @@ from typing import List, Optional  # novm
 import six
 import six.moves.urllib.parse as urllib_parse
 
+import llnl.util
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     get_single_file,
     mkdirp,
-    rename,
     temp_cwd,
     temp_rename,
     working_dir,
@@ -58,6 +58,7 @@ from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
+is_windows = sys.platform == 'win32'
 
 CONTENT_TYPE_MISMATCH_WARNING_TEMPLATE = (
     "The contents of {subject} look like {content_type}.  Either the URL"
@@ -304,13 +305,10 @@ class URLFetchStrategy(FetchStrategy):
         urls = []
 
         for url in [self.url] + (self.mirrors or []):
-            if sys.platform == "win32":
-                url = url.replace("\\", "/")
+            # This must be skipped on Windows due to URL encoding
+            # of ':' characters on filepaths on Windows
             if sys.platform != "win32" and url.startswith('file://'):
                 path = urllib_parse.quote(url[len('file://'):])
-                if sys.platform == "win32":
-                    if not path.startswith("/"):
-                        path = "/" + path
                 url = 'file://' + path
             urls.append(url)
 
@@ -331,7 +329,7 @@ class URLFetchStrategy(FetchStrategy):
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file and (partial_file is not None):
-                    rename(partial_file, save_file)
+                    llnl.util.filesystem.rename(partial_file, save_file)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -635,7 +633,9 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        path = re.sub('^file://', '', self.url)
+        reg_str = r'^file://'
+        reg_str += '/' if is_windows else ''
+        path = re.sub(reg_str, '', self.url)
 
         # check whether the cache file exists.
         if not os.path.isfile(path):
@@ -683,9 +683,6 @@ class VCSFetchStrategy(FetchStrategy):
         if not self.url:
             raise ValueError(
                 "%s requires %s argument." % (self.__class__, self.url_attr))
-
-        if sys.platform == "win32":
-            self.url = self.url.replace('\\', '/')
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
@@ -1410,7 +1407,7 @@ class S3FetchStrategy(URLFetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
 
         if self.stage.save_filename:
-            rename(
+            llnl.util.filesystem.rename(
                 os.path.join(self.stage.path, basename),
                 self.stage.save_filename)
 

@@ -190,10 +190,7 @@ def test_compiler_config_modifications(
     # Check they were applied
     for name, value in expected.items():
         if value is not None:
-            eviron_value = os.environ[name]
-            if sys.platform == "win32":
-                eviron_value = eviron_value.replace("\\", "/")
-            assert eviron_value == value
+            assert os.environ[name] == value
             continue
         assert name not in os.environ
 

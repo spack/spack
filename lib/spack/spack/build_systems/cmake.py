@@ -181,7 +181,7 @@ class CMakePackage(PackageBase):
         if pkg.spec.satisfies('^cmake@3.9:'):
             args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
 
-        if generator == 'Unix Makefiles':
+        if primary_generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:

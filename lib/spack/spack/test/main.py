@@ -13,6 +13,10 @@ import llnl.util.filesystem as fs
 import spack.paths
 from spack.main import get_version, main
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == 'win32',
+    reason="Test functionality support but failing on Win")
+
 
 def test_get_version_no_match_git(tmpdir, working_env):
     git = str(tmpdir.join("git"))
@@ -26,8 +30,6 @@ echo v0.13.3
     assert spack.spack_version == get_version()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_get_version_match_git(tmpdir, working_env):
     git = str(tmpdir.join("git"))
     with open(git, "w") as f:

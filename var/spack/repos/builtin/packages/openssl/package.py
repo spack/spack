@@ -91,7 +91,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                          'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
     variant('shared', default=False, description="Build shared library version")
-    variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
+    with when('platform=windows'):
+        variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
@@ -144,25 +145,35 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('~shared'):
             shared_flag = 'no-shared'
 
+        def configure_args():
+            base_args = ['--prefix=%s' % prefix,
+                         '--openssldir=%s'
+                         % join_path(prefix, 'etc', 'openssl')]
+            if spec.satisfies('platform=windows'):
+                base_args.extend([
+                    'CC=%s' % os.environ.get('CC'),
+                    'CXX=%s' % os.environ.get('CXX'),
+                    '%s' % shared_flag,
+                    'VC-WIN64A',
+                ])
+                base_args.insert(0, 'Configure')
+            else:
+                base_args.extend(
+                    [
+                        '-I{0}'.format(self.spec['zlib'].prefix.include),
+                        '-L{0}'.format(self.spec['zlib'].prefix.lib)
+                    ]
+                )
+                base_args.extend(options)
+            return base_args
         # On Windows, we use perl for configuration and build through MSVC
         # nmake.
         if spec.satisfies('platform=windows'):
             config = Executable('perl')
-            config('Configure',
-                   '--prefix=%s' % prefix,
-                   '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
-                   'CC=\"%s\"' % os.environ.get('SPACK_CC'),
-                   'CXX=\"%s\"' % os.environ.get('SPACK_CXX'),
-                   '%s' % shared_flag,
-                   'VC-WIN64A', ignore_quotes=True)
         else:
             config = Executable('./config')
-            config('--prefix=%s' % prefix,
-                   '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
-                   '-I{0}'.format(self.spec['zlib'].prefix.include),
-                   '-L{0}'.format(self.spec['zlib'].prefix.lib),
-                   *options)
 
+        config(*configure_args())
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
@@ -178,26 +189,17 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                          "+dynamic to suppress this warning.")
 
         if spec.satisfies('platform=windows'):
-            nmake = Executable('nmake')
-            nmake()
+            host_make = nmake
         else:
-            make()
+            host_make = make
 
         if self.run_tests:
-            if spec.satisfies('platform=windows'):
-                nmake = Executable('nmake')
-                nmake('test', parallel=False)
-            else:
-                make('test', parallel=False)  # 'VERBOSE=1'
+            host_make('test', parallel=False)  # 'VERBOSE=1'
 
         install_tgt = 'install' if self.spec.satisfies('+docs') else 'install_sw'
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        if spec.satisfies('platform=windows'):
-            nmake = Executable('nmake')
-            nmake(install_tgt, parallel=False)
-        else:
-            make(install_tgt, parallel=False)
+        host_make(install_tgt, parallel=False)
 
     @run_after('install')
     def link_system_certs(self):

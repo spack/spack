@@ -451,8 +451,6 @@ def test_package_id_ok(install_mockery):
     assert pkg.name in inst.package_id(pkg)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_fake_install(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
@@ -553,6 +551,8 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 

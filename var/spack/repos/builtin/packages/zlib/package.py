@@ -49,20 +49,19 @@ class Zlib(Package):
         compose_src_path = lambda x: os.path.join(build_dir, x)
         install_tree["include"] = [compose_src_path("zlib.h"),
                                    compose_src_path("zconf.h")]
-        install_tree["share"] = {"man": {"man3": [compose_src_path("zlib.3")]}}
+        # Windows path seps are fine here as this method is Windows specific.
+        install_tree["share\\man\\man3"] = [compose_src_path("zlib.3")]
 
         def installtree(dst, tree):
             for inst_dir in tree:
-                if type(tree[inst_dir]) is list:
-                    install_dst = getattr(dst, inst_dir)
-                    try:
-                        os.makedirs(install_dst)
-                    except OSError:
-                        pass
-                    for file in tree[inst_dir]:
-                        copy(file, install_dst)
-                else:
-                    installtree(getattr(dst, inst_dir), tree[inst_dir])
+                install_dst = getattr(dst, inst_dir)
+                try:
+                    os.makedirs(install_dst)
+                except OSError:
+                    pass
+                for file in tree[inst_dir]:
+                    install(file, install_dst)
+
         installtree(self.prefix, install_tree)
 
     def setup_build_environment(self, env):

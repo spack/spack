@@ -6,7 +6,6 @@
 import copy
 import os
 import shutil
-import sys
 
 import pytest
 
@@ -19,10 +18,6 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 from spack.version import ver
-
-pytestmark = pytest.mark.skipif(
-    not which('git'), reason='requires git to be installed')
-
 
 _mock_transport_error = 'Mock HTTP transport error'
 
@@ -76,6 +71,7 @@ def mock_bad_git(monkeypatch):
 def test_bad_git(tmpdir, mock_bad_git):
     """Trigger a SpackError when attempt a fetch with a bad git."""
     testpath = str(tmpdir)
+    print(spack.config.get('config:locks'))
 
     with pytest.raises(spack.error.SpackError):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
@@ -83,8 +79,6 @@ def test_bad_git(tmpdir, mock_bad_git):
             fetcher.fetch()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
 @pytest.mark.parametrize("secure", [True, False])
 def test_fetch(type_of_test,
@@ -140,8 +134,6 @@ def test_fetch(type_of_test,
             assert h('HEAD') == h(t.revision)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
 def test_debug_fetch(
         mock_packages, type_of_test, mock_git_repository, config, monkeypatch
@@ -182,8 +174,6 @@ def test_needs_stage():
         fetcher.fetch()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
                        config, mutable_mock_repo, monkeypatch):
@@ -229,8 +219,6 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
             assert(ncommits == 1)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("submodules", [True, False])
 def test_gitsubmodule(submodules, mock_git_repository, config,
@@ -260,8 +248,6 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
                 assert not os.path.isfile(file_path)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.disable_clean_stage_check
 def test_gitsubmodules_delete(
         mock_git_repository, config, mutable_mock_repo, monkeypatch

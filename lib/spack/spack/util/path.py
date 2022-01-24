@@ -167,6 +167,14 @@ def marshall_path(path, mode=Path.unix):
     return path
 
 
+def convert_to_posix_path(path):
+    return path.replace('\\', '/')
+
+
+def convert_to_windows_path(path):
+    return path.replace('/', '\\')
+
+
 def substitute_config_variables(path):
     """Substitute placeholders into paths.
 

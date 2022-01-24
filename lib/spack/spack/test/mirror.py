@@ -154,8 +154,6 @@ def test_all_mirror(
     repos.clear()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "mirror",
     [
@@ -172,8 +170,6 @@ def test_roundtrip_mirror(mirror):
     assert spack.mirror.Mirror.from_json(mirror_json) == mirror
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_yaml",
     [
@@ -188,8 +184,6 @@ def test_invalid_yaml_mirror(invalid_yaml):
     assert invalid_yaml in exc_msg
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_json, error_message",
     [
@@ -204,8 +198,6 @@ def test_invalid_json_mirror(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "mirror_collection",
     [
@@ -228,8 +220,6 @@ def test_roundtrip_mirror_collection(mirror_collection):
             mirror_collection)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_yaml",
     [
@@ -244,8 +234,6 @@ def test_invalid_yaml_mirror_collection(invalid_yaml):
     assert invalid_yaml in exc_msg
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "invalid_json, error_message",
     [
@@ -260,16 +248,12 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
     assert error_message in exc_msg
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
     spec = Spec('trivial-install-test-package@nonexistingversion')
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     spec = Spec('patch-several-dependencies')
     spec.concretize()

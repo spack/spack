@@ -18,6 +18,7 @@ import itertools
 import os
 import os.path
 import re
+import sys
 
 import six
 
@@ -27,6 +28,7 @@ import spack.config
 import spack.spec
 import spack.util.spack_yaml
 
+is_windows = sys.platform == 'win32'
 #: Information on a package that has been detected
 DetectedPackage = collections.namedtuple(
     'DetectedPackage', ['spec', 'prefix']
@@ -206,7 +208,7 @@ def find_win32_additional_install_paths():
     windows_search_ext.extend(
         spack.config.get("config:additional_external_search_paths", default=[])
     )
-
+    windows_search_ext.extend(spack.util.environment.get_path('PATH'))
     return windows_search_ext
 
 
@@ -218,10 +220,12 @@ def compute_windows_program_path_for_package(pkg):
         pkg (spack.package.Package): package for which
                            Program Files location is to be computed
     """
+    if not is_windows:
+        return []
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
-    program_files = 'C:\\Program Files {}\\{}'
+    program_files = 'C:\\Program Files{}\\{}'
 
     return[program_files.format(arch, name) for
-           arch, name in itertools.product(("", "(x86)"),
+           arch, name in itertools.product(("", " (x86)"),
            (pkg.name, pkg.name.capitalize()))]

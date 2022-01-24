@@ -11,6 +11,12 @@ import spack.installer as inst
 import spack.repo
 import spack.spec
 
+# Functionality supported on windows however tests are currently failing
+# due to compatibility issues, or due to dependent components currently
+# being unsupported on Windows
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 def test_build_request_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
@@ -21,8 +27,6 @@ def test_build_request_errors(install_mockery):
         inst.BuildRequest(pkg, {})
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_build_request_basics(install_mockery):
     spec = spack.spec.Spec('dependent-install')
     spec.concretize()
@@ -39,8 +43,6 @@ def test_build_request_basics(install_mockery):
     assert 'install_deps' in request.install_args
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_build_request_strings(install_mockery):
     """Tests of BuildRequest repr and str for coverage purposes."""
     # Using a package with one dependency

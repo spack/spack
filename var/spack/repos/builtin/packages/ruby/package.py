@@ -4,10 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import sys
 
 from spack import *
 
-is_windows = str(spack.platforms.host()) == 'windows'
+is_windows = sys.platform == 'win32'
 
 
 class Ruby(Package):
@@ -123,13 +124,13 @@ class Ruby(Package):
 
     def configure(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
-            # if is_windows:
-            Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)
-            # else:
-            #     options = getattr(self, 'configure_flag_args', [])
-            #     options += ['--prefix={0}'.format(prefix)]
-            #     options += self.configure_args()
-            #     configure(*options)
+            if is_windows:
+                Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)
+            else:
+                options = getattr(self, 'configure_flag_args', [])
+                options += ['--prefix={0}'.format(prefix)]
+                options += self.configure_args()
+                configure(*options)
 
     def build(self, spec, prefix):
         with working_dir(self.stage.source_path):

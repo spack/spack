@@ -494,7 +494,7 @@ def setup_main_options(args):
 
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
-    tty.debug(spack.config.config)
+
     if args.debug:
         spack.error.debug = True
         spack.util.debug.register_interrupt_handler()

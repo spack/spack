@@ -167,7 +167,7 @@ def push_to_url(
         local_file_path, remote_path, keep_original=True, extra_args=None):
     if sys.platform == "win32":
         if remote_path[1] == ':':
-            remote_path = "file:///" + remote_path
+            remote_path = "file://" + remote_path
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 

@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import platform
-
 import llnl.util.lang
 
 import spack.error
@@ -145,6 +143,3 @@ class Platform(object):
             for o in sorted(self.operating_sys.values()):
                 yield o._cmp_iter
         yield oses
-
-    def is_64bit(self):
-        return platform.machine().endswith('64')

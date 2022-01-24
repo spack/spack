@@ -15,7 +15,6 @@ import sys
 
 import six.moves.urllib.parse as urllib_parse
 from six import string_types
-from six.moves.urllib.request import url2pathname
 
 import spack.util.path
 

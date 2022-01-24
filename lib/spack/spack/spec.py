@@ -81,6 +81,7 @@ import itertools
 import operator
 import os
 import re
+import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -145,6 +146,7 @@ __all__ = [
     'SpecDeprecatedError',
 ]
 
+is_windows = sys.platform == 'win32'
 #: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
 
@@ -4887,7 +4889,10 @@ class SpecLexer(spack.parse.Lexer):
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
-            (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
+            # posixpath on Windows here because this string will be fed through
+            # shlex
+            (r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*' if not is_windows\
+                else r'([A-Za-z]:)*?[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*',
              lambda scanner, v: self.token(FILE, v)),
 
             # Hash match after filename. No valid filename can be a hash

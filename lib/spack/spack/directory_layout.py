@@ -24,6 +24,9 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
+# Note: Posixpath is used here as opposed to
+# os.path.join due to spack.spec.Spec.format
+# requiring forward slash path seperators at this stage
 default_projections = {'all': posixpath.join(
     '{architecture}', '{compiler.name}-{compiler.version}',
     '{name}-{version}-{hash}')}
@@ -284,7 +287,7 @@ class DirectoryLayout(object):
 
         specs = []
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, 'spec.json']
             pattern = os.path.join(self.root, *path_elems)
@@ -302,7 +305,7 @@ class DirectoryLayout(object):
 
         deprecated_specs = set()
         for _, path_scheme in self.projections.items():
-            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, self.deprecated_dir,
                            '*_spec.*']  # + self.spec_file_name]
