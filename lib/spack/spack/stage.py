@@ -694,8 +694,8 @@ class ResourceStage(Stage):
             source_path = os.path.join(self.source_path, key)
 
             if not os.path.exists(destination_path):
-                tty.info('Moving resource stage\n\tsource : '
-                         '{stage}\n\tdestination : {destination}'.format(
+                tty.info('Moving resource stage\n\tsource: '
+                         '{stage}\n\tdestination: {destination}'.format(
                              stage=source_path, destination=destination_path
                          ))
 
