@@ -39,6 +39,19 @@ def register_interrupt_handler():
 # Subclass of the debugger to keep readline working.  See
 # https://stackoverflow.com/questions/4716533/how-to-attach-debugger-to-a-python-subproccess/23654936
 class ForkablePdb(pdb.Pdb):
+    """
+    This class allows the python debugger to follow forked processes
+    and can set tracepoints allowing the Python Debugger Pdb to be used
+    from a python multiprocessing child process.
+
+    This is used the same way one would normally use Pdb, simply import this
+    class and use as a drop in for Pdb, although the syntax here is slightly different,
+    requiring the instantiton of this class, i.e. ForkablePdb().set_trace().
+
+    This should be used when attempting to call a debugger from a
+    child process spawned by the python multiprocessing such as during
+    the run of Spack.install, or any where else Spack spawns a child process.
+    """
 
     _original_stdin_fd = sys.stdin.fileno()
     _original_stdin = None

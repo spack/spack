@@ -287,8 +287,6 @@ class TestSpecSyntax(object):
             str(spec), spec.name + '@' + str(spec.version) +
             ' /' + spec.dag_hash()[:6])
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_spec_by_hash(self, database):
         specs = database.query()
@@ -297,8 +295,6 @@ class TestSpecSyntax(object):
         for spec in specs:
             self._check_hash_parse(spec)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_dep_spec_by_hash(self, database):
         mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
@@ -327,8 +323,6 @@ class TestSpecSyntax(object):
         assert 'fake' in mpileaks_hash_fake_and_zmpi
         assert mpileaks_hash_fake_and_zmpi['fake'] == fake
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_multiple_specs_with_hash(self, database):
         mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
@@ -362,8 +356,6 @@ class TestSpecSyntax(object):
                          ' / ' + callpath_mpich2.dag_hash())
         assert len(specs) == 2
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_ambiguous_hash(self, mutable_database):
         x1 = Spec('a')
@@ -382,8 +374,6 @@ class TestSpecSyntax(object):
         # ambiguity in first hash character AND spec name
         self._check_raises(AmbiguousHashError, ['a/x'])
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_invalid_hash(self, database):
         mpileaks_zmpi = database.query_one('mpileaks ^zmpi')
@@ -402,8 +392,6 @@ class TestSpecSyntax(object):
             'mpileaks ^mpich /' + mpileaks_zmpi.dag_hash(),
             'mpileaks ^zmpi /' + mpileaks_mpich.dag_hash()])
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_nonexistent_hash(self, database):
         """Ensure we get errors for nonexistant hashes."""
@@ -418,8 +406,6 @@ class TestSpecSyntax(object):
             '/' + no_such_hash,
             'mpileaks /' + no_such_hash])
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.db
     def test_redundant_spec(self, database):
         """Check that redundant spec constraints raise errors.
@@ -506,8 +492,6 @@ class TestSpecSyntax(object):
         ]
         self._check_raises(DuplicateArchitectureError, duplicates)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_simple(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
@@ -528,8 +512,6 @@ class TestSpecSyntax(object):
         specs = sp.parse('mvapich_foo {0}'.format(specfile.strpath))
         assert len(specs) == 2
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
         """Ensure that libelf.yaml parses as a spec, NOT a file."""
@@ -573,8 +555,6 @@ class TestSpecSyntax(object):
             )
         )
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_dependency(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
@@ -590,8 +570,6 @@ class TestSpecSyntax(object):
         specs = sp.parse('libdwarf ^ {0}'.format(specfile.strpath))
         assert len(specs) == 1
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_relative_paths(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
@@ -627,8 +605,6 @@ class TestSpecSyntax(object):
                 parent_dir, file_name))
             assert len(specs) == 2
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_relative_subdir_path(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
@@ -649,8 +625,6 @@ class TestSpecSyntax(object):
             specs = sp.parse('subdir/{0}'.format(file_name))
             assert len(specs) == 1
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_dependency_relative_paths(self, mock_packages, tmpdir):
         s = Spec('libdwarf')
@@ -710,8 +684,6 @@ class TestSpecSyntax(object):
         with pytest.raises(spack.repo.UnknownPackageError):
             Spec('builtin.mock.yamlfoobar').concretize()
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
     @pytest.mark.usefixtures('config')
     def test_parse_yaml_variant_error(self, mock_packages, tmpdir):
         s = Spec('a')

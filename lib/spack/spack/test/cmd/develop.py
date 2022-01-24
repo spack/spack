@@ -17,6 +17,9 @@ from spack.main import SpackCommand
 develop = SpackCommand('develop')
 env = SpackCommand('env')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.mark.usefixtures(
     'mutable_mock_env_path', 'mock_packages', 'mock_fetch')
@@ -41,7 +44,6 @@ class TestDevelop(object):
         else:
             assert yaml_entry['path'] == path
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
     def test_develop_no_path_no_clone(self):
         env('create', 'test')
         with ev.read('test') as e:
@@ -50,21 +52,18 @@ class TestDevelop(object):
             develop('--no-clone', 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
     def test_develop_no_clone(self, tmpdir):
         env('create', 'test')
         with ev.read('test') as e:
             develop('--no-clone', '-p', str(tmpdir), 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
     def test_develop(self):
         env('create', 'test')
         with ev.read('test') as e:
             develop('mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
     def test_develop_no_args(self):
         env('create', 'test')
         with ev.read('test') as e:
@@ -76,7 +75,6 @@ class TestDevelop(object):
             develop()
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
     def test_develop_twice(self):
         env('create', 'test')
         with ev.read('test') as e:
@@ -91,7 +89,6 @@ class TestDevelop(object):
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
             assert len(e.dev_specs) == 1
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
     def test_develop_update_path(self, tmpdir):
         env('create', 'test')
         with ev.read('test') as e:
@@ -100,7 +97,6 @@ class TestDevelop(object):
             self.check_develop(e, spack.spec.Spec('mpich@1.0'), str(tmpdir))
             assert len(e.dev_specs) == 1
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="not implemented on windows")
     def test_develop_update_spec(self):
         env('create', 'test')
         with ev.read('test') as e:

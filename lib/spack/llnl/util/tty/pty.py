@@ -11,6 +11,7 @@ If this is used outside a testing environment, we will want to reconsider
 things like timeouts in ``ProcessController.wait()``, which are set to
 get tests done quickly, not to avoid high CPU usage.
 
+Note: The functionality in this module is unsupported on Windows
 """
 from __future__ import print_function
 

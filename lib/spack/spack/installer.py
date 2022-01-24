@@ -43,7 +43,7 @@ import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output, winlog
+from llnl.util.tty.log import log_output
 
 import spack.binary_distribution as binary_distribution
 import spack.compilers
@@ -1937,7 +1937,6 @@ class BuildProcessInstaller(object):
 
             # Spawn a daemon that reads from a pipe and redirects
             # everything to log_path, and provide the phase for logging
-            # if sys.platform != 'win32':
             for i, (phase_name, phase_attr) in enumerate(zip(
                     pkg.phases, pkg._InstallPhase_phases)):
 
@@ -1958,6 +1957,7 @@ class BuildProcessInstaller(object):
                         env=self.unmodified_env,
                         filter_fn=self.filter_fn
                     )
+
                     with log_contextmanager as logger:
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
@@ -1988,28 +1988,10 @@ class BuildProcessInstaller(object):
 
                 # We assume loggers share echo True/False
                 self.echo = logger.echo
-            # if True:
-            #     with winlog(pkg.log_path, True, True,
-            #                 env=self.unmodified_env) as logger:
 
-            #         for phase_name, phase_attr in zip(
-            #                 pkg.phases, pkg._InstallPhase_phases):
-
-            #             # with logger.force_echo():
-            #             #    inner_debug_level = tty.debug_level()
-            #             #    tty.set_debug(debug_level)
-            #             #    tty.msg("{0} Executing phase: '{1}'"
-            #             #            .format(pre, phase_name))
-            #             #    tty.set_debug(inner_debug_level)
-
-            #             # Redirect stdout and stderr to daemon pipe
-            #             phase = getattr(pkg, phase_attr)
-            #             phase(pkg.spec, pkg.prefix)
-
-        if sys.platform != 'win32':
-            # After log, we can get all output/error files from the package stage
-            combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-            log(pkg)
+        # After log, we can get all output/error files from the package stage
+        combine_phase_logs(pkg.phase_log_files, pkg.log_path)
+        log(pkg)
 
 
 def build_process(pkg, install_args):

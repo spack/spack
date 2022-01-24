@@ -28,6 +28,7 @@ import spack.paths
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
+is_windows = sys.platform == 'win32'
 
 
 def setup_parser(subparser):
@@ -179,8 +180,11 @@ def unit_test(parser, args, unknown_args):
 
     # Ensure clingo is available before switching to the
     # mock configuration used by unit tests
-    with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
+    # Note: skip on windows here because for the moment,
+    # clingo is wholly unsupported from bootstrap
+    if not is_windows:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            spack.bootstrap.ensure_clingo_importable_or_raise()
 
     if pytest is None:
         vendored_pytest_dir = os.path.join(

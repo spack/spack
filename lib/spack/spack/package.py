@@ -898,6 +898,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                              " does not have a concrete version.")
         return self.spec.versions[0]
 
+    @property
+    def platform_executables(self):
+        plat_exe = []
+        if hasattr(self, 'executables'):
+            for exe in self.executables:
+                if sys.platform == 'win32':
+                    exe = exe.replace('$', r'\.exe$')
+                plat_exe.append(exe)
+        return plat_exe
+
     @memoized
     def version_urls(self):
         """OrderedDict of explicitly defined URLs for versions of this package.

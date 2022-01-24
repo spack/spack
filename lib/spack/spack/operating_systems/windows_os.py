@@ -15,12 +15,10 @@ from spack.version import Version
 from ._operating_system import OperatingSystem
 
 
-# FIXME: To get the actual Windows version, we need a python that runs
-# natively on Windows, not Cygwin.
 def windows_version():
     """temporary workaround to return a Windows version as a Version object
     """
-    return Version('10')
+    return Version(platform.release())
 
 
 class WindowsOs(OperatingSystem):

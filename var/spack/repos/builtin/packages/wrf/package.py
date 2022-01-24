@@ -10,14 +10,15 @@ from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK
 from os.path import basename
 from subprocess import PIPE, Popen
-from sys import platform as _platform
-from sys import stdout
+from sys import platform, stdout
 
 from llnl.util import tty
 
 from spack import *
 
-if _platform != 'win32':
+is_windows = platform == 'win32'
+
+if not is_windows:
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK, rename
 else:
@@ -36,9 +37,8 @@ def setNonBlocking(fd):
     Set the given file descriptor to non-blocking
     Non-blocking pipes are not supported on windows
     """
-    if _platform != 'win32':
-        flags = fcntl(fd, F_GETFL) | O_NONBLOCK
-        fcntl(fd, F_SETFL, flags)
+    flags = fcntl(fd, F_GETFL) | O_NONBLOCK
+    fcntl(fd, F_SETFL, flags)
 
 
 def collect_platform_options(stdoutpipe):
@@ -303,8 +303,9 @@ class Wrf(Package):
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        setNonBlocking(p.stdout)
-        setNonBlocking(p.stderr)
+        if not is_windows:
+            setNonBlocking(p.stdout)
+            setNonBlocking(p.stderr)
 
         # Because of WRFs custom configure scripts that require interactive
         # input we need to parse and respond to questions.  The details can

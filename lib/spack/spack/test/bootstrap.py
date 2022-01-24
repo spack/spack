@@ -128,17 +128,13 @@ spack:
     install_tree:
       root: /tmp/store
 """)
-    if os.name == 'nt':
-        sep = '\\'
-    else:
-        sep = '/'
     with spack.environment.Environment(str(tmpdir)):
         assert spack.environment.active_environment()
         assert spack.config.get('config:install_tree:root') == '/tmp/store'
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == sep + os.path.join('tmp', 'store')
+        assert str(spack.store.root) == os.sep + os.path.join('tmp', 'store')
 
 
 def test_nested_use_of_context_manager(mutable_config):

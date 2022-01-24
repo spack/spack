@@ -5,7 +5,6 @@
 
 import os
 import re
-import shutil
 import sys
 
 import spack.build_environment
@@ -145,11 +144,7 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
     patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
-    generator = "Unix Makefiles"
-
-    if sys.platform == 'win32':
-        generator = "Ninja"
-        depends_on('ninja')
+    depends_on('ninja', when='platform=windows')
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -232,6 +227,18 @@ class Cmake(Package):
     conflicts('%intel@:14', when='@3.14:',
               msg="Intel 14 has immature C++11 support")
 
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip',
+             checksum='213a4e6485b711cb0a48cbd97b10dfe161a46bfe37b8f3205f47e99ffec434d2',
+             placement='cmake-bootstrap',
+             when='@3.0.2: platform=windows')
+
+    resource(name='cmake-bootstrap',
+             url='https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip',
+             checksum='8b9b520f3372ce67e33d086421c1cb29a5826d0b9b074f44a8a0304e44cf88f3',
+             placement='cmake-bootstrap',
+             when='@:2.8.10.2 platform=windows')
+
     phases = ['bootstrap', 'build', 'install']
 
     @classmethod
@@ -259,7 +266,9 @@ class Cmake(Package):
     def bootstrap_args(self):
         spec = self.spec
         args = []
-        if not os.name == 'nt':
+        self.generator = make
+
+        if not sys.platform == 'win32':
             args.extend(
                 ['--prefix={0}'.format(self.prefix),
                  '--parallel={0}'.format(make_jobs)]
@@ -290,9 +299,9 @@ class Cmake(Package):
             args.append('--')
         else:
             args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix)
-        if self.spec.satisfies('generator=Ninja'):
+        if self.spec.satisfies('platform=windows'):
             args.append('-GNinja')
-
+            self.generator = ninja
         args.append('-DCMAKE_BUILD_TYPE={0}'.format(
             self.spec.variants['build_type'].value))
 
@@ -318,35 +327,15 @@ class Cmake(Package):
 
         return args
 
-    def winbootcmake(self, spec):
-        from spack import fetch_strategy, stage
-        urls = {
-            '3': ('https://cmake.org/files/v3.21/cmake-3.21.2-windows-x86_64.zip', "f21e72ede9d15070602b60b2c14dc779"),
-            '2': ('https://cmake.org/files/v2.8/cmake-2.8.4-win32-x86.zip', "a2525342e495518101381203bf4484c4")
-        }
-        if spec.satisfies('@3.0.2:'):
-            bootstrap_url = urls['3']
-        else:
-            bootstrap_url = urls['2']
-        remote = fetch_strategy.URLFetchStrategy(url=bootstrap_url[0],
-                                                 checksum=bootstrap_url[1])
-        bootstrap_stage_path = os.path.join(self.stage.path, "cmake-bootstraper")
-        with stage.Stage(remote, path=bootstrap_stage_path) as bootstrap_stage:
-            remote.stage = bootstrap_stage
-            remote.fetch()
-            remote.check()
-            remote.expand()
-            shutil.move(bootstrap_stage.source_path, self.stage.source_path)
-
     def cmake_bootstrap(self):
         exe_prefix = self.stage.source_path
-        relative_cmake_exe = os.path.join('spack-src', 'bin', 'cmake.exe')
+        relative_cmake_exe = os.path.join('cmake-bootstrap', 'bin', 'cmake.exe')
         return Executable(os.path.join(exe_prefix, relative_cmake_exe))
 
     def bootstrap(self, spec, prefix):
         bootstrap_args = self.bootstrap_args()
-        if os.name == 'nt':
-            self.winbootcmake(spec)
+        if sys.platform == 'win32':
+            # self.winbootcmake(spec)
             bootstrap = self.cmake_bootstrap()
             bootstrap_args.extend(['.'])
         else:
@@ -354,25 +343,16 @@ class Cmake(Package):
         bootstrap(*bootstrap_args)
 
     def build(self, spec, prefix):
-        if self.generator == "Ninja":
-            ninja()
-        else:
-            make()
+        self.generator()
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         # Some tests fail, takes forever
-        if self.generator == "Ninja":
-            ninja('test')
-        else:
-            make('test')
+        self.generator('test')
 
     def install(self, spec, prefix):
-        if self.generator == "Ninja":
-            ninja('install')
-        else:
-            make('install')
+        self.generator('install')
 
         if spec.satisfies('%fj'):
             for f in find(self.prefix, 'FindMPI.cmake', recursive=True):

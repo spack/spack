@@ -13,6 +13,7 @@
 #
 
 import os
+import platform
 import re
 from contextlib import contextmanager
 
@@ -22,8 +23,7 @@ from llnl.util.symlink import symlink
 from spack import *
 from spack.operating_systems.mac_os import macos_version
 
-host = spack.platforms.host()
-is_windows = str(host) == 'windows'
+is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -200,9 +200,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             args.append("ALL_STATIC=%s" % "define")
         if self.spec.satisfies('~threads'):
             args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
-        if not host.is_64bit():
+        if not self.is_64bit():
             args.append("WIN64=undef")
         return args
+
+    def is_64bit(self):
+        return platform.machine().endswith('64')
 
     def configure_args(self):
         spec = self.spec
@@ -286,7 +289,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if not is_windows:
             return
         win_install_path = os.path.join(self.prefix.bin, "MSWin32")
-        if host.is_64bit():
+        if self.is_64bit():
             win_install_path += "-x64"
         else:
             win_install_path += "-x86"
@@ -305,12 +308,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def install_cpanm(self):
         spec = self.spec
         maker = make
-        win_prefix = ''
+        cpan_dir = join_path('cpanm', 'cpanm')
         if is_windows:
             maker = nmake
-            win_prefix = self.stage.source_path
+            cpan_dir = join_path(self.stage.source_path, cpan_dir)
         if '+cpanm' in spec:
-            with working_dir(join_path(win_prefix, 'cpanm', 'cpanm')):
+            with working_dir(cpan_dir):
                 perl = spec['perl'].command
                 perl('Makefile.PL')
                 maker()

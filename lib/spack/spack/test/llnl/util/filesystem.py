@@ -12,7 +12,7 @@ import sys
 import pytest
 
 import llnl.util.filesystem as fs
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
 import spack.paths
 
@@ -149,7 +149,7 @@ class TestInstall:
                 fs.install('source/a/*/*', 'dest/1')
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
+@pytest.mark.skipif(sys.platform == 'win32', reason="Skip test on Windows")
 class TestCopyTree:
     """Tests for ``filesystem.copy_tree``"""
 
@@ -178,7 +178,7 @@ class TestCopyTree:
             assert os.path.exists('dest/2')
             if sys.platform != "win32":
                 # TODO: islink will return false for junctions
-                assert os.path.islink('dest/2')
+                assert islink('dest/2')
 
             assert os.path.exists('dest/a/b2')
             if sys.platform != "win32":
@@ -238,7 +238,7 @@ class TestCopyTree:
                 fs.copy_tree('source', 'source/sub/directory')
 
 
-@pytest.mark.skipif(os.name == 'nt', reason="Skip test on Windows")
+@pytest.mark.skipif(sys.platform == 'win32', reason="Skip test on Windows")
 class TestInstallTree:
     """Tests for ``filesystem.install_tree``"""
 

@@ -36,17 +36,6 @@ else:
     import win32security
 
 
-is_windows  = _platform == 'win32'
-
-if not is_windows:
-    import grp
-    import pwd
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
 __all__ = [
     'FileFilter',
     'FileList',
@@ -908,7 +897,7 @@ def ancestor(dir, n=1):
     parent = os.path.abspath(dir)
     for i in range(n):
         parent = os.path.dirname(parent)
-    return parent.replace("\\", "/")
+    return parent
 
 
 @system_path_filter

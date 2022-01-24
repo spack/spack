@@ -110,7 +110,6 @@ class MockMirrorArgs(object):
         self.exclude_specs = exclude_specs
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_exclude_specs(mock_packages, config):
     args = MockMirrorArgs(
         specs=['mpich'],
@@ -126,7 +125,6 @@ def test_exclude_specs(mock_packages, config):
     assert (not expected_exclude & set(mirror_specs))
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Test unsupported on Windows")
 def test_exclude_file(mock_packages, tmpdir, config):
     exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
     with open(exclude_path, 'w') as exclude_file:

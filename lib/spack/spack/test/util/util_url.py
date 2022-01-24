@@ -6,6 +6,7 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
+import posixpath
 import sys
 
 import pytest
@@ -38,7 +39,7 @@ def test_url_parse():
     if sys.platform != 'win32':
         parsed = url_util.parse('file://path/to/resource')
         assert(parsed.scheme == 'file')
-        expected = os.path.abspath(os.path.join('path', 'to', 'resource'))
+        expected = os.path.abspath(posixpath.join('path', 'to', 'resource'))
         assert(parsed.path == expected)
 
     parsed = url_util.parse('https://path/to/resource')

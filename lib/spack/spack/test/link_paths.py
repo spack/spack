@@ -10,6 +10,7 @@ import pytest
 import spack.paths
 from spack.compiler import _parse_non_system_link_dirs
 
+is_windows = sys.platform == 'win32'
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
                        'compiler_verbose_output')
@@ -26,6 +27,7 @@ def check_link_paths(filename, paths):
     with open(os.path.join(datadir, filename)) as file:
         output = file.read()
     detected_paths = _parse_non_system_link_dirs(output)
+    print(detected_paths)
 
     actual = detected_paths
     expected = paths
@@ -39,98 +41,144 @@ def check_link_paths(filename, paths):
     assert actual == expected
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_icc16_link_paths():
-    check_link_paths('icc-16.0.3.txt', [
-        '/usr/tce/packages/intel/intel-16.0.3/compilers_and_libraries_2016.3.210/linux/compiler/lib/intel64_lin',  # noqa
-        '/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3',  # noqa
-        '/usr/tce/packages/gcc/gcc-4.9.3/lib64'])
+    if is_windows:
+        check_link_paths('icc-16.0.3.txt', [
+            r'C:\usr\tce\packages\intel\intel-16.0.3\compilers_and_libraries_2016.3.210\linux\compiler\lib\intel64_lin',  # noqa
+            r'C:\usr\tce\packages\gcc\gcc-4.9.3\lib64\gcc\x86_64-unknown-linux-gnu\4.9.3',  # noqa
+            r'C:\usr\tce\packages\gcc\gcc-4.9.3\lib64'])
+    else:
+        check_link_paths('icc-16.0.3.txt', [
+            '/usr/tce/packages/intel/intel-16.0.3/compilers_and_libraries_2016.3.210/linux/compiler/lib/intel64_lin',  # noqa
+            '/usr/tce/packages/gcc/gcc-4.9.3/lib64/gcc/x86_64-unknown-linux-gnu/4.9.3',  # noqa
+            '/usr/tce/packages/gcc/gcc-4.9.3/lib64'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_pgi_link_paths():
-    check_link_paths('pgcc-16.3.txt', [
-        '/usr/tce/packages/pgi/pgi-16.3/linux86-64/16.3/lib'])
+    if is_windows:
+        check_link_paths('pgcc-16.3.txt', [
+            r'C:\usr\tce\packages\pgi\pgi-16.3\linux86-64\16.3\lib'])
+    else:
+        check_link_paths('pgcc-16.3.txt', [
+            '/usr/tce/packages/pgi/pgi-16.3/linux86-64/16.3/lib'])
 
 
 def test_gcc7_link_paths():
-    check_link_paths('gcc-7.3.1.txt', [])
+    if is_windows:
+        check_link_paths('gcc-7.3.1.txt', [])
+    else:
+        check_link_paths('gcc-7.3.1.txt', [])
 
 
 def test_clang4_link_paths():
-    check_link_paths('clang-4.0.1.txt', [])
+    if is_windows:
+        check_link_paths('clang-4.0.1.txt', [])
+    else:
+        check_link_paths('clang-4.0.1.txt', [])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_xl_link_paths():
-    check_link_paths('xl-13.1.5.txt', [
-        '/opt/ibm/xlsmp/4.1.5/lib',
-        '/opt/ibm/xlmass/8.1.5/lib',
-        '/opt/ibm/xlC/13.1.5/lib'])
+    if is_windows:
+        check_link_paths('xl-13.1.5.txt', [
+            r'C:\opt\ibm\xlsmp\4.1.5\lib',
+            r'C:\opt\ibm\xlmass\8.1.5\lib',
+            r'C:\opt\ibm\xlC\13.1.5\lib'])
+    else:
+        check_link_paths('xl-13.1.5.txt', [
+            '/opt/ibm/xlsmp/4.1.5/lib',
+            '/opt/ibm/xlmass/8.1.5/lib',
+            '/opt/ibm/xlC/13.1.5/lib'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_cce_link_paths():
-    check_link_paths('cce-8.6.5.txt', [
-        '/opt/gcc/6.1.0/snos/lib64',
-        '/opt/cray/dmapp/default/lib64',
-        '/opt/cray/pe/mpt/7.7.0/gni/mpich-cray/8.6/lib',
-        '/opt/cray/pe/libsci/17.12.1/CRAY/8.6/x86_64/lib',
-        '/opt/cray/rca/2.2.16-6.0.5.0_15.34__g5e09e6d.ari/lib64',
-        '/opt/cray/pe/pmi/5.0.13/lib64',
-        '/opt/cray/xpmem/2.2.4-6.0.5.0_4.8__g35d5e73.ari/lib64',
-        '/opt/cray/dmapp/7.1.1-6.0.5.0_49.8__g1125556.ari/lib64',
-        '/opt/cray/ugni/6.0.14-6.0.5.0_16.9__g19583bb.ari/lib64',
-        '/opt/cray/udreg/2.3.2-6.0.5.0_13.12__ga14955a.ari/lib64',
-        '/opt/cray/alps/6.5.28-6.0.5.0_18.6__g13a91b6.ari/lib64',
-        '/opt/cray/pe/atp/2.1.1/libApp',
-        '/opt/cray/pe/cce/8.6.5/cce/x86_64/lib',
-        '/opt/cray/wlm_detect/1.3.2-6.0.5.0_3.1__g388ccd5.ari/lib64',
-        '/opt/gcc/6.1.0/snos/lib/gcc/x86_64-suse-linux/6.1.0',
-        '/opt/cray/pe/cce/8.6.5/binutils/x86_64/x86_64-unknown-linux-gnu/lib'])
+    if is_windows:
+        check_link_paths('cce-8.6.5.txt', [
+            r'C:\opt\gcc\6.1.0\snos\lib64',
+            r'C:\opt\cray\dmapp\default\lib64',
+            r'C:\opt\cray\pe\mpt\7.7.0\gni\mpich-cray\8.6\lib',
+            r'C:\opt\cray\pe\libsci\17.12.1\CRAY\8.6\x86_64\lib',
+            r'C:\opt\cray\rca\2.2.16-6.0.5.0_15.34__g5e09e6d.ari\lib64',
+            r'C:\opt\cray\pe\pmi\5.0.13\lib64',
+            r'C:\opt\cray\xpmem\2.2.4-6.0.5.0_4.8__g35d5e73.ari\lib64',
+            r'C:\opt\cray\dmapp\7.1.1-6.0.5.0_49.8__g1125556.ari\lib64',
+            r'C:\opt\cray\ugni\6.0.14-6.0.5.0_16.9__g19583bb.ari\lib64',
+            r'C:\opt\cray\udreg\2.3.2-6.0.5.0_13.12__ga14955a.ari\lib64',
+            r'C:\opt\cray\alps\6.5.28-6.0.5.0_18.6__g13a91b6.ari\lib64',
+            r'C:\opt\cray\pe\atp\2.1.1\libApp',
+            r'C:\opt\cray\pe\cce\8.6.5\cce\x86_64\lib',
+            r'C:\opt\cray\wlm_detect\1.3.2-6.0.5.0_3.1__g388ccd5.ari\lib64',
+            r'C:\opt\gcc\6.1.0\snos\lib\gcc\x86_64-suse-linux\6.1.0',
+            r'C:\opt\cray\pe\cce\8.6.5\binutils\x86_64\x86_64-unknown-linux-gnu\lib'])
+    else:
+        check_link_paths('cce-8.6.5.txt', [
+            '/opt/gcc/6.1.0/snos/lib64',
+            '/opt/cray/dmapp/default/lib64',
+            '/opt/cray/pe/mpt/7.7.0/gni/mpich-cray/8.6/lib',
+            '/opt/cray/pe/libsci/17.12.1/CRAY/8.6/x86_64/lib',
+            '/opt/cray/rca/2.2.16-6.0.5.0_15.34__g5e09e6d.ari/lib64',
+            '/opt/cray/pe/pmi/5.0.13/lib64',
+            '/opt/cray/xpmem/2.2.4-6.0.5.0_4.8__g35d5e73.ari/lib64',
+            '/opt/cray/dmapp/7.1.1-6.0.5.0_49.8__g1125556.ari/lib64',
+            '/opt/cray/ugni/6.0.14-6.0.5.0_16.9__g19583bb.ari/lib64',
+            '/opt/cray/udreg/2.3.2-6.0.5.0_13.12__ga14955a.ari/lib64',
+            '/opt/cray/alps/6.5.28-6.0.5.0_18.6__g13a91b6.ari/lib64',
+            '/opt/cray/pe/atp/2.1.1/libApp',
+            '/opt/cray/pe/cce/8.6.5/cce/x86_64/lib',
+            '/opt/cray/wlm_detect/1.3.2-6.0.5.0_3.1__g388ccd5.ari/lib64',
+            '/opt/gcc/6.1.0/snos/lib/gcc/x86_64-suse-linux/6.1.0',
+            '/opt/cray/pe/cce/8.6.5/binutils/x86_64/x86_64-unknown-linux-gnu/lib'])
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_clang_apple_ld_link_paths():
-    check_link_paths('clang-9.0.0-apple-ld.txt', [
-        '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/usr/lib'])  # noqa
+    if is_windows:
+        check_link_paths('clang-9.0.0-apple-ld.txt', [
+            r'C:\Applications\Xcode.app\Contents\Developer\Platforms\MacOSX.platform\Developer\SDKs\MacOSX10.13.sdk\usr\lib'])  # noqa
+    else:
+        check_link_paths('clang-9.0.0-apple-ld.txt', [
+            '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/usr/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_nag_mixed_gcc_gnu_ld_link_paths():
     # This is a test of a mixed NAG/GCC toolchain, i.e. 'cxx' is set to g++ and
     # is used for the rpath detection. The reference compiler output is a
     # result of
     # '/path/to/gcc/bin/g++ -Wl,-v ./main.c'.
-    check_link_paths('collect2-6.3.0-gnu-ld.txt', [
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
+    if is_windows:
+        check_link_paths('collect2-6.3.0-gnu-ld.txt', [
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib\gcc\x86_64-pc-linux-gnu\6.5.0',  # noqa
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib64',  # noqa
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib'])  # noqa
+    else:
+        check_link_paths('collect2-6.3.0-gnu-ld.txt', [
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_nag_link_paths():
     # This is a test of a NAG-only toolchain, i.e. 'cc' and 'cxx' are empty,
     # and therefore 'fc' is used for the rpath detection). The reference
     # compiler output is a result of
     # 'nagfor -Wc=/path/to/gcc/bin/gcc -Wl,-v ./main.c'.
-    check_link_paths('nag-6.2-gcc-6.5.0.txt', [
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
-        '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
+    if is_windows:
+        check_link_paths('nag-6.2-gcc-6.5.0.txt', [
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib\gcc\x86_64-pc-linux-gnu\6.5.0',  # noqa
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib64',  # noqa
+            r'C:\scratch\local1\spack\opt\spack\gcc-6.3.0-haswell\gcc-6.5.0-4sdjgrs\lib'])  # noqa
+    else:
+        check_link_paths('nag-6.2-gcc-6.5.0.txt', [
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib/gcc/x86_64-pc-linux-gnu/6.5.0',  # noqa
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib64',  # noqa
+            '/scratch/local1/spack/opt/spack/gcc-6.3.0-haswell/gcc-6.5.0-4sdjgrs/lib'])  # noqa
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_obscure_parsing_rules():
-    check_link_paths('obscure-parsing-rules.txt', [
-        '/first/path',
-        '/second/path',
-        '/third/path'])
+    if is_windows:
+        check_link_paths('obscure-parsing-rules.txt', [
+            r'C:\first\path',
+            r'C:\third\path'])
+    else:
+        check_link_paths('obscure-parsing-rules.txt', [
+            '/first/path',
+            '/second/path',
+            '/third/path'])

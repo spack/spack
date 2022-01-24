@@ -43,7 +43,7 @@ def _unzip(archive_file):
     """Try to use Python's zipfile, but extract in the current working
     directory instead of in-place.
 
-    If unavailable, try unzip
+    If unavailable, search for 'unzip' executable on system and use instead
 
     Args:
         archive_file (str): absolute path of the file to be decompressed

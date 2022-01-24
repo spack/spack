@@ -9,9 +9,10 @@ import pytest
 import spack.spec
 import spack.store
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
+
 @pytest.mark.parametrize('hash_length', [1, 2, 3, 4, 5, 9])
 @pytest.mark.usefixtures('mock_packages')
 def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
@@ -28,8 +29,6 @@ def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
         assert len(hash_str) == hash_length
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.use_fixtures('mock_packages')
 def test_set_install_hash_length_upper_case(mutable_config, tmpdir):
     mutable_config.set('config:install_hash_length', 5)

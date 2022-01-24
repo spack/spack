@@ -22,9 +22,7 @@ from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
-arch_map = {"AMD64": "x64", "x86": "Win32",
-            "IA64": "Win32", "EM64T": "Win32"}
-is_windows = os.name == 'nt'
+is_windows = sys.platform == 'win32'
 
 
 class Python(Package):
@@ -36,7 +34,6 @@ class Python(Package):
     list_depth = 1
 
     maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
-
 
     phases = ['configure', 'build', 'install']
 
@@ -182,7 +179,7 @@ class Python(Package):
     variant('tix',      default=False, description='Build Tix module')
     variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
-    if os.name != 'nt':
+    if not is_windows:
         depends_on('pkgconfig@0.9.0:', type='build')
         depends_on('gettext +libxml2', when='+libxml2')
         depends_on('gettext ~libxml2', when='~libxml2')
@@ -457,19 +454,19 @@ class Python(Package):
         return (flags, None, None)
 
     @property
-    def configure_directory(self):
-        """Returns the directory where 'configure' resides.
-        :return: directory where to find configure
-        """
-        return self.stage.source_path
-
-    @property
-    def build_directory(self):
-        """Override to provide another place to build the package"""
-        return self.configure_directory
-
-    @property
     def plat_arch(self):
+        """
+        String referencing platform architecture
+        filtered through Python's Windows build file
+        architecture support map
+
+        Note: This function really only makes
+        sense to use on Windows, could be overridden to
+        cross compile however.
+        """
+
+        arch_map = {"AMD64": "x64", "x86": "Win32",
+                    "IA64": "Win32", "EM64T": "Win32"}
         arch = platform.machine()
         if arch in arch_map:
             arch = arch_map[arch]
@@ -477,6 +474,13 @@ class Python(Package):
 
     @property
     def win_build_params(self):
+        """
+        Arguments must be passed to the Python build batch script
+        in order to configure it to spec and system.
+        A number of these toggle optional MSBuild Projects
+        directly corresponding to the python support of the same
+        name.
+        """
         args = []
         args.append("-p %s" % self.plat_arch)
         if self.spec.satisfies('+debug'):
@@ -490,6 +494,15 @@ class Python(Package):
         return args
 
     def win_installer(self, prefix):
+        """
+        Python on Windows does not export an install target
+        so we must handcraft one here. This structure
+        directly mimics the install tree of the Python
+        Installer on Windows.
+
+        Parameters:
+            prefix (str): Install prefix for package
+        """
         proj_root = self.stage.source_path
         pcbuild_root = os.path.join(proj_root, "PCbuild")
         build_root = os.path.join(pcbuild_root, platform.machine().lower())
@@ -636,7 +649,7 @@ class Python(Package):
         :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
-        with working_dir(self.build_directory, create=True):
+        with working_dir(self.stage.source_path, create=True):
             if is_windows:
                 pass
             else:
@@ -651,7 +664,7 @@ class Python(Package):
         """
         # Windows builds use a batch script to drive
         # configure and build in one step
-        with working_dir(self.build_directory):
+        with working_dir(self.stage.source_path):
             if is_windows:
                 pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
                 builder_cmd = os.path.join(pcbuild_root, 'build.bat')
@@ -673,7 +686,7 @@ class Python(Package):
         """Makes the install targets specified by
         :py:attr:``~.AutotoolsPackage.install_targets``
         """
-        with working_dir(self.build_directory):
+        with working_dir(self.stage.source_path):
             if is_windows:
                 self.win_installer(prefix)
             else:
@@ -846,7 +859,7 @@ class Python(Package):
         # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), '']:
-            if sys.platform != "win32":
+            if not is_windows:
                 path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
             else:
                 path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
@@ -897,10 +910,6 @@ class Python(Package):
             dict: variable definitions
         """
 
-        # TODO: distutils is deprecated in Python 3.10 and will be removed in
-        # Python 3.12, find a different way to access this information.
-        # Also, calling the python executable disallows us from cross-compiling,
-        # so we want to try to avoid that if possible.
         cmd = """
 import json
 from sysconfig import (
@@ -1007,9 +1016,6 @@ config.update(get_paths())
         # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
         # in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
-        # LIBPL does not exist in Windows, avoid uneccesary KeyError while allowing
-        # later failures.
-        # Return empty string rather than none so os.path doesn't complain
         libpl = self.config_vars['LIBPL']
 
         # The system Python installation on macOS and Homebrew installations
@@ -1359,7 +1365,7 @@ config.update(get_paths())
                                         ))
 
     def add_files_to_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
+        bin_dir = self.spec.prefix.bin if sys.platform != 'win32'\
             else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
@@ -1392,7 +1398,7 @@ config.update(get_paths())
                 view.link(new_link_target, dst, spec=self.spec)
 
     def remove_files_from_view(self, view, merge_map):
-        bin_dir = self.spec.prefix.bin if os.name != 'nt'\
+        bin_dir = self.spec.prefix.bin if not is_windows\
             else self.spec.prefix
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):

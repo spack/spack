@@ -62,17 +62,13 @@ import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
-_platform = sys.platform
-if _platform == "win32":
-    import pywintypes
-    import win32con
-    import win32file
-    LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
-    LOCK_SH = 0
-    LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY
-    __overlapped = pywintypes.OVERLAPPED()
-else:
+is_windows = sys.platform == "win32"
+if not is_windows:
     import fcntl
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -131,7 +127,7 @@ def make_readable(*paths):
     # stat.S_IREAD constants or a corresponding integer value). All other
     # bits are ignored."
     for path in paths:
-        if (_platform != 'win32'):
+        if not is_windows:
             mode = 0o555 if os.path.isdir(path) else 0o444
         else:
             mode = stat.S_IREAD
@@ -140,7 +136,7 @@ def make_readable(*paths):
 
 def make_writable(*paths):
     for path in paths:
-        if (_platform != 'win32'):
+        if not is_windows:
             mode = 0o755 if os.path.isdir(path) else 0o744
         else:
             mode = stat.S_IWRITE
@@ -374,8 +370,6 @@ class TimeoutRead(object):
 # Test that exclusive locks on other processes time out when an
 # exclusive lock is held.
 #
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_write_lock_timeout_on_write(lock_path):
     multiproc_test(
         AcquireWrite(lock_path),
@@ -403,8 +397,6 @@ def test_write_lock_timeout_on_write_ranges(lock_path):
         TimeoutWrite(lock_path, 0, 1))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_2(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 64),
@@ -413,8 +405,6 @@ def test_write_lock_timeout_on_write_ranges_2(lock_path):
         TimeoutWrite(lock_path, 63, 1))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_3(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 1),
@@ -424,8 +414,6 @@ def test_write_lock_timeout_on_write_ranges_3(lock_path):
         TimeoutWrite(lock_path))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_write_ranges_4(lock_path):
     multiproc_test(
         AcquireWrite(lock_path, 0, 1),
@@ -476,8 +464,6 @@ def test_read_lock_timeout_on_write_ranges_2(lock_path):
         TimeoutRead(lock_path, 0, 1))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_read_lock_timeout_on_write_ranges_3(lock_path):
     """two write locks, overlapping read locks"""
     multiproc_test(
@@ -523,8 +509,6 @@ def test_write_lock_timeout_on_read_ranges_2(lock_path):
         TimeoutWrite(lock_path, 0, 1))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_on_read_ranges_3(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 1),
@@ -583,8 +567,6 @@ def test_write_lock_timeout_with_multiple_readers_3_2(lock_path):
         TimeoutWrite(lock_path))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 10),
@@ -592,8 +574,6 @@ def test_write_lock_timeout_with_multiple_readers_2_1_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 5))
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='locking ranges not supported on windows')
 def test_write_lock_timeout_with_multiple_readers_2_3_ranges(lock_path):
     multiproc_test(
         AcquireRead(lock_path, 0, 10),
@@ -620,8 +600,6 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 1))
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
@@ -637,8 +615,6 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
                 pass
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
     """read-only directory, writable lockfile."""
     touch(lock_path)
@@ -652,7 +628,6 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(_platform == 'win32' or getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -667,8 +642,6 @@ def test_read_lock_no_lockfile(lock_dir, lock_path):
                 pass
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='not supported on windows')
 def test_upgrade_read_to_write(private_lock_path):
     """Test that a read lock can be upgraded to a write lock.
 
@@ -706,8 +679,6 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
     # ensure lock file exists the first time
@@ -862,8 +833,6 @@ class ComplexAcquireAndRelease(object):
 # Longer test case that ensures locks are reusable. Ordering is
 # enforced by barriers throughout -- steps are shown with numbers.
 #
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_complex_acquire_and_release_chain(lock_path):
     test_chain = ComplexAcquireAndRelease(lock_path)
     multiproc_test(test_chain.p1,
@@ -908,8 +877,6 @@ class AssertLock(lk.Lock):
         return result
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -957,8 +924,6 @@ def test_transaction(lock_path, transaction, type):
     assert not vals['exception']
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -1016,8 +981,6 @@ def test_transaction_with_exception(lock_path, transaction, type):
     assert vals['exception']
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize(
     "transaction,type",
     [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
@@ -1136,8 +1099,6 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
     assert_only_ctx_exception(raises=False)
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_nested_write_transaction(lock_path):
     """Ensure that the outermost write transaction writes."""
 
@@ -1189,8 +1150,6 @@ def test_nested_write_transaction(lock_path):
         assert vals['wrote']
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_nested_reads(lock_path):
     """Ensure that write transactions won't re-read data."""
 
@@ -1317,8 +1276,6 @@ class LockDebugOutput(object):
         barrier.wait()  # ---------------------------------------- 4
 
 
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='debug output not supported on windows')
 def test_lock_debug_output(lock_path):
     test_debug = LockDebugOutput(lock_path)
     q1, q2 = Queue(), Queue()
@@ -1391,8 +1348,6 @@ def test_downgrade_write_fails(tmpdir):
                          [(errno.EACCES, "Fake EACCES error"),
                           (errno.EAGAIN, "Fake EAGAIN error"),
                           (errno.ENOENT, "Fake ENOENT error")])
-@pytest.mark.skipif(_platform == 'win32',
-                    reason='not supported on windows')
 def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
     """Test poll lock exception handling."""
     def _lockf(fd, cmd, len, start, whence):
@@ -1403,23 +1358,13 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         lock = lk.Lock(lockfile)
 
         touch(lockfile)
-        if _platform == 'win32':
-            monkeypatch.setattr(win32file, 'LockFileEx', _lockf)
+        monkeypatch.setattr(fcntl, 'lockf', _lockf)
 
-            if err_num in [errno.EAGAIN, errno.EACCES]:
-                assert not lock._poll_lock(win32con.LOCKFILE_EXCLUSIVE_LOCK)
-            else:
-                with pytest.raises(IOError, match=err_msg):
-                    lock._poll_lock(win32con.LOCKFILE_EXCLUSIVE_LOCK)
-
+        if err_num in [errno.EAGAIN, errno.EACCES]:
+            assert not lock._poll_lock(fcntl.LOCK_EX)
         else:
-            monkeypatch.setattr(fcntl, 'lockf', _lockf)
-
-            if err_num in [errno.EAGAIN, errno.EACCES]:
-                assert not lock._poll_lock(fcntl.LOCK_EX)
-            else:
-                with pytest.raises(IOError, match=err_msg):
-                    lock._poll_lock(fcntl.LOCK_EX)
+            with pytest.raises(IOError, match=err_msg):
+                lock._poll_lock(fcntl.LOCK_EX)
 
 
 def test_upgrade_read_okay(tmpdir):

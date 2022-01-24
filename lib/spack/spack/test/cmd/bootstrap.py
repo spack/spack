@@ -10,6 +10,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.main
+from spack.util.path import convert_to_posix_path
 
 _bootstrap = spack.main.SpackCommand('bootstrap')
 
@@ -40,7 +41,7 @@ def test_root_get_and_set(mutable_config, scope):
     _bootstrap('root', path, *scope_args)
     out = _bootstrap('root', *scope_args, output=str)
     if sys.platform == 'win32':
-        out = out.replace("\\", "/")
+        out = convert_to_posix_path(out)
     assert out.strip() == path
 
 

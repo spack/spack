@@ -17,9 +17,6 @@ from spack.config import ConfigError, ConfigScope
 from spack.spec import Spec
 from spack.version import Version
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
-
 
 @pytest.fixture()
 def concretize_scope(mutable_config, tmpdir):

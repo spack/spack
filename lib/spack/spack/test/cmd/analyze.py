@@ -18,6 +18,9 @@ from spack.spec import Spec
 install = SpackCommand('install')
 analyze = SpackCommand('analyze')
 
+pytestmark = pytest.mark.skipif(sys.platform == 'win32',
+                                reason="Test is unsupported on Windows")
+
 
 def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):
     # We cannot run an analysis for a package not installed
@@ -60,8 +63,6 @@ def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
         MyAnalyzer(spec)
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     Test that an analyzer errors if requested name does not exist.
@@ -107,7 +108,6 @@ def _run_analyzer(name, package, tmpdir):
     return output_file
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the install files analyzer
@@ -128,7 +128,6 @@ def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_confi
         assert key in basenames
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Install hangs on windows")
 def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the environment variables analyzer.
@@ -154,8 +153,6 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     assert not result['environment_variables']
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_list_analyzers():
     """
     test that listing analyzers shows all the possible analyzers.
@@ -171,8 +168,6 @@ def test_list_analyzers():
         assert analyzer_type in out
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
     """
     test the config args analyzer.

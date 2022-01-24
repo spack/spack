@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -33,12 +34,18 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
             (default '.')
     """
     git_utils_path = os.environ.get('PATH', '')
-    if os.name == 'nt':
+    if sys.platform == 'win32':
         git = which_string('git', required=True)
-        git_root = os.path.dirname(git).split('/')[:-1]
+        git_root = git.split('\\')[:-2]
         git_root.extend(['usr', 'bin'])
         git_utils_path = os.sep.join(git_root)
 
+    # TODO: Decouple Spack's patch support on Windows from Git
+    # for Windows, and instead have Spack directly fetch, install, and
+    # utilize that patch.
+    # Note for future developers: The GNU port of patch to windows
+    # has issues handling CRLF line endings unless the --binary
+    # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
         patch('-s',

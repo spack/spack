@@ -11,6 +11,9 @@ import spack.cmd.create
 import spack.stage
 import spack.util.executable
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.fixture(
     scope='function',
@@ -52,8 +55,6 @@ def url_and_build_system(request, tmpdir):
     orig_dir.chdir()
 
 
-@pytest.mark.skipif(sys.platform == 'win32',
-                    reason="Not supported on Windows (yet)")
 def test_build_systems(url_and_build_system):
     url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:
