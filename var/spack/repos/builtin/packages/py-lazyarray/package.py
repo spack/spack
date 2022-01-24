@@ -33,3 +33,5 @@ class PyLazyarray(PythonPackage):
     depends_on('py-numpy@1.8:', type=('build', 'run'), when='@0.3:0.3.4^python@:2')
     depends_on('py-numpy@1.12:', type=('build', 'run'), when='@0.3:0.5.1^python@3:')
     depends_on('py-numpy@1.13:', type=('build', 'run'), when='@0.5.2:')
+
+    depends_on('py-setuptools', type='build')
