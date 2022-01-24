@@ -37,14 +37,13 @@ class PyLibclang(PythonPackage):
 
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type=("build", "run"))
 
     for ver in ["9", "10", "11"]:
         depends_on("llvm@" + ver, when="@" + ver, type="build")
 
     def patch(self):
         filter_file(
-            r"source_dir = './native/'",
-            r"source_dir = '{0}'".format(self.spec["llvm"].prefix.lib),
-            "setup.py",
+            "source_dir = './native/'",
+            "source_dir = '{0}'".format(self.spec["llvm"].prefix.lib),
+            "setup.py", string=True,
         )
