@@ -85,7 +85,6 @@ class PyKeras(PythonPackage):
     @when('@2.5.0:')
     def build(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
-        env['TEST_TMPDIR'] = self.tmp_path
         env['HOME'] = self.tmp_path
 
         args = [
@@ -120,11 +119,7 @@ class PyKeras(PythonPackage):
         buildpath = join_path(self.stage.source_path, 'spack-build')
         build_pip_package('--src', buildpath)
 
-    @when('@2.5.0:')
-    def install(self, spec, prefix):
-        tmp_path = env['TEST_TMPDIR']
-        buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
             args = std_pip_args + ['--prefix=' + prefix, '.']
             pip(*args)
-        remove_linked_tree(tmp_path)
+        remove_linked_tree(self.tmp_path)
