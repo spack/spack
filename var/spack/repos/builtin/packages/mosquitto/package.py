@@ -55,20 +55,11 @@ class Mosquitto(CMakePackage):
     depends_on('libwebsockets', when='+websocket')
 
     def cmake_args(self):
-        args = []
-
-        args.append('-DDOCUMENTATION=no')
-
-        if '~cjson' in self.spec:
-            args.append('-DWITH_CJSON=no')
-
-        if '~tls' in self.spec:
-            args.append('-DWITH_TLS=no')
-
-        if '+static' in self.spec:
-            args.append('-DWITH_STATIC_LIBRARIES=yes')
-
-        if '+websocket' in self.spec:
-            args.append('-DWITH_WEBSOCKETS=yes')
-
+        args = [
+            self.define('DOCUMENTATION', 'no'),
+            self.define_from_variant('WITH_CJSON', 'cjson'),
+            self.define_from_variant('WITH_TLS', 'tls'),
+            self.define_from_variant('WITH_STATIC_LIBRARIES', 'static'),
+            self.define_from_variant('WITH_WEBSOCKETS', 'websocket')
+        ]
         return args
