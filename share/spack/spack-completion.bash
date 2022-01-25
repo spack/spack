@@ -919,14 +919,14 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -v --with-view -V --without-view -p --prompt --temp -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -v --with-view -V --without-view -p --prompt --temp -d --dir"
     else
         _environments
     fi
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh --fish"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat"
 }
 
 _spack_env_create() {
@@ -1205,7 +1205,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --first --only --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --first --only --list"
     else
         _installed_packages
     fi
@@ -1241,7 +1241,7 @@ _spack_maintainers() {
 _spack_make_installer() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -v --spack_version -s --spack_source"
+        SPACK_COMPREPLY="-h --help -v --spack_version -s --spack_source -g --git-installer-verbosity"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1809,7 +1809,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat -a --all"
     else
         _installed_packages
     fi
