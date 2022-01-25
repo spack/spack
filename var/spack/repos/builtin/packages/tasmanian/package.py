@@ -174,6 +174,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     @run_after('install')
     def setup_smoke_test(self):
         if not self.spec['cmake'].satisfies('@3.22:'):
+            tty.msg('Error tasmanian test: CMake 3.21 or higher is required')
             return
 
         install_tree(self.prefix.share.Tasmanian.examples,
@@ -189,13 +190,22 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             tty.msg('Skipping tasmanian test: cmake_bin_path.txt not found')
             return
 
-        # using the tests installed in <prefix>/share/Tasmanian/testing
+        # using the tests copied from <prefix>/share/Tasmanian/testing
         cmake_dir = self.test_suite.current_test_cache_dir.testing
-        self.run_test(cmake_bin,
+
+        if not self.run_test(cmake_bin,
                       options=[cmake_dir],
-                      purpose='Generate the Makefile')
-        self.run_test('make',
-                      purpose='Build test software')
-        self.run_test('make',
+                      purpose='Generate the Makefile'):
+            tty.msg('Skipping tasmanian test: failed to generate Makefile')
+            return
+
+        if not self.run_test('make',
+                      purpose='Build test software'):
+            tty.msg('Skipping tasmanian test: failed to build test')
+            return
+
+       if not self.run_test('make',
                       options=['test'],
-                      purpose='Run test')
+                      purpose='Run test'):
+            tty.msg('Failed tasmanian test')
+            return
