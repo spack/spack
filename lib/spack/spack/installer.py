@@ -650,7 +650,7 @@ class TermTitle(object):
 
 class TermStatusLine(object):
     """
-    This class is used in distributed builds to inform the user other packages are
+    This class is used in distributed builds to inform the user that other packages are
     being installed by another process.
     """
     def __init__(self, enabled):
