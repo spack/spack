@@ -23,10 +23,12 @@ class Mosquitto(CMakePackage):
     variant('tls',       default=True,  description='Build with TLS support')
     variant('cjson',     default=True,  description='Build with cJSON support',     when='@2.0.0:')
     variant('static',    default=False, description='Build with static libraries',  when='@1.5.0:')
+    variant('c-ares',    default=False, description='Build with c-ares support',    when='@1.4.0:')
     variant('websocket', default=False, description='Build with websocket support', when='@1.4.0:')
 
     depends_on('openssl',       when='+tls')
     depends_on('cjson',         when='+cjson')
+    depends_on('c-ares',        when='+c-ares')
     depends_on('libwebsockets', when='+websocket')
 
     def cmake_args(self):
@@ -35,6 +37,7 @@ class Mosquitto(CMakePackage):
             self.define_from_variant('WITH_CJSON', 'cjson'),
             self.define_from_variant('WITH_TLS', 'tls'),
             self.define_from_variant('WITH_STATIC_LIBRARIES', 'static'),
+            self.define_from_variant('WITH_SRV', 'c-ares'),
             self.define_from_variant('WITH_WEBSOCKETS', 'websocket')
         ]
         return args
