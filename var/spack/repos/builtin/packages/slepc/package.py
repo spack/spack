@@ -6,6 +6,8 @@
 import os
 import sys
 
+from llnl.util import tty
+
 from spack import *
 
 
@@ -156,8 +158,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         """Run stand alone test: hello"""
         test_dir = self.test_suite.current_test_data_dir
 
-        if not os.path.exists(test_dir):
-            print('Skipping slepc test')
+        if not os.path.isfile(join_path(test_dir, 'hello.c')):
+            tty.msg('Skipping slepc test: failed to find hello.c')
             return
 
         exe = 'hello'
@@ -165,10 +167,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
-                               '-L', self.prefix.lib, '-l', 'slepc',
-                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
-                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
-                               '-o', exe, join_path(test_dir, 'hello.c')],
+                               '-L{0}'.format(self.prefix.lib),
+                               '-L{0}'.format(self.spec['petsc'].prefix.lib),
+                               '-L{0}'.format(self.spec['mpi'].prefix.lib),
+                               join_path(test_dir, 'hello.c'), '-o', exe,
+                               '-lslepc','-lpetsc', '-lmpi'],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
