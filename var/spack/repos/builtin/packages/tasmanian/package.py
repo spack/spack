@@ -173,12 +173,10 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     @run_after('install')
     def setup_smoke_test(self):
-        if not self.spec['cmake'].satisfies('@3.22:'):
-            tty.msg('Error tasmanian test: CMake 3.21 or higher is required')
+        if not self.spec['cmake'].satisfies('@3.10:'):
+            tty.msg('Error tasmanian test: CMake 3.10 or higher is required')
             return
 
-        install_tree(self.prefix.share.Tasmanian.examples,
-                     join_path(self.install_test_root, 'examples'))
         install_tree(self.prefix.share.Tasmanian.testing,
                      join_path(self.install_test_root, 'testing'))
         self.cmake_bin(set=True)
