@@ -43,7 +43,6 @@ class PyTensorboardDataServer(PythonPackage):
                                                           'rustboard')))
 
     def install(self, spec, prefix):
-        pip = which('pip')
         wheel_files_pattern = '*.whl'
         wheel_files = glob.glob(wheel_files_pattern)
         pip('install', '--prefix={0}'.format(prefix), *wheel_files)
