@@ -42,7 +42,6 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
-from llnl.util.lang import elide_list
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 
@@ -659,20 +658,16 @@ class TermStatusLine(object):
         self.pkg_set = set()
         self.pkg_list = []
 
-    def add(self, name):
+    def add(self, pkg_id):
         """
         Add a package to the waiting list, and if it is new, update the status line.
         """
-        if not self.enabled or name in self.pkg_set:
+        if not self.enabled or pkg_id in self.pkg_set:
             return
 
-        self.pkg_set.add(name)
-        self.pkg_list.append(name)
-
-        wait_list = ', '.join(elide_list(self.pkg_list, max_num=6))
-
-        sys.stdout.write('\r\x1b[K')
-        tty.msg('Waiting for {0}...'.format(wait_list), newline=False)
+        self.pkg_set.add(pkg_id)
+        self.pkg_list.append(pkg_id)
+        tty.msg(colorize('@*{Waiting for} @*g{%s}' % pkg_id))
         sys.stdout.flush()
 
     def clear(self):
@@ -682,10 +677,17 @@ class TermStatusLine(object):
         if not self.enabled:
             return
 
+        lines = len(self.pkg_list)
+
+        if lines == 0:
+            return
+
         self.pkg_set.clear()
         self.pkg_list.clear()
 
-        sys.stdout.write('\r\x1b[K')
+        # Move the cursor to the beginning of the first "Waiting for" message and clear
+        # everything after it.
+        sys.stdout.write('\x1b[%sF\x1b[J' % lines)
         sys.stdout.flush()
 
 
@@ -1617,7 +1619,7 @@ class PackageInstaller(object):
             # determined the spec has already been installed (though the
             # other process may be hung).
             term_title.set('Acquiring lock for {0}'.format(pkg.name))
-            term_status.add(pkg.name)
+            term_status.add(pkg_id)
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
