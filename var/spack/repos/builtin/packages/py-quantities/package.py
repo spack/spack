@@ -23,12 +23,10 @@ class PyQuantities(PythonPackage):
 
     conflicts('^py-numpy@1.13:', when='@:0.11')
 
-    depends_on('python@2.6:2.7', type=('build', 'run'), when='@:0.11')
-    depends_on('python@2.7.0:2.7', type=('build', 'run'), when='@:0.12.5')
-    depends_on('python@3.3:3.4', type=('build', 'run'), when='@:0.11')
-    depends_on('python@3.4:3.6', type=('build', 'run'), when='@0.12.0:0.12.2')
-    depends_on('python@3.4:3.7', type=('build', 'run'), when='@0.12.3')
-    depends_on('python@3.4:3.8', type=('build', 'run'), when='@0.12.4:0.12.5')
+    depends_on('python@2.6:2.7,3.3:3.4', type=('build', 'run'), when='@:0.11')
+    depends_on('python@2.7.0:2.7,3.4:3.6', type=('build', 'run'), when='@0.12.0:0.12.2')
+    depends_on('python@2.7.0:2.7,3.4:3.7', type=('build', 'run'), when='@0.12.3')
+    depends_on('python@2.7.0:2.7,3.4:3.8', type=('build', 'run'), when='@0.12.4:0.12.5')
     depends_on('python@3.7:3.10:', type=('build', 'run'), when='@0.13:')
 
     # pip silently replaces distutils with setuptools
