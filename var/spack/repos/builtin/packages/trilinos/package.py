@@ -280,12 +280,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
-
-    # See discussion on the PR adding cuda@11.6 for details.
-    #
-    #     https://github.com/spack/spack/pull/28439
-    #
-    conflicts('+cuda', when='^cuda@11.6.0:')
+    # Build hangs with CUDA 11.6 (see #28439)
+    conflicts('+cuda +stokhos', when='^cuda@11.6:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
