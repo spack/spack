@@ -263,6 +263,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
+    conflicts('cxxstd=14', when='@:12')
+    conflicts('cxxstd=17', when='@:12')
 
     # Multi-value gotype only applies to trilinos through 12.14
     conflicts('gotype=all', when='@12.15:')
