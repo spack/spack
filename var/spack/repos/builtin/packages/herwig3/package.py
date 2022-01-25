@@ -20,19 +20,19 @@ class Herwig3(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
-    depends_on('lhapdf',   type='link')
-    depends_on('lhapdfsets',   type=('build', 'run'))
-    depends_on('thepeg@2.2.1', when='@7.2.1', type='link')
-    depends_on('boost', type='link')
+    depends_on('lhapdf',   )
+    depends_on('lhapdfsets')
+    depends_on('thepeg@2.2.1', when='@7.2.1')
+    depends_on('boost')
     depends_on('python', type=('build', 'run'))
-    depends_on('gsl', type='link')
-    depends_on('fastjet', type='link')
-    depends_on('vbfnlo@3:', type='link')
-    depends_on('madgraph5amc', type='link')
-    depends_on('njet', type='link')
-    depends_on('py-gosam', type='link', when='^python@2.7.0:2.7')
-    depends_on('gosam-contrib', type='link')
-    depends_on('openloops', type='link')
+    depends_on('gsl')
+    depends_on('fastjet')
+    depends_on('vbfnlo@3:')
+    depends_on('madgraph5amc')
+    depends_on('njet')
+    depends_on('py-gosam', when='^python@2.7:2.7.99')
+    depends_on('gosam-contrib')
+    depends_on('openloops')
 
     force_autoreconf = True
 
@@ -57,12 +57,9 @@ class Herwig3(AutotoolsPackage):
         return args
 
     def flag_handler(self, name, flags):
-        if name == 'fcflags':
+        if name == 'fflags':
             flags.append('-std=legacy')
-            return (None, flags, None)
-        elif name in ['cflags', 'cxxflags', 'cppflags']:
-            return (None, flags, None)
-
+            return (flags, None, None)
         return (flags, None, None)
 
     def setup_build_environment(self, env):
