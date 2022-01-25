@@ -23,7 +23,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ['mtmiller','siko1056']
+    maintainers = ['mtmiller', 'siko1056']
 
     extendable = True
 
