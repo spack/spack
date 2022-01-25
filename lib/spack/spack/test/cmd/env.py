@@ -975,14 +975,14 @@ def create_v1_lockfile_dict(roots, all_specs):
         },
         "roots": list(
             {
-                "hash": s.dag_hash(),
+                "hash": s.runtime_hash(),
                 "spec": s.name
             } for s in roots
         ),
         # Version one lockfiles use the dag hash without build deps as keys,
         # but they write out the full node dict (including build deps)
         "concrete_specs": dict(
-            (s.dag_hash(), s.to_node_dict(hash=ht.build_hash))
+            (s.runtime_hash(), s.to_node_dict(hash=ht.build_hash))
             for s in all_specs
         )
     }
@@ -1016,8 +1016,8 @@ def test_read_old_lock_and_write_new(tmpdir):
         # When the lockfile is rewritten, it should adopt the new hash scheme
         # which accounts for all dependencies, including build dependencies
         assert hashes == set([
-            x.build_hash(),
-            y.build_hash()])
+            x.dag_hash(),
+            y.dag_hash()])
 
 
 @pytest.mark.usefixtures('config')
@@ -1118,7 +1118,7 @@ def test_store_different_build_deps():
         # according to the DAG hash (since build deps are excluded from
         # comparison by default). Although the dag hashes are equal, the specs
         # are not considered equal because they compare build deps.
-        assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
+        assert x_concretized['y'].runtime_hash() == y_concretized.runtime_hash()
 
         _env_create('test', with_view=False)
         e = ev.read('test')
