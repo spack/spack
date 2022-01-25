@@ -169,12 +169,8 @@ class Geant4(CMakePackage):
             # geant4 libs at application runtime
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
 
-        # install the data with geant4
-        datadir = spec['geant4-data'].prefix.share
-        dataver = '{0}-{1}'.format(spec['geant4-data'].name,
-                                   spec['geant4-data'].version.dotted)
-        datapath = join_path(datadir, dataver)
-        options.append('-DGEANT4_INSTALL_DATADIR={0}'.format(datapath))
+        # never install the data with geant4
+        options.append('-DGEANT4_INSTALL_DATA=OFF')
 
         # Vecgeom
         if '+vecgeom' in spec:
