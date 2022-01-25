@@ -59,7 +59,7 @@ class RocmDebugAgent(CMakePackage):
 
     @property
     def root_cmakelists_dir(self):
-        if '@3.5.0' or '@master' in self.spec:
+        if '@3.5.0' in self.spec:
             return 'src'
         else:
             return self.stage.source_path
