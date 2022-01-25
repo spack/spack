@@ -22,5 +22,5 @@ class PyClang(PythonPackage):
         "5.0", sha256="ceccae97eda0225a5b44d42ffd61102e248325c2865ca53e4407746464a5333a"
     )
 
-    depends_on("python@2.7:2.8,3:", type=("build", "run"))
+    depends_on("python@2.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
