@@ -224,14 +224,13 @@ class Hypre(AutotoolsPackage, CudaPackage):
     config_file = 'Makefile.config'
     extra_install_tests = [join_path('src', 'test'),
                            join_path('src', 'config', config_file),
-                           join_path('src', 'examples', 'ex5big.c'),
-                           join_path('src', 'examples', 'ex15big.c')]
+                           join_path('src', 'examples', 'ex5big.c')]
 
     @run_after('install')
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.extra_install_tests, )
+        self.cache_extra_test_sources(self.extra_install_tests)
 
     def test(self):
         """Perform smoke tests on installed HYPRE package."""
