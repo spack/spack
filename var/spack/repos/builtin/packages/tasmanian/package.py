@@ -204,8 +204,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             tty.msg('Skipping tasmanian test: failed to build test')
             return
 
-       if not self.run_test('make',
+        if not self.run_test('make',
                       options=['test'],
                       purpose='Run test'):
-            tty.msg('Failed tasmanian test')
-            return
+            tty.msg('Failed tasmanian test: failed to run test')
