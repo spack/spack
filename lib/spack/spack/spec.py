@@ -4377,7 +4377,7 @@ class Spec(object):
             # deps_to_replace = [self[v] for v in virtuals_to_replace]
         else:
             # TODO: sanity check and error raise here for other.name not in self
-            deps_to_replace = {self[other.name], other}
+            deps_to_replace = {self[other.name]: other}
             # deps_to_replace = [self[other.name]]
 
         for d in deps_to_replace:
