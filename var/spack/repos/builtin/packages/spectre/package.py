@@ -164,6 +164,11 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/1b61e62a27b02b658cc6a74c4d46af1f5b5d0a4d.patch',
         sha256='07be176ca4dda74a2dd8e71c31dab638a9f3567c3a58eb7fddbfde001646fb8c',
         when='@:2022.01.03')
+    # - Backport fix for PCH builds with Spack
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/4bb3f25f905f83d8295a28a8036f6971dc4e75a2.patch',
+        sha256='cd39217614a40f080d812e20220044aa8b26b9413324a7cd7a304e2378a2b426',
+        when='@:2022.01.03')
 
     def cmake_args(self):
         args = [
@@ -177,8 +182,7 @@ class Spectre(CMakePackage):
             self.define_from_variant('USE_FORMALINE', 'formaline'),
             self.define_from_variant('MEMORY_ALLOCATOR').upper(),
             self.define_from_variant('ENABLE_PROFILING', 'profiling'),
-            # TODO: Fix PCH builds to reduce compile time
-            self.define('USE_PCH', False),
+            self.define('USE_PCH', True),
             self.define_from_variant('DEBUG_SYMBOLS'),
         ]
         # Allow for more time on slower machines
