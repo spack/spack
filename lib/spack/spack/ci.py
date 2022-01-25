@@ -202,7 +202,7 @@ def format_root_spec(spec, main_phase, strip_compiler):
         return '{0}@{1} arch={2}'.format(
             spec.name, spec.version, spec.architecture)
     else:
-        return spec.build_hash()
+        return spec.dag_hash()
 
 
 def spec_deps_key(s):

@@ -94,7 +94,7 @@ spack:
 valid_environment_name_re = r'^\w[\w-]*$'
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 3
+lockfile_format_version = 4
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
@@ -439,7 +439,7 @@ class ViewDescriptor(object):
     def content_hash(self, specs):
         d = syaml.syaml_dict([
             ('descriptor', self.to_dict()),
-            ('specs', [(spec.full_hash(), spec.prefix) for spec in sorted(specs)])
+            ('specs', [(spec.dag_hash(), spec.prefix) for spec in sorted(specs)])
         ])
         contents = sjson.dump(d)
         return spack.util.hash.b32_hash(contents)
@@ -1010,14 +1010,9 @@ class Environment(object):
 
         if not matches:
             # concrete specs match against concrete specs in the env
-            # by *dag hash*, not build hash.
-            dag_hashes_in_order = [
-                self.specs_by_hash[build_hash].dag_hash()
-                for build_hash in self.concretized_order
-            ]
-
+            # by dag hash.
             specs_hashes = zip(
-                self.concretized_user_specs, dag_hashes_in_order
+                self.concretized_user_specs, self.concretized_order
             )
 
             matches = [
@@ -1331,7 +1326,7 @@ class Environment(object):
             spec = next(
                 s for s in self.user_specs if s.satisfies(user_spec)
             )
-            concrete = self.specs_by_hash.get(spec.build_hash())
+            concrete = self.specs_by_hash.get(spec.dag_hash())
             if not concrete:
                 concrete = spec.concretized(tests=tests)
                 self._add_concrete_spec(spec, concrete)
@@ -1499,7 +1494,7 @@ class Environment(object):
         # update internal lists of specs
         self.concretized_user_specs.append(spec)
 
-        h = concrete.build_hash()
+        h = concrete.dag_hash()
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
@@ -1621,9 +1616,7 @@ class Environment(object):
         return sorted(all_specs)
 
     def all_hashes(self):
-        """Return hashes of all specs.
-
-        Note these hashes exclude build dependencies."""
+        """Return hashes of all specs."""
         return list(set(s.dag_hash() for s in self.all_specs()))
 
     def roots(self):
@@ -1695,11 +1688,10 @@ class Environment(object):
         for user_spec, concretized_user_spec in self.concretized_specs():
             # Deal with concrete specs differently
             if spec.concrete:
-                # Matching a concrete spec is more restrictive
-                # than just matching the dag hash
+                # TODO: do we still need the extra check comparing dag hashes?
                 is_match = (
                     spec in concretized_user_spec and
-                    concretized_user_spec[spec.name].build_hash() == spec.build_hash()
+                    concretized_user_spec[spec.name].dag_hash() == spec.dag_hash()
                 )
                 if is_match:
                     matches[spec] = spec
@@ -1781,12 +1773,12 @@ class Environment(object):
         concrete_specs = {}
         for spec in self.specs_by_hash.values():
             for s in spec.traverse():
-                build_hash = s.build_hash()
-                if build_hash not in concrete_specs:
-                    spec_dict = s.to_node_dict(hash=ht.build_hash)
+                dag_hash = s.dag_hash()
+                if dag_hash not in concrete_specs:
+                    spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
                     # Assumes no legacy formats, since this was just created.
                     spec_dict[ht.dag_hash.name] = s.dag_hash()
-                    concrete_specs[build_hash] = spec_dict
+                    concrete_specs[dag_hash] = spec_dict
 
         hash_spec_list = zip(
             self.concretized_order, self.concretized_user_specs)
@@ -1828,33 +1820,53 @@ class Environment(object):
         root_hashes = set(self.concretized_order)
 
         specs_by_hash = {}
-        for build_hash, node_dict in json_specs_by_hash.items():
+        for dag_hash, node_dict in json_specs_by_hash.items():
             spec = Spec.from_node_dict(node_dict)
             if d['_meta']['lockfile-version'] > 1:
                 # Build hash is stored as a key, but not as part of the node dict
                 # To ensure build hashes are not recomputed, we reattach here
-                setattr(spec, ht.build_hash.attr, build_hash)
-            specs_by_hash[build_hash] = spec
+                setattr(spec, ht.dag_hash.attr, dag_hash)
+            specs_by_hash[dag_hash] = spec
 
-        for build_hash, node_dict in json_specs_by_hash.items():
+        for dag_hash, node_dict in json_specs_by_hash.items():
             for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
-                specs_by_hash[build_hash]._add_dependency(
+                specs_by_hash[dag_hash]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
-        # If we are reading an older lockfile format (which uses dag hashes
-        # that exclude build deps), we use this to convert the old
-        # concretized_order to the full hashes (preserving the order)
+        # Current lockfile key: dag_hash() (dag_hash() == full_hash())
+        # Previous lockfile keys from most recent to least:
+        #   1. build_hash
+        #   2. dag_hash (computed *without* build deps)
+
+        # If we are reading an older lockfile format, the key may have been computed
+        # using a different hash type than the one spack uses currently (which
+        # includes build deps as well as the package hash).  If this is the case
+        # the following code updates the keys in in 'concretized_order' to be computed
+        # using the hash type spack currently uses, while maintaining the order of the
+        # list.
         old_hash_to_new = {}
         self.specs_by_hash = {}
         for _, spec in specs_by_hash.items():
-            dag_hash = spec.dag_hash()
+            # - to get old dag_hash() (w/out build deps) use runtime_hash() now
+            # - dag_hash() now includes build deps and package hash
+            #     - i.e. dag_hash() == full_hash()
+            # - regardless of what hash type keyed the lockfile we're reading,
+            #   the dag_hash we read from the file may appear appear in install
+            #   trees and binary mirrors, and as such, must be considered the
+            #   permanent id of the spec.
+            dag_hash = spec.dag_hash()          # == full_hash()
             build_hash = spec.build_hash()
-            if dag_hash in root_hashes:
-                old_hash_to_new[dag_hash] = build_hash
+            runtime_hash = spec.runtime_hash()  # == old dag_hash()
 
-            if (dag_hash in root_hashes or build_hash in root_hashes):
-                self.specs_by_hash[build_hash] = spec
+            if runtime_hash in root_hashes:
+                old_hash_to_new[runtime_hash] = dag_hash
+            elif build_hash in root_hashes:
+                old_hash_to_new[build_hash] = dag_hash
+
+            if (runtime_hash in root_hashes or
+                    build_hash in root_hashes or dag_hash in root_hashes):
+                self.specs_by_hash[dag_hash] = spec
 
         if old_hash_to_new:
             # Replace any older hashes in concretized_order with hashes
