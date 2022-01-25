@@ -171,7 +171,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
                                '-L{0}'.format(self.spec['petsc'].prefix.lib),
                                '-L{0}'.format(self.spec['mpi'].prefix.lib),
                                join_path(test_dir, 'hello.c'), '-o', exe,
-                               '-lslepc','-lpetsc', '-lmpi'],
+                               '-lslepc', '-lpetsc', '-lmpi'],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
