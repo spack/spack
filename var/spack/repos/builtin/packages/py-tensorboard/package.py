@@ -29,7 +29,7 @@ class PyTensorboard(Package):
     depends_on('bazel@2.1.0:', type='build', when='@2.2.0:')
     depends_on('bazel@3.7.0:', type='build', when='@2.5.0:')
     depends_on('py-pip', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on('py-wheel@0.26:', type='build')
     depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
     depends_on('py-markdown@2.6.8:', type=('build', 'run'))
@@ -45,12 +45,9 @@ class PyTensorboard(Package):
     depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
     depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
 
-    # py-tensorboard-plugin-wit only builds with versions of bazel older than
-    # what is needed for py-tensorboard-2.5 and greater. Work around that for
-    # now by using a wheel.
     depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'))
 
-    depends_on('py-tensorboard-data-server@0.6.0:0.6', type=('build', 'run'), when='@2.5:')
+    depends_on('py-tensorboard-data-server@0.6', type=('build', 'run'), when='@2.5:')
 
     extends('python')
 
@@ -60,7 +57,7 @@ class PyTensorboard(Package):
 
     phases = ['configure', 'build', 'install']
 
-    # Version 2.6.0 does not build in parallel
+    # Version 2.6.0 and above do not build in parallel
     @property
     def parallel(self):
         return self.spec.version < Version('2.6.0')
