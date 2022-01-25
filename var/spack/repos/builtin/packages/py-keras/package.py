@@ -14,7 +14,7 @@ class PyKeras(PythonPackage):
 
     homepage = "https://keras.io"
     git = "https://github.com/keras-team/keras"
-    pypi = "Keras/Keras-1.2.2.tar.gz"
+    url = 'https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz'
 
     version('2.7.0', sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
     version('2.6.0', sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
@@ -64,10 +64,10 @@ class PyKeras(PythonPackage):
 
     def url_for_version(self, version):
         if version >= Version('2.6.0'):
-            url = 'https://github.com/keras-team/keras/archive/refs/tags/v{0}.tar.gz'
-            return url.format(version.dotted)
-        else:
             return super(PyKeras, self).url_for_version(version)
+        else:
+            url = 'https://pypi.io/packages/source/K/Keras/Keras-{0}.tar.gz'
+            return url.format(version.dotted)
 
     @when('@2.5.0:')
     def patch(self):
@@ -83,7 +83,7 @@ class PyKeras(PythonPackage):
                     string=True)
 
     @when('@2.5.0:')
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
         env['HOME'] = self.tmp_path
 
