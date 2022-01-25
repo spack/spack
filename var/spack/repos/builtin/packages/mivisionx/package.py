@@ -71,6 +71,7 @@ class Mivisionx(CMakePackage):
     depends_on('miopen-opencl@3.5.0', when='@1.7')
     depends_on('miopengemm@1.1.6', when='@1.7')
     depends_on('openssl', when='@4.0.0:')
+    conflicts('^cmake@3.22:')
 
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
