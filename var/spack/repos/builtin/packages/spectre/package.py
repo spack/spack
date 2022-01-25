@@ -56,10 +56,9 @@ class Spectre(CMakePackage):
     # - Allow disabling debug symbols to reduce memory usage and executable size
     variant('debug_symbols', default=True,
             description="Build with debug symbols")
-    # TODO: support installation of executables with shared libs
-    # variant('shared',
-    #         default=False,
-    #         description="Build shared libraries instead of static")
+    variant('shared',
+            default=False,
+            description="Build shared libraries instead of static")
     variant('memory_allocator',
             values=('system', 'jemalloc'),
             multi=False,
@@ -119,6 +118,11 @@ class Spectre(CMakePackage):
         depends_on('py-beautifulsoup4', type='build')
         depends_on('py-pybtex', type='build')
 
+    # Incompatibilities
+    # - Shared libs builds on macOS don't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/2680
+    conflicts('+shared', when='@:2022.01.03 platform=darwin')
+
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
     # support releases associated with published papers, so their results are
@@ -169,11 +173,16 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/4bb3f25f905f83d8295a28a8036f6971dc4e75a2.patch',
         sha256='cd39217614a40f080d812e20220044aa8b26b9413324a7cd7a304e2378a2b426',
         when='@:2022.01.03')
+    # - Backport installation of shared libs
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch',
+        sha256='29ad44594ecfd6442a64d2cb57ed2d712cb8d93707c6bceea8030a9a2682b7ed',
+        when='@:2022.01.03 +shared')
 
     def cmake_args(self):
         args = [
             self.define('CHARM_ROOT', self.spec['charmpp'].prefix),
-            # self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('Python_EXECUTABLE', self.spec['python'].command.path),
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define('BUILD_TESTING', self.run_tests),
