@@ -174,7 +174,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Conflicts ##########################
 
-    # Epetra packages
+    # Epetra stack
     with when('~epetra'):
         conflicts('+amesos')
         conflicts('+aztec')
@@ -188,8 +188,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+epetraextbtf')
         conflicts('+epetraextexperimental')
         conflicts('+epetraextgraphreorderings')
+    with when('+teko'):
+        conflicts('~stratimikos')
+        conflicts('@:12 gotype=long')
 
-    # Tpetra packages
+    # Tpetra stack
     with when('~kokkos'):
         conflicts('+cuda')
         conflicts('+rocm')
@@ -204,31 +207,29 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+teko')
         conflicts('+zoltan2')
 
-    with when('+teko'):
-        conflicts('~amesos')
-        conflicts('~anasazi')
-        conflicts('~aztec')
-        conflicts('~ifpack')
-        conflicts('~ml')
-        conflicts('~stratimikos')
-        conflicts('@:12 gotype=long')
+    with when('~zoltan'):
+        conflicts('+isorropia')
+        conflicts('+scorec')
+        conflicts('+shylu')
+        conflicts('+zoltan2')
+    with when('~shards'):
+        conflicts('+intrepid')
+        conflicts('+intrepid2')
+        conflicts('+scorec')
+        conflicts('+stk')
+    with when('+scorec'):
+        conflicts('~mpi')
+        conflicts('~stk')
 
     # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
-    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
-    conflicts('+intrepid', when='~shards')
-    conflicts('+intrepid2', when='~shards')
-    conflicts('+isorropia', when='~zoltan')
+    conflicts('+minitensor', when='~boost')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
+    conflicts('+stokhos', when='~kokkos')
     conflicts('+tempus', when='~nox')
-    conflicts('+zoltan2', when='~zoltan')
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts('+dtk', when='~boost')
