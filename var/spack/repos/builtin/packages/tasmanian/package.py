@@ -194,17 +194,17 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         cmake_dir = self.test_suite.current_test_cache_dir.testing
 
         if not self.run_test(cmake_bin,
-                      options=[cmake_dir],
-                      purpose='Generate the Makefile'):
+                             options=[cmake_dir],
+                             purpose='Generate the Makefile'):
             tty.msg('Skipping tasmanian test: failed to generate Makefile')
             return
 
         if not self.run_test('make',
-                      purpose='Build test software'):
+                             purpose='Build test software'):
             tty.msg('Skipping tasmanian test: failed to build test')
             return
 
         if not self.run_test('make',
-                      options=['test'],
-                      purpose='Run test'):
+                             options=['test'],
+                             purpose='Run test'):
             tty.msg('Failed tasmanian test: failed to run test')
