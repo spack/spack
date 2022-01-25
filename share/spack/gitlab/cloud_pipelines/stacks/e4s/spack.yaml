@@ -77,7 +77,9 @@ spack:
     - sundials +cuda cuda_arch=70
     - superlu-dist +cuda cuda_arch=70
     - tasmanian +cuda cuda_arch=70
-    - trilinos@13.2.0 +cuda cuda_arch=70
+    # Trilinos: enable CUDA, Kokkos, and important Tpetra-era solver packages; 
+    # disable Epetra; disable ETI to speed up CI; disable all other TPLs
+    - trilinos@13.2.0 +cuda cuda_arch=70 +amesos2 +belos +ifpack2 +kokkos +muelu +nox +stratimikos +tpetra     ~amesos ~anasazi ~aztec ~epetraext ~ifpack ~isorropia ~ml ~teko ~tempus ~zoltan ~zoltan2     ~explicit_template_instantiation ~adios2~basker~boost~chaco~complex~debug~dtk~epetraextbtf~epetraextexperimental~epetraextgraphreorderings~exodus~float~fortran~gtest~hypre~intrepid~intrepid2~ipo~mesquite~minitensor~mumps~openmp~phalanx~piro~rocm~rol~rythmos~sacado~scorec~shards~shared~shylu~stk~stokhos~strumpack~suite-sparse~superlu~superlu-dist~trilinoscouplings~wrapper~x11
     - umpire ~shared +cuda cuda_arch=70
     - vtk-m +cuda cuda_arch=70
     - zfp +cuda cuda_arch=70
