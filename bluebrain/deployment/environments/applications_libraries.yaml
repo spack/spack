@@ -16,12 +16,14 @@ spack:
         - py-dask-mpi
         - py-flake8
         - py-h5py+mpi
+        - py-libsonata
         - py-mpi4py
         - py-notebook
         - py-numpy
         - py-poisson-recon-pybind
         - py-rtree
         - py-scikit-learn
+        - py-scipy
         - py-tensorflow
         - python-dev
         - py-virtualenv
@@ -51,6 +53,7 @@ spack:
     - py-exhale
     - py-flake8
     - py-h5py
+    - py-libsonata
     - py-matplotlib
     - py-mpi4py
     - py-notebook
@@ -59,6 +62,7 @@ spack:
     - py-poisson-recon-pybind
     - py-rtree
     - py-scikit-learn
+    - py-scipy
     - py-tensorflow
     - py-virtualenv
     - python-dev

@@ -3,28 +3,41 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
-from .sim_model import SimModel
-import shutil
 import os
+import shutil
+
 import llnl.util.tty as tty
+
+from spack import *
+
+from .py_neurodamus import PyNeurodamus
+from .sim_model import SimModel
 
 # Definitions
 _CORENRN_MODLIST_FNAME = "coreneuron_modlist.txt"
 _BUILD_NEURODAMUS_FNAME = "build_neurodamus.sh"
+PYNEURODAMUS_DEFAULT_V = PyNeurodamus.LATEST_STABLE
 
 
-def version_from_model_core_deps(model_core_dep_v):
+def version_from_model_core_dep(model_v, core_v):
     """Creates version specification which depend on both the model
        and core versions.
        E.g. using model 1.1 and core 3.0.1 it will define a version
        '1.1-3.0.1' which takes model from tag 1.1 and depends on core@3.0.1
     """
-    for model_v, core_v in model_core_dep_v:
-        this_version = model_v + "-" + core_v  # e.g. 1.1-3.0.2
-        version(this_version, tag=model_v, submodules=True, get_full_repo=True)
-        depends_on('neurodamus-core@' + core_v, type='build',
-                   when='@' + this_version)
+    this_version = model_v + "-" + core_v  # e.g. 1.1-3.0.2
+    version(this_version, tag=model_v, submodules=True, get_full_repo=True)
+    depends_on('neurodamus-core@' + core_v, type='build',
+               when='@' + this_version)
+
+
+def version_from_model_ndpy_dep(model_v, ndamus_v=PYNEURODAMUS_DEFAULT_V):
+    """New version scheme following dependency on neurodamus-py
+    """
+    this_version = model_v + "-" + ndamus_v  # e.g. 1.1-3.0.2
+    version(this_version, tag=model_v, submodules=True, get_full_repo=True)
+    depends_on('py-neurodamus@' + ndamus_v, type='build',
+               when='@' + this_version)
 
 
 class NeurodamusModel(SimModel):
@@ -32,6 +45,7 @@ class NeurodamusModel(SimModel):
        Eventually in the future Models are independent entities,
        not tied to neurodamus
     """
+
     # NOTE: Several variants / dependencies come from SimModel
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
     variant('mvdtool',     default=True,  description="Enable MVDTool reader (for nodes)")
@@ -47,16 +61,16 @@ class NeurodamusModel(SimModel):
         destination='common_latest'
     )
 
+    # Now we depend on neurodamus-py
+    # However don't depend on it at runtime just yet, we still want to use
+    # use neurodamus-py from GCC stack for compat with other py libs (bglibpy)
+    depends_on('py-neurodamus@develop', type='build', when='@develop')
+
     # Note: We dont request link to MPI so that mpicc can do what is best
     # and dont rpath it so we stay dynamic.
     # 'run' mode will load the same mpi module
     depends_on("mpi", type=('build', 'run'))
 
-    # Version >=1.0 freezes core, but 1.0 is the last to not include -core_v
-    # neurodamus models should call `version_from_model_core_deps`
-    depends_on('neurodamus-core@3.0.1', type='build', when='@1.0')
-    depends_on('neurodamus-core@:2.99', type=('build', 'run'), when='@:0.99')
-    depends_on('neurodamus-core@develop', type=('build', 'run'), when='@develop')
     depends_on('hdf5+mpi')
     depends_on('reportinglib')
     depends_on('libsonata-report')
@@ -71,7 +85,11 @@ class NeurodamusModel(SimModel):
     depends_on('zlib')  # for hdf5
 
     phases = [
-        'setup_common_mods', 'build_model', 'merge_hoc_mod', 'build', 'install'
+        'setup_common_mods',
+        'build_model',
+        'merge_hoc_mod',
+        'build',
+        'install'
     ]
 
     def setup_common_mods(self, spec, prefix):
@@ -105,7 +123,9 @@ class NeurodamusModel(SimModel):
         This routine simply adds the additional mods to existing dirs
         so that incremental builds can actually happen.
         """
-        core_prefix = spec['neurodamus-core'].prefix
+        core = spec['py-neurodamus'] if spec.satisfies('^py-neurodamus') \
+            else spec['neurodamus-core']
+        core_prefix = core.prefix
 
         # If we shall build mods for coreneuron,
         # only bring from core those specified
@@ -187,7 +207,9 @@ class NeurodamusModel(SimModel):
         shutil.move(_BUILD_NEURODAMUS_FNAME, prefix.bin)
 
         # Create mods links in share
-        force_symlink(spec['neurodamus-core'].prefix.lib.mod,
+        core = spec['py-neurodamus'] if spec.satisfies('^py-neurodamus') \
+            else spec['neurodamus-core']
+        force_symlink(core.prefix.lib.mod,
                       prefix.share.mod_neurodamus)
         force_symlink(prefix.lib.mod, prefix.share.mod_full)
 
