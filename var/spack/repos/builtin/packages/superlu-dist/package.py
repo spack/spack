@@ -54,7 +54,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+rocm', when='+cuda')
     conflicts('+cuda', when='@:6.3')
     # See https://github.com/xiaoyeli/superlu_dist/issues/87
-    conflicts('^cuda@11.5.0:', when='@7.1.0:7.1')
+    conflicts('^cuda@11.5.0:', when='@7.1.0:7.1 +cuda')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
