@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+import jsonschema
 
 import six
 
@@ -12,7 +13,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.hash_types as hash_types
 
-default_path = '/opt/cray/pe/search-tree/spack.json'
+from spack.schema.cray_manifest import schema as manifest_schema
 
 
 def compiler_from_entry(entry):
@@ -139,6 +140,9 @@ def entries_to_specs(entries):
 def read(path, apply_updates):
     with open(path, 'r') as json_file:
         json_data = json.load(json_file)
+
+    jsonschema.validate(json_data, manifest_schema)
+
     specs = entries_to_specs(json_data['specs'])
     compilers = list(compiler_from_entry(x)
                      for x in json_data['compilers'])
