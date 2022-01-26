@@ -476,6 +476,12 @@ class Llvm(CMakePackage, CudaPackage):
             result = os.path.join(self.spec.prefix.bin, 'flang')
         return result
 
+    @property
+    def libs(self):
+        shared = '+shared_libs' in self.spec
+        return find_libraries('libLLVMCore', self.prefix, shared=shared,
+                              recursive=True)
+
     @run_before('cmake')
     def codesign_check(self):
         if self.spec.satisfies("+code_signing"):
