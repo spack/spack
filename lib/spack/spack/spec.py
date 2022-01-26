@@ -1211,7 +1211,7 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = spack.compiler.tokenize_flags(value)
         elif name == 'cmakeflags':
-            self.variants[name] = vt.SingleValuedVariant(name, value)
+            self.variants[name] = vt.MultiValuedVariant(name, value)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
@@ -1906,7 +1906,8 @@ class Spec(object):
                 if name in _valid_compiler_flags:
                     spec.compiler_flags[name] = value
                 elif name == 'cmakeflags':
-                    spec.variants[name] = vt.SingleValuedVariant(name, value)
+                    spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
+                        name, value)
                 else:
                     spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
                         name, value)

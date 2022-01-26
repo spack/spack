@@ -1839,11 +1839,15 @@ class SpecBuilder(object):
             return
 
         if name == 'cmakeflags':
-            self._specs[pkg].variants.setdefault(
-                name,
-                spack.variant.SingleValuedVariant(name, value)
-            )
-            return
+            variants = self._specs[pkg].variants
+            if not variants.get(name):
+                variants.setdefault(
+                    name,
+                    spack.variant.MultiValuedVariant(name, value)
+                )
+            else:
+                variants[name].append(value)
+        return
 
         self._specs[pkg].update_variant_validate(name, value)
 

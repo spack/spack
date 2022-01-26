@@ -329,10 +329,10 @@ class CMakePackage(PackageBase):
                                                                libs_flags))
 
     def extra_cmake_args(self):
-        cmake_flags = self.spec.variants.get("cmakeflags", None)
-        if not cmake_flags:
-            return []
-        return [entry for entry in cmake_flags.value.split(' ')]
+        cmake_flags = self.spec.variants.get("cmakeflags")
+        if cmake_flags:
+            return cmake_flags.value
+        return []
 
     @property
     def build_dirname(self):
