@@ -117,7 +117,9 @@ def external_read_cray_manifest(args):
     for path in paths:
         try:
             cray_manifest.read(path, not args.dry_run)
-        except:
+        except (AssertionError, spack.error.SpackError):
+            # TODO: the AssertionError comes from class_for_compiler_name
+            # and should be transformed into a SpackError
             tty.warn("Failure reading manifest file: {0}".format(path))
 
 

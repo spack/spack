@@ -23,8 +23,8 @@ schema = {
             "additionalProperties": False,
             "properties": {
                 "file-type": {"type": "string", "minLength": 1},
-                "version": { "type": "string", "minLength": 1},
-                "system-type": { "type": "string", "minLength": 1}
+                "version": {"type": "string", "minLength": 1},
+                "system-type": {"type": "string", "minLength": 1}
             }
         },
         "compilers": {
@@ -59,7 +59,7 @@ schema = {
         },
         "specs": {
             "type": "array",
-            "items":{
+            "items": {
                 "type": "object",
                 "required": [
                     "name",
@@ -91,11 +91,11 @@ schema = {
                     },
                     "compiler": {
                         "type": "object",
-                        "required": [ "name", "version"],
+                        "required": ["name", "version"],
                         "additionalProperties": False,
                         "properties": {
                             "name": {"type": "string", "minLength": 1},
-                            "version": { "type": "string", "minLength": 1}
+                            "version": {"type": "string", "minLength": 1}
                         }
                     },
                     "dependencies": {
