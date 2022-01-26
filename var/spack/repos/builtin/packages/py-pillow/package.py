@@ -103,6 +103,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version('9.0.0', sha256='ee6e2963e92762923956fe5d3479b1fdc3b76c83f290aad131a2f98c3df0593e')
     version('8.4.0', sha256='b8e2f83c56e141920c39464b852de3719dfbfb6e3c99a2d8da0edf4fb33176ed')
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
@@ -117,6 +118,7 @@ class PyPillow(PyPillowBase):
     version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb', deprecated=True)
 
     for ver in [
+        '9.0.0',
         '8.4.0', '8.0.0',
         '7.2.0', '7.0.0',
         '6.2.2', '6.2.1', '6.2.0', '6.0.0',
