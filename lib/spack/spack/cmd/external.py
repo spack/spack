@@ -57,6 +57,9 @@ def setup_parser(subparser):
     read_cray_manifest.add_argument(
         '--directory', default=None,
         help="specify a directory storing a group of manifest files")
+    read_cray_manifest.add_argument(
+        '--dry-run', action='store_true', default=False,
+        help="don't modify DB with files that are read")
 
 
 def external_find(args):
@@ -113,7 +116,7 @@ def external_read_cray_manifest(args):
 
     for path in paths:
         try:
-            cray_manifest.read(path, True)
+            cray_manifest.read(path, not args.dry_run)
         except:
             tty.warn("Failure reading manifest file: {0}".format(path))
 

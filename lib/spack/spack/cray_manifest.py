@@ -144,8 +144,14 @@ def read(path, apply_updates):
     jsonschema.validate(json_data, manifest_schema)
 
     specs = entries_to_specs(json_data['specs'])
+    tty.debug("{0}: {1} specs read from manifest".format(
+        path,
+        str(len(specs))))
     compilers = list(compiler_from_entry(x)
                      for x in json_data['compilers'])
+    tty.debug("{0}: {1} compilers read from manifest".format(
+        path,
+        str(len(compilers))))
     if apply_updates:
         spack.compilers.add_compilers_to_config(
             compilers, init_config=False)
