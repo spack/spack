@@ -43,7 +43,7 @@ class GpiSpace(CMakePackage):
             description="CMake build type")
 
     depends_on("cmake@3.15.0:",
-               type=("build", "run"))
+               type="build")
     depends_on("chrpath@0.13:",
                type=("build", "run"))
     depends_on("pkgconf",
