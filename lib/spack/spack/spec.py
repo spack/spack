@@ -4615,6 +4615,18 @@ class Spec(object):
         assert other.concrete
         assert other.name in self
 
+        # Check, for the time being, that we don't have DAG with multiple
+        # specs from the same package
+        def multiple_specs(root):
+            counter = collections.Counter([node.name for node in root.traverse()])
+            _, max_number = counter.most_common()[0]
+            return max_number > 1
+
+        if multiple_specs(self) or multiple_specs(other):
+            msg = ('Either "{0}" or "{1}" contain multiple specs from the same '
+                   'package, which cannot be handled by splicing at the moment')
+            raise ValueError(msg.format(self, other))
+
         # Multiple unique specs with the same name will collide, so the
         # _dependents of these specs should not be trusted.
         # Variants may also be ignored here for now...
