@@ -263,8 +263,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
-    conflicts('cxxstd=14', when='@:12')
-    conflicts('cxxstd=17', when='@:12')
 
     # Multi-value gotype only applies to trilinos through 12.14
     conflicts('gotype=all', when='@12.15:')
@@ -327,6 +325,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('superlu@4.3 +pic', when='+superlu')
     depends_on('swig', when='+python')
     depends_on('zlib', when='+zoltan')
+    depends_on('cmake@:3.21', type='build', when='@:12')
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
