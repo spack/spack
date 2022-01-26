@@ -39,11 +39,11 @@ class PyLibclang(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     for ver in ["9", "10", "11"]:
-        depends_on("llvm@" + ver, when="@" + ver, type="build")
+        depends_on("llvm+clang@" + ver, when="@" + ver, type="build")
 
     def patch(self):
         filter_file(
             "source_dir = './native/'",
-            "source_dir = '{0}'".format(self.spec["llvm"].prefix.lib),
+            "source_dir = '{0}'".format(self.spec["llvm"].libs.directories[0]),
             "setup.py", string=True,
         )
