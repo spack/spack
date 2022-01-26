@@ -54,6 +54,9 @@ def setup_parser(subparser):
     read_cray_manifest.add_argument(
         '--file', default=None,
         help="specify a location other than the default")
+    read_cray_manifest.add_argument(
+        '--directory', default=None,
+        help="specify a directory storing a group of manifest files")
 
 
 def external_find(args):
@@ -97,15 +100,22 @@ def external_find(args):
 
 def external_read_cray_manifest(args):
     if args.file:
-        path = args.file
-    elif os.path.exists(cray_manifest.default_path):
-        path = cray_manifest.default_path
+        paths = [args.file]
+    elif args.directory:
+        directory = args.directory
+        paths = []
+        for fname in os.listdir(directory):
+            paths.append(os.path.join(directory, fname))
     else:
         raise ValueError(
             "No --file specified, and no manifest found at {0}"
             .format(cray_manifest.default_path))
 
-    cray_manifest.read(path, True)
+    for path in paths:
+        try:
+            cray_manifest.read(path, True)
+        except:
+            tty.warn("Failure reading manifest file: {0}".format(path))
 
 
 def external_list(args):
