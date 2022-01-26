@@ -25,15 +25,14 @@ class Jali(CMakePackage):
     version('1.0.5', sha256='979170615d33a7bf20c96bd4d0285e05a2bbd901164e377a8bccbd9af9463801')
 
     variant('mstk', default=True, description='Enable MSTK')
-   
+
     # dependencies
     depends_on('cmake@3.13:', type='build')
 
     depends_on('mpi')
 
-    depends_on('boost', when='@:1.1.5')
-       
-
+    if version < Version('1.1.6'):
+        depends_on('boost')
 
     depends_on('mstk@3.3.5: +exodusii+parallel~use_markers partitioner=all', when='+mstk')
 
