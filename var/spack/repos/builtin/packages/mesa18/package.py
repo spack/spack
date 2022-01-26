@@ -61,7 +61,7 @@ class Mesa18(AutotoolsPackage):
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('llvm@6:10', when='+llvm')
+    depends_on('libllvm@6:10', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -138,8 +138,8 @@ class Mesa18(AutotoolsPackage):
 
         if '+llvm' in spec:
             args.append('--enable-llvm')
-            args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-            if '+llvm_dylib' in spec['llvm']:
+            args.append('--with-llvm-prefix=%s' % spec['libllvm'].prefix)
+            if '+llvm_dylib' in spec['libllvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')

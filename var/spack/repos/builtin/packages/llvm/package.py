@@ -342,6 +342,10 @@ class Llvm(CMakePackage, CudaPackage):
     patch('no_cyclades.patch', when='@10:12.0.0')
     patch('no_cyclades9.patch', when='@6:9')
 
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:13.0.0')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
