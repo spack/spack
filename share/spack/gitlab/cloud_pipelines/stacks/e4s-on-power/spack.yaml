@@ -117,6 +117,7 @@ spack:
     - globalarrays
     - gmp
     - gotcha
+    - gptune
     - hdf5
     - heffte +fftw
     - hpctoolkit
