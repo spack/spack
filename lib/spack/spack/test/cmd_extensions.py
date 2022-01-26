@@ -257,6 +257,19 @@ def test_get_command_paths(config):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
+def test_variable_in_extension_path(config, working_env):
+    """Test variables in extension paths."""
+    os.environ['_MY_VAR'] = "my/var"
+    ext_paths = [
+        os.path.join("~", "${_MY_VAR}", "spack-extension-1")
+    ]
+    expected_ext_paths = [
+        os.path.join(os.environ['HOME'], os.environ['_MY_VAR'], "spack-extension-1")
+    ]
+    with spack.config.override('config:extensions', ext_paths):
+        assert spack.extensions.get_extension_paths() == expected_ext_paths
+
+
 @pytest.mark.parametrize('command_name,contents,exception',
                          [('bad-cmd', 'from oopsie.daisy import bad\n',
                            ImportError),
