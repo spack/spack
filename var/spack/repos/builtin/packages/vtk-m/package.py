@@ -60,6 +60,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # CudaPackage provides cuda variant
     # ROCmPackage provides rocm variant
     variant("kokkos", default=False, description="build using Kokkos backend")
+    variant("cuda_native", default=True, description="build using native cuda backend", when="+cuda")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
 
@@ -69,14 +70,17 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('%gcc@:4.10',
               msg='vtk-m requires gcc >= 5. Please install a newer version')
 
-    depends_on('cuda@10.1.0:', when='+cuda')
+    depends_on('cuda@10.1.0:', when='+cuda_native')
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
     # VTK-m uses the default Kokkos backend
     depends_on('kokkos', when='+kokkos')
     # VTK-m native CUDA and Kokkos CUDA backends are not compatible
-    depends_on('kokkos ~cuda', when='+kokkos +cuda')
+    depends_on('kokkos ~cuda', when='+kokkos +cuda +cuda_native')
+    depends_on('kokkos +cuda', when='+kokkos +cuda ~cuda_native')
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on("kokkos cuda_arch=%s" % cuda_arch, when="+kokkos +cuda ~cuda_native cuda_arch=%s" % cuda_arch)
     # VTK-m uses the Kokkos HIP backend.
     # If Kokkos provides multiple backends, the HIP backend may or
     # may not be used for VTK-m depending on the default selected by Kokkos
@@ -90,6 +94,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
+
+    conflicts("+shared", when="+cuda_native")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")
@@ -106,13 +112,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs logic
             # force building statically with cuda
-            if "+cuda" in spec:
-                options.append('-DBUILD_SHARED_LIBS=OFF')
+            if "+shared" in spec:
+                options.append('-DBUILD_SHARED_LIBS=ON')
             else:
-                if "+shared" in spec:
-                    options.append('-DBUILD_SHARED_LIBS=ON')
-                else:
-                    options.append('-DBUILD_SHARED_LIBS=OFF')
+                options.append('-DBUILD_SHARED_LIBS=OFF')
 
             # double precision
             if "+doubleprecision" in spec:
@@ -167,7 +170,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")
 
             # cuda support
-            if "+cuda" in spec:
+            if "+cuda_native" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
                                env["SPACK_CXX"]))
@@ -347,10 +350,10 @@ vtkm_add_target_information(VTKmSmokeTest
                 except ProcessError:
                     output = ""
                 print(output)
-                if "+kokkos" in spec:
-                    expected_device = 'Kokkos'
-                elif "+cuda" in spec:
+                if "+cuda_native" in spec:
                     expected_device = 'Cuda'
+                elif "+kokkos" in spec:
+                    expected_device = 'Kokkos'
                 elif "+tbb" in spec:
                     expected_device = 'TBB'
                 elif "+openmp" in spec:
