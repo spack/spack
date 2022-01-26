@@ -4,15 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import jsonschema
 
+import jsonschema
 import six
 
 import llnl.util.tty as tty
 
 import spack.cmd
 import spack.hash_types as hash_types
-
 from spack.schema.cray_manifest import schema as manifest_schema
 
 
