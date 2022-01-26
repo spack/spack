@@ -178,6 +178,8 @@ class Mvapich2Gdr(AutotoolsPackage):
         ]
 
     def configure_args(self):
+        spec = self.spec
+
         args = [
             "--with-ch3-rank-bits=32",
             "--without-hydra-ckpointlib",
@@ -185,5 +187,13 @@ class Mvapich2Gdr(AutotoolsPackage):
             "--enable-shared",
             "--disable-rdma-cm",
         ]
+
+        # prevents build error regarding gfortran not allowing mismatched arguments
+        if spec.satisfies('%gcc@10.0.0:'):
+            args.extend([
+                'FFLAGS=-fallow-argument-mismatch',
+                'FCFLAGS=-fallow-argument-mismatch'
+            ])
+
         args.extend(self.process_manager_options)
         return args
