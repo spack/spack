@@ -94,7 +94,7 @@ class Ascent(CMakePackage, CudaPackage):
     ###########################################################################
     # patch for gcc 10 and 11, changes already on develop, here
     # so folks can build 0.7.1 with those compilers
-    patch("ascent-gcc-11-pr753.patch ",when="@0.7.1")
+    patch("ascent-gcc-11-pr753.patch", when="@0.7.1")
 
     ##########################################################################
     # package dependencies
