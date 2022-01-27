@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,8 +37,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-numpy@1.16.6:', type=('build', 'run'), when='@3.0.0:')
     depends_on('py-six@1.0.0:', type=('build', 'run'), when='@0.15.0')
-    depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1.99')
-    depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@0.15.0:^python@:3.3.99')
+    depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1')
+    depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@0.15.0:^python@:3.3')
 
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1', '@0.17.1', '@3.0.0', '@4.0.1'):
         depends_on('arrow+python' + v, when=v)
@@ -46,11 +46,9 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+cuda' + v, when='+cuda' + v)
         depends_on('arrow+orc' + v, when='+orc' + v)
 
-    phases = ['build_ext', 'install']
-
     patch('for_aarch64.patch', when='target=aarch64:')
 
-    def build_ext_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         args = []
         if spec.satisfies('+parquet'):
             args.append('--with-parquet')

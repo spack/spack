@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.18', sha256='2780640233a36e0d3c767140417015be1893c1ad695ccc0bd3ee0767bc9fbed8')
+    version('1.1.17', sha256='2e95429b795311a6986320d785bedcd9dace9f8e7b7f6bd778d23a4ff23e0424')
     version('1.1.16', sha256='2fa636993156d9d06750586e8a1ac1701ae2be62dea07964e2369698ae521d02')
     version('1.1.15', sha256='0ee9897eb12d8d560dc0c9e56e8fdb78d0111f651a984df24e983da035bd1c70')
     version('1.1.13', sha256='6bb364cc74bdab2e64e2fe132debd7f1e192da0a103f5149df7ab25b7c19a205')
@@ -48,6 +50,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Build shared libraries')
 
+    depends_on('veccore@0.8.0', type=('build', 'link'), when='@1.1.18')
     depends_on('veccore@0.5.2:', type=('build', 'link'), when='@1.1.0:')
     depends_on('veccore@0.4.2', type=('build', 'link'), when='@:1.0')
     depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')

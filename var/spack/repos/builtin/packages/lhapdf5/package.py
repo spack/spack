@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Lhapdf5(AutotoolsPackage):
     variant('python2', default=False,
             description="Enable Python2 extension")
 
-    depends_on('python@2.3:2.7.99', when='+python2')
+    depends_on('python@2.3:2.7', when='+python2')
 
     def setup_build_environment(self, env):
         env.append_flags('FFLAGS', '-std=legacy')

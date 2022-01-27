@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class Libevent(AutotoolsPackage):
     variant('openssl', default=True,
             description="Build with encryption enabled at the libevent level.")
     # Versions before 2.1 do not build with OpenSSL 1.1
-    depends_on('openssl@:1.0', when='@:2.0.99+openssl')
+    depends_on('openssl@:1.0', when='@:2.0+openssl')
     depends_on('openssl', when='+openssl')
 
     def url_for_version(self, version):

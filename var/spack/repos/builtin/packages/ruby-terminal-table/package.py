@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class RubyTerminalTable(RubyPackage):
 
     version('1.8.0', sha256='69b8e157f5dc3f056b5242923ab3e729a16c6f893b3a5d540e71135a973e5fbe')
 
-    depends_on('ruby-unicode-display-width@1.1.1:1.999', type=('build', 'run'))
+    depends_on('ruby-unicode-display-width@1.1.1:1', type=('build', 'run'))

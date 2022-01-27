@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,13 +91,13 @@ class Hdf5(CMakePackage):
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     depends_on('pkgconfig', type='run')
 
-    conflicts('api=v114', when='@1.6:1.12.99',
+    conflicts('api=v114', when='@1.6.0:1.12',
               msg='v114 is not compatible with this release')
-    conflicts('api=v112', when='@1.6:1.10.99',
+    conflicts('api=v112', when='@1.6.0:1.10',
               msg='v112 is not compatible with this release')
-    conflicts('api=v110', when='@1.6:1.8.99',
+    conflicts('api=v110', when='@1.6.0:1.8',
               msg='v110 is not compatible with this release')
-    conflicts('api=v18', when='@1.6:1.6.99',
+    conflicts('api=v18', when='@1.6.0:1.6',
               msg='v18 is not compatible with this release')
 
     # The Java wrappers and associated libhdf5_java library
@@ -387,9 +387,9 @@ class Hdf5(CMakePackage):
         # 1.10.6 and 1.12.0. The current develop versions do not produce 'h5pfc'
         # at all. Here, we make sure that 'h5pfc' is available when Fortran and
         # MPI support are enabled (only for versions that generate 'h5fc').
-        if self.spec.satisfies('@1.8.22:1.8.999,'
-                               '1.10.6:1.10.999,'
-                               '1.12.0:1.12.999,'
+        if self.spec.satisfies('@1.8.22:1.8,'
+                               '1.10.6:1.10,'
+                               '1.12.0:1.12,'
                                'develop:'
                                '+fortran+mpi'):
             with working_dir(self.prefix.bin):

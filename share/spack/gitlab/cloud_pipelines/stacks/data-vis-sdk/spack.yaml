@@ -10,27 +10,36 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
+    mesa:
+      variants: ~glx +osmesa
+    paraview:
+      variants: +osmesa
     all:
       target: [x86_64]
 
   # The spec will be gradually expanded to enable all the SDK components.
-  # Currently disabled: ascent, catalyst, cinema, paraview, unifyfs, visit, vtkm
+  # Currently disabled: ascent, catalyst, visit
   specs:
   - matrix:
     - - ecp-data-vis-sdk
           +adios2
+          +ascent
+          +cinema
           +darshan
           +faodel
           +hdf5
+          +paraview
           +pnetcdf
           +sz
+          +unifyfs
           +veloc
+          +vtkm
           +zfp
 
   mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
 
   gitlab-ci:
-    image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -39,20 +48,22 @@ spack:
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - spack -d ci rebuild
     mappings:
-      - match: [vtk-h, vtk-m, paraview, llvm, vtk]
+      - match: [llvm]
+        runner-attributes:
+          tags: ["spack", "public", "huge", "x86_64"]
+      - match: [vtk-h, vtk-m, paraview, vtk]
         runner-attributes:
           tags: ["spack", "public", "xlarge", "x86_64"]
       - match: ['@:']
         runner-attributes:
           tags: ["spack", "public", "large", "x86_64"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+    broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/data-vis-sdk
-        - spack env activate --without-view .
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:
@@ -60,4 +71,3 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-

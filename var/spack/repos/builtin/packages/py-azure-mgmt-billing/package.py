@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,5 +13,5 @@ class PyAzureMgmtBilling(PythonPackage):
     version('0.2.0', sha256='85f73bb3808a7d0d2543307e8f41e5b90a170ad6eeedd54fe7fcaac61b5b22d2')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-msrestazure@0.4.20:1.999', type=('build', 'run'))
-    depends_on('py-azure-common@1.1:1.999', type=('build', 'run'))
+    depends_on('py-msrestazure@0.4.20:1', type=('build', 'run'))
+    depends_on('py-azure-common@1.1:1', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,8 @@ class PyResponses(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-mock', when='^python@:3.2.999', type=('build', 'run'))
-    depends_on('py-cookies', when='^python@:3.3.999', type=('build', 'run'))
+    depends_on('py-mock', when='^python@:3.2', type=('build', 'run'))
+    depends_on('py-cookies', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-requests@2.0:', type=('build', 'run'))
     depends_on('py-urllib3@1.25.10:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))

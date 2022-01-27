@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,6 +54,9 @@ class Abinit(AutotoolsPackage):
     variant('optimization-flavor', default='standard', multi=False,
             values=('safe', 'standard', 'aggressive'),
             description='Select the optimization flavor to use.')
+
+    variant('install-tests', default=False,
+            description='Install test cases')
 
     # Add dependencies
     depends_on('atompaw')
@@ -276,3 +279,8 @@ class Abinit(AutotoolsPackage):
         #       requires Python with numpy, pyyaml, pandas
         if '~mpi' in self.spec:
             make('tests_in')
+
+    def install(self, spec, prefix):
+        make('install')
+        if '+install-tests' in spec:
+            install_tree('tests', spec.prefix.tests)

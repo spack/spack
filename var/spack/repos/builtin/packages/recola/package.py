@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,9 @@ class Recola(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
+            self.define('static', True),
+            self.define('collier_path', self.spec['collier'].prefix.lib.cmake),
+            self.define('modelfile_path', self.spec['recola-sm'].prefix.lib.cmake),
             self.define_from_variant("with_python3", 'python'),
         ]
         return args

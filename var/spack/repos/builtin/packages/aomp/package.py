@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,11 +92,14 @@ class Aomp(Package):
     url = tools_url + "/aomp/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+
+    tags = ['e4s']
+
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
-    version('3.8.0', sha256=versions_dict['3.8.0']['aomp'])
-    version('3.7.0', sha256=versions_dict['3.7.0']['aomp'])
-    version('3.5.0', sha256=versions_dict['3.5.0']['aomp'])
+    version('3.8.0', sha256=versions_dict['3.8.0']['aomp'], deprecated=True)
+    version('3.7.0', sha256=versions_dict['3.7.0']['aomp'], deprecated=True)
+    version('3.5.0', sha256=versions_dict['3.5.0']['aomp'], deprecated=True)
 
     # Cmake above 3.18 would fail the build on 3.5.0
     depends_on('cmake@3:', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,4 @@ class PyYolk3k(PythonPackage):
 
     version('0.9', sha256='cf8731dd0a9f7ef50b5dc253fe0174383e3fed295a653672aa918c059eef86ae')
 
-    depends_on('py-pygments')
-    depends_on('py-jinja2')
-    depends_on('py-docutils')
+    depends_on('py-setuptools', type='build')

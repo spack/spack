@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,6 @@ import itertools
 import operator
 import os
 import re
-import sys
 import warnings
 
 import ruamel.yaml as yaml
@@ -91,8 +90,8 @@ import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.util.compat import Mapping
 
-import spack.architecture
 import spack.compiler
 import spack.compilers
 import spack.config
@@ -117,12 +116,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.string
 import spack.variant as vt
 import spack.version as vn
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 
 __all__ = [
     'CompilerSpec',
@@ -213,6 +206,27 @@ def colorize_spec(spec):
 
 @lang.lazy_lexicographic_ordering
 class ArchSpec(object):
+    """Aggregate the target platform, the operating system and the target
+    microarchitecture into an architecture spec..
+    """
+    @staticmethod
+    def _return_arch(os_tag, target_tag):
+        platform = spack.platforms.host()
+        default_os = platform.operating_system(os_tag)
+        default_target = platform.target(target_tag)
+        arch_tuple = str(platform), str(default_os), str(default_target)
+        return ArchSpec(arch_tuple)
+
+    @staticmethod
+    def default_arch():
+        """Return the default architecture"""
+        return ArchSpec._return_arch('default_os', 'default_target')
+
+    @staticmethod
+    def frontend_arch():
+        """Return the frontend architecture"""
+        return ArchSpec._return_arch('frontend', 'frontend')
+
     def __init__(self, spec_or_platform_tuple=(None, None, None)):
         """ Architecture specification a package should be built with.
 
@@ -225,11 +239,6 @@ class ArchSpec(object):
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
         """
-        # If another instance of ArchSpec was passed, duplicate it
-        if isinstance(spec_or_platform_tuple, ArchSpec):
-            self._dup(spec_or_platform_tuple)
-            return
-
         # If the argument to __init__ is a spec string, parse it
         # and construct an ArchSpec
         def _string_or_none(s):
@@ -237,21 +246,27 @@ class ArchSpec(object):
                 return str(s)
             return None
 
-        if isinstance(spec_or_platform_tuple, six.string_types):
-            spec_fields = spec_or_platform_tuple.split("-")
-            msg = "invalid arch spec [{0}]"
-            assert len(spec_fields) == 3, msg.format(spec_or_platform_tuple)
+        # If another instance of ArchSpec was passed, duplicate it
+        if isinstance(spec_or_platform_tuple, ArchSpec):
+            other = spec_or_platform_tuple
+            platform_tuple = other.platform, other.os, other.target
+
+        elif isinstance(spec_or_platform_tuple, (six.string_types, tuple)):
+            spec_fields = spec_or_platform_tuple
+
+            # Normalize the string to a tuple
+            if isinstance(spec_or_platform_tuple, six.string_types):
+                spec_fields = spec_or_platform_tuple.split("-")
+                if len(spec_fields) != 3:
+                    msg = 'cannot construct an ArchSpec from {0!s}'
+                    raise ValueError(msg.format(spec_or_platform_tuple))
 
             platform, operating_system, target = spec_fields
-            platform_tuple = _string_or_none(platform),\
-                _string_or_none(operating_system), target
-
-        if isinstance(spec_or_platform_tuple, tuple):
-            platform, operating_system, target = spec_or_platform_tuple
-            platform_tuple = _string_or_none(platform), \
-                _string_or_none(operating_system), target
-            msg = "invalid arch spec tuple [{0}]"
-            assert len(platform_tuple) == 3, msg.format(platform_tuple)
+            platform_tuple = (
+                _string_or_none(platform),
+                _string_or_none(operating_system),
+                target
+            )
 
         self.platform, self.os, self.target = platform_tuple
 
@@ -264,11 +279,6 @@ class ArchSpec(object):
         yield self.platform
         yield self.os
         yield self.target
-
-    def _dup(self, other):
-        self.platform = other.platform
-        self.os = other.os
-        self.target = other.target
 
     @property
     def platform(self):
@@ -298,7 +308,7 @@ class ArchSpec(object):
         value = str(value) if value is not None else None
 
         if value in spack.platforms.Platform.reserved_oss:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -335,7 +345,7 @@ class ArchSpec(object):
         value = target_or_none(value)
 
         if str(value) in spack.platforms.Platform.reserved_targets:
-            curr_platform = str(spack.architecture.platform())
+            curr_platform = str(spack.platforms.host())
             self.platform = self.platform or curr_platform
 
             if self.platform != curr_platform:
@@ -484,9 +494,7 @@ class ArchSpec(object):
 
     def copy(self):
         """Copy the current instance and returns the clone."""
-        clone = ArchSpec.__new__(ArchSpec)
-        clone._dup(self)
-        return clone
+        return ArchSpec(self)
 
     @property
     def concrete(self):
@@ -509,36 +517,17 @@ class ArchSpec(object):
 
     @staticmethod
     def from_dict(d):
-        """Import an ArchSpec from raw YAML/JSON data.
-
-        This routine implements a measure of compatibility with older
-        versions of Spack.  Spack releases before 0.10 used a single
-        string with no OS or platform identifiers.  We import old Spack
-        architectures with platform ``spack09``, OS ``unknown``, and the
-        old arch string as the target.
-
-        Specs from `0.10` or later have a more fleshed out architecture
-        descriptor with a platform, an OS, and a target.
-
-        """
-        if not isinstance(d['arch'], dict):
-            return ArchSpec(('spack09', 'unknown', d['arch']))
-
-        d = d['arch']
-
-        operating_system = d.get('platform_os', None) or d['os']
-        target = spack.target.Target.from_dict_or_value(d['target'])
-
-        return ArchSpec((d['platform'], operating_system, target))
+        """Import an ArchSpec from raw YAML/JSON data"""
+        arch = d['arch']
+        target = spack.target.Target.from_dict_or_value(arch['target'])
+        return ArchSpec((arch['platform'], arch['platform_os'], target))
 
     def __str__(self):
         return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
-        # TODO: this needs to be changed (repr is meant to return valid
-        # TODO: Python code to return an instance equivalent to the current
-        # TODO: one).
-        return str(self)
+        fmt = 'ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))'
+        return fmt.format(self, str(self.target))
 
     def __contains__(self, string):
         return string in str(self) or string in self.target
@@ -1045,6 +1034,13 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
+    @staticmethod
+    def default_arch():
+        """Return an anonymous spec for the default architecture"""
+        s = Spec()
+        s.architecture = ArchSpec.default_arch()
+        return s
+
     def __init__(self, spec_like=None, normal=False,
                  concrete=False, external_path=None, external_modules=None):
         """Create a new Spec.
@@ -1267,7 +1263,7 @@ class Spec(object):
         """
         arch = self.architecture
         if arch and not arch.platform and (arch.os or arch.target):
-            self._set_architecture(platform=spack.architecture.platform().name)
+            self._set_architecture(platform=spack.platforms.host().name)
 
     #
     # Public interface
@@ -1565,14 +1561,19 @@ class Spec(object):
         """
         return self._cached_hash(ht.build_hash, length)
 
+    def process_hash(self, length=None):
+        """Hash used to store specs in environments.
+
+        This hash includes build and test dependencies and is only used to
+        serialize a spec and pass it around among processes.
+        """
+        return self._cached_hash(ht.process_hash, length)
+
     def full_hash(self, length=None):
         """Hash  to determine when to rebuild packages in the build pipeline.
 
         This hash includes the package hash, so that we know when package
-        files has changed between builds. It does not currently include
-        build dependencies, though it likely should.
-
-        TODO: investigate whether to include build deps here.
+        files has changed between builds.
         """
         return self._cached_hash(ht.full_hash, length)
 
@@ -1833,6 +1834,7 @@ class Spec(object):
                 not self._hashes_final)                     # lazily compute
             if write_full_hash:
                 node[ht.full_hash.name] = self.full_hash()
+
             write_build_hash = 'build' in hash.deptype and (
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
@@ -1840,8 +1842,12 @@ class Spec(object):
                 node[ht.build_hash.name] = self.build_hash()
         else:
             node['concrete'] = False
+
         if hash.name == 'build_hash':
             node[hash.name] = self.build_hash()
+        elif hash.name == 'process_hash':
+            node[hash.name] = self.process_hash()
+
         return node
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
@@ -1850,6 +1856,15 @@ class Spec(object):
 
     def to_json(self, stream=None, hash=ht.dag_hash):
         return sjson.dump(self.to_dict(hash), stream)
+
+    @staticmethod
+    def from_specfile(path):
+        """Construct a spec from aJSON or YAML spec file path"""
+        with open(path, 'r') as fd:
+            file_content = fd.read()
+            if path.endswith('.json'):
+                return Spec.from_json(file_content)
+            return Spec.from_yaml(file_content)
 
     @staticmethod
     def from_node_dict(node):
@@ -1975,7 +1990,8 @@ class Spec(object):
                 # new format: elements of dependency spec are keyed.
                 for key in (ht.full_hash.name,
                             ht.build_hash.name,
-                            ht.dag_hash.name):
+                            ht.dag_hash.name,
+                            ht.process_hash.name):
                     if key in elt:
                         dep_hash, deptypes = elt[key], elt['type']
                         hash_type = key
@@ -2161,7 +2177,10 @@ class Spec(object):
             data = yaml.load(stream)
             return Spec.from_dict(data)
         except yaml.error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML spec:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream):
@@ -2174,8 +2193,10 @@ class Spec(object):
             data = sjson.load(stream)
             return Spec.from_dict(data)
         except Exception as e:
-            tty.debug(e)
-            raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON spec:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_detection(spec_str, extra_attributes=None):
@@ -2382,13 +2403,15 @@ class Spec(object):
 
         return changed
 
-    def _old_concretize(self, tests=False):
+    def _old_concretize(self, tests=False, deprecation_warning=True):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
 
         Args:
             tests (list or bool): list of packages that will need test
                 dependencies, or True/False for test all/none
+            deprecation_warning (bool): enable or disable the deprecation
+                warning for the old concretizer
 
         If this spec could describe more than one version, variant, or build
         of a package, this will add constraints to make it concrete.
@@ -2402,10 +2425,11 @@ class Spec(object):
 
         # Add a warning message to inform users that the original concretizer
         # will be removed in v0.18.0
-        msg = ('the original concretizer is currently being used.\n\tUpgrade to '
-               '"clingo" at your earliest convenience. The original concretizer '
-               'will be removed from Spack starting at v0.18.0')
-        warnings.warn(msg)
+        if deprecation_warning:
+            msg = ('the original concretizer is currently being used.\n\tUpgrade to '
+                   '"clingo" at your earliest convenience. The original concretizer '
+                   'will be removed from Spack starting at v0.18.0')
+            warnings.warn(msg)
 
         if not self.name:
             raise spack.error.SpecError(
@@ -2581,7 +2605,7 @@ class Spec(object):
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def _new_concretize(self, tests=False):
+    def _new_concretize(self, tests=False, reuse=False):
         import spack.solver.asp
 
         if not self.name:
@@ -2591,11 +2615,8 @@ class Spec(object):
         if self._concrete:
             return
 
-        result = spack.solver.asp.solve([self], tests=tests)
-        if not result.satisfiable:
-            result.print_cores()
-            raise spack.error.UnsatisfiableSpecError(
-                self, "unknown", "Unsatisfiable!")
+        result = spack.solver.asp.solve([self], tests=tests, reuse=reuse)
+        result.raise_if_unsat()
 
         # take the best answer
         opt, i, answer = min(result.answers)
@@ -2612,17 +2633,23 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    def concretize(self, tests=False):
+    def concretize(self, tests=False, reuse=False):
         """Concretize the current spec.
 
         Args:
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         if spack.config.get('config:concretizer') == "clingo":
-            self._new_concretize(tests)
+            self._new_concretize(tests, reuse=reuse)
         else:
+            if reuse:
+                msg = ('maximizing reuse of installed specs is not '
+                       'possible with the original concretizer')
+                raise spack.error.SpecError(msg)
             self._old_concretize(tests)
 
     def _mark_root_concrete(self, value=True):
@@ -2647,7 +2674,7 @@ class Spec(object):
                 s.clear_cached_hashes()
             s._mark_root_concrete(value)
 
-    def concretized(self, tests=False):
+    def concretized(self, tests=False, reuse=False):
         """This is a non-destructive version of concretize().
 
         First clones, then returns a concrete version of this package
@@ -2657,9 +2684,11 @@ class Spec(object):
             tests (bool or list): if False disregard 'test' dependencies,
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
+            reuse (bool): if True try to maximize reuse of already installed
+                specs, if False don't account for installation status.
         """
         clone = self.copy(caches=True)
-        clone.concretize(tests=tests)
+        clone.concretize(tests=tests, reuse=reuse)
         return clone
 
     def flat_dependencies(self, **kwargs):
@@ -2704,7 +2733,10 @@ class Spec(object):
             # with inconsistent constraints.  Users cannot produce
             # inconsistent specs like this on the command line: the
             # parser doesn't allow it. Spack must be broken!
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
+            raise six.raise_from(
+                InconsistentSpecError("Invalid Spec DAG: %s" % e.message),
+                e,
+            )
 
     def index(self, deptype='all'):
         """Return DependencyMap that points to all the dependencies in this
@@ -3039,6 +3071,10 @@ class Spec(object):
         Raises:
             spack.variant.UnknownVariantError: on the first unknown variant found
         """
+        # concrete variants are always valid
+        if spec.concrete:
+            return
+
         pkg_cls = spec.package_class
         pkg_variants = pkg_cls.variants
         # reserved names are variants that may be set on any package
@@ -3068,7 +3104,7 @@ class Spec(object):
         if not isinstance(values, tuple):
             values = (values,)
 
-        pkg_variant = self.package_class.variants[variant_name]
+        pkg_variant, _ = self.package_class.variants[variant_name]
 
         for value in values:
             if self.variants.get(variant_name):
@@ -3896,7 +3932,7 @@ class Spec(object):
             elif 'version' in parts:
                 col = '@'
 
-            # Finally, write the ouptut
+            # Finally, write the output
             write(sig + morph(spec, str(current)), col)
 
         attribute = ''
@@ -4428,7 +4464,35 @@ class Spec(object):
         return hash(lang.tuplify(self._cmp_iter))
 
     def __reduce__(self):
-        return _spec_from_dict, (self.to_dict(hash=ht.build_hash),)
+        return _spec_from_dict, (self.to_dict(hash=ht.process_hash),)
+
+
+def merge_abstract_anonymous_specs(*abstract_specs):
+    """Merge the abstracts specs passed as input and return the result.
+
+    The root specs must be anonymous, and it's duty of the caller to ensure that.
+
+    This function merge the abstract specs based on package names. In particular
+    it doesn't try to resolve virtual dependencies.
+
+    Args:
+        *abstract_specs (list of Specs): abstract specs to be merged
+    """
+    merged_spec = spack.spec.Spec()
+    for current_spec_constraint in abstract_specs:
+        merged_spec.constrain(current_spec_constraint, deps=False)
+
+        for name in merged_spec.common_dependencies(current_spec_constraint):
+            merged_spec[name].constrain(
+                current_spec_constraint[name], deps=False
+            )
+
+        # Update with additional constraints from other spec
+        for name in current_spec_constraint.dep_difference(merged_spec):
+            edge = current_spec_constraint.get_dependency(name)
+            merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
+
+    return merged_spec
 
 
 def _spec_from_old_dict(data):
@@ -4705,13 +4769,17 @@ class SpecParser(spack.parse.Parser):
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:
-            raise SpecParseError(e)
+            raise six.raise_from(SpecParseError(e), e)
 
         # Generate lookups for git-commit-based versions
         for spec in specs:
             # Cannot do lookups for versions in anonymous specs
-            # Only allow concrete versions using git for now
-            if spec.name and spec.versions.concrete and spec.version.is_commit:
+            # Only allow Version objects to use git for now
+            # Note: VersionRange(x, x) is currently concrete, hence isinstance(...).
+            if (
+                spec.name and spec.versions.concrete and
+                isinstance(spec.version, vn.Version) and spec.version.is_commit
+            ):
                 pkg = spec.package
                 if hasattr(pkg, 'git'):
                     spec.version.generate_commit_lookup(pkg)

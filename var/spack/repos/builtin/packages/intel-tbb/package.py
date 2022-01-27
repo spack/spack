@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class IntelTbb(CMakePackage):
     homepage = "https://www.threadingbuildingblocks.org/"
     url_prefix = 'https://github.com/oneapi-src/oneTBB/'
     url = url_prefix + 'archive/v2020.1.tar.gz'
+
+    maintainers = ['rscohn2']
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
@@ -298,3 +300,23 @@ class IntelTbb(CMakePackage):
             options.append('-DCMAKE_CXX_STANDARD=%s' %
                            spec.variants['cxxstd'].value)
         return options
+
+    @run_after('install')
+    def install_pkgconfig(self):
+        # pkg-config generation is introduced in May 5, 2021.
+        # It must not be overwritten by spack-generated tbb.pc.
+        # https://github.com/oneapi-src/oneTBB/commit/478de5b1887c928e52f029d706af6ea640a877be
+        if self.spec.satisfies('@:2021.2.0', strict=True):
+            mkdirp(self.prefix.lib.pkgconfig)
+
+            with open(join_path(self.prefix.lib.pkgconfig, 'tbb.pc'), 'w') as f:
+                f.write('prefix={0}\n'.format(self.prefix))
+                f.write('exec_prefix=${prefix}\n')
+                f.write('libdir={0}\n'.format(self.prefix.lib))
+                f.write('includedir={0}\n'.format(self.prefix.include))
+                f.write('\n')
+                f.write('Name: Threading Building Blocks\n')
+                f.write('Description: Intel\'s parallelism library for C++\n')
+                f.write('Version: {0}\n'.format(self.spec.version))
+                f.write('Cflags: -I${includedir}\n')
+                f.write('Libs: -L${libdir} -ltbb -latomic\n')

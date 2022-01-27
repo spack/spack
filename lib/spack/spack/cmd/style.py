@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,10 +48,10 @@ exclude_directories = [
 #: double-check the results of other tools (if, e.g., --fix was provided)
 #: The list maps an executable name to a spack spec needed to install it.
 tool_order = [
-    ("isort", "py-isort@4.3.5:"),
-    ("mypy", "py-mypy@0.900:"),
-    ("black", "py-black"),
-    ("flake8", "py-flake8"),
+    ("isort", spack.bootstrap.ensure_isort_in_path_or_raise),
+    ("mypy", spack.bootstrap.ensure_mypy_in_path_or_raise),
+    ("black", spack.bootstrap.ensure_black_in_path_or_raise),
+    ("flake8", spack.bootstrap.ensure_flake8_in_path_or_raise),
 ]
 
 #: tools we run in spack style
@@ -387,40 +387,33 @@ def style(parser, args):
 
         file_list = [prefix_relative(p) for p in file_list]
 
-    returncode = 0
+    return_code = 0
     with working_dir(args.root):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
         print_style_header(file_list, args)
 
-        # run tools in order defined in tool_order
-        returncode = 0
-        for tool_name, tool_spec in tool_order:
-            if getattr(args, tool_name):
+        commands = {}
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            for tool_name, bootstrap_fn in tool_order:
+                # Skip the tool if it was not requested
+                if not getattr(args, tool_name):
+                    continue
+
+                commands[tool_name] = bootstrap_fn()
+
+            for tool_name, bootstrap_fn in tool_order:
+                # Skip the tool if it was not requested
+                if not getattr(args, tool_name):
+                    continue
+
                 run_function, required = tools[tool_name]
                 print_tool_header(tool_name)
+                return_code |= run_function(commands[tool_name], file_list, args)
 
-                try:
-                    # Bootstrap tools so we don't need to require install
-                    with spack.bootstrap.ensure_bootstrap_configuration():
-                        spec = spack.spec.Spec(tool_spec)
-                        cmd = None
-                        cmd = spack.bootstrap.get_executable(
-                            tool_name, spec=spec, install=True
-                        )
-                        if not cmd:
-                            color.cprint("  @y{%s not in PATH, skipped}" % tool_name)
-                            continue
-                        returncode |= run_function(cmd, file_list, args)
-
-                except Exception as e:
-                    raise spack.error.SpackError(
-                        "Couldn't bootstrap %s:" % tool_name, str(e)
-                    )
-
-    if returncode == 0:
+    if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))
     else:
         tty.error(color.colorize("@*{spack style found errors}"))
 
-    return returncode
+    return return_code

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
     maintainers = ['msimberg', 'albestro', 'teonnik']
+
+    tags = ['e4s']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
@@ -49,9 +51,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             description='Max number of OS-threads for HPX applications',
             values=lambda x: isinstance(x, str) and x.isdigit())
 
-    variant('instrumentation', values=any_combination_of(
-        'apex', 'google_perftools', 'papi', 'valgrind'
-    ), description='Add support for various kind of instrumentation')
+    instrumentation_values = ('apex', 'google_perftools', 'papi', 'valgrind')
+    variant('instrumentation', values=any_combination_of(*instrumentation_values),
+            description='Add support for various kind of instrumentation')
 
     variant(
         "networking",
@@ -144,6 +146,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches and one-off conflicts
 
+    # Boost and HIP don't work together in certain versions:
+    # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
+    # both include a fix.
+    conflicts("boost@:1.77.0", when="@:1.7 +rocm")
+
     # boost 1.73.0 build problem with HPX 1.4.0 and 1.4.1
     # https://github.com/STEllAR-GROUP/hpx/issues/4728#issuecomment-640685308
     depends_on('boost@:1.72.0', when='@:1.4')
@@ -161,13 +168,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def instrumentation_args(self):
-        for value in self.variants['instrumentation'].values:
-            if value == 'none':
-                continue
-
+        args = []
+        for value in self.instrumentation_values:
             condition = 'instrumentation={0}'.format(value)
-            yield self.define(
-                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec)
+            args.append(self.define(
+                'HPX_WITH_{0}'.format(value.upper()), condition in self.spec
+            ))
+        return args
 
     def cmake_args(self):
         spec, args = self.spec, []
@@ -208,7 +215,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # HIP support requires compiling with hipcc
         if '+rocm' in self.spec:
             args += [self.define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc)]
-            if self.spec.satisfies('^cmake@3.21:'):
+            if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
                 args += [self.define('__skip_rocmclang', True)]
 
         # Instrumentation

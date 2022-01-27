@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,9 +40,7 @@ class PyJedi(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@0.17.2')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.18.0')
 
-    depends_on('py-parso@0.1.0', type=('build', 'run'), when='@0.11.0')
-    depends_on('py-parso@0.1.1', type=('build', 'run'), when='@0.11.1')
     depends_on('py-parso@0.2.0:', type=('build', 'run'), when='@0.12.0')
     depends_on('py-parso@0.3.0:', type=('build', 'run'), when='@0.12.1:0.14.0')
-    depends_on('py-parso@0.7.0:0.7.99', type=('build', 'run'), when='@0.17.2')
-    depends_on('py-parso@0.8.0:0.8.99', type=('build', 'run'), when='@0.18.0')
+    depends_on('py-parso@0.7.0:0.7', type=('build', 'run'), when='@0.17.2')
+    depends_on('py-parso@0.8.0:0.8', type=('build', 'run'), when='@0.18.0')

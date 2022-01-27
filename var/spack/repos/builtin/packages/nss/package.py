@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,9 @@ class Nss(MakefilePackage):
     homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
     url      = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_67_RTM/src/nss-3.67.tar.gz"
 
-    version('3.67', sha256='f6549a9148cd27b394b40c77fa73111d5ea23cdb51d796665de1b7458f88ce7f')
+    version('3.73', sha256='566d3a68da9b10d7da9ef84eb4fe182f8f04e20d85c55d1bf360bb2c0096d8e5')
+    # Everything before 3.73 is vulnerable (CVE-2021-43527)
+    version('3.67', sha256='f6549a9148cd27b394b40c77fa73111d5ea23cdb51d796665de1b7458f88ce7f', deprecated=True)
 
     depends_on('nspr@4.24:')
     depends_on('sqlite')
@@ -25,6 +27,11 @@ class Nss(MakefilePackage):
     parallel = False
 
     build_directory = 'nss'
+
+    def url_for_version(self, version):
+        url = 'https://ftp.mozilla.org/pub/security/nss/releases/NSS_{0}_RTM/src/nss-{1}.tar.gz'
+
+        return url.format(version.underscored, version)
 
     @property
     def build_targets(self):

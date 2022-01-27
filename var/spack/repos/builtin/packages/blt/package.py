@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Blt(Package):
     homepage = "https://github.com/LLNL/blt"
     url      = "https://github.com/LLNL/blt/archive/v0.4.0.tar.gz"
     git      = "https://github.com/LLNL/blt.git"
+    tags     = ['radiuss']
 
     maintainers = ['white238', 'davidbeckingsale']
 

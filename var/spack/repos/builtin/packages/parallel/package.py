@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/parallel/"
     gnu_mirror_path = "parallel/parallel-20170122.tar.bz2"
 
+    version('20210922', sha256='dedca94fc41f2054dbadd9b8361e56015fc8af5d1961c1b982b63e6d86494d66')
     version('20200822', sha256='9654226a808392c365b1e7b8dea91bf4870bc4f306228d853eb700679e21be09')
     version('20190222', sha256='86b1badc56ee2de1483107c2adf634604fd72789c91f65e40138d21425906b1c')
     version('20170322', sha256='f8f810040088bf3c52897a2ee0c0c71bd8d097e755312364b946f107ae3553f6')

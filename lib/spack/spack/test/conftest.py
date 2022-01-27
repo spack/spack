@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
+from typing import Dict  # novm
 
 import py
 import pytest
@@ -22,9 +23,9 @@ import pytest
 import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
+import llnl.util.lang
 from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
 
-import spack.architecture
 import spack.binary_distribution
 import spack.caches
 import spack.compilers
@@ -50,8 +51,8 @@ from spack.util.pattern import Bunch
 #
 # Return list of shas for latest two git commits in local spack repo
 #
-@pytest.fixture
-def last_two_git_commits(scope='session'):
+@pytest.fixture(scope='session')
+def last_two_git_commits():
     git = spack.util.executable.which('git', required=True)
     spack_git_path = spack.paths.prefix
     with working_dir(spack_git_path):
@@ -195,7 +196,7 @@ def no_path_access(monkeypatch):
 @pytest.fixture(scope='session', autouse=True)
 def clean_user_environment():
     spack_env_value = os.environ.pop(ev.spack_env_var, None)
-    with ev.deactivate_environment():
+    with ev.no_active_environment():
         yield
     if spack_env_value:
         os.environ[ev.spack_env_var] = spack_env_value
@@ -430,8 +431,14 @@ def _skip_if_missing_executables(request):
     """Permits to mark tests with 'require_executables' and skip the
     tests if the executables passed as arguments are not found.
     """
-    if request.node.get_marker('requires_executables'):
-        required_execs = request.node.get_marker('requires_executables').args
+    if hasattr(request.node, 'get_marker'):
+        # TODO: Remove the deprecated API as soon as we drop support for Python 2.6
+        marker = request.node.get_marker('requires_executables')
+    else:
+        marker = request.node.get_closest_marker('requires_executables')
+
+    if marker:
+        required_execs = marker.args
         missing_execs = [
             x for x in required_execs if spack.util.executable.which(x) is None
         ]
@@ -450,7 +457,7 @@ def _use_test_platform(test_platform):
     # This is the only context manager used at session scope (see note
     # below for more insight) since we want to use the test platform as
     # a default during tests.
-    with spack.architecture.use_platform(test_platform):
+    with spack.platforms.use_platform(test_platform):
         yield
 
 #
@@ -515,10 +522,9 @@ def linux_os():
     """Returns a named tuple with attributes 'name' and 'version'
     representing the OS.
     """
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     name, version = 'debian', '6'
     if platform.name == 'linux':
-        platform = spack.architecture.platform()
         current_os = platform.operating_system('default_os')
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple('LinuxOS', ['name', 'version'])
@@ -972,7 +978,10 @@ def mock_gnupghome(monkeypatch):
         yield short_name_tmpdir
 
     # clean up, since we are doing this manually
-    shutil.rmtree(short_name_tmpdir)
+    # Ignore errors cause we seem to be hitting a bug similar to
+    # https://bugs.python.org/issue29699 in CI (FileNotFoundError: [Errno 2] No such
+    # file or directory: 'S.gpg-agent.extra').
+    shutil.rmtree(short_name_tmpdir, ignore_errors=True)
 
 ##########
 # Fake archives and repositories
@@ -1386,11 +1395,11 @@ def mock_svn_repository(tmpdir_factory):
 @pytest.fixture()
 def mutable_mock_env_path(tmpdir_factory):
     """Fixture for mocking the internal spack environments directory."""
-    saved_path = ev.env_path
+    saved_path = ev.environment.env_path
     mock_path = tmpdir_factory.mktemp('mock-env-path')
-    ev.env_path = str(mock_path)
+    ev.environment.env_path = str(mock_path)
     yield mock_path
-    ev.env_path = saved_path
+    ev.environment.env_path = saved_path
 
 
 @pytest.fixture()
@@ -1451,7 +1460,7 @@ def invalid_spec(request):
     return request.param
 
 
-@pytest.fixture("module")
+@pytest.fixture(scope='module')
 def mock_test_repo(tmpdir_factory):
     """Create an empty repository."""
     repo_namespace = 'mock_test_repo'
@@ -1480,7 +1489,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}  # type: ignore
+    versions = {}  # type: Dict
 
 
 @pytest.fixture
@@ -1526,3 +1535,10 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set('config:test_stage', tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(autouse=True)
+def brand_new_binary_cache():
+    yield
+    spack.binary_distribution.binary_index = llnl.util.lang.Singleton(
+        spack.binary_distribution._binary_index)

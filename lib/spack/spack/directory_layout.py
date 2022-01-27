@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,13 @@
 import errno
 import glob
 import os
+import re
 import shutil
 import tempfile
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -88,8 +90,8 @@ class DirectoryLayout(object):
         self.manifest_file_name  = 'install_manifest.json'
 
     @property
-    def hidden_file_paths(self):
-        return (self.metadata_dir,)
+    def hidden_file_regexes(self):
+        return (re.escape(self.metadata_dir),)
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
@@ -343,13 +345,13 @@ class DirectoryLayout(object):
                     os.unlink(path)
                     os.remove(metapath)
                 except OSError as e:
-                    raise RemoveFailedError(spec, path, e)
+                    raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
             except OSError as e:
-                raise RemoveFailedError(spec, path, e)
+                raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         path = os.path.dirname(path)
         while path != self.root:

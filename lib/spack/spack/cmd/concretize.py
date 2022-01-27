@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.cmd
+import spack.cmd.common.arguments
 import spack.environment as ev
 
 description = 'concretize an environment and write a lockfile'
@@ -12,6 +13,7 @@ level = "long"
 
 
 def setup_parser(subparser):
+    spack.cmd.common.arguments.add_common_arguments(subparser, ['reuse'])
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="Re-concretize even if already concretized.")
@@ -34,6 +36,8 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force, tests=tests)
+        concretized_specs = env.concretize(
+            force=args.force, tests=tests, reuse=args.reuse
+        )
         ev.display_specs(concretized_specs)
         env.write()

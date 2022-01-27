@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,4 +29,4 @@ class RXlconnect(RPackage):
     depends_on('r-xlconnectjars@0.2-14', when='@0.2-14', type=('build', 'run'))
     depends_on('r-xlconnectjars@0.2-15', when='@0.2-15', type=('build', 'run'))
     depends_on('java@6:')
-    depends_on('java@8:11.999', when='@1.0.1:')
+    depends_on('java@8:11', when='@1.0.1:')

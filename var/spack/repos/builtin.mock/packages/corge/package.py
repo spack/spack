@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -142,10 +142,12 @@ main(int argc, char* argv[])
                 '-Wl,-rpath,%s' % spec['quux'].prefix.lib64,
                 '-Wl,-rpath,%s' % spec['garply'].prefix.lib64,
                 'libcorge.dylib',
-                '%s/libquux.dylib' % spec['quux'].prefix.lib64,
-                '%s/libgarply.dylib' % spec['garply'].prefix.lib64)
+                '%s/libquux.dylib.3.0' % spec['quux'].prefix.lib64,
+                '%s/libgarply.dylib.3.0' % spec['garply'].prefix.lib64)
             mkdirp(prefix.lib64)
             copy('libcorge.dylib', '%s/libcorge.dylib' % prefix.lib64)
+            os.link('%s/libcorge.dylib' % prefix.lib64,
+                    '%s/libcorge.dylib.3.0' % prefix.lib64)
         else:
             gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
                 '-Wl,-soname,libcorge.so', '-o', 'libcorge.so', 'corge.cc.o',
@@ -159,10 +161,12 @@ main(int argc, char* argv[])
                 '-Wl,-rpath,%s' % spec['quux'].prefix.lib64,
                 '-Wl,-rpath,%s' % spec['garply'].prefix.lib64,
                 'libcorge.so',
-                '%s/libquux.so' % spec['quux'].prefix.lib64,
-                '%s/libgarply.so' % spec['garply'].prefix.lib64)
+                '%s/libquux.so.3.0' % spec['quux'].prefix.lib64,
+                '%s/libgarply.so.3.0' % spec['garply'].prefix.lib64)
             mkdirp(prefix.lib64)
             copy('libcorge.so', '%s/libcorge.so' % prefix.lib64)
+            os.link('%s/libcorge.so' % prefix.lib64,
+                    '%s/libcorge.so.3.0' % prefix.lib64)
         copy('corgegator', '%s/corgegator' % prefix.lib64)
         copy('%s/corge/corge.h' % self.stage.source_path,
              '%s/corge/corge.h' % prefix.include)

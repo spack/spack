@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import sys
 
 from spack import *
@@ -16,6 +17,11 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
+    executables = ['^curl$']
+
+    version('7.80.0', sha256='dd0d150e49cd950aff35e16b628edf04927f0289df42883750cf952bb858189c')
+    version('7.79.1', sha256='de62c4ab9a9316393962e8b94777a570bb9f71feb580fb4475e412f2f9387851')
+    version('7.79.0', sha256='d607a677f473f79f96c964100327125a6204a39d835dc00dab7fc0129b959f42')
     version('7.78.0', sha256='98530b317dc95ccb324bbe4f834f07bb642fbc393b794ddf3434f246a71ea44a')
     version('7.77.0', sha256='6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea')
     version('7.76.1', sha256='7a8e184d7d31312c4ebf6a8cb59cd757e61b2b2833a9ed4f9bf708066e7695e9')
@@ -73,7 +79,7 @@ class Curl(AutotoolsPackage):
     variant('ldap',       default=False, description='enable ldap support')
     variant('libidn2',    default=False,  description='enable libidn2 support')
 
-    conflicts('+libssh', when='@:7.57.99')
+    conflicts('+libssh', when='@:7.57')
     # on OSX and --with-ssh the configure steps fails with
     # one or more libs available at link-time are not available run-time
     # unless the libssh are installed externally (e.g. via homebrew), even
@@ -86,7 +92,8 @@ class Curl(AutotoolsPackage):
     conflicts('tls=mbedtls', when='@:7.45')
 
     depends_on('gnutls', when='tls=gnutls')
-    depends_on('mbedtls', when='tls=mbedtls')
+    depends_on('mbedtls@3:', when='@7.79: tls=mbedtls')
+    depends_on('mbedtls@:2', when='@:7.78 tls=mbedtls')
     depends_on('nss', when='tls=nss')
     depends_on('openssl', when='tls=openssl')
     depends_on('libidn2', when='+libidn2')
@@ -95,6 +102,38 @@ class Curl(AutotoolsPackage):
     depends_on('libssh2', when='+libssh2')
     depends_on('libssh', when='+libssh')
     depends_on('krb5', when='+gssapi')
+
+    # curl queries pkgconfig for openssl compilation flags
+    depends_on('pkgconfig', type='build')
+
+    @classmethod
+    def determine_version(cls, exe):
+        curl = Executable(exe)
+        output = curl('--version', output=str, error=str)
+        match = re.match(r'curl ([\d.]+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            variants = ''
+            curl = Executable(exe)
+            output = curl('--version', output=str, error='str')
+            if 'nghttp2' in output:
+                variants += '+nghttp2'
+            protocols_match = re.search(r'Protocols: (.*)\n', output)
+            if protocols_match:
+                protocols = protocols_match.group(1).strip().split(' ')
+                if 'ldap' in protocols:
+                    variants += '+ldap'
+            features_match = re.search(r'Features: (.*)\n', output)
+            if features_match:
+                features = features_match.group(1).strip().split(' ')
+                if 'GSS-API' in features:
+                    variants += '+gssapi'
+            # TODO: Determine TLS backend if needed.
+            # TODO: Determine more variants.
+            return variants
 
     def configure_args(self):
         spec = self.spec
@@ -108,6 +147,15 @@ class Curl(AutotoolsPackage):
             '--without-libpsl',
             '--without-zstd',
         ]
+
+        # Make gnutls / openssl decide what certs are trusted.
+        # TODO: certs for other tls options.
+        if spec.satisfies('tls=gnutls') or spec.satisfies('tls=openssl'):
+            args.extend([
+                '--without-ca-bundle',
+                '--without-ca-path',
+                '--with-ca-fallback',
+            ])
 
         # https://daniel.haxx.se/blog/2021/06/07/bye-bye-metalink-in-curl/
         # We always disable it explicitly, but the flag is gone in newer
@@ -127,6 +175,7 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
         args += self.enable_or_disable('ldap')
+
         return args
 
     def with_or_without_gnutls(self, activated):

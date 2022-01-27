@@ -1,0 +1,10 @@
+diff --git a/autotune/__init__.py b/autotune/__init__.py
+index 5636cf1..6c9488d 100644
+--- a/autotune/__init__.py
++++ b/autotune/__init__.py
+@@ -1,4 +1,4 @@
+-from autotune.__version__ import __version__, __version_suffix__
++from autotune.__version__ import __version__
+ name = 'autotune'
+ version = __version__
+ 

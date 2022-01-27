@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,10 +62,10 @@ class RangeV3(CMakePackage):
     # Known compiler conflicts. Your favorite compiler may also conflict
     # depending on its C++ standard support.
     conflicts('%clang@:3.6.1')
-    conflicts('%clang@:3.9.99', when='@0.11.0:')
+    conflicts('%clang@:3.9', when='@0.11.0:')
     conflicts('%gcc@:4.9.0')
     conflicts('%gcc@:5.2.0', when='cxxstd=14')
-    conflicts('%gcc@:5.99.99', when='cxxstd=17')
+    conflicts('%gcc@:5', when='cxxstd=17')
 
     depends_on('cmake@3.6:', type='build')
     depends_on('doxygen+graphviz', type='build', when='+doc')

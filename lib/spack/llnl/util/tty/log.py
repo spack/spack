@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ except ImportError:
 
 
 # Use this to strip escape sequences
-_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
+_escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h|\x1b\][0-9]+;[^\x07]*\x07')
 
 # control characters for enabling/disabling echo
 #
@@ -323,7 +323,7 @@ class FileWrapper(object):
                 if sys.version_info < (3,):
                     self.file = open(self.file_like, 'w')
                 else:
-                    self.file = open(self.file_like, 'w', encoding='utf-8')
+                    self.file = open(self.file_like, 'w', encoding='utf-8')  # novm
             else:
                 self.file = StringIO()
             return self.file
@@ -607,7 +607,7 @@ class log_output(object):
         self._active = True
 
         # return this log_output object so that the user can do things
-        # like temporarily echo some ouptut.
+        # like temporarily echo some output.
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -780,7 +780,12 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                     try:
                         while line_count < 100:
                             # Handle output from the calling process.
-                            line = _retry(in_pipe.readline)()
+                            try:
+                                line = _retry(in_pipe.readline)()
+                            except UnicodeDecodeError:
+                                # installs like --test=root gpgme produce non-UTF8 logs
+                                line = '<line lost: output was not encoded as UTF-8>\n'
+
                             if not line:
                                 return
                             line_count += 1

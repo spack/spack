@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,16 +13,17 @@ class Cddlib(AutotoolsPackage):
     and extreme rays of a general convex polyhedron in R^d given by a system
     of linear inequalities"""
 
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-094h.tar.gz"
+    homepage = "https://people.inf.ethz.ch/fukudak/cdd_home"
+    url      = "https://github.com/cddlib/cddlib/archive/refs/tags/0.94m.tar.gz"
+    maintainers = ['NessieCanCode']
+    version('0.94m', sha256='70dffdb3369b8704dc75428a1b3c42ab9047b81ce039f12f427e2eb2b1b0dee2')
+    version('0.94h', sha256='7382782c3834214b022c8b2898ed775a7bf915f2cb2acb73fa045d6fd9a3de33')
 
-    version('0.94h', sha256='fe6d04d494683cd451be5f6fe785e147f24e8ce3ef7387f048e739ceb4565ab5')
-
-    # Note: It should be possible to build cddlib also without gmp
-
-    depends_on("gmp")
-    depends_on("libtool", type="build")
+    depends_on("gmp", when='@0.94h')
 
     def url_for_version(self, version):
-        url = "ftp://ftp.math.ethz.ch/users/fukudak/cdd/cddlib-{0}.tar.gz"
-        return url.format(version.joined)
+        if self.spec.satisfies('@:0.94i'):
+            url = "https://github.com/cddlib/cddlib/archive/refs/tags/{0}.tar.gz"
+        elif self.spec.satisfies('@0.94j:'):
+            url = "https://github.com/cddlib/cddlib/releases/download/{0}/cddlib-{0}.tar.gz"
+        return url.format(version.dotted)

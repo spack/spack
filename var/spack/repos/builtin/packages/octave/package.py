@@ -1,8 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import re
 import shutil
 import sys
 import tempfile
@@ -22,10 +23,11 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ['mtmiller']
+    maintainers = ['mtmiller', 'siko1056']
 
     extendable = True
 
+    version('6.4.0', sha256='b48f33d4fceaf394cfbea73a8c850000936d83a41739a24f7568b5b0a7b39acd')
     version('6.3.0', sha256='232065f3a72fc3013fe9f17f429a3df69d672c1f6b6077029a31c8f3cd58a66e')
     version('6.2.0', sha256='457d1fda8634a839e2fd7cfc55b98bd56f36b6ae73d31bb9df43dde3012caa7c')
     version('6.1.0', sha256='6ff34e401658622c44094ecb67e497672e4337ca2d36c0702d0403ecc60b0a57')
@@ -45,6 +47,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     # Variants
     variant('readline',   default=True)
+    variant('bz2',        default=True)
     variant('arpack',     default=False)
     variant('curl',       default=False)
     variant('fftw',       default=False)
@@ -73,9 +76,11 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
     depends_on('pkgconfig', type='build')
+    depends_on('texinfo',   type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')
+    depends_on('bzip2',        when='+bz2')
 
     # Optional dependencies
     depends_on('arpack-ng',    when='+arpack')
@@ -160,16 +165,33 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        config_args.extend([
-            "--with-blas=%s" % spec['blas'].libs.ld_flags,
-            "--with-lapack=%s" % spec['lapack'].libs.ld_flags
-        ])
+        if '^mkl' in spec and 'gfortran' in self.compiler.fc:
+            mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
+            config_args.extend([
+                mkl_re.sub(r'\g<1>gf\g<2>',
+                           '--with-blas={0}'.format(
+                               spec['blas'].libs.ld_flags)),
+                '--with-lapack'
+            ])
+        else:
+            config_args.extend([
+                '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+                '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
+            ])
 
         # Strongly recommended dependencies
         if '+readline' in spec:
             config_args.append('--enable-readline')
         else:
             config_args.append('--disable-readline')
+
+        if '+bz2' in spec:
+            config_args.extend([
+                "--with-bz2-includedir=%s" % spec['bzip2'].prefix.include,
+                "--with-bz2-libdir=%s"     % spec['bzip2'].prefix.lib
+            ])
+        else:
+            config_args.append("--without-bz2")
 
         # Optional dependencies
         if '+arpack' in spec:
@@ -265,6 +287,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-qrupdate")
 
+        config_args += self.with_or_without("qscintilla")
+
         if '+zlib' in spec:
             config_args.extend([
                 "--with-z-includedir=%s" % spec['zlib'].prefix.include,
@@ -282,6 +306,9 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         # Use gfortran calling-convention %fj
         if spec.satisfies('%fj'):
             config_args.append('--enable-fortran-calling-convention=gfortran')
+
+        # Make sure we do not use qtchooser
+        config_args.append('ac_cv_prog_ac_ct_QTCHOOSER=')
 
         return config_args
 

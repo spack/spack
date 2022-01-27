@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class Flake8(Package):
     variant('super-awesome-feature',    default=True,  description='Enable super awesome feature')
     variant('somewhat-awesome-feature', default=False, description='Enable somewhat awesome feature')
 
-    provides('lapack', when='@2.0+super-awesome-feature+somewhat-awesome-feature')
+    provides('somevirt', when='@2.0+super-awesome-feature+somewhat-awesome-feature')
 
     extends('python', ignore='bin/(why|does|every|package|that|depends|on|numpy|need|to|copy|f2py3?)')
 

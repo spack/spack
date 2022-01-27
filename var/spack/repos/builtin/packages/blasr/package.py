@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Blasr(Package):
     version('5.3.1', sha256='ff7da5a03096294572e6c64340354da5c5ee1c86c277e7b899f2c170c1ac4049')
 
     depends_on('ncurses')
-    depends_on('hdf5+cxx@1.8.12:1.8.99')
+    depends_on('hdf5+cxx@1.8.12:1.8')
     depends_on('htslib')
     depends_on('zlib')
     depends_on('boost')

@@ -1,9 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import os
 
 from spack import *
@@ -20,7 +18,6 @@ class Turbine(AutotoolsPackage):
     version('master', branch='master')
     version('1.3.0', sha256='9709e5dada91a7dce958a7967d6ff2bd39ccc9e7da62d05a875324b5089da393')
     version('1.2.3', sha256='a3156c7e0b39e166da3de8892f55fa5d535b0c99c87a9add067c801098fe51ba')
-    version('1.1.0', sha256='98fad47597935a04d15072e42bf85411d55ef00cb6f953e9f14d6de902e33209')
 
     variant('python', default=False,
             description='Enable calling python')
@@ -28,11 +25,10 @@ class Turbine(AutotoolsPackage):
             description='Enable calling R')
     variant('hdf5', default=False,
             description='Enable HDF5 support')
-    depends_on('adlbx@master', when='@master')
-    depends_on('adlbx@:0.9.2', when='@:1.2.3')
-    depends_on('adlbx@:0.8.0', when='@:1.1.0')
-    depends_on('adlbx', when='@1.2.1:')
+
     depends_on('adlbx')
+    depends_on('adlbx@master', when='@master')
+    depends_on('adlbx@:0.9.2', when='@1.2.3:1.2.99')
     depends_on('tcl', type=('build', 'run'))
     depends_on('zsh', type=('build', 'run'))
     depends_on('swig', type='build')

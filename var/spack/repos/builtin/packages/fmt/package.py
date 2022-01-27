@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,8 +42,8 @@ class Fmt(CMakePackage):
 
     # Supported compilers/standards are detailed here:
     # http://fmtlib.net/latest/index.html#portability
-    conflicts('%gcc@:4.3.999', when='@5:')
-    conflicts('%llvm@:2.8.999', when='@5:')
+    conflicts('%gcc@:4.3', when='@5:')
+    conflicts('%llvm@:2.8', when='@5:')
     # 5 and above require C++11
     conflicts('cxxstd=98', when='@5:')
     # 5.0.0 enables C++14 auto return types in C++11 mode

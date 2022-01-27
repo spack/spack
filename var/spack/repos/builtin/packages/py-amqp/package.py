@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,5 +20,5 @@ class PyAmqp(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-vine@1.1.3:4.999', when="@2.999", type=('build', 'run'))
-    depends_on('py-vine@5.0.0:5.999', when="@5.0.0:5.999", type=('build', 'run'))
+    depends_on('py-vine@1.1.3:4', when="@2", type=('build', 'run'))
+    depends_on('py-vine@5.0.0:5', when="@5.0.0:5", type=('build', 'run'))

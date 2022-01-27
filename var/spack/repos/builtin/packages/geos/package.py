@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class Geos(CMakePackage):
 
     patch('https://patch-diff.githubusercontent.com/raw/libgeos/geos/pull/461.patch',
           sha256='58795ae79f168851f27aa488a589796f9a7563d368ffa32e1fe315eb71699877',
-          when='@3.7:')
+          when='@3.8:')
 
     def cmake_args(self):
         args = []

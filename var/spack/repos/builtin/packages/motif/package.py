@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,13 @@ class Motif(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     patch('add_xbitmaps_dependency.patch')
+
+    def patch(self):
+        # fix linking the simple_app demo program
+        # https://bugs.launchpad.net/ubuntu/+source/openmotif/+bug/705294
+        filter_file('../../../lib/Exm/libExm.a',
+                    '../../../lib/Exm/libExm.a -lX11',
+                    'demos/programs/Exm/simple_app/Makefile.am')
 
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')

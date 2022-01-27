@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,4 +17,4 @@ class PySpykeutils(PythonPackage):
     depends_on('py-setuptools',       type='build')
     depends_on('py-scipy',            type=('build', 'run'))
     depends_on('py-quantities',       type=('build', 'run'))
-    depends_on('py-neo@0.2.1:0.3.99', type=('build', 'run'))
+    depends_on('py-neo@0.2.1:0.3', type=('build', 'run'))

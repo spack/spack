@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ __all__ = ['Barrier']
 class Barrier:
     """Simple reusable semaphore barrier.
 
-    Python 2.6 doesn't have multiprocessing barriers so we implement this.
+    Python 2 doesn't have multiprocessing barriers so we implement this.
 
     See http://greenteapress.com/semaphores/downey08semaphores.pdf, p. 41.
     """

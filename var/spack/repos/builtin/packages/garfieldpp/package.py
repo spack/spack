@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,18 @@ class Garfieldpp(CMakePackage):
 
     maintainers = ['mirguest']
 
+    variant('examples', default=False, description="Build garfield examples")
+
     version('master', branch='master')
     version('4.0', sha256='82bc1f0395213bd30a7cd854426e6757d0b4155e99ffd4405355c9648fa5ada3')
     version('3.0', sha256='c1282427a784658bc38b71c8e8cfc8c9f5202b185f0854d85f7c9c5a747c5406')
 
     depends_on('root')
+    depends_on('gsl')
+    depends_on('geant4', when='+examples')
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('WITH_EXAMPLES', 'examples')
+        ]
+        return args

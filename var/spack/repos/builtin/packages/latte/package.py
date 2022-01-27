@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Latte(CMakePackage):
     version('master', branch='master')
     version('1.2.2', sha256='ab1346939dbd70ffd89c5e5bf8d24946cb3655dc25b203bec7fc59c6c63e4c79')
     version('1.2.1', sha256='a21dda5ebdcefa56e9ff7296d74ef03f89c200d2e110a02af7a84612668bf702')
+    version('1.0.1', sha256='67b2957639ad8e36b69bc6ea9a13085183a881562af9ca6d2b90b412ff073789')
 
     variant('mpi', default=True,
             description='Build with mpi')

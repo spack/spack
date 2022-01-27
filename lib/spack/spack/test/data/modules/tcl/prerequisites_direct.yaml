@@ -2,4 +2,5 @@ enable:
   - tcl
 tcl:
   all:
-    prerequisites: 'direct'
+    autoload: none
+    prerequisites: direct

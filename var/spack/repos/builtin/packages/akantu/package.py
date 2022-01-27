@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Akantu(CMakePackage):
     variant('python', default=False,
             description="Activates python bindings")
 
-    depends_on('boost@:1.66', when='@:3.0.99')
+    depends_on('boost@:1.66', when='@:3.0')
     depends_on('boost')
     depends_on('lapack')
     depends_on('cmake@3.5.1:', type='build')
@@ -49,9 +49,9 @@ class Akantu(CMakePackage):
 
     extends('python', when='+python')
 
-    conflicts('%gcc@:5.3.99')
-    conflicts('@:3.0.99 external_solvers=petsc')
-    conflicts('@:3.0.99 +python')
+    conflicts('%gcc@:5.3')
+    conflicts('@:3.0 external_solvers=petsc')
+    conflicts('@:3.0 +python')
 
     def cmake_args(self):
         spec = self.spec
@@ -68,7 +68,7 @@ class Akantu(CMakePackage):
                 'ON' if spec.satisfies('+python') else 'OFF'),
         ]
 
-        if spec.satisfies('@:3.0.99'):
+        if spec.satisfies('@:3.0'):
             args.extend(['-DCMAKE_CXX_FLAGS=-Wno-class-memaccess',
                          '-DAKANTU_TRACTION_AT_SPLIT_NODE_CONTACT:BOOL=OFF'])
         else:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
+import collections
 import operator
 import os
 import os.path
@@ -19,14 +20,9 @@ import traceback
 
 import ruamel.yaml.error as yaml_error
 import six
-from ordereddict_backport import OrderedDict
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
 
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -39,6 +35,10 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.util.spack_yaml import syaml_dict
 from spack.version import VersionList
+
+
+def _is_string(url):
+    return isinstance(url, six.string_types)
 
 
 def _display_mirror_entry(size, name, url, type_=None):
@@ -59,10 +59,15 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None):
+    def __init__(self, fetch_url, push_url=None,
+                 name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
+
+    def __eq__(self, other):
+        return (self._fetch_url == other._fetch_url and
+                self._push_url == other._push_url)
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -76,16 +81,27 @@ class Mirror(object):
             data = syaml.load(stream)
             return Mirror.from_dict(data, name)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return Mirror.from_dict(d, name)
+        try:
+            d = sjson.load(stream)
+            return Mirror.from_dict(d, name)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror:", str(e)),
+                e,
+            )
 
     def to_dict(self):
         if self._push_url is None:
-            return self._fetch_url
+            return syaml_dict([
+                ('fetch', self._fetch_url),
+                ('push', self._fetch_url)])
         else:
             return syaml_dict([
                 ('fetch', self._fetch_url),
@@ -96,16 +112,16 @@ class Mirror(object):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name)
+            return Mirror(d['fetch'], d['push'], name=name)
 
     def display(self, max_len=0):
         if self._push_url is None:
-            _display_mirror_entry(max_len, self._name, self._fetch_url)
+            _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
             _display_mirror_entry(
-                max_len, self._name, self._fetch_url, "fetch")
+                max_len, self._name, self.fetch_url, "fetch")
             _display_mirror_entry(
-                max_len, self._name, self._push_url, "push")
+                max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
@@ -137,24 +153,83 @@ class Mirror(object):
     def name(self):
         return self._name or "<unnamed>"
 
+    def get_profile(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get('profile', None)
+            return self._fetch_url.get('profile', None)
+        else:
+            return None
+
+    def set_profile(self, url_type, profile):
+        if url_type == "push":
+            self._push_url["profile"] = profile
+        else:
+            self._fetch_url["profile"] = profile
+
+    def get_access_pair(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get('access_pair', None)
+            return self._fetch_url.get('access_pair', None)
+        else:
+            return None
+
+    def set_access_pair(self, url_type, connection_tuple):
+        if url_type == "push":
+            self._push_url["access_pair"] = connection_tuple
+        else:
+            self._fetch_url["access_pair"] = connection_tuple
+
+    def get_endpoint_url(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get('endpoint_url', None)
+            return self._fetch_url.get('endpoint_url', None)
+        else:
+            return None
+
+    def set_endpoint_url(self, url_type, url):
+        if url_type == "push":
+            self._push_url["endpoint_url"] = url
+        else:
+            self._fetch_url["endpoint_url"] = url
+
+    def get_access_token(self, url_type):
+        if isinstance(self._fetch_url, dict):
+            if url_type == "push":
+                return self._push_url.get('access_token', None)
+            return self._fetch_url.get('access_token', None)
+        else:
+            return None
+
+    def set_access_token(self, url_type, connection_token):
+        if url_type == "push":
+            self._push_url["access_token"] = connection_token
+        else:
+            self._fetch_url["access_token"] = connection_token
+
     @property
     def fetch_url(self):
-        return self._fetch_url
+        return self._fetch_url if _is_string(self._fetch_url) \
+            else self._fetch_url["url"]
 
     @fetch_url.setter
     def fetch_url(self, url):
-        self._fetch_url = url
+        self._fetch_url["url"] = url
         self._normalize()
 
     @property
     def push_url(self):
         if self._push_url is None:
-            return self._fetch_url
-        return self._push_url
+            return self._fetch_url if _is_string(self._fetch_url) \
+                else self._fetch_url["url"]
+        return self._push_url if _is_string(self._push_url) \
+            else self._push_url["url"]
 
     @push_url.setter
     def push_url(self, url):
-        self._push_url = url
+        self._push_url["url"] = url
         self._normalize()
 
     def _normalize(self):
@@ -166,11 +241,14 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = OrderedDict(
+        self._mirrors = collections.OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
                 spack.config.get('mirrors', scope=scope).items()))
+
+    def __eq__(self, other):
+        return self._mirrors == other._mirrors
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(True), stream)
@@ -185,12 +263,21 @@ class MirrorCollection(Mapping):
             data = syaml.load(stream)
             return MirrorCollection(data)
         except yaml_error.MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
+            raise six.raise_from(
+                syaml.SpackYAMLError("error parsing YAML mirror collection:", str(e)),
+                e,
+            )
 
     @staticmethod
     def from_json(stream, name=None):
-        d = sjson.load(stream)
-        return MirrorCollection(d)
+        try:
+            d = sjson.load(stream)
+            return MirrorCollection(d)
+        except Exception as e:
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)),
+                e,
+            )
 
     def to_dict(self, recursive=False):
         return syaml_dict(sorted(
@@ -453,7 +540,7 @@ def create(path, specs, skip_unstable_versions=False):
     return mirror_stats.stats()
 
 
-def add(name, url, scope):
+def add(name, url, scope, args={}):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get('mirrors', scope=scope)
     if not mirrors:
@@ -463,7 +550,18 @@ def add(name, url, scope):
         tty.die("Mirror with name %s already exists." % name)
 
     items = [(n, u) for n, u in mirrors.items()]
-    items.insert(0, (name, url))
+    mirror_data = url
+    key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
+    # On creation, assume connection data is set for both
+    if any(value for value in key_values if value in args):
+        url_dict = {"url": url,
+                    "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+                    "access_token": args.s3_access_token,
+                    "profile": args.s3_profile,
+                    "endpoint_url": args.s3_endpoint_url}
+        mirror_data = {"fetch": url_dict, "push": url_dict}
+
+    items.insert(0, (name, mirror_data))
     mirrors = syaml_dict(items)
     spack.config.set('mirrors', mirrors, scope=scope)
 
@@ -567,6 +665,35 @@ def _add_single_spec(spec, mirror, mirror_stats):
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
                 getattr(exception, 'message', exception))
         mirror_stats.error()
+
+
+def push_url_from_directory(output_directory):
+    """Given a directory in the local filesystem, return the URL on
+    which to push binary packages.
+    """
+    scheme = url_util.parse(output_directory, scheme='<missing>').scheme
+    if scheme != '<missing>':
+        raise ValueError('expected a local path, but got a URL instead')
+    mirror_url = 'file://' + output_directory
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_name(mirror_name):
+    """Given a mirror name, return the URL on which to push binary packages."""
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_name)
+    if mirror.name == "<unnamed>":
+        raise ValueError('no mirror named "{0}"'.format(mirror_name))
+    return url_util.format(mirror.push_url)
+
+
+def push_url_from_mirror_url(mirror_url):
+    """Given a mirror URL, return the URL on which to push binary packages."""
+    scheme = url_util.parse(mirror_url, scheme='<missing>').scheme
+    if scheme == '<missing>':
+        raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
+    mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
+    return url_util.format(mirror.push_url)
 
 
 class MirrorError(spack.error.SpackError):

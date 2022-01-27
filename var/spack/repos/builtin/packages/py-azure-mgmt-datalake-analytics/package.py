@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,6 @@ class PyAzureMgmtDatalakeAnalytics(PythonPackage):
     version('0.2.1', sha256='4c7960d094f5847d9a456c18b8a3c8e60c428e3080a3905f1c943d81ba6351a4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-msrestazure@0.4.27:1.999', when='@0.6:', type=('build', 'run'))
-    depends_on('py-msrestazure@0.4.7:1.999', type=('build', 'run'))
-    depends_on('py-azure-common@1.1:1.999', type=('build', 'run'))
+    depends_on('py-msrestazure@0.4.27:1', when='@0.6:', type=('build', 'run'))
+    depends_on('py-msrestazure@0.4.7:1', type=('build', 'run'))
+    depends_on('py-azure-common@1.1:1', type=('build', 'run'))

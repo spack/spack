@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version('1.9.2', sha256='6fff9215f5cb81760be4cc16d033526d1080427d236e86d70bb02994f85e3d38')
+    version('1.9.1', sha256='9a452cfa24408baccc9b2bc2d421d68172a7630c99e9504a14754be840d31a62')
+    version('1.9.0', sha256='9ad181d75aaedbf47c8881e7b947a47cac3d306997e39de24dba60db633e70a7')
     version('1.8.5', sha256='944d0bd7c763ac721398dca2bb0f3b5ed16f67cef36810ede5061f35a543b4b8')
     version('1.8.4', sha256='d19cff06a3d235efcb451e04193a925bebc6ef7e7bd4a56ca27096acbab3cf3b')
     version('1.8.3', sha256='6f5b88ca4c9b96264e6c961716fec6f1a7b94c80a5edce667c3e42507caa8a82')

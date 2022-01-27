@@ -2,6 +2,7 @@ version: 2
 
 sphinx:
   configuration: lib/spack/docs/conf.py
+  fail_on_warning: true
 
 python:
   version: 3.7

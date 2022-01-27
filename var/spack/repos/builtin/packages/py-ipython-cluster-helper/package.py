@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyIpythonClusterHelper(PythonPackage):
 
     depends_on('py-setuptools@18.5:', type=('build', 'run'))
     depends_on('py-pyzmq@2.1.11:', type=('build', 'run'))
-    depends_on('py-ipython@:5.99', type=('build', 'run'))
+    depends_on('py-ipython@:5', type=('build', 'run'))
     depends_on('py-ipyparallel@6.0.2:', type=('build', 'run'))
     depends_on('py-netifaces@0.10.3:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))

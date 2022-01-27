@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,11 @@ from spack import *
 
 class Paraview(CMakePackage, CudaPackage):
     """ParaView is an open-source, multi-platform data analysis and
-    visualization application."""
+    visualization application. This package includes the Catalyst
+    in-situ library for versions 5.7 and greater, othewise use the
+    catalyst package.
+
+    """
 
     homepage = 'https://www.paraview.org'
     url      = "https://www.paraview.org/files/v5.7/ParaView-v5.7.0.tar.xz"
@@ -20,9 +24,11 @@ class Paraview(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
 
     maintainers = ['chuckatkins', 'danlipsa', 'vicentebolea']
+    tags = ['e4s']
 
     version('master', branch='master', submodules=True)
-    version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d', preferred=True)
+    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5', preferred=True)
+    version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d')
     version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
@@ -40,8 +46,8 @@ class Paraview(CMakePackage, CudaPackage):
     version('5.0.1', sha256='caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb')
     version('4.4.0', sha256='c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73')
 
-    variant('plugins', default=True,
-            description='Install include files for plugins support')
+    variant('development_files', default=True,
+            description='Install include files for Catalyst or plugins support')
     variant('python', default=False, description='Enable Python support')
     variant('python3', default=False, description='Enable Python3 support')
     variant('mpi', default=True, description='Enable MPI support')
@@ -54,9 +60,18 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('adios2', default=False,
+            description='Enable ADIOS2 support',
+            when='@5.8:')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
+    variant('build_edition', default='canonical', multi=False,
+            values=('canonical', 'catalyst_rendering',
+                    'catalyst', 'rendering', 'core'),
+            description='Build editions include only certain modules. '
+            'Editions are listed in decreasing order of size.')
 
+    conflicts('+adios2', when='@:5.10 ~mpi')
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
     conflicts('+python', when='@5.9:')
@@ -65,6 +80,11 @@ class Paraview(CMakePackage, CudaPackage):
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
+    # in 5.7 you cannot reduce the size of the code for Catalyst builds.
+    conflicts('build_edition=catalyst_rendering', when='@:5.7')
+    conflicts('build_edition=catalyst', when='@:5.7')
+    conflicts('build_edition=rendering', when='@:5.7')
+    conflicts('build_edition=core', when='@:5.7')
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -127,6 +147,8 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('adios2+mpi', when='+adios2+mpi')
+    depends_on('adios2~mpi', when='+adios2~mpi')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libogg')
@@ -143,17 +165,25 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
-    depends_on('pugixml@:1.10', when='@:5.8.99')
+    depends_on('pugixml@:1.10', when='@:5.8')
     depends_on('pugixml', when='@5.9:')
 
     # Can't contretize with python2 and py-setuptools@45.0.0:
-    depends_on('py-setuptools@:44.99.99', when='+python')
+    depends_on('py-setuptools@:44', when='+python')
     # Can't contretize with python2 and py-pillow@7.0.0:
     depends_on('pil@:6', when='+python')
 
     # ParaView depends on cli11 due to changes in MR
     # https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4951
     depends_on('cli11@1.9.1', when='@5.10:')
+
+    # ParaView depends on nlohmann-json due to changes in MR
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8550
+    depends_on('nlohmann-json', when='@master')
+
+    # ParaView depends on proj@8.1.0 due to changes in MR
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
+    depends_on('proj@8.1.0', when='@master')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -167,10 +197,17 @@ class Paraview(CMakePackage, CudaPackage):
     patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
 
     # Broken H5Part with external parallel HDF5
-    patch('h5part-parallel.patch', when='@5.7:5.7.999')
+    patch('h5part-parallel.patch', when='@5.7.0:5.7')
 
     # Broken downstream FindMPI
     patch('vtkm-findmpi-downstream.patch', when='@5.9.0')
+
+    # Include limits header wherever needed to fix compilation with GCC 11
+    patch('paraview-gcc11-limits.patch', when='@5.9.1 %gcc@11.1.0:')
+
+    # Fix IOADIOS2 module to work with kits
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
@@ -186,7 +223,7 @@ class Paraview(CMakePackage, CudaPackage):
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
         if self.spec.version == Version('master'):
-            return 'paraview-5.9'
+            return 'paraview-5.10'
         else:
             return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
@@ -273,7 +310,7 @@ class Paraview(CMakePackage, CudaPackage):
             return variant_bool(feature, on='OFF', off='ON')
 
         rendering = variant_bool('+opengl2', 'OpenGL2', 'OpenGL')
-        includes  = variant_bool('+plugins')
+        includes  = variant_bool('+development_files')
 
         cmake_args = [
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
@@ -296,12 +333,15 @@ class Paraview(CMakePackage, CudaPackage):
         if spec.satisfies('@5.7:'):
             if spec.satisfies('@5.8:'):
                 cmake_args.extend([
+                    '-DPARAVIEW_BUILD_EDITION:STRING=%s' %
+                    spec.variants['build_edition'].value.upper(),
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
                 if spec.satisfies('%cce'):
                     cmake_args.append('-DVTK_PYTHON_OPTIONAL_LINK:BOOL=OFF')
             else:  # @5.7:
                 cmake_args.extend([
+                    '-DPARAVIEW_ENABLE_CATALYST:BOOL=ON',
                     '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_USE_EXTERNAL:BOOL=ON'])
 
@@ -330,6 +370,11 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_SYSTEM_UTF8:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_XDMF2:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF'])
+
+        if '+adios2' in spec:
+            cmake_args.extend([
+                '-DPARAVIEW_ENABLE_ADIOS2:BOOL=ON'
+            ])
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used

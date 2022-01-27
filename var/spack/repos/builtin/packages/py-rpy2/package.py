@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class PyRpy2(PythonPackage):
     depends_on('r@3.3:',      when='@2.9.0:', type=('build', 'run'))
     depends_on('python@3.5:', when='@2.9.0:', type=('build', 'run'))
     depends_on('py-jinja2',   when='@2.9.0:', type=('build', 'run'))
-    depends_on('py-six',      when='@2.9.0:2.9.999', type=('build', 'run'))
+    depends_on('py-six',      when='@2.9.0:2.9', type=('build', 'run'))
 
     # @:2.8.6
     depends_on('r@2.8:',           when='@:2.8.6', type=('build', 'run'))

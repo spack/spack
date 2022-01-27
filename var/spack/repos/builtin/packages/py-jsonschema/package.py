@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,4 +32,4 @@ class PyJsonschema(PythonPackage):
     depends_on('py-pyrsistent@0.14.0:', when='@3:', type=('build', 'run'))
     depends_on('py-six@1.11.0:', when='@3:', type=('build', 'run'))
 
-    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7.99', type=('build', 'run'))
+    depends_on('py-importlib-metadata', when='@3.1.1: ^python@:3.7', type=('build', 'run'))

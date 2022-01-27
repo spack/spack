@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,8 +40,8 @@ class Scalasca(AutotoolsPackage):
     depends_on('cube@4.3', when='@2.3:2.3.99')
 
     # version 2.1 - 2.2
-    depends_on('cube@4.2', when='@2.1:2.2.999')
-    depends_on('otf2@1.4', when='@2.1:2.2.999')
+    depends_on('cube@4.2', when='@2.1:2.2')
+    depends_on('otf2@1.4', when='@2.1:2.2')
 
     def url_for_version(self, version):
         return 'http://apps.fz-juelich.de/scalasca/releases/scalasca/{0}/dist/scalasca-{1}.tar.gz'.format(version.up_to(2), version)

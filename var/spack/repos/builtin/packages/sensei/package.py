@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,6 @@ class Sensei(CMakePackage):
     version('1.0.0', sha256='5b8609352048e048e065a7b99f615a602f84b3329085e40274341488ef1b9522')
 
     variant('shared', default=True, description='Enables shared libraries')
-    variant('sencore', default=True, description='Enables the SENSEI core library')
     variant('ascent', default=False, description='Build with ParaView-Catalyst support')
     variant('catalyst', default=False, description='Build with ParaView-Catalyst support')
     variant('libsim', default=False, description='Build with VisIt-Libsim support')
@@ -39,8 +38,7 @@ class Sensei(CMakePackage):
     variant('hdf5', default=False, description='Enables HDF5 adaptors and endpoints')
     variant('vtkm', default=False, description='Enable VTKm adaptors and endpoints')
     variant('python', default=False, description='Enable Python bindings')
-    variant('miniapps', default=True, description='Enable the parallel 3D and oscillators miniapps')
-    variant('cxxstd', default='11', values=('11', '14', '17'), multi=False, description='Use the specified C++ standard when building.')
+    variant('miniapps', default=False, description='Enable the parallel 3D and oscillators miniapps')
 
     # All SENSEI versions up to 2.1.1 support only Python 2, so in this case
     # Paraview 6 cannot be used since it requires Python 3. Starting from
@@ -85,11 +83,8 @@ class Sensei(CMakePackage):
         # -Ox flags are set by default in CMake based on the build type
         args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
-            self.define('CMAKE_C_STANDARD', 11),
             self.define('SENSEI_USE_EXTERNAL_pugixml', True),
-            self.define('CMAKE_POSITION_INDEPENDENT_CODE', True),
-            self.define_from_variant('ENABLE_SENSEI', 'sencore'),
+            self.define('ENABLE_SENSEI', True),
             self.define_from_variant('ENABLE_ASCENT', 'ascent'),
             self.define_from_variant('ENABLE_VTKM', 'vtkm'),
             self.define_from_variant('ENABLE_CATALYST', 'catalyst'),

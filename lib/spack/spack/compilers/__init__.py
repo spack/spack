@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,11 +20,11 @@ import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.architecture
 import spack.compiler
 import spack.config
 import spack.error
 import spack.paths
+import spack.platforms
 import spack.spec
 from spack.util.environment import get_path
 from spack.util.naming import mod_to_class
@@ -300,8 +300,8 @@ def find_specs_by_arch(compiler_spec, arch_spec, scope=None, init_config=True):
                                                init_config)]
 
 
-def all_compilers(scope=None):
-    config = get_compiler_config(scope)
+def all_compilers(scope=None, init_config=True):
+    config = get_compiler_config(scope, init_config=init_config)
     compilers = list()
     for items in config:
         items = items['compiler']
@@ -519,7 +519,7 @@ def all_os_classes():
     """
     classes = []
 
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     for os_class in platform.operating_sys.values():
         classes.append(os_class)
 

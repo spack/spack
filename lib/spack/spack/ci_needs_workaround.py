@@ -1,20 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
-
-try:
-    # dynamically import to keep vermin from complaining
-    collections_abc = __import__('collections.abc')
-except ImportError:
-    collections_abc = collections
-
+from llnl.util.compat import Mapping
 
 get_job_name = lambda needs_entry: (
     needs_entry.get('job') if (
-        isinstance(needs_entry, collections_abc.Mapping) and
+        isinstance(needs_entry, Mapping) and
         needs_entry.get('artifacts', True))
 
     else
@@ -25,7 +18,7 @@ get_job_name = lambda needs_entry: (
 
 
 def convert_job(job_entry):
-    if not isinstance(job_entry, collections_abc.Mapping):
+    if not isinstance(job_entry, Mapping):
         return job_entry
 
     needs = job_entry.get('needs')

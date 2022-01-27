@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ import os
 import re
 from contextlib import contextmanager
 
+from llnl.util import tty
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -97,8 +98,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Enable builds with the NVIDIA compiler
     # The Configure script assumes some gcc specific behavior, and use
     # the mini Perl environment to bootstrap installation.
-    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30 %nvhpc')
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32 %nvhpc')
     conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
@@ -128,6 +129,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     )
 
     phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
+        os.chmod('lib/perlbug.t', 0o644)
+        filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
 
     @classmethod
     def determine_version(cls, exe):
@@ -294,8 +300,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # This is to avoid failures when using -mmacosx-version-min=11.1
         # since not all Apple Clang compilers support that version range
         # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
+        # It seems that this is only necessary for older versions of the
+        # command line tools rather than the xcode/clang version.
         if spec.satisfies('os=bigsur'):
-            env.set('SYSTEM_VERSION_COMPAT', 1)
+            pkgutil = Executable('pkgutil')
+            output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
+                             output=str, error=str, fail_on_error=False)
+            match = re.search(r'version:\s*([0-9.]+)', output)
+            if not match:
+                tty.warn('Failed to detect macOS command line tools version: '
+                         + output)
+            else:
+                if Version(match.group(1)) < Version('12'):
+                    tty.warn("Setting SYSTEM_VERSION_COMPAT=1 due to older "
+                             "command line tools version")
+                    env.set('SYSTEM_VERSION_COMPAT', 1)
 
         # This is how we tell perl the locations of bzip and zlib.
         env.set('BUILD_BZIP2', 0)

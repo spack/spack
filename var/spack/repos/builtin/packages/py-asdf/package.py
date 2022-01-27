@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,6 @@ class PyAsdf(PythonPackage):
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-semantic-version@2.3.1:2.6.0', type=('build', 'run'))
     depends_on('py-pyyaml@3.10:', type=('build', 'run'))
-    depends_on('py-jsonschema@2.3:3.999', type=('build', 'run'))
+    depends_on('py-jsonschema@2.3:3', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-numpy@1.8:', type=('build', 'run'))

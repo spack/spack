@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Umap(CMakePackage):
     homepage = "https://github.com/LLNL/umap"
     url      = "https://github.com/LLNL/umap/archive/v2.1.0.tar.gz"
     git      = "https://github.com/LLNL/umap.git"
+
+    tags = ['e4s']
 
     version('develop', branch='develop')
     version('2.1.0', sha256='dfdc5b717aecdbfbb0da22e8567b9f2ffbc3607000a31122bf7c5ab3b85cecd9')

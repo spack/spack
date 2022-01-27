@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,9 @@ class PyTox(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-importlib-metadata@1.1.0:', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-packaging@14:', type=('build', 'run'))
-    depends_on('py-pluggy@0.12.0:0.999', type=('build', 'run'))
-    depends_on('py-py@1.4.17:1.999', type=('build', 'run'))
-    depends_on('py-six@1.0.0:1.999', type=('build', 'run'))
+    depends_on('py-pluggy@0.12.0:0', type=('build', 'run'))
+    depends_on('py-py@1.4.17:1', type=('build', 'run'))
+    depends_on('py-six@1.0.0:1', type=('build', 'run'))
     depends_on('py-virtualenv@16.0.0:', type=('build', 'run'))
     depends_on('py-toml@0.9.4:', type=('build', 'run'))
-    depends_on('py-filelock@3.0.0:3.999', type=('build', 'run'))
+    depends_on('py-filelock@3.0.0:3', type=('build', 'run'))

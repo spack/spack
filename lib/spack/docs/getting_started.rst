@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -197,17 +197,6 @@ Spack will build the required software on the first request to concretize a spec
    [ ... ]
    zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
 
-.. tip::
-
-   If you want to speed-up bootstrapping ``clingo`` from sources, you may try to
-   search for ``cmake`` and ``bison`` on your system:
-
-   .. code-block:: console
-
-      $ spack external find cmake bison
-      ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
-      bison@3.0.4  cmake@3.19.4
-
 """""""""""""""""""
 The Bootstrap Store
 """""""""""""""""""
@@ -282,9 +271,10 @@ Compiler configuration
 ----------------------
 
 Spack has the ability to build packages with multiple compilers and
-compiler versions. Spack searches for compilers on your machine
-automatically the first time it is run. It does this by inspecting
-your ``PATH``.
+compiler versions. Compilers can be made available to Spack by
+specifying them manually in ``compilers.yaml``, or automatically by
+running ``spack compiler find``, but for convenience Spack will
+automatically detect compilers the first time it needs them.
 
 .. _cmd-spack-compilers:
 
@@ -292,7 +282,7 @@ your ``PATH``.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers spack has found by running ``spack
+You can see which compilers are available to Spack by running ``spack
 compilers`` or ``spack compiler list``:
 
 .. code-block:: console
@@ -331,9 +321,10 @@ An alias for ``spack compiler find``.
 ``spack compiler find``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler find`` with the path to
-where the compiler is installed.  For example:
+Lists the compilers currently available to Spack. If you do not see
+a compiler in this list, but you want to use it with Spack, you can
+simply run ``spack compiler find`` with the path to where the
+compiler is installed.  For example:
 
 .. code-block:: console
 

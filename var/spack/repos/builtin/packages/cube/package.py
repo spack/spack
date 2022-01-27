@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Cube(AutotoolsPackage):
 
     variant('gui', default=True, description='Build Cube GUI')
 
-    patch('qt-version.patch', when='@4.3.0:4.3.999 +gui')
+    patch('qt-version.patch', when='@4.3.0:4.3 +gui')
 
     depends_on('cubelib@4.6', when='@4.6')
     depends_on('cubelib@4.5', when='@4.5')
@@ -45,7 +45,7 @@ class Cube(AutotoolsPackage):
     depends_on('zlib')
 
     depends_on('qt@5:', when='@4.3.0: +gui')
-    depends_on('qt@4.8:', when='@4.2.0:4.2.999 +gui')
+    depends_on('qt@4.8:', when='@4.2.0:4.2 +gui')
 
     conflicts('~gui', when='@4.4:')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -128,6 +128,7 @@ def test_namespaces_shown_correctly(database):
 def _check_json_output(spec_list):
     assert len(spec_list) == 3
     assert all(spec["name"] == "mpileaks" for spec in spec_list)
+    assert all(spec["hash"] for spec in spec_list)
 
     deps = [spec["dependencies"] for spec in spec_list]
     assert sum(["zmpi" in [node["name"] for d in deps for node in d]]) == 1
