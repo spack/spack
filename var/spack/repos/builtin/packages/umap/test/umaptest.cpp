@@ -151,9 +151,9 @@ public:
 } // namespace umaptest
 
 int main() {
-  const uint64_t umap_page_size = 512 * 1024ul;
-  const uint64_t umap_buf_size = 16;
-  const uint64_t num_pages = 64;
+  const uint64_t umap_page_size = 128 * 1024ul;
+  const uint64_t umap_buf_size = 64;
+  const uint64_t num_pages = 256;
   int test_result = 0;
   int exit_status = -1;
 
