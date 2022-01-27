@@ -199,7 +199,15 @@ def setup_parser(subparser):
         "--black",
         dest="black",
         action="store_true",
-        help="run black if available (default: skip black)",
+        default=True,
+        help="run black if available (default: run black)",
+    )
+    subparser.add_argument(
+        "--no-black",
+        dest="black",
+        action="store_false",
+        default=True,
+        help="run black if available (default: run black)",
     )
     subparser.add_argument(
         "--root",
