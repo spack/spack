@@ -15,12 +15,7 @@ class PyTensorboardPluginWit(PythonPackage):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
-    # py-tensorboard-plugin-wit only builds with versions of bazel older than
-    # what is needed for py-tensorboard-2.5 and greater. Work around that for
-    # now by using a wheel.
-
     homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
-
     # Could also build from source, but this package requires an older version of bazel
     # than tensorflow supports, so we can't build both from source in the same DAG until
     # Spack supports separate concretization of build deps.
