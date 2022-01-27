@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Metabat(SConsPackage):
+class Metabat(CMakePackage):
     """MetaBAT, an efficient tool for accurately reconstructing single
     genomes from complex microbial communities."""
 
@@ -16,8 +16,8 @@ class Metabat(SConsPackage):
     version('2.15',   sha256='550487b66ec9b3bc53edf513d00c9deda594a584f53802165f037bde29b4d34e')
     version('2.14',   sha256='d43d5e91afa8f2d211a913739127884669516bfbed870760597fcee2b513abe2')
     version('2.13',   sha256='aa75a2b62ec9588add4c288993821bab5312a83b1259ff0d508c215133492d74')
-    version('2.12.1', sha256='e3aca0656f56f815135521360dc56667ec26af25143c3a31d645fef1a96abbc2')
-    version('2.11.2', sha256='9baf81b385e503e71792706237c308a21ff9177a3211c79057dcecf8434e9a67')
+    version('2.12.1', sha256='e3aca0656f56f815135521360dc56667ec26af25143c3a31d645fef1a96abbc2', deprecated=True)
+    version('2.11.2', sha256='9baf81b385e503e71792706237c308a21ff9177a3211c79057dcecf8434e9a67', deprecated=True)
 
     depends_on('cmake', type='build', when='@2.13:')
     depends_on('boost@1.55.0:', type=('build', 'run'))
@@ -27,9 +27,6 @@ class Metabat(SConsPackage):
 
     def setup_build_environment(self, env):
         env.set('BOOST_ROOT', self.spec['boost'].prefix)
-
-    def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.bin)
 
     def install_args(self, spec, prefix):
         return ["PREFIX={0}".format(prefix)]
@@ -43,19 +40,3 @@ class Metabat(SConsPackage):
         filter_file(r'#!/usr/bin/perl',
                     '#!/usr/bin/env perl',
                     'aggregateContigOverlapsByBin.pl')
-
-    # Override previous build version
-    @when('@2.13:')
-    def build(self, spec, prefix):
-        pass
-
-    # Was a SCons Package before 2.13
-    @when('@2.13:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make()
-            make('install')
