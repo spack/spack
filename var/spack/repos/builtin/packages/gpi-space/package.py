@@ -50,7 +50,7 @@ class GpiSpace(CMakePackage):
                type="build")
     depends_on("boost@1.62.0:1.63.0 +coroutine +context cxxstd=14")
     depends_on("hwloc@1.10: +libudev ~shared ~libxml2")
-    depends_on("libssh2@1.7: build_type=Release")
+    depends_on("libssh2@1.7:")
     depends_on("openssl@0.9:")
     depends_on("gpi-2@1.3.2:1.3.3 fabrics=infiniband",
                when="network=infiniband")
