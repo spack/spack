@@ -37,7 +37,7 @@ class Arbor(CMakePackage, CudaPackage):
     depends_on('cmake@3.12:', type='build')
 
     # misc dependencies
-    depends_on('fmt@7.1:', when='@0.5.3:') # required by the modcc compiler
+    depends_on('fmt@7.1:', when='@0.5.3:')  # required by the modcc compiler
     depends_on('nlohmann-json')
     depends_on('cuda@10:', when='+cuda')
     depends_on('libxml2', when='+neuroml')
