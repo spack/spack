@@ -20,12 +20,10 @@ class PyTensorboardDataServer(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('rust', type='build')
 
-    phases = ['build', 'install']
-
     def setup_build_environment(self, env):
         env.set('CARGO_HOME', self.stage.source_path)
 
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
         with working_dir(join_path('tensorboard', 'data', 'server')):
             cargo = which('cargo')
             cargo('build', '--release')
@@ -42,7 +40,6 @@ class PyTensorboardDataServer(PythonPackage):
                                                           'release',
                                                           'rustboard')))
 
-    def install(self, spec, prefix):
-        wheel_files_pattern = '*.whl'
-        wheel_files = glob.glob(wheel_files_pattern)
-        pip('install', '--prefix={0}'.format(prefix), *wheel_files)
+        wheel = glob.glob('*.whl')[0]
+        args = std_pip_args + ['--prefix=' + prefix, wheel]
+        pip(*args)
