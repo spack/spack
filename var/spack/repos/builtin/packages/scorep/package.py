@@ -13,18 +13,19 @@ class Scorep(AutotoolsPackage):
     """
 
     homepage = "https://www.vi-hps.org/projects/score-p"
-    url      = "https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz"
+    url      = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
 
-    version('7.0',   sha256='68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996', url='https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.0/scorep-7.0.tar.gz')
-    version('6.0',   sha256='5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8')
-    version('5.0',   sha256='0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1')
-    version('4.1',   sha256='7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63')
-    version('4.0',   sha256='c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655')
-    version('3.1',   sha256='49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540')
-    version('3.0',   sha256='c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be')
-    version('2.0.2', sha256='d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610')
-    version('1.4.2', sha256='d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac')
-    version('1.3',   sha256='dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254')
+    version('7.1',   sha256='98dea497982001fb82da3429ca55669b2917a0858c71abe2cfe7cd113381f1f7')
+    version('7.0',   sha256='68f24a68eb6f94eaecf500e17448f566031946deab74f2cba072ee8368af0996')
+    version('6.0',   sha256='5dc1023eb766ba5407f0b5e0845ec786e0021f1da757da737db1fb71fc4236b8', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-6.0.tar.gz')
+    version('5.0',   sha256='0651614eacfc92ffbe5264a3efebd0803527ae6e8b11f7df99a56a02c37633e1', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-5.0.tar.gz')
+    version('4.1',   sha256='7bb6c1eecdd699b4a3207caf202866778ee01f15ff39a9ec198fcd872578fe63', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.1.tar.gz')
+    version('4.0',   sha256='c050525606965950ad9b35c14077b88571bcf9bfca08599279a3d8d1bb00e655', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-4.0.tar.gz')
+    version('3.1',   sha256='49efe8a4e02afca752452809e1b21cba42e8ccb0a0772f936d4459d94e198540', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-3.1.tar.gz')
+    version('3.0',   sha256='c9e7fe0a8239b3bbbf7628eb15f7e90de9c36557818bf3d01aecce9fec2dc0be', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-3.0.tar.gz')
+    version('2.0.2', sha256='d19498408781048f0e9039a1a245bce6b384f09fbe7d3643105b4e2981ecd610', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-2.0.2.tar.gz')
+    version('1.4.2', sha256='d7f3fcca2efeb2f5d5b5f183b3b2c4775e66cbb3400ea2da841dd0428713ebac', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-1.4.2.tar.gz')
+    version('1.3',   sha256='dcfd42bd05f387748eeefbdf421cb3cd98ed905e009303d70b5f75b217fd1254', url='https://www.vi-hps.org/cms/upload/packages/scorep/scorep-1.3.tar.gz')
 
     patch('gcc7.patch', when='@1.4:3')
     patch('gcc10.patch', when='@3.1:6.0')
@@ -41,7 +42,7 @@ class Scorep(AutotoolsPackage):
     # two components of cube -- cubew and cubelib.
 
     # SCOREP 7
-    depends_on('otf2@2.3:', when='@7:')
+    depends_on('otf2@2.3:2.3.99', when='@7:')
     depends_on('cubew@4.6:', when='@7:')
     depends_on('cubelib@4.6:', when='@7:')
     depends_on('opari2@2.0.6:', when='@7:')
