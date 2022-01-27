@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -30,6 +32,7 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
           sha256='5878894375a8fda98150783430b30c0b7104899dc5522034ebcaf8c961183b7e')
 
     build_directory = 'spack-build'
+    executables = [r'^ls$']
 
     def configure_args(self):
         spec = self.spec
@@ -41,3 +44,9 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append('gl_cv_func_ftello_works=yes')
 
         return configure_args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'\(GNU coreutils\)\s+([\d\.]+)', output)
+        return match.group(1) if match else None
