@@ -260,6 +260,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts('+adios2', when='@:12.14.1')
     conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -293,6 +294,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Fortran mangling fails on Apple M1 (see spack/spack#25900)
     conflicts('@:13.0.1 +fortran', when='target=m1')
 
+    conflicts('cmake@3.22.0:3.22.1', when='@:12')
     # ###################### Dependencies ##########################
 
     depends_on('adios2', when='+adios2')
@@ -325,7 +327,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('superlu@4.3 +pic', when='+superlu')
     depends_on('swig', when='+python')
     depends_on('zlib', when='+zoltan')
-    depends_on('cmake@:3.21', type='build', when='@:12')
 
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
