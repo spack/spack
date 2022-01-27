@@ -278,3 +278,9 @@ class Esmf(MakefilePackage):
 
     def check(self):
         make('check', parallel=False)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('ESMFMKFILE', os.path.join(self.prefix.lib, 'esmf.mk'))
+
+    def setup_run_environment(self, env):
+        env.set('ESMFMKFILE', os.path.join(self.prefix.lib, 'esmf.mk'))
