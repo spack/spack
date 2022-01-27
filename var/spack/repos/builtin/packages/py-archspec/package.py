@@ -10,13 +10,16 @@ class PyArchspec(PythonPackage):
     homepage = "https://archspec.readthedocs.io/en/latest/"
     pypi = "archspec/archspec-0.1.1.tar.gz"
 
-    maintainers = ['alalazo']
+    maintainers = ["alalazo"]
 
-    version('0.1.1', sha256='34bafad493b41208857232e21776216d716de37ab051a6a4a1cc1653f7e26423')
+    version(
+        "0.1.1",
+        sha256="34bafad493b41208857232e21776216d716de37ab051a6a4a1cc1653f7e26423",
+    )
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
 
-    depends_on('py-click@7.1.2:7', type=('build', 'run'))
-    depends_on('py-six@1.13.0:1', type=('build', 'run'))
+    depends_on("py-click@7.1.2:7", type=("build", "run"))
+    depends_on("py-six@1.13.0:1", type=("build", "run"))
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

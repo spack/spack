@@ -12,9 +12,14 @@ class Giblib(AutotoolsPackage):
     fontstyles to the truetype renderer and supplies a generic
     doubly-linked list and some string functions."""
 
-    homepage = "https://web.archive.org/web/20071002210842/http://linuxbrit.co.uk/giblib/"
-    url      = "https://mirror.amdmi3.ru/distfiles/giblib-1.2.4.tar.gz"
+    homepage = (
+        "https://web.archive.org/web/20071002210842/http://linuxbrit.co.uk/giblib/"
+    )
+    url = "https://mirror.amdmi3.ru/distfiles/giblib-1.2.4.tar.gz"
 
-    version('1.2.4', sha256='176611c4d88d742ea4013991ad54c2f9d2feefbc97a28434c0f48922ebaa8bac')
+    version(
+        "1.2.4",
+        sha256="176611c4d88d742ea4013991ad54c2f9d2feefbc97a28434c0f48922ebaa8bac",
+    )
 
-    depends_on('imlib2')
+    depends_on("imlib2")

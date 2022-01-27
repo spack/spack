@@ -11,8 +11,11 @@ class PerlSetIntervaltree(PerlPackage):
     ranges using a range-based lookup."""
 
     homepage = "https://metacpan.org/release/Set-IntervalTree"
-    url      = "https://cpan.metacpan.org/authors/id/B/BE/BENBOOTH/Set-IntervalTree-0.10.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/B/BE/BENBOOTH/Set-IntervalTree-0.10.tar.gz"
 
-    version('0.10', sha256='e3bd9ccf0d074b5f879eef1ed88254983697bf83d02744fce62150ee46553ebc')
+    version(
+        "0.10",
+        sha256="e3bd9ccf0d074b5f879eef1ed88254983697bf83d02744fce62150ee46553ebc",
+    )
 
-    depends_on('perl-extutils-makemaker', type='build')
+    depends_on("perl-extutils-makemaker", type="build")

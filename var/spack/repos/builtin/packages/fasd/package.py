@@ -12,10 +12,13 @@ class Fasd(MakefilePackage):
     """
 
     homepage = "https://github.com/clvv/fasd"
-    url      = "https://github.com/clvv/fasd/archive/refs/tags/1.0.1.tar.gz"
-    git      = "https://github.com/clvv/fasd.git"
+    url = "https://github.com/clvv/fasd/archive/refs/tags/1.0.1.tar.gz"
+    git = "https://github.com/clvv/fasd.git"
 
-    version('1.0.1', sha256='88efdfbbed8df408699a14fa6c567450bf86480f5ff3dde42d0b3e1dee731f65')
+    version(
+        "1.0.1",
+        sha256="88efdfbbed8df408699a14fa6c567450bf86480f5ff3dde42d0b3e1dee731f65",
+    )
 
     def install(self, spec, prefix):
-        make('PREFIX={0}'.format(prefix), 'install')
+        make("PREFIX={0}".format(prefix), "install")

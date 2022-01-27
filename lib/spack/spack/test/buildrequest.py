@@ -11,16 +11,16 @@ import spack.spec
 
 
 def test_build_request_errors(install_mockery):
-    with pytest.raises(ValueError, match='must be a package'):
-        inst.BuildRequest('abc', {})
+    with pytest.raises(ValueError, match="must be a package"):
+        inst.BuildRequest("abc", {})
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='must have a concrete spec'):
+    pkg = spack.repo.get("trivial-install-test-package")
+    with pytest.raises(ValueError, match="must have a concrete spec"):
         inst.BuildRequest(pkg, {})
 
 
 def test_build_request_basics(install_mockery):
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 
@@ -31,14 +31,14 @@ def test_build_request_basics(install_mockery):
     assert request.spec == spec.package.spec
 
     # Ensure key default install arguments are set
-    assert 'install_package' in request.install_args
-    assert 'install_deps' in request.install_args
+    assert "install_package" in request.install_args
+    assert "install_deps" in request.install_args
 
 
 def test_build_request_strings(install_mockery):
     """Tests of BuildRequest repr and str for coverage purposes."""
     # Using a package with one dependency
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 

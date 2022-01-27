@@ -20,8 +20,10 @@ class PyAutograd(PythonPackage):
     homepage = "https://github.com/HIPS/autograd"
     pypi = "autograd/autograd-1.3.tar.gz"
 
-    version('1.3', sha256='a15d147577e10de037de3740ca93bfa3b5a7cdfbc34cfb9105429c3580a33ec4')
+    version(
+        "1.3", sha256="a15d147577e10de037de3740ca93bfa3b5a7cdfbc34cfb9105429c3580a33ec4"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future@0.15.2:', type=('build', 'run'))
-    depends_on('py-numpy@1.12:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-future@0.15.2:", type=("build", "run"))
+    depends_on("py-numpy@1.12:", type=("build", "run"))

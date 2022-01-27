@@ -12,25 +12,21 @@ class Voropp(MakefilePackage):
     scientific fields."""
 
     homepage = "http://math.lbl.gov/voro++/about.html"
-    url      = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
+    url = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
 
-    variant('pic', default=True,
-            description='Position independent code')
+    variant("pic", default=True, description="Position independent code")
 
-    version('0.4.6', sha256='ef7970071ee2ce3800daa8723649ca069dc4c71cc25f0f7d22552387f3ea437e')
+    version(
+        "0.4.6",
+        sha256="ef7970071ee2ce3800daa8723649ca069dc4c71cc25f0f7d22552387f3ea437e",
+    )
 
     def edit(self, spec, prefix):
-        filter_file(r'CC=g\+\+',
-                    'CC={0}'.format(self.compiler.cxx),
-                    'config.mk')
-        filter_file(r'PREFIX=/usr/local',
-                    'PREFIX={0}'.format(self.prefix),
-                    'config.mk')
+        filter_file(r"CC=g\+\+", "CC={0}".format(self.compiler.cxx), "config.mk")
+        filter_file(r"PREFIX=/usr/local", "PREFIX={0}".format(self.prefix), "config.mk")
         # We can safely replace the default CFLAGS which are:
         # CFLAGS=-Wall -ansi -pedantic -O3
-        cflags = ''
-        if '+pic' in spec:
+        cflags = ""
+        if "+pic" in spec:
             cflags += self.compiler.cc_pic_flag
-        filter_file(r'CFLAGS=.*',
-                    'CFLAGS={0}'.format(cflags),
-                    'config.mk')
+        filter_file(r"CFLAGS=.*", "CFLAGS={0}".format(cflags), "config.mk")

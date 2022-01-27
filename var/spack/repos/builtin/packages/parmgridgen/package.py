@@ -18,33 +18,40 @@ class Parmgridgen(Package):
     homepage = "https://github.com/mrklein/ParMGridGen"
     url = "http://www.stasyan.com/devel/distfiles/ParMGridGen-1.0.tar.gz"
 
-    version('1.0', sha256='62cdb6e48cfc59124e5d5d360c2841e0fc2feecafe65bda110b74e942740b395')
+    version(
+        "1.0", sha256="62cdb6e48cfc59124e5d5d360c2841e0fc2feecafe65bda110b74e942740b395"
+    )
 
-    variant('mpi', default=True,
-            description='Activate the compilation of parallel libraries')
+    variant(
+        "mpi",
+        default=True,
+        description="Activate the compilation of parallel libraries",
+    )
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
     def install(self, spec, prefix):
         make_opts = [
-            'make=make',
-            'COPTIONS={0}'.format(self.compiler.cc_pic_flag),
-            'LDOPTIONS={0}'.format(self.compiler.cc_pic_flag),
-            'CC={0}'.format(self.compiler.cc),
-            'LD={0}'.format(self.compiler.cc),
-            'LIBDIR=-L../..',
-            'LIBS=-L../.. -lmgrid -lm',
+            "make=make",
+            "COPTIONS={0}".format(self.compiler.cc_pic_flag),
+            "LDOPTIONS={0}".format(self.compiler.cc_pic_flag),
+            "CC={0}".format(self.compiler.cc),
+            "LD={0}".format(self.compiler.cc),
+            "LIBDIR=-L../..",
+            "LIBS=-L../.. -lmgrid -lm",
         ]
 
-        if '+mpi' in spec:
-            make_opts.extend([
-                'PARCC={0}'.format(spec['mpi'].mpicc),
-                'PARLD={0}'.format(spec['mpi'].mpicc),
-                'PARLIBS=-L../.. -lparmgrid -lmgrid -lm',
-                'parallel'
-            ])
+        if "+mpi" in spec:
+            make_opts.extend(
+                [
+                    "PARCC={0}".format(spec["mpi"].mpicc),
+                    "PARLD={0}".format(spec["mpi"].mpicc),
+                    "PARLIBS=-L../.. -lparmgrid -lmgrid -lm",
+                    "parallel",
+                ]
+            )
         else:
-            make_opts.append('serial')
+            make_opts.append("serial")
 
         make(*make_opts, parallel=False)
 
@@ -52,9 +59,9 @@ class Parmgridgen(Package):
 
         install("mgridgen.h", prefix.include)
         install("libmgrid.a", prefix.lib)
-        install("mgridgen",   prefix.bin)
+        install("mgridgen", prefix.bin)
 
-        if '+mpi' in spec:
+        if "+mpi" in spec:
             install("parmgridgen.h", prefix.include)
             install("libparmgrid.a", prefix.lib)
-            install("parmgridgen",   prefix.bin)
+            install("parmgridgen", prefix.bin)

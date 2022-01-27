@@ -10,6 +10,9 @@ class PerlDigestMd5(PerlPackage):
     """Perl interface to the MD5 Algorithm"""
 
     homepage = "https://metacpan.org/pod/Digest::MD5"
-    url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/Digest-MD5-2.55.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/Digest-MD5-2.55.tar.gz"
 
-    version('2.55', sha256='03b198a2d14425d951e5e50a885d3818c3162c8fe4c21e18d7798a9a179d0e3c')
+    version(
+        "2.55",
+        sha256="03b198a2d14425d951e5e50a885d3818c3162c8fe4c21e18d7798a9a179d0e3c",
+    )

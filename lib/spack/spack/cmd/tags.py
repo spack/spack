@@ -25,7 +25,7 @@ def report_tags(category, tags):
 
     if isatty:
         num = len(tags)
-        fmt = '{0} package tag'.format(category)
+        fmt = "{0} package tag".format(category)
         buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
 
     if tags:
@@ -43,17 +43,21 @@ def setup_parser(subparser):
         "'--all' at the same time."
     )
     subparser.add_argument(
-        '-i', '--installed', action='store_true', default=False,
-        help="show information for installed packages only"
+        "-i",
+        "--installed",
+        action="store_true",
+        default=False,
+        help="show information for installed packages only",
     )
     subparser.add_argument(
-        '-a', '--all', action='store_true', default=False,
-        help="show packages for all available tags"
+        "-a",
+        "--all",
+        action="store_true",
+        default=False,
+        help="show packages for all available tags",
     )
     subparser.add_argument(
-        'tag',
-        nargs='*',
-        help="show packages with the specified tag"
+        "tag", nargs="*", help="show packages with the specified tag"
     )
 
 
@@ -91,7 +95,7 @@ def tags(parser, args):
 
     tags = args.tag if args.tag else available_tags
     tag_pkgs = spack.tag.packages_with_tags(tags, args.installed, False)
-    missing = 'No installed packages' if args.installed else 'None'
+    missing = "No installed packages" if args.installed else "None"
     for tag in sorted(tag_pkgs):
         # TODO: Remove the sorting once we're sure noone has an old
         # TODO: tag cache since it can accumulate duplicates.

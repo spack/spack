@@ -15,9 +15,12 @@ class RAod(RPackage):
     (GLMM)."""
 
     homepage = "https://cloud.r-project.org/package=aod"
-    url      = "https://cloud.r-project.org/src/contrib/aod_1.3.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/aod_1.3.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/aod"
 
-    version('1.3.1', sha256='052d8802500fcfdb3b37a8e3e6f3fbd5c3a54e48c3f68122402d2ea3a15403bc')
+    version(
+        "1.3.1",
+        sha256="052d8802500fcfdb3b37a8e3e6f3fbd5c3a54e48c3f68122402d2ea3a15403bc",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))

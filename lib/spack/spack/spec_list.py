@@ -12,21 +12,20 @@ from spack.spec import Spec
 
 
 def spec_ordering_key(s):
-    if s.startswith('^'):
+    if s.startswith("^"):
         return 5
-    elif s.startswith('/'):
+    elif s.startswith("/"):
         return 4
-    elif s.startswith('%'):
+    elif s.startswith("%"):
         return 3
-    elif any(s.startswith(c) for c in '~-+@') or '=' in s:
+    elif any(s.startswith(c) for c in "~-+@") or "=" in s:
         return 2
     else:
         return 1
 
 
 class SpecList(object):
-
-    def __init__(self, name='specs', yaml_list=None, reference=None):
+    def __init__(self, name="specs", yaml_list=None, reference=None):
         # Normalize input arguments
         yaml_list = yaml_list or []
         reference = reference or {}
@@ -35,11 +34,14 @@ class SpecList(object):
         self._reference = reference  # TODO: Do we need defensive copy here?
 
         # Validate yaml_list before assigning
-        if not all(isinstance(s, string_types) or isinstance(s, (list, dict))
-                   for s in yaml_list):
+        if not all(
+            isinstance(s, string_types) or isinstance(s, (list, dict))
+            for s in yaml_list
+        ):
             raise ValueError(
                 "yaml_list can contain only valid YAML types!  Found:\n  %s"
-                % [type(s) for s in yaml_list])
+                % [type(s) for s in yaml_list]
+            )
         self.yaml_list = yaml_list[:]
 
         # Expansions can be expensive to compute and difficult to keep updated
@@ -95,13 +97,16 @@ class SpecList(object):
 
     def remove(self, spec):
         # Get spec to remove from list
-        remove = [s for s in self.yaml_list
-                  if (isinstance(s, string_types) and not s.startswith('$'))
-                  and Spec(s) == Spec(spec)]
+        remove = [
+            s
+            for s in self.yaml_list
+            if (isinstance(s, string_types) and not s.startswith("$"))
+            and Spec(s) == Spec(spec)
+        ]
         if not remove:
-            msg = 'Cannot remove %s from SpecList %s\n' % (spec, self.name)
-            msg += 'Either %s is not in %s or %s is ' % (spec, self.name, spec)
-            msg += 'expanded from a matrix and cannot be removed directly.'
+            msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
+            msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
+            msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
         assert len(remove) == 1
         self.yaml_list.remove(remove[0])
@@ -127,19 +132,19 @@ class SpecList(object):
         self._specs = None
 
     def _parse_reference(self, name):
-        sigil = ''
+        sigil = ""
         name = name[1:]
 
         # Parse specs as constraints
-        if name.startswith('^') or name.startswith('%'):
+        if name.startswith("^") or name.startswith("%"):
             sigil = name[0]
             name = name[1:]
 
         # Make sure the reference is valid
         if name not in self._reference:
-            msg = 'SpecList %s refers to ' % self.name
-            msg += 'named list %s ' % name
-            msg += 'which does not appear in its reference dict'
+            msg = "SpecList %s refers to " % self.name
+            msg += "named list %s " % name
+            msg += "which does not appear in its reference dict"
             raise UndefinedReferenceError(msg)
 
         return (name, sigil)
@@ -150,7 +155,7 @@ class SpecList(object):
 
             for item in yaml:
                 # if it's a reference, expand it
-                if isinstance(item, string_types) and item.startswith('$'):
+                if isinstance(item, string_types) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
                     referent = [
@@ -164,8 +169,9 @@ class SpecList(object):
             return ret
         elif isinstance(yaml, dict):
             # There can't be expansions in dicts
-            return dict((name, self._expand_references(val))
-                        for (name, val) in yaml.items())
+            return dict(
+                (name, self._expand_references(val)) for (name, val) in yaml.items()
+            )
         else:
             # Strings are just returned
             return yaml
@@ -180,19 +186,22 @@ class SpecList(object):
 def _expand_matrix_constraints(object, specify=True):
     # recurse so we can handle nexted matrices
     expanded_rows = []
-    for row in object['matrix']:
+    for row in object["matrix"]:
         new_row = []
         for r in row:
             if isinstance(r, dict):
                 new_row.extend(
-                    [[' '.join(c)]
-                     for c in _expand_matrix_constraints(r, specify=False)])
+                    [
+                        [" ".join(c)]
+                        for c in _expand_matrix_constraints(r, specify=False)
+                    ]
+                )
             else:
                 new_row.append([r])
         expanded_rows.append(new_row)
 
-    excludes = object.get('exclude', [])  # only compute once
-    sigil = object.get('sigil', '')
+    excludes = object.get("exclude", [])  # only compute once
+    sigil = object.get("sigil", "")
 
     results = []
     for combo in itertools.product(*expanded_rows):
@@ -200,7 +209,7 @@ def _expand_matrix_constraints(object, specify=True):
         flat_combo = [constraint for list in combo for constraint in list]
         ordered_combo = sorted(flat_combo, key=spec_ordering_key)
 
-        test_spec = Spec(' '.join(ordered_combo))
+        test_spec = Spec(" ".join(ordered_combo))
         # Abstract variants don't have normal satisfaction semantics
         # Convert all variants to concrete types.
         # This method is best effort, so all existing variants will be
@@ -228,7 +237,7 @@ def _expand_matrix_constraints(object, specify=True):
 def _sigilify(item, sigil):
     if isinstance(item, dict):
         if sigil:
-            item['sigil'] = sigil
+            item["sigil"] = sigil
         return item
     else:
         return sigil + item

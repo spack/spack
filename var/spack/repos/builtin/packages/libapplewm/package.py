@@ -14,15 +14,18 @@ class Libapplewm(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libAppleWM"
     xorg_mirror_path = "lib/libAppleWM-1.4.1.tar.gz"
 
-    version('1.4.1', sha256='d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049')
+    version(
+        "1.4.1",
+        sha256="d7fb098d65ad4d840f60e5c92de7f58f1725bd70d0d132755ea453462fd50049",
+    )
 
-    depends_on('libx11')
-    depends_on('libxext')
+    depends_on("libx11")
+    depends_on("libxext")
 
-    depends_on('xextproto')
-    depends_on('applewmproto@1.4:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xextproto")
+    depends_on("applewmproto@1.4:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")
 
     # Crashes with this error message on Linux:
     # HIServices/Processes.h: No such file or directory

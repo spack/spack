@@ -10,11 +10,14 @@ class PyNbclassic(PythonPackage):
     """Jupyter Notebook as a Jupyter Server Extension."""
 
     homepage = "https://github.com/jupyterlab/nbclassic"
-    pypi     = "nbclassic/nbclassic-0.3.1.tar.gz"
+    pypi = "nbclassic/nbclassic-0.3.1.tar.gz"
 
-    version('0.3.1', sha256='f920f8d09849bea7950e1017ff3bd101763a8d68f565a51ce053572e65aa7947')
+    version(
+        "0.3.1",
+        sha256="f920f8d09849bea7950e1017ff3bd101763a8d68f565a51ce053572e65aa7947",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-jupyter-server@1.8:1', type=('build', 'run'))
-    depends_on('py-notebook@:6', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-jupyter-server@1.8:1", type=("build", "run"))
+    depends_on("py-notebook@:6", type=("build", "run"))

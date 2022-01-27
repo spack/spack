@@ -13,16 +13,14 @@ from ._operating_system import OperatingSystem
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
 def macos_version():
-    """temporary workaround to return a macOS version as a Version object
-    """
+    """temporary workaround to return a macOS version as a Version object"""
     return Version(py_platform.mac_ver()[0])
 
 
 def macos_sdk_path():
-    """Return SDK path
-    """
-    xcrun = Executable('xcrun')
-    return xcrun('--show-sdk-path', output=str, error=str).rstrip()
+    """Return SDK path"""
+    xcrun = Executable("xcrun")
+    return xcrun("--show-sdk-path", output=str, error=str).rstrip()
 
 
 class MacOs(OperatingSystem):
@@ -39,30 +37,30 @@ class MacOs(OperatingSystem):
         will use a generic "macos" version string until Spack is updated.
         """
         mac_releases = {
-            '10.0':  'cheetah',
-            '10.1':  'puma',
-            '10.2':  'jaguar',
-            '10.3':  'panther',
-            '10.4':  'tiger',
-            '10.5':  'leopard',
-            '10.6':  'snowleopard',
-            '10.7':  'lion',
-            '10.8':  'mountainlion',
-            '10.9':  'mavericks',
-            '10.10': 'yosemite',
-            '10.11': 'elcapitan',
-            '10.12': 'sierra',
-            '10.13': 'highsierra',
-            '10.14': 'mojave',
-            '10.15': 'catalina',
-            '10.16': 'bigsur',
-            '11': 'bigsur',
-            '12': 'monterey',
+            "10.0": "cheetah",
+            "10.1": "puma",
+            "10.2": "jaguar",
+            "10.3": "panther",
+            "10.4": "tiger",
+            "10.5": "leopard",
+            "10.6": "snowleopard",
+            "10.7": "lion",
+            "10.8": "mountainlion",
+            "10.9": "mavericks",
+            "10.10": "yosemite",
+            "10.11": "elcapitan",
+            "10.12": "sierra",
+            "10.13": "highsierra",
+            "10.14": "mojave",
+            "10.15": "catalina",
+            "10.16": "bigsur",
+            "11": "bigsur",
+            "12": "monterey",
         }
 
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
         # only used the minor component)
-        part = 1 if macos_version() >= Version('11') else 2
+        part = 1 if macos_version() >= Version("11") else 2
 
         mac_ver = str(macos_version().up_to(part))
         name = mac_releases.get(mac_ver, "macos")

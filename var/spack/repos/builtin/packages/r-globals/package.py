@@ -16,11 +16,17 @@ class RGlobals(RPackage):
     environments."""
 
     homepage = "https://github.com/HenrikBengtsson/globals"
-    url      = "https://cloud.r-project.org/src/contrib/globals_0.12.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/globals_0.12.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/globals"
 
-    version('0.14.0', sha256='203dbccb829ca9cc6aedb6f5e79cb126ea31f8dd379dff9111ec66e3628c32f3')
-    version('0.12.4', sha256='7985356ad75afa1f795f8267a20dee847020c0207252dc075c614cef55d8fe6b')
+    version(
+        "0.14.0",
+        sha256="203dbccb829ca9cc6aedb6f5e79cb126ea31f8dd379dff9111ec66e3628c32f3",
+    )
+    version(
+        "0.12.4",
+        sha256="7985356ad75afa1f795f8267a20dee847020c0207252dc075c614cef55d8fe6b",
+    )
 
-    depends_on('r@3.1.2:', type=('build', 'run'))
-    depends_on('r-codetools', type=('build', 'run'))
+    depends_on("r@3.1.2:", type=("build", "run"))
+    depends_on("r-codetools", type=("build", "run"))

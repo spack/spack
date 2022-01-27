@@ -9,62 +9,74 @@ class Fish(CMakePackage):
     the rest of the family.
     """
 
-    homepage = 'https://fishshell.com/'
-    url      = 'https://github.com/fish-shell/fish-shell/releases/download/3.3.1/fish-3.3.1.tar.xz'
-    git      = 'https://github.com/fish-shell/fish-shell.git'
+    homepage = "https://fishshell.com/"
+    url = "https://github.com/fish-shell/fish-shell/releases/download/3.3.1/fish-3.3.1.tar.xz"
+    git = "https://github.com/fish-shell/fish-shell.git"
     list_url = homepage
-    maintainers = ['funnell']
+    maintainers = ["funnell"]
 
-    version('master', branch='master')
-    version('3.3.1', sha256='b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89')
-    version('3.1.2', sha256='d5b927203b5ca95da16f514969e2a91a537b2f75bec9b21a584c4cd1c7aa74ed')
-    version('3.1.0', sha256='e5db1e6839685c56f172e1000c138e290add4aa521f187df4cd79d4eab294368')
-    version('3.0.0', sha256='ea9dd3614bb0346829ce7319437c6a93e3e1dfde3b7f6a469b543b0d2c68f2cf')
+    version("master", branch="master")
+    version(
+        "3.3.1",
+        sha256="b5b4ee1a5269762cbbe993a4bd6507e675e4100ce9bbe84214a5eeb2b19fae89",
+    )
+    version(
+        "3.1.2",
+        sha256="d5b927203b5ca95da16f514969e2a91a537b2f75bec9b21a584c4cd1c7aa74ed",
+    )
+    version(
+        "3.1.0",
+        sha256="e5db1e6839685c56f172e1000c138e290add4aa521f187df4cd79d4eab294368",
+    )
+    version(
+        "3.0.0",
+        sha256="ea9dd3614bb0346829ce7319437c6a93e3e1dfde3b7f6a469b543b0d2c68f2cf",
+    )
 
-    variant('docs', default=False, description='Build documentation')
+    variant("docs", default=False, description="Build documentation")
 
     # https://github.com/fish-shell/fish-shell#dependencies-1
-    depends_on('cmake@3.2:', type='build')
-    depends_on('ncurses')
-    depends_on('pcre2@10.21:')
-    depends_on('gettext')
-    depends_on('py-sphinx', when='+docs', type='build')
-    depends_on('python@3.3:', type='test')
-    depends_on('py-pexpect', type='test')
+    depends_on("cmake@3.2:", type="build")
+    depends_on("ncurses")
+    depends_on("pcre2@10.21:")
+    depends_on("gettext")
+    depends_on("py-sphinx", when="+docs", type="build")
+    depends_on("python@3.3:", type="test")
+    depends_on("py-pexpect", type="test")
 
     # https://github.com/fish-shell/fish-shell/issues/7310
-    patch('codesign.patch', when='@3.1.2 platform=darwin')
+    patch("codesign.patch", when="@3.1.2 platform=darwin")
 
-    executables = ['^fish$']
+    executables = ["^fish$"]
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'fish, version (\S+)', output)
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"fish, version (\S+)", output)
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        url = 'https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.{1}'
-        if version < Version('3.2.0'):
-            ext = 'gz'
+        url = "https://github.com/fish-shell/fish-shell/releases/download/{0}/fish-{0}.tar.{1}"
+        if version < Version("3.2.0"):
+            ext = "gz"
         else:
-            ext = 'xz'
+            ext = "xz"
         return url.format(version, ext)
 
     def setup_build_environment(self, env):
-        env.append_flags('LDFLAGS', self.spec['ncurses'].libs.link_flags)
+        env.append_flags("LDFLAGS", self.spec["ncurses"].libs.link_flags)
 
     def cmake_args(self):
         args = [
-            '-DBUILD_SHARED_LIBS=ON',
-            '-DMAC_CODESIGN_ID=OFF',
-            '-DPCRE2_LIB=' + self.spec['pcre2'].libs[0],
-            '-DPCRE2_INCLUDE_DIR=' + self.spec['pcre2'].headers.directories[0],
+            "-DBUILD_SHARED_LIBS=ON",
+            "-DMAC_CODESIGN_ID=OFF",
+            "-DPCRE2_LIB=" + self.spec["pcre2"].libs[0],
+            "-DPCRE2_INCLUDE_DIR=" + self.spec["pcre2"].headers.directories[0],
         ]
 
-        if '+docs' in self.spec:
-            args.append('-DBUILD_DOCS=ON')
+        if "+docs" in self.spec:
+            args.append("-DBUILD_DOCS=ON")
         else:
-            args.append('-DBUILD_DOCS=OFF')
+            args.append("-DBUILD_DOCS=OFF")
 
         return args

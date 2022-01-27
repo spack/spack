@@ -28,36 +28,47 @@ def cmake_cache_entry(name, value, vtype=None):
 class Apcomp(Package):
     """A multi use-case image compositor"""
 
-    homepage = 'https://github.com/Alpine-DAV/ap_compositor'
-    git      = 'https://github.com/Alpine-DAV/ap_compositor.git'
-    url      = "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
+    homepage = "https://github.com/Alpine-DAV/ap_compositor"
+    git = "https://github.com/Alpine-DAV/ap_compositor.git"
+    url = "https://github.com/Alpine-DAV/ap_compositor/releases/download/v0.0.1/apcomp-v0.0.1.tar.gz"
 
-    maintainers = ['cyrush']
+    maintainers = ["cyrush"]
 
-    version('master', branch='master', submodules='True')
-    version('0.0.4', sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494")
-    version('0.0.3', sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e")
-    version('0.0.2', sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c")
-    version('0.0.1', sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2")
+    version("master", branch="master", submodules="True")
+    version(
+        "0.0.4",
+        sha256="061876dd55e443de91a40d10662496f6bb58b0a3835aec78f5710f5a737d0494",
+    )
+    version(
+        "0.0.3",
+        sha256="07e8c1d6a23205f4cc66d0a030e65a69e8344545f4d56213d968b67a410adc6e",
+    )
+    version(
+        "0.0.2",
+        sha256="cb2e2c4524889408de2dd3d29665512c99763db13e6f5e35c3b55e52948c649c",
+    )
+    version(
+        "0.0.1",
+        sha256="cbf85fe58d5d5bc2f468d081386cc8b79861046b3bb7e966edfa3f8e95b998b2",
+    )
 
-    variant('openmp', default=True, description='Build with openmp support')
-    variant('mpi', default=True, description='Build with MPI support')
-    variant('shared', default=True, description='Build Shared Library')
+    variant("openmp", default=True, description="Build with openmp support")
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("shared", default=True, description="Build Shared Library")
     # set to false for systems that implicitly link mpi
-    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
+    variant("blt_find_mpi", default=True, description="Use BLT CMake Find MPI logic")
 
-    depends_on('cmake@3.9:', type='build')
+    depends_on("cmake@3.9:", type="build")
     depends_on("mpi", when="+mpi")
 
-    root_cmakelists_dir = 'src'
+    root_cmakelists_dir = "src"
 
     def install(self, spec, prefix):
         """
         Build and install APComp
         """
-        with working_dir('spack-build', create=True):
-            host_cfg_fname = self.create_host_config(spec,
-                                                     prefix)
+        with working_dir("spack-build", create=True):
+            host_cfg_fname = self.create_host_config(spec, prefix)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -105,17 +116,19 @@ class Apcomp(Package):
         ##############################################
 
         if "+cmake" in spec:
-            cmake_exe = spec['cmake'].command.path
+            cmake_exe = spec["cmake"].command.path
         else:
             cmake_exe = which("cmake")
             if cmake_exe is None:
-                msg = 'failed to find CMake (and cmake variant is off)'
+                msg = "failed to find CMake (and cmake variant is off)"
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s-apcomp.cmake" % (socket.gethostname(),
-                                                    sys_type,
-                                                    spec.compiler)
+        host_cfg_fname = "%s-%s-%s-apcomp.cmake" % (
+            socket.gethostname(),
+            sys_type,
+            spec.compiler,
+        )
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -151,8 +164,8 @@ class Apcomp(Package):
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
 
         if "+mpi" in spec:
-            mpicc_path = spec['mpi'].mpicc
-            mpicxx_path = spec['mpi'].mpicxx
+            mpicc_path = spec["mpi"].mpicc
+            mpicxx_path = spec["mpi"].mpicxx
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
@@ -167,16 +180,14 @@ class Apcomp(Package):
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
             else:
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
-            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
-                if self.spec["cmake"].satisfies('@3.10:'):
-                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
-                                                mpiexe_bin))
+                if self.spec["cmake"].satisfies("@3.10:"):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexe_bin))
                 else:
-                    cfg.write(cmake_cache_entry("MPIEXEC",
-                                                mpiexe_bin))
+                    cfg.write(cmake_cache_entry("MPIEXEC", mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 

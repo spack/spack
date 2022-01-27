@@ -84,7 +84,7 @@ class BundlePackageTemplate(object):
     Provides the default values to be used for a bundle package file template.
     """
 
-    base_class_name = 'BundlePackage'
+    base_class_name = "BundlePackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -94,29 +94,32 @@ class BundlePackageTemplate(object):
     body_def = "    # There is no need for install() since there is no code."
 
     def __init__(self, name, versions):
-        self.name       = name
+        self.name = name
         self.class_name = mod_to_class(name)
-        self.versions   = versions
+        self.versions = versions
 
     def write(self, pkg_path):
         """Writes the new package file."""
 
         # Write out a template for the file
         with open(pkg_path, "w") as pkg_file:
-            pkg_file.write(package_template.format(
-                name=self.name,
-                class_name=self.class_name,
-                base_class_name=self.base_class_name,
-                url_def=self.url_def,
-                versions=self.versions,
-                dependencies=self.dependencies,
-                body_def=self.body_def))
+            pkg_file.write(
+                package_template.format(
+                    name=self.name,
+                    class_name=self.class_name,
+                    base_class_name=self.base_class_name,
+                    url_def=self.url_def,
+                    versions=self.versions,
+                    dependencies=self.dependencies,
+                    body_def=self.body_def,
+                )
+            )
 
 
 class PackageTemplate(BundlePackageTemplate):
     """Provides the default values to be used for the package file template"""
 
-    base_class_name = 'Package'
+    base_class_name = "Package"
 
     body_def = """\
     def install(self, spec, prefix):
@@ -136,7 +139,7 @@ class AutotoolsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Autotools-based packages
     that *do* come with a ``configure`` script"""
 
-    base_class_name = 'AutotoolsPackage'
+    base_class_name = "AutotoolsPackage"
 
     body_def = """\
     def configure_args(self):
@@ -150,7 +153,7 @@ class AutoreconfPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Autotools-based packages
     that *do not* come with a ``configure`` script"""
 
-    base_class_name = 'AutotoolsPackage'
+    base_class_name = "AutotoolsPackage"
 
     dependencies = """\
     depends_on('autoconf', type='build')
@@ -176,7 +179,7 @@ class AutoreconfPackageTemplate(PackageTemplate):
 class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
-    base_class_name = 'CMakePackage'
+    base_class_name = "CMakePackage"
 
     body_def = """\
     def cmake_args(self):
@@ -190,7 +193,7 @@ class CMakePackageTemplate(PackageTemplate):
 class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
-    base_class_name = 'MesonPackage'
+    base_class_name = "MesonPackage"
 
     body_def = """\
     def meson_args(self):
@@ -202,7 +205,7 @@ class MesonPackageTemplate(PackageTemplate):
 class QMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for QMake-based packages"""
 
-    base_class_name = 'QMakePackage'
+    base_class_name = "QMakePackage"
 
     body_def = """\
     def qmake_args(self):
@@ -214,7 +217,7 @@ class QMakePackageTemplate(PackageTemplate):
 class MavenPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Maven-based packages"""
 
-    base_class_name = 'MavenPackage'
+    base_class_name = "MavenPackage"
 
     body_def = """\
     def build(self, spec, prefix):
@@ -225,7 +228,7 @@ class MavenPackageTemplate(PackageTemplate):
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
-    base_class_name = 'SConsPackage'
+    base_class_name = "SConsPackage"
 
     body_def = """\
     def build_args(self, spec, prefix):
@@ -238,7 +241,7 @@ class SconsPackageTemplate(PackageTemplate):
 class WafPackageTemplate(PackageTemplate):
     """Provides appropriate override for Waf-based packages"""
 
-    base_class_name = 'WafPackage'
+    base_class_name = "WafPackage"
 
     body_def = """\
     # FIXME: Override configure_args(), build_args(),
@@ -260,7 +263,8 @@ class BazelPackageTemplate(PackageTemplate):
 
 class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
-    base_class_name = 'PythonPackage'
+
+    base_class_name = "PythonPackage"
 
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
@@ -294,10 +298,10 @@ class PythonPackageTemplate(PackageTemplate):
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
-        if not name.startswith('py-'):
+        if not name.startswith("py-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
-            name = 'py-{0}'.format(name)
+            name = "py-{0}".format(name)
 
         # Simple PyPI URLs:
         # https://<hostname>/packages/<type>/<first character of project>/<project>/<download file>
@@ -320,38 +324,39 @@ class PythonPackageTemplate(PackageTemplate):
         # https://files.pythonhosted.org/packages/cp35.cp36.cp37.cp38.cp39/s/shiboken2/shiboken2-5.15.2-5.15.2-cp35.cp36.cp37.cp38.cp39-abi3-manylinux1_x86_64.whl
         # https://files.pythonhosted.org/packages/f4/99/ad2ef1aeeb395ee2319bb981ea08dbbae878d30dd28ebf27e401430ae77a/azureml_core-1.36.0.post2-py3-none-any.whl#sha256=60bcad10b4380d78a8280deb7365de2c2cd66527aacdcb4a173f613876cbe739
 
-        match = re.search(
-            r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
-            url
-        )
+        match = re.search(r"(?:pypi|pythonhosted)[^/]+/packages" + "/([^/#]+)" * 4, url)
         if match:
             # PyPI URLs for wheels are too complicated, ignore them for now
             # https://www.python.org/dev/peps/pep-0427/#file-name-convention
-            if not match.group(4).endswith('.whl'):
+            if not match.group(4).endswith(".whl"):
                 if len(match.group(2)) == 1:
                     # Simple PyPI URL
-                    url = '/'.join(match.group(3, 4))
+                    url = "/".join(match.group(3, 4))
                 else:
                     # PyPI URL containing hash
                     # Project name doesn't necessarily match download name, but it
                     # usually does, so this is the best we can do
                     project = parse_name(url)
-                    url = '/'.join([project, match.group(4)])
+                    url = "/".join([project, match.group(4)])
 
                 self.url_line = '    pypi     = "{url}"'
         else:
             # Add a reminder about spack preferring PyPI URLs
-            self.url_line = '''
+            self.url_line = (
+                """
     # FIXME: ensure the package is not available through PyPI. If it is,
     # re-run `spack create --force` with the PyPI URL.
-''' + self.url_line
+"""
+                + self.url_line
+            )
 
         super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
-    base_class_name = 'RPackage'
+
+    base_class_name = "RPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -366,30 +371,25 @@ class RPackageTemplate(PackageTemplate):
 
     def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
-        if not name.startswith('r-'):
+        if not name.startswith("r-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to r-{0}".format(name))
-            name = 'r-{0}'.format(name)
+            name = "r-{0}".format(name)
 
         r_name = parse_name(url)
 
-        cran = re.search(
-            r'(?:r-project|rstudio)[^/]+/src' + '/([^/]+)' * 2,
-            url
-        )
+        cran = re.search(r"(?:r-project|rstudio)[^/]+/src" + "/([^/]+)" * 2, url)
 
         if cran:
             url = r_name
             self.url_line = '    cran     = "{url}"'
 
-        bioc = re.search(
-            r'(?:bioconductor)[^/]+/packages' + '/([^/]+)' * 5,
-            url
-        )
+        bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url      = "{0}"\n'\
-                '    bioc     = "{1}"'.format(url, r_name)
+            self.url_line = '    url      = "{0}"\n' '    bioc     = "{1}"'.format(
+                url, r_name
+            )
 
         super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
@@ -397,7 +397,8 @@ class RPackageTemplate(PackageTemplate):
 class PerlmakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Perl extensions
     that come with a Makefile.PL"""
-    base_class_name = 'PerlPackage'
+
+    base_class_name = "PerlPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required:
@@ -412,10 +413,10 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     def __init__(self, name, *args, **kwargs):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
-        if not name.startswith('perl-'):
+        if not name.startswith("perl-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to perl-{0}".format(name))
-            name = 'perl-{0}'.format(name)
+            name = "perl-{0}".format(name)
 
         super(PerlmakePackageTemplate, self).__init__(name, *args, **kwargs)
 
@@ -423,6 +424,7 @@ class PerlmakePackageTemplate(PackageTemplate):
 class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     """Provides appropriate overrides for Perl extensions
     that come with a Build.PL instead of a Makefile.PL"""
+
     dependencies = """\
     depends_on('perl-module-build', type='build')
 
@@ -433,7 +435,7 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
-    base_class_name = 'OctavePackage'
+    base_class_name = "OctavePackage"
 
     dependencies = """\
     extends('octave')
@@ -444,10 +446,10 @@ class OctavePackageTemplate(PackageTemplate):
     def __init__(self, name, *args, **kwargs):
         # If the user provided `--name octave-splines`, don't rename it
         # octave-octave-splines
-        if not name.startswith('octave-'):
+        if not name.startswith("octave-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
-            name = 'octave-{0}'.format(name)
+            name = "octave-{0}".format(name)
 
         super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
@@ -455,7 +457,7 @@ class OctavePackageTemplate(PackageTemplate):
 class RubyPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Ruby packages"""
 
-    base_class_name = 'RubyPackage'
+    base_class_name = "RubyPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
@@ -472,10 +474,10 @@ class RubyPackageTemplate(PackageTemplate):
     def __init__(self, name, *args, **kwargs):
         # If the user provided `--name ruby-numpy`, don't rename it
         # ruby-ruby-numpy
-        if not name.startswith('ruby-'):
+        if not name.startswith("ruby-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to ruby-{0}".format(name))
-            name = 'ruby-{0}'.format(name)
+            name = "ruby-{0}".format(name)
 
         super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
 
@@ -483,7 +485,7 @@ class RubyPackageTemplate(PackageTemplate):
 class MakefilePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Makefile packages"""
 
-    base_class_name = 'MakefilePackage'
+    base_class_name = "MakefilePackage"
 
     body_def = """\
     def edit(self, spec, prefix):
@@ -496,7 +498,7 @@ class MakefilePackageTemplate(PackageTemplate):
 class IntelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for licensed Intel software"""
 
-    base_class_name = 'IntelPackage'
+    base_class_name = "IntelPackage"
 
     body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
@@ -505,7 +507,7 @@ class IntelPackageTemplate(PackageTemplate):
 class SIPPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SIP packages."""
 
-    base_class_name = 'SIPPackage'
+    base_class_name = "SIPPackage"
 
     body_def = """\
     def configure_args(self, spec, prefix):
@@ -516,68 +518,79 @@ class SIPPackageTemplate(PackageTemplate):
 
     def __init__(self, name, *args, **kwargs):
         # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
-        if not name.startswith('py-'):
+        if not name.startswith("py-"):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
-            name = 'py-{0}'.format(name)
+            name = "py-{0}".format(name)
 
         super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
 templates = {
-    'autotools':  AutotoolsPackageTemplate,
-    'autoreconf': AutoreconfPackageTemplate,
-    'cmake':      CMakePackageTemplate,
-    'bundle':     BundlePackageTemplate,
-    'qmake':      QMakePackageTemplate,
-    'maven':      MavenPackageTemplate,
-    'scons':      SconsPackageTemplate,
-    'waf':        WafPackageTemplate,
-    'bazel':      BazelPackageTemplate,
-    'python':     PythonPackageTemplate,
-    'r':          RPackageTemplate,
-    'perlmake':   PerlmakePackageTemplate,
-    'perlbuild':  PerlbuildPackageTemplate,
-    'octave':     OctavePackageTemplate,
-    'ruby':       RubyPackageTemplate,
-    'makefile':   MakefilePackageTemplate,
-    'intel':      IntelPackageTemplate,
-    'meson':      MesonPackageTemplate,
-    'sip':        SIPPackageTemplate,
-    'generic':    PackageTemplate,
+    "autotools": AutotoolsPackageTemplate,
+    "autoreconf": AutoreconfPackageTemplate,
+    "cmake": CMakePackageTemplate,
+    "bundle": BundlePackageTemplate,
+    "qmake": QMakePackageTemplate,
+    "maven": MavenPackageTemplate,
+    "scons": SconsPackageTemplate,
+    "waf": WafPackageTemplate,
+    "bazel": BazelPackageTemplate,
+    "python": PythonPackageTemplate,
+    "r": RPackageTemplate,
+    "perlmake": PerlmakePackageTemplate,
+    "perlbuild": PerlbuildPackageTemplate,
+    "octave": OctavePackageTemplate,
+    "ruby": RubyPackageTemplate,
+    "makefile": MakefilePackageTemplate,
+    "intel": IntelPackageTemplate,
+    "meson": MesonPackageTemplate,
+    "sip": SIPPackageTemplate,
+    "generic": PackageTemplate,
 }
 
 
 def setup_parser(subparser):
+    subparser.add_argument("url", nargs="?", help="url of package archive")
     subparser.add_argument(
-        'url', nargs='?',
-        help="url of package archive")
+        "--keep-stage",
+        action="store_true",
+        help="don't clean up staging area when command completes",
+    )
+    subparser.add_argument("-n", "--name", help="name of the package to create")
     subparser.add_argument(
-        '--keep-stage', action='store_true',
-        help="don't clean up staging area when command completes")
-    subparser.add_argument(
-        '-n', '--name',
-        help="name of the package to create")
-    subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE',
+        "-t",
+        "--template",
+        metavar="TEMPLATE",
         choices=sorted(templates.keys()),
-        help="build system template to use. options: %(choices)s")
+        help="build system template to use. options: %(choices)s",
+    )
     subparser.add_argument(
-        '-r', '--repo',
-        help="path to a repository where the package should be created")
+        "-r", "--repo", help="path to a repository where the package should be created"
+    )
     subparser.add_argument(
-        '-N', '--namespace',
+        "-N",
+        "--namespace",
         help="specify a namespace for the package. must be the namespace of "
-        "a repository registered with Spack")
+        "a repository registered with Spack",
+    )
     subparser.add_argument(
-        '-f', '--force', action='store_true',
-        help="overwrite any existing package file with the same name")
+        "-f",
+        "--force",
+        action="store_true",
+        help="overwrite any existing package file with the same name",
+    )
     subparser.add_argument(
-        '--skip-editor', action='store_true',
-        help="skip the edit session for the package (e.g., automation)")
+        "--skip-editor",
+        action="store_true",
+        help="skip the edit session for the package (e.g., automation)",
+    )
     subparser.add_argument(
-        '-b', '--batch', action='store_true',
-        help="don't ask which versions to checksum")
+        "-b",
+        "--batch",
+        action="store_true",
+        help="don't ask which versions to checksum",
+    )
 
 
 class BuildSystemGuesser:
@@ -588,7 +601,7 @@ class BuildSystemGuesser:
 
     def __init__(self):
         """Sets the default build system."""
-        self.build_system = 'generic'
+        self.build_system = "generic"
 
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
@@ -598,14 +611,14 @@ class BuildSystemGuesser:
             # Most octave extensions are hosted on Octave-Forge:
             #     https://octave.sourceforge.net/index.html
             # They all have the same base URL.
-            if 'downloads.sourceforge.net/octave/' in url:
-                self.build_system = 'octave'
+            if "downloads.sourceforge.net/octave/" in url:
+                self.build_system = "octave"
                 return
-            if url.endswith('.gem'):
-                self.build_system = 'ruby'
+            if url.endswith(".gem"):
+                self.build_system = "ruby"
                 return
-            if url.endswith('.whl') or '.whl#' in url:
-                self.build_system = 'python'
+            if url.endswith(".whl") or ".whl#" in url:
+                self.build_system = "python"
                 return
 
         # A list of clues that give us an idea of the build system a package
@@ -614,45 +627,43 @@ class BuildSystemGuesser:
         # NOTE: Order is important here. If a package supports multiple
         # build systems, we choose the first match in this list.
         clues = [
-            (r'/CMakeLists\.txt$',    'cmake'),
-            (r'/NAMESPACE$',          'r'),
-            (r'/configure$',          'autotools'),
-            (r'/configure\.(in|ac)$', 'autoreconf'),
-            (r'/Makefile\.am$',       'autoreconf'),
-            (r'/pom\.xml$',           'maven'),
-            (r'/SConstruct$',         'scons'),
-            (r'/waf$',                'waf'),
-            (r'/pyproject.toml',      'python'),
-            (r'/setup\.(py|cfg)$',    'python'),
-            (r'/WORKSPACE$',          'bazel'),
-            (r'/Build\.PL$',          'perlbuild'),
-            (r'/Makefile\.PL$',       'perlmake'),
-            (r'/.*\.gemspec$',        'ruby'),
-            (r'/Rakefile$',           'ruby'),
-            (r'/setup\.rb$',          'ruby'),
-            (r'/.*\.pro$',            'qmake'),
-            (r'/(GNU)?[Mm]akefile$',  'makefile'),
-            (r'/DESCRIPTION$',        'octave'),
-            (r'/meson\.build$',       'meson'),
-            (r'/configure\.py$',      'sip'),
+            (r"/CMakeLists\.txt$", "cmake"),
+            (r"/NAMESPACE$", "r"),
+            (r"/configure$", "autotools"),
+            (r"/configure\.(in|ac)$", "autoreconf"),
+            (r"/Makefile\.am$", "autoreconf"),
+            (r"/pom\.xml$", "maven"),
+            (r"/SConstruct$", "scons"),
+            (r"/waf$", "waf"),
+            (r"/pyproject.toml", "python"),
+            (r"/setup\.(py|cfg)$", "python"),
+            (r"/WORKSPACE$", "bazel"),
+            (r"/Build\.PL$", "perlbuild"),
+            (r"/Makefile\.PL$", "perlmake"),
+            (r"/.*\.gemspec$", "ruby"),
+            (r"/Rakefile$", "ruby"),
+            (r"/setup\.rb$", "ruby"),
+            (r"/.*\.pro$", "qmake"),
+            (r"/(GNU)?[Mm]akefile$", "makefile"),
+            (r"/DESCRIPTION$", "octave"),
+            (r"/meson\.build$", "meson"),
+            (r"/configure\.py$", "sip"),
         ]
 
         # Peek inside the compressed file.
-        if (stage.archive_file.endswith('.zip') or
-                '.zip#' in stage.archive_file):
+        if stage.archive_file.endswith(".zip") or ".zip#" in stage.archive_file:
             try:
-                unzip  = which('unzip')
-                output = unzip('-lq', stage.archive_file, output=str)
+                unzip = which("unzip")
+                output = unzip("-lq", stage.archive_file, output=str)
             except ProcessError:
-                output = ''
+                output = ""
         else:
             try:
-                tar    = which('tar')
-                output = tar('--exclude=*/*/*', '-tf',
-                             stage.archive_file, output=str)
+                tar = which("tar")
+                output = tar("--exclude=*/*/*", "-tf", stage.archive_file, output=str)
             except ProcessError:
-                output = ''
-        lines = output.split('\n')
+                output = ""
+        lines = output.split("\n")
 
         # Determine the build system based on the files contained
         # in the archive.
@@ -677,7 +688,7 @@ def get_name(args):
     """
 
     # Default package name
-    name = 'example'
+    name = "example"
 
     if args.name is not None:
         # Use a user-supplied name if one is present
@@ -691,14 +702,16 @@ def get_name(args):
         try:
             name = parse_name(args.url)
             if name != args.url:
-                desc = 'URL'
+                desc = "URL"
             else:
-                desc = 'package name'
+                desc = "package name"
             tty.msg("This looks like a {0} for {1}".format(desc, name))
         except UndetectableNameError:
-            tty.die("Couldn't guess a name for this package.",
-                    "  Please report this bug. In the meantime, try running:",
-                    "  `spack create --name <name> <url>`")
+            tty.die(
+                "Couldn't guess a name for this package.",
+                "  Please report this bug. In the meantime, try running:",
+                "  `spack create --name <name> <url>`",
+            )
 
     name = simplify_name(name)
 
@@ -721,7 +734,7 @@ def get_url(args):
     """
 
     # Default URL
-    url = 'https://www.example.com/example-1.2.3.tar.gz'
+    url = "https://www.example.com/example-1.2.3.tar.gz"
 
     if args.url:
         # Use a user-supplied URL if one is present
@@ -758,7 +771,7 @@ def get_versions(args, name):
     # Default guesser
     guesser = BuildSystemGuesser()
 
-    if args.url is not None and args.template != 'bundle':
+    if args.url is not None and args.template != "bundle":
         # Find available versions
         try:
             url_dict = spack.util.web.find_versions_of_archive(args.url)
@@ -773,9 +786,12 @@ def get_versions(args, name):
             url_dict = {version: args.url}
 
         versions = spack.stage.get_checksums_for_versions(
-            url_dict, name, first_stage_function=guesser,
+            url_dict,
+            name,
+            first_stage_function=guesser,
             keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1))
+            batch=(args.batch or len(url_dict) == 1),
+        )
     else:
         versions = unhashed_versions
 
@@ -798,7 +814,7 @@ def get_build_system(args, guesser):
         str: The name of the build system template to use
     """
     # Default template
-    template = 'generic'
+    template = "generic"
 
     if args.template is not None:
         # Use a user-supplied template if one is present
@@ -807,9 +823,10 @@ def get_build_system(args, guesser):
     elif args.url is not None:
         # Use whatever build system the guesser detected
         template = guesser.build_system
-        if template == 'generic':
-            tty.warn("Unable to detect a build system. "
-                     "Using a generic package template.")
+        if template == "generic":
+            tty.warn(
+                "Unable to detect a build system. " "Using a generic package template."
+            )
         else:
             msg = "This package looks like it uses the {0} build system"
             tty.msg(msg.format(template))
@@ -832,8 +849,11 @@ def get_repository(args, name):
     spec = Spec(name)
     # Figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
-        tty.die("Namespaces '{0}' and '{1}' do not match.".format(
-            spec.namespace, args.namespace))
+        tty.die(
+            "Namespaces '{0}' and '{1}' do not match.".format(
+                spec.namespace, args.namespace
+            )
+        )
 
     if not spec.namespace and args.namespace:
         spec.namespace = args.namespace
@@ -843,8 +863,10 @@ def get_repository(args, name):
     if repo_path is not None:
         repo = spack.repo.Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
-            tty.die("Can't create package with namespace {0} in repo with "
-                    "namespace {1}".format(spec.namespace, repo.namespace))
+            tty.die(
+                "Can't create package with namespace {0} in repo with "
+                "namespace {1}".format(spec.namespace, repo.namespace)
+            )
     else:
         if spec.namespace:
             repo = spack.repo.path.get_repo(spec.namespace, None)
@@ -868,10 +890,10 @@ def create(parser, args):
     build_system = get_build_system(args, guesser)
 
     # Create the package template object
-    constr_args = {'name': name, 'versions': versions}
+    constr_args = {"name": name, "versions": versions}
     package_class = templates[build_system]
     if package_class != BundlePackageTemplate:
-        constr_args['url'] = url
+        constr_args["url"] = url
     package = package_class(**constr_args)
     tty.msg("Created template for {0} package".format(package.name))
 
@@ -879,8 +901,10 @@ def create(parser, args):
     repo = get_repository(args, name)
     pkg_path = repo.filename_for_package_name(package.name)
     if os.path.exists(pkg_path) and not args.force:
-        tty.die('{0} already exists.'.format(pkg_path),
-                '  Try running `spack create --force` to overwrite it.')
+        tty.die(
+            "{0} already exists.".format(pkg_path),
+            "  Try running `spack create --force` to overwrite it.",
+        )
     else:
         mkdirp(os.path.dirname(pkg_path))
 

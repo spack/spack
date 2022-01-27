@@ -23,21 +23,24 @@ class Gurobi(Package):
     homepage = "https://www.gurobi.com/index"
     manual_download = True
 
-    maintainers = ['glennpj']
+    maintainers = ["glennpj"]
 
-    version('9.1.2', sha256='7f60bd675f79476bb2b32cd632aa1d470f8246f2b033b7652d8de86f6e7e429b')
-    version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
+    version(
+        "9.1.2",
+        sha256="7f60bd675f79476bb2b32cd632aa1d470f8246f2b033b7652d8de86f6e7e429b",
+    )
+    version("7.5.2", "01f6dbb8d165838cca1664a1a14e4a85")
 
     # Licensing
     license_required = True
-    license_files    = ['gurobi.lic']
-    license_vars     = ['GRB_LICENSE_FILE']
-    license_url      = 'http://www.gurobi.com/downloads/download-center'
+    license_files = ["gurobi.lic"]
+    license_vars = ["GRB_LICENSE_FILE"]
+    license_url = "http://www.gurobi.com/downloads/download-center"
 
-    extends('python')
-    depends_on('python@2.7,3.6:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
-    depends_on('py-wheel', type='build')
+    extends("python")
+    depends_on("python@2.7,3.6:", type=("build", "run"))
+    depends_on("py-pip", type="build")
+    depends_on("py-wheel", type="build")
 
     def url_for_version(self, version):
         return "file://{0}/gurobi{1}_linux64.tar.gz".format(os.getcwd(), version)
@@ -45,18 +48,18 @@ class Gurobi(Package):
     def patch(self):
         # Strip out existing PYTHONPATH as the presence of that will generally
         # break given that Spack has likely set that for a different Python.
-        gurobi_shell = join_path('linux64', 'bin', 'gurobi.sh')
-        filter_file(r':\$PYTHONPATH', '', gurobi_shell)
+        gurobi_shell = join_path("linux64", "bin", "gurobi.sh")
+        filter_file(r":\$PYTHONPATH", "", gurobi_shell)
 
     def setup_run_environment(self, env):
-        env.set('GUROBI_HOME', self.prefix)
-        env.set('GRB_LICENSE_FILE', join_path(self.prefix, 'gurobi.lic'))
+        env.set("GUROBI_HOME", self.prefix)
+        env.set("GRB_LICENSE_FILE", join_path(self.prefix, "gurobi.lic"))
 
     def install(self, spec, prefix):
-        install_tree('linux64', prefix)
+        install_tree("linux64", prefix)
 
-    @run_after('install')
+    @run_after("install")
     def gurobipy(self):
-        with working_dir('linux64'):
-            args = std_pip_args + ['--prefix=' + self.prefix, '.']
+        with working_dir("linux64"):
+            args = std_pip_args + ["--prefix=" + self.prefix, "."]
             pip(*args)

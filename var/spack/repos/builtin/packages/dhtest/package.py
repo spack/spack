@@ -13,10 +13,12 @@ class Dhtest(MakefilePackage):
     and receiving dhcp packets."""
 
     homepage = "https://github.com/saravana815/dhtest"
-    url      = "https://github.com/saravana815/dhtest/archive/v1.5.tar.gz"
+    url = "https://github.com/saravana815/dhtest/archive/v1.5.tar.gz"
 
-    version('1.5', sha256='df66150429a59a3b6cea9b29e2687707d04ab10db5dfe1c893ba3e0b0531b151')
+    version(
+        "1.5", sha256="df66150429a59a3b6cea9b29e2687707d04ab10db5dfe1c893ba3e0b0531b151"
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('dhtest', prefix.bin)
+        install("dhtest", prefix.bin)

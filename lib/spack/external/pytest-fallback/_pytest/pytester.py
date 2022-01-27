@@ -24,14 +24,27 @@ from _pytest.assertion.rewrite import AssertionRewritingHook
 
 def pytest_addoption(parser):
     # group = parser.getgroup("pytester", "pytester (self-tests) options")
-    parser.addoption('--lsof',
-                     action="store_true", dest="lsof", default=False,
-                     help=("run FD checks if lsof is available"))
+    parser.addoption(
+        "--lsof",
+        action="store_true",
+        dest="lsof",
+        default=False,
+        help=("run FD checks if lsof is available"),
+    )
 
-    parser.addoption('--runpytest', default="inprocess", dest="runpytest",
-                     choices=("inprocess", "subprocess", ),
-                     help=("run pytest sub runs in tests using an 'inprocess' "
-                           "or 'subprocess' (python -m main) method"))
+    parser.addoption(
+        "--runpytest",
+        default="inprocess",
+        dest="runpytest",
+        choices=(
+            "inprocess",
+            "subprocess",
+        ),
+        help=(
+            "run pytest sub runs in tests using an 'inprocess' "
+            "or 'subprocess' (python -m main) method"
+        ),
+    )
 
 
 def pytest_configure(config):
@@ -61,17 +74,21 @@ class LsofFdLeakChecker(object):
 
     def _parse_lsof_output(self, out):
         def isopen(line):
-            return line.startswith('f') and ("deleted" not in line and
-                                             'mem' not in line and "txt" not in line and 'cwd' not in line)
+            return line.startswith("f") and (
+                "deleted" not in line
+                and "mem" not in line
+                and "txt" not in line
+                and "cwd" not in line
+            )
 
         open_files = []
 
         for line in out.split("\n"):
             if isopen(line):
-                fields = line.split('\0')
+                fields = line.split("\0")
                 fd = fields[0][1:]
                 filename = fields[1][1:]
-                if filename.startswith('/'):
+                if filename.startswith("/"):
                     open_files.append((fd, filename))
 
         return open_files
@@ -108,18 +125,18 @@ class LsofFdLeakChecker(object):
             error.append(error[0])
             error.append("*** function %s:%s: %s " % item.location)
             error.append("See issue #2366")
-            item.warn('', "\n".join(error))
+            item.warn("", "\n".join(error))
 
 
 # XXX copied from execnet's conftest.py - needs to be merged
 winpymap = {
-    'python2.7': r'C:\Python27\python.exe',
-    'python2.6': r'C:\Python26\python.exe',
-    'python3.1': r'C:\Python31\python.exe',
-    'python3.2': r'C:\Python32\python.exe',
-    'python3.3': r'C:\Python33\python.exe',
-    'python3.4': r'C:\Python34\python.exe',
-    'python3.5': r'C:\Python35\python.exe',
+    "python2.7": r"C:\Python27\python.exe",
+    "python2.6": r"C:\Python26\python.exe",
+    "python3.1": r"C:\Python31\python.exe",
+    "python3.2": r"C:\Python32\python.exe",
+    "python3.3": r"C:\Python33\python.exe",
+    "python3.4": r"C:\Python34\python.exe",
+    "python3.5": r"C:\Python35\python.exe",
 }
 
 
@@ -130,8 +147,12 @@ def getexecutable(name, cache={}):
         executable = py.path.local.sysfind(name)
         if executable:
             import subprocess
-            popen = subprocess.Popen([str(executable), "--version"],
-                                     universal_newlines=True, stderr=subprocess.PIPE)
+
+            popen = subprocess.Popen(
+                [str(executable), "--version"],
+                universal_newlines=True,
+                stderr=subprocess.PIPE,
+            )
             out, err = popen.communicate()
             if name == "jython":
                 if not err or "2.5" not in err:
@@ -145,8 +166,9 @@ def getexecutable(name, cache={}):
         return executable
 
 
-@pytest.fixture(params=['python2.6', 'python2.7', 'python3.3', "python3.4",
-                        'pypy', 'pypy3'])
+@pytest.fixture(
+    params=["python2.6", "python2.7", "python3.3", "python3.4", "pypy", "pypy3"]
+)
 def anypython(request):
     name = request.param
     executable = getexecutable(name)
@@ -160,12 +182,13 @@ def anypython(request):
         pytest.skip("no suitable %s found" % (name,))
     return executable
 
+
 # used at least by pytest-xdist plugin
 
 
 @pytest.fixture
 def _pytest(request):
-    """ Return a helper which offers a gethookrecorder(hook)
+    """Return a helper which offers a gethookrecorder(hook)
     method which returns a HookRecorder instance which helps
     to make assertions about called hooks.
     """
@@ -194,7 +217,7 @@ class ParsedCall:
 
     def __repr__(self):
         d = self.__dict__.copy()
-        del d['_name']
+        del d["_name"]
         return "<ParsedCall %r(**%r)>" % (self._name, d)
 
 
@@ -264,13 +287,16 @@ class HookRecorder:
 
     # functionality for test reports
 
-    def getreports(self,
-                   names="pytest_runtest_logreport pytest_collectreport"):
+    def getreports(self, names="pytest_runtest_logreport pytest_collectreport"):
         return [x.report for x in self.getcalls(names)]
 
-    def matchreport(self, inamepart="",
-                    names="pytest_runtest_logreport pytest_collectreport", when=None):
-        """ return a testreport whose dotted import path matches """
+    def matchreport(
+        self,
+        inamepart="",
+        names="pytest_runtest_logreport pytest_collectreport",
+        when=None,
+    ):
+        """return a testreport whose dotted import path matches"""
         values = []
         for rep in self.getreports(names=names):
             try:
@@ -279,31 +305,32 @@ class HookRecorder:
                     continue
             except AttributeError:
                 pass
-            if when and getattr(rep, 'when', None) != when:
+            if when and getattr(rep, "when", None) != when:
                 continue
             if not inamepart or inamepart in rep.nodeid.split("::"):
                 values.append(rep)
         if not values:
-            raise ValueError("could not find test report matching %r: "
-                             "no test reports at all!" % (inamepart,))
+            raise ValueError(
+                "could not find test report matching %r: "
+                "no test reports at all!" % (inamepart,)
+            )
         if len(values) > 1:
             raise ValueError(
-                "found 2 or more testreports matching %r: %s" % (inamepart, values))
+                "found 2 or more testreports matching %r: %s" % (inamepart, values)
+            )
         return values[0]
 
-    def getfailures(self,
-                    names='pytest_runtest_logreport pytest_collectreport'):
+    def getfailures(self, names="pytest_runtest_logreport pytest_collectreport"):
         return [rep for rep in self.getreports(names) if rep.failed]
 
     def getfailedcollections(self):
-        return self.getfailures('pytest_collectreport')
+        return self.getfailures("pytest_collectreport")
 
     def listoutcomes(self):
         passed = []
         skipped = []
         failed = []
-        for rep in self.getreports(
-                "pytest_collectreport pytest_runtest_logreport"):
+        for rep in self.getreports("pytest_collectreport pytest_runtest_logreport"):
             if rep.passed:
                 if getattr(rep, "when", None) == "call":
                     passed.append(rep)
@@ -331,7 +358,7 @@ def linecomp(request):
     return LineComp()
 
 
-@pytest.fixture(name='LineMatcher')
+@pytest.fixture(name="LineMatcher")
 def LineMatcher_fixture(request):
     return LineMatcher
 
@@ -369,10 +396,10 @@ class RunResult:
         self.duration = duration
 
     def parseoutcomes(self):
-        """ Return a dictionary of outcomestring->num from parsing
+        """Return a dictionary of outcomestring->num from parsing
         the terminal output that the test process produced."""
         for line in reversed(self.outlines):
-            if 'seconds' in line:
+            if "seconds" in line:
                 outcomes = rex_outcome.findall(line)
                 if outcomes:
                     d = {}
@@ -382,16 +409,18 @@ class RunResult:
         raise ValueError("Pytest terminal report not found")
 
     def assert_outcomes(self, passed=0, skipped=0, failed=0, error=0):
-        """ assert that the specified outcomes appear with the respective
+        """assert that the specified outcomes appear with the respective
         numbers (0 means it didn't occur) in the text output from a test run."""
         d = self.parseoutcomes()
         obtained = {
-            'passed': d.get('passed', 0),
-            'skipped': d.get('skipped', 0),
-            'failed': d.get('failed', 0),
-            'error': d.get('error', 0),
+            "passed": d.get("passed", 0),
+            "skipped": d.get("skipped", 0),
+            "failed": d.get("failed", 0),
+            "error": d.get("error", 0),
         }
-        assert obtained == dict(passed=passed, skipped=skipped, failed=failed, error=error)
+        assert obtained == dict(
+            passed=passed, skipped=skipped, failed=failed, error=error
+        )
 
 
 class Testdir:
@@ -452,7 +481,7 @@ class Testdir:
 
         """
         sys.path[:], sys.meta_path[:] = self._savesyspath
-        if hasattr(self, '_olddir'):
+        if hasattr(self, "_olddir"):
             self._olddir.chdir()
         self.delete_loaded_modules()
 
@@ -483,14 +512,15 @@ class Testdir:
 
         """
         old = self.tmpdir.chdir()
-        if not hasattr(self, '_olddir'):
+        if not hasattr(self, "_olddir"):
             self._olddir = old
 
     def _makefile(self, ext, args, kwargs, encoding="utf-8"):
         items = list(kwargs.items())
         if args:
             source = py.builtin._totext("\n").join(
-                map(py.builtin._totext, args)) + py.builtin._totext("\n")
+                map(py.builtin._totext, args)
+            ) + py.builtin._totext("\n")
             basename = self.request.function.__name__
             items.insert(0, (basename, source))
         ret = None
@@ -538,20 +568,20 @@ class Testdir:
 
     def makeini(self, source):
         """Write a tox.ini file with 'source' as contents."""
-        return self.makefile('.ini', tox=source)
+        return self.makefile(".ini", tox=source)
 
     def getinicfg(self, source):
         """Return the pytest section from the tox.ini config file."""
         p = self.makeini(source)
-        return py.iniconfig.IniConfig(p)['pytest']
+        return py.iniconfig.IniConfig(p)["pytest"]
 
     def makepyfile(self, *args, **kwargs):
         """Shortcut for .makefile() with a .py extension."""
-        return self._makefile('.py', args, kwargs)
+        return self._makefile(".py", args, kwargs)
 
     def maketxtfile(self, *args, **kwargs):
         """Shortcut for .makefile() with a .txt extension."""
-        return self._makefile('.txt', args, kwargs)
+        return self._makefile(".txt", args, kwargs)
 
     def syspathinsert(self, path=None):
         """Prepend a directory to sys.path, defaults to :py:attr:`tmpdir`.
@@ -604,7 +634,7 @@ class Testdir:
 
         """
         session = Session(config)
-        assert '::' not in str(arg)
+        assert "::" not in str(arg)
         p = py.path.local(arg)
         config.hook.pytest_sessionstart(session=session)
         res = session.perform_collect([str(p)], genitems=False)[0]
@@ -734,8 +764,10 @@ class Testdir:
         if len(rec) == 1:
             reprec = rec.pop()
         else:
+
             class reprec:
                 pass
+
         reprec.ret = ret
 
         # typically we reraise keyboard interrupts from the child run
@@ -747,8 +779,8 @@ class Testdir:
         return reprec
 
     def runpytest_inprocess(self, *args, **kwargs):
-        """ Return result of running pytest in-process, providing a similar
-        interface to what self.runpytest() provides. """
+        """Return result of running pytest in-process, providing a similar
+        interface to what self.runpytest() provides."""
         if kwargs.get("syspathinsert"):
             self.syspathinsert()
         now = time.time()
@@ -767,20 +799,19 @@ class Testdir:
 
                 class reprec:
                     ret = 3
+
         finally:
             out, err = capture.readouterr()
             capture.stop_capturing()
             sys.stdout.write(out)
             sys.stderr.write(err)
 
-        res = RunResult(reprec.ret,
-                        out.split("\n"), err.split("\n"),
-                        time.time() - now)
+        res = RunResult(reprec.ret, out.split("\n"), err.split("\n"), time.time() - now)
         res.reprec = reprec
         return res
 
     def runpytest(self, *args, **kwargs):
-        """ Run pytest inline or in a subprocess, depending on the command line
+        """Run pytest inline or in a subprocess, depending on the command line
         option "--runpytest" and return a :py:class:`RunResult`.
 
         """
@@ -790,11 +821,11 @@ class Testdir:
     def _ensure_basetemp(self, args):
         args = [str(x) for x in args]
         for x in args:
-            if str(x).startswith('--basetemp'):
+            if str(x).startswith("--basetemp"):
                 # print("basedtemp exists: %s" %(args,))
                 break
         else:
-            args.append("--basetemp=%s" % self.tmpdir.dirpath('basetemp'))
+            args.append("--basetemp=%s" % self.tmpdir.dirpath("basetemp"))
             # print("added basetemp: %s" %(args,))
         return args
 
@@ -813,6 +844,7 @@ class Testdir:
         args = self._ensure_basetemp(args)
 
         import _pytest.config
+
         config = _pytest.config._prepareconfig(args, self.plugins)
         # we don't know what the test will do with this half-setup config
         # object and thus we make sure it gets unconfigured properly in any
@@ -851,7 +883,10 @@ class Testdir:
             if item.name == funcname:
                 return item
         assert 0, "%r item not found in module:\n%s\nitems: %s" % (
-                  funcname, source, items)
+            funcname,
+            source,
+            items,
+        )
 
     def getitems(self, source):
         """Return all test items collected from the module.
@@ -917,11 +952,14 @@ class Testdir:
 
         """
         env = os.environ.copy()
-        env['PYTHONPATH'] = os.pathsep.join(filter(None, [
-            str(os.getcwd()), env.get('PYTHONPATH', '')]))
-        kw['env'] = env
+        env["PYTHONPATH"] = os.pathsep.join(
+            filter(None, [str(os.getcwd()), env.get("PYTHONPATH", "")])
+        )
+        kw["env"] = env
 
-        popen = subprocess.Popen(cmdargs, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr, **kw)
+        popen = subprocess.Popen(
+            cmdargs, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr, **kw
+        )
         popen.stdin.close()
 
         return popen
@@ -941,14 +979,15 @@ class Testdir:
         cmdargs = [str(x) for x in cmdargs]
         p1 = self.tmpdir.join("stdout")
         p2 = self.tmpdir.join("stderr")
-        print("running:", ' '.join(cmdargs))
+        print("running:", " ".join(cmdargs))
         print("     in:", str(py.path.local()))
         f1 = codecs.open(str(p1), "w", encoding="utf8")
         f2 = codecs.open(str(p2), "w", encoding="utf8")
         try:
             now = time.time()
-            popen = self.popen(cmdargs, stdout=f1, stderr=f2,
-                               close_fds=(sys.platform != "win32"))
+            popen = self.popen(
+                cmdargs, stdout=f1, stderr=f2, close_fds=(sys.platform != "win32")
+            )
             ret = popen.wait()
         finally:
             f1.close()
@@ -975,7 +1014,10 @@ class Testdir:
     def _getpytestargs(self):
         # we cannot use "(sys.executable,script)"
         # because on windows the script is e.g. a pytest.exe
-        return (sys.executable, _pytest_fullpath,)  # noqa
+        return (
+            sys.executable,
+            _pytest_fullpath,
+        )  # noqa
 
     def runpython(self, script):
         """Run a python script using sys.executable as interpreter.
@@ -1001,9 +1043,10 @@ class Testdir:
         Returns a :py:class:`RunResult`.
 
         """
-        p = py.path.local.make_numbered_dir(prefix="runpytest-",
-                                            keep=None, rootdir=self.tmpdir)
-        args = ('--basetemp=%s' % p, ) + args
+        p = py.path.local.make_numbered_dir(
+            prefix="runpytest-", keep=None, rootdir=self.tmpdir
+        )
+        args = ("--basetemp=%s" % p,) + args
         # for x in args:
         #    if '--confcutdir' in str(x):
         #        break
@@ -1012,7 +1055,7 @@ class Testdir:
         #    args = ('--confcutdir=.',) + args
         plugins = [x for x in self.plugins if isinstance(x, str)]
         if plugins:
-            args = ('-p', plugins[0]) + args
+            args = ("-p", plugins[0]) + args
         args = self._getpytestargs() + args
         return self.run(*args)
 
@@ -1036,7 +1079,7 @@ class Testdir:
         The pexpect child is returned.
         """
         pexpect = pytest.importorskip("pexpect", "3.0")
-        if hasattr(sys, 'pypy_version_info') and '64' in platform.machine():
+        if hasattr(sys, "pypy_version_info") and "64" in platform.machine():
             pytest.skip("pypy-64 bit not supported")
         if sys.platform.startswith("freebsd"):
             pytest.xfail("pexpect does not work reliably on freebsd")
@@ -1052,7 +1095,8 @@ def getdecoded(out):
         return out.decode("utf-8")
     except UnicodeDecodeError:
         return "INTERNAL not-utf8-decodeable, truncated string:\n%s" % (
-            py.io.saferepr(out),)
+            py.io.saferepr(out),
+        )
 
 
 class LineComp:
@@ -1060,8 +1104,8 @@ class LineComp:
         self.stringio = py.io.TextIO()
 
     def assert_contains_lines(self, lines2):
-        """ assert that lines2 are contained (linearly) in lines1.
-            return a list of extralines found.
+        """assert that lines2 are contained (linearly) in lines1.
+        return a list of extralines found.
         """
         __tracebackhide__ = True
         val = self.stringio.getvalue()
@@ -1121,15 +1165,15 @@ class LineMatcher:
         """
         for i, line in enumerate(self.lines):
             if fnline == line or fnmatch(line, fnline):
-                return self.lines[i + 1:]
+                return self.lines[i + 1 :]
         raise ValueError("line %r not found in output" % fnline)
 
     def _log(self, *args):
-        self._log_output.append(' '.join((str(x) for x in args)))
+        self._log_output.append(" ".join((str(x) for x in args)))
 
     @property
     def _log_text(self):
-        return '\n'.join(self._log_output)
+        return "\n".join(self._log_output)
 
     def fnmatch_lines(self, lines2):
         """Search the text for matching lines.

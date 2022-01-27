@@ -10,10 +10,13 @@ class PyAzureMgmtRdbms(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-rdbms/azure-mgmt-rdbms-2.2.0.zip"
 
-    version('2.2.0', sha256='f93344897a9bfa6ebc57dd0c10ad79602ff7965c322c65115e3f4b8584bbe1c7')
+    version(
+        "2.2.0",
+        sha256="f93344897a9bfa6ebc57dd0c10ad79602ff7965c322c65115e3f4b8584bbe1c7",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-msrest@0.5.0:', type=('build', 'run'))
-    depends_on('py-msrestazure@0.4.32:1', type=('build', 'run'))
-    depends_on('py-azure-common@1.1:1', type=('build', 'run'))
-    depends_on('py-azure-mgmt-nspkg', when='^python@:2', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-msrest@0.5.0:", type=("build", "run"))
+    depends_on("py-msrestazure@0.4.32:1", type=("build", "run"))
+    depends_on("py-azure-common@1.1:1", type=("build", "run"))
+    depends_on("py-azure-mgmt-nspkg", when="^python@:2", type=("build", "run"))

@@ -6,6 +6,6 @@ class MiddleAddsVirtual(Package):
     url = "http://www.example.com/"
     url = "http://www.example.com/2.0.tar.gz"
 
-    version('1.0', 'abcdef1234567890abcdef1234567890')
+    version("1.0", "abcdef1234567890abcdef1234567890")
 
-    depends_on('leaf-adds-virtual')
+    depends_on("leaf-adds-virtual")

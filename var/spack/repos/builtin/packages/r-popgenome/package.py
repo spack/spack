@@ -17,13 +17,22 @@ class RPopgenome(RPackage):
     seamless integration of C code."""
 
     homepage = "https://popgenome.weebly.com"
-    url      = "https://cloud.r-project.org/src/contrib/PopGenome_2.6.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/PopGenome_2.6.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/PopGenome"
 
-    version('2.7.5', sha256='d627b8ac87b4db6038d7349b2df20648d2fcfd48e2dafcd7f4731d1b607cbc75')
-    version('2.7.1', sha256='a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa')
-    version('2.6.1', sha256='7a2922ed505fa801117a153e479d246bcf4854b91c6ab0241acc620a9d779b1c')
+    version(
+        "2.7.5",
+        sha256="d627b8ac87b4db6038d7349b2df20648d2fcfd48e2dafcd7f4731d1b607cbc75",
+    )
+    version(
+        "2.7.1",
+        sha256="a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa",
+    )
+    version(
+        "2.6.1",
+        sha256="7a2922ed505fa801117a153e479d246bcf4854b91c6ab0241acc620a9d779b1c",
+    )
 
-    depends_on('r@2.14.2:', type=('build', 'run'))
-    depends_on('r-ff', type=('build', 'run'))
-    depends_on('zlib')
+    depends_on("r@2.14.2:", type=("build", "run"))
+    depends_on("r-ff", type=("build", "run"))
+    depends_on("zlib")

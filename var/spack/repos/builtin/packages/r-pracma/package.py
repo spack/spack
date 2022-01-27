@@ -15,9 +15,12 @@ class RPracma(RPackage):
     names where appropriate to simplify porting."""
 
     homepage = "https://cloud.r-project.org/package=pracma"
-    url      = "https://cloud.r-project.org/src/contrib/pracma_2.2.9.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/pracma_2.2.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pracma"
 
-    version('2.2.9', sha256='0cea0ff5e88643df121e07b9aebfe57084c61e11801680039752f371fe87bf1e')
+    version(
+        "2.2.9",
+        sha256="0cea0ff5e88643df121e07b9aebfe57084c61e11801680039752f371fe87bf1e",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on("r@3.1.0:", type=("build", "run"))

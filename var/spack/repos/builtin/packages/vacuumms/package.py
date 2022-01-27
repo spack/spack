@@ -14,12 +14,12 @@ class Vacuumms(CMakePackage):
     production of high quality ray-traced images and videos."""
 
     homepage = "https://github.com/frankwillmore/VACUUMMS"
-    url      = "https://github.com/frankwillmore/VACUUMMS/archive/refs/tags/v1.0.0.tar.gz"
-    git      = "https://github.com/frankwillmore/VACUUMMS.git"
+    url = "https://github.com/frankwillmore/VACUUMMS/archive/refs/tags/v1.0.0.tar.gz"
+    git = "https://github.com/frankwillmore/VACUUMMS.git"
 
-    maintainers = ['frankwillmore']
+    maintainers = ["frankwillmore"]
 
-    version('master', branch='master')
-    version('1.0.0', 'c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f')
+    version("master", branch="master")
+    version("1.0.0", "c18fe52f5041880da7f50d3808d37afb3e9c936a56f80f67838d045bf7af372f")
 
-    depends_on('libtiff')
+    depends_on("libtiff")

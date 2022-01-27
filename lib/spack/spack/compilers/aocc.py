@@ -14,38 +14,48 @@ from spack.version import ver
 
 class Aocc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['clang']
+    cc_names = ["clang"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['clang++']
+    cxx_names = ["clang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['flang']
+    f77_names = ["flang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['flang']
+    fc_names = ["flang"]
 
-    PrgEnv = 'PrgEnv-aocc'
-    PrgEnv_compiler = 'aocc'
+    PrgEnv = "PrgEnv-aocc"
+    PrgEnv_compiler = "aocc"
 
-    version_argument = '--version'
+    version_argument = "--version"
 
     @property
     def debug_flags(self):
-        return ['-gcodeview', '-gdwarf-2', '-gdwarf-3', '-gdwarf-4',
-                '-gdwarf-5', '-gline-tables-only', '-gmodules', '-gz', '-g']
+        return [
+            "-gcodeview",
+            "-gdwarf-2",
+            "-gdwarf-3",
+            "-gdwarf-4",
+            "-gdwarf-5",
+            "-gline-tables-only",
+            "-gmodules",
+            "-gz",
+            "-g",
+        ]
 
     @property
     def opt_flags(self):
-        return ['-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og',
-                '-O', '-O4']
+        return ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'aocc/clang',
-                      'cxx': 'aocc/clang++',
-                      'f77': 'aocc/flang',
-                      'fc': 'aocc/flang'}
+        link_paths = {
+            "cc": "aocc/clang",
+            "cxx": "aocc/clang++",
+            "f77": "aocc/flang",
+            "fc": "aocc/flang",
+        }
 
         return link_paths
 
@@ -71,7 +81,7 @@ class Aocc(Compiler):
 
     @property
     def c99_flag(self):
-        return '-std=c99'
+        return "-std=c99"
 
     @property
     def c11_flag(self):
@@ -93,22 +103,19 @@ class Aocc(Compiler):
     def fc_pic_flag(self):
         return "-fPIC"
 
-    required_libs = ['libclang']
+    required_libs = ["libclang"]
 
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        match = re.search(
-            r'AOCC_(\d+)[._](\d+)[._](\d+)',
-            output
-        )
+        match = re.search(r"AOCC_(\d+)[._](\d+)[._](\d+)", output)
         if match:
-            return '.'.join(match.groups())
+            return ".".join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):
-        if sys.platform == 'darwin':
-            return cls.default_version('clang')
+        if sys.platform == "darwin":
+            return cls.default_version("clang")
 
         return cls.default_version(fortran_compiler)
 
@@ -118,7 +125,7 @@ class Aocc(Compiler):
 
     @property
     def stdcxx_libs(self):
-        return ('-lstdc++', )
+        return ("-lstdc++",)
 
     @property
     def cflags(self):
@@ -135,6 +142,8 @@ class Aocc(Compiler):
     def _handle_default_flag_addtions(self):
         # This is a known issue for AOCC 3.0 see:
         # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
-        if self.real_version == ver('3.0.0'):
-            return ("-Wno-unused-command-line-argument "
-                    "-mllvm -eliminate-similar-expr=false")
+        if self.real_version == ver("3.0.0"):
+            return (
+                "-Wno-unused-command-line-argument "
+                "-mllvm -eliminate-similar-expr=false"
+            )

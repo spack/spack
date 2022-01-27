@@ -14,9 +14,12 @@ class RRpmm(RPackage):
     similar to hierarchical clustering, but also similar to finite mixture
     models."""
 
-    cran     = "RPMM"
+    cran = "RPMM"
 
-    version('1.25', sha256='f04a524b13918062616beda50c4e759ce2719ce14150a0e677d07132086c88c8')
+    version(
+        "1.25",
+        sha256="f04a524b13918062616beda50c4e759ce2719ce14150a0e677d07132086c88c8",
+    )
 
-    depends_on('r@2.3.12:', type=('build', 'run'))
-    depends_on('r-cluster', type=('build', 'run'))
+    depends_on("r@2.3.12:", type=("build", "run"))
+    depends_on("r-cluster", type=("build", "run"))

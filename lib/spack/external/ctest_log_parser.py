@@ -94,7 +94,7 @@ _error_matches = [
     "^[Ee]rror: ",
     "^Error ",
     "[0-9] ERROR: ",
-    "^\"[^\"]+\", line [0-9]+: [^Ww]",
+    '^"[^"]+", line [0-9]+: [^Ww]',
     "^cc[^C]*CC: ERROR File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*ERROR([^:])*:",
     "^ild:([ \\t])*\\(undefined symbol\\)",
@@ -119,7 +119,7 @@ _error_matches = [
     ": Can't find library for",
     ": internal link edit command failed",
     ": Unrecognized option [`'].*\\'",
-    "\", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([^WI]\\)",
+    '", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([^WI]\\)',
     "ld: 0706-006 Cannot find or open library file: -l ",
     "ild: \\(argument error\\) can't find library argument ::",
     "^could not be found and will not be loaded.",
@@ -162,19 +162,19 @@ _warning_matches = [
     "^cc[^C]*CC: WARNING File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*WARNING([^:])*:",
     "[^:]: warning [0-9]+:",
-    "^\"[^\"]+\", line [0-9]+: [Ww](arning|arnung)",
+    '^"[^"]+", line [0-9]+: [Ww](arning|arnung)',
     "[^:]: warning[ \\t]*[0-9]+[ \\t]*:",
     "^(Warning|Warnung) ([0-9]+):",
     "^(Warning|Warnung)[ :]",
     "WARNING: ",
     "[^ :] : warning",
     "[^:]: warning",
-    "\", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([WI]\\)",
+    '", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([WI]\\)',
     "^cxx: Warning:",
     "file: .* has no symbols",
     "[^ :]:[0-9]+: (Warning|Warnung)",
     "\\([0-9]*\\): remark #[0-9]*",
-    "\".*\", line [0-9]+: remark\\([0-9]*\\):",
+    '".*", line [0-9]+: remark\\([0-9]*\\):',
     "cc-[0-9]* CC: REMARK File = .*, Line = [0-9]*",
     "^CMake Warning",
     "^\\[WARNING\\]",
@@ -194,7 +194,7 @@ _warning_exceptions = [
     "IceFlush",
     "warning LNK4089: all references to [^ \\t]+ discarded by .OPT:REF",
     "ld32: WARNING 85: definition of dataKey in",
-    "cc: warning 422: Unknown option \"\\+b",
+    'cc: warning 422: Unknown option "\\+b',
     "_with_warning_C",
 ]
 
@@ -205,20 +205,27 @@ _file_line_matches = [
     "^([a-zA-Z.\\:/0-9_+ ~-]+)\\(([0-9]+)\\)",
     "^[0-9]+>([a-zA-Z.\\:/0-9_+ ~-]+)\\(([0-9]+)\\)",
     "^([a-zA-Z./0-9_+ ~-]+)\\(([0-9]+)\\)",
-    "\"([a-zA-Z./0-9_+ ~-]+)\", line ([0-9]+)",
+    '"([a-zA-Z./0-9_+ ~-]+)", line ([0-9]+)',
     "File = ([a-zA-Z./0-9_+ ~-]+), Line = ([0-9]+)",
 ]
 
 
 class LogEvent(object):
     """Class representing interesting events (e.g., errors) in a build log."""
-    def __init__(self, text, line_no,
-                 source_file=None, source_line_no=None,
-                 pre_context=None, post_context=None):
+
+    def __init__(
+        self,
+        text,
+        line_no,
+        source_file=None,
+        source_line_no=None,
+        pre_context=None,
+        post_context=None,
+    ):
         self.text = text
         self.line_no = line_no
-        self.source_file = source_file,
-        self.source_line_no = source_line_no,
+        self.source_file = (source_file,)
+        self.source_line_no = (source_line_no,)
         self.pre_context = pre_context if pre_context is not None else []
         self.post_context = post_context if post_context is not None else []
         self.repeat_count = 0
@@ -247,9 +254,9 @@ class LogEvent(object):
         out = StringIO()
         for i in range(self.start, self.end):
             if i == self.line_no:
-                out.write('  >> %-6d%s' % (i, self[i]))
+                out.write("  >> %-6d%s" % (i, self[i]))
             else:
-                out.write('     %-6d%s' % (i, self[i]))
+                out.write("     %-6d%s" % (i, self[i]))
         return out.getvalue()
 
 
@@ -264,7 +271,7 @@ class BuildWarning(LogEvent):
 def chunks(l, n):
     """Divide l into n approximately-even chunks."""
     chunksize = int(math.ceil(len(l) / n))
-    return [l[i:i + chunksize] for i in range(0, len(l), chunksize)]
+    return [l[i : i + chunksize] for i in range(0, len(l), chunksize)]
 
 
 @contextmanager
@@ -277,8 +284,9 @@ def _time(times, i):
 
 def _match(matches, exceptions, line):
     """True if line matches a regex in matches and none in exceptions."""
-    return (any(m.search(line) for m in matches) and
-            not any(e.search(line) for e in exceptions))
+    return any(m.search(line) for m in matches) and not any(
+        e.search(line) for e in exceptions
+    )
 
 
 def _profile_match(matches, exceptions, line, match_times, exc_times):
@@ -307,19 +315,22 @@ def _parse(lines, offset, profile):
     def compile(regex_array):
         return [re.compile(regex) for regex in regex_array]
 
-    error_matches      = compile(_error_matches)
-    error_exceptions   = compile(_error_exceptions)
-    warning_matches    = compile(_warning_matches)
+    error_matches = compile(_error_matches)
+    error_exceptions = compile(_error_exceptions)
+    warning_matches = compile(_warning_matches)
     warning_exceptions = compile(_warning_exceptions)
-    file_line_matches  = compile(_file_line_matches)
+    file_line_matches = compile(_file_line_matches)
 
     matcher, args = _match, []
     timings = []
     if profile:
         matcher = _profile_match
         timings = [
-            [0.0] * len(error_matches), [0.0] * len(error_exceptions),
-            [0.0] * len(warning_matches), [0.0] * len(warning_exceptions)]
+            [0.0] * len(error_matches),
+            [0.0] * len(error_exceptions),
+            [0.0] * len(warning_matches),
+            [0.0] * len(warning_exceptions),
+        ]
 
     errors = []
     warnings = []
@@ -349,6 +360,7 @@ def _parse_unpack(args):
 
 class CTestLogParser(object):
     """Log file parser that extracts errors and warnings."""
+
     def __init__(self, profile=False):
         # whether to record timing information
         self.timings = []
@@ -356,22 +368,25 @@ class CTestLogParser(object):
 
     def print_timings(self):
         """Print out profile of time spent in different regular expressions."""
+
         def stringify(elt):
             return elt if isinstance(elt, str) else elt.pattern
 
         index = 0
-        for name, arr in [('error_matches', _error_matches),
-                          ('error_exceptions', _error_exceptions),
-                          ('warning_matches', _warning_matches),
-                          ('warning_exceptions', _warning_exceptions)]:
+        for name, arr in [
+            ("error_matches", _error_matches),
+            ("error_exceptions", _error_exceptions),
+            ("warning_matches", _warning_matches),
+            ("warning_exceptions", _warning_exceptions),
+        ]:
 
             print()
             print(name)
             for i, elt in enumerate(arr):
-                print("%16.2f        %s" % (
-                    self.timings[index][i] * 1e6, stringify(elt)))
+                print(
+                    "%16.2f        %s" % (self.timings[index][i] * 1e6, stringify(elt))
+                )
             index += 1
-
 
     def parse(self, stream, context=6, jobs=None):
         """Parse a log file by searching each line for errors and warnings.
@@ -419,15 +434,12 @@ class CTestLogParser(object):
             warnings = sum(warnings, [])
 
             if self.profile:
-                self.timings = [
-                    [sum(i) for i in zip(*t)] for t in zip(*timings)]
+                self.timings = [[sum(i) for i in zip(*t)] for t in zip(*timings)]
 
         # add log context to all events
-        for event in (errors + warnings):
+        for event in errors + warnings:
             i = event.line_no - 1
-            event.pre_context = [
-                l.rstrip() for l in lines[i - context:i]]
-            event.post_context = [
-                l.rstrip() for l in lines[i + 1:i + context + 1]]
+            event.pre_context = [l.rstrip() for l in lines[i - context : i]]
+            event.post_context = [l.rstrip() for l in lines[i + 1 : i + context + 1]]
 
         return errors, warnings

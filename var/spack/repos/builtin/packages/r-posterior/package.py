@@ -20,17 +20,20 @@ class RPosterior(RPackage):
     diagnostics. References: Vehtari et al. (2021) <doi:10.1214/20-BA1221>."""
 
     homepage = "https://mc-stan.org/posterior/"
-    cran     = "posterior"
+    cran = "posterior"
 
-    version('1.1.0', sha256='eff6262dbcc1bf18337f535b0c75ba2fe360322e8b170c466e24ed3ee76cf4d2')
+    version(
+        "1.1.0",
+        sha256="eff6262dbcc1bf18337f535b0c75ba2fe360322e8b170c466e24ed3ee76cf4d2",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-abind', type=('build', 'run'))
-    depends_on('r-checkmate', type=('build', 'run'))
-    depends_on('r-rlang@0.4.7:', type=('build', 'run'))
-    depends_on('r-tibble@3.0.0:', type=('build', 'run'))
-    depends_on('r-vctrs', type=('build', 'run'))
-    depends_on('r-tensora', type=('build', 'run'))
-    depends_on('r-pillar', type=('build', 'run'))
-    depends_on('r-distributional', type=('build', 'run'))
-    depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-abind", type=("build", "run"))
+    depends_on("r-checkmate", type=("build", "run"))
+    depends_on("r-rlang@0.4.7:", type=("build", "run"))
+    depends_on("r-tibble@3.0.0:", type=("build", "run"))
+    depends_on("r-vctrs", type=("build", "run"))
+    depends_on("r-tensora", type=("build", "run"))
+    depends_on("r-pillar", type=("build", "run"))
+    depends_on("r-distributional", type=("build", "run"))
+    depends_on("r-matrixstats", type=("build", "run"))

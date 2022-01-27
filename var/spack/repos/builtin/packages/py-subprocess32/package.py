@@ -11,7 +11,13 @@ class PySubprocess32(PythonPackage):
 
     pypi = "subprocess32/subprocess32-3.2.7.tar.gz"
 
-    version('3.5.4', sha256='eb2937c80497978d181efa1b839ec2d9622cf9600a039a79d0e108d1f9aec79d')
-    version('3.2.7', sha256='1e450a4a4c53bf197ad6402c564b9f7a53539385918ef8f12bdf430a61036590')
+    version(
+        "3.5.4",
+        sha256="eb2937c80497978d181efa1b839ec2d9622cf9600a039a79d0e108d1f9aec79d",
+    )
+    version(
+        "3.2.7",
+        sha256="1e450a4a4c53bf197ad6402c564b9f7a53539385918ef8f12bdf430a61036590",
+    )
 
-    depends_on('py-setuptools', type='build', when='@3.5.0:')
+    depends_on("py-setuptools", type="build", when="@3.5.0:")

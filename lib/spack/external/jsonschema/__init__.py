@@ -9,7 +9,11 @@ instance under a schema, and will create a validator for you.
 """
 
 from jsonschema.exceptions import (
-    ErrorTree, FormatError, RefResolutionError, SchemaError, ValidationError
+    ErrorTree,
+    FormatError,
+    RefResolutionError,
+    SchemaError,
+    ValidationError,
 )
 from jsonschema._format import (
     FormatChecker,
@@ -27,6 +31,7 @@ from jsonschema.validators import (
     RefResolver,
     validate,
 )
+
 # try:
 #     from importlib import metadata
 # except ImportError: # for Python<3.8
@@ -34,4 +39,4 @@ from jsonschema.validators import (
 # __version__ = metadata.version("jsonschema")
 # set the version manually here, as we don't install dist-info or egg-info
 # files for vendored spack externals.
-__version__ = '3.2.0'
+__version__ = "3.2.0"

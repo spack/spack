@@ -21,23 +21,29 @@ class Freeipmi(AutotoolsPackage):
     info."""
 
     homepage = "https://www.gnu.org/software/freeipmi/"
-    url      = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
+    url = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
 
-    version('1.6.4',
-            sha256='65dfbb95a30438ba247f01a58498862a37d2e71c8c950bcfcee459d079241a3c')
+    version(
+        "1.6.4",
+        sha256="65dfbb95a30438ba247f01a58498862a37d2e71c8c950bcfcee459d079241a3c",
+    )
 
-    depends_on('libgcrypt')
+    depends_on("libgcrypt")
 
     parallel = False
 
     def configure_args(self):
         # FIXME: If root checking of root installation is added fix this:
         # Discussed in issue  #4432
-        tty.warn("Requires 'root' for bmc-watchdog.service installation to"
-                 " /lib/systemd/system/ !")
+        tty.warn(
+            "Requires 'root' for bmc-watchdog.service installation to"
+            " /lib/systemd/system/ !"
+        )
 
-        args = ['--prefix={0}'.format(prefix),
-                "--with-systemdsystemunitdir=" +
-                self.spec['freeipmi'].prefix.lib.systemd.system]
+        args = [
+            "--prefix={0}".format(prefix),
+            "--with-systemdsystemunitdir="
+            + self.spec["freeipmi"].prefix.lib.systemd.system,
+        ]
 
         return args

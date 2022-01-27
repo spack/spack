@@ -8,17 +8,17 @@ from spack.pkg.builtin.mock.multimethod import Multimethod
 
 class MultimethodInheritor(Multimethod):
     """This package is designed for use with Spack's multimethod test.
-       It has a bunch of test cases for the @when decorator that the
-       test uses.
+    It has a bunch of test cases for the @when decorator that the
+    test uses.
     """
 
-    @when('@1.0')
+    @when("@1.0")
     def inherited_and_overridden(self):
         return "inheritor@1.0"
 
     #
     # Test multi-level inheritance
     #
-    @when('@2:')
+    @when("@2:")
     def base_method(self):
-        return 'multimethod-inheritor'
+        return "multimethod-inheritor"

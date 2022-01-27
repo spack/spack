@@ -39,6 +39,7 @@ ASCII_IS_DEFAULT_ENCODING = sys.version_info[0] < 3
 if sys.version_info >= (3, 5):
     ast_Call = ast.Call
 else:
+
     def ast_Call(a, b, c):
         return ast.Call(a, b, c, None, None)
 
@@ -150,14 +151,13 @@ class AssertionRewritingHook(object):
     def _should_rewrite(self, name, fn_pypath, state):
         # always rewrite conftest files
         fn = str(fn_pypath)
-        if fn_pypath.basename == 'conftest.py':
+        if fn_pypath.basename == "conftest.py":
             state.trace("rewriting conftest file: %r" % (fn,))
             return True
 
         if self.session is not None:
             if self.session.isinitpath(fn):
-                state.trace("matched test file (was specified on cmdline): %r" %
-                            (fn,))
+                state.trace("matched test file (was specified on cmdline): %r" % (fn,))
                 return True
 
         # modules not passed explicitly on the command line are only
@@ -189,8 +189,8 @@ class AssertionRewritingHook(object):
 
     def _warn_already_imported(self, name):
         self.config.warn(
-            'P1',
-            'Module already imported so can not be re-written: %s' % name)
+            "P1", "Module already imported so can not be re-written: %s" % name
+        )
 
     def load_module(self, name):
         # If there is an existing module object named 'fullname' in
@@ -234,6 +234,7 @@ class AssertionRewritingHook(object):
         """
         try:
             import pkg_resources
+
             # access an attribute in case a deferred importer is present
             pkg_resources.__name__
         except ImportError:
@@ -244,9 +245,8 @@ class AssertionRewritingHook(object):
         pkg_resources.register_loader_type(cls, pkg_resources.DefaultProvider)
 
     def get_data(self, pathname):
-        """Optional PEP302 get_data API.
-        """
-        with open(pathname, 'rb') as f:
+        """Optional PEP302 get_data API."""
+        with open(pathname, "rb") as f:
             return f.read()
 
 
@@ -280,7 +280,7 @@ RN = "\r\n".encode("utf-8")
 N = "\n".encode("utf-8")
 
 cookie_re = re.compile(r"^[ \t\f]*#.*coding[:=][ \t]*[-\w.]+")
-BOM_UTF8 = '\xef\xbb\xbf'
+BOM_UTF8 = "\xef\xbb\xbf"
 
 
 def _rewrite_test(config, fn):
@@ -305,9 +305,11 @@ def _rewrite_test(config, fn):
         # gets this right.
         end1 = source.find("\n")
         end2 = source.find("\n", end1 + 1)
-        if (not source.startswith(BOM_UTF8) and
-            cookie_re.match(source[0:end1]) is None and
-                cookie_re.match(source[end1 + 1:end2]) is None):
+        if (
+            not source.startswith(BOM_UTF8)
+            and cookie_re.match(source[0:end1]) is None
+            and cookie_re.match(source[end1 + 1 : end2]) is None
+        ):
             if hasattr(state, "_indecode"):
                 # encodings imported us again, so don't rewrite.
                 return None, None
@@ -370,20 +372,23 @@ def _read_pyc(source, pyc, trace=lambda x: None):
             size = source.size()
             data = fp.read(12)
         except EnvironmentError as e:
-            trace('_read_pyc(%s): EnvironmentError %s' % (source, e))
+            trace("_read_pyc(%s): EnvironmentError %s" % (source, e))
             return None
         # Check for invalid or out of date pyc file.
-        if (len(data) != 12 or data[:4] != imp.get_magic() or
-                struct.unpack("<ll", data[4:]) != (mtime, size)):
-            trace('_read_pyc(%s): invalid or out of date pyc' % source)
+        if (
+            len(data) != 12
+            or data[:4] != imp.get_magic()
+            or struct.unpack("<ll", data[4:]) != (mtime, size)
+        ):
+            trace("_read_pyc(%s): invalid or out of date pyc" % source)
             return None
         try:
             co = marshal.load(fp)
         except Exception as e:
-            trace('_read_pyc(%s): marshal.load error %s' % (source, e))
+            trace("_read_pyc(%s): marshal.load error %s" % (source, e))
             return None
         if not isinstance(co, types.CodeType):
-            trace('_read_pyc(%s): not a code object' % source)
+            trace("_read_pyc(%s): not a code object" % source)
             return None
         return co
 
@@ -453,7 +458,7 @@ def _format_boolop(explanations, is_or):
         t = py.builtin.text
     else:
         t = py.builtin.bytes
-    return explanation.replace(t('%'), t('%%'))
+    return explanation.replace(t("%"), t("%%"))
 
 
 def _call_reprcompare(ops, results, expls, each_obj):
@@ -471,12 +476,7 @@ def _call_reprcompare(ops, results, expls, each_obj):
     return expl
 
 
-unary_map = {
-    ast.Not: "not %s",
-    ast.Invert: "~%s",
-    ast.USub: "-%s",
-    ast.UAdd: "+%s"
-}
+unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
 binop_map = {
     ast.BitOr: "|",
@@ -500,7 +500,7 @@ binop_map = {
     ast.Is: "is",
     ast.IsNot: "is not",
     ast.In: "in",
-    ast.NotIn: "not in"
+    ast.NotIn: "not in",
 }
 # Python 3.5+ compatibility
 try:
@@ -512,12 +512,14 @@ except AttributeError:
 if hasattr(ast, "NameConstant"):
     _NameConstant = ast.NameConstant
 else:
+
     def _NameConstant(c):
         return ast.Name(str(c), ast.Load())
 
 
 def set_location(node, lineno, col_offset):
     """Set node location information recursively."""
+
     def _fix(node, lineno, col_offset):
         if "lineno" in node._attributes:
             node.lineno = lineno
@@ -525,6 +527,7 @@ def set_location(node, lineno, col_offset):
             node.col_offset = col_offset
         for child in ast.iter_child_nodes(node):
             _fix(child, lineno, col_offset)
+
     _fix(node, lineno, col_offset)
     return node
 
@@ -593,8 +596,10 @@ class AssertionRewriter(ast.NodeVisitor):
             return
         # Insert some special imports at the top of the module but after any
         # docstrings and __future__ imports.
-        aliases = [ast.alias(py.builtin.builtins.__name__, "@py_builtins"),
-                   ast.alias("_pytest.assertion.rewrite", "@pytest_ar")]
+        aliases = [
+            ast.alias(py.builtin.builtins.__name__, "@py_builtins"),
+            ast.alias("_pytest.assertion.rewrite", "@pytest_ar"),
+        ]
         doc = getattr(mod, "docstring", None)
         expect_docstring = doc is None
         if doc is not None and self.is_rewrite_disabled(doc):
@@ -602,21 +607,28 @@ class AssertionRewriter(ast.NodeVisitor):
         pos = 0
         lineno = 1
         for item in mod.body:
-            if (expect_docstring and isinstance(item, ast.Expr) and
-                    isinstance(item.value, ast.Str)):
+            if (
+                expect_docstring
+                and isinstance(item, ast.Expr)
+                and isinstance(item.value, ast.Str)
+            ):
                 doc = item.value.s
                 if self.is_rewrite_disabled(doc):
                     return
                 expect_docstring = False
-            elif (not isinstance(item, ast.ImportFrom) or item.level > 0 or
-                  item.module != "__future__"):
+            elif (
+                not isinstance(item, ast.ImportFrom)
+                or item.level > 0
+                or item.module != "__future__"
+            ):
                 lineno = item.lineno
                 break
             pos += 1
         else:
             lineno = item.lineno
-        imports = [ast.Import([alias], lineno=lineno, col_offset=0)
-                   for alias in aliases]
+        imports = [
+            ast.Import([alias], lineno=lineno, col_offset=0) for alias in aliases
+        ]
         mod.body[pos:pos] = imports
         # Collect asserts.
         nodes = [mod]
@@ -634,10 +646,13 @@ class AssertionRewriter(ast.NodeVisitor):
                             if isinstance(child, ast.AST):
                                 nodes.append(child)
                     setattr(node, name, new)
-                elif (isinstance(field, ast.AST) and
-                      # Don't recurse into expressions as they can't contain
-                      # asserts.
-                      not isinstance(field, ast.expr)):
+                elif (
+                    isinstance(field, ast.AST)
+                    and
+                    # Don't recurse into expressions as they can't contain
+                    # asserts.
+                    not isinstance(field, ast.expr)
+                ):
                     nodes.append(field)
 
     def is_rewrite_disabled(self, docstring):
@@ -734,8 +749,11 @@ class AssertionRewriter(ast.NodeVisitor):
         """
         if isinstance(assert_.test, ast.Tuple) and self.config is not None:
             fslocation = (self.module_path, assert_.lineno)
-            self.config.warn('R1', 'assertion is always true, perhaps '
-                             'remove parentheses?', fslocation=fslocation)
+            self.config.warn(
+                "R1",
+                "assertion is always true, perhaps " "remove parentheses?",
+                fslocation=fslocation,
+            )
         self.statements = []
         self.variables = []
         self.variable_counter = itertools.count()
@@ -749,7 +767,7 @@ class AssertionRewriter(ast.NodeVisitor):
         negation = ast.UnaryOp(ast.Not(), top_condition)
         self.statements.append(ast.If(negation, body, []))
         if assert_.msg:
-            assertmsg = self.helper('format_assertmsg', assert_.msg)
+            assertmsg = self.helper("format_assertmsg", assert_.msg)
             explanation = "\n>assert " + explanation
         else:
             assertmsg = ast.Str("")
@@ -766,8 +784,7 @@ class AssertionRewriter(ast.NodeVisitor):
         body.append(raise_)
         # Clear temporary variables by setting them to None.
         if self.variables:
-            variables = [ast.Name(name, ast.Store())
-                         for name in self.variables]
+            variables = [ast.Name(name, ast.Store()) for name in self.variables]
             clear = ast.Assign(variables, _NameConstant(None))
             self.statements.append(clear)
         # Fix line numbers.
@@ -854,7 +871,7 @@ class AssertionRewriter(ast.NodeVisitor):
             else:  # **args have `arg` keywords with an .arg of None
                 arg_expls.append("**" + expl)
 
-        expl = "%s(%s)" % (func_expl, ', '.join(arg_expls))
+        expl = "%s(%s)" % (func_expl, ", ".join(arg_expls))
         new_call = ast.Call(new_func, new_args, new_kwargs)
         res = self.assign(new_call)
         res_expl = self.explanation_param(self.display(res))
@@ -864,7 +881,7 @@ class AssertionRewriter(ast.NodeVisitor):
     def visit_Starred(self, starred):
         # From Python 3.5, a Starred node can appear in a function call
         res, expl = self.visit(starred.value)
-        return starred, '*' + expl
+        return starred, "*" + expl
 
     def visit_Call_legacy(self, call):
         """
@@ -889,9 +906,8 @@ class AssertionRewriter(ast.NodeVisitor):
         if call.kwargs:
             new_kwarg, expl = self.visit(call.kwargs)
             arg_expls.append("**" + expl)
-        expl = "%s(%s)" % (func_expl, ', '.join(arg_expls))
-        new_call = ast.Call(new_func, new_args, new_kwargs,
-                            new_star, new_kwarg)
+        expl = "%s(%s)" % (func_expl, ", ".join(arg_expls))
+        new_call = ast.Call(new_func, new_args, new_kwargs, new_star, new_kwarg)
         res = self.assign(new_call)
         res_expl = self.explanation_param(self.display(res))
         outer_expl = "%s\n{%s = %s\n}" % (res_expl, res_expl, expl)
@@ -940,11 +956,13 @@ class AssertionRewriter(ast.NodeVisitor):
             self.statements.append(ast.Assign([store_names[i]], res_expr))
             left_res, left_expl = next_res, next_expl
         # Use pytest.assertion.util._reprcompare if that's available.
-        expl_call = self.helper("call_reprcompare",
-                                ast.Tuple(syms, ast.Load()),
-                                ast.Tuple(load_names, ast.Load()),
-                                ast.Tuple(expls, ast.Load()),
-                                ast.Tuple(results, ast.Load()))
+        expl_call = self.helper(
+            "call_reprcompare",
+            ast.Tuple(syms, ast.Load()),
+            ast.Tuple(load_names, ast.Load()),
+            ast.Tuple(expls, ast.Load()),
+            ast.Tuple(results, ast.Load()),
+        )
         if len(comp.ops) > 1:
             res = ast.BoolOp(ast.And(), load_names)
         else:

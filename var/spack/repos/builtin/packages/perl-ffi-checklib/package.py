@@ -15,6 +15,9 @@ class PerlFfiChecklib(PerlPackage):
     FFI system."""
 
     homepage = "https://metacpan.org/pod/FFI::CheckLib"
-    url      = "https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/FFI-CheckLib-0.25.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/FFI-CheckLib-0.25.tar.gz"
 
-    version('0.25', sha256='eb36b9a7cff1764a65b1b77e01e92c26207c558a3f986d0d17d2b110fa366ba4')
+    version(
+        "0.25",
+        sha256="eb36b9a7cff1764a65b1b77e01e92c26207c558a3f986d0d17d2b110fa366ba4",
+    )

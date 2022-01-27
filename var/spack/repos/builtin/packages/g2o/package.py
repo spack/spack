@@ -14,31 +14,34 @@ class G2o(CMakePackage):
     BA."""
 
     homepage = "https://openslam-org.github.io/g2o.html"
-    url      = "https://github.com/RainerKuemmerle/g2o/archive/20200410_git.tar.gz"
-    git      = "https://github.com/RainerKuemmerle/g2o.git"
+    url = "https://github.com/RainerKuemmerle/g2o/archive/20200410_git.tar.gz"
+    git = "https://github.com/RainerKuemmerle/g2o.git"
 
-    version('master', branch='master')
-    version('20200410_git', sha256='b79eb1407ae7f2a9e6a002bb4b41d65402c185855db41a9ef4a6e3b42abaec4c')
+    version("master", branch="master")
+    version(
+        "20200410_git",
+        sha256="b79eb1407ae7f2a9e6a002bb4b41d65402c185855db41a9ef4a6e3b42abaec4c",
+    )
 
-    depends_on('cmake@3.1:', type='build')
-    depends_on('eigen@2.91.0:', type='link')
-    depends_on('ceres-solver')
-    depends_on('freeglut')
-    depends_on('suite-sparse')
-    depends_on('qt@5:+gui+opengl')
-    depends_on('libqglviewer')
+    depends_on("cmake@3.1:", type="build")
+    depends_on("eigen@2.91.0:", type="link")
+    depends_on("ceres-solver")
+    depends_on("freeglut")
+    depends_on("suite-sparse")
+    depends_on("qt@5:+gui+opengl")
+    depends_on("libqglviewer")
 
     def cmake_args(self):
         return [
-            '-DBUILD_CSPARSE=OFF',
-            '-DCSPARSE_INCLUDE_DIR=' + self.spec[
-                'suite-sparse:cxsparse'].headers.directories[0],
-            '-DCSPARSE_LIBRARY=' + self.spec['suite-sparse:cxsparse'].libs[0],
-            '-DQGLVIEWER_INCLUDE_DIR=' + self.spec[
-                'libqglviewer'].prefix.include.QGLViewer
+            "-DBUILD_CSPARSE=OFF",
+            "-DCSPARSE_INCLUDE_DIR="
+            + self.spec["suite-sparse:cxsparse"].headers.directories[0],
+            "-DCSPARSE_LIBRARY=" + self.spec["suite-sparse:cxsparse"].libs[0],
+            "-DQGLVIEWER_INCLUDE_DIR="
+            + self.spec["libqglviewer"].prefix.include.QGLViewer,
         ]
 
-    @run_after('install')
+    @run_after("install")
     def darwin_fix(self):
-        if self.spec.satisfies('platform=darwin'):
+        if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)

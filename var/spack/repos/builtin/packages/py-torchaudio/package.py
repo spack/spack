@@ -17,10 +17,13 @@ class PyTorchaudio(PythonPackage):
     extension."""
 
     homepage = "https://github.com/pytorch/audio"
-    url      = "https://github.com/pytorch/audio/archive/v0.4.0.tar.gz"
+    url = "https://github.com/pytorch/audio/archive/v0.4.0.tar.gz"
 
-    version('0.4.0', sha256='9361312319b1ab880fc348ea82b024053bca6faf477ef6a9232a5b805742dc66')
+    version(
+        "0.4.0",
+        sha256="9361312319b1ab880fc348ea82b024053bca6faf477ef6a9232a5b805742dc66",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('sox@14.3.2:')
-    depends_on('py-torch@1.2.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("sox@14.3.2:")
+    depends_on("py-torch@1.2.0:", type=("build", "run"))

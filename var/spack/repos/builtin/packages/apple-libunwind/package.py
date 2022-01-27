@@ -11,15 +11,15 @@ class AppleLibunwind(Package):
 
     homepage = "https://opensource.apple.com/source/libunwind/libunwind-35.3/"
 
-    provides('unwind')
+    provides("unwind")
 
     # The 'conflicts' directive only accepts valid spack specs;
     # platforms cannot be negated -- 'platform!=darwin' is not a valid
     # spec -- so expressing a conflict for any platform that isn't
     # Darwin must be expressed by listing a conflict with every
     # platform that isn't Darwin/macOS
-    conflicts('platform=linux')
-    conflicts('platform=cray')
+    conflicts("platform=linux")
+    conflicts("platform=cray")
 
     # Override the fetcher method to throw a useful error message;
     # avoids GitHub issue (#7061) in which the opengl placeholder
@@ -63,17 +63,15 @@ class AppleLibunwind(Package):
         it will link dynamically to `/usr/lib/system/libunwind.dylib`.
 
         """
-        libs = find_libraries('libSystem',
-                              self.prefix.lib,
-                              shared=True, recursive=False)
+        libs = find_libraries(
+            "libSystem", self.prefix.lib, shared=True, recursive=False
+        )
         if libs:
             return libs
         return None
 
     @property
     def headers(self):
-        """ Export the Apple libunwind header
-        """
-        hdrs = HeaderList(find(self.prefix.include, 'libunwind.h',
-                               recursive=False))
+        """Export the Apple libunwind header"""
+        hdrs = HeaderList(find(self.prefix.include, "libunwind.h", recursive=False))
         return hdrs or None

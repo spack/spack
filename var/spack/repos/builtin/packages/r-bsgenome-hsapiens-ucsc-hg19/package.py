@@ -15,14 +15,18 @@ class RBsgenomeHsapiensUcscHg19(RPackage):
 
     # This is a bioconductor package but there is no available git repo.
     homepage = "https://bioconductor.org/packages/BSgenome.Hsapiens.UCSC.hg19/"
-    url      = "http://www.bioconductor.org/packages/release/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.0.tar.gz"
+    url = "http://www.bioconductor.org/packages/release/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.0.tar.gz"
 
-    version('1.4.3',
-            sha256='5bfa65d7836449d9b30c356968497cdfaa98be48c4e329e71e8f8a120f3e9d1a',
-            url='https://bioconductor.org/packages/3.12/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.3.tar.gz')
-    version('1.4.0',
-            sha256='88f515e5c27dd11d10654250e3a0a9389e4dfeb0b1c2d43419aa7086e6c516f8',
-            url='https://bioconductor.org/packages/3.10/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.0.tar.gz')
+    version(
+        "1.4.3",
+        sha256="5bfa65d7836449d9b30c356968497cdfaa98be48c4e329e71e8f8a120f3e9d1a",
+        url="https://bioconductor.org/packages/3.12/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.3.tar.gz",
+    )
+    version(
+        "1.4.0",
+        sha256="88f515e5c27dd11d10654250e3a0a9389e4dfeb0b1c2d43419aa7086e6c516f8",
+        url="https://bioconductor.org/packages/3.10/data/annotation/src/contrib/BSgenome.Hsapiens.UCSC.hg19_1.4.0.tar.gz",
+    )
 
-    depends_on('r-bsgenome@1.33.5:', type=('build', 'run'))
-    depends_on('r-bsgenome@1.54.0:', when='@1.4.3:', type=('build', 'run'))
+    depends_on("r-bsgenome@1.33.5:", type=("build", "run"))
+    depends_on("r-bsgenome@1.54.0:", when="@1.4.3:", type=("build", "run"))

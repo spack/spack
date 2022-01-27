@@ -16,12 +16,12 @@ from llnl.util import tty
 
 from spack import *
 
-re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
-re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
-re_paroptnum = re.compile(r'\s+([0-9]+)\.\s+\(')
-re_nestline = re.compile(r'\(([0-9]+=[^)0-9]+)+\)')
-re_nestoptnum = re.compile(r'([0-9]+)=')
-re_nestoptname = re.compile(r'=([^,)]+)')
+re_optline = re.compile(r"\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+")
+re_paroptname = re.compile(r"\((serial|smpar|dmpar|dm\+sm)\)")
+re_paroptnum = re.compile(r"\s+([0-9]+)\.\s+\(")
+re_nestline = re.compile(r"\(([0-9]+=[^)0-9]+)+\)")
+re_nestoptnum = re.compile(r"([0-9]+)=")
+re_nestoptname = re.compile(r"=([^,)]+)")
 
 
 def setNonBlocking(fd):
@@ -61,13 +61,21 @@ class Wrf(Package):
     for both atmospheric research and operational forecasting applications.
     """
 
-    homepage    = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
-    url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
+    homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
+    url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
-    version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
-    version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
-    version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
+    version(
+        "4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706"
+    )
+    version(
+        "4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65"
+    )
+    version(
+        "3.9.1.1",
+        sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a",
+        url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
+    )
 
     variant(
         "build_type",
@@ -182,7 +190,7 @@ class Wrf(Package):
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
-            env.prepend_path('PATH', ancestor(self.compiler.cc))
+            env.prepend_path("PATH", ancestor(self.compiler.cc))
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -239,10 +247,10 @@ class Wrf(Package):
                     for line in ifh:
                         if line.startswith("DM_"):
                             line = line.replace(
-                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpifc
+                                "mpif90 -f90=$(SFC)", self.spec["mpi"].mpifc
                             )
                             line = line.replace(
-                                "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
+                                "mpicc -cc=$(SCC)", self.spec["mpi"].mpicc
                             )
                         ofh.write(line)
 
@@ -257,11 +265,11 @@ class Wrf(Package):
                         if line.startswith("DM_"):
                             line = line.replace(
                                 "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
+                                self.spec["mpi"].mpifc + " -DMPI2_SUPPORT",
                             )
                             line = line.replace(
                                 "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
+                                self.spec["mpi"].mpicc + " -DMPI2_SUPPORT",
                             )
                         ofh.write(line)
 
@@ -279,11 +287,11 @@ class Wrf(Package):
                         if line.startswith("DM_"):
                             line = line.replace(
                                 "mpif90 -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
+                                self.spec["mpi"].mpifc + " -DMPI2_SUPPORT",
                             )
                             line = line.replace(
                                 "mpicc -DMPI2_SUPPORT",
-                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
+                                self.spec["mpi"].mpicc + " -DMPI2_SUPPORT",
                             )
                         ofh.write(line)
 
@@ -299,8 +307,8 @@ class Wrf(Package):
                 with open("./arch/configure.defaults", "wt") as ofh:
                     for line in ifh:
                         if line.startswith("DM_"):
-                            line = line.replace("mpif90", self.spec['mpi'].mpifc)
-                            line = line.replace("mpicc", self.spec['mpi'].mpicc)
+                            line = line.replace("mpif90", self.spec["mpi"].mpifc)
+                            line = line.replace("mpicc", self.spec["mpi"].mpicc)
                         ofh.write(line)
 
     def configure(self, spec, prefix):
@@ -334,8 +342,7 @@ class Wrf(Package):
                     break
                 if stallcounter > 300:
                     raise InstallError(
-                        "Output stalled for 30s, presumably an "
-                        "undetected question."
+                        "Output stalled for 30s, presumably an " "undetected question."
                     )
                 time.sleep(0.1)  # Try to do a bit of rate limiting
                 stallcounter += 1
@@ -343,10 +350,7 @@ class Wrf(Package):
             stdout.write(line)
             stallcounter = 0
             outputbuf += line
-            if (
-                "Enter selection" in outputbuf
-                or "Compile for nesting" in outputbuf
-            ):
+            if "Enter selection" in outputbuf or "Compile for nesting" in outputbuf:
                 answer = self.answer_configure_question(outputbuf)
                 p.stdin.write(answer.encode())
                 p.stdin.flush()
@@ -359,7 +363,7 @@ class Wrf(Package):
     def patch_for_libmvec(self):
         if self.spec.satisfies("@3.9.1.1 %aocc"):
             fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
-            which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
+            which("patch")("-s", "-p1", "-i", "{0}".format(fp), "-d", ".")
 
     def run_compile_script(self):
         csh_bin = self.spec["tcsh"].prefix.bin.csh
@@ -378,7 +382,7 @@ class Wrf(Package):
             num_jobs,
             self.spec.variants["compile_type"].value,
             output=str,
-            error=str
+            error=str,
         )
 
         if "Executables successfully built" in result_buf:
@@ -398,9 +402,7 @@ class Wrf(Package):
             result = self.run_compile_script()
 
         if not result:
-            raise InstallError(
-                "Compile failed. Check the output log for details."
-            )
+            raise InstallError("Compile failed. Check the output log for details.")
 
     def install(self, spec, prefix):
         # Save all install files as many are needed for WPS and WRF runs

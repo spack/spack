@@ -16,48 +16,70 @@ class XercesC(AutotoolsPackage):
     APIs."""
 
     homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
+    url = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
 
-    version('3.2.3', sha256='45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6')
-    version('3.2.2', sha256='1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0')
-    version('3.2.1', sha256='a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da')
-    version('3.1.4', sha256='9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891')
-    version('3.1.3', sha256='fc5e5e0247b108b8d64d75aeb124cabdee9b7fcd725a89fe2242b4637b25c1fa')
+    version(
+        "3.2.3",
+        sha256="45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6",
+    )
+    version(
+        "3.2.2",
+        sha256="1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0",
+    )
+    version(
+        "3.2.1",
+        sha256="a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da",
+    )
+    version(
+        "3.1.4",
+        sha256="9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891",
+    )
+    version(
+        "3.1.3",
+        sha256="fc5e5e0247b108b8d64d75aeb124cabdee9b7fcd725a89fe2242b4637b25c1fa",
+    )
 
     # Whilst still using Autotools, can use full cxxstd with 'default'
     # If build is moved to CMake, then will also need a patch to Xerces-C's
     # CMakeLists.txt as a specific standard cannot be forced
-    variant('cxxstd',
-            default='default',
-            values=('default', '98', '11', '14', '17'),
-            multi=False,
-            description='Use the specified C++ standard when building')
+    variant(
+        "cxxstd",
+        default="default",
+        values=("default", "98", "11", "14", "17"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
 
-    variant('netaccessor',
-            default='curl',
-            # todo: add additional values (platform-specific)
-            # 'socket', 'cfurl', 'winsock'
-            values=('curl', 'none'),
-            multi=False,
-            description='Net Accessor (used to access network resources')
+    variant(
+        "netaccessor",
+        default="curl",
+        # todo: add additional values (platform-specific)
+        # 'socket', 'cfurl', 'winsock'
+        values=("curl", "none"),
+        multi=False,
+        description="Net Accessor (used to access network resources",
+    )
 
     # It's best to be explicit about the transcoder or else xerces may
     # choose another value.
-    if sys.platform == 'darwin':
-        default_transcoder = 'macos'
-    elif sys.platform.startswith('win') or sys.platform == 'cygwin':
-        default_transcoder = 'windows'
+    if sys.platform == "darwin":
+        default_transcoder = "macos"
+    elif sys.platform.startswith("win") or sys.platform == "cygwin":
+        default_transcoder = "windows"
     else:
-        default_transcoder = 'gnuiconv'
+        default_transcoder = "gnuiconv"
 
-    variant('transcoder', default=default_transcoder,
-            values=('gnuiconv', 'iconv', 'icu', 'macos', 'windows'),
-            multi=False,
-            description='Use the specified transcoder')
+    variant(
+        "transcoder",
+        default=default_transcoder,
+        values=("gnuiconv", "iconv", "icu", "macos", "windows"),
+        multi=False,
+        description="Use the specified transcoder",
+    )
 
-    depends_on('iconv', type='link', when='transcoder=gnuiconv')
-    depends_on('icu4c',    type='link', when='transcoder=icu')
-    depends_on('curl', when='netaccessor=curl')
+    depends_on("iconv", type="link", when="transcoder=gnuiconv")
+    depends_on("icu4c", type="link", when="transcoder=icu")
+    depends_on("curl", when="netaccessor=curl")
 
     # Pass flags to configure.  This is necessary for CXXFLAGS or else
     # the xerces default will override the spack wrapper.
@@ -65,14 +87,16 @@ class XercesC(AutotoolsPackage):
         spec = self.spec
 
         # Need to pass -std flag explicitly
-        if name == 'cxxflags' and spec.variants['cxxstd'].value != 'default':
-            flags.append(getattr(self.compiler,
-                         'cxx{0}_flag'.format(
-                             spec.variants['cxxstd'].value)))
+        if name == "cxxflags" and spec.variants["cxxstd"].value != "default":
+            flags.append(
+                getattr(
+                    self.compiler, "cxx{0}_flag".format(spec.variants["cxxstd"].value)
+                )
+            )
 
         # There is no --with-pkg for gnuiconv.
-        if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
-            flags.append(spec['iconv'].libs.ld_flags)
+        if name == "ldflags" and "transcoder=gnuiconv" in spec:
+            flags.append(spec["iconv"].libs.ld_flags)
 
         return (None, None, flags)
 
@@ -80,25 +104,25 @@ class XercesC(AutotoolsPackage):
         spec = self.spec
         args = []
 
-        if 'netaccessor=curl' in spec:
-            args.append('--enable-netaccessor-curl')
+        if "netaccessor=curl" in spec:
+            args.append("--enable-netaccessor-curl")
         else:
-            args.append('--disable-network')
+            args.append("--disable-network")
 
-        if 'transcoder=gnuiconv' in spec:
-            args.append('--enable-transcoder-gnuiconv')
+        if "transcoder=gnuiconv" in spec:
+            args.append("--enable-transcoder-gnuiconv")
 
-        if 'transcoder=iconv' in spec:
-            args.append('--enable-transcoder-iconv')
+        if "transcoder=iconv" in spec:
+            args.append("--enable-transcoder-iconv")
 
-        if 'transcoder=icu' in spec:
-            args.append('--enable-transcoder-icu')
-            args.append('--with-icu=%s' % spec['icu4c'].prefix)
+        if "transcoder=icu" in spec:
+            args.append("--enable-transcoder-icu")
+            args.append("--with-icu=%s" % spec["icu4c"].prefix)
 
-        if 'transcoder=macos' in spec:
-            args.append('--enable-transcoder-macosunicodeconverter')
+        if "transcoder=macos" in spec:
+            args.append("--enable-transcoder-macosunicodeconverter")
 
-        if 'transcoder=windows' in spec:
-            args.append('--enable-transcoder-windows')
+        if "transcoder=windows" in spec:
+            args.append("--enable-transcoder-windows")
 
         return args

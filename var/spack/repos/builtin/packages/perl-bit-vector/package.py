@@ -10,8 +10,10 @@ class PerlBitVector(PerlPackage):
     """Efficient bit vector, set of integers and "big int" math library"""
 
     homepage = "https://metacpan.org/dist/Bit-Vector/view/Vector.pod"
-    url      = "http://search.cpan.org/CPAN/authors/id/S/ST/STBEY/Bit-Vector-7.4.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/S/ST/STBEY/Bit-Vector-7.4.tar.gz"
 
-    version('7.4', sha256='3c6daa671fecfbc35f92a9385b563d65f50dfc6bdc8b4805f9ef46c0d035a926')
+    version(
+        "7.4", sha256="3c6daa671fecfbc35f92a9385b563d65f50dfc6bdc8b4805f9ef46c0d035a926"
+    )
 
-    depends_on('perl-carp-clan', type=('build', 'run'))
+    depends_on("perl-carp-clan", type=("build", "run"))

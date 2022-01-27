@@ -26,25 +26,31 @@ class RRminer(RPackage):
     - first version."""
 
     homepage = "http://www3.dsi.uminho.pt/pcortez/rminer.html"
-    url      = "https://cloud.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rminer"
 
-    version('1.4.6', sha256='1f8bf7b3fbc887fd766568c1ec1f861021c962259354bd8967a61c1d0761cdf7')
-    version('1.4.2', sha256='64444dcedcd17f2f26129819d6bd2f84d4bb59c8f65328b6054ef32cb9624fc2')
+    version(
+        "1.4.6",
+        sha256="1f8bf7b3fbc887fd766568c1ec1f861021c962259354bd8967a61c1d0761cdf7",
+    )
+    version(
+        "1.4.2",
+        sha256="64444dcedcd17f2f26129819d6bd2f84d4bb59c8f65328b6054ef32cb9624fc2",
+    )
 
-    depends_on('r-plotrix', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-nnet', type=('build', 'run'))
-    depends_on('r-kknn', type=('build', 'run'))
-    depends_on('r-pls', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-mda', type=('build', 'run'))
-    depends_on('r-rpart', type=('build', 'run'))
-    depends_on('r-randomforest', type=('build', 'run'))
-    depends_on('r-adabag', type=('build', 'run'))
-    depends_on('r-party', type=('build', 'run'))
-    depends_on('r-cubist', type=('build', 'run'))
-    depends_on('r-kernlab', type=('build', 'run'))
-    depends_on('r-e1071', type=('build', 'run'))
-    depends_on('r-glmnet', type=('build', 'run'))
-    depends_on('r-xgboost', type=('build', 'run'))
+    depends_on("r-plotrix", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-nnet", type=("build", "run"))
+    depends_on("r-kknn", type=("build", "run"))
+    depends_on("r-pls", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-mda", type=("build", "run"))
+    depends_on("r-rpart", type=("build", "run"))
+    depends_on("r-randomforest", type=("build", "run"))
+    depends_on("r-adabag", type=("build", "run"))
+    depends_on("r-party", type=("build", "run"))
+    depends_on("r-cubist", type=("build", "run"))
+    depends_on("r-kernlab", type=("build", "run"))
+    depends_on("r-e1071", type=("build", "run"))
+    depends_on("r-glmnet", type=("build", "run"))
+    depends_on("r-xgboost", type=("build", "run"))

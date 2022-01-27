@@ -29,32 +29,32 @@ spack_script = os.path.join(bin_path, "spack")
 sbang_script = os.path.join(bin_path, "sbang")
 
 # spack directory hierarchy
-lib_path              = os.path.join(prefix, "lib", "spack")
-external_path         = os.path.join(lib_path, "external")
-build_env_path        = os.path.join(lib_path, "env")
-module_path           = os.path.join(lib_path, "spack")
-command_path          = os.path.join(module_path, "cmd")
-analyzers_path        = os.path.join(module_path, "analyzers")
-platform_path         = os.path.join(module_path, 'platforms')
-compilers_path        = os.path.join(module_path, "compilers")
-build_systems_path    = os.path.join(module_path, 'build_systems')
-operating_system_path = os.path.join(module_path, 'operating_systems')
-test_path             = os.path.join(module_path, "test")
-hooks_path            = os.path.join(module_path, "hooks")
-opt_path              = os.path.join(prefix, "opt")
-share_path            = os.path.join(prefix, "share", "spack")
-etc_path              = os.path.join(prefix, "etc")
+lib_path = os.path.join(prefix, "lib", "spack")
+external_path = os.path.join(lib_path, "external")
+build_env_path = os.path.join(lib_path, "env")
+module_path = os.path.join(lib_path, "spack")
+command_path = os.path.join(module_path, "cmd")
+analyzers_path = os.path.join(module_path, "analyzers")
+platform_path = os.path.join(module_path, "platforms")
+compilers_path = os.path.join(module_path, "compilers")
+build_systems_path = os.path.join(module_path, "build_systems")
+operating_system_path = os.path.join(module_path, "operating_systems")
+test_path = os.path.join(module_path, "test")
+hooks_path = os.path.join(module_path, "hooks")
+opt_path = os.path.join(prefix, "opt")
+share_path = os.path.join(prefix, "share", "spack")
+etc_path = os.path.join(prefix, "etc")
 
 
 #
 # Things in $spack/var/spack
 #
-var_path              = os.path.join(prefix, "var", "spack")
+var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
-repos_path            = os.path.join(var_path, "repos")
-packages_path         = os.path.join(repos_path, "builtin")
-mock_packages_path    = os.path.join(repos_path, "builtin.mock")
+repos_path = os.path.join(var_path, "repos")
+packages_path = os.path.join(repos_path, "builtin")
+mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #
 # Writable things in $spack/var/spack
@@ -65,10 +65,10 @@ mock_packages_path    = os.path.join(repos_path, "builtin.mock")
 default_fetch_cache_path = os.path.join(var_path, "cache")
 
 # GPG paths.
-gpg_keys_path      = os.path.join(var_path, "gpg")
+gpg_keys_path = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path           = os.path.join(opt_path, "spack", "gpg")
+gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 
 # Below paths are where Spack can write information for the user.
@@ -81,7 +81,7 @@ gpg_path           = os.path.join(opt_path, "spack", "gpg")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CACHE_PATH') or "~/.spack")
+    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~/.spack")
 
 
 user_cache_path = _get_user_cache_path()
@@ -96,13 +96,13 @@ default_test_path = os.path.join(user_cache_path, "test")
 default_monitor_path = os.path.join(reports_path, "monitor")
 
 #: git repositories fetched to compare commits to versions
-user_repos_cache_path = os.path.join(user_cache_path, 'git_repos')
+user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
 
 #: bootstrap store for bootstrapping clingo and other tools
-default_user_bootstrap_path = os.path.join(user_cache_path, 'bootstrap')
+default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(user_cache_path, 'cache')
+default_misc_cache_path = os.path.join(user_cache_path, "cache")
 
 
 # Below paths pull configuration from the host environment.
@@ -116,12 +116,12 @@ default_misc_cache_path = os.path.join(user_cache_path, 'cache')
 
 # User configuration and caches in $HOME/.spack
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CONFIG_PATH') or "~/.spack")
+    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or "~/.spack")
 
 
 # Configuration in /etc/spack on the system
 def _get_system_config_path():
-    return os.path.expanduser(os.getenv('SPACK_SYSTEM_CONFIG_PATH') or "/etc/spack")
+    return os.path.expanduser(os.getenv("SPACK_SYSTEM_CONFIG_PATH") or "/etc/spack")
 
 
 #: User configuration location

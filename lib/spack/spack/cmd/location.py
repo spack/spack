@@ -26,40 +26,59 @@ def setup_parser(subparser):
     directories = subparser.add_mutually_exclusive_group()
 
     directories.add_argument(
-        '-m', '--module-dir', action='store_true',
-        help="spack python module directory")
+        "-m", "--module-dir", action="store_true", help="spack python module directory"
+    )
     directories.add_argument(
-        '-r', '--spack-root', action='store_true',
-        help="spack installation root")
+        "-r", "--spack-root", action="store_true", help="spack installation root"
+    )
 
     directories.add_argument(
-        '-i', '--install-dir', action='store_true',
-        help="install prefix for spec (spec need not be installed)")
+        "-i",
+        "--install-dir",
+        action="store_true",
+        help="install prefix for spec (spec need not be installed)",
+    )
     directories.add_argument(
-        '-p', '--package-dir', action='store_true',
-        help="directory enclosing a spec's package.py file")
+        "-p",
+        "--package-dir",
+        action="store_true",
+        help="directory enclosing a spec's package.py file",
+    )
     directories.add_argument(
-        '-P', '--packages', action='store_true',
-        help="top-level packages directory for Spack")
+        "-P",
+        "--packages",
+        action="store_true",
+        help="top-level packages directory for Spack",
+    )
     directories.add_argument(
-        '-s', '--stage-dir', action='store_true',
-        help="stage directory for a spec")
+        "-s", "--stage-dir", action="store_true", help="stage directory for a spec"
+    )
     directories.add_argument(
-        '-S', '--stages', action='store_true',
-        help="top level stage directory")
+        "-S", "--stages", action="store_true", help="top level stage directory"
+    )
     directories.add_argument(
-        '--source-dir', action='store_true',
-        help="source directory for a spec "
-             "(requires it to be staged first)")
+        "--source-dir",
+        action="store_true",
+        help="source directory for a spec " "(requires it to be staged first)",
+    )
     directories.add_argument(
-        '-b', '--build-dir', action='store_true',
-        help="build directory for a spec "
-             "(requires it to be staged first)")
+        "-b",
+        "--build-dir",
+        action="store_true",
+        help="build directory for a spec " "(requires it to be staged first)",
+    )
     directories.add_argument(
-        '-e', '--env', action='store', dest='location_env', nargs='?', metavar="name",
-        default=False, help="location of the named or current environment")
+        "-e",
+        "--env",
+        action="store",
+        dest="location_env",
+        nargs="?",
+        metavar="name",
+        default=False,
+        help="location of the named or current environment",
+    )
 
-    arguments.add_common_arguments(subparser, ['spec'])
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def location(parser, args):
@@ -75,7 +94,7 @@ def location(parser, args):
     if args.location_env is not False:
         if args.location_env is None:
             # Get current environment path
-            spack.cmd.require_active_env('location -e')
+            spack.cmd.require_active_env("location -e")
             path = ev.active_environment().path
         else:
             # Get named environment path
@@ -125,13 +144,10 @@ def location(parser, args):
 
     if args.build_dir:
         # Out of source builds have build_directory defined
-        if hasattr(pkg, 'build_directory'):
+        if hasattr(pkg, "build_directory"):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(
-                pkg.stage.path,
-                pkg.build_directory
-            )))
+            print(os.path.normpath(os.path.join(pkg.stage.path, pkg.build_directory)))
             return
 
         # Otherwise assume in-source builds
@@ -140,9 +156,10 @@ def location(parser, args):
 
     # source dir remains, which requires the spec to be staged
     if not pkg.stage.expanded:
-        tty.die("Source directory does not exist yet. "
-                "Run this to create it:",
-                "spack stage " + " ".join(args.spec))
+        tty.die(
+            "Source directory does not exist yet. " "Run this to create it:",
+            "spack stage " + " ".join(args.spec),
+        )
 
     # Default to source dir.
     print(pkg.stage.source_path)

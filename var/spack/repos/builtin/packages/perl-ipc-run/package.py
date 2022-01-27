@@ -13,9 +13,12 @@ class PerlIpcRun(PerlPackage):
     supported and may be mixed."""
 
     homepage = "https://metacpan.org/pod/IPC::Run"
-    url      = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20180523.0.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20180523.0.tar.gz"
 
-    version('20180523.0', sha256='3850d7edf8a4671391c6e99bb770698e1c45da55b323b31c76310913349b6c2f')
+    version(
+        "20180523.0",
+        sha256="3850d7edf8a4671391c6e99bb770698e1c45da55b323b31c76310913349b6c2f",
+    )
 
-    depends_on('perl-io-tty', type=('build', 'run'))
-    depends_on('perl-readonly', type='build')
+    depends_on("perl-io-tty", type=("build", "run"))
+    depends_on("perl-readonly", type="build")

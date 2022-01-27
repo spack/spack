@@ -11,32 +11,43 @@ class Assimp(CMakePackage):
     import various well-known 3D model formats in a uniform manner."""
 
     homepage = "https://www.assimp.org"
-    url      = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
-    git      = "https://github.com/assimp/assimp.git"
+    url = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
+    git = "https://github.com/assimp/assimp.git"
 
-    maintainers = ['wdconinc']
+    maintainers = ["wdconinc"]
 
-    version('master', branch='master')
-    version('5.1.4', sha256='bd32cdc27e1f8b7ac09d914ab92dd81d799c97e9e47315c1f40dcb7c6f7938c6')
-    version('5.1.3', sha256='50a7bd2c8009945e1833c591d16f4f7c491a3c6190f69d9d007167aadb175c35')
-    version('5.0.1', sha256='11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc')
-    version('4.0.1', sha256='60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e')
+    version("master", branch="master")
+    version(
+        "5.1.4",
+        sha256="bd32cdc27e1f8b7ac09d914ab92dd81d799c97e9e47315c1f40dcb7c6f7938c6",
+    )
+    version(
+        "5.1.3",
+        sha256="50a7bd2c8009945e1833c591d16f4f7c491a3c6190f69d9d007167aadb175c35",
+    )
+    version(
+        "5.0.1",
+        sha256="11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc",
+    )
+    version(
+        "4.0.1",
+        sha256="60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e",
+    )
 
-    variant('shared',  default=True,
-            description='Enables the build of shared libraries')
+    variant("shared", default=True, description="Enables the build of shared libraries")
 
-    depends_on('zlib')
-    depends_on('boost')
+    depends_on("zlib")
+    depends_on("boost")
 
     def cmake_args(self):
         args = [
-            '-DASSIMP_BUILD_TESTS=OFF',
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            "-DASSIMP_BUILD_TESTS=OFF",
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         return args
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        if name == 'cxxflags':
+        if name == "cxxflags":
             flags.append(self.compiler.cxx11_flag)
         return (None, None, flags)

@@ -11,18 +11,20 @@ class Ladot(Package):
     (graphviz) relatively easy."""
 
     homepage = "https://brighten.bigw.org/projects/ladot/"
-    url      = "https://brighten.bigw.org/projects/ladot/ladot-1.2.tar.gz"
+    url = "https://brighten.bigw.org/projects/ladot/ladot-1.2.tar.gz"
 
-    version('1.2', sha256='f829eeca829b82c0315cd87bffe410bccab96309b86b1c883b3ddaa93170f25e')
+    version(
+        "1.2", sha256="f829eeca829b82c0315cd87bffe410bccab96309b86b1c883b3ddaa93170f25e"
+    )
 
-    depends_on('perl', type=('run', 'test'))
-    depends_on('graphviz', type=('run', 'test'))
-    depends_on('texlive', type='test')
+    depends_on("perl", type=("run", "test"))
+    depends_on("graphviz", type=("run", "test"))
+    depends_on("texlive", type="test")
 
     def install(self, spec, prefix):
         if self.run_tests:
-            with working_dir('example'):
+            with working_dir("example"):
                 make()
 
         mkdir(prefix.bin)
-        install('ladot', prefix.bin)
+        install("ladot", prefix.bin)

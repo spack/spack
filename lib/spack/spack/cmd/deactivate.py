@@ -19,16 +19,22 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-f', '--force', action='store_true',
-        help="run deactivation even if spec is NOT currently activated")
+        "-f",
+        "--force",
+        action="store_true",
+        help="run deactivation even if spec is NOT currently activated",
+    )
     subparser.add_argument(
-        '-v', '--view', metavar='VIEW', type=str,
-        help="the view to operate on")
+        "-v", "--view", metavar="VIEW", type=str, help="the view to operate on"
+    )
     subparser.add_argument(
-        '-a', '--all', action='store_true',
+        "-a",
+        "--all",
+        action="store_true",
         help="deactivate all extensions of an extendable package, or "
-        "deactivate an extension AND its dependencies")
-    arguments.add_common_arguments(subparser, ['installed_spec'])
+        "deactivate an extension AND its dependencies",
+    )
+    arguments.add_common_arguments(subparser, ["installed_spec"])
 
 
 def deactivate(parser, args):
@@ -53,7 +59,8 @@ def deactivate(parser, args):
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
             ext_pkgs = spack.store.db.activated_extensions_for(
-                spec, view.extensions_layout)
+                spec, view.extensions_layout
+            )
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
@@ -61,12 +68,10 @@ def deactivate(parser, args):
                     ext_pkg.do_deactivate(view, force=True)
 
         elif pkg.is_extension:
-            if not args.force and \
-               not spec.package.is_activated(view):
+            if not args.force and not spec.package.is_activated(view):
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
-            tty.msg("Deactivating %s and all dependencies." %
-                    pkg.spec.short_spec)
+            tty.msg("Deactivating %s and all dependencies." % pkg.spec.short_spec)
 
             topo_order = topological_sort(spec)
             index = spec.index()
@@ -81,15 +86,17 @@ def deactivate(parser, args):
         else:
             tty.die(
                 "spack deactivate --all requires an extendable package "
-                "or an extension.")
+                "or an extension."
+            )
 
     else:
         if not pkg.is_extension:
-            tty.die("spack deactivate requires an extension.",
-                    "Did you mean 'spack deactivate --all'?")
+            tty.die(
+                "spack deactivate requires an extension.",
+                "Did you mean 'spack deactivate --all'?",
+            )
 
-        if not args.force and \
-           not spec.package.is_activated(view):
+        if not args.force and not spec.package.is_activated(view):
             tty.die("Package %s is not activated." % specs[0].short_spec)
 
         spec.package.do_deactivate(view, force=args.force)

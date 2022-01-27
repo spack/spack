@@ -13,74 +13,136 @@ class Sqlite(AutotoolsPackage):
     """SQLite is a C-language library that implements a small, fast,
     self-contained, high-reliability, full-featured, SQL database engine.
     """
+
     homepage = "https://www.sqlite.org"
 
-    version('3.37.1', sha256='40f22a13bf38bbcd4c7ac79bcfb42a72d5aa40930c1f3f822e30ccce295f0f2e')
-    version('3.37.0', sha256='731a4651d4d4b36fc7d21db586b2de4dd00af31fd54fb5a9a4b7f492057479f7')
-    version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
-    version('3.35.5', sha256='f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0')
-    version('3.35.4', sha256='7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d')
-    version('3.35.3', sha256='ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b')
-    version('3.34.0', sha256='bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee')
-    version('3.33.0', sha256='106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15')
-    version('3.32.3', sha256='a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66')
-    version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
-    version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
-    version('3.30.0', sha256='e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58')
-    version('3.29.0', sha256='8e7c1e2950b5b04c5944a981cb31fffbf9d2ddda939d536838ebc854481afd5b')
-    version('3.28.0', sha256='d61b5286f062adfce5125eaf544d495300656908e61fca143517afcc0a89b7c3')
-    version('3.27.2', sha256='50c39e85ea28b5ecfdb3f9e860afe9ba606381e21836b2849efca6a0bfe6ef6e')
-    version('3.27.1', sha256='54a92b8ff73ff6181f89b9b0c08949119b99e8cccef93dbef90e852a8b10f4f8')
-    version('3.27.0', sha256='dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0')
-    version('3.26.0', sha256='5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d')
+    version(
+        "3.37.1",
+        sha256="40f22a13bf38bbcd4c7ac79bcfb42a72d5aa40930c1f3f822e30ccce295f0f2e",
+    )
+    version(
+        "3.37.0",
+        sha256="731a4651d4d4b36fc7d21db586b2de4dd00af31fd54fb5a9a4b7f492057479f7",
+    )
+    version(
+        "3.36.0",
+        sha256="bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3",
+    )
+    version(
+        "3.35.5",
+        sha256="f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0",
+    )
+    version(
+        "3.35.4",
+        sha256="7771525dff0185bfe9638ccce23faa0e1451757ddbda5a6c853bb80b923a512d",
+    )
+    version(
+        "3.35.3",
+        sha256="ecbccdd440bdf32c0e1bb3611d635239e3b5af268248d130d0445a32daf0274b",
+    )
+    version(
+        "3.34.0",
+        sha256="bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee",
+    )
+    version(
+        "3.33.0",
+        sha256="106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15",
+    )
+    version(
+        "3.32.3",
+        sha256="a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66",
+    )
+    version(
+        "3.31.1",
+        sha256="62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae",
+    )
+    version(
+        "3.30.1",
+        sha256="8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60",
+    )
+    version(
+        "3.30.0",
+        sha256="e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58",
+    )
+    version(
+        "3.29.0",
+        sha256="8e7c1e2950b5b04c5944a981cb31fffbf9d2ddda939d536838ebc854481afd5b",
+    )
+    version(
+        "3.28.0",
+        sha256="d61b5286f062adfce5125eaf544d495300656908e61fca143517afcc0a89b7c3",
+    )
+    version(
+        "3.27.2",
+        sha256="50c39e85ea28b5ecfdb3f9e860afe9ba606381e21836b2849efca6a0bfe6ef6e",
+    )
+    version(
+        "3.27.1",
+        sha256="54a92b8ff73ff6181f89b9b0c08949119b99e8cccef93dbef90e852a8b10f4f8",
+    )
+    version(
+        "3.27.0",
+        sha256="dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0",
+    )
+    version(
+        "3.26.0",
+        sha256="5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d",
+    )
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
-    variant('functions', default=False, when='+dynamic_extensions',
-            description='Provide mathematical and string extension functions for SQL '
-                        'queries using the loadable extensions mechanism')
-    variant('fts', default=True, description='Include fts4 and fts5 support')
-    variant('column_metadata', default=True, description='Build with COLUMN_METADATA')
-    variant('dynamic_extensions', default=True, description='Support loadable extensions')
-    variant('rtree', default=True, description='Build with Rtree module')
+    variant(
+        "functions",
+        default=False,
+        when="+dynamic_extensions",
+        description="Provide mathematical and string extension functions for SQL "
+        "queries using the loadable extensions mechanism",
+    )
+    variant("fts", default=True, description="Include fts4 and fts5 support")
+    variant("column_metadata", default=True, description="Build with COLUMN_METADATA")
+    variant(
+        "dynamic_extensions", default=True, description="Support loadable extensions"
+    )
+    variant("rtree", default=True, description="Build with Rtree module")
 
-    depends_on('readline')
-    depends_on('zlib')
+    depends_on("readline")
+    depends_on("zlib")
 
     # See https://blade.tencent.com/magellan/index_en.html
-    conflicts('+fts', when='@:3.25')
+    conflicts("+fts", when="@:3.25")
 
-    resource(name='extension-functions',
-             url='https://www.sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25',
-             sha256='991b40fe8b2799edc215f7260b890f14a833512c9d9896aa080891330ffe4052',
-             expand=False,
-             placement={'extension-functions.c?get=25':
-                        'extension-functions.c'},
-             when='+functions')
+    resource(
+        name="extension-functions",
+        url="https://www.sqlite.org/contrib/download/extension-functions.c/download/extension-functions.c?get=25",
+        sha256="991b40fe8b2799edc215f7260b890f14a833512c9d9896aa080891330ffe4052",
+        expand=False,
+        placement={"extension-functions.c?get=25": "extension-functions.c"},
+        when="+functions",
+    )
 
     # On some platforms (e.g., PPC) the include chain includes termios.h which
     # defines a macro B0. Sqlite has a shell.c source file that declares a
     # variable named B0 and will fail to compile when the macro is found. The
     # following patch undefines the macro in shell.c
-    patch('sqlite_b0.patch', when='@3.18.0:3.21.0')
+    patch("sqlite_b0.patch", when="@3.18.0:3.21.0")
 
     # Starting version 3.17.0, SQLite uses compiler built-ins
     # __builtin_sub_overflow(), __builtin_add_overflow(), and
     # __builtin_mul_overflow(), which are not supported by Intel compiler.
     # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
     # compiler is used.
-    patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
+    patch("remove_overflow_builtins.patch", when="@3.17.0:3.20%intel")
 
-    executables = ['^sqlite3$']
+    executables = ["^sqlite3$"]
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=str)
+        output = Executable(exe)("--version", output=str, error=str)
         # `sqlite3 --version` prints only the version number, timestamp, commit
         # hash(?) but not the program name. As a basic sanity check, the code
         # calls re.match() and attempts to match the ISO 8601 date following the
         # version number as well.
-        match = re.match(r'(\S+) \d{4}-\d{2}-\d{2}', output)
+        match = re.match(r"(\S+) \d{4}-\d{2}-\d{2}", output)
         return match.group(1) if match else None
 
     @classmethod
@@ -88,13 +150,15 @@ class Sqlite(AutotoolsPackage):
         all_variants = []
 
         def call(exe, query):
-            with NamedTemporaryFile(mode='w', buffering=1) as sqlite_stdin:
-                sqlite_stdin.write(query + '\n')
+            with NamedTemporaryFile(mode="w", buffering=1) as sqlite_stdin:
+                sqlite_stdin.write(query + "\n")
                 e = Executable(exe)
-                e(fail_on_error=False,
-                  input=sqlite_stdin.name,
-                  output=os.devnull,
-                  error=os.devnull)
+                e(
+                    fail_on_error=False,
+                    input=sqlite_stdin.name,
+                    output=os.devnull,
+                    error=os.devnull,
+                )
             return e.returncode
 
         def get_variant(name, has_variant):
@@ -106,128 +170,156 @@ class Sqlite(AutotoolsPackage):
 
             # check for fts
             def query_fts(version):
-                return 'CREATE VIRTUAL TABLE name ' \
-                       'USING fts{:d}(sender, title, body);'.format(version)
+                return (
+                    "CREATE VIRTUAL TABLE name "
+                    "USING fts{:d}(sender, title, body);".format(version)
+                )
 
             rc_fts4 = call(exe, query_fts(4))
             rc_fts5 = call(exe, query_fts(5))
-            variants.append(get_variant('fts', rc_fts4 == 0 and rc_fts5 == 0))
+            variants.append(get_variant("fts", rc_fts4 == 0 and rc_fts5 == 0))
 
             # check for functions
             # SQL query taken from extension-functions.c usage instructions
             query_functions = "SELECT load_extension('libsqlitefunctions');"
             rc_functions = call(exe, query_functions)
-            variants.append(get_variant('functions', rc_functions == 0))
+            variants.append(get_variant("functions", rc_functions == 0))
 
             # check for rtree
-            query_rtree = 'CREATE VIRTUAL TABLE name USING rtree(id, x, y);'
+            query_rtree = "CREATE VIRTUAL TABLE name USING rtree(id, x, y);"
             rc_rtree = call(exe, query_rtree)
-            variants.append(get_variant('rtree', rc_rtree == 0))
+            variants.append(get_variant("rtree", rc_rtree == 0))
 
             # TODO: column_metadata, dynamic_extensions
 
-            all_variants.append(''.join(variants))
+            all_variants.append("".join(variants))
 
         return all_variants
 
     def url_for_version(self, version):
         full_version = list(version.version) + [0 * (4 - len(version.version))]
-        version_string\
-            = str(full_version[0]) + \
-            ''.join(['%02d' % v for v in full_version[1:]])
+        version_string = str(full_version[0]) + "".join(
+            ["%02d" % v for v in full_version[1:]]
+        )
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version('3.34.1'):
-            year = '2021'
-        elif version >= Version('3.31.0'):
-            year = '2020'
-        elif version >= Version('3.27.0'):
-            year = '2019'
-        elif version >= Version('3.22.0'):
-            year = '2018'
-        elif version >= Version('3.16.0'):
-            year = '2017'
-        elif version >= Version('3.10.0'):
-            year = '2016'
-        elif version >= Version('3.8.8'):
-            year = '2015'
-        elif version >= Version('3.8.3'):
-            year = '2014'
-        elif version >= Version('3.7.16'):
-            year = '2013'
+        if version >= Version("3.34.1"):
+            year = "2021"
+        elif version >= Version("3.31.0"):
+            year = "2020"
+        elif version >= Version("3.27.0"):
+            year = "2019"
+        elif version >= Version("3.22.0"):
+            year = "2018"
+        elif version >= Version("3.16.0"):
+            year = "2017"
+        elif version >= Version("3.10.0"):
+            year = "2016"
+        elif version >= Version("3.8.8"):
+            year = "2015"
+        elif version >= Version("3.8.3"):
+            year = "2014"
+        elif version >= Version("3.7.16"):
+            year = "2013"
         else:
-            raise ValueError('Unsupported version {0}'.format(version))
-        return 'https://www.sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz'.format(year, version_string)
+            raise ValueError("Unsupported version {0}".format(version))
+        return "https://www.sqlite.org/{0}/sqlite-autoconf-{1}.tar.gz".format(
+            year, version_string
+        )
 
     @property
     def libs(self):
-        return find_libraries('libsqlite3', root=self.prefix.lib)
+        return find_libraries("libsqlite3", root=self.prefix.lib)
 
     def get_arch(self):
         host_platform = spack.platforms.host()
-        return str(host_platform.target('default_target'))
+        return str(host_platform.target("default_target"))
 
     def configure_args(self):
         args = []
 
-        if self.get_arch() == 'ppc64le':
-            args.append('--build=powerpc64le-redhat-linux-gnu')
+        if self.get_arch() == "ppc64le":
+            args.append("--build=powerpc64le-redhat-linux-gnu")
 
-        args.extend(self.enable_or_disable('fts4', variant='fts'))
-        args.extend(self.enable_or_disable('fts5', variant='fts'))
+        args.extend(self.enable_or_disable("fts4", variant="fts"))
+        args.extend(self.enable_or_disable("fts5", variant="fts"))
 
         # Ref: https://www.sqlite.org/rtree.html
-        args.extend(self.enable_or_disable('rtree'))
+        args.extend(self.enable_or_disable("rtree"))
 
         # Ref: https://www.sqlite.org/loadext.html
-        args.extend(self.enable_or_disable(
-            'dynamic-extensions', variant='dynamic_extensions'
-        ))
+        args.extend(
+            self.enable_or_disable("dynamic-extensions", variant="dynamic_extensions")
+        )
 
         # Ref: https://www.sqlite.org/compile.html
-        if '+column_metadata' in self.spec:
-            args.append('CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1')
+        if "+column_metadata" in self.spec:
+            args.append("CPPFLAGS=-DSQLITE_ENABLE_COLUMN_METADATA=1")
 
         return args
 
-    @run_after('install')
+    @run_after("install")
     def build_libsqlitefunctions(self):
-        if '+functions' in self.spec:
-            libraryname = 'libsqlitefunctions.' + dso_suffix
+        if "+functions" in self.spec:
+            libraryname = "libsqlitefunctions." + dso_suffix
             cc = Executable(spack_cc)
-            cc(self.compiler.cc_pic_flag, '-lm', '-shared',
-                'extension-functions.c', '-o', libraryname)
+            cc(
+                self.compiler.cc_pic_flag,
+                "-lm",
+                "-shared",
+                "extension-functions.c",
+                "-o",
+                libraryname,
+            )
             install(libraryname, self.prefix.lib)
 
     def _test_example(self):
         """Ensure a sequence of commands on example db are successful."""
 
         test_data_dir = self.test_suite.current_test_data_dir
-        db_filename = test_data_dir.join('packages.db')
-        exe = 'sqlite3'
+        db_filename = test_data_dir.join("packages.db")
+        exe = "sqlite3"
 
         # Ensure the database only contains one table
-        expected = 'packages'
+        expected = "packages"
         reason = 'test: ensuring only table is "{0}"'.format(expected)
-        self.run_test(exe, [db_filename, '.tables'], expected, installed=True,
-                      purpose=reason, skip_missing=False)
+        self.run_test(
+            exe,
+            [db_filename, ".tables"],
+            expected,
+            installed=True,
+            purpose=reason,
+            skip_missing=False,
+        )
 
         # Ensure the database dump matches expectations, where special
         # characters are replaced with spaces in the expected and actual
         # output to avoid pattern errors.
-        reason = 'test: checking dump output'
-        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
-        self.run_test(exe, [db_filename, '.dump'], expected, installed=True,
-                      purpose=reason, skip_missing=False)
+        reason = "test: checking dump output"
+        expected = get_escaped_text_output(test_data_dir.join("dump.out"))
+        self.run_test(
+            exe,
+            [db_filename, ".dump"],
+            expected,
+            installed=True,
+            purpose=reason,
+            skip_missing=False,
+        )
 
     def _test_version(self):
         """Perform version check on the installed package."""
-        exe = 'sqlite3'
+        exe = "sqlite3"
         vers_str = str(self.spec.version)
 
-        reason = 'test: ensuring version of {0} is {1}'.format(exe, vers_str)
-        self.run_test(exe, '-version', vers_str, installed=True,
-                      purpose=reason, skip_missing=False)
+        reason = "test: ensuring version of {0} is {1}".format(exe, vers_str)
+        self.run_test(
+            exe,
+            "-version",
+            vers_str,
+            installed=True,
+            purpose=reason,
+            skip_missing=False,
+        )
 
     def test(self):
         """Perform smoke tests on the installed package."""

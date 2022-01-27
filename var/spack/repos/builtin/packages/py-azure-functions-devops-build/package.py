@@ -11,9 +11,12 @@ class PyAzureFunctionsDevopsBuild(PythonPackage):
     homepage = "https://github.com/Azure/azure-functions-devops-build"
     pypi = "azure-functions-devops-build/azure-functions-devops-build-0.0.22.tar.gz"
 
-    version('0.0.22', sha256='c6341abda6098813f8fa625acd1e925410a17a8a1c7aaabdf975bb7cecb14edf')
+    version(
+        "0.0.22",
+        sha256="c6341abda6098813f8fa625acd1e925410a17a8a1c7aaabdf975bb7cecb14edf",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-msrest', type=('build', 'run'))
-    depends_on('py-vsts', type=('build', 'run'))
-    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-msrest", type=("build", "run"))
+    depends_on("py-vsts", type=("build", "run"))
+    depends_on("py-jinja2", type=("build", "run"))

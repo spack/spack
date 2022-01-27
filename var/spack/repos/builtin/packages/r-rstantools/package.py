@@ -16,14 +16,20 @@ class RRstantools(RPackage):
     developers."""
 
     homepage = "https://discourse.mc-stan.org/"
-    url      = "https://cloud.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rstantools_1.5.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstantools"
 
-    version('2.1.1', sha256='c95b15de8ec577eeb24bb5206e7b685d882f88b5e6902efda924b7217f463d2d')
-    version('1.5.1', sha256='5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485')
+    version(
+        "2.1.1",
+        sha256="c95b15de8ec577eeb24bb5206e7b685d882f88b5e6902efda924b7217f463d2d",
+    )
+    version(
+        "1.5.1",
+        sha256="5cab16c132c12e84bd08e18cd6ef25ba39d67a04ce61015fc4490659c7cfb485",
+    )
 
-    depends_on('r+X', type=('build', 'run'))
-    depends_on('r-desc', when='@2.1.1:', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.16:', when='@2.1.1:', type=('build', 'run'))
-    depends_on('r-rcppparallel@5.0.1:', when='@2.1.1:', type=('build', 'run'))
-    depends_on('pandoc', type='build')
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r-desc", when="@2.1.1:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.16:", when="@2.1.1:", type=("build", "run"))
+    depends_on("r-rcppparallel@5.0.1:", when="@2.1.1:", type=("build", "run"))
+    depends_on("pandoc", type="build")

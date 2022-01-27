@@ -21,44 +21,64 @@ class Butterflypack(CMakePackage):
     equations or highly oscillatory integral operators."""
 
     homepage = "https://github.com/liuyangzhuan/ButterflyPACK"
-    git      = "https://github.com/liuyangzhuan/ButterflyPACK.git"
-    url      = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v1.2.0.tar.gz"
-    maintainers = ['liuyangzhuan']
+    git = "https://github.com/liuyangzhuan/ButterflyPACK.git"
+    url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v1.2.0.tar.gz"
+    maintainers = ["liuyangzhuan"]
 
-    version('master', branch='master')
-    version('2.0.0', sha256='84f0e5ac40997409f3c80324238a07f9c700a1263b84140ed97275d67b577b80')
-    version('1.2.1', sha256='cd61b0e033f55a932f13d9902e28a7abbf029c279cec9ab1b2a063525d036fa2')
-    version('1.2.0', sha256='870b8acd826eb414dc38fa25e22c9c09ddeb5ca595b1dfdaa1fd65ae964d4e94')
-    version('1.1.0', sha256='0e6fd0f9e27b3ee8a273dc52f4d24b8737e7279dc26d461ef5658b317215f1dc')
-    version('1.0.3', sha256='acf9bc98dd7fea31ab73756b68b3333228b53ab0e85400a8250fcc749a1a6656')
-    version('1.0.1', sha256='e8ada37466a19f49e13456b150700d4c3afaad2ddbe3678f4e933f9d556a24a5')
-    version('1.0.0', sha256='86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232')
+    version("master", branch="master")
+    version(
+        "2.0.0",
+        sha256="84f0e5ac40997409f3c80324238a07f9c700a1263b84140ed97275d67b577b80",
+    )
+    version(
+        "1.2.1",
+        sha256="cd61b0e033f55a932f13d9902e28a7abbf029c279cec9ab1b2a063525d036fa2",
+    )
+    version(
+        "1.2.0",
+        sha256="870b8acd826eb414dc38fa25e22c9c09ddeb5ca595b1dfdaa1fd65ae964d4e94",
+    )
+    version(
+        "1.1.0",
+        sha256="0e6fd0f9e27b3ee8a273dc52f4d24b8737e7279dc26d461ef5658b317215f1dc",
+    )
+    version(
+        "1.0.3",
+        sha256="acf9bc98dd7fea31ab73756b68b3333228b53ab0e85400a8250fcc749a1a6656",
+    )
+    version(
+        "1.0.1",
+        sha256="e8ada37466a19f49e13456b150700d4c3afaad2ddbe3678f4e933f9d556a24a5",
+    )
+    version(
+        "1.0.0",
+        sha256="86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232",
+    )
 
-    variant('shared', default=True, description='Build shared libraries')
+    variant("shared", default=True, description="Build shared libraries")
 
-    depends_on('mpi')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('scalapack')
-    depends_on('arpack-ng')
+    depends_on("mpi")
+    depends_on("blas")
+    depends_on("lapack")
+    depends_on("scalapack")
+    depends_on("arpack-ng")
 
-    patch('longline.patch', when='%fj')
-    patch('fjfortran.patch', when='%fj')
-    patch('isnan.patch', when='%fj')
+    patch("longline.patch", when="%fj")
+    patch("fjfortran.patch", when="%fj")
+    patch("isnan.patch", when="%fj")
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
-            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
-            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
-            '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
-            libs.joined(";"),
-            '-DTPL_ARPACK_LIBRARIES=%s' % spec['arpack-ng'].libs.joined(";"),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
+            "-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc,
+            "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
+            "-DTPL_BLAS_LIBRARIES=%s" % spec["blas"].libs.joined(";"),
+            "-DTPL_LAPACK_LIBRARIES=%s" % spec["lapack"].libs.joined(";"),
+            "-DTPL_SCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"),
+            "-DTPL_ARPACK_LIBRARIES=%s" % spec["arpack-ng"].libs.joined(";"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
         return args

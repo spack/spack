@@ -7,12 +7,18 @@ import sys
 def pytest_addoption(parser):
     group = parser.getgroup("general")
     group._addoption(
-        '--pdb', dest="usepdb", action="store_true",
-        help="start the interactive Python debugger on errors.")
+        "--pdb",
+        dest="usepdb",
+        action="store_true",
+        help="start the interactive Python debugger on errors.",
+    )
     group._addoption(
-        '--pdbcls', dest="usepdb_cls", metavar="modulename:classname",
+        "--pdbcls",
+        dest="usepdb_cls",
+        metavar="modulename:classname",
         help="start a custom interactive Python debugger on errors. "
-             "For example: --pdbcls=IPython.terminal.debugger:TerminalPdb")
+        "For example: --pdbcls=IPython.terminal.debugger:TerminalPdb",
+    )
 
 
 def pytest_configure(config):
@@ -24,7 +30,7 @@ def pytest_configure(config):
         pdb_cls = pdb.Pdb
 
     if config.getvalue("usepdb"):
-        config.pluginmanager.register(PdbInvoke(), 'pdbinvoke')
+        config.pluginmanager.register(PdbInvoke(), "pdbinvoke")
 
     old = (pdb.set_trace, pytestPDB._pluginmanager)
 
@@ -41,15 +47,17 @@ def pytest_configure(config):
 
 
 class pytestPDB:
-    """ Pseudo PDB that defers to the real pdb. """
+    """Pseudo PDB that defers to the real pdb."""
+
     _pluginmanager = None
     _config = None
     _pdb_cls = pdb.Pdb
 
     @classmethod
     def set_trace(cls):
-        """ invoke PDB set_trace debugging, dropping any IO capturing. """
+        """invoke PDB set_trace debugging, dropping any IO capturing."""
         import _pytest.config
+
         frame = sys._getframe().f_back
         if cls._pluginmanager is not None:
             capman = cls._pluginmanager.getplugin("capturemanager")
@@ -98,6 +106,7 @@ def _postmortem_traceback(excinfo):
     # A doctest.UnexpectedException is not useful for post_mortem.
     # Use the underlying exception instead:
     from doctest import UnexpectedException
+
     if isinstance(excinfo.value, UnexpectedException):
         return excinfo.value.exc_info[2]
     else:
@@ -118,6 +127,7 @@ def post_mortem(t):
             if f is None:
                 i = _find_last_non_hidden_frame(stack)
             return stack, i
+
     p = Pdb()
     p.reset()
     p.interaction(None, t)

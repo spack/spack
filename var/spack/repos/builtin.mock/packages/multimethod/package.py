@@ -12,25 +12,25 @@ from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
 
 class Multimethod(MultimethodBase):
     """This package is designed for use with Spack's multimethod test.
-       It has a bunch of test cases for the @when decorator that the
-       test uses.
+    It has a bunch of test cases for the @when decorator that the
+    test uses.
     """
 
-    homepage = 'http://www.example.com/'
-    url      = 'http://www.example.com/example-1.0.tar.gz'
+    homepage = "http://www.example.com/"
+    url = "http://www.example.com/example-1.0.tar.gz"
 
     #
     # These functions are only valid for versions 1, 3, and 4.
     #
-    @when('@1.0')
+    @when("@1.0")
     def no_version_2(self):
         return 1
 
-    @when('@3.0')
+    @when("@3.0")
     def no_version_2(self):
         return 3
 
-    @when('@4.0')
+    @when("@4.0")
     def no_version_2(self):
         return 4
 
@@ -38,11 +38,11 @@ class Multimethod(MultimethodBase):
     # These functions overlap, so there is ambiguity, but we'll take
     # the first one.
     #
-    @when('@:4')
+    @when("@:4")
     def version_overlap(self):
         return 1
 
-    @when('@2:')
+    @when("@2:")
     def version_overlap(self):
         return 2
 
@@ -52,15 +52,15 @@ class Multimethod(MultimethodBase):
     def mpi_version(self):
         return 0
 
-    @when('^mpi@3:')
+    @when("^mpi@3:")
     def mpi_version(self):
         return 3
 
-    @when('^mpi@2:')
+    @when("^mpi@2:")
     def mpi_version(self):
         return 2
 
-    @when('^mpi@1:')
+    @when("^mpi@1:")
     def mpi_version(self):
         return 1
 
@@ -70,15 +70,15 @@ class Multimethod(MultimethodBase):
     # on compilers
     #
     def has_a_default(self):
-        return 'default'
+        return "default"
 
-    @when('%gcc')
+    @when("%gcc")
     def has_a_default(self):
-        return 'gcc'
+        return "gcc"
 
-    @when('%intel')
+    @when("%intel")
     def has_a_default(self):
-        return 'intel'
+        return "intel"
 
     #
     # Make sure we can switch methods on different target
@@ -89,23 +89,25 @@ class Multimethod(MultimethodBase):
         targets = targets[:-1]
 
     for target in targets:
-        @when('target=' + target.name)
+
+        @when("target=" + target.name)
         def different_by_target(self):
             if isinstance(self.spec.architecture.target, string_types):
                 return self.spec.architecture.target
             else:
                 return self.spec.architecture.target.name
+
     #
     # Make sure we can switch methods on different dependencies
     #
 
-    @when('^mpich')
+    @when("^mpich")
     def different_by_dep(self):
-        return 'mpich'
+        return "mpich"
 
-    @when('^zmpi')
+    @when("^zmpi")
     def different_by_dep(self):
-        return 'zmpi'
+        return "zmpi"
 
     #
     # Make sure we can switch on virtual dependencies
@@ -113,7 +115,7 @@ class Multimethod(MultimethodBase):
     def different_by_virtual_dep(self):
         return 1
 
-    @when('^mpi@2:')
+    @when("^mpi@2:")
     def different_by_virtual_dep(self):
         return 2
 
@@ -123,7 +125,7 @@ class Multimethod(MultimethodBase):
     #
     @when("@2:")
     def base_method(self):
-        return 'multimethod'
+        return "multimethod"
 
     #
     # Make sure methods with non-default implementations in a superclass
@@ -141,11 +143,11 @@ class Multimethod(MultimethodBase):
     #
     # Make sure that multimethods follow MRO properly with diamond inheritance
     #
-    @when('@2.0')
+    @when("@2.0")
     def diamond_inheritance(self):
-        return 'first_parent'
+        return "first_parent"
 
-    @when('@4.0')
+    @when("@4.0")
     def diamond_inheritance(self):
         return "should_not_be_reached by diamond inheritance test"
 
@@ -154,16 +156,16 @@ class Multimethod(MultimethodBase):
     #
     @when(True)
     def boolean_true_first(self):
-        return 'True'
+        return "True"
 
     @when(False)
     def boolean_true_first(self):
-        return 'False'
+        return "False"
 
     @when(False)
     def boolean_false_first(self):
-        return 'False'
+        return "False"
 
     @when(True)
     def boolean_false_first(self):
-        return 'True'
+        return "True"

@@ -11,17 +11,19 @@ class Neartree(MakefilePackage):
     points in spaces of arbitrary dimensions."""
 
     homepage = "http://neartree.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/neartree/neartree/NearTree-3.1/NearTree-3.1.tar.gz"
+    url = "https://downloads.sourceforge.net/project/neartree/neartree/NearTree-3.1/NearTree-3.1.tar.gz"
 
-    version('3.1', sha256='07b668516f15a7c13c219fd005b14e73bced5dc6b23857edcc24d3e5cf0d3be3')
+    version(
+        "3.1", sha256="07b668516f15a7c13c219fd005b14e73bced5dc6b23857edcc24d3e5cf0d3be3"
+    )
 
-    depends_on('libtool',  type='build')
-    depends_on('cvector')
+    depends_on("libtool", type="build")
+    depends_on("cvector")
 
     def edit(self, spec, prefix):
-        mf = FileFilter('Makefile')
-        mf.filter(r'^CC.+', "CC = {0}".format(spack_cc))
-        mf.filter(r'^INSTALL_PREFIX .+', "INSTALL_PREFIX = {0}".format(prefix))
+        mf = FileFilter("Makefile")
+        mf.filter(r"^CC.+", "CC = {0}".format(spack_cc))
+        mf.filter(r"^INSTALL_PREFIX .+", "INSTALL_PREFIX = {0}".format(prefix))
 
     def build(self, spec, prefix):
         pass

@@ -10,19 +10,20 @@ class Webbench(MakefilePackage):
     """Webbench is a simple website pressure test tool used in Linux."""
 
     homepage = "http://home.tiscali.cz/~cz210552/webbench.html"
-    git      = "https://github.com/EZLippi/WebBench.git"
+    git = "https://github.com/EZLippi/WebBench.git"
 
-    version('1.5', commit='b1acf3c01cc914729fe188dfc8ed761858028d4f')
+    version("1.5", commit="b1acf3c01cc914729fe188dfc8ed761858028d4f")
 
-    depends_on('ntirpc')
+    depends_on("ntirpc")
 
     def setup_build_environment(self, env):
-        env.prepend_path('CPATH', self.spec['ntirpc'].prefix.include.ntirpc)
+        env.prepend_path("CPATH", self.spec["ntirpc"].prefix.include.ntirpc)
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('$(DESTDIR)/usr/local/man/man1', self.prefix.man.man1,
-                        string=True)
+        makefile = FileFilter("Makefile")
+        makefile.filter(
+            "$(DESTDIR)/usr/local/man/man1", self.prefix.man.man1, string=True
+        )
 
     def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+        make("install", "PREFIX={0}".format(prefix))

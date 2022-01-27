@@ -16,17 +16,20 @@ class Ntpoly(CMakePackage):
     """
 
     homepage = "https://william-dawson.github.io/NTPoly/"
-    url      = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1.tar.gz"
+    url = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1.tar.gz"
 
-    version('2.3.1', sha256='af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e')
+    version(
+        "2.3.1",
+        sha256="af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e",
+    )
 
-    depends_on('cmake', type='build')
-    depends_on('blas', type='link')
-    depends_on('mpi@3')
+    depends_on("cmake", type="build")
+    depends_on("blas", type="link")
+    depends_on("mpi@3")
 
     def cmake_args(self):
         args = ["-DNOSWIG=Yes"]
-        if self.spec.satisfies('%fj'):
-            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+        if self.spec.satisfies("%fj"):
+            args.append("-DCMAKE_Fortran_MODDIR_FLAG=-M")
 
         return args

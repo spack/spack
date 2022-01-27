@@ -12,6 +12,9 @@ class PyYacs(PythonPackage):
     homepage = "https://github.com/rbgirshick/yacs"
     pypi = "yacs/yacs-0.1.8.tar.gz"
 
-    version('0.1.8', sha256='efc4c732942b3103bea904ee89af98bcd27d01f0ac12d8d4d369f1e7a2914384')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pyyaml', type=('build', 'run'))
+    version(
+        "0.1.8",
+        sha256="efc4c732942b3103bea904ee89af98bcd27d01f0ac12d8d4d369f1e7a2914384",
+    )
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pyyaml", type=("build", "run"))

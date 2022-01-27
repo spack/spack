@@ -13,9 +13,12 @@ class PyS3fs(PythonPackage):
     homepage = "https://s3fs.readthedocs.io/en/latest/"
     pypi = "s3fs/s3fs-0.5.2.tar.gz"
 
-    version('0.5.2', sha256='87e5210415db17b9de18c77bcfc4a301570cc9030ee112b77dc47ab82426bae1')
+    version(
+        "0.5.2",
+        sha256="87e5210415db17b9de18c77bcfc4a301570cc9030ee112b77dc47ab82426bae1",
+    )
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-aiobotocore@1.0.1:', type=('build', 'run'))
-    depends_on('py-fsspec@0.8.0:', type=('build', 'run'))
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-aiobotocore@1.0.1:", type=("build", "run"))
+    depends_on("py-fsspec@0.8.0:", type=("build", "run"))

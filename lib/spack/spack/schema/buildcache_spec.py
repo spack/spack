@@ -11,30 +11,30 @@
 import spack.schema.spec
 
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack buildcache specfile schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': {
-        'buildinfo': {
-            'type': 'object',
-            'additionalProperties': False,
-            'required': ['relative_prefix'],
-            'properties': {
-                'relative_prefix': {'type': 'string'},
-                'relative_rpaths': {'type': 'boolean'},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack buildcache specfile schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "buildinfo": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["relative_prefix"],
+            "properties": {
+                "relative_prefix": {"type": "string"},
+                "relative_rpaths": {"type": "boolean"},
             },
         },
-        'spec': {
-            'type': 'object',
-            'additionalProperties': True,
-            'items': spack.schema.spec.properties,
+        "spec": {
+            "type": "object",
+            "additionalProperties": True,
+            "items": spack.schema.spec.properties,
         },
-        'binary_cache_checksum': {
-            'type': 'object',
-            'properties': {
-                'hash_algorithm': {'type': 'string'},
-                'hash': {'type': 'string'},
+        "binary_cache_checksum": {
+            "type": "object",
+            "properties": {
+                "hash_algorithm": {"type": "string"},
+                "hash": {"type": "string"},
             },
         },
     },

@@ -9,19 +9,19 @@ from spack import *
 class Bmi(AutotoolsPackage):
     """a communications framework and network abstraction layer"""
 
-    homepage = 'https://github.com/radix-io/bmi/'
-    git = 'https://github.com/radix-io/bmi.git'
+    homepage = "https://github.com/radix-io/bmi/"
+    git = "https://github.com/radix-io/bmi.git"
 
-    maintainers = ['carns']
+    maintainers = ["carns"]
 
-    version('main', branch='main')
+    version("main", branch="main")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
 
     # need to override 'autoreconf' so we can run BMI's 'prepare' script
     def autoreconf(self, spec, prefix):
-        Executable('./prepare')()
+        Executable("./prepare")()
 
     def configure_args(self):
         args = ["--enable-shared", "--enable-bmi-only"]

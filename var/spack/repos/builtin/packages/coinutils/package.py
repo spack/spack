@@ -12,8 +12,11 @@ class Coinutils(AutotoolsPackage):
     projects."""
 
     homepage = "https://projects.coin-or.org/Coinutils"
-    url      = "https://github.com/coin-or/CoinUtils/archive/releases/2.11.4.tar.gz"
+    url = "https://github.com/coin-or/CoinUtils/archive/releases/2.11.4.tar.gz"
 
-    version('2.11.4', sha256='d4effff4452e73356eed9f889efd9c44fe9cd68bd37b608a5ebb2c58bd45ef81')
+    version(
+        "2.11.4",
+        sha256="d4effff4452e73356eed9f889efd9c44fe9cd68bd37b608a5ebb2c58bd45ef81",
+    )
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

@@ -13,8 +13,14 @@ class PyFusepy(PythonPackage):
     homepage = "https://github.com/fusepy/fusepy"
     pypi = "fusepy/fusepy-3.0.1.tar.gz"
 
-    version('3.0.1', sha256='72ff783ec2f43de3ab394e3f7457605bf04c8cf288a2f4068b4cde141d4ee6bd')
-    version('2.0.4', sha256='10f5c7f5414241bffecdc333c4d3a725f1d6605cae6b4eaf86a838ff49cdaf6c')
+    version(
+        "3.0.1",
+        sha256="72ff783ec2f43de3ab394e3f7457605bf04c8cf288a2f4068b4cde141d4ee6bd",
+    )
+    version(
+        "2.0.4",
+        sha256="10f5c7f5414241bffecdc333c4d3a725f1d6605cae6b4eaf86a838ff49cdaf6c",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('fuse@2.6:')
+    depends_on("py-setuptools", type="build")
+    depends_on("fuse@2.6:")

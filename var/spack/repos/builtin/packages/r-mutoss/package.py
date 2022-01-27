@@ -14,13 +14,16 @@ class RMutoss(RPackage):
     and usable by the accompanying 'mutossGUI'."""
 
     homepage = "https://github.com/kornl/mutoss/"
-    url      = "https://cloud.r-project.org/src/contrib/mutoss_0.1-12.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/mutoss_0.1-12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mutoss"
 
-    version('0.1-12', sha256='2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa')
+    version(
+        "0.1-12",
+        sha256="2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa",
+    )
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-mvtnorm', type=('build', 'run'))
-    depends_on('r-plotrix', type=('build', 'run'))
-    depends_on('r-multtest@2.2.0:', type=('build', 'run'))
-    depends_on('r-multcomp@1.1-0:', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-mvtnorm", type=("build", "run"))
+    depends_on("r-plotrix", type=("build", "run"))
+    depends_on("r-multtest@2.2.0:", type=("build", "run"))
+    depends_on("r-multcomp@1.1-0:", type=("build", "run"))

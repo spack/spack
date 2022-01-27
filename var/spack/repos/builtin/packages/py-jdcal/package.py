@@ -12,7 +12,11 @@ class PyJdcal(PythonPackage):
     homepage = "https://github.com/phn/jdcal"
     pypi = "jdcal/jdcal-1.3.tar.gz"
 
-    version('1.3', sha256='b760160f8dc8cc51d17875c6b663fafe64be699e10ce34b6a95184b5aa0fdc9e')
-    version('1.2', sha256='5ebedb58b95ebabd30f56abef65139c6f69ec1687cf1d2f3a7c503f9a2cdfa4d')
+    version(
+        "1.3", sha256="b760160f8dc8cc51d17875c6b663fafe64be699e10ce34b6a95184b5aa0fdc9e"
+    )
+    version(
+        "1.2", sha256="5ebedb58b95ebabd30f56abef65139c6f69ec1687cf1d2f3a7c503f9a2cdfa4d"
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

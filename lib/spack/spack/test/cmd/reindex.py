@@ -7,15 +7,14 @@ import os
 import spack.store
 from spack.main import SpackCommand
 
-install = SpackCommand('install')
-deprecate = SpackCommand('deprecate')
-reindex = SpackCommand('reindex')
+install = SpackCommand("install")
+deprecate = SpackCommand("deprecate")
+reindex = SpackCommand("reindex")
 
 
-def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
-                       install_mockery):
-    install('libelf@0.8.13')
-    install('libelf@0.8.12')
+def test_reindex_basic(mock_packages, mock_archive, mock_fetch, install_mockery):
+    install("libelf@0.8.13")
+    install("libelf@0.8.12")
 
     all_installed = spack.store.db.query()
 
@@ -24,10 +23,9 @@ def test_reindex_basic(mock_packages, mock_archive, mock_fetch,
     assert spack.store.db.query() == all_installed
 
 
-def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
-                            install_mockery):
-    install('libelf@0.8.13')
-    install('libelf@0.8.12')
+def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch, install_mockery):
+    install("libelf@0.8.13")
+    install("libelf@0.8.12")
 
     all_installed = spack.store.db.query()
 
@@ -37,12 +35,13 @@ def test_reindex_db_deleted(mock_packages, mock_archive, mock_fetch,
     assert spack.store.db.query() == all_installed
 
 
-def test_reindex_with_deprecated_packages(mock_packages, mock_archive,
-                                          mock_fetch, install_mockery):
-    install('libelf@0.8.13')
-    install('libelf@0.8.12')
+def test_reindex_with_deprecated_packages(
+    mock_packages, mock_archive, mock_fetch, install_mockery
+):
+    install("libelf@0.8.13")
+    install("libelf@0.8.12")
 
-    deprecate('-y', 'libelf@0.8.12', 'libelf@0.8.13')
+    deprecate("-y", "libelf@0.8.12", "libelf@0.8.13")
 
     all_installed = spack.store.db.query(installed=any)
     non_deprecated = spack.store.db.query(installed=True)

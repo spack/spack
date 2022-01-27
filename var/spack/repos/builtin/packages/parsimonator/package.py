@@ -10,36 +10,36 @@ class Parsimonator(MakefilePackage):
     """
 
     homepage = "http://www.exelixis-lab.org/"
-    git      = "https://github.com/stamatak/Parsimonator-1.0.2.git"
+    git = "https://github.com/stamatak/Parsimonator-1.0.2.git"
 
-    version('1.0.2', commit='78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a')
+    version("1.0.2", commit="78368c6ab1e9adc7e9c6ec9256dd7ff2a5bb1b0a")
 
-    patch('nox86.patch')
+    patch("nox86.patch")
 
     @property
     def makefile_file(self):
-        if self.spec.target.family != 'x86_64':
-            return 'Makefile.nosse'
+        if self.spec.target.family != "x86_64":
+            return "Makefile.nosse"
 
-        if 'avx' in self.spec.target:
-            return 'Makefile.AVX.gcc'
-        elif 'sse3' in self.spec.target:
-            return 'Makefile.SSE3.gcc'
+        if "avx" in self.spec.target:
+            return "Makefile.AVX.gcc"
+        elif "sse3" in self.spec.target:
+            return "Makefile.SSE3.gcc"
 
-        return 'Makefile.gcc'
+        return "Makefile.gcc"
 
     def edit(self, spec, prefix):
         makefile = FileFilter(self.makefile_file)
-        makefile.filter('CC = gcc', 'CC = %s' % spack_cc)
+        makefile.filter("CC = gcc", "CC = %s" % spack_cc)
 
     def build(self, spec, prefix):
-        make('-f', self.makefile_file)
+        make("-f", self.makefile_file)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        if 'avx' in self.spec.target:
-            install('parsimonator-AVX', prefix.bin)
-        elif 'sse3' in self.spec.target:
-            install('parsimonator-SSE3', prefix.bin)
+        if "avx" in self.spec.target:
+            install("parsimonator-AVX", prefix.bin)
+        elif "sse3" in self.spec.target:
+            install("parsimonator-SSE3", prefix.bin)
         else:
-            install('parsimonator', prefix.bin)
+            install("parsimonator", prefix.bin)

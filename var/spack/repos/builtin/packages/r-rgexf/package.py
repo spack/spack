@@ -19,13 +19,19 @@ class RRgexf(RPackage):
     package."""
 
     homepage = "https://bitbucket.org/gvegayon/rgexf"
-    url      = "https://cloud.r-project.org/src/contrib/rgexf_0.15.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rgexf_0.15.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgexf"
 
-    version('0.16.0', sha256='2a671df9ac70cfefd4092754317cb28e32a33df345b80e1975bf838e838245ee')
-    version('0.15.3', sha256='2e8a7978d1fb977318e6310ba65b70a9c8890185c819a7951ac23425c6dc8147')
+    version(
+        "0.16.0",
+        sha256="2a671df9ac70cfefd4092754317cb28e32a33df345b80e1975bf838e838245ee",
+    )
+    version(
+        "0.15.3",
+        sha256="2e8a7978d1fb977318e6310ba65b70a9c8890185c819a7951ac23425c6dc8147",
+    )
 
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-servr', when='@0.16.0:', type=('build', 'run'))
-    depends_on('r-rook', when='@:0.15.3', type=('build', 'run'))
+    depends_on("r-xml", type=("build", "run"))
+    depends_on("r-igraph", type=("build", "run"))
+    depends_on("r-servr", when="@0.16.0:", type=("build", "run"))
+    depends_on("r-rook", when="@:0.15.3", type=("build", "run"))

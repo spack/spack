@@ -16,11 +16,11 @@ class RGlobaltest(RPackage):
     facilitate the use of this test for gene set testing of GO and KEGG
     terms."""
 
-    bioc     = "globaltest"
+    bioc = "globaltest"
 
-    version('5.44.0', commit='571933d5c779a241740be913ff49ecdd59bcbc45')
+    version("5.44.0", commit="571933d5c779a241740be913ff49ecdd59bcbc45")
 
-    depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-annotate', type=('build', 'run'))
+    depends_on("r-survival", type=("build", "run"))
+    depends_on("r-biobase", type=("build", "run"))
+    depends_on("r-annotationdbi", type=("build", "run"))
+    depends_on("r-annotate", type=("build", "run"))

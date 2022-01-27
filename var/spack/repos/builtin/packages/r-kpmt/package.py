@@ -11,9 +11,12 @@ class RKpmt(RPackage):
 
     Functions that implement the known population median test."""
 
-    cran     = "kpmt"
+    cran = "kpmt"
 
-    version('0.1.0', sha256='6342ad02c93bfa7a764d028821bb6115bb8bc8c55b057a5860736cc0e034a295')
+    version(
+        "0.1.0",
+        sha256="6342ad02c93bfa7a764d028821bb6115bb8bc8c55b057a5860736cc0e034a295",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-matrixstats", type=("build", "run"))

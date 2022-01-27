@@ -16,40 +16,44 @@ class Neuron(CMakePackage):
     """
 
     homepage = "https://www.neuron.yale.edu/"
-    url      = "https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.tar.gz"
-    git      = "https://github.com/neuronsimulator/nrn"
-    maintainers = ['pramodk', 'nrnhines', 'iomaganaris', 'alexsavulescu']
+    url = "https://neuron.yale.edu/ftp/neuron/versions/v7.7/nrn-7.7.tar.gz"
+    git = "https://github.com/neuronsimulator/nrn"
+    maintainers = ["pramodk", "nrnhines", "iomaganaris", "alexsavulescu"]
 
-    version('develop', branch='master', submodules='True')
-    version("8.0.0", tag="8.0.0", submodules='True')
-    version("7.8.2", tag="7.8.2", submodules='True')
-    version("7.8.1", tag="7.8.1", submodules='True')
+    version("develop", branch="master", submodules="True")
+    version("8.0.0", tag="8.0.0", submodules="True")
+    version("7.8.2", tag="7.8.2", submodules="True")
+    version("7.8.1", tag="7.8.1", submodules="True")
 
-    variant("coreneuron",    default=False, description="Enable CoreNEURON as submodule")
-    variant("cross-compile", default=False, description="Build for cross-compile environment")
-    variant("interviews",    default=False, description="Enable GUI with INTERVIEWS")
-    variant("legacy-unit",   default=False, description="Enable legacy units")
-    variant("mpi",           default=True,  description="Enable MPI parallelism")
-    variant("python",        default=True,  description="Enable python")
-    variant("rx3d",          default=False,  description="Enable cython translated 3-d rxd")
-    variant("tests",         default=False, description="Enable unit tests")
-    variant("caliper",       default=False, description="Add LLNL/Caliper support")
+    variant("coreneuron", default=False, description="Enable CoreNEURON as submodule")
+    variant(
+        "cross-compile",
+        default=False,
+        description="Build for cross-compile environment",
+    )
+    variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
+    variant("legacy-unit", default=False, description="Enable legacy units")
+    variant("mpi", default=True, description="Enable MPI parallelism")
+    variant("python", default=True, description="Enable python")
+    variant("rx3d", default=False, description="Enable cython translated 3-d rxd")
+    variant("tests", default=False, description="Enable unit tests")
+    variant("caliper", default=False, description="Add LLNL/Caliper support")
 
-    depends_on("bison",     type="build")
-    depends_on("flex",      type="build")
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
     depends_on("py-cython", when="+rx3d", type="build")
 
     depends_on("gettext")
-    depends_on("mpi",         when="+mpi")
+    depends_on("mpi", when="+mpi")
     depends_on("ncurses")
     depends_on("python@2.7:", when="+python")
-    depends_on("py-pytest",   when="+python+tests")
-    depends_on("py-mpi4py",   when="+mpi+python+tests")
+    depends_on("py-pytest", when="+python+tests")
+    depends_on("py-mpi4py", when="+mpi+python+tests")
     depends_on("readline")
-    depends_on("caliper",     when="+caliper")
-    depends_on("py-numpy",    type='run')
+    depends_on("caliper", when="+caliper")
+    depends_on("py-numpy", type="run")
 
-    conflicts("+rx3d",        when="~python")
+    conflicts("+rx3d", when="~python")
 
     patch("patch-v782-git-cmake-avx512.patch", when="@7.8.2")
 
@@ -61,32 +65,36 @@ class Neuron(CMakePackage):
             cmake_name = spec_options[1:].upper().replace("-", "_")
             return "-DNRN_ENABLE_" + cmake_name + ":BOOL=" + value
 
-        args = [cmake_options(variant) for variant in ["+coreneuron",
-                                                       "+interviews",
-                                                       "+mpi",
-                                                       "+python",
-                                                       "+rx3d",
-                                                       "+coreneuron",
-                                                       "+tests"]]
+        args = [
+            cmake_options(variant)
+            for variant in [
+                "+coreneuron",
+                "+interviews",
+                "+mpi",
+                "+python",
+                "+rx3d",
+                "+coreneuron",
+                "+tests",
+            ]
+        ]
         args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
 
-        if "~mpi" in spec and '+coreneuron' in spec:
+        if "~mpi" in spec and "+coreneuron" in spec:
             args.append("-DCORENRN_ENABLE_MPI=OFF")
 
         if "+python" in spec:
-            args.append("-DPYTHON_EXECUTABLE:FILEPATH="
-                        + spec["python"].command.path)
+            args.append("-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path)
 
-        if spec.variants['build_type'].value == 'Debug':
+        if spec.variants["build_type"].value == "Debug":
             args.append("-DCMAKE_C_FLAGS=-g -O0")
             args.append("-DCMAKE_CXX_FLAGS=-g -O0")
             args.append("-DCMAKE_BUILD_TYPE=Custom")
 
         if "+legacy-unit" in spec:
-            args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
+            args.append("-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON")
 
         if "+caliper" in spec:
-            args.append('-DCORENRN_CALIPER_PROFILING=ON')
+            args.append("-DCORENRN_CALIPER_PROFILING=ON")
 
         return args
 
@@ -108,8 +116,7 @@ class Neuron(CMakePackage):
             cxx_compiler = self.compiler.cxx
 
         kwargs = {"backup": False, "string": True}
-        nrnmech_makefile = join_path(self.prefix,
-                                     "./bin/nrnmech_makefile")
+        nrnmech_makefile = join_path(self.prefix, "./bin/nrnmech_makefile")
 
         # assign_operator is changed to fix wheel support
         if self.spec.satisfies("@:7"):
@@ -117,18 +124,23 @@ class Neuron(CMakePackage):
         else:
             assign_operator = "="
 
-        filter_file("CC {0} {1}".format(assign_operator, env["CC"]),
-                    "CC = {0}".format(cc_compiler),
-                    nrnmech_makefile,
-                    **kwargs)
-        filter_file("CXX {0} {1}".format(assign_operator, env["CXX"]),
-                    "CXX = {0}".format(cxx_compiler),
-                    nrnmech_makefile,
-                    **kwargs)
+        filter_file(
+            "CC {0} {1}".format(assign_operator, env["CC"]),
+            "CC = {0}".format(cc_compiler),
+            nrnmech_makefile,
+            **kwargs
+        )
+        filter_file(
+            "CXX {0} {1}".format(assign_operator, env["CXX"]),
+            "CXX = {0}".format(cxx_compiler),
+            nrnmech_makefile,
+            **kwargs
+        )
 
         if spec.satisfies("+coreneuron"):
-            corenrn_makefile = join_path(self.prefix,
-                                         "share/coreneuron/nrnivmodl_core_makefile")
+            corenrn_makefile = join_path(
+                self.prefix, "share/coreneuron/nrnivmodl_core_makefile"
+            )
             filter_file(env["CXX"], cxx_compiler, corenrn_makefile, **kwargs)
 
     def setup_run_environment(self, env):

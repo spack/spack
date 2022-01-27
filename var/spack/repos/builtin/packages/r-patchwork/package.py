@@ -17,10 +17,13 @@ class RPatchwork(RPackage):
     this need (but with a different approach) are 'gridExtra' and 'cowplot'."""
 
     homepage = "https://patchwork.data-imaginist.com/"
-    url      = "https://cloud.r-project.org/src/contrib/patchwork_1.1.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/patchwork_1.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/patchwork"
 
-    version('1.1.1', sha256='cf0d7d9f92945729b499d6e343441c55007d5b371206d5389b9e5154dc7cf481')
+    version(
+        "1.1.1",
+        sha256="cf0d7d9f92945729b499d6e343441c55007d5b371206d5389b9e5154dc7cf481",
+    )
 
-    depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
-    depends_on('r-gtable', type=('build', 'run'))
+    depends_on("r-ggplot2@3.0.0:", type=("build", "run"))
+    depends_on("r-gtable", type=("build", "run"))

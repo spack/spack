@@ -16,11 +16,14 @@ class RAssertiveDataUs(RPackage):
     End-users will usually want to use assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.data.us"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.data.us_0.0-2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/assertive.data.us_0.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.data.us"
 
-    version('0.0-2', sha256='180e64dfe6339d25dd27d7fe9e77619ef697ef6e5bb6a3cf4fb732a681bdfaad')
+    version(
+        "0.0-2",
+        sha256="180e64dfe6339d25dd27d7fe9e77619ef697ef6e5bb6a3cf4fb732a681bdfaad",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
-    depends_on('r-assertive-strings', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-2:", type=("build", "run"))
+    depends_on("r-assertive-strings", type=("build", "run"))

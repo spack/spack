@@ -11,15 +11,18 @@ class Hcol(Package):
     (HCOL)."""
 
     homepage = "https://https://spiral.net"
-    url      = "https://github.com/spiral-software/spiral-package-hcol/archive/1.0.0.zip"
+    url = "https://github.com/spiral-software/spiral-package-hcol/archive/1.0.0.zip"
 
-    maintainers = ['spiralgen']
-    extends('spiral')
+    maintainers = ["spiralgen"]
+    extends("spiral")
 
-    version('1.0.0', sha256='9a95574e2b061d03d264c32dbf733e893017d1644b6486c7a8a55a3b24783f58')
+    version(
+        "1.0.0",
+        sha256="9a95574e2b061d03d264c32dbf733e893017d1644b6486c7a8a55a3b24783f58",
+    )
 
     # HCOL package is an extension for Spiral.  Install the files in their own
     # prefix, in "namespaces/packages/hcol".  This allows 'spack activate' to
     # symlink hcol at the right location for spiral packages.
     def install(self, spec, prefix):
-        install_tree('.', prefix.namespaces.packages.hcol)
+        install_tree(".", prefix.namespaces.packages.hcol)

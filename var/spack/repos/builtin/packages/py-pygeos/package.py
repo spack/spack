@@ -16,16 +16,23 @@ class PyPygeos(PythonPackage):
     homepage = "https://github.com/pygeos/pygeos"
     pypi = "pygeos/pygeos-0.8.tar.gz"
 
-    maintainers = ['adamjstewart']
+    maintainers = ["adamjstewart"]
 
-    version('0.10', sha256='8ad4703cf8f983a6878a885765be975709a2fe300e54bc6c8623ddbca4903b6c')
-    version('0.9', sha256='c0584b20e95f80ee57277a6eb1e5d7f86600f8b1ef3c627d238e243afdcc0cc7')
-    version('0.8', sha256='45b7e1aaa5fc9ff53565ef089fb75c53c419ace8cee18385ec1d7c1515c17cbc')
+    version(
+        "0.10",
+        sha256="8ad4703cf8f983a6878a885765be975709a2fe300e54bc6c8623ddbca4903b6c",
+    )
+    version(
+        "0.9", sha256="c0584b20e95f80ee57277a6eb1e5d7f86600f8b1ef3c627d238e243afdcc0cc7"
+    )
+    version(
+        "0.8", sha256="45b7e1aaa5fc9ff53565ef089fb75c53c419ace8cee18385ec1d7c1515c17cbc"
+    )
 
-    depends_on('python@3.6:', when='@0.10:', type=('build', 'link', 'run'))
-    depends_on('python@3:', type=('build', 'link', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-numpy@1.13:', when='@0.9:', type=('build', 'link', 'run'))
-    depends_on('py-numpy@1.10:', type=('build', 'link', 'run'))
-    depends_on('geos@3.5:')
+    depends_on("python@3.6:", when="@0.10:", type=("build", "link", "run"))
+    depends_on("python@3:", type=("build", "link", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
+    depends_on("py-numpy@1.13:", when="@0.9:", type=("build", "link", "run"))
+    depends_on("py-numpy@1.10:", type=("build", "link", "run"))
+    depends_on("geos@3.5:")

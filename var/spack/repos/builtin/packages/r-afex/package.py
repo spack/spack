@@ -25,14 +25,20 @@ class RAfex(RPackage):
     """
 
     homepage = "https://github.com/singmann/afex"
-    cran     = "afex"
+    cran = "afex"
 
-    version('1.0-1', sha256='6febc34b87a1109f5cbcd213c08d2b7b3e9cf99065fa41c19bc88ac99fb104cc')
-    version('0.28-1', sha256='cfb0b79bfa01b590afc3354a5b2ad3640d2f4974b036d6c256fa8e684bc69c2e')
+    version(
+        "1.0-1",
+        sha256="6febc34b87a1109f5cbcd213c08d2b7b3e9cf99065fa41c19bc88ac99fb104cc",
+    )
+    version(
+        "0.28-1",
+        sha256="cfb0b79bfa01b590afc3354a5b2ad3640d2f4974b036d6c256fa8e684bc69c2e",
+    )
 
-    depends_on('r@3.5.0:', type=('build', 'run'))
-    depends_on('r-lme4@1.1-8:', type=('build', 'run'))
-    depends_on('r-pbkrtest@0.4-1:', type=('build', 'run'))
-    depends_on('r-lmertest@3.0-0:', type=('build', 'run'))
-    depends_on('r-car', type=('build', 'run'))
-    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on("r@3.5.0:", type=("build", "run"))
+    depends_on("r-lme4@1.1-8:", type=("build", "run"))
+    depends_on("r-pbkrtest@0.4-1:", type=("build", "run"))
+    depends_on("r-lmertest@3.0-0:", type=("build", "run"))
+    depends_on("r-car", type=("build", "run"))
+    depends_on("r-reshape2", type=("build", "run"))

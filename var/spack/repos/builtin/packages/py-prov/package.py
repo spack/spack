@@ -14,18 +14,25 @@ class PyProv(PythonPackage):
     """
 
     homepage = "prov.readthedocs.io/"
-    pypi     = "prov/prov-2.0.0.tar.gz"
+    pypi = "prov/prov-2.0.0.tar.gz"
 
-    version('2.0.0', sha256='b6438f2195ecb9f6e8279b58971e02bc51814599b5d5383366eef91d867422ee')
+    version(
+        "2.0.0",
+        sha256="b6438f2195ecb9f6e8279b58971e02bc51814599b5d5383366eef91d867422ee",
+    )
 
-    variant('dot', default=False, description='Graphical visualisation support for prov.model')
+    variant(
+        "dot",
+        default=False,
+        description="Graphical visualisation support for prov.model",
+    )
 
-    depends_on('python@3.6:3', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
 
-    depends_on('py-lxml@3.3.5:', type=('build', 'run'))
-    depends_on('py-networkx@2.0:', type=('build', 'run'))
-    depends_on('py-python-dateutil@2.2:', type=('build', 'run'))
-    depends_on('py-rdflib@4.2.1:', type=('build', 'run'))
-    depends_on('py-pydot@1.2.0:', when='+dot', type=('build', 'run'))
-    depends_on('graphviz', when='+dot', type=('build', 'run'))
+    depends_on("py-lxml@3.3.5:", type=("build", "run"))
+    depends_on("py-networkx@2.0:", type=("build", "run"))
+    depends_on("py-python-dateutil@2.2:", type=("build", "run"))
+    depends_on("py-rdflib@4.2.1:", type=("build", "run"))
+    depends_on("py-pydot@1.2.0:", when="+dot", type=("build", "run"))
+    depends_on("graphviz", when="+dot", type=("build", "run"))

@@ -45,16 +45,14 @@ class _HookRunner(object):
     def _populate_hooks(cls):
         # Lazily populate the list of hooks
         cls._hooks = []
-        relative_names = list(llnl.util.lang.list_modules(
-            spack.paths.hooks_path
-        ))
+        relative_names = list(llnl.util.lang.list_modules(spack.paths.hooks_path))
 
         # We want this hook to be the last registered
-        relative_names.sort(key=lambda x: x == 'write_install_manifest')
-        assert relative_names[-1] == 'write_install_manifest'
+        relative_names.sort(key=lambda x: x == "write_install_manifest")
+        assert relative_names[-1] == "write_install_manifest"
 
         for name in relative_names:
-            module_name = __name__ + '.' + name
+            module_name = __name__ + "." + name
             # When importing a module from a package, __import__('A.B', ...)
             # returns package A when 'fromlist' is empty. If fromlist is not
             # empty it returns the submodule B instead
@@ -72,28 +70,28 @@ class _HookRunner(object):
         for _, module in self.hooks:
             if hasattr(module, self.hook_name):
                 hook = getattr(module, self.hook_name)
-                if hasattr(hook, '__call__'):
+                if hasattr(hook, "__call__"):
                     hook(*args, **kwargs)
 
 
 # pre/post install and run by the install subprocess
-pre_install = _HookRunner('pre_install')
-post_install = _HookRunner('post_install')
+pre_install = _HookRunner("pre_install")
+post_install = _HookRunner("post_install")
 
 # These hooks are run within an install subprocess
-pre_uninstall = _HookRunner('pre_uninstall')
-post_uninstall = _HookRunner('post_uninstall')
-on_phase_success = _HookRunner('on_phase_success')
-on_phase_error = _HookRunner('on_phase_error')
+pre_uninstall = _HookRunner("pre_uninstall")
+post_uninstall = _HookRunner("post_uninstall")
+on_phase_success = _HookRunner("on_phase_success")
+on_phase_error = _HookRunner("on_phase_error")
 
 # These are hooks in installer.py, before starting install subprocess
-on_install_start = _HookRunner('on_install_start')
-on_install_success = _HookRunner('on_install_success')
-on_install_failure = _HookRunner('on_install_failure')
-on_install_cancel = _HookRunner('on_install_cancel')
+on_install_start = _HookRunner("on_install_start")
+on_install_success = _HookRunner("on_install_success")
+on_install_failure = _HookRunner("on_install_failure")
+on_install_cancel = _HookRunner("on_install_cancel")
 
 # Analyzer hooks
-on_analyzer_save = _HookRunner('on_analyzer_save')
+on_analyzer_save = _HookRunner("on_analyzer_save")
 
 # Environment hooks
-post_env_write = _HookRunner('post_env_write')
+post_env_write = _HookRunner("post_env_write")

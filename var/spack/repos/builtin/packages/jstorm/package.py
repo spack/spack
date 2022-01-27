@@ -12,9 +12,12 @@ class Jstorm(Package):
     """
 
     homepage = "https://github.com/alibaba/jstorm"
-    url      = "https://github.com/alibaba/jstorm/releases/download/2.4.0/jstorm-2.4.0.tgz"
+    url = "https://github.com/alibaba/jstorm/releases/download/2.4.0/jstorm-2.4.0.tgz"
 
-    version('2.4.0', sha256='8a3965cb51ff95395a40e8d9fd83f12b0aad15c2726c74a796d8085cccc9d69f')
+    version(
+        "2.4.0",
+        sha256="8a3965cb51ff95395a40e8d9fd83f12b0aad15c2726c74a796d8085cccc9d69f",
+    )
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

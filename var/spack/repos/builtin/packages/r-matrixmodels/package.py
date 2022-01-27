@@ -11,10 +11,13 @@ class RMatrixmodels(RPackage):
     prediction and response module classes."""
 
     homepage = "https://matrix.r-forge.r-project.org/"
-    url      = "https://cloud.r-project.org/src/contrib/MatrixModels_0.4-1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/MatrixModels_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MatrixModels"
 
-    version('0.4-1', sha256='fe878e401e697992a480cd146421c3a10fa331f6b37a51bac83b5c1119dcce33')
+    version(
+        "0.4-1",
+        sha256="fe878e401e697992a480cd146421c3a10fa331f6b37a51bac83b5c1119dcce33",
+    )
 
-    depends_on('r@3.0.1:', type=('build', 'run'))
-    depends_on('r-matrix@1.1-5:', type=('build', 'run'))
+    depends_on("r@3.0.1:", type=("build", "run"))
+    depends_on("r-matrix@1.1-5:", type=("build", "run"))

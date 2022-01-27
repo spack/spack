@@ -13,7 +13,10 @@ class PyPynvml(PythonPackage):
     homepage = "https://www.nvidia.com/"
     pypi = "pynvml/pynvml-8.0.4.tar.gz"
 
-    version('8.0.4', sha256='c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d')
+    version(
+        "8.0.4",
+        sha256="c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("python@3.6:", type=("build", "run"))

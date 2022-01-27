@@ -12,14 +12,17 @@ class PyRadicalGtod(PythonPackage):
     binary tool, radical-gtod, which is a compiled binary and does not require
     the invocation of the Python interpreter."""
 
-    homepage = 'https://radical-cybertools.github.io'
-    git      = 'https://github.com/radical-cybertools/radical.gtod.git'
-    pypi     = 'radical.gtod/radical.gtod-1.6.7.tar.gz'
+    homepage = "https://radical-cybertools.github.io"
+    git = "https://github.com/radical-cybertools/radical.gtod.git"
+    pypi = "radical.gtod/radical.gtod-1.6.7.tar.gz"
 
-    maintainers = ['andre-merzky']
+    maintainers = ["andre-merzky"]
 
-    version('develop', branch='devel')
-    version('1.6.7',   sha256='8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8')
+    version("develop", branch="devel")
+    version(
+        "1.6.7",
+        sha256="8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8",
+    )
 
-    depends_on('python@3.6:',   type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -8,10 +8,13 @@ from spack import *
 
 class PyXlsxwriter(PythonPackage):
     """XlsxWriter is a Python module for writing files in the Excel 2007+ XLSX
-       file format."""
+    file format."""
 
     pypi = "XlsxWriter/XlsxWriter-1.0.2.tar.gz"
 
-    version('1.0.2', sha256='a26bbbafff88abffce592ffd5dfaa4c9f08dc44ef4afbf45c70d3e270325f856')
+    version(
+        "1.0.2",
+        sha256="a26bbbafff88abffce592ffd5dfaa4c9f08dc44ef4afbf45c70d3e270325f856",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

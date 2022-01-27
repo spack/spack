@@ -8,27 +8,29 @@ import spack.compiler
 
 class Fj(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['fcc']
+    cc_names = ["fcc"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['FCC']
+    cxx_names = ["FCC"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['frt']
+    f77_names = ["frt"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['frt']
+    fc_names = ["frt"]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'fj/fcc',
-                  'cxx': 'fj/case-insensitive/FCC',
-                  'f77': 'fj/frt',
-                  'fc': 'fj/frt'}
+    link_paths = {
+        "cc": "fj/fcc",
+        "cxx": "fj/case-insensitive/FCC",
+        "f77": "fj/frt",
+        "fc": "fj/frt",
+    }
 
-    version_argument = '--version'
-    version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'
+    version_argument = "--version"
+    version_regex = r"\((?:FCC|FRT)\) ([a-z\d.]+)"
 
-    required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
+    required_libs = ["libfj90i", "libfj90f", "libfjsrcinfo"]
 
     @property
     def verbose_flag(self):
@@ -40,7 +42,7 @@ class Fj(spack.compiler.Compiler):
 
     @property
     def opt_flags(self):
-        return ['-O0', '-O1', '-O2', '-O3', '-Ofast']
+        return ["-O0", "-O1", "-O2", "-O3", "-Ofast"]
 
     @property
     def openmp_flag(self):

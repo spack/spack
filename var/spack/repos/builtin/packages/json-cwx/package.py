@@ -10,27 +10,33 @@ class JsonCwx(AutotoolsPackage):
     """JSON-C with Extensions"""
 
     homepage = "https://github.com/LLNL/json-cwx"
-    url      = "https://github.com/LLNL/json-cwx/archive/0.12.tar.gz"
+    url = "https://github.com/LLNL/json-cwx/archive/0.12.tar.gz"
 
-    version('0.12', sha256='3bfae1f23eacba53ee130dbd1a6acf617af4627a9b4e4581d64b20a99b4e2b60')
+    version(
+        "0.12",
+        sha256="3bfae1f23eacba53ee130dbd1a6acf617af4627a9b4e4581d64b20a99b4e2b60",
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
     parallel = False
 
-    configure_directory = 'json-cwx'
+    configure_directory = "json-cwx"
 
     def autoreconf(self, spec, prefix):
-        with working_dir('json-cwx'):
+        with working_dir("json-cwx"):
             autogen = Executable("./autogen.sh")
             autogen()
 
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies('%nvhpc'):
-            filter_file('-Wno-error=deprecated-declarations -Wextra '
-                        '-Wwrite-strings -Wno-unused-parameter -std=gnu99',
-                        '', 'json-cwx/Makefile.am.inc')
+        if self.spec.satisfies("%nvhpc"):
+            filter_file(
+                "-Wno-error=deprecated-declarations -Wextra "
+                "-Wwrite-strings -Wno-unused-parameter -std=gnu99",
+                "",
+                "json-cwx/Makefile.am.inc",
+            )

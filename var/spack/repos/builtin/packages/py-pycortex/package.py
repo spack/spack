@@ -16,38 +16,46 @@ class PyPycortex(PythonPackage):
     homepage = "https://github.com/gallantlab/pycortex"
     pypi = "pycortex/pycortex-1.2.2.tar.gz"
 
-    version('1.2.2', sha256='ac46ed6a1dc727c3126c2b5d7916fc0ac21a6510c32a5edcd3b8cfb7b2128414')
+    version(
+        "1.2.2",
+        sha256="ac46ed6a1dc727c3126c2b5d7916fc0ac21a6510c32a5edcd3b8cfb7b2128414",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-future', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-tornado@4.3:', type=('build', 'run'))
-    depends_on('py-shapely', type=('build', 'run'))
-    depends_on('py-lxml', type=('build', 'run'))
-    depends_on('py-html5lib', type=('build', 'run'))
-    depends_on('py-h5py', type=('build', 'run'))
-    depends_on('py-numexpr', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))  # is in install_requires
-    depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('pil', type=('build', 'run'))
-    depends_on('py-nibabel', type=('build', 'run'))
-    depends_on('py-networkx@2.1:', type=('build', 'run'))
-    depends_on('py-imageio', type=('build', 'run'))
-    depends_on('py-wget', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
+    depends_on("py-future", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-tornado@4.3:", type=("build", "run"))
+    depends_on("py-shapely", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))
+    depends_on("py-html5lib", type=("build", "run"))
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-numexpr", type=("build", "run"))
+    depends_on("py-cython", type=("build", "run"))  # is in install_requires
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("pil", type=("build", "run"))
+    depends_on("py-nibabel", type=("build", "run"))
+    depends_on("py-networkx@2.1:", type=("build", "run"))
+    depends_on("py-imageio", type=("build", "run"))
+    depends_on("py-wget", type=("build", "run"))
 
     # inkscape is not in spack
     # TODO remove this patch and add inkscape dependency once it is in
     def patch(self):
         # remove inkscape dependency
-        filter_file('from .testing_utils import INKSCAPE_VERSION', '',
-                    'cortex/utils.py',
-                    string=True)
-        filter_file('open_inkscape=True', 'open_inkscape=False',
-                    'cortex/utils.py',
-                    string=True)
-        filter_file('from .testing_utils import INKSCAPE_VERSION',
-                    'INKSCAPE_VERSION = None',
-                    'cortex/svgoverlay.py',
-                    string=True)
+        filter_file(
+            "from .testing_utils import INKSCAPE_VERSION",
+            "",
+            "cortex/utils.py",
+            string=True,
+        )
+        filter_file(
+            "open_inkscape=True", "open_inkscape=False", "cortex/utils.py", string=True
+        )
+        filter_file(
+            "from .testing_utils import INKSCAPE_VERSION",
+            "INKSCAPE_VERSION = None",
+            "cortex/svgoverlay.py",
+            string=True,
+        )

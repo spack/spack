@@ -7,12 +7,13 @@ class Fftw(Package):
     cases with the old concretizer have been solved by the
     new ones.
     """
+
     homepage = "http://www.example.com"
     url = "http://www.example.com/fftw-1.0.tar.gz"
 
-    version(2.0, 'abcdef1234567890abcdef1234567890')
-    version(1.0, '1234567890abcdef1234567890abcdef')
+    version(2.0, "abcdef1234567890abcdef1234567890")
+    version(1.0, "1234567890abcdef1234567890abcdef")
 
-    variant('mpi', default=False, description='Enable MPI')
+    variant("mpi", default=False, description="Enable MPI")
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")

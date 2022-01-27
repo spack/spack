@@ -13,11 +13,14 @@ class RShadowtext(RPackage):
     'ggplot2'. These functions create/draw text grob with background shadow."""
 
     homepage = "https://github.com/GuangchuangYu/shadowtext/"
-    url      = "https://cloud.r-project.org/src/contrib/shadowtext_0.0.7.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/shadowtext_0.0.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/shadowtext"
 
-    version('0.0.7', sha256='6e32b1dfd3d4816803848b876666185258b888286ec3d3e8500499ec3eba31e8')
+    version(
+        "0.0.7",
+        sha256="6e32b1dfd3d4816803848b876666185258b888286ec3d3e8500499ec3eba31e8",
+    )
 
-    depends_on('r@3.4.0:', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
+    depends_on("r@3.4.0:", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-scales", type=("build", "run"))

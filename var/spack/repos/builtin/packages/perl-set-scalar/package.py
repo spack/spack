@@ -10,6 +10,9 @@ class PerlSetScalar(PerlPackage):
     """Set::Scalar - basic set operations"""
 
     homepage = "https://metacpan.org/pod/Set::Scalar"
-    url      = "https://cpan.metacpan.org/authors/id/D/DA/DAVIDO/Set-Scalar-1.29.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/D/DA/DAVIDO/Set-Scalar-1.29.tar.gz"
 
-    version('1.29', sha256='a3dc1526f3dde72d3c64ea00007b86ce608cdcd93567cf6e6e42dc10fdc4511d')
+    version(
+        "1.29",
+        sha256="a3dc1526f3dde72d3c64ea00007b86ce608cdcd93567cf6e6e42dc10fdc4511d",
+    )

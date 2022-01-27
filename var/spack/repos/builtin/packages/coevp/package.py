@@ -19,59 +19,62 @@ class Coevp(MakefilePackage):
     application provides the coarse-scale model implementation and the ASPA
     proxy application provides the adaptive sampling support."""
 
-    homepage = 'https://github.com/exmatex/CoEVP'
-    git      = 'https://github.com/exmatex/CoEVP.git'
+    homepage = "https://github.com/exmatex/CoEVP"
+    git = "https://github.com/exmatex/CoEVP.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    variant('mpi', default=True, description='Build with MPI Support')
-    variant('silo', default=False, description='Build with silo Support')
-    variant('flann', default=False, description='Build with flann Support')
+    variant("mpi", default=True, description="Build with MPI Support")
+    variant("silo", default=False, description="Build with silo Support")
+    variant("flann", default=False, description="Build with flann Support")
 
-    depends_on('mpi', when='+mpi')
-    depends_on('silo', when='+silo')
-    depends_on('flann@1.8.1', when='+flann')
-    depends_on('lapack')
+    depends_on("mpi", when="+mpi")
+    depends_on("silo", when="+silo")
+    depends_on("flann@1.8.1", when="+flann")
+    depends_on("lapack")
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
     @property
     def build_targets(self):
         targets = []
-        if '+mpi' in self.spec:
-            targets.append('COEVP_MPI=yes')
+        if "+mpi" in self.spec:
+            targets.append("COEVP_MPI=yes")
         else:
-            targets.append('COEVP_MPI=no')
-        if '+flann' in self.spec:
-            targets.append('FLANN=yes')
-            targets.append('FLANN_TARGET=')
-            targets.append('FLANN_LOC={0}'.format(
-                join_path(self.spec['flann'].prefix.include, 'flann')))
+            targets.append("COEVP_MPI=no")
+        if "+flann" in self.spec:
+            targets.append("FLANN=yes")
+            targets.append("FLANN_TARGET=")
+            targets.append(
+                "FLANN_LOC={0}".format(
+                    join_path(self.spec["flann"].prefix.include, "flann")
+                )
+            )
         else:
-            targets.append('FLANN=no')
-        targets.append('REDIS=no')
-        if '+silo' in self.spec:
-            targets.append('SILO=yes')
-            targets.append('SILO_TARGET=')
-            targets.append('SILO_LOC={0}'.format(self.spec['silo'].prefix))
+            targets.append("FLANN=no")
+        targets.append("REDIS=no")
+        if "+silo" in self.spec:
+            targets.append("SILO=yes")
+            targets.append("SILO_TARGET=")
+            targets.append("SILO_LOC={0}".format(self.spec["silo"].prefix))
         else:
-            targets.append('SILO=no')
-        targets.append('TWEMPROXY=no')
-        targets.append('LAPACK=%s' % self.spec['lapack'].libs.ld_flags)
+            targets.append("SILO=no")
+        targets.append("TWEMPROXY=no")
+        targets.append("LAPACK=%s" % self.spec["lapack"].libs.ld_flags)
 
         return targets
 
     def edit(self, spec, prefix):
         # libquadmath is only available x86_64 and powerle
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
-        if self.spec.target.family not in ['x86_64', 'ppc64le']:
-            comps = join_path('LULESH', 'Makefile')
-            filter_file('-lquadmath', '', comps)
+        if self.spec.target.family not in ["x86_64", "ppc64le"]:
+            comps = join_path("LULESH", "Makefile")
+            filter_file("-lquadmath", "", comps)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        install('LULESH/lulesh', prefix.bin)
-        install('COPYRIGHT', prefix.doc)
-        install('README.md', prefix.doc)
-        install('CoEVP.pdf', prefix.doc)
+        install("LULESH/lulesh", prefix.bin)
+        install("COPYRIGHT", prefix.doc)
+        install("README.md", prefix.doc)
+        install("CoEVP.pdf", prefix.doc)

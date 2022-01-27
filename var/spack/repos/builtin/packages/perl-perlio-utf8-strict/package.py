@@ -10,6 +10,9 @@ class PerlPerlioUtf8Strict(PerlPackage):
     """This module provides a fast and correct UTF-8 PerlIO layer."""
 
     homepage = "https://metacpan.org/pod/PerlIO::utf8_strict"
-    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/PerlIO-utf8_strict-0.002.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/PerlIO-utf8_strict-0.002.tar.gz"
 
-    version('0.002', sha256='6e3163f8a2f1d276c975f21789d7a07843586d69e3e6156ffb67ef6680ceb75f')
+    version(
+        "0.002",
+        sha256="6e3163f8a2f1d276c975f21789d7a07843586d69e3e6156ffb67ef6680ceb75f",
+    )

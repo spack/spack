@@ -8,7 +8,7 @@ from spack import *
 
 class ExternalCommonOpenssl(Package):
     homepage = "http://www.openssl.org"
-    url      = "http://www.openssl.org/source/openssl-1.1.1i.tar.gz"
+    url = "http://www.openssl.org/source/openssl-1.1.1i.tar.gz"
 
-    version('1.1.1i', 'be78e48cdfc1a7ad90efff146dce6cfe')
-    depends_on('external-common-perl')
+    version("1.1.1i", "be78e48cdfc1a7ad90efff146dce6cfe")
+    depends_on("external-common-perl")

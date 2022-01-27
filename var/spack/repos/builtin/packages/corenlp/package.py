@@ -17,34 +17,41 @@ class Corenlp(Package):
     mentions, get the quotes people said, etc."""
 
     homepage = "https://stanfordnlp.github.io/CoreNLP/index.html"
-    url      = "https://github.com/stanfordnlp/CoreNLP/archive/v4.0.0.tar.gz"
+    url = "https://github.com/stanfordnlp/CoreNLP/archive/v4.0.0.tar.gz"
 
-    version('4.0.0', sha256='07195eed46dd39bdc364d3988da8ec6a5fc9fed8c17613cfe5a8b84d649c8f0f')
+    version(
+        "4.0.0",
+        sha256="07195eed46dd39bdc364d3988da8ec6a5fc9fed8c17613cfe5a8b84d649c8f0f",
+    )
 
     resources = [
-        ('4.0.0', 'f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94'),
+        ("4.0.0", "f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94"),
     ]
     for ver, checksum in resources:
-        jarfile = 'stanford-corenlp-{0}-models.jar'.format(ver)
-        resource(when='@{0}'.format(ver),
-                 name=jarfile,
-                 url='https://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/{0}/{1}'.format(ver, jarfile),
-                 expand=False,
-                 destination='',
-                 placement=jarfile,
-                 sha256=checksum)
+        jarfile = "stanford-corenlp-{0}-models.jar".format(ver)
+        resource(
+            when="@{0}".format(ver),
+            name=jarfile,
+            url="https://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/{0}/{1}".format(
+                ver, jarfile
+            ),
+            expand=False,
+            destination="",
+            placement=jarfile,
+            sha256=checksum,
+        )
 
-    depends_on('ant', type='build')
+    depends_on("ant", type="build")
 
     def install(self, spec, prefix):
-        ant = self.spec['ant'].command
+        ant = self.spec["ant"].command
         ant()
 
-        with working_dir('classes'):
-            jar = Executable('jar')
-            jar('-cf', '../stanford-corenlp.jar', 'edu')
+        with working_dir("classes"):
+            jar = Executable("jar")
+            jar("-cf", "../stanford-corenlp.jar", "edu")
 
-        install_tree('.', prefix.lib)
+        install_tree(".", prefix.lib)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
@@ -56,12 +63,12 @@ class Corenlp(Package):
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = self.spec['java'].prefix.bin.java
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-        filter_file('^java', java, script, **kwargs)
+        java = self.spec["java"].prefix.bin.java
+        kwargs = {"ignore_absent": False, "backup": False, "string": False}
+        filter_file("^java", java, script, **kwargs)
 
     def setup_run_environment(self, run_env):
         class_paths = []
-        class_paths.extend(find(prefix.lib, '*.jar'))
+        class_paths.extend(find(prefix.lib, "*.jar"))
         classpath = os.pathsep.join(class_paths)
-        run_env.prepend_path('CLASSPATH', classpath)
+        run_env.prepend_path("CLASSPATH", classpath)

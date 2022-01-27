@@ -15,21 +15,23 @@ class Debugedit(AutotoolsPackage):
     """
 
     homepage = "https://www.sourceware.org/debugedit/"
-    git      = "git://sourceware.org/git/debugedit.git"
-    url      = "https://sourceware.org/ftp/debugedit/0.2/debugedit-0.2.tar.xz"
+    git = "git://sourceware.org/git/debugedit.git"
+    url = "https://sourceware.org/ftp/debugedit/0.2/debugedit-0.2.tar.xz"
 
-    version('develop', branch='main')
-    version('0.2', sha256="b78258240bb7ec5bbff109495092dcc111aa0393f135f2d2a4b43887ba26a942")
+    version("develop", branch="main")
+    version(
+        "0.2", sha256="b78258240bb7ec5bbff109495092dcc111aa0393f135f2d2a4b43887ba26a942"
+    )
 
-    depends_on('help2man', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('elfutils')  # requires libdw
-    depends_on('libiberty')
+    depends_on("help2man", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("elfutils")  # requires libdw
+    depends_on("libiberty")
 
     def build(self, spec, prefix):
         # requires libiberty
-        libiberty = spec['libiberty'].prefix.include.libiberty
-        make('CPPFLAGS=-I%s' % libiberty)
+        libiberty = spec["libiberty"].prefix.include.libiberty
+        make("CPPFLAGS=-I%s" % libiberty)

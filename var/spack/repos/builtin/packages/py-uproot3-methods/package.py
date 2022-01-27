@@ -17,10 +17,13 @@ class PyUproot3Methods(PythonPackage):
     which is purely an I/O package."""
 
     homepage = "https://github.com/scikit-hep/uproot3-methods"
-    pypi     = "uproot3-methods/uproot3-methods-0.10.1.tar.gz"
+    pypi = "uproot3-methods/uproot3-methods-0.10.1.tar.gz"
 
-    version('0.10.1', sha256='dd68f90be1ea276360b96369836849df29045f7fe4e534f9ac21ea00798ee358')
+    version(
+        "0.10.1",
+        sha256="dd68f90be1ea276360b96369836849df29045f7fe4e534f9ac21ea00798ee358",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.13.1:', type=('build', 'run'))
-    depends_on('py-awkward0', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.13.1:", type=("build", "run"))
+    depends_on("py-awkward0", type=("build", "run"))

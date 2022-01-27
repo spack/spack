@@ -13,9 +13,12 @@ class PyWeblogo(PythonPackage):
     homepage = "http://weblogo.threeplusone.com"
     pypi = "weblogo/weblogo-3.6.0.tar.gz"
 
-    version('3.6.0', sha256='af5a9f065581f18d71bd7c22b160c1e443932f22cab992d439d3dc8757c80a85')
+    version(
+        "3.6.0",
+        sha256="af5a9f065581f18d71bd7c22b160c1e443932f22cab992d439d3dc8757c80a85",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('ghostscript', type=('build', 'run'))
-    depends_on('pdf2svg', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("ghostscript", type=("build", "run"))
+    depends_on("pdf2svg", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))

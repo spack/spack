@@ -13,18 +13,18 @@ import spack.spec
 
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # create an environment
-    env_path = tmpdir.mkdir('env_dir').strpath
+    env_path = tmpdir.mkdir("env_dir").strpath
     env = ev.Environment(env_path)
     env.write()
 
     # add a spec with a rewritten build hash
-    spec = spack.spec.Spec('mpileaks')
+    spec = spack.spec.Spec("mpileaks")
     env.add(spec)
     env.concretize()
 
     # rewrite the hash
     old_hash = env.concretized_order[0]
-    new_hash = 'abc'
+    new_hash = "abc"
     env.specs_by_hash[old_hash]._build_hash = new_hash
     env.concretized_order[0] = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
@@ -42,7 +42,7 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
 
 def test_activate_should_require_an_env():
     with pytest.raises(TypeError):
-        ev.activate(env='name')
+        ev.activate(env="name")
 
     with pytest.raises(TypeError):
         ev.activate(env=None)

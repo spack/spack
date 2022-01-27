@@ -11,8 +11,11 @@ class PyIniconfig(PythonPackage):
     iniconfig: brain-dead simple parsing of ini files
     """
 
-    pypi     = "iniconfig/iniconfig-1.1.1.tar.gz"
+    pypi = "iniconfig/iniconfig-1.1.1.tar.gz"
 
-    version('1.1.1', sha256='bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32')
+    version(
+        "1.1.1",
+        sha256="bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

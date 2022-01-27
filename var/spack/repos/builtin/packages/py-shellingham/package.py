@@ -10,9 +10,12 @@ class PyShellingham(PythonPackage):
     """Tool to Detect Surrounding Shell"""
 
     homepage = "https://github.com/sarugaku/shellingham"
-    pypi     = "shellingham/shellingham-1.4.0.tar.gz"
+    pypi = "shellingham/shellingham-1.4.0.tar.gz"
 
-    version('1.4.0', sha256='4855c2458d6904829bd34c299f11fdeed7cfefbf8a2c522e4caea6cd76b3171e')
+    version(
+        "1.4.0",
+        sha256="4855c2458d6904829bd34c299f11fdeed7cfefbf8a2c522e4caea6cd76b3171e",
+    )
 
-    depends_on('python@2.6:2.7,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.6:2.7,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

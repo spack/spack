@@ -8,7 +8,7 @@ from spack import *
 
 class ExternalCommonPerl(Package):
     homepage = "http://www.perl.org"
-    url      = "http://www.cpan.org/src/5.0/perl-5.32.0.tar.gz"
+    url = "http://www.cpan.org/src/5.0/perl-5.32.0.tar.gz"
 
-    version('5.32.0', 'be78e48cdfc1a7ad90efff146dce6cfe')
-    depends_on('external-common-gdbm')
+    version("5.32.0", "be78e48cdfc1a7ad90efff146dce6cfe")
+    depends_on("external-common-gdbm")

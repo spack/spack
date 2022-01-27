@@ -8,24 +8,24 @@ import os
 
 class Mpi(Package):
     """Virtual package for the Message Passing Interface."""
-    homepage = 'https://www.mpi-forum.org/'
+
+    homepage = "https://www.mpi-forum.org/"
     virtual = True
 
     def test(self):
-        for lang in ('c', 'f'):
-            filename = self.test_suite.current_test_data_dir.join(
-                'mpi_hello.' + lang)
+        for lang in ("c", "f"):
+            filename = self.test_suite.current_test_data_dir.join("mpi_hello." + lang)
 
-            compiler_var = 'MPICC' if lang == 'c' else 'MPIF90'
+            compiler_var = "MPICC" if lang == "c" else "MPIF90"
             compiler = os.environ[compiler_var]
 
-            exe_name = 'mpi_hello_%s' % lang
-            mpirun = join_path(self.prefix.bin, 'mpirun')
+            exe_name = "mpi_hello_%s" % lang
+            mpirun = join_path(self.prefix.bin, "mpirun")
 
-            compiled = self.run_test(compiler,
-                                     options=['-o', exe_name, filename])
+            compiled = self.run_test(compiler, options=["-o", exe_name, filename])
             if compiled:
-                self.run_test(mpirun,
-                              options=['-np', '1', exe_name],
-                              expected=[r'Hello world! From rank \s*0 of \s*1']
-                              )
+                self.run_test(
+                    mpirun,
+                    options=["-np", "1", exe_name],
+                    expected=[r"Hello world! From rank \s*0 of \s*1"],
+                )

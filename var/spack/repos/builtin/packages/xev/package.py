@@ -18,11 +18,14 @@ class Xev(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xev"
     xorg_mirror_path = "app/xev-1.2.2.tar.gz"
 
-    version('1.2.2', sha256='e4c0c7b6f411e8b9731f2bb10d729d167bd00480d172c28b62607a6ea9e45c57')
+    version(
+        "1.2.2",
+        sha256="e4c0c7b6f411e8b9731f2bb10d729d167bd00480d172c28b62607a6ea9e45c57",
+    )
 
-    depends_on('libxrandr@1.2:')
-    depends_on('libx11')
+    depends_on("libxrandr@1.2:")
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

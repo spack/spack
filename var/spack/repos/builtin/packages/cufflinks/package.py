@@ -8,20 +8,23 @@ from spack import *
 
 class Cufflinks(Package):
     """Cufflinks assembles transcripts, estimates their abundances, and tests
-       for differential expression and regulation in RNA-Seq samples."""
+    for differential expression and regulation in RNA-Seq samples."""
 
     homepage = "https://cole-trapnell-lab.github.io/cufflinks"
-    url      = "https://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
+    url = "https://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
 
-    version('2.2.1', sha256='39f812452cae26462e5d2671d38104d9e8ef30aaf9ab6dea8ca57f50f46448e4')
+    version(
+        "2.2.1",
+        sha256="39f812452cae26462e5d2671d38104d9e8ef30aaf9ab6dea8ca57f50f46448e4",
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('cuffcompare', prefix.bin)
-        install('cuffdiff', prefix.bin)
-        install('cufflinks', prefix.bin)
-        install('cuffmerge', prefix.bin)
-        install('cuffnorm', prefix.bin)
-        install('cuffquant', prefix.bin)
-        install('gffread', prefix.bin)
-        install('gtf_to_sam', prefix.bin)
+        install("cuffcompare", prefix.bin)
+        install("cuffdiff", prefix.bin)
+        install("cufflinks", prefix.bin)
+        install("cuffmerge", prefix.bin)
+        install("cuffnorm", prefix.bin)
+        install("cuffquant", prefix.bin)
+        install("gffread", prefix.bin)
+        install("gtf_to_sam", prefix.bin)

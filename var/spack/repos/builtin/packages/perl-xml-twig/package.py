@@ -23,10 +23,13 @@ class PerlXmlTwig(PerlPackage):
     that come with XML and XML::Parser."""
 
     homepage = "https://metacpan.org/pod/XML::Twig"
-    url      = "https://cpan.metacpan.org/authors/id/M/MI/MIROD/XML-Twig-3.52.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/M/MI/MIROD/XML-Twig-3.52.tar.gz"
 
-    version('3.52', sha256='fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad')
+    version(
+        "3.52",
+        sha256="fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad",
+    )
 
-    depends_on('perl-xml-parser', type=('build', 'run'))
+    depends_on("perl-xml-parser", type=("build", "run"))
 
-    patch('non_interactive.patch')
+    patch("non_interactive.patch")

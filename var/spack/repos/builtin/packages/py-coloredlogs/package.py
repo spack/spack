@@ -11,8 +11,14 @@ class PyColoredlogs(PythonPackage):
 
     pypi = "coloredlogs/coloredlogs-10.0.tar.gz"
 
-    version('14.0', sha256='a1fab193d2053aa6c0a97608c4342d031f1f93a3d1218432c59322441d31a505')
-    version('10.0', sha256='b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36')
+    version(
+        "14.0",
+        sha256="a1fab193d2053aa6c0a97608c4342d031f1f93a3d1218432c59322441d31a505",
+    )
+    version(
+        "10.0",
+        sha256="b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-humanfriendly@4.7:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-humanfriendly@4.7:", type=("build", "run"))

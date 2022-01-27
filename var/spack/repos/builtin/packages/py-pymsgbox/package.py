@@ -11,8 +11,11 @@ class PyPymsgbox(PythonPackage):
     JavaScript-like message boxes."""
 
     homepage = "https://github.com/asweigart/pymsgbox"
-    pypi     = "PyMsgBox/PyMsgBox-1.0.9.tar.gz"
+    pypi = "PyMsgBox/PyMsgBox-1.0.9.tar.gz"
 
-    version('1.0.9', sha256='2194227de8bff7a3d6da541848705a155dcbb2a06ee120d9f280a1d7f51263ff')
+    version(
+        "1.0.9",
+        sha256="2194227de8bff7a3d6da541848705a155dcbb2a06ee120d9f280a1d7f51263ff",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

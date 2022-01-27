@@ -3,7 +3,8 @@ import py
 
 BuiltinAssertionError = py.builtin.builtins.AssertionError
 
-_reprcompare = None # if set, will be called by assert reinterp for comparison ops
+_reprcompare = None  # if set, will be called by assert reinterp for comparison ops
+
 
 def _format_explanation(explanation):
     """This formats an explanation
@@ -15,38 +16,38 @@ def _format_explanation(explanation):
     for when one explanation needs to span multiple lines, e.g. when
     displaying diffs.
     """
-    raw_lines = (explanation or '').split('\n')
+    raw_lines = (explanation or "").split("\n")
     # escape newlines not followed by {, } and ~
     lines = [raw_lines[0]]
     for l in raw_lines[1:]:
-        if l.startswith('{') or l.startswith('}') or l.startswith('~'):
+        if l.startswith("{") or l.startswith("}") or l.startswith("~"):
             lines.append(l)
         else:
-            lines[-1] += '\\n' + l
+            lines[-1] += "\\n" + l
 
     result = lines[:1]
     stack = [0]
     stackcnt = [0]
     for line in lines[1:]:
-        if line.startswith('{'):
+        if line.startswith("{"):
             if stackcnt[-1]:
-                s = 'and   '
+                s = "and   "
             else:
-                s = 'where '
+                s = "where "
             stack.append(len(result))
             stackcnt[-1] += 1
             stackcnt.append(0)
-            result.append(' +' + '  '*(len(stack)-1) + s + line[1:])
-        elif line.startswith('}'):
-            assert line.startswith('}')
+            result.append(" +" + "  " * (len(stack) - 1) + s + line[1:])
+        elif line.startswith("}"):
+            assert line.startswith("}")
             stack.pop()
             stackcnt.pop()
             result[stack[-1]] += line[1:]
         else:
-            assert line.startswith('~')
-            result.append('  '*len(stack) + line[1:])
+            assert line.startswith("~")
+            result.append("  " * len(stack) + line[1:])
     assert len(stack) == 1
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 class AssertionError(BuiltinAssertionError):
@@ -58,8 +59,10 @@ class AssertionError(BuiltinAssertionError):
             except py.builtin._sysex:
                 raise
             except:
-                self.msg = "<[broken __repr__] %s at %0xd>" %(
-                    args[0].__class__, id(args[0]))
+                self.msg = "<[broken __repr__] %s at %0xd>" % (
+                    args[0].__class__,
+                    id(args[0]),
+                )
         else:
             f = py.code.Frame(sys._getframe(1))
             try:
@@ -82,6 +85,7 @@ class AssertionError(BuiltinAssertionError):
             if not self.args:
                 self.args = (self.msg,)
 
+
 if sys.version_info > (3, 0):
     AssertionError.__module__ = "builtins"
     reinterpret_old = "old reinterpretation not available for py3"
@@ -91,4 +95,3 @@ if sys.version_info >= (2, 6) or (sys.platform.startswith("java")):
     from py._code._assertionnew import interpret as reinterpret
 else:
     reinterpret = reinterpret_old
-

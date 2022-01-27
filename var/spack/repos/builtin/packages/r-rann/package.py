@@ -15,7 +15,10 @@ class RRann(RPackage):
     L1 (Manhattan, taxicab) metric."""
 
     homepage = "https://github.com/jefferis/RANN"
-    url      = "https://cloud.r-project.org/src/contrib/RANN_2.6.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/RANN_2.6.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RANN"
 
-    version('2.6.1', sha256='b299c3dfb7be17aa41e66eff5674fddd2992fb6dd3b10bc59ffbf0c401697182')
+    version(
+        "2.6.1",
+        sha256="b299c3dfb7be17aa41e66eff5674fddd2992fb6dd3b10bc59ffbf0c401697182",
+    )

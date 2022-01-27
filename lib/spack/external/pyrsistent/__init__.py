@@ -3,4 +3,4 @@
 from pyrsistent._pmap import pmap
 
 
-__all__ = ('pmap',)
+__all__ = ("pmap",)

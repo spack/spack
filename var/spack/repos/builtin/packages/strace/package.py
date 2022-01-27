@@ -13,29 +13,61 @@ class Strace(AutotoolsPackage):
     signal deliveries, and changes of process state."""
 
     homepage = "https://strace.io"
-    url      = "https://github.com/strace/strace/releases/download/v5.2/strace-5.2.tar.xz"
+    url = "https://github.com/strace/strace/releases/download/v5.2/strace-5.2.tar.xz"
 
-    conflicts('platform=darwin', msg='strace runs only on Linux.')
+    conflicts("platform=darwin", msg="strace runs only on Linux.")
 
-    version('5.12', sha256='29171edf9d252f89c988a4c340dfdec662f458cb8c63d85431d64bab5911e7c4')
-    version('5.11', sha256='ffe340b10c145a0f85734271e9cce56457d23f21a7ea5931ab32f8cf4e793879')
-    version('5.10', sha256='fe3982ea4cd9aeb3b4ba35f6279f0b577a37175d3282be24b9a5537b56b8f01c')
-    version('5.9',  sha256='39473eb8465546c3e940fb663cb381eba5613160c7302794699d194a4d5d66d9')
-    version('5.8',  sha256='df4a669f7fff9cc302784085bd4b72fab216a426a3f72c892b28a537b71e7aa9')
-    version('5.7', sha256='b284b59f9bcd95b9728cea5bd5c0edc5ebe360af73dc76fbf6334f11c777ccd8')
-    version('5.6', sha256='189968eeae06ed9e20166ec55a830943c84374676a457c9fe010edc7541f1b01')
-    version('5.5', sha256='9f58958c8e59ea62293d907d10572e352b582bd7948ed21aa28ebb47e5bf30ff')
-    version('5.4', sha256='f7d00514d51290b6db78ad7a9de709baf93caa5981498924cbc9a744cfd2a741')
-    version('5.3', sha256='6c131198749656401fe3efd6b4b16a07ea867e8f530867ceae8930bbc937a047')
-    version('5.2', sha256='d513bc085609a9afd64faf2ce71deb95b96faf46cd7bc86048bc655e4e4c24d2')
-    version('5.1', sha256='f5a341b97d7da88ee3760626872a4899bf23cf8dee56901f114be5b1837a9a8b')
-    version('5.0', sha256='3b7ad77eb2b81dc6078046a9cc56eed5242b67b63748e7fc28f7c2daf4e647da')
-    version('4.21', sha256='5c7688db44073e94c59a5627744e5699454419824cc8166e8bcfd7ec58375c37')
+    version(
+        "5.12",
+        sha256="29171edf9d252f89c988a4c340dfdec662f458cb8c63d85431d64bab5911e7c4",
+    )
+    version(
+        "5.11",
+        sha256="ffe340b10c145a0f85734271e9cce56457d23f21a7ea5931ab32f8cf4e793879",
+    )
+    version(
+        "5.10",
+        sha256="fe3982ea4cd9aeb3b4ba35f6279f0b577a37175d3282be24b9a5537b56b8f01c",
+    )
+    version(
+        "5.9", sha256="39473eb8465546c3e940fb663cb381eba5613160c7302794699d194a4d5d66d9"
+    )
+    version(
+        "5.8", sha256="df4a669f7fff9cc302784085bd4b72fab216a426a3f72c892b28a537b71e7aa9"
+    )
+    version(
+        "5.7", sha256="b284b59f9bcd95b9728cea5bd5c0edc5ebe360af73dc76fbf6334f11c777ccd8"
+    )
+    version(
+        "5.6", sha256="189968eeae06ed9e20166ec55a830943c84374676a457c9fe010edc7541f1b01"
+    )
+    version(
+        "5.5", sha256="9f58958c8e59ea62293d907d10572e352b582bd7948ed21aa28ebb47e5bf30ff"
+    )
+    version(
+        "5.4", sha256="f7d00514d51290b6db78ad7a9de709baf93caa5981498924cbc9a744cfd2a741"
+    )
+    version(
+        "5.3", sha256="6c131198749656401fe3efd6b4b16a07ea867e8f530867ceae8930bbc937a047"
+    )
+    version(
+        "5.2", sha256="d513bc085609a9afd64faf2ce71deb95b96faf46cd7bc86048bc655e4e4c24d2"
+    )
+    version(
+        "5.1", sha256="f5a341b97d7da88ee3760626872a4899bf23cf8dee56901f114be5b1837a9a8b"
+    )
+    version(
+        "5.0", sha256="3b7ad77eb2b81dc6078046a9cc56eed5242b67b63748e7fc28f7c2daf4e647da"
+    )
+    version(
+        "4.21",
+        sha256="5c7688db44073e94c59a5627744e5699454419824cc8166e8bcfd7ec58375c37",
+    )
 
     def configure_args(self):
         args = []
-        if self.spec.target.family == 'aarch64':
-            args.append('--enable-mpers=no')
+        if self.spec.target.family == "aarch64":
+            args.append("--enable-mpers=no")
         else:
-            args.append('--enable-mpers=yes')
+            args.append("--enable-mpers=yes")
         return args

@@ -15,13 +15,16 @@ class Proxymngr(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/proxymngr"
     xorg_mirror_path = "app/proxymngr-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='d40f2d15985ee8e8ef5320a85c0b1899a7bc95974a65137ae886e499bced86f4')
+    version(
+        "1.0.4",
+        sha256="d40f2d15985ee8e8ef5320a85c0b1899a7bc95974a65137ae886e499bced86f4",
+    )
 
-    depends_on('libice')
-    depends_on('libxt')
-    depends_on('lbxproxy')
+    depends_on("libice")
+    depends_on("libxt")
+    depends_on("lbxproxy")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('xproxymanagementprotocol')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("xproxymanagementprotocol")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

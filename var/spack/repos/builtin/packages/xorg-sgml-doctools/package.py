@@ -14,7 +14,10 @@ class XorgSgmlDoctools(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/doc/xorg-sgml-doctools"
     xorg_mirror_path = "doc/xorg-sgml-doctools-1.11.tar.gz"
 
-    version('1.11', sha256='986326d7b4dd2ad298f61d8d41fe3929ac6191c6000d6d7e47a8ffc0c34e7426')
+    version(
+        "1.11",
+        sha256="986326d7b4dd2ad298f61d8d41fe3929ac6191c6000d6d7e47a8ffc0c34e7426",
+    )
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

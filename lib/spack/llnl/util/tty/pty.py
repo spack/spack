@@ -35,8 +35,8 @@ class ProcessController(object):
     minion) similar to the way a shell would, by sending signals and I/O.
 
     """
-    def __init__(self, pid, controller_fd,
-                 timeout=1, sleep_time=1e-1, debug=False):
+
+    def __init__(self, pid, controller_fd, timeout=1, sleep_time=1e-1, debug=False):
         """Create a controller to manipulate the process with id ``pid``
 
         Args:
@@ -77,18 +77,19 @@ class ProcessController(object):
     def horizontal_line(self, name):
         """Labled horizontal line for debugging."""
         if self.debug:
-            sys.stderr.write(
-                "------------------------------------------- %s\n" % name
-            )
+            sys.stderr.write("------------------------------------------- %s\n" % name)
 
     def status(self):
         """Print debug message with status info for the minion."""
         if self.debug:
             canon, echo = self.get_canon_echo_attrs()
-            sys.stderr.write("canon: %s, echo: %s\n" % (
-                "on" if canon else "off",
-                "on" if echo else "off",
-            ))
+            sys.stderr.write(
+                "canon: %s, echo: %s\n"
+                % (
+                    "on" if canon else "off",
+                    "on" if echo else "off",
+                )
+            )
             sys.stderr.write("input: %s\n" % self.input_on())
             sys.stderr.write("bg: %s\n" % self.background())
             sys.stderr.write("\n")
@@ -130,7 +131,7 @@ class ProcessController(object):
 
     def wait(self, condition):
         start = time.time()
-        while (((time.time() - start) < self.timeout) and not condition()):
+        while ((time.time() - start) < self.timeout) and not condition():
             time.sleep(1e-2)
         assert condition()
 
@@ -212,6 +213,7 @@ class PseudoShell(object):
         |_________________________________________________________|
 
     """
+
     def __init__(self, controller_function, minion_function):
         self.proc = None
         self.controller_function = controller_function
@@ -235,8 +237,12 @@ class PseudoShell(object):
         """
         self.proc = multiprocessing.Process(
             target=PseudoShell._set_up_and_run_controller_function,
-            args=(self.controller_function, self.minion_function,
-                  self.controller_timeout, self.sleep_time),
+            args=(
+                self.controller_function,
+                self.minion_function,
+                self.controller_timeout,
+                self.sleep_time,
+            ),
             kwargs=kwargs,
         )
         self.proc.start()
@@ -248,7 +254,8 @@ class PseudoShell(object):
 
     @staticmethod
     def _set_up_and_run_minion_function(
-            tty_name, stdout_fd, stderr_fd, ready, minion_function, **kwargs):
+        tty_name, stdout_fd, stderr_fd, ready, minion_function, **kwargs
+    ):
         """Minion process wrapper for PseudoShell.
 
         Handles the mechanics of setting up a PTY, then calls
@@ -266,8 +273,7 @@ class PseudoShell(object):
         os.close(stdin_fd)
 
         if kwargs.get("debug"):
-            sys.stderr.write(
-                "minion: stdin.isatty(): %s\n" % sys.stdin.isatty())
+            sys.stderr.write("minion: stdin.isatty(): %s\n" % sys.stdin.isatty())
 
         # tell the parent that we're really running
         if kwargs.get("debug"):
@@ -281,15 +287,15 @@ class PseudoShell(object):
 
     @staticmethod
     def _set_up_and_run_controller_function(
-            controller_function, minion_function, controller_timeout,
-            sleep_time, **kwargs):
+        controller_function, minion_function, controller_timeout, sleep_time, **kwargs
+    ):
         """Set up a pty, spawn a minion process, execute controller_function.
 
         Handles the mechanics of setting up a PTY, then calls
         ``controller_function``.
 
         """
-        os.setsid()   # new session; this process is the controller
+        os.setsid()  # new session; this process is the controller
 
         controller_fd, minion_fd = os.openpty()
         pty_name = os.ttyname(minion_fd)
@@ -298,11 +304,16 @@ class PseudoShell(object):
         pty_fd = os.open(pty_name, os.O_RDWR)
         os.close(pty_fd)
 
-        ready = multiprocessing.Value('i', False)
+        ready = multiprocessing.Value("i", False)
         minion_process = multiprocessing.Process(
             target=PseudoShell._set_up_and_run_minion_function,
-            args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
-                  ready, minion_function),
+            args=(
+                pty_name,
+                sys.stdout.fileno(),
+                sys.stderr.fileno(),
+                ready,
+                minion_function,
+            ),
             kwargs=kwargs,
         )
         minion_process.start()
@@ -322,8 +333,7 @@ class PseudoShell(object):
             minion_pgid = os.getpgid(minion_process.pid)
             sys.stderr.write("minion pid:  %d\n" % minion_process.pid)
             sys.stderr.write("minion pgid: %d\n" % minion_pgid)
-            sys.stderr.write(
-                "minion sid:  %d\n" % os.getsid(minion_process.pid))
+            sys.stderr.write("minion sid:  %d\n" % os.getsid(minion_process.pid))
             sys.stderr.write("\n")
             sys.stderr.flush()
         # set up controller to ignore SIGTSTP, like a shell
@@ -332,7 +342,8 @@ class PseudoShell(object):
         # call the controller function once the minion is ready
         try:
             controller = ProcessController(
-                minion_process.pid, controller_fd, debug=kwargs.get("debug"))
+                minion_process.pid, controller_fd, debug=kwargs.get("debug")
+            )
             controller.timeout = controller_timeout
             controller.sleep_time = sleep_time
             error = controller_function(minion_process, controller, **kwargs)

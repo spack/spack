@@ -9,8 +9,11 @@ class Hudi(MavenPackage):
     Hudi manages the storage of large analytical datasets on DFS."""
 
     homepage = "https://hudi.apache.org/"
-    url      = "https://github.com/apache/hudi/archive/release-0.5.3.tar.gz"
+    url = "https://github.com/apache/hudi/archive/release-0.5.3.tar.gz"
 
-    version('0.5.3', sha256='8cbf52007fddd07eebd20c8962cd630b05a8ae4c597523fd63db837a45a0b227')
+    version(
+        "0.5.3",
+        sha256="8cbf52007fddd07eebd20c8962cd630b05a8ae4c597523fd63db837a45a0b227",
+    )
 
-    depends_on('java@8', type=('build', 'run'))
+    depends_on("java@8", type=("build", "run"))

@@ -19,8 +19,10 @@ class RRpsychi(RPackage):
     meta-analysis, even if a researcher do not report effect size in a
     published work."""
 
-    cran = 'rpsychi'
+    cran = "rpsychi"
 
-    version('0.8', sha256='9c5465f59c92431e345418aee5bc1f5bc12f843492b20ccb9f92f3bdf19a80c0')
+    version(
+        "0.8", sha256="9c5465f59c92431e345418aee5bc1f5bc12f843492b20ccb9f92f3bdf19a80c0"
+    )
 
-    depends_on('r-gtools', type=('build', 'run'))
+    depends_on("r-gtools", type=("build", "run"))

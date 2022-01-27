@@ -11,17 +11,20 @@ class Libisal(AutotoolsPackage):
     storage applications."""
 
     homepage = "https://github.com/intel/isa-l"
-    url      = "https://github.com/intel/isa-l/archive/v2.29.0.tar.gz"
+    url = "https://github.com/intel/isa-l/archive/v2.29.0.tar.gz"
 
-    version('2.29.0', sha256='832d9747ef3f0c8c05d39e3d7fd6ee5299a844e1ee7382fc8c8b52a268f36eda')
+    version(
+        "2.29.0",
+        sha256="832d9747ef3f0c8c05d39e3d7fd6ee5299a844e1ee7382fc8c8b52a268f36eda",
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
-    depends_on('nasm', type='build')
+    depends_on("nasm", type="build")
 
     def autoreconf(self, spec, prefix):
-        autogen = Executable('./autogen.sh')
+        autogen = Executable("./autogen.sh")
         autogen()

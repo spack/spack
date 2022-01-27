@@ -12,12 +12,15 @@ class PyKeyboard(PythonPackage):
     simulate key presses and much more."""
 
     homepage = "https://github.com/boppreh/keyboard"
-    pypi     = "keyboard/keyboard-0.13.5.zip"
+    pypi = "keyboard/keyboard-0.13.5.zip"
 
-    version('0.13.5', sha256='63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b')
+    version(
+        "0.13.5",
+        sha256="63ed83305955939ca5c9a73755e5cc43e8242263f5ad5fd3bb7e0b032f3d308b",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
     # depends_on('py-pyobjc', when='platform=darwin', type=('build', 'run'))
 
     # Until py-pyobjc can be created, specifying conflict with platform=darwin
-    conflicts('platform=darwin')
+    conflicts("platform=darwin")

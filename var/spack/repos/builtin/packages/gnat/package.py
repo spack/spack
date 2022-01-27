@@ -23,10 +23,14 @@ class Gnat(MakefilePackage):
     # dependencies are already in Spack.
 
     # This is the GPL release for Linux x86-64
-    version('2016', sha256='d083c01e054d0aeda7c67967306cfa5a8df12268664f9098a2d9b331aa24dfe7', extension='tar.gz',
-            url="http://mirrors.cdn.adacore.com/art/5739cefdc7a447658e0b016b")
+    version(
+        "2016",
+        sha256="d083c01e054d0aeda7c67967306cfa5a8df12268664f9098a2d9b331aa24dfe7",
+        extension="tar.gz",
+        url="http://mirrors.cdn.adacore.com/art/5739cefdc7a447658e0b016b",
+    )
 
-    phases = ['install']
+    phases = ["install"]
 
     def install(self, spec, prefix):
-        make('ins-all', 'prefix={0}'.format(prefix))
+        make("ins-all", "prefix={0}".format(prefix))

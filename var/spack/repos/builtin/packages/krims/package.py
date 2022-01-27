@@ -10,30 +10,38 @@ class Krims(CMakePackage):
     """The bucket of Krimskrams every C or C++ project needs"""
 
     homepage = "https://lazyten.org/krims"
-    url      = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
-    git      = "https://github.com/lazyten/krims.git"
+    url = "https://github.com/lazyten/krims/archive/v0.2.1.tar.gz"
+    git = "https://github.com/lazyten/krims.git"
 
-    maintainers = ['mfherbst']
+    maintainers = ["mfherbst"]
 
     #
     # Versions
     #
     version("develop", branch="master")
-    version("0.2.1", sha256="baac8de392e6c2a73a535f71596f51d4a80a08d9c0ecbf9a2d72d1d70dd17999")
+    version(
+        "0.2.1",
+        sha256="baac8de392e6c2a73a535f71596f51d4a80a08d9c0ecbf9a2d72d1d70dd17999",
+    )
 
     #
     # Variants
     #
     # Library build type
-    variant("build_type", default="DebugRelease",
-            description="The build type to build",
-            values=("Debug", "Release", "DebugRelease"))
-    variant("shared", default=True,
-            description="Build shared libraries (else the static one)")
+    variant(
+        "build_type",
+        default="DebugRelease",
+        description="The build type to build",
+        values=("Debug", "Release", "DebugRelease"),
+    )
+    variant(
+        "shared",
+        default=True,
+        description="Build shared libraries (else the static one)",
+    )
 
     # Components
-    variant("examples", default=False,
-            description="Compile examples")
+    variant("examples", default=False, description="Compile examples")
 
     #
     # Conflicts
@@ -47,7 +55,7 @@ class Krims(CMakePackage):
     # patch
     #
     # float80 is enable only x86_64
-    patch('float80.patch')
+    patch("float80.patch")
 
     #
     # Dependencies

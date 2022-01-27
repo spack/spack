@@ -18,10 +18,13 @@ class RSitmo(RPackage):
     vignette that provide additional information."""
 
     homepage = "https://github.com/coatless/sitmo"
-    url      = "https://cloud.r-project.org/src/contrib/sitmo_2.0.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/sitmo_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/sitmo"
 
-    version('2.0.1', sha256='0c90d357af334d5c99c8956739dc12623ddd87dda5efa59f4a43f7393c87ed2a')
+    version(
+        "2.0.1",
+        sha256="0c90d357af334d5c99c8956739dc12623ddd87dda5efa59f4a43f7393c87ed2a",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.13:', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.13:", type=("build", "run"))

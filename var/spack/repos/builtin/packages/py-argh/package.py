@@ -16,11 +16,14 @@ class PyArgh(PythonPackage):
     a very powerful tool; Argh just makes it easy to use."""
 
     homepage = "https://github.com/neithere/argh/"
-    pypi     = "argh/argh-0.26.2.tar.gz"
+    pypi = "argh/argh-0.26.2.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.26.2', sha256='e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65')
+    version(
+        "0.26.2",
+        sha256="e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-argparse", when="^python@:2.6", type=("build", "run"))

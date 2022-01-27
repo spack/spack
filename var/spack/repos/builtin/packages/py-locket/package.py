@@ -12,7 +12,10 @@ class PyLocket(PythonPackage):
     homepage = "https://github.com/mwilliamson/locket.py"
     pypi = "locket/locket-0.2.0.tar.gz"
 
-    version('0.2.0', sha256='1fee63c1153db602b50154684f5725564e63a0f6d09366a1cb13dffcec179fb4')
+    version(
+        "0.2.0",
+        sha256="1fee63c1153db602b50154684f5725564e63a0f6d09366a1cb13dffcec179fb4",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -43,8 +43,10 @@ def edit_package(name, repo_path, namespace):
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
     else:
-        tty.die("No package for '{0}' was found.".format(spec.name),
-                "  Use `spack create` to create a new package")
+        tty.die(
+            "No package for '{0}' was found.".format(spec.name),
+            "  Use `spack create` to create a new package",
+        )
 
     editor(path)
 
@@ -55,36 +57,55 @@ def setup_parser(subparser):
     # Various types of Spack files that can be edited
     # Edits package files by default
     excl_args.add_argument(
-        '-b', '--build-system', dest='path', action='store_const',
+        "-b",
+        "--build-system",
+        dest="path",
+        action="store_const",
         const=spack.paths.build_systems_path,
-        help="Edit the build system with the supplied name.")
+        help="Edit the build system with the supplied name.",
+    )
     excl_args.add_argument(
-        '-c', '--command', dest='path', action='store_const',
+        "-c",
+        "--command",
+        dest="path",
+        action="store_const",
         const=spack.paths.command_path,
-        help="edit the command with the supplied name")
+        help="edit the command with the supplied name",
+    )
     excl_args.add_argument(
-        '-d', '--docs', dest='path', action='store_const',
-        const=os.path.join(spack.paths.lib_path, 'docs'),
-        help="edit the docs with the supplied name")
+        "-d",
+        "--docs",
+        dest="path",
+        action="store_const",
+        const=os.path.join(spack.paths.lib_path, "docs"),
+        help="edit the docs with the supplied name",
+    )
     excl_args.add_argument(
-        '-t', '--test', dest='path', action='store_const',
+        "-t",
+        "--test",
+        dest="path",
+        action="store_const",
         const=spack.paths.test_path,
-        help="edit the test with the supplied name")
+        help="edit the test with the supplied name",
+    )
     excl_args.add_argument(
-        '-m', '--module', dest='path', action='store_const',
+        "-m",
+        "--module",
+        dest="path",
+        action="store_const",
         const=spack.paths.module_path,
-        help="edit the main spack module with the supplied name")
+        help="edit the main spack module with the supplied name",
+    )
 
     # Options for editing packages
     excl_args.add_argument(
-        '-r', '--repo', default=None,
-        help="path to repo to edit package in")
+        "-r", "--repo", default=None, help="path to repo to edit package in"
+    )
     excl_args.add_argument(
-        '-N', '--namespace', default=None,
-        help="namespace of package to edit")
+        "-N", "--namespace", default=None, help="namespace of package to edit"
+    )
 
-    subparser.add_argument(
-        'package', nargs='?', default=None, help="package name")
+    subparser.add_argument("package", nargs="?", default=None, help="package name")
 
 
 def edit(parser, args):
@@ -103,19 +124,19 @@ def edit(parser, args):
 
             path = os.path.join(path, name)
             if not os.path.exists(path):
-                files = glob.glob(path + '*')
-                blacklist = ['.pyc', '~']  # blacklist binaries and backups
-                files = list(filter(
-                    lambda x: all(s not in x for s in blacklist), files))
+                files = glob.glob(path + "*")
+                blacklist = [".pyc", "~"]  # blacklist binaries and backups
+                files = list(
+                    filter(lambda x: all(s not in x for s in blacklist), files)
+                )
                 if len(files) > 1:
-                    m = 'Multiple files exist with the name {0}.'.format(name)
-                    m += ' Please specify a suffix. Files are:\n\n'
+                    m = "Multiple files exist with the name {0}.".format(name)
+                    m += " Please specify a suffix. Files are:\n\n"
                     for f in files:
-                        m += '        ' + os.path.basename(f) + '\n'
+                        m += "        " + os.path.basename(f) + "\n"
                     tty.die(m)
                 if not files:
-                    tty.die("No file for '{0}' was found in {1}".format(name,
-                                                                        path))
+                    tty.die("No file for '{0}' was found in {1}".format(name, path))
                 path = files[0]  # already confirmed only one entry in files
 
         editor(path)

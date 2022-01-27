@@ -14,10 +14,13 @@ class Agrep(MakefilePackage):
     of Arizona."""
 
     homepage = "https://www.tgries.de/agrep"
-    url      = "https://www.tgries.de/agrep/agrep-3.41.tgz"
+    url = "https://www.tgries.de/agrep/agrep-3.41.tgz"
 
-    version('3.41', sha256='0508eafaf9725fc67cc955eb6d32ba4f50138443a4fea4275508d2c3f67a234e')
+    version(
+        "3.41",
+        sha256="0508eafaf9725fc67cc955eb6d32ba4f50138443a4fea4275508d2c3f67a234e",
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('agrep', prefix.bin)
+        install("agrep", prefix.bin)

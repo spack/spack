@@ -105,9 +105,7 @@ class SpackFormatter(Pylint):
         # get list of patterns for this error code
         pats = self.spack_errors.get(error.code, None)
         # if any pattern matches, skip line
-        if pats is not None and any(
-            (pat.search(error.physical_line) for pat in pats)
-        ):
+        if pats is not None and any((pat.search(error.physical_line) for pat in pats)):
             return
 
         # Special F811 handling
@@ -124,9 +122,7 @@ class SpackFormatter(Pylint):
         ):
             if self.file_lines is None:
                 if self.filename in {"stdin", "-", "(none)", None}:
-                    self.file_lines = pycodestyle.stdin_get_value().splitlines(
-                        True
-                    )
+                    self.file_lines = pycodestyle.stdin_get_value().splitlines(True)
                 else:
                     self.file_lines = pycodestyle.readlines(self.filename)
             for pat in self.spack_errors["F811"]:

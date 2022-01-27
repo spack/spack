@@ -12,7 +12,10 @@ class PyStestr(PythonPackage):
     homepage = "https://stestr.readthedocs.io/en/latest/"
     pypi = "stestr/stestr-2.5.1.tar.gz"
 
-    version('2.5.1', sha256='151479fdf2db9f5f492b5285f4696f2d38960639054835dbdcd4c0687122c0fd')
+    version(
+        "2.5.1",
+        sha256="151479fdf2db9f5f492b5285f4696f2d38960639054835dbdcd4c0687122c0fd",
+    )
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -7,10 +7,19 @@ class VersionTestDependencyPreferred(AutotoolsPackage):
     variant with two default values (a very low priority optimization
     criterion for clingo is to maximize their number)
     """
+
     homepage = "http://www.spack.org"
     url = "http://www.spack.org/downloads/xz-1.0.tar.gz"
 
-    version('5.2.5', sha256='5117f930900b341493827d63aa910ff5e011e0b994197c3b71c08a20228a42df')
+    version(
+        "5.2.5",
+        sha256="5117f930900b341493827d63aa910ff5e011e0b994197c3b71c08a20228a42df",
+    )
 
-    variant('libs', default='shared,static', values=('shared', 'static'),
-            multi=True, description='Build shared libs, static libs or both')
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )

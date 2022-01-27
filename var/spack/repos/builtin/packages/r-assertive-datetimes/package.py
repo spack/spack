@@ -15,11 +15,14 @@ class RAssertiveDatetimes(RPackage):
     End-users will usually want to use assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.datetimes"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.datetimes_0.0-3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/assertive.datetimes_0.0-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.datetimes"
 
-    version('0.0-3', sha256='014e2162f5a8d95138ed8330f7477e71c908a29341697c09a1b7198b7e012d94')
+    version(
+        "0.0-3",
+        sha256="014e2162f5a8d95138ed8330f7477e71c908a29341697c09a1b7198b7e012d94",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-7:', type=('build', 'run'))
-    depends_on('r-assertive-types', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-7:", type=("build", "run"))
+    depends_on("r-assertive-types", type=("build", "run"))

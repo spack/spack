@@ -8,12 +8,12 @@ from spack import *
 
 class ConfigureWarning(AutotoolsPackage):
     """This package prints output that looks like an error during configure, but
-       it actually installs successfully."""
+    it actually installs successfully."""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/configure-warning-1.0.tar.gz"
+    url = "http://www.example.com/configure-warning-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
     parallel = False
 
@@ -21,7 +21,7 @@ class ConfigureWarning(AutotoolsPackage):
         pass
 
     def configure(self, spec, prefix):
-        print('foo: No such file or directory')
+        print("foo: No such file or directory")
         return 0
 
     def build(self, spec, prefix):

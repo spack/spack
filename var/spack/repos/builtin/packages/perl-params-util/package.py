@@ -10,6 +10,9 @@ class PerlParamsUtil(PerlPackage):
     """Simple, compact and correct param-checking functions"""
 
     homepage = "https://metacpan.org/pod/Params::Util"
-    url      = "http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Params-Util-1.07.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/A/AD/ADAMK/Params-Util-1.07.tar.gz"
 
-    version('1.07', sha256='30f1ec3f2cf9ff66ae96f973333f23c5f558915bb6266881eac7423f52d7c76c')
+    version(
+        "1.07",
+        sha256="30f1ec3f2cf9ff66ae96f973333f23c5f558915bb6266881eac7423f52d7c76c",
+    )

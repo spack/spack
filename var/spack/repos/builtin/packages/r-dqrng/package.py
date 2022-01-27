@@ -21,12 +21,15 @@ class RDqrng(RPackage):
     <doi:10.1145/2063384.2063405>) as provided by the package 'sitmo'."""
 
     homepage = "https://www.daqana.org/dqrng"
-    url      = "https://cloud.r-project.org/src/contrib/dqrng_0.2.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/dqrng_0.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dqrng"
 
-    version('0.2.1', sha256='e149c105b1db31e7f46b1aebf31d911a109e380923f3696fc56a53197fc1e866')
+    version(
+        "0.2.1",
+        sha256="e149c105b1db31e7f46b1aebf31d911a109e380923f3696fc56a53197fc1e866",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.16:', type=('build', 'run'))
-    depends_on('r-bh@1.64.0-1:', type=('build', 'run'))
-    depends_on('r-sitmo@2.0.0:', type=('build', 'run'))
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.16:", type=("build", "run"))
+    depends_on("r-bh@1.64.0-1:", type=("build", "run"))
+    depends_on("r-sitmo@2.0.0:", type=("build", "run"))

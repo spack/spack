@@ -12,14 +12,17 @@ class Ray(CMakePackage, SourceforgePackage):
     homepage = "http://denovoassembler.sourceforge.net/"
     sourceforge_mirror_path = "denovoassembler/Ray-2.3.1.tar.bz2"
 
-    version('2.3.1', sha256='3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036')
+    version(
+        "2.3.1",
+        sha256="3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036",
+    )
 
-    depends_on('mpi')
+    depends_on("mpi")
 
-    @run_after('build')
+    @run_after("build")
     def make(self):
         mkdirp(prefix.bin)
-        make('PREFIX=%s' % prefix.bin)
+        make("PREFIX=%s" % prefix.bin)
 
     def install(self, spec, prefix):
-        make('install')
+        make("install")

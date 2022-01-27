@@ -15,17 +15,20 @@ class Cosign(Package):
     """
 
     homepage = "https://github.com/sigstore/cosign"
-    url      = "https://github.com/sigstore/cosign/archive/refs/tags/v1.3.1.tar.gz"
-    git      = "https://github.com/sigstore/cosign.git"
+    url = "https://github.com/sigstore/cosign/archive/refs/tags/v1.3.1.tar.gz"
+    git = "https://github.com/sigstore/cosign.git"
 
-    version('main', branch='main')
-    version('1.3.1', sha256='7f7e0af52ee8d795440e66dcc1a7a25783e22d30935f4f957779628b348f38af')
+    version("main", branch="main")
+    version(
+        "1.3.1",
+        sha256="7f7e0af52ee8d795440e66dcc1a7a25783e22d30935f4f957779628b348f38af",
+    )
 
-    depends_on("go", type='build')
+    depends_on("go", type="build")
 
     def setup_build_environment(self, env):
         # Point GOPATH at the top of the staging dir for the build step.
-        env.prepend_path('GOPATH', self.stage.path)
+        env.prepend_path("GOPATH", self.stage.path)
 
     def install(self, spec, prefix):
         go = which("go")

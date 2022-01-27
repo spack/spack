@@ -12,14 +12,17 @@ class PyTweedledum(PythonPackage):
     and alongside established tools."""
 
     homepage = "https://github.com/boschmitt/tweedledum"
-    pypi = 'tweedledum/tweedledum-1.1.1.tar.gz'
+    pypi = "tweedledum/tweedledum-1.1.1.tar.gz"
 
-    version('1.1.1', sha256='58d6f7a988b10c31be3faa1faf3e58288ef7e8159584bfa6ded45742f390309f')
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools@42:', type='build')
-    depends_on('py-scikit-build@0.12:', type='build')
-    depends_on('py-cmake@3.18:', type='build')
-    depends_on('py-ninja', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('eigen@3.3:')
-    depends_on('nlohmann-json@3.9.0:')
+    version(
+        "1.1.1",
+        sha256="58d6f7a988b10c31be3faa1faf3e58288ef7e8159584bfa6ded45742f390309f",
+    )
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-scikit-build@0.12:", type="build")
+    depends_on("py-cmake@3.18:", type="build")
+    depends_on("py-ninja", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("eigen@3.3:")
+    depends_on("nlohmann-json@3.9.0:")

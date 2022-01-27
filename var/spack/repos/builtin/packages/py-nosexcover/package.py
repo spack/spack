@@ -13,8 +13,11 @@ class PyNosexcover(PythonPackage):
     homepage = "https://github.com/cmheisel/nose-xcover"
     pypi = "nosexcover/nosexcover-1.0.11.tar.gz"
 
-    version('1.0.11', sha256='298c3c655da587f6cab8a666e9f4b150320032431062dea91353988d45c8b883')
+    version(
+        "1.0.11",
+        sha256="298c3c655da587f6cab8a666e9f4b150320032431062dea91353988d45c8b883",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-nose',        type=('build', 'run'))
-    depends_on('py-coverage@3.4:',        type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-nose", type=("build", "run"))
+    depends_on("py-coverage@3.4:", type=("build", "run"))

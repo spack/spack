@@ -12,7 +12,10 @@ class PyZict(PythonPackage):
     homepage = "https://zict.readthedocs.io/en/latest/"
     pypi = "zict/zict-1.0.0.tar.gz"
 
-    version('1.0.0', sha256='e34dd25ea97def518fb4c77f2c27078f3a7d6c965b0a3ac8fe5bdb0a8011a310')
+    version(
+        "1.0.0",
+        sha256="e34dd25ea97def518fb4c77f2c27078f3a7d6c965b0a3ac8fe5bdb0a8011a310",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-heapdict', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-heapdict", type=("build", "run"))

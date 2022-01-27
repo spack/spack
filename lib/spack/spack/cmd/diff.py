@@ -22,27 +22,27 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(
-        subparser, ['specs'])
+    arguments.add_common_arguments(subparser, ["specs"])
 
     subparser.add_argument(
-        '--json',
-        action='store_true',
+        "--json",
+        action="store_true",
         default=False,
-        dest='dump_json',
-        help="Dump json output instead of pretty printing."
+        dest="dump_json",
+        help="Dump json output instead of pretty printing.",
     )
     subparser.add_argument(
-        '--first',
-        action='store_true',
+        "--first",
+        action="store_true",
         default=False,
-        dest='load_first',
-        help="load the first match if multiple packages match the spec"
+        dest="load_first",
+        help="load the first match if multiple packages match the spec",
     )
     subparser.add_argument(
-        '-a', '--attribute',
-        action='append',
-        help="select the attributes to show (defaults to all)"
+        "-a",
+        "--attribute",
+        action="append",
+        help="select the attributes to show (defaults to all)",
     )
 
 
@@ -114,8 +114,8 @@ def print_difference(c, attributes="all", out=None):
     # Default to standard out unless another stream is provided
     out = out or sys.stdout
 
-    A = c['b_not_a']
-    B = c['a_not_b']
+    A = c["b_not_a"]
+    B = c["a_not_b"]
 
     cprint("@R{--- %s}" % c["a_name"])  # bright red
     cprint("@G{+++ %s}" % c["b_name"])  # bright green
@@ -180,8 +180,10 @@ def diff(parser, args):
     if len(args.specs) != 2:
         tty.die("You must provide two specs to diff.")
 
-    specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-             for spec in spack.cmd.parse_specs(args.specs)]
+    specs = [
+        spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
+        for spec in spack.cmd.parse_specs(args.specs)
+    ]
 
     # Calculate the comparison (c)
     color = False if args.dump_json else get_color_when()

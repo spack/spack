@@ -21,30 +21,48 @@ class RBroom(RPackage):
     homepage = "https://github.com/tidyverse/broom"
     cran = "broom"
 
-    version('0.7.10', sha256='129fd5a53abef7f42b7efac6c64ebd71269b136aa648846d640562357927464f')
-    version('0.7.9', sha256='1d5695f97b378b2b77fb8f64a4a54b72b278913d4adf9d61a7ca4f38a1c7c5fc')
-    version('0.7.3', sha256='de5650e46ca6884876b63bc401d22bef9eace671147774466406d43324aebc2f')
-    version('0.5.2', sha256='16af7b446b24bc14461efbda9bea1521cf738c778c5e48fcc7bad45660a4ac62')
-    version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
-    version('0.4.2', sha256='9f409413623cf25e7110452e6215353af5114f7044d73af182bd6c10971c5a44')
+    version(
+        "0.7.10",
+        sha256="129fd5a53abef7f42b7efac6c64ebd71269b136aa648846d640562357927464f",
+    )
+    version(
+        "0.7.9",
+        sha256="1d5695f97b378b2b77fb8f64a4a54b72b278913d4adf9d61a7ca4f38a1c7c5fc",
+    )
+    version(
+        "0.7.3",
+        sha256="de5650e46ca6884876b63bc401d22bef9eace671147774466406d43324aebc2f",
+    )
+    version(
+        "0.5.2",
+        sha256="16af7b446b24bc14461efbda9bea1521cf738c778c5e48fcc7bad45660a4ac62",
+    )
+    version(
+        "0.5.1",
+        sha256="da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e",
+    )
+    version(
+        "0.4.2",
+        sha256="9f409413623cf25e7110452e6215353af5114f7044d73af182bd6c10971c5a44",
+    )
 
-    depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r-backports', when='@0.5.0:', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-dplyr@1.0.0:', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-ellipsis', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-generics@0.0.2:', when='@0.5.1:', type=('build', 'run'))
-    depends_on('r-glue', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-purrr', when='@0.5.0:', type=('build', 'run'))
-    depends_on('r-rlang', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-tibble', when='@0.5.0:', type=('build', 'run'))
-    depends_on('r-tibble@3.0.0:', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-tidyr', type=('build', 'run'))
-    depends_on('r-tidyr@1.0.0:', when='@0.7.3:', type=('build', 'run'))
-    depends_on('r-ggplot2', when='@0.7.10:', type=('build', 'run'))
+    depends_on("r@3.1:", type=("build", "run"))
+    depends_on("r-backports", when="@0.5.0:", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-dplyr@1.0.0:", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-ellipsis", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-generics@0.0.2:", when="@0.5.1:", type=("build", "run"))
+    depends_on("r-glue", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-purrr", when="@0.5.0:", type=("build", "run"))
+    depends_on("r-rlang", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-tibble", when="@0.5.0:", type=("build", "run"))
+    depends_on("r-tibble@3.0.0:", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-tidyr", type=("build", "run"))
+    depends_on("r-tidyr@1.0.0:", when="@0.7.3:", type=("build", "run"))
+    depends_on("r-ggplot2", when="@0.7.10:", type=("build", "run"))
 
-    depends_on('r-plyr', when='@:0.4.2', type=('build', 'run'))
-    depends_on('r-psych', when='@:0.4.2', type=('build', 'run'))
-    depends_on('r-reshape2', when='@:0.5.2', type=('build', 'run'))
-    depends_on('r-nlme', when='@:0.5.2', type=('build', 'run'))
+    depends_on("r-plyr", when="@:0.4.2", type=("build", "run"))
+    depends_on("r-psych", when="@:0.4.2", type=("build", "run"))
+    depends_on("r-reshape2", when="@:0.5.2", type=("build", "run"))
+    depends_on("r-nlme", when="@:0.5.2", type=("build", "run"))

@@ -12,16 +12,19 @@ class Taskflow(CMakePackage):
     modern C++."""
 
     homepage = "https://github.com/taskflow/taskflow"
-    url      = "https://github.com/taskflow/taskflow/archive/v2.7.0.tar.gz"
-    git      = "https://github.com/taskflow/taskflow.git"
+    url = "https://github.com/taskflow/taskflow/archive/v2.7.0.tar.gz"
+    git = "https://github.com/taskflow/taskflow.git"
 
-    version('master', branch='master')
-    version('2.7.0', sha256='bc2227dcabec86abeba1fee56bb357d9d3c0ef0184f7c2275d7008e8758dfc3e')
+    version("master", branch="master")
+    version(
+        "2.7.0",
+        sha256="bc2227dcabec86abeba1fee56bb357d9d3c0ef0184f7c2275d7008e8758dfc3e",
+    )
 
     # Compiler must offer C++14 support
-    conflicts('%gcc@:4.8')
-    conflicts('%clang@:3.5')
-    conflicts('%apple-clang@:8.0.0')
+    conflicts("%gcc@:4.8")
+    conflicts("%clang@:3.5")
+    conflicts("%apple-clang@:8.0.0")
     # untested: conflicts('%intel@:15')
     # untested: conflicts('%pgi@:14')
 
@@ -29,7 +32,7 @@ class Taskflow(CMakePackage):
         try:
             self.compiler.cxx14_flag
         except UnsupportedCompilerFlag:
-            InstallError('Taskflow requires a C++14-compliant C++ compiler')
+            InstallError("Taskflow requires a C++14-compliant C++ compiler")
 
         args = []
         return args

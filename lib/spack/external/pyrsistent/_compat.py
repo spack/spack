@@ -5,7 +5,10 @@ from six import string_types
 try:
     from enum import Enum
 except:
-    class Enum(object): pass
+
+    class Enum(object):
+        pass
+
     # no objects will be instances of this class
 
 # collections compat

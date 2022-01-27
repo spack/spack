@@ -12,6 +12,9 @@ class PyDocopt(PythonPackage):
     homepage = "http://docopt.org/"
     pypi = "docopt/docopt-0.6.2.tar.gz"
 
-    version('0.6.2', sha256='49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491')
+    version(
+        "0.6.2",
+        sha256="49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

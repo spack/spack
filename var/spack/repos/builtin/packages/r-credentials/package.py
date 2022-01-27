@@ -18,14 +18,17 @@ class RCredentials(RPackage):
     with existing user credentials."""
 
     homepage = "https://docs.ropensci.org/credentials"
-    url      = "https://cloud.r-project.org/src/contrib/credentials_1.3.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/credentials_1.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/credentials"
 
-    version('1.3.0', sha256='c119ec26fd97b977c3b0cd1eb8fad3c59b84df6262c3adbf5ee9f3d6c9903ff1')
+    version(
+        "1.3.0",
+        sha256="c119ec26fd97b977c3b0cd1eb8fad3c59b84df6262c3adbf5ee9f3d6c9903ff1",
+    )
 
-    depends_on('r-openssl@1.3:', type=('build', 'run'))
-    depends_on('r-sys@2.1:', type=('build', 'run'))
-    depends_on('r-curl', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-askpass', type=('build', 'run'))
-    depends_on('git', type='run')
+    depends_on("r-openssl@1.3:", type=("build", "run"))
+    depends_on("r-sys@2.1:", type=("build", "run"))
+    depends_on("r-curl", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"))
+    depends_on("r-askpass", type=("build", "run"))
+    depends_on("git", type="run")

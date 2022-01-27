@@ -16,11 +16,14 @@ class RRncl(RPackage):
     'read_newick_phylo()' and 'read_nexus_phylo()'."""
 
     homepage = "https://github.com/fmichonneau/rncl"
-    url      = "https://cloud.r-project.org/src/contrib/rncl_0.8.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rncl_0.8.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rncl"
 
-    version('0.8.4', sha256='6b19d0dd9bb08ecf99766be5ad684bcd1894d1cd9291230bdd709dbd3396496b')
+    version(
+        "0.8.4",
+        sha256="6b19d0dd9bb08ecf99766be5ad684bcd1894d1cd9291230bdd709dbd3396496b",
+    )
 
-    depends_on('r@3.1.1:', type=('build', 'run'))
-    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
-    depends_on('r-progress@1.1.2:', type=('build', 'run'))
+    depends_on("r@3.1.1:", type=("build", "run"))
+    depends_on("r-rcpp@0.11.0:", type=("build", "run"))
+    depends_on("r-progress@1.1.2:", type=("build", "run"))

@@ -42,24 +42,25 @@ class MakefilePackage(PackageBase):
         |                                               | Makefile is located|
         +-----------------------------------------------+--------------------+
     """
+
     #: Phases of a package that is built with an hand-written Makefile
-    phases = ['edit', 'build', 'install']
+    phases = ["edit", "build", "install"]
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'MakefilePackage'
+    build_system_class = "MakefilePackage"
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
     build_targets = []  # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
     #: phase
-    install_targets = ['install']
+    install_targets = ["install"]
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['check']
+    build_time_test_callbacks = ["check"]
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['installcheck']
+    install_time_test_callbacks = ["installcheck"]
 
     @property
     def build_directory(self):
@@ -73,7 +74,7 @@ class MakefilePackage(PackageBase):
         """Edits the Makefile before calling make. This phase cannot
         be defaulted.
         """
-        tty.msg('Using default implementation: skipping edit phase.')
+        tty.msg("Using default implementation: skipping edit phase.")
 
     def build(self, spec, prefix):
         """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
@@ -89,27 +90,27 @@ class MakefilePackage(PackageBase):
         with working_dir(self.build_directory):
             inspect.getmodule(self).make(*self.install_targets)
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
         and runs them if found.
         """
         with working_dir(self.build_directory):
-            self._if_make_target_execute('test')
-            self._if_make_target_execute('check')
+            self._if_make_target_execute("test")
+            self._if_make_target_execute("check")
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    run_after("install")(PackageBase._run_default_install_time_test_callbacks)
 
     def installcheck(self):
         """Searches the Makefile for an ``installcheck`` target
         and runs it if found.
         """
         with working_dir(self.build_directory):
-            self._if_make_target_execute('installcheck')
+            self._if_make_target_execute("installcheck")
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after('install')(PackageBase.apply_macos_rpath_fixups)
+    run_after("install")(PackageBase.apply_macos_rpath_fixups)

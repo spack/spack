@@ -12,9 +12,12 @@ class PyEinops(PythonPackage):
     Supports numpy, pytorch, tensorflow, and others."""
 
     homepage = "https://github.com/arogozhnikov/einops"
-    pypi     = "einops/einops-0.3.2.tar.gz"
+    pypi = "einops/einops-0.3.2.tar.gz"
 
-    version('0.3.2', sha256='5200e413539f0377f4177ef00dc019968f4177c49b1db3e836c7883df2a5fe2e')
+    version(
+        "0.3.2",
+        sha256="5200e413539f0377f4177ef00dc019968f4177c49b1db3e836c7883df2a5fe2e",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

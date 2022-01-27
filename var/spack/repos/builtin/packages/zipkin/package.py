@@ -11,10 +11,19 @@ class Zipkin(MavenPackage):
     of this data."""
 
     homepage = "https://zipkin.io/"
-    url      = "https://github.com/openzipkin/zipkin/archive/2.21.5.tar.gz"
+    url = "https://github.com/openzipkin/zipkin/archive/2.21.5.tar.gz"
 
-    version('2.21.5', sha256='e643a810f82f9ea50e2cb6847694c7645507d3deae77685a3a1bb841e0f885a2')
-    version('2.21.4', sha256='ee7b0110b3852479c925b6429ff278aa38b1d5da27f4762891b1f863e67bdad5')
-    version('2.21.3', sha256='02526e2ba4de85938b510cb2db01865ec46cdad53157862c39fa5e9b6cbd15b6')
+    version(
+        "2.21.5",
+        sha256="e643a810f82f9ea50e2cb6847694c7645507d3deae77685a3a1bb841e0f885a2",
+    )
+    version(
+        "2.21.4",
+        sha256="ee7b0110b3852479c925b6429ff278aa38b1d5da27f4762891b1f863e67bdad5",
+    )
+    version(
+        "2.21.3",
+        sha256="02526e2ba4de85938b510cb2db01865ec46cdad53157862c39fa5e9b6cbd15b6",
+    )
 
-    depends_on('maven@1.8:14', type='build')
+    depends_on("maven@1.8:14", type="build")

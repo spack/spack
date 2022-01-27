@@ -12,19 +12,20 @@ class Libxt(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXt"
     xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
-    version('1.1.5', sha256='b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3')
+    version(
+        "1.1.5",
+        sha256="b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3",
+    )
 
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libx11')
+    depends_on("libsm")
+    depends_on("libice")
+    depends_on("libx11")
 
-    depends_on('xproto')
-    depends_on('kbproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto")
+    depends_on("kbproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")
 
     @property
     def libs(self):
-        return find_libraries(
-            'libXt', root=self.prefix, shared=True, recursive=True
-        )
+        return find_libraries("libXt", root=self.prefix, shared=True, recursive=True)

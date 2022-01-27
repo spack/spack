@@ -17,35 +17,46 @@ class Superchic(MakefilePackage):
     """
 
     homepage = "https://superchic.hepforge.org/"
-    url      = "https://superchic.hepforge.org/superchic4.01.tar.gz"
+    url = "https://superchic.hepforge.org/superchic4.01.tar.gz"
 
-    version('4.01', sha256='2d690e1cdb0fd0ee345028b0d823a76c8d93156aaa0c9cd1ecb5f18cde75acd6')
-    version('3.06', sha256='17b4f56e85634f3c9708d5263772d7035fe4d7fb91a11bbffe889e0860efbd02')
-    version('3.05', sha256='032f5c784f284ca02003a990234b099f61cd125791d56715680cd342e55c7da1')
+    version(
+        "4.01",
+        sha256="2d690e1cdb0fd0ee345028b0d823a76c8d93156aaa0c9cd1ecb5f18cde75acd6",
+    )
+    version(
+        "3.06",
+        sha256="17b4f56e85634f3c9708d5263772d7035fe4d7fb91a11bbffe889e0860efbd02",
+    )
+    version(
+        "3.05",
+        sha256="032f5c784f284ca02003a990234b099f61cd125791d56715680cd342e55c7da1",
+    )
 
-    depends_on('lhapdf')
-    depends_on('apfel', when='@4.01:')
+    depends_on("lhapdf")
+    depends_on("apfel", when="@4.01:")
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('makefile')
-        makefile.filter('LHAPDFLIB = .*',
-                        'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
-        if self.spec.satisfies('@4.01:'):
-            makefile.filter('APFELLIB = .*',
-                            'APFELLIB = ' + self.spec['apfel'].prefix.lib)
+        makefile = FileFilter("makefile")
+        makefile.filter(
+            "LHAPDFLIB = .*", "LHAPDFLIB = " + self.spec["lhapdf"].prefix.lib
+        )
+        if self.spec.satisfies("@4.01:"):
+            makefile.filter(
+                "APFELLIB = .*", "APFELLIB = " + self.spec["apfel"].prefix.lib
+            )
 
     def build(self, spec, prefix):
-        make('PWD=' + self.build_directory)
+        make("PWD=" + self.build_directory)
 
     def install(self, spec, prefix):
         mkdirp(self.prefix.bin)
-        install_tree('bin', self.prefix.bin)
+        install_tree("bin", self.prefix.bin)
 
         mkdirp(self.prefix.lib)
-        install_tree('lib', self.prefix.lib)
+        install_tree("lib", self.prefix.lib)
 
-        if self.spec.satisfies('@3.05:'):
-            mkdirp(join_path(self.prefix, 'src', 'inc'))
-            install_tree(join_path('src', 'inc'), join_path(self.prefix, 'src', 'inc'))
-            mkdirp(join_path(self.prefix, 'obj'))
-            install_tree('obj', join_path(self.prefix, 'obj'))
+        if self.spec.satisfies("@3.05:"):
+            mkdirp(join_path(self.prefix, "src", "inc"))
+            install_tree(join_path("src", "inc"), join_path(self.prefix, "src", "inc"))
+            mkdirp(join_path(self.prefix, "obj"))
+            install_tree("obj", join_path(self.prefix, "obj"))

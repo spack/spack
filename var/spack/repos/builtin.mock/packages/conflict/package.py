@@ -7,16 +7,16 @@ from spack import *
 
 
 class Conflict(Package):
-    homepage = 'https://github.com/tgamblin/callpath'
-    url = 'http://github.com/tgamblin/callpath-1.0.tar.gz'
+    homepage = "https://github.com/tgamblin/callpath"
+    url = "http://github.com/tgamblin/callpath-1.0.tar.gz"
 
-    version(0.8, '0123456789abcdef0123456789abcdef')
-    version(0.9, '0123456789abcdef0123456789abcdef')
-    version(1.0, '0123456789abcdef0123456789abcdef')
+    version(0.8, "0123456789abcdef0123456789abcdef")
+    version(0.9, "0123456789abcdef0123456789abcdef")
+    version(1.0, "0123456789abcdef0123456789abcdef")
 
-    variant('foo', default=True, description='')
+    variant("foo", default=True, description="")
 
-    conflicts('%clang', when='+foo')
+    conflicts("%clang", when="+foo")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
@@ -24,4 +24,4 @@ class Conflict(Package):
         make("install")
 
     def setup_environment(self, senv, renv):
-        renv.set('FOOBAR', self.name)
+        renv.set("FOOBAR", self.name)

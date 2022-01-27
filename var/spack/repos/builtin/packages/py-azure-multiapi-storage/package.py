@@ -11,13 +11,16 @@ class PyAzureMultiapiStorage(PythonPackage):
     homepage = "https://github.com/Azure/azure-multiapi-storage-python"
     pypi = "azure-multiapi-storage/azure-multiapi-storage-0.3.5.tar.gz"
 
-    version('0.3.5', sha256='71c238c785786a159b3ffd587a5e7fa1d9a517b66b592ae277fed73a9fbfa2b0')
+    version(
+        "0.3.5",
+        sha256="71c238c785786a159b3ffd587a5e7fa1d9a517b66b592ae277fed73a9fbfa2b0",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-azure-common', type=('build', 'run'))
-    depends_on('py-cryptography', type=('build', 'run'))
-    depends_on('py-python-dateutil', type=('build', 'run'))
-    depends_on('py-requests', type=('build', 'run'))
-    depends_on('py-azure-core', type=('build', 'run'))
-    depends_on('py-futures', when='^python@:2', type=('build', 'run'))
-    depends_on('py-azure-nspkg', when='^python@:2', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-azure-common", type=("build", "run"))
+    depends_on("py-cryptography", type=("build", "run"))
+    depends_on("py-python-dateutil", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
+    depends_on("py-azure-core", type=("build", "run"))
+    depends_on("py-futures", when="^python@:2", type=("build", "run"))
+    depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))

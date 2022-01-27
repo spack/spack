@@ -10,9 +10,12 @@ class PyRply(PythonPackage):
     """A pure Python Lex/Yacc that works with RPython."""
 
     homepage = "https://github.com/alex/rply/"
-    pypi     = "rply/rply-0.7.8.tar.gz"
+    pypi = "rply/rply-0.7.8.tar.gz"
 
-    version('0.7.8', sha256='2a808ac25a4580a9991fc304d64434e299a8fc75760574492f242cbb5bb301c9')
+    version(
+        "0.7.8",
+        sha256="2a808ac25a4580a9991fc304d64434e299a8fc75760574492f242cbb5bb301c9",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-appdirs', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-appdirs", type=("build", "run"))

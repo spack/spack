@@ -10,19 +10,19 @@ class Elsdc(MakefilePackage):
     """ELSDc: Ellipse and Line Segment Detector, with Continuous validation."""
 
     homepage = "http://ubee.enseeiht.fr/vision/ELSD/"
-    git      = "https://github.com/viorik/ELSDc.git"
+    git = "https://github.com/viorik/ELSDc.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on("blas")
+    depends_on("lapack")
 
     def edit(self, spec, prefix):
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas = spec["lapack"].libs + spec["blas"].libs
 
-        makefile = FileFilter('src/Makefile')
-        makefile.filter('-llapack', lapack_blas.link_flags)
+        makefile = FileFilter("src/Makefile")
+        makefile.filter("-llapack", lapack_blas.link_flags)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('elsdc', prefix.bin)
+        install("elsdc", prefix.bin)

@@ -4,9 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class Mvdefaults(Package):
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/mvdefaults-1.0.tar.gz"
+    url = "http://www.example.com/mvdefaults-1.0.tar.gz"
 
-    version('1.0', 'abcdef1234567890abcdef1234567890')
+    version("1.0", "abcdef1234567890abcdef1234567890")
 
-    variant('foo', values=('a', 'b', 'c'), default=('a', 'b', 'c'),
-            multi=True, description='')
+    variant(
+        "foo",
+        values=("a", "b", "c"),
+        default=("a", "b", "c"),
+        multi=True,
+        description="",
+    )

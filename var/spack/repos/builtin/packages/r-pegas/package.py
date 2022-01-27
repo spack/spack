@@ -18,13 +18,16 @@ class RPegas(RPackage):
     median-joining networks."""
 
     homepage = "http://ape-package.ird.fr/pegas.html"
-    url      = "https://cloud.r-project.org/src/contrib/pegas_0.14.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/pegas_0.14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pegas"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.14', sha256='7df90e6c4a69e8dbed2b3f68b18f1975182475bf6f86d4159256b52fd5332053')
+    version(
+        "0.14",
+        sha256="7df90e6c4a69e8dbed2b3f68b18f1975182475bf6f86d4159256b52fd5332053",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-ape@5.3-11:', type=('build', 'run'))
-    depends_on('r-adegenet', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-ape@5.3-11:", type=("build", "run"))
+    depends_on("r-adegenet", type=("build", "run"))

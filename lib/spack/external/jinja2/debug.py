@@ -214,7 +214,6 @@ if sys.version_info >= (3, 7):
         tb.tb_next = tb_next
         return tb
 
-
 elif PYPY:
     # PyPy might have special support, and won't work with ctypes.
     try:
@@ -235,7 +234,6 @@ elif PYPY:
                 return op.delegate()
 
             return tputil.make_proxy(controller, obj=tb)
-
 
 else:
     # Use ctypes to assign tb_next at the C level since it's read-only

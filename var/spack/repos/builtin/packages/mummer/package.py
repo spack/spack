@@ -10,42 +10,66 @@ class Mummer(Package):
     """MUMmer is a system for rapidly aligning entire genomes."""
 
     homepage = "http://mummer.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download"
+    url = "https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download"
 
-    version('3.23', sha256='1efad4f7d8cee0d8eaebb320a2d63745bb3a160bb513a15ef7af46f330af662f')
+    version(
+        "3.23",
+        sha256="1efad4f7d8cee0d8eaebb320a2d63745bb3a160bb513a15ef7af46f330af662f",
+    )
 
-    depends_on('gnuplot')
-    depends_on('perl', type=('build', 'run'))
+    depends_on("gnuplot")
+    depends_on("perl", type=("build", "run"))
 
-    patch('Makefile.patch')
-    patch('scripts-Makefile.patch')
+    patch("Makefile.patch")
+    patch("scripts-Makefile.patch")
 
     def patch(self):
         """Fix mummerplot's use of defined on hashes (deprecated
-           since perl@5.10, made illegal in perl@5.20."""
+        since perl@5.10, made illegal in perl@5.20."""
 
-        kwargs = {'string': True}
-        filter_file('defined (%', '(%', 'scripts/mummerplot.pl',
-                    **kwargs)
+        kwargs = {"string": True}
+        filter_file("defined (%", "(%", "scripts/mummerplot.pl", **kwargs)
 
     def install(self, spec, prefix):
         if self.run_tests:
-            make('check')
-        make('INSTALL_TOP_DIR={0}'.format(prefix))
+            make("check")
+        make("INSTALL_TOP_DIR={0}".format(prefix))
         bd = prefix.bin
-        abd = join_path(prefix, 'aux_bin')
-        sd = join_path(prefix, 'scripts')
+        abd = join_path(prefix, "aux_bin")
+        sd = join_path(prefix, "scripts")
         mkdirp(bd)
         mkdirp(abd)
         mkdirp(sd)
 
-        bins = ["show-tiling", "show-snps", "show-coords", "show-aligns",
-                "show-diff", "delta-filter", "combineMUMs", "mummer",
-                "repeat-match", "annotate", "mgaps", "gaps", "dnadiff",
-                "nucmer2xfig", "run-mummer3", "mummerplot", "promer",
-                "run-mummer1", "nucmer", "mapview", "exact-tandems"]
-        aux_bins = ["aux_bin/postnuc", "aux_bin/postpro",
-                    "aux_bin/prenuc", "aux_bin/prepro"]
+        bins = [
+            "show-tiling",
+            "show-snps",
+            "show-coords",
+            "show-aligns",
+            "show-diff",
+            "delta-filter",
+            "combineMUMs",
+            "mummer",
+            "repeat-match",
+            "annotate",
+            "mgaps",
+            "gaps",
+            "dnadiff",
+            "nucmer2xfig",
+            "run-mummer3",
+            "mummerplot",
+            "promer",
+            "run-mummer1",
+            "nucmer",
+            "mapview",
+            "exact-tandems",
+        ]
+        aux_bins = [
+            "aux_bin/postnuc",
+            "aux_bin/postpro",
+            "aux_bin/prenuc",
+            "aux_bin/prepro",
+        ]
         scripts = ["scripts/Foundation.pm"]
 
         for f in bins:

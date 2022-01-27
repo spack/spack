@@ -16,8 +16,8 @@ def sort_yaml_obj(obj):
     if isinstance(obj, Mapping):
         return syaml.syaml_dict(
             (k, sort_yaml_obj(v))
-            for k, v in
-            sorted(obj.items(), key=(lambda item: str(item[0]))))
+            for k, v in sorted(obj.items(), key=(lambda item: str(item[0])))
+        )
 
     if isinstance(obj, Sequence) and not isinstance(obj, str):
         return syaml.syaml_list(sort_yaml_obj(x) for x in obj)
@@ -44,24 +44,18 @@ def matches(obj, proto):
             return False
 
         return all(
-            (key in obj and matches(obj[key], val))
-            for key, val in proto.items()
+            (key in obj and matches(obj[key], val)) for key, val in proto.items()
         )
 
-    if (isinstance(obj, Sequence) and
-            not isinstance(obj, str)):
+    if isinstance(obj, Sequence) and not isinstance(obj, str):
 
-        if not (isinstance(proto, Sequence) and
-                not isinstance(proto, str)):
+        if not (isinstance(proto, Sequence) and not isinstance(proto, str)):
             return False
 
         if len(obj) != len(proto):
             return False
 
-        return all(
-            matches(obj[index], val)
-            for index, val in enumerate(proto)
-        )
+        return all(matches(obj[index], val) for index, val in enumerate(proto))
 
     return obj == proto
 
@@ -85,8 +79,7 @@ def subkeys(obj, proto):
 
     Otherwise, obj is returned.
     """
-    if not (isinstance(obj, Mapping) and
-            isinstance(proto, Mapping)):
+    if not (isinstance(obj, Mapping) and isinstance(proto, Mapping)):
         return obj
 
     new_obj = {}
@@ -95,8 +88,7 @@ def subkeys(obj, proto):
             new_obj[key] = value
             continue
 
-        if (matches(value, proto[key]) and
-            matches(proto[key], value)):
+        if matches(value, proto[key]) and matches(proto[key], value):
             continue
 
         if isinstance(value, Mapping):
@@ -124,19 +116,19 @@ def add_extends(yaml, key):
     Otherwise, yaml is left unchanged.
     """
 
-    has_key = ('extends' in yaml)
-    extends = yaml.get('extends')
+    has_key = "extends" in yaml
+    extends = yaml.get("extends")
 
     if has_key and not isinstance(extends, (str, Sequence)):
         return
 
     if extends is None:
-        yaml['extends'] = key
+        yaml["extends"] = key
         return
 
     if isinstance(extends, str):
         if extends != key:
-            yaml['extends'] = [extends, key]
+            yaml["extends"] = [extends, key]
         return
 
     if key not in extends:
@@ -164,11 +156,11 @@ def common_subobject(yaml, sub):
     if not match_list:
         return yaml, None
 
-    common_prefix = '.c'
+    common_prefix = ".c"
     common_index = 0
 
     while True:
-        common_key = ''.join((common_prefix, str(common_index)))
+        common_key = "".join((common_prefix, str(common_index)))
         if common_key not in yaml:
             break
         common_index += 1
@@ -195,22 +187,20 @@ def print_delta(name, old, new, applied=None):
     reldelta = (reldelta // 10, reldelta % 10)
 
     if applied is None:
-        applied = (new <= old)
+        applied = new <= old
 
-    print('\n'.join((
-        '{0} {1}:',
-        '  before: {2: 10d}',
-        '  after : {3: 10d}',
-        '  delta : {4:+10d} ({5:=+3d}.{6}%)',
-    )).format(
-        name,
-        ('+' if applied else 'x'),
-        old,
-        new,
-        delta,
-        reldelta[0],
-        reldelta[1]
-    ))
+    print(
+        "\n".join(
+            (
+                "{0} {1}:",
+                "  before: {2: 10d}",
+                "  after : {3: 10d}",
+                "  delta : {4:+10d} ({5:=+3d}.{6}%)",
+            )
+        ).format(
+            name, ("+" if applied else "x"), old, new, delta, reldelta[0], reldelta[1]
+        )
+    )
 
 
 def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
@@ -243,13 +233,11 @@ def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
         # pass was not applied
         return (yaml, new_yaml, False, other_results)
 
-    pre_size = len(syaml.dump_config(
-        sort_yaml_obj(yaml), default_flow_style=True))
-    post_size = len(syaml.dump_config(
-        sort_yaml_obj(new_yaml), default_flow_style=True))
+    pre_size = len(syaml.dump_config(sort_yaml_obj(yaml), default_flow_style=True))
+    post_size = len(syaml.dump_config(sort_yaml_obj(new_yaml), default_flow_style=True))
 
     # pass makes the size worse: not applying
-    applied = (post_size <= pre_size)
+    applied = post_size <= pre_size
     if applied:
         yaml, new_yaml = new_yaml, yaml
 
@@ -297,70 +285,70 @@ def build_histogram(iterator, key):
         buckets[value_hash] += 1
         values[value_hash] = val
 
-    return [(h, buckets[h], float(buckets[h]) / num_objects, values[h])
-            for h in sorted(buckets.keys(), key=lambda k: -buckets[k])]
+    return [
+        (h, buckets[h], float(buckets[h]) / num_objects, values[h])
+        for h in sorted(buckets.keys(), key=lambda k: -buckets[k])
+    ]
 
 
 def optimizer(yaml):
-    original_size = len(syaml.dump_config(
-        sort_yaml_obj(yaml), default_flow_style=True))
+    original_size = len(syaml.dump_config(sort_yaml_obj(yaml), default_flow_style=True))
 
     # try factoring out commonly repeated portions
     common_job = {
-        'variables': {
-            'SPACK_COMPILER_ACTION': 'NONE',
-            'SPACK_RELATED_BUILDS_CDASH': ''
+        "variables": {
+            "SPACK_COMPILER_ACTION": "NONE",
+            "SPACK_RELATED_BUILDS_CDASH": "",
         },
-
-        'after_script': ['rm -rf "./spack"'],
-
-        'artifacts': {
-            'paths': ['jobs_scratch_dir', 'cdash_report'],
-            'when': 'always'
-        },
+        "after_script": ['rm -rf "./spack"'],
+        "artifacts": {"paths": ["jobs_scratch_dir", "cdash_report"], "when": "always"},
     }
 
     # look for a list of tags that appear frequently
-    _, count, proportion, tags = next(iter(
-        build_histogram(yaml.values(), 'tags')),
-        (None,) * 4)
+    _, count, proportion, tags = next(
+        iter(build_histogram(yaml.values(), "tags")), (None,) * 4
+    )
 
     # If a list of tags is found, and there are more than one job that uses it,
     # *and* the jobs that do use it represent at least 70% of all jobs, then
     # add the list to the prototype object.
     if tags and count > 1 and proportion >= 0.70:
-        common_job['tags'] = tags
+        common_job["tags"] = tags
 
     # apply common object factorization
     yaml, other, applied, rest = try_optimization_pass(
-        'general common object factorization',
-        yaml, common_subobject, common_job)
+        "general common object factorization", yaml, common_subobject, common_job
+    )
 
     # look for a common script, and try factoring that out
-    _, count, proportion, script = next(iter(
-        build_histogram(yaml.values(), 'script')),
-        (None,) * 4)
+    _, count, proportion, script = next(
+        iter(build_histogram(yaml.values(), "script")), (None,) * 4
+    )
 
     if script and count > 1 and proportion >= 0.70:
         yaml, other, applied, rest = try_optimization_pass(
-            'script factorization',
-            yaml, common_subobject, {'script': script})
+            "script factorization", yaml, common_subobject, {"script": script}
+        )
 
     # look for a common before_script, and try factoring that out
-    _, count, proportion, script = next(iter(
-        build_histogram(yaml.values(), 'before_script')),
-        (None,) * 4)
+    _, count, proportion, script = next(
+        iter(build_histogram(yaml.values(), "before_script")), (None,) * 4
+    )
 
     if script and count > 1 and proportion >= 0.70:
         yaml, other, applied, rest = try_optimization_pass(
-            'before_script factorization',
-            yaml, common_subobject, {'before_script': script})
+            "before_script factorization",
+            yaml,
+            common_subobject,
+            {"before_script": script},
+        )
 
     # Look specifically for the SPACK_ROOT_SPEC environment variables.
     # Try to factor them out.
-    h = build_histogram((
-        getattr(val, 'get', lambda *args: {})('variables')
-        for val in yaml.values()), 'SPACK_ROOT_SPEC')
+    h = build_histogram(
+        (getattr(val, "get", lambda *args: {})("variables") for val in yaml.values()),
+        "SPACK_ROOT_SPEC",
+    )
 
     # In this case, we try to factor out *all* instances of the SPACK_ROOT_SPEC
     # environment variable; not just the one that appears with the greatest
@@ -375,15 +363,15 @@ def optimizer(yaml):
         counter += 1
 
         yaml, other, applied, rest = try_optimization_pass(
-            'SPACK_ROOT_SPEC factorization ({count})'.format(count=counter),
+            "SPACK_ROOT_SPEC factorization ({count})".format(count=counter),
             yaml,
             common_subobject,
-            {'variables': {'SPACK_ROOT_SPEC': spec}})
+            {"variables": {"SPACK_ROOT_SPEC": spec}},
+        )
 
-    new_size = len(syaml.dump_config(
-        sort_yaml_obj(yaml), default_flow_style=True))
+    new_size = len(syaml.dump_config(sort_yaml_obj(yaml), default_flow_style=True))
 
-    print('\n')
-    print_delta('overall summary', original_size, new_size)
-    print('\n')
+    print("\n")
+    print_delta("overall summary", original_size, new_size)
+    print("\n")
     return yaml

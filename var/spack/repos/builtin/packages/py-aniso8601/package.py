@@ -10,8 +10,11 @@ class PyAniso8601(PythonPackage):
     """A library for parsing ISO 8601 strings."""
 
     homepage = "https://bitbucket.org/nielsenb/aniso8601"
-    pypi     = "aniso8601/aniso8601-9.0.1.tar.gz"
+    pypi = "aniso8601/aniso8601-9.0.1.tar.gz"
 
-    version('9.0.1', sha256='72e3117667eedf66951bb2d93f4296a56b94b078a8a95905a052611fb3f1b973')
+    version(
+        "9.0.1",
+        sha256="72e3117667eedf66951bb2d93f4296a56b94b078a8a95905a052611fb3f1b973",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

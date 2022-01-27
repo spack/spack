@@ -17,13 +17,18 @@ class Teckit(AutotoolsPackage):
     descriptions."""
 
     homepage = "https://scripts.sil.org/cms/scripts/page.php?cat_id=TECkit"
-    url      = "https://github.com/silnrsi/teckit/releases/download/v2.5.9/teckit-2.5.9.tar.gz"
+    url = (
+        "https://github.com/silnrsi/teckit/releases/download/v2.5.9/teckit-2.5.9.tar.gz"
+    )
 
-    version('2.5.9', sha256='6823fb3142efa34e5d74de35d37cdf4724efbf577f5ff15a8e2b364e6ef47d3d')
+    version(
+        "2.5.9",
+        sha256="6823fb3142efa34e5d74de35d37cdf4724efbf577f5ff15a8e2b364e6ef47d3d",
+    )
 
-    depends_on('expat')
-    depends_on('zlib')
+    depends_on("expat")
+    depends_on("zlib")
 
     def configure_args(self):
-        args = ['--with-system-zlib']
+        args = ["--with-system-zlib"]
         return args

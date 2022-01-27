@@ -19,12 +19,18 @@ class RSpdata(RPackage):
     designed to illustrate point pattern analysis techniques."""
 
     homepage = "https://github.com/Nowosad/spData"
-    url      = "https://cloud.r-project.org/src/contrib/spData_0.3.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/spData_0.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spData"
 
-    version('0.3.8', sha256='7a61268db4fdbfb004b77d36e953cbb3fdfdac7e8bb6c500628ec6c592c79ad6')
-    version('0.3.0', sha256='de24ea659541a6c795cd26a1f6a213e15061af9c97a24cba1c24ce30c6c24c98')
+    version(
+        "0.3.8",
+        sha256="7a61268db4fdbfb004b77d36e953cbb3fdfdac7e8bb6c500628ec6c592c79ad6",
+    )
+    version(
+        "0.3.0",
+        sha256="de24ea659541a6c795cd26a1f6a213e15061af9c97a24cba1c24ce30c6c24c98",
+    )
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-sp', when='@0.3.8:', type=('build', 'run'))
-    depends_on('r-raster', when='@0.3.8:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-sp", when="@0.3.8:", type=("build", "run"))
+    depends_on("r-raster", when="@0.3.8:", type=("build", "run"))

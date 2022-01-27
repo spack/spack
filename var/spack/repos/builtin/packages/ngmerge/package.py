@@ -10,12 +10,14 @@ class Ngmerge(MakefilePackage):
     """Merging paired-end reads and removing adapters."""
 
     homepage = "https://github.com/jsh58/NGmerge"
-    url      = "https://github.com/jsh58/NGmerge/archive/v0.3.tar.gz"
+    url = "https://github.com/jsh58/NGmerge/archive/v0.3.tar.gz"
 
-    version('0.3', sha256='5928f727feebd0d1bcdbee0e631ba06fbe9ce88328bd58b6c8bf4e54cc742ac3')
+    version(
+        "0.3", sha256="5928f727feebd0d1bcdbee0e631ba06fbe9ce88328bd58b6c8bf4e54cc742ac3"
+    )
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('NGmerge', prefix.bin)
+        install("NGmerge", prefix.bin)

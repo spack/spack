@@ -16,8 +16,14 @@ if sys.version_info >= (3, 3):
 else:
     from collections import MutableSet
 
-__all__ = ["CommentedSeq", "CommentedMap", "CommentedOrderedMap",
-           "CommentedSet", 'comment_attrib', 'merge_attrib']
+__all__ = [
+    "CommentedSeq",
+    "CommentedMap",
+    "CommentedOrderedMap",
+    "CommentedSet",
+    "comment_attrib",
+    "merge_attrib",
+]
 
 
 try:
@@ -25,12 +31,12 @@ try:
 except ImportError:
     from ruamel.yaml.compat import ordereddict
 
-comment_attrib = '_yaml_comment'
-format_attrib = '_yaml_format'
-line_col_attrib = '_yaml_line_col'
-anchor_attrib = '_yaml_anchor'
-merge_attrib = '_yaml_merge'
-tag_attrib = '_yaml_tag'
+comment_attrib = "_yaml_comment"
+format_attrib = "_yaml_format"
+line_col_attrib = "_yaml_line_col"
+anchor_attrib = "_yaml_anchor"
+merge_attrib = "_yaml_merge"
+tag_attrib = "_yaml_tag"
 
 
 class Comment(object):
@@ -49,11 +55,12 @@ class Comment(object):
 
     def __str__(self):
         if self._end:
-            end = ',\n  end=' + str(self._end)
+            end = ",\n  end=" + str(self._end)
         else:
-            end = ''
+            end = ""
         return "Comment(comment={0},\n  items={1}{2})".format(
-            self.comment, self._items, end)
+            self.comment, self._items, end
+        )
 
     @property
     def items(self):
@@ -149,6 +156,7 @@ class Anchor(object):
 
 class Tag(object):
     """store tag information for roundtripping"""
+
     attrib = tag_attrib
 
     def __init__(self):
@@ -193,12 +201,13 @@ class CommentedBase(object):
         """
         from .error import Mark
         from .tokens import CommentToken
+
         pre_comments = self._yaml_get_pre_comment()
-        if comment[-1] == '\n':
+        if comment[-1] == "\n":
             comment = comment[:-1]  # strip final newline if there
         start_mark = Mark(None, None, None, indent, None, None)
-        for com in comment.split('\n'):
-            pre_comments.append(CommentToken('# ' + com + '\n', start_mark, None))
+        for com in comment.split("\n"):
+            pre_comments.append(CommentToken("# " + com + "\n", start_mark, None))
 
     @property
     def fa(self):
@@ -217,13 +226,14 @@ class CommentedBase(object):
         """
         from .tokens import CommentToken
         from .error import Mark
+
         if column is None:
             column = self._yaml_get_column(key)
-        if comment[0] != '#':
-            comment = '# ' + comment
+        if comment[0] != "#":
+            comment = "# " + comment
         if column is None:
-            if comment[0] == '#':
-                comment = ' ' + comment
+            if comment[0] == "#":
+                comment = " " + comment
                 column = 0
         start_mark = Mark(None, None, None, column, None, None)
         ct = [CommentToken(comment, start_mark, None), None]
@@ -271,7 +281,9 @@ class CommentedBase(object):
 
 
 class CommentedSeq(list, CommentedBase):
-    __slots__ = [Comment.attrib, ]
+    __slots__ = [
+        Comment.attrib,
+    ]
 
     def _yaml_add_comment(self, comment, key=NoComment):
         if key is not NoComment:
@@ -291,7 +303,7 @@ class CommentedSeq(list, CommentedBase):
         for list_index in sorted(self.ca.items, reverse=True):
             if list_index < idx:
                 break
-            self.ca.items[list_index+1] = self.ca.items.pop(list_index)
+            self.ca.items[list_index + 1] = self.ca.items.pop(list_index)
 
     def pop(self, idx):
         res = list.pop(self, idx)
@@ -299,13 +311,13 @@ class CommentedSeq(list, CommentedBase):
         for list_index in sorted(self.ca.items):
             if list_index < idx:
                 continue
-            self.ca.items[list_index-1] = self.ca.items.pop(list_index)
+            self.ca.items[list_index - 1] = self.ca.items.pop(list_index)
         return res
 
     def _yaml_get_column(self, key):
         column = None
         sel_idx = None
-        pre, post = key-1, key+1
+        pre, post = key - 1, key + 1
         if pre in self.ca.items:
             sel_idx = pre
         elif post in self.ca.items:
@@ -332,7 +344,9 @@ class CommentedSeq(list, CommentedBase):
 
 
 class CommentedMap(ordereddict, CommentedBase):
-    __slots__ = [Comment.attrib, ]
+    __slots__ = [
+        Comment.attrib,
+    ]
 
     def _yaml_add_comment(self, comment, key=NoComment, value=NoComment):
         """values is set to key to indicate a value attachment of comment"""
@@ -414,8 +428,8 @@ class CommentedMap(ordereddict, CommentedBase):
             if level >= len(key_list):
                 if level > len(key_list):
                     raise IndexError
-                return d[key_list[level-1]]
-            return get_one_level(key_list, level+1, d[key_list[level-1]])
+                return d[key_list[level - 1]]
+            return get_one_level(key_list, level + 1, d[key_list[level - 1]])
 
         try:
             return get_one_level(key, 1, self)
@@ -452,11 +466,13 @@ class CommentedMap(ordereddict, CommentedBase):
 
 
 class CommentedOrderedMap(CommentedMap):
-    __slots__ = [Comment.attrib, ]
+    __slots__ = [
+        Comment.attrib,
+    ]
 
 
 class CommentedSet(MutableSet, CommentedMap):
-    __slots__ = [Comment.attrib, 'odict']
+    __slots__ = [Comment.attrib, "odict"]
 
     def __init__(self, values=None):
         self.odict = ordereddict()
@@ -483,4 +499,4 @@ class CommentedSet(MutableSet, CommentedMap):
         return len(self.odict)
 
     def __repr__(self):
-        return 'set({0!r})'.format(self.odict.keys())
+        return "set({0!r})".format(self.odict.keys())

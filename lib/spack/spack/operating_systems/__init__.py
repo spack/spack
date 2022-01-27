@@ -8,13 +8,7 @@ from .cray_frontend import CrayFrontend
 from .linux_distro import LinuxDistro
 from .mac_os import MacOs
 
-__all__ = [
-    'OperatingSystem',
-    'LinuxDistro',
-    'MacOs',
-    'CrayFrontend',
-    'CrayBackend'
-]
+__all__ = ["OperatingSystem", "LinuxDistro", "MacOs", "CrayFrontend", "CrayBackend"]
 
 #: List of all the Operating Systems known to Spack
 operating_systems = [LinuxDistro, MacOs, CrayFrontend, CrayBackend]

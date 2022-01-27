@@ -13,21 +13,24 @@ class Sollya(AutotoolsPackage):
     a certified infinity (supremum) norm and a fast Remez algorithm."""
 
     homepage = "https://www.sollya.org"
-    url      = "https://www.sollya.org/releases/sollya-7.0/sollya-7.0.tar.bz2"
+    url = "https://www.sollya.org/releases/sollya-7.0/sollya-7.0.tar.bz2"
 
-    version('7.0', sha256='15745871f7dd3e96e12915098dd6df2078b815853a38143b2bc6c01477044984')
+    version(
+        "7.0", sha256="15745871f7dd3e96e12915098dd6df2078b815853a38143b2bc6c01477044984"
+    )
 
-    depends_on('gmp')
-    depends_on('mpfi')
-    depends_on('mpfr')
-    depends_on('libxml2')
-    depends_on('fplll')
+    depends_on("gmp")
+    depends_on("mpfi")
+    depends_on("mpfr")
+    depends_on("libxml2")
+    depends_on("fplll")
 
     def configure_args(self):
-        args = ['--with-gmp=' + self.spec['gmp'].prefix,
-                '--with-mpfr=' + self.spec['mpfr'].prefix,
-                '--with-mpfi=' + self.spec['mpfi'].prefix,
-                '--with-xml2=' + self.spec['libxml2'].prefix,
-                '--with-fplll=' + self.spec['fplll'].prefix
-                ]
+        args = [
+            "--with-gmp=" + self.spec["gmp"].prefix,
+            "--with-mpfr=" + self.spec["mpfr"].prefix,
+            "--with-mpfi=" + self.spec["mpfi"].prefix,
+            "--with-xml2=" + self.spec["libxml2"].prefix,
+            "--with-fplll=" + self.spec["fplll"].prefix,
+        ]
         return args

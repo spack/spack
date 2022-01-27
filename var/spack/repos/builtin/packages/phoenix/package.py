@@ -9,6 +9,6 @@ class Phoenix(MavenPackage):
     JDBC driver targeting low latency queries over HBase data."""
 
     homepage = "https://github.com"
-    git      = "https://github.com/apache/phoenix.git"
+    git = "https://github.com/apache/phoenix.git"
 
-    version('master', branch='master')
+    version("master", branch="master")

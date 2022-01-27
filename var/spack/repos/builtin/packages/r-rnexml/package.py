@@ -15,21 +15,24 @@ class RRnexml(RPackage):
     'ape' objects."""
 
     homepage = "https://github.com/ropensci/RNeXML"
-    url      = "https://cloud.r-project.org/src/contrib/RNeXML_2.4.5.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/RNeXML_2.4.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RNeXML"
 
-    version('2.4.5', sha256='2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3')
+    version(
+        "2.4.5",
+        sha256="2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-ape@3.1:', type=('build', 'run'))
-    depends_on('r-xml@3.95:', type=('build', 'run'))
-    depends_on('r-plyr@1.8:', type=('build', 'run'))
-    depends_on('r-reshape2@1.2.2:', type=('build', 'run'))
-    depends_on('r-httr@0.3:', type=('build', 'run'))
-    depends_on('r-uuid@0.1-1:', type=('build', 'run'))
-    depends_on('r-dplyr@0.5.0:', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.0:', type=('build', 'run'))
-    depends_on('r-tidyr@0.3.1:', type=('build', 'run'))
-    depends_on('r-stringr@1.0:', type=('build', 'run'))
-    depends_on('r-stringi', type=('build', 'run'))
-    depends_on('r-xml2', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-ape@3.1:", type=("build", "run"))
+    depends_on("r-xml@3.95:", type=("build", "run"))
+    depends_on("r-plyr@1.8:", type=("build", "run"))
+    depends_on("r-reshape2@1.2.2:", type=("build", "run"))
+    depends_on("r-httr@0.3:", type=("build", "run"))
+    depends_on("r-uuid@0.1-1:", type=("build", "run"))
+    depends_on("r-dplyr@0.5.0:", type=("build", "run"))
+    depends_on("r-lazyeval@0.1.0:", type=("build", "run"))
+    depends_on("r-tidyr@0.3.1:", type=("build", "run"))
+    depends_on("r-stringr@1.0:", type=("build", "run"))
+    depends_on("r-stringi", type=("build", "run"))
+    depends_on("r-xml2", type=("build", "run"))

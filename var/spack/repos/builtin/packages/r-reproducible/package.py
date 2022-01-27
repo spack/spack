@@ -23,23 +23,26 @@ class RReproducible(RPackage):
     available, see ?reproducibleOptions."""
 
     homepage = "https://reproducible.predictiveecology.org/"
-    url      = "https://cloud.r-project.org/src/contrib/reproducible_1.2.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/reproducible_1.2.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/reproducible"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('1.2.4', sha256='0525deefa6a0713c3fe2da8bfc529f62d6352bebf2ef08866503b4853412f149')
+    version(
+        "1.2.4",
+        sha256="0525deefa6a0713c3fe2da8bfc529f62d6352bebf2ef08866503b4853412f149",
+    )
 
-    depends_on('r@3.5:', type=('build', 'run'))
-    depends_on('r-data-table@1.10.4:', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-fpcompare', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-require', type=('build', 'run'))
-    depends_on('r-raster', type=('build', 'run'))
-    depends_on('r-rsqlite', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'))
-    depends_on('r-sp@1.4-2:', type=('build', 'run'))
-    depends_on('unrar', type=('build', 'run'))
+    depends_on("r@3.5:", type=("build", "run"))
+    depends_on("r-data-table@1.10.4:", type=("build", "run"))
+    depends_on("r-dbi", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
+    depends_on("r-fpcompare", type=("build", "run"))
+    depends_on("r-glue", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-require", type=("build", "run"))
+    depends_on("r-raster", type=("build", "run"))
+    depends_on("r-rsqlite", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))
+    depends_on("r-sp@1.4-2:", type=("build", "run"))
+    depends_on("unrar", type=("build", "run"))

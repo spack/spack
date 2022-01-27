@@ -8,9 +8,13 @@ from spack import *
 
 class PerlGdgraphHistogram(PerlPackage):
     """GD::Graph::histogram extends the GD::Graph module to create histograms.
-       The module allow creation of count or percentage histograms."""
+    The module allow creation of count or percentage histograms."""
 
     homepage = "https://metacpan.org/pod/GD::Graph::histogram"
-    url      = "https://cpan.metacpan.org/authors/id/W/WH/WHIZDOG/GDGraph-histogram-1.1.tar.gz"
+    url = (
+        "https://cpan.metacpan.org/authors/id/W/WH/WHIZDOG/GDGraph-histogram-1.1.tar.gz"
+    )
 
-    version('1.1', sha256='20f752d0e6deb59b29aa2ec3496b5883476d00280b6e83f5b47c33fac4097f8a')
+    version(
+        "1.1", sha256="20f752d0e6deb59b29aa2ec3496b5883476d00280b6e83f5b47c33fac4097f8a"
+    )

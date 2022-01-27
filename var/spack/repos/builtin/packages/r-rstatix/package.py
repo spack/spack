@@ -25,20 +25,23 @@ class RRstatix(RPackage):
     normality and homogeneity of variances."""
 
     homepage = "https://rpkgs.datanovia.com/rstatix/"
-    url      = "https://cloud.r-project.org/src/contrib/rstatix_0.6.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rstatix_0.6.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rstatix"
 
-    version('0.6.0', sha256='ebb28e20c7e28809194a2a027bc83303b17be1e3db32f49325727c9279df9c5b')
+    version(
+        "0.6.0",
+        sha256="ebb28e20c7e28809194a2a027bc83303b17be1e3db32f49325727c9279df9c5b",
+    )
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-tidyr@1.0.0:', type=('build', 'run'))
-    depends_on('r-purrr', type=('build', 'run'))
-    depends_on('r-broom@0.5.6:', type=('build', 'run'))
-    depends_on('r-rlang@0.3.1:', type=('build', 'run'))
-    depends_on('r-tibble@2.1.3:', type=('build', 'run'))
-    depends_on('r-dplyr@0.7.1:', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-corrplot', type=('build', 'run'))
-    depends_on('r-tidyselect@1.0.0:', type=('build', 'run'))
-    depends_on('r-car', type=('build', 'run'))
-    depends_on('r-generics@0.0.2:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-tidyr@1.0.0:", type=("build", "run"))
+    depends_on("r-purrr", type=("build", "run"))
+    depends_on("r-broom@0.5.6:", type=("build", "run"))
+    depends_on("r-rlang@0.3.1:", type=("build", "run"))
+    depends_on("r-tibble@2.1.3:", type=("build", "run"))
+    depends_on("r-dplyr@0.7.1:", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-corrplot", type=("build", "run"))
+    depends_on("r-tidyselect@1.0.0:", type=("build", "run"))
+    depends_on("r-car", type=("build", "run"))
+    depends_on("r-generics@0.0.2:", type=("build", "run"))

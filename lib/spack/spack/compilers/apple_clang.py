@@ -21,10 +21,10 @@ class AppleClang(spack.compilers.clang.Clang):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        ver = 'unknown'
+        ver = "unknown"
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.
-            r'^Apple (?:LLVM|clang) version ([^ )]+)',
+            r"^Apple (?:LLVM|clang) version ([^ )]+)",
             output,
             # Multi-line, since 'Apple clang' may not be on the first line
             # in particular, when run as gcc, it seems to output
@@ -39,7 +39,7 @@ class AppleClang(spack.compilers.clang.Clang):
     def cxx11_flag(self):
         # Adapted from CMake's AppleClang-CXX rules
         # Spack's AppleClang detection only valid from Xcode >= 4.6
-        if self.real_version < spack.version.ver('4.0.0'):
+        if self.real_version < spack.version.ver("4.0.0"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++11 standard", "cxx11_flag", "Xcode < 4.0.0"
             )
@@ -48,11 +48,11 @@ class AppleClang(spack.compilers.clang.Clang):
     @property
     def cxx14_flag(self):
         # Adapted from CMake's rules for AppleClang
-        if self.real_version < spack.version.ver('5.1.0'):
+        if self.real_version < spack.version.ver("5.1.0"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++14 standard", "cxx14_flag", "Xcode < 5.1.0"
             )
-        elif self.real_version < spack.version.ver('6.1.0'):
+        elif self.real_version < spack.version.ver("6.1.0"):
             return "-std=c++1y"
 
         return "-std=c++14"
@@ -60,7 +60,7 @@ class AppleClang(spack.compilers.clang.Clang):
     @property
     def cxx17_flag(self):
         # Adapted from CMake's rules for AppleClang
-        if self.real_version < spack.version.ver('6.1.0'):
+        if self.real_version < spack.version.ver("6.1.0"):
             raise spack.compiler.UnsupportedCompilerFlag(
                 self, "the C++17 standard", "cxx17_flag", "Xcode < 6.1.0"
             )
@@ -89,50 +89,50 @@ class AppleClang(spack.compilers.clang.Clang):
 
         # Use special XCode versions of compiler wrappers when using XCode
         # Overwrites build_environment's setting of SPACK_CC and SPACK_CXX
-        xcrun = spack.util.executable.Executable('xcrun')
-        xcode_clang = xcrun('-f', 'clang', output=str).strip()
-        xcode_clangpp = xcrun('-f', 'clang++', output=str).strip()
-        env.set('SPACK_CC', xcode_clang, force=True)
-        env.set('SPACK_CXX', xcode_clangpp, force=True)
+        xcrun = spack.util.executable.Executable("xcrun")
+        xcode_clang = xcrun("-f", "clang", output=str).strip()
+        xcode_clangpp = xcrun("-f", "clang++", output=str).strip()
+        env.set("SPACK_CC", xcode_clang, force=True)
+        env.set("SPACK_CXX", xcode_clangpp, force=True)
 
-        xcode_select = spack.util.executable.Executable('xcode-select')
+        xcode_select = spack.util.executable.Executable("xcode-select")
 
         # Get the path of the active developer directory
-        real_root = xcode_select('--print-path', output=str).strip()
+        real_root = xcode_select("--print-path", output=str).strip()
 
         # The path name can be used to determine whether the full Xcode suite
         # or just the command-line tools are installed
-        if real_root.endswith('Developer'):
+        if real_root.endswith("Developer"):
             # The full Xcode suite is installed
             pass
         else:
-            if real_root.endswith('CommandLineTools'):
+            if real_root.endswith("CommandLineTools"):
                 # Only the command-line tools are installed
-                msg  = 'It appears that you have the Xcode command-line tools '
-                msg += 'but not the full Xcode suite installed.\n'
+                msg = "It appears that you have the Xcode command-line tools "
+                msg += "but not the full Xcode suite installed.\n"
 
             else:
                 # Xcode is not installed
-                msg  = 'It appears that you do not have Xcode installed.\n'
+                msg = "It appears that you do not have Xcode installed.\n"
 
-            msg += 'In order to use Spack to build the requested application, '
-            msg += 'you need the full Xcode suite. It can be installed '
-            msg += 'through the App Store. Make sure you launch the '
-            msg += 'application and accept the license agreement.\n'
+            msg += "In order to use Spack to build the requested application, "
+            msg += "you need the full Xcode suite. It can be installed "
+            msg += "through the App Store. Make sure you launch the "
+            msg += "application and accept the license agreement.\n"
 
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.stage.get_stage_root(),
-                                      'xcode-select',
-                                      self.name,
-                                      str(self.version))
-        xcode_link = os.path.join(developer_root, 'Xcode.app')
+        developer_root = os.path.join(
+            spack.stage.get_stage_root(), "xcode-select", self.name, str(self.version)
+        )
+        xcode_link = os.path.join(developer_root, "Xcode.app")
 
         if not os.path.exists(developer_root):
-            tty.warn('Copying Xcode from %s to %s in order to add spack '
-                     'wrappers to it. Please do not interrupt.'
-                     % (real_root, developer_root))
+            tty.warn(
+                "Copying Xcode from %s to %s in order to add spack "
+                "wrappers to it. Please do not interrupt." % (real_root, developer_root)
+            )
 
             # We need to make a new Xcode.app instance, but with symlinks to
             # the spack wrappers for the compilers it ships. This is necessary
@@ -141,31 +141,37 @@ class AppleClang(spack.compilers.clang.Clang):
             # as they do realpath and end up ignoring the symlinks in a
             # "softer" tree of nothing but symlinks in the right places.
             shutil.copytree(
-                real_root, developer_root, symlinks=True,
+                real_root,
+                developer_root,
+                symlinks=True,
                 ignore=shutil.ignore_patterns(
-                    'AppleTV*.platform', 'Watch*.platform', 'iPhone*.platform',
-                    'Documentation', 'swift*'
-                ))
+                    "AppleTV*.platform",
+                    "Watch*.platform",
+                    "iPhone*.platform",
+                    "Documentation",
+                    "swift*",
+                ),
+            )
 
             real_dirs = [
-                'Toolchains/XcodeDefault.xctoolchain/usr/bin',
-                'usr/bin',
+                "Toolchains/XcodeDefault.xctoolchain/usr/bin",
+                "usr/bin",
             ]
 
-            bins = ['c++', 'c89', 'c99', 'cc', 'clang', 'clang++', 'cpp']
+            bins = ["c++", "c89", "c99", "cc", "clang", "clang++", "cpp"]
 
             for real_dir in real_dirs:
-                dev_dir = os.path.join(developer_root,
-                                       'Contents',
-                                       'Developer',
-                                       real_dir)
+                dev_dir = os.path.join(
+                    developer_root, "Contents", "Developer", real_dir
+                )
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
                         os.unlink(os.path.join(dev_dir, fname))
                         os.symlink(
-                            os.path.join(spack.paths.build_env_path, 'cc'),
-                            os.path.join(dev_dir, fname))
+                            os.path.join(spack.paths.build_env_path, "cc"),
+                            os.path.join(dev_dir, fname),
+                        )
 
             os.symlink(developer_root, xcode_link)
 
-        env.set('DEVELOPER_DIR', xcode_link)
+        env.set("DEVELOPER_DIR", xcode_link)

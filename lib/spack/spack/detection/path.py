@@ -38,7 +38,7 @@ def executables_in_path(path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    path_hints = path_hints or spack.util.environment.get_path('PATH')
+    path_hints = path_hints or spack.util.environment.get_path("PATH")
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
     path_to_exe = {}
@@ -71,7 +71,7 @@ def by_executable(packages_to_check, path_hints=None):
     path_to_exe_name = executables_in_path(path_hints=path_hints)
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
-        if hasattr(pkg, 'executables'):
+        if hasattr(pkg, "executables"):
             for exe in pkg.executables:
                 exe_pattern_to_pkgs[exe].append(pkg)
 
@@ -87,11 +87,12 @@ def by_executable(packages_to_check, path_hints=None):
     resolved_specs = {}  # spec -> exe found for the spec
 
     for pkg, exes in pkg_to_found_exes.items():
-        if not hasattr(pkg, 'determine_spec_details'):
+        if not hasattr(pkg, "determine_spec_details"):
             llnl.util.tty.warn(
                 "{0} must define 'determine_spec_details' in order"
                 " for Spack to detect externally-provided instances"
-                " of the package.".format(pkg.name))
+                " of the package.".format(pkg.name)
+            )
             continue
 
         for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
@@ -111,10 +112,12 @@ def by_executable(packages_to_check, path_hints=None):
 
             if not specs:
                 llnl.util.tty.debug(
-                    'The following executables in {0} were decidedly not '
-                    'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(
-                        _convert_to_iterable(exes_in_prefix)))
+                    "The following executables in {0} were decidedly not "
+                    "part of the package {1}: {2}".format(
+                        prefix,
+                        pkg.name,
+                        ", ".join(_convert_to_iterable(exes_in_prefix)),
+                    )
                 )
 
             for spec in specs:
@@ -126,13 +129,14 @@ def by_executable(packages_to_check, path_hints=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(
-                        _convert_to_iterable(resolved_specs[spec]))
+                    prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
 
                     llnl.util.tty.debug(
                         "Executables in {0} and {1} are both associated"
-                        " with the same spec {2}"
-                        .format(prefix, prior_prefix, str(spec)))
+                        " with the same spec {2}".format(
+                            prefix, prior_prefix, str(spec)
+                        )
+                    )
                     continue
                 else:
                     resolved_specs[spec] = prefix
@@ -140,8 +144,10 @@ def by_executable(packages_to_check, path_hints=None):
                 try:
                     spec.validate_detection()
                 except Exception as e:
-                    msg = ('"{0}" has been detected on the system but will '
-                           'not be added to packages.yaml [reason={1}]')
+                    msg = (
+                        '"{0}" has been detected on the system but will '
+                        "not be added to packages.yaml [reason={1}]"
+                    )
                     llnl.util.tty.warn(msg.format(spec, str(e)))
                     continue
 

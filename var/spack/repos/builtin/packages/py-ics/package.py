@@ -27,14 +27,18 @@ class PyIcs(PythonPackage):
     """
 
     homepage = "https://github.com/C4ptainCrunch/ics.py"
-    url      = "https://github.com/C4ptainCrunch/ics.py/archive/v0.6.tar.gz"
+    url = "https://github.com/C4ptainCrunch/ics.py/archive/v0.6.tar.gz"
 
-    version('0.7', sha256='48c637e5eb8dfc817b1f3f6b3f662ba19cfcc25f8f71eb42f5d07e6f2c573994')
-    version('0.6', sha256='4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830')
+    version(
+        "0.7", sha256="48c637e5eb8dfc817b1f3f6b3f662ba19cfcc25f8f71eb42f5d07e6f2c573994"
+    )
+    version(
+        "0.6", sha256="4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830"
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-python-dateutil', type=('build', 'run'))
-    depends_on('py-arrow@0.11:0.14', type=('build', 'run'))
-    depends_on('py-six@1.5:', type=('build', 'run'))
-    depends_on('py-tatsu@4.2:', type=('build', 'run'), when='@0.6:')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-python-dateutil", type=("build", "run"))
+    depends_on("py-arrow@0.11:0.14", type=("build", "run"))
+    depends_on("py-six@1.5:", type=("build", "run"))
+    depends_on("py-tatsu@4.2:", type=("build", "run"), when="@0.6:")

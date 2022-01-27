@@ -22,21 +22,36 @@ class Converge(Package):
     computationally efficient as possible."""
 
     homepage = "https://www.convergecfd.com/"
-    url      = "https://download.convergecfd.com/download/CONVERGE_2.4/Full_Solver_Packages/converge_install_2.4.10.tar.gz"
+    url = "https://download.convergecfd.com/download/CONVERGE_2.4/Full_Solver_Packages/converge_install_2.4.10.tar.gz"
 
     # In order to view available versions, you need to register for an account:
     # https://download.convergecfd.com/wp-login.php?action=register
 
-    version('2.4.10', sha256='5d3c39894598d2395149cfcc653af13b8b1091177290edd62fcf22c7e830d410')
-    version('2.3.23', sha256='1217d16eaf9d263f917ee468778508bad9dacb7e4397a293cfa6467f39fb4c52')
-    version('2.2.0',  sha256='3885acbaf352c718ea69f0206c858a01be02f0928ffee738e4aceb1dd939a77a',
-            url="https://download.convergecfd.com/download/CONVERGE_2.2/Full_Solver_Packages/converge_install_2.2.0_042916.tar.gz")
-    version('2.1.0',  sha256='6b8896d42cf7b9013cae5456f4dc118306a5bd271d4a15945ceb7dae913e825a',
-            url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz")
-    version('2.0.0',  sha256='f32c4824eb33724d85e283481d67ebd0630b1406011c528d775028bb2546f34e',
-            url="https://download.convergecfd.com/download/CONVERGE_2.0/Full_Solver_Packages/converge_install_2.0.0_090214.tar.gz")
+    version(
+        "2.4.10",
+        sha256="5d3c39894598d2395149cfcc653af13b8b1091177290edd62fcf22c7e830d410",
+    )
+    version(
+        "2.3.23",
+        sha256="1217d16eaf9d263f917ee468778508bad9dacb7e4397a293cfa6467f39fb4c52",
+    )
+    version(
+        "2.2.0",
+        sha256="3885acbaf352c718ea69f0206c858a01be02f0928ffee738e4aceb1dd939a77a",
+        url="https://download.convergecfd.com/download/CONVERGE_2.2/Full_Solver_Packages/converge_install_2.2.0_042916.tar.gz",
+    )
+    version(
+        "2.1.0",
+        sha256="6b8896d42cf7b9013cae5456f4dc118306a5bd271d4a15945ceb7dae913e825a",
+        url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz",
+    )
+    version(
+        "2.0.0",
+        sha256="f32c4824eb33724d85e283481d67ebd0630b1406011c528d775028bb2546f34e",
+        url="https://download.convergecfd.com/download/CONVERGE_2.0/Full_Solver_Packages/converge_install_2.0.0_090214.tar.gz",
+    )
 
-    variant('mpi', default=True, description='Build with MPI support')
+    variant("mpi", default=True, description="Build with MPI support")
 
     # The following MPI libraries are compatible with CONVERGE:
     #
@@ -58,7 +73,7 @@ class Converge(Package):
     # the version of libmpi.so must match exactly, or else
     # you will end up with missing libraries and symbols.
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
     # FIXME: Concretization is currently broken, so this causes:
     #     $ spack spec converge
@@ -66,23 +81,23 @@ class Converge(Package):
     #     $ spack spec converge@2.4.10 +mpi ^openmpi@:1.10
     #
     # TODO: Add version ranges for other MPI libraries
-    depends_on('openmpi@1.10.0:1.10', when='@2.4.0:2.4+mpi^openmpi')
-    depends_on('openmpi@1.5:1.8',         when='@2.2:2.3+mpi^openmpi')
-    depends_on('openmpi@:1.4',            when='@:2.1+mpi^openmpi')
+    depends_on("openmpi@1.10.0:1.10", when="@2.4.0:2.4+mpi^openmpi")
+    depends_on("openmpi@1.5:1.8", when="@2.2:2.3+mpi^openmpi")
+    depends_on("openmpi@:1.4", when="@:2.1+mpi^openmpi")
 
     # TODO: Add packages for hp-mpi and platform-mpi
     # conflicts('^hp-mpi', when='@2.4:')
-    conflicts('^intel-mpi', when='@:2.3')
-    conflicts('^intel-parallel-studio+mpi', when='@:2.3')
+    conflicts("^intel-mpi", when="@:2.3")
+    conflicts("^intel-parallel-studio+mpi", when="@:2.3")
     # conflicts('^platform-mpi', when='@:2.1')
-    conflicts('^spectrum-mpi')
+    conflicts("^spectrum-mpi")
 
     # Licensing
     license_required = True
-    license_comment = '#'
-    license_files = ['license/license.lic']
-    license_vars = ['RLM_LICENSE']
-    license_url = 'https://www.reprisesoftware.com/RLM_License_Administration.pdf'
+    license_comment = "#"
+    license_files = ["license/license.lic"]
+    license_vars = ["RLM_LICENSE"]
+    license_url = "https://www.reprisesoftware.com/RLM_License_Administration.pdf"
 
     def url_for_version(self, version):
         url = "https://download.convergecfd.com/download/CONVERGE_{0}/Full_Solver_Packages/converge_install_{1}.tar.gz"
@@ -144,56 +159,56 @@ class Converge(Package):
 
         # The CONVERGE tarball comes with binaries for several MPI libraries.
         # Only install the binary that matches the MPI we are building with.
-        with working_dir('l_x86_64/bin'):
-            if '~mpi' in spec:
-                converge = glob.glob('converge-*-serial*')
-                post_convert = glob.glob('post_convert_serial*')
-            elif 'hp-mpi' in spec:
-                converge = glob.glob('converge-*-hpmpi*')
+        with working_dir("l_x86_64/bin"):
+            if "~mpi" in spec:
+                converge = glob.glob("converge-*-serial*")
+                post_convert = glob.glob("post_convert_serial*")
+            elif "hp-mpi" in spec:
+                converge = glob.glob("converge-*-hpmpi*")
                 # No HP-MPI version of post_convert
-                post_convert = glob.glob('post_convert_serial*')
-            elif 'intel-mpi' in spec or 'intel-parallel-studio+mpi' in spec:
-                converge = glob.glob('converge-*-intel*')
+                post_convert = glob.glob("post_convert_serial*")
+            elif "intel-mpi" in spec or "intel-parallel-studio+mpi" in spec:
+                converge = glob.glob("converge-*-intel*")
                 # No Intel MPI version of post_convert
-                post_convert = glob.glob('post_convert_serial*')
-            elif 'mpich' in spec:
-                converge = glob.glob('converge-*-mpich*')
-                post_convert = glob.glob('post_convert_mpich*')
-            elif 'mvapich2' in spec:
-                converge = glob.glob('converge-*-mvapich*')
+                post_convert = glob.glob("post_convert_serial*")
+            elif "mpich" in spec:
+                converge = glob.glob("converge-*-mpich*")
+                post_convert = glob.glob("post_convert_mpich*")
+            elif "mvapich2" in spec:
+                converge = glob.glob("converge-*-mvapich*")
                 # MVAPICH2 hasn't been supported since CONVERGE
                 # came with a single serial post_convert
-                post_convert = glob.glob('post_convert')
-            elif 'openmpi' in spec:
-                converge = glob.glob('converge-*-o*mpi*')
-                post_convert = glob.glob('post_convert_o*mpi*')
-            elif 'platform-mpi' in spec:
-                converge = glob.glob('converge-*-pmpi*')
-                post_convert = glob.glob('post_convert_pmpi*')
+                post_convert = glob.glob("post_convert")
+            elif "openmpi" in spec:
+                converge = glob.glob("converge-*-o*mpi*")
+                post_convert = glob.glob("post_convert_o*mpi*")
+            elif "platform-mpi" in spec:
+                converge = glob.glob("converge-*-pmpi*")
+                post_convert = glob.glob("post_convert_pmpi*")
             else:
-                raise InstallError('Unsupported MPI provider')
+                raise InstallError("Unsupported MPI provider")
 
-            make_surface = glob.glob('make_surface*')
+            make_surface = glob.glob("make_surface*")
 
             # Old versions of CONVERGE come with a single serial post_convert
             if not post_convert:
-                post_convert = glob.glob('post_convert')
+                post_convert = glob.glob("post_convert")
 
             # Make sure glob actually found something
             if not converge:
-                raise InstallError('converge executable not found')
+                raise InstallError("converge executable not found")
             if not post_convert:
-                raise InstallError('post_convert executable not found')
+                raise InstallError("post_convert executable not found")
             if not make_surface:
-                raise InstallError('make_surface executable not found')
+                raise InstallError("make_surface executable not found")
 
             # Make sure glob didn't find multiple matches
             if len(converge) > 1:
-                raise InstallError('multiple converge executables found')
+                raise InstallError("multiple converge executables found")
             if len(post_convert) > 1:
-                raise InstallError('multiple post_convert executables found')
+                raise InstallError("multiple post_convert executables found")
             if len(make_surface) > 1:
-                raise InstallError('multiple make_surface executables found')
+                raise InstallError("multiple make_surface executables found")
 
             converge = converge[0]
             post_convert = post_convert[0]
@@ -202,20 +217,20 @@ class Converge(Package):
             mkdir(prefix.bin)
 
             # Install the executables
-            install(converge,     join_path(prefix.bin, converge))
+            install(converge, join_path(prefix.bin, converge))
             install(post_convert, join_path(prefix.bin, post_convert))
             install(make_surface, join_path(prefix.bin, make_surface))
 
         with working_dir(prefix.bin):
             # Create generic symlinks to all executables
-            if not os.path.exists('converge'):
-                os.symlink(converge, 'converge')
-            if not os.path.exists('post_convert'):
-                os.symlink(post_convert, 'post_convert')
-            if not os.path.exists('make_surface'):
-                os.symlink(make_surface, 'make_surface')
+            if not os.path.exists("converge"):
+                os.symlink(converge, "converge")
+            if not os.path.exists("post_convert"):
+                os.symlink(post_convert, "post_convert")
+            if not os.path.exists("make_surface"):
+                os.symlink(make_surface, "make_surface")
 
     def setup_run_environment(self, env):
         # CONVERGE searches for a valid license file in:
         #     $CONVERGE_ROOT/license/license.lic
-        env.set('CONVERGE_ROOT', self.prefix)
+        env.set("CONVERGE_ROOT", self.prefix)

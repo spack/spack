@@ -9,18 +9,19 @@ import pytest
 import spack.container
 
 
-@pytest.mark.parametrize('image,spack_version,expected', [
-    ('ubuntu:18.04', 'develop', ('spack/ubuntu-bionic', 'latest')),
-    ('ubuntu:18.04', '0.14.0', ('spack/ubuntu-bionic', '0.14.0')),
-])
+@pytest.mark.parametrize(
+    "image,spack_version,expected",
+    [
+        ("ubuntu:18.04", "develop", ("spack/ubuntu-bionic", "latest")),
+        ("ubuntu:18.04", "0.14.0", ("spack/ubuntu-bionic", "0.14.0")),
+    ],
+)
 def test_build_info(image, spack_version, expected):
     output = spack.container.images.build_info(image, spack_version)
     assert output == expected
 
 
-@pytest.mark.parametrize('image', [
-    'ubuntu:18.04'
-])
+@pytest.mark.parametrize("image", ["ubuntu:18.04"])
 def test_package_info(image):
     pkg_manager = spack.container.images.os_package_manager_for(image)
     update, install, clean = spack.container.images.commands_for(pkg_manager)
@@ -29,19 +30,22 @@ def test_package_info(image):
     assert clean
 
 
-@pytest.mark.parametrize('extra_config,expected_msg', [
-    ({'modules': {'enable': ['tcl']}}, 'the subsection "modules" in'),
-    ({'concretization': 'separately'}, 'the "concretization" attribute'),
-    ({'config': {'install_tree': '/some/dir'}},
-     'the "config:install_tree" attribute has been set'),
-    ({'view': '/some/dir'}, 'the "view" attribute has been set')
-])
-def test_validate(
-        extra_config, expected_msg, minimal_configuration, config_dumper
-):
-    minimal_configuration['spack'].update(extra_config)
+@pytest.mark.parametrize(
+    "extra_config,expected_msg",
+    [
+        ({"modules": {"enable": ["tcl"]}}, 'the subsection "modules" in'),
+        ({"concretization": "separately"}, 'the "concretization" attribute'),
+        (
+            {"config": {"install_tree": "/some/dir"}},
+            'the "config:install_tree" attribute has been set',
+        ),
+        ({"view": "/some/dir"}, 'the "view" attribute has been set'),
+    ],
+)
+def test_validate(extra_config, expected_msg, minimal_configuration, config_dumper):
+    minimal_configuration["spack"].update(extra_config)
     spack_yaml_dir = config_dumper(minimal_configuration)
-    spack_yaml = os.path.join(spack_yaml_dir, 'spack.yaml')
+    spack_yaml = os.path.join(spack_yaml_dir, "spack.yaml")
 
     with pytest.warns(UserWarning) as w:
         spack.container.validate(spack_yaml)

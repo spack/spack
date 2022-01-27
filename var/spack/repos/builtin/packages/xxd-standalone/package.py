@@ -14,15 +14,18 @@ class XxdStandalone(MakefilePackage):
     it makes sense to have it available as a standalone package."""
 
     homepage = "https://www.vim.org/"
-    url      = "https://github.com/vim/vim/archive/v8.2.1201.tar.gz"
+    url = "https://github.com/vim/vim/archive/v8.2.1201.tar.gz"
 
-    maintainers = ['haampie']
-    build_targets = ['-C', os.path.join('src', 'xxd')]
+    maintainers = ["haampie"]
+    build_targets = ["-C", os.path.join("src", "xxd")]
 
-    provides('xxd')
+    provides("xxd")
 
-    version('8.2.1201', sha256='39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d')
+    version(
+        "8.2.1201",
+        sha256="39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d",
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install(os.path.join(self.build_directory, 'src', 'xxd', 'xxd'), prefix.bin)
+        install(os.path.join(self.build_directory, "src", "xxd", "xxd"), prefix.bin)

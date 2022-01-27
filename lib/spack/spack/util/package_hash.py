@@ -23,6 +23,7 @@ class RemoveDocstrings(ast.NodeTransformer):
     the declaration.
 
     """
+
     def remove_docstring(self, node):
         def unused_string(node):
             """Criteria for unassigned body strings."""
@@ -75,29 +76,39 @@ class RemoveDirectives(ast.NodeTransformer):
         # Note that changes to directives (e.g., a preferred version change or a hash
         # chnage on an archive) are already represented in the spec *outside* the
         # package hash.
-        return None if (
-            node.value and isinstance(node.value, ast.Call) and
-            isinstance(node.value.func, ast.Name) and
-            node.value.func.id in spack.directives.directive_names
-        ) else node
+        return (
+            None
+            if (
+                node.value
+                and isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id in spack.directives.directive_names
+            )
+            else node
+        )
 
     def visit_Assign(self, node):
         # Remove assignments to metadata attributes, b/c they don't affect the build.
-        return None if (
-            node.targets and isinstance(node.targets[0], ast.Name) and
-            node.targets[0].id in self.metadata_attrs
-        ) else node
+        return (
+            None
+            if (
+                node.targets
+                and isinstance(node.targets[0], ast.Name)
+                and node.targets[0].id in self.metadata_attrs
+            )
+            else node
+        )
 
     def visit_With(self, node):
-        self.generic_visit(node)            # visit children
+        self.generic_visit(node)  # visit children
         return node if node.body else None  # remove with statement if it has no body
 
     def visit_For(self, node):
-        self.generic_visit(node)            # visit children
+        self.generic_visit(node)  # visit children
         return node if node.body else None  # remove loop if it has no body
 
     def visit_While(self, node):
-        self.generic_visit(node)            # visit children
+        self.generic_visit(node)  # visit children
         return node if node.body else None  # remove loop if it has no body
 
     def visit_If(self, node):
@@ -139,6 +150,7 @@ class RemoveDirectives(ast.NodeTransformer):
 
 class TagMultiMethods(ast.NodeVisitor):
     """Tag @when-decorated methods in a package AST."""
+
     def __init__(self, spec):
         self.spec = spec
         # map from function name to (implementation, condition_list) tuples
@@ -147,7 +159,7 @@ class TagMultiMethods(ast.NodeVisitor):
     def visit_FunctionDef(self, func):
         conditions = []
         for dec in func.decorator_list:
-            if isinstance(dec, ast.Call) and dec.func.id == 'when':
+            if isinstance(dec, ast.Call) and dec.func.id == "when":
                 try:
                     # evaluate spec condition for any when's
                     cond = dec.args[0].s
@@ -231,6 +243,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
     package hash, because either could be chosen.
 
     """
+
     def __init__(self, methods):
         self.methods = methods
 
@@ -280,8 +293,9 @@ class ResolveMultiMethods(ast.NodeTransformer):
 
         # strip the when decorators (preserve the rest)
         func.decorator_list = [
-            dec for dec in func.decorator_list
-            if not (isinstance(dec, ast.Call) and dec.func.id == 'when')
+            dec
+            for dec in func.decorator_list
+            if not (isinstance(dec, ast.Call) and dec.func.id == "when")
         ]
         return func
 

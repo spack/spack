@@ -12,6 +12,9 @@ class PyPythonOauth2(PythonPackage):
 
     pypi = "python-oauth2/python-oauth2-1.1.1.tar.gz"
 
-    version('1.1.1', sha256='d7a8544927ac18215ba5317edd8f640a5f1f0593921bcf3ce862178312c8c9a4')
+    version(
+        "1.1.1",
+        sha256="d7a8544927ac18215ba5317edd8f640a5f1f0593921bcf3ce862178312c8c9a4",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

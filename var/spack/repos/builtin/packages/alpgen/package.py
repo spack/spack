@@ -10,27 +10,34 @@ from spack import *
 
 class Alpgen(MakefilePackage):
     """A collection of codes for the generation of
-       multi-parton processes in hadronic collisions."""
+    multi-parton processes in hadronic collisions."""
 
     homepage = "http://mlm.home.cern.ch/mlm/alpgen/"
-    url      = "http://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
+    url = "http://mlm.home.cern.ch/mlm/alpgen/V2.1/v214.tgz"
 
-    maintainers = ['iarspider']
-    tags = ['hep']
+    maintainers = ["iarspider"]
+    tags = ["hep"]
 
-    patch('alpgen-214.patch', when='recipe=cms')
-    patch('alpgen-214-Darwin-x86_84-gfortran.patch', when='platform=darwin recipe=cms')
-    patch('alpgen-2.1.4-sft.patch', when='recipe=sft', level=0)
+    patch("alpgen-214.patch", when="recipe=cms")
+    patch("alpgen-214-Darwin-x86_84-gfortran.patch", when="platform=darwin recipe=cms")
+    patch("alpgen-2.1.4-sft.patch", when="recipe=sft", level=0)
 
-    depends_on('cmake', type='build', when='recipe=sft')
+    depends_on("cmake", type="build", when="recipe=sft")
 
-    variant('recipe', values=('cms', 'sft'), default='sft',
-            description='Select build recipe: CMS for CMS experiment, ' +
-                        'SFT for ATLAS/LHCb/others.')
+    variant(
+        "recipe",
+        values=("cms", "sft"),
+        default="sft",
+        description="Select build recipe: CMS for CMS experiment, "
+        + "SFT for ATLAS/LHCb/others.",
+    )
 
-    version('2.1.4', sha256='2f43f7f526793fe5f81a3a3e1adeffe21b653a7f5851efc599ed69ea13985c5e')
+    version(
+        "2.1.4",
+        sha256="2f43f7f526793fe5f81a3a3e1adeffe21b653a7f5851efc599ed69ea13985c5e",
+    )
 
-    phases = ['cmake', 'build', 'install']
+    phases = ["cmake", "build", "install"]
 
     # copied from CMakePackage
     @property
@@ -39,7 +46,7 @@ class Alpgen(MakefilePackage):
 
         :return: name of the subdirectory for building the package
         """
-        return 'spack-build-%s' % self.spec.dag_hash(7)
+        return "spack-build-%s" % self.spec.dag_hash(7)
 
     @property
     def build_directory(self):
@@ -82,63 +89,65 @@ class Alpgen(MakefilePackage):
         """
         # standard CMake arguments
         std_cmake_args = CMakePackage._std_args(self)
-        std_cmake_args += getattr(self, 'cmake_flag_args', [])
+        std_cmake_args += getattr(self, "cmake_flag_args", [])
         return std_cmake_args
 
     # end
 
     def url_for_version(self, version):
-        root = self.url.rsplit('/', 2)[0]
+        root = self.url.rsplit("/", 2)[0]
         return "{0}/V{1}/v{2}.tgz".format(root, version.up_to(2), version.joined)
 
     def patch(self):
-        if self.spec.satisfies('recipe=sft'):
-            copy(join_path(os.path.dirname(__file__), 'CMakeLists.txt'),
-                 'CMakeLists.txt')
+        if self.spec.satisfies("recipe=sft"):
+            copy(
+                join_path(os.path.dirname(__file__), "CMakeLists.txt"), "CMakeLists.txt"
+            )
 
-        if self.spec.satisfies('recipe=cms'):
-            filter_file('-fno-automatic', '-fno-automatic -std=legacy', 'compile.mk')
-            copy(join_path(os.path.dirname(__file__), 'cms_build.sh'), 'cms_build.sh')
-            copy(join_path(os.path.dirname(__file__), 'cms_install.sh'),
-                 'cms_install.sh')
+        if self.spec.satisfies("recipe=cms"):
+            filter_file("-fno-automatic", "-fno-automatic -std=legacy", "compile.mk")
+            copy(join_path(os.path.dirname(__file__), "cms_build.sh"), "cms_build.sh")
+            copy(
+                join_path(os.path.dirname(__file__), "cms_install.sh"), "cms_install.sh"
+            )
 
-    @when('recipe=cms')
+    @when("recipe=cms")
     def cmake(self, spec, prefix):
         return
 
-    @when('recipe=cms')
+    @when("recipe=cms")
     def build(self, spec, prefix):
-        bash = which('bash')
-        bash('./cms_build.sh')
+        bash = which("bash")
+        bash("./cms_build.sh")
 
-    @when('recipe=cms')
+    @when("recipe=cms")
     def install(self, spec, prefix):
-        bash = which('bash')
-        bash('./cms_install.sh', prefix)
+        bash = which("bash")
+        bash("./cms_install.sh", prefix)
 
         for root, dirs, files in os.walk(prefix):
             set_install_permissions(root)
             for file in files:
                 set_install_permissions(join_path(root, file))
 
-    @when('recipe=sft')
+    @when("recipe=sft")
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
         options = self.std_cmake_args
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
         with working_dir(self.build_directory, create=True):
-            cmake_x = which('cmake')
+            cmake_x = which("cmake")
             cmake_x(*options)
 
-    @when('recipe=sft')
+    @when("recipe=sft")
     def build(self, spec, prefix):
         """Make the build targets"""
         with working_dir(self.build_directory):
             make()
 
-    @when('recipe=sft')
+    @when("recipe=sft")
     def install(self, spec, prefix):
         """Make the install targets"""
         with working_dir(self.build_directory):
-            make('install')
+            make("install")

@@ -4,6 +4,7 @@
 #
 import types
 
+
 def format_exception_only(etype, value):
     """Format the exception part of a traceback.
 
@@ -27,9 +28,12 @@ def format_exception_only(etype, value):
     #
     # Clear these out first because issubtype(string1, SyntaxError)
     # would throw another exception and mask the original problem.
-    if (isinstance(etype, BaseException) or
-        isinstance(etype, types.InstanceType) or
-        etype is None or type(etype) is str):
+    if (
+        isinstance(etype, BaseException)
+        or isinstance(etype, types.InstanceType)
+        or etype is None
+        or type(etype) is str
+    ):
         return [_format_final_exc_line(etype, value)]
 
     stype = etype.__name__
@@ -47,17 +51,18 @@ def format_exception_only(etype, value):
         filename = filename or "<string>"
         lines.append('  File "%s", line %d\n' % (filename, lineno))
         if badline is not None:
-            lines.append('    %s\n' % badline.strip())
+            lines.append("    %s\n" % badline.strip())
             if offset is not None:
-                caretspace = badline.rstrip('\n')[:offset].lstrip()
+                caretspace = badline.rstrip("\n")[:offset].lstrip()
                 # non-space whitespace (likes tabs) must be kept for alignment
-                caretspace = ((c.isspace() and c or ' ') for c in caretspace)
+                caretspace = ((c.isspace() and c or " ") for c in caretspace)
                 # only three spaces to account for offset1 == pos 0
-                lines.append('   %s^\n' % ''.join(caretspace))
+                lines.append("   %s^\n" % "".join(caretspace))
         value = msg
 
     lines.append(_format_final_exc_line(stype, value))
     return lines
+
 
 def _format_final_exc_line(etype, value):
     """Return a list of a single line -- normal case for format_exception_only"""
@@ -68,6 +73,7 @@ def _format_final_exc_line(etype, value):
         line = "%s: %s\n" % (etype, valuestr)
     return line
 
+
 def _some_str(value):
     try:
         return unicode(value)
@@ -76,4 +82,4 @@ def _some_str(value):
             return str(value)
         except Exception:
             pass
-    return '<unprintable %s object>' % type(value).__name__
+    return "<unprintable %s object>" % type(value).__name__

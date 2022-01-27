@@ -13,7 +13,7 @@ import spack.util.spack_yaml as syaml
 
 from .writers import recipe
 
-__all__ = ['validate', 'recipe']
+__all__ = ["validate", "recipe"]
 
 
 def validate(configuration_file):
@@ -32,50 +32,59 @@ def validate(configuration_file):
         A sanitized copy of the configuration stored in the input file
     """
     import jsonschema
+
     with open(configuration_file) as f:
         config = syaml.load(f)
 
     # Ensure we have a "container" attribute with sensible defaults set
     env_dict = ev.config_dict(config)
-    env_dict.setdefault('container', {
-        'format': 'docker',
-        'images': {'os': 'ubuntu:18.04', 'spack': 'develop'}
-    })
-    env_dict['container'].setdefault('format', 'docker')
-    env_dict['container'].setdefault(
-        'images', {'os': 'ubuntu:18.04', 'spack': 'develop'}
+    env_dict.setdefault(
+        "container",
+        {"format": "docker", "images": {"os": "ubuntu:18.04", "spack": "develop"}},
+    )
+    env_dict["container"].setdefault("format", "docker")
+    env_dict["container"].setdefault(
+        "images", {"os": "ubuntu:18.04", "spack": "develop"}
     )
 
     # Remove attributes that are not needed / allowed in the
     # container recipe
-    for subsection in ('cdash', 'gitlab_ci', 'modules'):
+    for subsection in ("cdash", "gitlab_ci", "modules"):
         if subsection in env_dict:
-            msg = ('the subsection "{0}" in "{1}" is not used when generating'
-                   ' container recipes and will be discarded')
+            msg = (
+                'the subsection "{0}" in "{1}" is not used when generating'
+                " container recipes and will be discarded"
+            )
             warnings.warn(msg.format(subsection, configuration_file))
             env_dict.pop(subsection)
 
     # Set the default value of the concretization strategy to "together" and
     # warn if the user explicitly set another value
-    env_dict.setdefault('concretization', 'together')
-    if env_dict['concretization'] != 'together':
-        msg = ('the "concretization" attribute of the environment is set '
-               'to "{0}" [the advised value is instead "together"]')
-        warnings.warn(msg.format(env_dict['concretization']))
+    env_dict.setdefault("concretization", "together")
+    if env_dict["concretization"] != "together":
+        msg = (
+            'the "concretization" attribute of the environment is set '
+            'to "{0}" [the advised value is instead "together"]'
+        )
+        warnings.warn(msg.format(env_dict["concretization"]))
 
     # Check if the install tree was explicitly set to a custom value and warn
     # that it will be overridden
-    environment_config = env_dict.get('config', {})
-    if environment_config.get('install_tree', None):
-        msg = ('the "config:install_tree" attribute has been set explicitly '
-               'and will be overridden in the container image')
+    environment_config = env_dict.get("config", {})
+    if environment_config.get("install_tree", None):
+        msg = (
+            'the "config:install_tree" attribute has been set explicitly '
+            "and will be overridden in the container image"
+        )
         warnings.warn(msg)
 
     # Likewise for the view
-    environment_view = env_dict.get('view', None)
+    environment_view = env_dict.get("view", None)
     if environment_view:
-        msg = ('the "view" attribute has been set explicitly '
-               'and will be overridden in the container image')
+        msg = (
+            'the "view" attribute has been set explicitly '
+            "and will be overridden in the container image"
+        )
         warnings.warn(msg)
 
     jsonschema.validate(config, schema=env.schema)

@@ -12,10 +12,14 @@ class PyPysqlite(PythonPackage):
     homepage = "https://github.com/ghaering/pysqlite"
     pypi = "pysqlite/pysqlite-2.8.3.tar.gz"
 
-    version('2.8.3', sha256='17d3335863e8cf8392eea71add33dab3f96d060666fe68ab7382469d307f4490', deprecated=True)
+    version(
+        "2.8.3",
+        sha256="17d3335863e8cf8392eea71add33dab3f96d060666fe68ab7382469d307f4490",
+        deprecated=True,
+    )
 
     # pysqlite is built into Python3
-    depends_on('python@2.7.0:2.7', type=('build', 'run'))
+    depends_on("python@2.7.0:2.7", type=("build", "run"))
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
-    depends_on('sqlite', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("sqlite", type=("build", "run"))

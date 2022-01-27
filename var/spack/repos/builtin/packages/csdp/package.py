@@ -8,17 +8,20 @@ from spack import *
 
 class Csdp(MakefilePackage):
     """CSDP is a library of routines that implements a predictor corrector
-       variant of the semidefinite programming algorithm of Helmberg, Rendl,
-       Vanderbei, and Wolkowicz"""
+    variant of the semidefinite programming algorithm of Helmberg, Rendl,
+    Vanderbei, and Wolkowicz"""
 
     homepage = "https://projects.coin-or.org/Csdp"
-    url      = "https://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
+    url = "https://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
 
-    version('6.1.1', sha256='0558a46ac534e846bf866b76a9a44e8a854d84558efa50988ffc092f99a138b9')
+    version(
+        "6.1.1",
+        sha256="0558a46ac534e846bf866b76a9a44e8a854d84558efa50988ffc092f99a138b9",
+    )
 
-    depends_on('atlas')
+    depends_on("atlas")
 
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
-        makefile = FileFilter('Makefile')
-        makefile.filter('/usr/local/bin', prefix.bin)
+        makefile = FileFilter("Makefile")
+        makefile.filter("/usr/local/bin", prefix.bin)

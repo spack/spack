@@ -14,14 +14,22 @@ class PyUncertainties(PythonPackage):
     homepage = "https://uncertainties-python-package.readthedocs.io/en/latest/"
     pypi = "uncertainties/uncertainties-3.1.4.tar.gz"
 
-    version('3.1.6', sha256='7c4db5aaafd227e95485b61fba5d235dc8133aeecd98f8fc1224c038ce063e2d')
-    version('3.1.4', sha256='63548a94899f2a51eeb89b640f6ac311f481a8016b37dce157186e44619bc968')
+    version(
+        "3.1.6",
+        sha256="7c4db5aaafd227e95485b61fba5d235dc8133aeecd98f8fc1224c038ce063e2d",
+    )
+    version(
+        "3.1.4",
+        sha256="63548a94899f2a51eeb89b640f6ac311f481a8016b37dce157186e44619bc968",
+    )
 
-    variant('optional', default=False, description='Enable extra features involving numpy')
-    variant('docs',  default=False, description='Build with documentation')
+    variant(
+        "optional", default=False, description="Enable extra features involving numpy"
+    )
+    variant("docs", default=False, description="Build with documentation")
 
-    depends_on('python@2.7:',   type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-future',     type=('build', 'run'))
-    depends_on('py-numpy',      type=('build', 'run'), when='+optional')
-    depends_on('py-sphinx',     type='build', when='+docs')
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-future", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"), when="+optional")
+    depends_on("py-sphinx", type="build", when="+docs")

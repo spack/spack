@@ -21,11 +21,14 @@ class RRunjags(RPackage):
     DuMouchel prior and the half-Cauchy prior."""
 
     homepage = "https://github.com/ku-awdc/runjags"
-    cran     = "runjags"
+    cran = "runjags"
 
-    version('2.2.0-2', sha256='e5dfeb83d36faf19ebe64429f6db64aedecf3c9a040fd5bf9c0200914bf5039a')
+    version(
+        "2.2.0-2",
+        sha256="e5dfeb83d36faf19ebe64429f6db64aedecf3c9a040fd5bf9c0200914bf5039a",
+    )
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-lattice@0.20-10:', type=('build', 'run'))
-    depends_on('r-coda@0.17-1:', type=('build', 'run'))
-    depends_on('jags@4.3.0:')
+    depends_on("r@2.14.0:", type=("build", "run"))
+    depends_on("r-lattice@0.20-10:", type=("build", "run"))
+    depends_on("r-coda@0.17-1:", type=("build", "run"))
+    depends_on("jags@4.3.0:")

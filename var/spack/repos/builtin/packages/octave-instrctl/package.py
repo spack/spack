@@ -13,6 +13,9 @@ class OctaveInstrctl(OctavePackage, SourceforgePackage):
     homepage = "https://octave.sourceforge.io/instrument-control/"
     sourceforge_mirror_path = "octave/instrument-control-0.3.1.tar.gz"
 
-    version('0.3.1', sha256='d9c3b2e258cc8245ebfdd282e6314af12987daf453f4356555f56ca5ec55873c')
+    version(
+        "0.3.1",
+        sha256="d9c3b2e258cc8245ebfdd282e6314af12987daf453f4356555f56ca5ec55873c",
+    )
 
-    extends('octave@3.6.0:')
+    extends("octave@3.6.0:")

@@ -8,16 +8,19 @@ from spack import *
 
 class Ngmlr(CMakePackage):
     """Ngmlr is a long-read mapper designed to align PacBilo or Oxford
-       Nanopore to a reference genome with a focus on reads that span
-       structural variations."""
+    Nanopore to a reference genome with a focus on reads that span
+    structural variations."""
 
     homepage = "https://github.com/philres/ngmlr"
-    url      = "https://github.com/philres/ngmlr/archive/v0.2.5.tar.gz"
+    url = "https://github.com/philres/ngmlr/archive/v0.2.5.tar.gz"
 
-    version('0.2.5', sha256='719944a35cc7ff9c321eedbf3385a7375ce2301f609b3fd7be0a850cabbb028b')
+    version(
+        "0.2.5",
+        sha256="719944a35cc7ff9c321eedbf3385a7375ce2301f609b3fd7be0a850cabbb028b",
+    )
 
-    depends_on('zlib', type='link')
-    depends_on('sse2neon', when='target=aarch64:')
+    depends_on("zlib", type="link")
+    depends_on("sse2neon", when="target=aarch64:")
 
-    patch('for_aarch64.patch', when='target=aarch64:')
-    patch('for_va_list.patch')
+    patch("for_aarch64.patch", when="target=aarch64:")
+    patch("for_va_list.patch")

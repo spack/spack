@@ -32,35 +32,45 @@ error_message = """You can either:
 
 # Arguments for display_specs when we find ambiguity
 display_args = {
-    'long': True,
-    'show_flags': False,
-    'variants': False,
-    'indent': 4,
+    "long": True,
+    "show_flags": False,
+    "variants": False,
+    "indent": 4,
 }
 
 
 def setup_parser(subparser):
-    epilog_msg = ("Specs to be uninstalled are specified using the spec syntax"
-                  " (`spack help --spec`) and can be identified by their "
-                  "hashes. To remove packages that are needed only at build "
-                  "time and were not explicitly installed see `spack gc -h`."
-                  "\n\nWhen using the --all option ALL packages matching the "
-                  "supplied specs will be uninstalled. For instance, "
-                  "`spack uninstall --all libelf` uninstalls all the versions "
-                  "of `libelf` currently present in Spack's store. If no spec "
-                  "is supplied, all installed packages will be uninstalled. "
-                  "If used in an environment, all packages in the environment "
-                  "will be uninstalled.")
+    epilog_msg = (
+        "Specs to be uninstalled are specified using the spec syntax"
+        " (`spack help --spec`) and can be identified by their "
+        "hashes. To remove packages that are needed only at build "
+        "time and were not explicitly installed see `spack gc -h`."
+        "\n\nWhen using the --all option ALL packages matching the "
+        "supplied specs will be uninstalled. For instance, "
+        "`spack uninstall --all libelf` uninstalls all the versions "
+        "of `libelf` currently present in Spack's store. If no spec "
+        "is supplied, all installed packages will be uninstalled. "
+        "If used in an environment, all packages in the environment "
+        "will be uninstalled."
+    )
     subparser.epilog = epilog_msg
     subparser.add_argument(
-        '-f', '--force', action='store_true', dest='force',
+        "-f",
+        "--force",
+        action="store_true",
+        dest="force",
         help="remove regardless of whether other packages or environments "
-        "depend on this one")
+        "depend on this one",
+    )
     arguments.add_common_arguments(
-        subparser, ['recurse_dependents', 'yes_to_all', 'installed_specs'])
+        subparser, ["recurse_dependents", "yes_to_all", "installed_specs"]
+    )
     subparser.add_argument(
-        '-a', '--all', action='store_true', dest='all',
-        help="remove ALL installed packages that match each supplied spec"
+        "-a",
+        "--all",
+        action="store_true",
+        dest="all",
+        help="remove ALL installed packages that match each supplied spec",
     )
 
 
@@ -85,16 +95,16 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     has_errors = False
     for spec in specs:
         install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-        matching = spack.store.db.query_local(spec, hashes=hashes,
-                                              installed=install_query)
+        matching = spack.store.db.query_local(
+            spec, hashes=hashes, installed=install_query
+        )
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
-            tty.error('{0} matches multiple packages:'.format(spec))
-            sys.stderr.write('\n')
-            spack.cmd.display_specs(matching, output=sys.stderr,
-                                    **display_args)
-            sys.stderr.write('\n')
+            tty.error("{0} matches multiple packages:".format(spec))
+            sys.stderr.write("\n")
+            spack.cmd.display_specs(matching, output=sys.stderr, **display_args)
+            sys.stderr.write("\n")
             sys.stderr.flush()
             has_errors = True
 
@@ -103,8 +113,8 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
             if env:
                 pkg_type = "packages in environment '%s'" % env.name
             else:
-                pkg_type = 'installed packages'
-            tty.die('{0} does not match any {1}.'.format(spec, pkg_type))
+                pkg_type = "installed packages"
+            tty.die("{0} does not match any {1}.".format(spec, pkg_type))
 
         specs_from_cli.extend(matching)
 
@@ -227,9 +237,11 @@ def do_uninstall(env, specs, force):
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]
         if not ready:
-            msg = 'unexpected error [cannot proceed uninstalling specs with' \
-                  ' remaining dependents {0}]'
-            msg = msg.format(', '.join(x.name for x in packages))
+            msg = (
+                "unexpected error [cannot proceed uninstalling specs with"
+                " remaining dependents {0}]"
+            )
+            msg = msg.format(", ".join(x.name for x in packages))
             raise spack.error.SpackError(msg)
 
         packages = [x for x in packages if x not in ready]
@@ -269,29 +281,27 @@ def get_uninstall_list(args, specs, env):
             if i > 0:
                 print()
 
-            spec_format = '{name}{@version}{%compiler}{/hash:7}'
-            tty.info("Will not uninstall %s" % spec.cformat(spec_format),
-                     format='*r')
+            spec_format = "{name}{@version}{%compiler}{/hash:7}"
+            tty.info("Will not uninstall %s" % spec.cformat(spec_format), format="*r")
 
             dependents = active_dpts.get(spec)
             if dependents:
-                print('The following packages depend on it:')
+                print("The following packages depend on it:")
                 spack.cmd.display_specs(dependents, **display_args)
 
             if not env:
                 envs = spec_envs.get(spec)
                 if envs:
-                    print('It is used by the following environments:')
+                    print("It is used by the following environments:")
                     colify([e.name for e in envs], indent=4)
 
         msgs = []
         if active_dpts:
-            msgs.append(
-                'use `spack uninstall --dependents` to remove dependents too')
+            msgs.append("use `spack uninstall --dependents` to remove dependents too")
         if spec_envs:
-            msgs.append('use `spack env remove` to remove from environments')
+            msgs.append("use `spack env remove` to remove from environments")
         print()
-        tty.die('There are still dependents.', *msgs)
+        tty.die("There are still dependents.", *msgs)
 
     elif args.dependents:
         for spec, lst in active_dpts.items():
@@ -317,7 +327,7 @@ def uninstall_specs(args, specs):
     anything_to_do = set(uninstall_list).union(set(remove_list))
 
     if not anything_to_do:
-        tty.warn('There are no package to uninstall.')
+        tty.warn("There are no package to uninstall.")
         return
 
     if not args.yes_to_all:
@@ -341,19 +351,21 @@ def confirm_removal(specs):
     Args:
         specs (list): specs to be removed
     """
-    tty.msg('The following packages will be uninstalled:\n')
+    tty.msg("The following packages will be uninstalled:\n")
     spack.cmd.display_specs(specs, **display_args)
-    print('')
-    answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+    print("")
+    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
     if not answer:
-        tty.msg('Aborting uninstallation')
+        tty.msg("Aborting uninstallation")
         sys.exit(0)
 
 
 def uninstall(parser, args):
     if not args.specs and not args.all:
-        tty.die('uninstall requires at least one package argument.',
-                '  Use `spack uninstall --all` to uninstall ALL packages.')
+        tty.die(
+            "uninstall requires at least one package argument.",
+            "  Use `spack uninstall --all` to uninstall ALL packages.",
+        )
 
     # [any] here handles the --all case by forcing all specs to be returned
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [any]

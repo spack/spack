@@ -12,9 +12,12 @@ class PyH2(PythonPackage):
     homepage = "https://github.com/python-hyper/hyper-h2"
     pypi = "h2/h2-4.0.0.tar.gz"
 
-    version('4.0.0', sha256='bb7ac7099dd67a857ed52c815a6192b6b1f5ba6b516237fc24a085341340593d')
+    version(
+        "4.0.0",
+        sha256="bb7ac7099dd67a857ed52c815a6192b6b1f5ba6b516237fc24a085341340593d",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-hyperframe')
-    depends_on('py-hpack')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-hyperframe")
+    depends_on("py-hpack")

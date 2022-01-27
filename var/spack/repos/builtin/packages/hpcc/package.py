@@ -37,62 +37,72 @@ class Hpcc(MakefilePackage):
     url = "https://icl.cs.utk.edu/projectsfiles/hpcc/download/hpcc-1.5.0.tar.gz"
     git = "https://github.com/icl-utk-edu/hpcc.git"
 
-    version('develop', branch='main')
-    version('1.5.0', sha256='0a6fef7ab9f3347e549fed65ebb98234feea9ee18aea0c8f59baefbe3cf7ffb8')
-
-    variant(
-        'fft', default='internal', description='FFT library to use',
-        values=('internal', 'fftw2', 'mkl'), multi=False
+    version("develop", branch="main")
+    version(
+        "1.5.0",
+        sha256="0a6fef7ab9f3347e549fed65ebb98234feea9ee18aea0c8f59baefbe3cf7ffb8",
     )
 
-    depends_on('gmake', type='build')
-    depends_on('mpi@1.1:')
-    depends_on('blas')
-    depends_on('fftw-api@2+mpi', when='fft=fftw2')
-    depends_on('mkl', when='fft=mkl')
+    variant(
+        "fft",
+        default="internal",
+        description="FFT library to use",
+        values=("internal", "fftw2", "mkl"),
+        multi=False,
+    )
 
-    arch = '{0}-{1}'.format(platform.system(), platform.processor())
+    depends_on("gmake", type="build")
+    depends_on("mpi@1.1:")
+    depends_on("blas")
+    depends_on("fftw-api@2+mpi", when="fft=fftw2")
+    depends_on("mkl", when="fft=mkl")
+
+    arch = "{0}-{1}".format(platform.system(), platform.processor())
 
     config = {
-        '@SHELL@': '/bin/sh',
-        '@CD@': 'cd',
-        '@CP@': 'cp',
-        '@LN_S@': 'ln -s',
-        '@MKDIR@': 'mkdir',
-        '@RM@': '/bin/rm -f',
-        '@TOUCH@': 'touch',
-        '@ARCHIVER@': 'ar',
-        '@ARFLAGS@': 'r',
-        '@RANLIB@': 'echo',
-        '@ARCH@': arch,
-        '@MPDIR@': '',
-        '@MPINC@': '',
-        '@MPLIB@': '',
-        '@F2CDEFS@': '-DAdd_ -DF77_INTEGER=int -DStringSunStyle',
-        '@LADIR@': '',
-        '@LAINC@': '',
-        '@LALIB@': '',
-        '@CC@': None,
-        '@CCNOOPT@': '',
-        '@CCFLAGS@': '-O3',
-        '@LINKER@': '$(CC)',
-        '@LINKFLAGS@': ''
+        "@SHELL@": "/bin/sh",
+        "@CD@": "cd",
+        "@CP@": "cp",
+        "@LN_S@": "ln -s",
+        "@MKDIR@": "mkdir",
+        "@RM@": "/bin/rm -f",
+        "@TOUCH@": "touch",
+        "@ARCHIVER@": "ar",
+        "@ARFLAGS@": "r",
+        "@RANLIB@": "echo",
+        "@ARCH@": arch,
+        "@MPDIR@": "",
+        "@MPINC@": "",
+        "@MPLIB@": "",
+        "@F2CDEFS@": "-DAdd_ -DF77_INTEGER=int -DStringSunStyle",
+        "@LADIR@": "",
+        "@LAINC@": "",
+        "@LALIB@": "",
+        "@CC@": None,
+        "@CCNOOPT@": "",
+        "@CCFLAGS@": "-O3",
+        "@LINKER@": "$(CC)",
+        "@LINKFLAGS@": "",
     }
 
     def patch(self):
-        if 'fftw' in self.spec:
+        if "fftw" in self.spec:
             # spack's fftw2 prefix headers with floating point type
-            filter_file(r"^\s*#include <fftw.h>", "#include <sfftw.h>",
-                        "FFT/wrapfftw.h")
-            filter_file(r"^\s*#include <fftw_mpi.h>", "#include <sfftw_mpi.h>",
-                        "FFT/wrapmpifftw.h")
+            filter_file(
+                r"^\s*#include <fftw.h>", "#include <sfftw.h>", "FFT/wrapfftw.h"
+            )
+            filter_file(
+                r"^\s*#include <fftw_mpi.h>",
+                "#include <sfftw_mpi.h>",
+                "FFT/wrapmpifftw.h",
+            )
 
     def _write_make_arch(self, spec, prefix):
         """write make.arch file"""
-        with working_dir('hpl'):
+        with working_dir("hpl"):
             # copy template make.arch file
-            make_arch_filename = 'Make.{0}'.format(self.arch)
-            copy(join_path('setup', 'Make.UNKNOWN.in'), make_arch_filename)
+            make_arch_filename = "Make.{0}".format(self.arch)
+            copy(join_path("setup", "Make.UNKNOWN.in"), make_arch_filename)
 
             # fill template with values
             make_arch = FileFilter(make_arch_filename)
@@ -101,33 +111,36 @@ class Hpcc(MakefilePackage):
 
     def edit(self, spec, prefix):
         # Message Passing library (MPI)
-        self.config['@MPINC@'] = spec['mpi'].headers.include_flags
-        self.config['@MPLIB@'] = spec['mpi'].libs.search_flags
+        self.config["@MPINC@"] = spec["mpi"].headers.include_flags
+        self.config["@MPLIB@"] = spec["mpi"].libs.search_flags
 
         lin_alg_libs = []
         # FFT
-        if self.spec.variants['fft'].value in ('fftw2', 'mkl'):
-            self.config['@LAINC@'] += ' -DUSING_FFTW'
+        if self.spec.variants["fft"].value in ("fftw2", "mkl"):
+            self.config["@LAINC@"] += " -DUSING_FFTW"
 
-            if self.spec.variants['fft'].value == 'fftw2':
-                self.config['@LAINC@'] += \
-                    spec['fftw-api'].headers.include_flags
+            if self.spec.variants["fft"].value == "fftw2":
+                self.config["@LAINC@"] += spec["fftw-api"].headers.include_flags
                 # fftw does not set up libs for version 2
                 lin_alg_libs.append(
-                    join_path(spec['fftw-api'].prefix.lib, 'libsfftw_mpi.so'))
+                    join_path(spec["fftw-api"].prefix.lib, "libsfftw_mpi.so")
+                )
                 lin_alg_libs.append(
-                    join_path(spec['fftw-api'].prefix.lib, 'libsfftw.so'))
+                    join_path(spec["fftw-api"].prefix.lib, "libsfftw.so")
+                )
 
-            elif self.spec.variants['fft'].value == 'mkl' and '^mkl' in spec:
-                mklroot = env['MKLROOT']
-                self.config['@LAINC@'] += \
-                    ' -I{0}'.format(join_path(mklroot, 'include/fftw'))
+            elif self.spec.variants["fft"].value == "mkl" and "^mkl" in spec:
+                mklroot = env["MKLROOT"]
+                self.config["@LAINC@"] += " -I{0}".format(
+                    join_path(mklroot, "include/fftw")
+                )
                 libfftw2x_cdft = join_path(
-                    mklroot, 'lib', 'intel64', 'libfftw2x_cdft_DOUBLE_ilp64.a')
+                    mklroot, "lib", "intel64", "libfftw2x_cdft_DOUBLE_ilp64.a"
+                )
                 libfftw2xc = join_path(
-                    mklroot, 'lib', 'intel64', 'libfftw2xc_double_intel.a')
-                if not (os.path.exists(libfftw2x_cdft) and
-                        os.path.exists(libfftw2xc)):
+                    mklroot, "lib", "intel64", "libfftw2xc_double_intel.a"
+                )
+                if not (os.path.exists(libfftw2x_cdft) and os.path.exists(libfftw2xc)):
                     raise InstallError(
                         "HPCC need fftw2 interface, "
                         "here are brief notes how to make one:\n"
@@ -139,46 +152,49 @@ class Hpcc(MakefilePackage):
                         "# make FFTW C wrapper library\n"
                         "cd $MKLROOT/interfaces/fftw2xc\n"
                         "make libintel64 PRECISION=MKL_DOUBLE "
-                        "MKLROOT=$MKLROOT\n")
+                        "MKLROOT=$MKLROOT\n"
+                    )
                 lin_alg_libs.append(libfftw2xc)
                 lin_alg_libs.append(libfftw2x_cdft)
 
         # Linear Algebra library (BLAS or VSIPL)
-        self.config['@LAINC@'] = spec['blas'].headers.include_flags
+        self.config["@LAINC@"] = spec["blas"].headers.include_flags
         lin_alg_libs = lin_alg_libs + [
-            lib for lib in spec['blas'].libs if lib not in lin_alg_libs]
+            lib for lib in spec["blas"].libs if lib not in lin_alg_libs
+        ]
 
         # pack all LA/FFT libraries
-        self.config['@LALIB@'] = ' '.join(lin_alg_libs)
+        self.config["@LALIB@"] = " ".join(lin_alg_libs)
 
         # Compilers / linkers - Optimization flags
-        self.config['@CC@'] = '{0}'.format(spec['mpi'].mpicc)
+        self.config["@CC@"] = "{0}".format(spec["mpi"].mpicc)
 
         # Compiler flags for CPU architecture optimizations
-        if spec.satisfies('%intel'):
+        if spec.satisfies("%intel"):
             # with intel-parallel-studio+mpi the '-march' arguments
             # are not passed to icc
             arch_opt = spec.target.optimization_flags(
-                spec.compiler.name, spec.compiler.version)
-            self.config['@CCFLAGS@'] = \
-                '-O3 -restrict -ansi-alias -ip {0}'.format(arch_opt)
-            self.config['@CCNOOPT@'] = '-restrict'
+                spec.compiler.name, spec.compiler.version
+            )
+            self.config["@CCFLAGS@"] = "-O3 -restrict -ansi-alias -ip {0}".format(
+                arch_opt
+            )
+            self.config["@CCNOOPT@"] = "-restrict"
         self._write_make_arch(spec, prefix)
 
     def build(self, spec, prefix):
-        make('arch={0}'.format(self.arch))
+        make("arch={0}".format(self.arch))
 
     def check(self):
         """Simple check that compiled binary is working:
         launch with 4 MPI processes and check that test finished."""
         # copy input
-        copy('_hpccinf.txt', 'hpccinf.txt')
+        copy("_hpccinf.txt", "hpccinf.txt")
         # run test
-        run = Executable(
-            join_path(os.path.dirname(self.spec['mpi'].mpicc), 'mpirun'))
-        run('-np', '4', './hpcc')
+        run = Executable(join_path(os.path.dirname(self.spec["mpi"].mpicc), "mpirun"))
+        run("-np", "4", "./hpcc")
         # check output
-        hpccoutf = open('hpccoutf.txt', 'rt').read()
+        hpccoutf = open("hpccoutf.txt", "rt").read()
         if not re.search("End of HPC Challenge tests", hpccoutf):
             raise Exception("Test run was not successfull!")
 
@@ -187,28 +203,28 @@ class Hpcc(MakefilePackage):
         with working_dir(self.prefix.share.hpcc):
             # run test
             run = Executable(
-                join_path(os.path.dirname(self.spec['mpi'].mpicc), 'mpirun'))
-            run('-np', '4', self.prefix.bin.hpcc)
+                join_path(os.path.dirname(self.spec["mpi"].mpicc), "mpirun")
+            )
+            run("-np", "4", self.prefix.bin.hpcc)
             # check output
-            hpccoutf = open('hpccoutf.txt', 'rt').read()
+            hpccoutf = open("hpccoutf.txt", "rt").read()
             if not re.search("End of HPC Challenge tests", hpccoutf):
                 raise Exception("Test run was not successfull!")
 
     def install(self, spec, prefix):
         # copy executable
         mkdirp(self.prefix.bin)
-        install('hpcc', prefix.bin)
+        install("hpcc", prefix.bin)
         # copy input example
         mkdirp(self.prefix.share.hpcc)
-        install('_hpccinf.txt',
-                join_path(self.prefix.share.hpcc, 'hpccinf.txt'))
+        install("_hpccinf.txt", join_path(self.prefix.share.hpcc, "hpccinf.txt"))
         # copy documentation
         mkdirp(self.prefix.doc.hpcc)
-        install('README.html', self.prefix.doc.hpcc)
-        install('README.txt', self.prefix.doc.hpcc)
+        install("README.html", self.prefix.doc.hpcc)
+        install("README.txt", self.prefix.doc.hpcc)
 
     def flag_handler(self, name, flags):
         # old GCC defaults to -std=c90 but C99 is required for "restrict"
-        if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
+        if self.spec.satisfies("%gcc@:5.1") and name == "cflags":
             flags.append(self.compiler.c99_flag)
         return (flags, None, None)

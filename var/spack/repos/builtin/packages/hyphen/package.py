@@ -10,13 +10,16 @@ class Hyphen(AutotoolsPackage):
     """A library of text hyphenation."""
 
     homepage = "https://hunspell.github.io"
-    url      = "https://downloads.sourceforge.net/hunspell/hyphen-2.8.8.tar.gz"
-    git      = "https://github.com/hunspell/hyphen.git"
+    url = "https://downloads.sourceforge.net/hunspell/hyphen-2.8.8.tar.gz"
+    git = "https://github.com/hunspell/hyphen.git"
 
-    version('master', branch='master')
-    version('2.8.8', sha256='304636d4eccd81a14b6914d07b84c79ebb815288c76fe027b9ebff6ff24d5705')
+    version("master", branch="master")
+    version(
+        "2.8.8",
+        sha256="304636d4eccd81a14b6914d07b84c79ebb815288c76fe027b9ebff6ff24d5705",
+    )
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    depends_on("m4", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")

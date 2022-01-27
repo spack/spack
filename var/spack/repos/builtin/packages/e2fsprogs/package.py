@@ -11,18 +11,26 @@ class E2fsprogs(AutotoolsPackage):
     It also supports the ext3 and ext4 filesystems."""
 
     homepage = "https://github.com/tytso/e2fsprogs"
-    url      = "https://github.com/tytso/e2fsprogs/archive/v1.45.6.tar.gz"
+    url = "https://github.com/tytso/e2fsprogs/archive/v1.45.6.tar.gz"
 
-    version('1.45.6', sha256='d785164a2977cd88758cb0cac5c29add3fe491562a60040cfb193abcd0f9609b')
-    version('1.45.5', sha256='0fd76e55c1196c1d97a2c01f2e84f463b8e99484541b43ff4197f5a695159fd3')
+    version(
+        "1.45.6",
+        sha256="d785164a2977cd88758cb0cac5c29add3fe491562a60040cfb193abcd0f9609b",
+    )
+    version(
+        "1.45.5",
+        sha256="0fd76e55c1196c1d97a2c01f2e84f463b8e99484541b43ff4197f5a695159fd3",
+    )
 
-    depends_on('texinfo', type='build')
+    depends_on("texinfo", type="build")
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path("PATH", self.prefix.sbin)
 
     def configure_args(self):
         # avoid installing things in /etc
-        return ['--without-udev-rules-dir',
-                '--without-crond-dir',
-                '--without-systemd-unit-dir']
+        return [
+            "--without-udev-rules-dir",
+            "--without-crond-dir",
+            "--without-systemd-unit-dir",
+        ]

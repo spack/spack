@@ -14,13 +14,16 @@ class Xbiff(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xbiff"
     xorg_mirror_path = "app/xbiff-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='b4b702348674985741685e3ec7fcb5640ffb7bf20e753fc2d708f70f2e4c304d')
+    version(
+        "1.0.3",
+        sha256="b4b702348674985741685e3ec7fcb5640ffb7bf20e753fc2d708f70f2e4c304d",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxmu')
-    depends_on('libxext')
-    depends_on('libx11')
+    depends_on("libxaw")
+    depends_on("libxmu")
+    depends_on("libxext")
+    depends_on("libx11")
 
-    depends_on('xbitmaps')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xbitmaps")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

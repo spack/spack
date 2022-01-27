@@ -12,13 +12,16 @@ class Hstr(AutotoolsPackage):
     your command history."""
 
     homepage = "https://github.com/dvorka/hstr"
-    url      = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
+    url = "https://github.com/dvorka/hstr/archive/1.22.tar.gz"
 
-    version('1.22', sha256='384fee04e4c80a1964dcf443131c1da4a20dd474fb48132a51d3de0a946ba996')
+    version(
+        "1.22",
+        sha256="384fee04e4c80a1964dcf443131c1da4a20dd474fb48132a51d3de0a946ba996",
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('ncurses@5.9')
-    depends_on('readline')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("ncurses@5.9")
+    depends_on("readline")

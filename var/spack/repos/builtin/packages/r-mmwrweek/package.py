@@ -17,8 +17,14 @@ class RMmwrweek(RPackage):
     reverse."""
 
     homepage = "https://cloud.r-project.org/package=MMWRweek"
-    url      = "https://cloud.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/MMWRweek_0.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/MMWRweek"
 
-    version('0.1.3', sha256='1aa8b687dc3340c3f277689eb0ca529e0064a4a3a66868137f2f8ab209d133d0')
-    version('0.1.1', sha256='969fd18535f3b78dd360d62d29d5f15409fc059f4af5d345abfde711e4adbc99')
+    version(
+        "0.1.3",
+        sha256="1aa8b687dc3340c3f277689eb0ca529e0064a4a3a66868137f2f8ab209d133d0",
+    )
+    version(
+        "0.1.1",
+        sha256="969fd18535f3b78dd360d62d29d5f15409fc059f4af5d345abfde711e4adbc99",
+    )

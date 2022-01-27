@@ -7,8 +7,9 @@ class EcpVizSdk(Package):
     adds a transitive dependency forced to use non default
     values.
     """
+
     homepage = "https://dev.null"
 
-    version('1.0')
+    version("1.0")
 
-    depends_on('conditional-constrained-dependencies')
+    depends_on("conditional-constrained-dependencies")

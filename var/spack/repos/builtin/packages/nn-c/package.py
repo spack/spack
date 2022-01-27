@@ -12,22 +12,27 @@ class NnC(AutotoolsPackage):
     It provides a C library and a command line utility nnbathy."""
 
     homepage = "https://github.com/sakov/nn-c"
-    git      = "https://github.com/sakov/nn-c.git"
+    git = "https://github.com/sakov/nn-c.git"
 
-    version('master', branch='master')
-    version('1.86.2', commit='343c7784d38d3270d75d450569fc0b64767c37e9')
+    version("master", branch="master")
+    version("1.86.2", commit="343c7784d38d3270d75d450569fc0b64767c37e9")
 
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
+    variant(
+        "pic",
+        default=True,
+        description="Produce position-independent code (for shared libs)",
+    )
 
-    configure_directory = 'nn'
+    configure_directory = "nn"
 
     def configure_args(self):
         args = []
-        if '+pic' in self.spec:
-            args.extend([
-                'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
-                'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag),
-                'FFLAGS={0}'.format(self.compiler.fc_pic_flag)
-            ])
+        if "+pic" in self.spec:
+            args.extend(
+                [
+                    "CFLAGS={0}".format(self.compiler.cc_pic_flag),
+                    "CXXFLAGS={0}".format(self.compiler.cxx_pic_flag),
+                    "FFLAGS={0}".format(self.compiler.fc_pic_flag),
+                ]
+            )
         return args

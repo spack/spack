@@ -18,36 +18,43 @@ class Rnpletal(AutotoolsPackage):
     details."""
 
     homepage = "http://laplace.physics.ubc.ca/People/matt/Rnpl/index.html"
-    url      = "ftp://laplace.physics.ubc.ca/pub/rnpletal/rnpletal.tar.gz"
+    url = "ftp://laplace.physics.ubc.ca/pub/rnpletal/rnpletal.tar.gz"
 
     # RNPL is distributed via tarballs that are updated from time to time, but
     # which carry no version number.
-    version('develop', sha256='2886f96393b64703fccf61b3dbc34e0fa45a79297232be76352f29cb83863d4d')
+    version(
+        "develop",
+        sha256="2886f96393b64703fccf61b3dbc34e0fa45a79297232be76352f29cb83863d4d",
+    )
 
-    maintainers = ['eschnett']
+    maintainers = ["eschnett"]
 
-    variant('packages', multi=True,
-            description="Packages to enable",
-            values=(
-                # "rvs",
-                # "cliser",
-                "rnpl",
-                # "svs",
-                # "vutil",
-                # "utilmath",
-                # "visutil",
-                # "utilio",
-                # "cvtestsdf",
-                # "netlib_linpack",
-                # "netlib_odepack",
-                # "netlib_fftpack",
-                # "netlib_lapack3.0",
-            ), default="rnpl")
+    variant(
+        "packages",
+        multi=True,
+        description="Packages to enable",
+        values=(
+            # "rvs",
+            # "cliser",
+            "rnpl",
+            # "svs",
+            # "vutil",
+            # "utilmath",
+            # "visutil",
+            # "utilio",
+            # "cvtestsdf",
+            # "netlib_linpack",
+            # "netlib_odepack",
+            # "netlib_fftpack",
+            # "netlib_lapack3.0",
+        ),
+        default="rnpl",
+    )
 
     patch("corrections.diff")
 
-    depends_on('bison', type='build')
-    depends_on('flex', type='build')
+    depends_on("bison", type="build")
+    depends_on("flex", type="build")
 
     parallel = False
 
@@ -57,27 +64,27 @@ class Rnpletal(AutotoolsPackage):
     @property
     def configure_abs_path(self):
         return os.path.join(
-            os.path.abspath(self.configure_directory), 'rnpl', 'configure')
+            os.path.abspath(self.configure_directory), "rnpl", "configure"
+        )
 
     def configure(self, spec, prefix):
-        options = ['--prefix={0}'.format(prefix)]
-        for package in self.spec.variants['packages'].value:
+        options = ["--prefix={0}".format(prefix)]
+        for package in self.spec.variants["packages"].value:
             with working_dir(package):
                 configure(*options)
 
     def build(self, spec, prefix):
-        for package in self.spec.variants['packages'].value:
+        for package in self.spec.variants["packages"].value:
             with working_dir(package):
                 make()
 
     def install(self, spec, prefix):
-        for package in self.spec.variants['packages'].value:
+        for package in self.spec.variants["packages"].value:
             with working_dir(package):
                 make("install")
 
     @property
     def libs(self):
         return find_libraries(
-            ["libbbhutil", "librnpl"],
-            root=self.prefix, shared=False, recursive=True
+            ["libbbhutil", "librnpl"], root=self.prefix, shared=False, recursive=True
         )

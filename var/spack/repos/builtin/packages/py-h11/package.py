@@ -12,8 +12,14 @@ class PyH11(PythonPackage):
     homepage = "https://github.com/python-hyper/h11"
     pypi = "h11/h11-0.10.0.tar.gz"
 
-    version('0.10.0', sha256='311dc5478c2568cc07262e0381cdfc5b9c6ba19775905736c87e81ae6662b9fd')
-    version('0.9.0', sha256='33d4bca7be0fa039f4e84d50ab00531047e53d6ee8ffbc83501ea602c169cae1')
+    version(
+        "0.10.0",
+        sha256="311dc5478c2568cc07262e0381cdfc5b9c6ba19775905736c87e81ae6662b9fd",
+    )
+    version(
+        "0.9.0",
+        sha256="33d4bca7be0fa039f4e84d50ab00531047e53d6ee8ffbc83501ea602c169cae1",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")

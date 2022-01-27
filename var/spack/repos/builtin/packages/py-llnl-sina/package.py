@@ -25,20 +25,20 @@ class PyLlnlSina(PythonPackage):
 
     # notify when the package is updated.
     maintainers = [
-        'HaluskaR',
-        'estebanpauli',
-        'murray55',
-        'doutriaux1',
+        "HaluskaR",
+        "estebanpauli",
+        "murray55",
+        "doutriaux1",
     ]
-    version('1.11.0', tag="v1.11.0")
-    version('1.10.0', tag="v1.10.0")
+    version("1.11.0", tag="v1.11.0")
+    version("1.10.0", tag="v1.10.0")
 
     # let's remove dependency on orjson
-    patch('no_orjson.patch')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-ujson', type=('build', 'run'))
+    patch("no_orjson.patch")
+    depends_on("py-setuptools", type="build")
+    depends_on("py-enum34", when="^python@:3.3", type=("build", "run"))
+    depends_on("py-ujson", type=("build", "run"))
     depends_on("py-sqlalchemy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
 
-    build_directory = 'python'
+    build_directory = "python"

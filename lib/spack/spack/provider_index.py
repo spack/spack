@@ -98,9 +98,7 @@ class _IndexBase(object):
         # vpkg constraints on self.
         result = {}
         for name in common:
-            crossed = _cross_provider_maps(
-                self.providers[name], other.providers[name]
-            )
+            crossed = _cross_provider_maps(self.providers[name], other.providers[name])
             if crossed:
                 result[name] = crossed
 
@@ -195,8 +193,7 @@ class ProviderIndex(_IndexBase):
                         # If this package existed in the index before,
                         # need to take the old versions out, as they're
                         # now more constrained.
-                        old = set(
-                            [s for s in provider_set if s.name == spec.name])
+                        old = set([s for s in provider_set if s.name == spec.name])
                         provider_set.difference_update(old)
 
                         # Now add the new version.
@@ -216,10 +213,11 @@ class ProviderIndex(_IndexBase):
             stream: stream where to dump
         """
         provider_list = self._transform(
-            lambda vpkg, pset: [
-                vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list)
+            lambda vpkg, pset: [vpkg.to_node_dict(), [p.to_node_dict() for p in pset]],
+            list,
+        )
 
-        sjson.dump({'provider_index': {'providers': provider_list}}, stream)
+        sjson.dump({"provider_index": {"providers": provider_list}}, stream)
 
     def merge(self, other):
         """Merge another provider index into this one.
@@ -227,7 +225,7 @@ class ProviderIndex(_IndexBase):
         Args:
             other (ProviderIndex): provider index to be merged
         """
-        other = other.copy()   # defensive copy.
+        other = other.copy()  # defensive copy.
 
         for pkg in other.providers:
             if pkg not in self.providers:
@@ -240,8 +238,9 @@ class ProviderIndex(_IndexBase):
                     spdict[provided_spec] = opdict[provided_spec]
                     continue
 
-                spdict[provided_spec] = \
-                    spdict[provided_spec].union(opdict[provided_spec])
+                spdict[provided_spec] = spdict[provided_spec].union(
+                    opdict[provided_spec]
+                )
 
     def remove_provider(self, pkg_name):
         """Remove a provider from the ProviderIndex."""
@@ -268,7 +267,8 @@ class ProviderIndex(_IndexBase):
         """Return a deep copy of this index."""
         clone = ProviderIndex()
         clone.providers = self._transform(
-            lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
+            lambda vpkg, pset: (vpkg, set((p.copy() for p in pset)))
+        )
         return clone
 
     @staticmethod
@@ -283,17 +283,20 @@ class ProviderIndex(_IndexBase):
         if not isinstance(data, dict):
             raise ProviderIndexError("JSON ProviderIndex data was not a dict.")
 
-        if 'provider_index' not in data:
+        if "provider_index" not in data:
             raise ProviderIndexError(
-                "YAML ProviderIndex does not start with 'provider_index'")
+                "YAML ProviderIndex does not start with 'provider_index'"
+            )
 
         index = ProviderIndex()
-        providers = data['provider_index']['providers']
+        providers = data["provider_index"]["providers"]
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (
                 spack.spec.Spec.from_node_dict(vpkg),
-                set(spack.spec.Spec.from_node_dict(p) for p in plist)))
+                set(spack.spec.Spec.from_node_dict(p) for p in plist),
+            ),
+        )
         return index
 
 
@@ -310,6 +313,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
     Returns:
         Transformed mapping
     """
+
     def mapiter(mappings):
         if isinstance(mappings, dict):
             return six.iteritems(mappings)
@@ -317,10 +321,14 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
             return iter(mappings)
 
     return dict(
-        (name, out_mapping_type(
-            [transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]
-        ))
-        for name, mappings in providers.items())
+        (
+            name,
+            out_mapping_type(
+                [transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]
+            ),
+        )
+        for name, mappings in providers.items()
+    )
 
 
 class ProviderIndexError(spack.error.SpackError):

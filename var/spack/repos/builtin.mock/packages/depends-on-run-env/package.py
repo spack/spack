@@ -8,15 +8,15 @@ from spack import *
 
 class DependsOnRunEnv(Package):
     """This package has a runtime dependency on another package which needs
-       to perform shell modifications to run.
+    to perform shell modifications to run.
     """
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('modifies-run-env', type=('run',))
+    depends_on("modifies-run-env", type=("run",))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

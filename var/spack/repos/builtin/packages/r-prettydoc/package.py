@@ -15,9 +15,12 @@ class RPrettydoc(RPackage):
     HTML pages. Various themes and syntax highlight styles are supported."""
 
     homepage = "https://github.com/yixuan/prettydoc"
-    cran     = "prettydoc"
+    cran = "prettydoc"
 
-    version('0.4.1', sha256='1094a69b026238d149435472b4f41c75151c7370a1be6c6332147c88ad4c4829')
+    version(
+        "0.4.1",
+        sha256="1094a69b026238d149435472b4f41c75151c7370a1be6c6332147c88ad4c4829",
+    )
 
-    depends_on('r-rmarkdown@1.17:', type=('build', 'run'))
-    depends_on('pandoc@1.12.3:', type='build')
+    depends_on("r-rmarkdown@1.17:", type=("build", "run"))
+    depends_on("pandoc@1.12.3:", type="build")

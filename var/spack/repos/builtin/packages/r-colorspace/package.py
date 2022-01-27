@@ -28,11 +28,29 @@ class RColorspace(RPackage):
     homepage = "https://colorspace.R-Forge.R-project.org"
     cran = "colorspace"
 
-    version('2.0-2', sha256='b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a')
-    version('2.0-0', sha256='4e6a53af9918db282cefdc71eaa30f507d4d1d682bcfb74cb0dd68a0b282018e')
-    version('1.4-1', sha256='693d713a050f8bfecdb7322739f04b40d99b55aed168803686e43401d5f0d673')
-    version('1.4-0', sha256='ce003c5958dd704697959e9dc8a108c8cb568f8d78ece113235732afc5dff556')
-    version('1.3-2', sha256='dd9fd2342b650456901d014e7ff6d2e201f8bec0b555be63b1a878d2e1513e34')
-    version('1.2-6', sha256='ba3165c5b906edadcd1c37cad0ef58f780b0af651f3fdeb49fbb2dc825251679')
+    version(
+        "2.0-2",
+        sha256="b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a",
+    )
+    version(
+        "2.0-0",
+        sha256="4e6a53af9918db282cefdc71eaa30f507d4d1d682bcfb74cb0dd68a0b282018e",
+    )
+    version(
+        "1.4-1",
+        sha256="693d713a050f8bfecdb7322739f04b40d99b55aed168803686e43401d5f0d673",
+    )
+    version(
+        "1.4-0",
+        sha256="ce003c5958dd704697959e9dc8a108c8cb568f8d78ece113235732afc5dff556",
+    )
+    version(
+        "1.3-2",
+        sha256="dd9fd2342b650456901d014e7ff6d2e201f8bec0b555be63b1a878d2e1513e34",
+    )
+    version(
+        "1.2-6",
+        sha256="ba3165c5b906edadcd1c37cad0ef58f780b0af651f3fdeb49fbb2dc825251679",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))

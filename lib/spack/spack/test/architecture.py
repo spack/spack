@@ -19,11 +19,11 @@ def current_host_platform():
     """Return the platform of the current host as detected by the
     'platform' stdlib package.
     """
-    if os.path.exists('/opt/cray/pe'):
+    if os.path.exists("/opt/cray/pe"):
         current_platform = spack.platforms.Cray()
-    elif 'Linux' in platform.system():
+    elif "Linux" in platform.system():
         current_platform = spack.platforms.Linux()
-    elif 'Darwin' in platform.system():
+    elif "Darwin" in platform.system():
         current_platform = spack.platforms.Darwin()
     return current_platform
 
@@ -33,8 +33,11 @@ valid_keywords = ["fe", "be", "frontend", "backend"]
 
 
 @pytest.fixture(
-    params=([x for x in spack.platforms.Test().targets]
-            + valid_keywords + ['default_target'])
+    params=(
+        [x for x in spack.platforms.Test().targets]
+        + valid_keywords
+        + ["default_target"]
+    )
 )
 def target_str(request):
     """All the possible strings that can be used for targets"""
@@ -42,8 +45,11 @@ def target_str(request):
 
 
 @pytest.fixture(
-    params=([x for x in spack.platforms.Test().operating_sys]
-            + valid_keywords + ['default_os'])
+    params=(
+        [x for x in spack.platforms.Test().operating_sys]
+        + valid_keywords
+        + ["default_os"]
+    )
 )
 def os_str(request):
     """All the possible strings that can be used for operating systems"""
@@ -73,120 +79,145 @@ def test_user_input_combination(config, target_str, os_str):
 
 
 def test_operating_system_conversion_to_dict():
-    operating_system = spack.operating_systems.OperatingSystem('os', '1.0')
-    assert operating_system.to_dict() == {
-        'name': 'os', 'version': '1.0'
-    }
+    operating_system = spack.operating_systems.OperatingSystem("os", "1.0")
+    assert operating_system.to_dict() == {"name": "os", "version": "1.0"}
 
 
-@pytest.mark.parametrize('cpu_flag,target_name', [
-    # Test that specific flags can be used in queries
-    ('ssse3', 'haswell'),
-    ('popcnt', 'nehalem'),
-    ('avx512f', 'skylake_avx512'),
-    ('avx512ifma', 'icelake'),
-    # Test that proxy flags can be used in queries too
-    ('sse3', 'nehalem'),
-    ('avx512', 'skylake_avx512'),
-    ('avx512', 'icelake'),
-])
+@pytest.mark.parametrize(
+    "cpu_flag,target_name",
+    [
+        # Test that specific flags can be used in queries
+        ("ssse3", "haswell"),
+        ("popcnt", "nehalem"),
+        ("avx512f", "skylake_avx512"),
+        ("avx512ifma", "icelake"),
+        # Test that proxy flags can be used in queries too
+        ("sse3", "nehalem"),
+        ("avx512", "skylake_avx512"),
+        ("avx512", "icelake"),
+    ],
+)
 def test_target_container_semantic(cpu_flag, target_name):
     target = spack.target.Target(target_name)
     assert cpu_flag in target
 
 
-@pytest.mark.parametrize('item,architecture_str', [
-    # We can search the architecture string representation
-    ('linux', 'linux-ubuntu18.04-haswell'),
-    ('ubuntu', 'linux-ubuntu18.04-haswell'),
-    ('haswell', 'linux-ubuntu18.04-haswell'),
-    # We can also search flags of the target,
-    ('avx512', 'linux-ubuntu18.04-icelake'),
-])
+@pytest.mark.parametrize(
+    "item,architecture_str",
+    [
+        # We can search the architecture string representation
+        ("linux", "linux-ubuntu18.04-haswell"),
+        ("ubuntu", "linux-ubuntu18.04-haswell"),
+        ("haswell", "linux-ubuntu18.04-haswell"),
+        # We can also search flags of the target,
+        ("avx512", "linux-ubuntu18.04-icelake"),
+    ],
+)
 def test_arch_spec_container_semantic(item, architecture_str):
     architecture = spack.spec.ArchSpec(architecture_str)
     assert item in architecture
 
 
-@pytest.mark.parametrize('compiler_spec,target_name,expected_flags', [
-    # Check compilers with version numbers from a single toolchain
-    ('gcc@4.7.2', 'ivybridge', '-march=core-avx-i -mtune=core-avx-i'),
-    # Check mixed toolchains
-    ('clang@8.0.0', 'broadwell', ''),
-    ('clang@3.5', 'x86_64', '-march=x86-64 -mtune=generic'),
-    # Check Apple's Clang compilers
-    ('apple-clang@9.1.0', 'x86_64', '-march=x86-64')
-])
+@pytest.mark.parametrize(
+    "compiler_spec,target_name,expected_flags",
+    [
+        # Check compilers with version numbers from a single toolchain
+        ("gcc@4.7.2", "ivybridge", "-march=core-avx-i -mtune=core-avx-i"),
+        # Check mixed toolchains
+        ("clang@8.0.0", "broadwell", ""),
+        ("clang@3.5", "x86_64", "-march=x86-64 -mtune=generic"),
+        # Check Apple's Clang compilers
+        ("apple-clang@9.1.0", "x86_64", "-march=x86-64"),
+    ],
+)
 @pytest.mark.filterwarnings("ignore:microarchitecture specific")
-def test_optimization_flags(
-        compiler_spec, target_name, expected_flags, config
-):
+def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
     target = spack.target.Target(target_name)
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
 
-@pytest.mark.parametrize('compiler,real_version,target_str,expected_flags', [
-    (spack.spec.CompilerSpec('gcc@9.2.0'), None, 'haswell',
-     '-march=haswell -mtune=haswell'),
-    # Check that custom string versions are accepted
-    (spack.spec.CompilerSpec('gcc@foo'), '9.2.0', 'icelake',
-     '-march=icelake-client -mtune=icelake-client'),
-    # Check that we run version detection (4.4.0 doesn't support icelake)
-    (spack.spec.CompilerSpec('gcc@4.4.0-special'), '9.2.0', 'icelake',
-     '-march=icelake-client -mtune=icelake-client'),
-    # Check that the special case for Apple's clang is treated correctly
-    # i.e. it won't try to detect the version again
-    (spack.spec.CompilerSpec('apple-clang@9.1.0'), None, 'x86_64',
-     '-march=x86-64'),
-])
+@pytest.mark.parametrize(
+    "compiler,real_version,target_str,expected_flags",
+    [
+        (
+            spack.spec.CompilerSpec("gcc@9.2.0"),
+            None,
+            "haswell",
+            "-march=haswell -mtune=haswell",
+        ),
+        # Check that custom string versions are accepted
+        (
+            spack.spec.CompilerSpec("gcc@foo"),
+            "9.2.0",
+            "icelake",
+            "-march=icelake-client -mtune=icelake-client",
+        ),
+        # Check that we run version detection (4.4.0 doesn't support icelake)
+        (
+            spack.spec.CompilerSpec("gcc@4.4.0-special"),
+            "9.2.0",
+            "icelake",
+            "-march=icelake-client -mtune=icelake-client",
+        ),
+        # Check that the special case for Apple's clang is treated correctly
+        # i.e. it won't try to detect the version again
+        (spack.spec.CompilerSpec("apple-clang@9.1.0"), None, "x86_64", "-march=x86-64"),
+    ],
+)
 def test_optimization_flags_with_custom_versions(
-        compiler, real_version, target_str, expected_flags, monkeypatch, config
+    compiler, real_version, target_str, expected_flags, monkeypatch, config
 ):
     target = spack.target.Target(target_str)
     if real_version:
         monkeypatch.setattr(
-            spack.compiler.Compiler, 'get_real_version',
-            lambda x: real_version)
+            spack.compiler.Compiler, "get_real_version", lambda x: real_version
+        )
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 
 
-@pytest.mark.regression('15306')
-@pytest.mark.parametrize('architecture_tuple,constraint_tuple', [
-    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64')),
-    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64:')),
-])
+@pytest.mark.regression("15306")
+@pytest.mark.parametrize(
+    "architecture_tuple,constraint_tuple",
+    [
+        (("linux", "ubuntu18.04", None), ("linux", None, "x86_64")),
+        (("linux", "ubuntu18.04", None), ("linux", None, "x86_64:")),
+    ],
+)
 def test_satisfy_strict_constraint_when_not_concrete(
-        architecture_tuple, constraint_tuple
+    architecture_tuple, constraint_tuple
 ):
     architecture = spack.spec.ArchSpec(architecture_tuple)
     constraint = spack.spec.ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint, strict=True)
 
 
-@pytest.mark.parametrize('root_target_range,dep_target_range,result', [
-    ('x86_64:nocona', 'x86_64:core2', 'nocona'),  # pref not in intersection
-    ('x86_64:core2', 'x86_64:nocona', 'nocona'),
-    ('x86_64:haswell', 'x86_64:mic_knl', 'core2'),  # pref in intersection
-    ('ivybridge', 'nocona:skylake', 'ivybridge'),  # one side concrete
-    ('haswell:icelake', 'broadwell', 'broadwell'),
-    # multiple ranges in lists with multiple overlaps
-    ('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:', 'nocona'),
-    # lists with concrete targets, lists compared to ranges
-    ('x86_64,haswell', 'core2:broadwell', 'haswell')
-])
-@pytest.mark.usefixtures('mock_packages', 'config')
-def test_concretize_target_ranges(
-        root_target_range, dep_target_range, result
-):
+@pytest.mark.parametrize(
+    "root_target_range,dep_target_range,result",
+    [
+        ("x86_64:nocona", "x86_64:core2", "nocona"),  # pref not in intersection
+        ("x86_64:core2", "x86_64:nocona", "nocona"),
+        ("x86_64:haswell", "x86_64:mic_knl", "core2"),  # pref in intersection
+        ("ivybridge", "nocona:skylake", "ivybridge"),  # one side concrete
+        ("haswell:icelake", "broadwell", "broadwell"),
+        # multiple ranges in lists with multiple overlaps
+        ("x86_64:nocona,haswell:broadwell", "nocona:haswell,skylake:", "nocona"),
+        # lists with concrete targets, lists compared to ranges
+        ("x86_64,haswell", "core2:broadwell", "haswell"),
+    ],
+)
+@pytest.mark.usefixtures("mock_packages", "config")
+def test_concretize_target_ranges(root_target_range, dep_target_range, result):
     # use foobar=bar to make the problem simpler for the old concretizer
     # the new concretizer should not need that help
-    spec_str = ('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
-                (root_target_range, dep_target_range))
+    spec_str = "a %%gcc@10 foobar=bar target=%s ^b target=%s" % (
+        root_target_range,
+        dep_target_range,
+    )
     spec = spack.spec.Spec(spec_str)
     with spack.concretize.disable_compiler_existence_check():
         spec.concretize()
 
-    assert str(spec).count('arch=test-debian6-%s' % result) == 2
+    assert str(spec).count("arch=test-debian6-%s" % result) == 2

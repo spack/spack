@@ -8,23 +8,29 @@ from spack import *
 
 class Trinity(MakefilePackage):
     """Trinity, developed at the Broad Institute and the Hebrew University of
-       Jerusalem, represents a novel method for the efficient and robust de
-       novo reconstruction of transcriptomes from RNA-seq data. Trinity
-       combines three independent software modules: Inchworm, Chrysalis, and
-       Butterfly, applied sequentially to process large volumes of RNA-seq
-       reads. Trinity partitions the sequence data into many individual de
-       Bruijn graphs, each representing the transcriptional complexity at a
-       given gene or locus, and then processes each graph independently to
-       extract full-length splicing isoforms and to tease apart transcripts
-       derived from paralogous genes.
+    Jerusalem, represents a novel method for the efficient and robust de
+    novo reconstruction of transcriptomes from RNA-seq data. Trinity
+    combines three independent software modules: Inchworm, Chrysalis, and
+    Butterfly, applied sequentially to process large volumes of RNA-seq
+    reads. Trinity partitions the sequence data into many individual de
+    Bruijn graphs, each representing the transcriptional complexity at a
+    given gene or locus, and then processes each graph independently to
+    extract full-length splicing isoforms and to tease apart transcripts
+    derived from paralogous genes.
     """
 
     homepage = "https://trinityrnaseq.github.io/"
-    url      = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
+    url = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
-    version('2.12.0.FULL', sha256='0d47dc433cc3003e1c732b97da605e29c6ccafa38cd52cdb8ecc42399a9195d0',
-            url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/v2.12.0/trinityrnaseq-v2.12.0.FULL.tar.gz")
-    version('2.6.6', sha256='868dfadeefaf2d3c6150a88d5e86fbc09466d69bbf4a65f70b4f5a7485668984')
+    version(
+        "2.12.0.FULL",
+        sha256="0d47dc433cc3003e1c732b97da605e29c6ccafa38cd52cdb8ecc42399a9195d0",
+        url="https://github.com/trinityrnaseq/trinityrnaseq/releases/download/v2.12.0/trinityrnaseq-v2.12.0.FULL.tar.gz",
+    )
+    version(
+        "2.6.6",
+        sha256="868dfadeefaf2d3c6150a88d5e86fbc09466d69bbf4a65f70b4f5a7485668984",
+    )
 
     depends_on("cmake", type="build")
     depends_on("java@8:", type=("build", "run"))
@@ -80,25 +86,29 @@ class Trinity(MakefilePackage):
         make("plugins")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin)
-        force_remove(join_path(prefix.bin, '.gitmodules'))
-        force_remove(join_path(prefix.bin, 'Butterfly', '.err'))
-        force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.classpath'))
-        force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.err'))
-        force_remove(join_path(prefix.bin, 'Butterfly', 'src', '.project'))
-        remove_linked_tree(join_path(prefix.bin, 'Butterfly', 'src',
-                                     '.settings'))
-        remove_linked_tree(join_path(prefix.bin, 'Inchworm', 'src', '.deps'))
-        remove_linked_tree(join_path(prefix.bin, 'trinity-plugins',
-                                     'ParaFly-0.1.0', 'src', '.deps'))
-        force_remove(join_path(prefix.bin, 'trinity-plugins',
-                               'seqtk-trinity-0.0.2', '.gitignore'))
-        force_remove(join_path(prefix.bin, 'trinity-plugins', 'slclust', 'bin',
-                               '.hidden'))
+        install_tree(".", prefix.bin)
+        force_remove(join_path(prefix.bin, ".gitmodules"))
+        force_remove(join_path(prefix.bin, "Butterfly", ".err"))
+        force_remove(join_path(prefix.bin, "Butterfly", "src", ".classpath"))
+        force_remove(join_path(prefix.bin, "Butterfly", "src", ".err"))
+        force_remove(join_path(prefix.bin, "Butterfly", "src", ".project"))
+        remove_linked_tree(join_path(prefix.bin, "Butterfly", "src", ".settings"))
+        remove_linked_tree(join_path(prefix.bin, "Inchworm", "src", ".deps"))
+        remove_linked_tree(
+            join_path(prefix.bin, "trinity-plugins", "ParaFly-0.1.0", "src", ".deps")
+        )
+        force_remove(
+            join_path(
+                prefix.bin, "trinity-plugins", "seqtk-trinity-0.0.2", ".gitignore"
+            )
+        )
+        force_remove(
+            join_path(prefix.bin, "trinity-plugins", "slclust", "bin", ".hidden")
+        )
 
     def setup_build_environment(self, env):
-        env.append_flags('CXXFLAGS', self.compiler.openmp_flag)
+        env.append_flags("CXXFLAGS", self.compiler.openmp_flag)
 
     def setup_run_environment(self, env):
-        env.set('TRINITY_HOME', self.prefix.bin)
-        env.prepend_path('PATH', self.prefix.bin.util)
+        env.set("TRINITY_HOME", self.prefix.bin)
+        env.prepend_path("PATH", self.prefix.bin.util)

@@ -13,10 +13,13 @@ class Xlsfonts(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xlsfonts"
     xorg_mirror_path = "app/xlsfonts-1.0.5.tar.gz"
 
-    version('1.0.5', sha256='2a7aeca1023a3918ad2a1af2258ed63d8f8b6c48e53841b3a3f15fb9a0c008ce')
+    version(
+        "1.0.5",
+        sha256="2a7aeca1023a3918ad2a1af2258ed63d8f8b6c48e53841b3a3f15fb9a0c008ce",
+    )
 
-    depends_on('libx11')
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

@@ -24,10 +24,7 @@ class Hipsycl(CMakePackage):
     provides("sycl")
 
     version("stable", branch="stable", submodules=True)
-    version(
-        "0.9.1",
-        commit="fe8465cd5399a932f7221343c07c9942b0fe644c",
-        submodules=True)
+    version("0.9.1", commit="fe8465cd5399a932f7221343c07c9942b0fe644c", submodules=True)
     version(
         "0.8.0",
         commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a",
@@ -42,7 +39,9 @@ class Hipsycl(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
-    depends_on("boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when='@0.9.1:')
+    depends_on(
+        "boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when="@0.9.1:"
+    )
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
@@ -53,13 +52,14 @@ class Hipsycl(CMakePackage):
 
     conflicts(
         "%gcc@:4",
-        when='@:0.9.0',
+        when="@:0.9.0",
         msg="hipSYCL needs proper C++14 support to be built, %gcc is too old",
     )
     conflicts(
         "%gcc@:8",
-        when='@0.9.1:',
-        msg="hipSYCL needs proper C++17 support to be built, %gcc is too old")
+        when="@0.9.1:",
+        msg="hipSYCL needs proper C++17 support to be built, %gcc is too old",
+    )
     conflicts(
         "^llvm build_type=Debug",
         when="+cuda",
@@ -83,18 +83,14 @@ class Hipsycl(CMakePackage):
         ]
         # LLVM directory containing all installed CMake files
         # (e.g.: configs consumed by client projects)
-        llvm_cmake_dirs = filesystem.find(
-            spec["llvm"].prefix, "LLVMExports.cmake"
-        )
+        llvm_cmake_dirs = filesystem.find(spec["llvm"].prefix, "LLVMExports.cmake")
         if len(llvm_cmake_dirs) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide "
                 "a unique directory containing CMake client "
                 "files, found: {0}".format(llvm_cmake_dirs)
             )
-        args.append(
-            "-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0]))
-        )
+        args.append("-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0])))
         # clang internal headers directory
         llvm_clang_include_dirs = filesystem.find(
             spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h"
@@ -118,15 +114,11 @@ class Hipsycl(CMakePackage):
                 "valid clang++ executable, found invalid: "
                 "{0}".format(llvm_clang_bin)
             )
-        args.append(
-            "-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin)
-        )
+        args.append("-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin))
         # explicit CUDA toolkit
         if "+cuda" in spec:
             args.append(
-                "-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(
-                    spec["cuda"].prefix
-                )
+                "-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix)
             )
         return args
 

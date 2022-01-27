@@ -16,14 +16,20 @@ class PyOauth2client(PythonPackage):
     homepage = "https://github.com/google/oauth2client/"
     pypi = "oauth2client/oauth2client-4.1.3.tar.gz"
 
-    version('4.1.3', sha256='d486741e451287f69568a4d26d70d9acd73a2bbfa275746c535b4209891cccc6')
-    version('3.0.0', sha256='5b5b056ec6f2304e7920b632885bd157fa71d1a7f3ddd00a43b1541a8d1a2460')
+    version(
+        "4.1.3",
+        sha256="d486741e451287f69568a4d26d70d9acd73a2bbfa275746c535b4209891cccc6",
+    )
+    version(
+        "3.0.0",
+        sha256="5b5b056ec6f2304e7920b632885bd157fa71d1a7f3ddd00a43b1541a8d1a2460",
+    )
 
-    depends_on('python@2.7:2,3.4:', when='@4:', type=('build', 'run'))
-    depends_on('python@2.6:2,3.3:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-httplib2@0.9.1:', type=('build', 'run'))
-    depends_on('py-pyasn1@0.1.7:', type=('build', 'run'))
-    depends_on('py-pyasn1-modules@0.0.5:', type=('build', 'run'))
-    depends_on('py-rsa@3.1.4:', type=('build', 'run'))
-    depends_on('py-six@1.6.1:', type=('build', 'run'))
+    depends_on("python@2.7:2,3.4:", when="@4:", type=("build", "run"))
+    depends_on("python@2.6:2,3.3:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-httplib2@0.9.1:", type=("build", "run"))
+    depends_on("py-pyasn1@0.1.7:", type=("build", "run"))
+    depends_on("py-pyasn1-modules@0.0.5:", type=("build", "run"))
+    depends_on("py-rsa@3.1.4:", type=("build", "run"))
+    depends_on("py-six@1.6.1:", type=("build", "run"))

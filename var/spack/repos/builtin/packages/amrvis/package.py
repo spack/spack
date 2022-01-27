@@ -6,157 +6,124 @@
 
 class Amrvis(MakefilePackage):
     """Amrvis is a visualization package specifically designed to
-       read and display output and profiling data from codes built
-       on the AMReX framework.
+    read and display output and profiling data from codes built
+    on the AMReX framework.
     """
 
     homepage = "https://github.com/AMReX-Codes/Amrvis"
-    git      = "https://github.com/AMReX-Codes/Amrvis.git"
+    git = "https://github.com/AMReX-Codes/Amrvis.git"
 
-    version('main', tag='main')
+    version("main", tag="main")
 
     variant(
-        'dims',
-        default='3',
-        values=('1', '2', '3'),
+        "dims",
+        default="3",
+        values=("1", "2", "3"),
         multi=False,
-        description='Number of spatial dimensions'
+        description="Number of spatial dimensions",
     )
     variant(
-        'prec',
-        default='DOUBLE',
-        values=('FLOAT', 'DOUBLE'),
+        "prec",
+        default="DOUBLE",
+        values=("FLOAT", "DOUBLE"),
         multi=False,
-        description='Floating point precision'
+        description="Floating point precision",
     )
-    variant('mpi', default=True, description='Enable MPI parallel support')
-    variant('debug', default=False, description='Enable debugging features')
-    variant('profiling', default=False,
-            description='Enable AMReX profiling features')
+    variant("mpi", default=True, description="Enable MPI parallel support")
+    variant("debug", default=False, description="Enable debugging features")
+    variant("profiling", default=False, description="Enable AMReX profiling features")
 
-    depends_on('gmake', type='build')
-    depends_on('mpi', when='+mpi')
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libxpm')
-    depends_on('libx11')
-    depends_on('libxt')
-    depends_on('libxext')
-    depends_on('motif')
-    depends_on('flex')
-    depends_on('bison')
+    depends_on("gmake", type="build")
+    depends_on("mpi", when="+mpi")
+    depends_on("libsm")
+    depends_on("libice")
+    depends_on("libxpm")
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxext")
+    depends_on("motif")
+    depends_on("flex")
+    depends_on("bison")
 
     conflicts(
-        '+profiling', when='dims=1',
-        msg='Amrvis profiling support requires a 2D build'
+        "+profiling", when="dims=1", msg="Amrvis profiling support requires a 2D build"
     )
     conflicts(
-        '+profiling', when='dims=3',
-        msg='Amrvis profiling support requires a 2D build'
+        "+profiling", when="dims=3", msg="Amrvis profiling support requires a 2D build"
     )
 
     # Only doing gcc and clang at the moment.
     # Intel currently fails searching for mpiicc, mpiicpc, etc.
-    for comp in ['%intel', '%cce', '%nag', '%pgi', '%xl', '%xl_r']:
-        conflicts(
-            comp,
-            msg='Amrvis currently only builds with gcc and clang'
-        )
+    for comp in ["%intel", "%cce", "%nag", "%pgi", "%xl", "%xl_r"]:
+        conflicts(comp, msg="Amrvis currently only builds with gcc and clang")
 
     # Need to clone AMReX into Amrvis because Amrvis uses AMReX's source
-    resource(name='amrex',
-             git='https://github.com/AMReX-Codes/amrex.git',
-             tag='development',
-             placement='amrex')
+    resource(
+        name="amrex",
+        git="https://github.com/AMReX-Codes/amrex.git",
+        tag="development",
+        placement="amrex",
+    )
 
     def edit(self, spec, prefix):
         # libquadmath is only available x86_64 and powerle
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
-        if self.spec.target.family not in ['x86_64', 'ppc64le']:
-            comps = join_path('amrex', 'Tools', 'GNUMake', 'comps')
+        if self.spec.target.family not in ["x86_64", "ppc64le"]:
+            comps = join_path("amrex", "Tools", "GNUMake", "comps")
             maks = [
-                join_path(comps, 'gnu.mak'),
-                join_path(comps, 'llvm.mak'),
+                join_path(comps, "gnu.mak"),
+                join_path(comps, "llvm.mak"),
             ]
             for mak in maks:
-                filter_file('-lquadmath', '', mak)
+                filter_file("-lquadmath", "", mak)
 
         # Set all available makefile options to values we want
-        makefile = FileFilter('GNUmakefile')
+        makefile = FileFilter("GNUmakefile")
+        makefile.filter(r"^AMREX_HOME\s*\?=.*", "AMREX_HOME = {0}".format("./amrex"))
         makefile.filter(
-            r'^AMREX_HOME\s*\?=.*',
-            'AMREX_HOME = {0}'.format('./amrex')
+            r"^PRECISION\s*=.*", "PRECISION = {0}".format(spec.variants["prec"].value)
+        )
+        makefile.filter(r"^DIM\s*=.*", "DIM = {0}".format(spec.variants["dims"].value))
+        makefile.filter(
+            r"^PROFILE\s*=.*",
+            "PROFILE = {0}".format(spec.variants["profiling"].value).upper(),
         )
         makefile.filter(
-            r'^PRECISION\s*=.*',
-            'PRECISION = {0}'.format(spec.variants['prec'].value)
+            r"^TRACE_PROFILE\s*=.*",
+            "TRACE_PROFILE = {0}".format(spec.variants["profiling"].value).upper(),
         )
         makefile.filter(
-            r'^DIM\s*=.*',
-            'DIM = {0}'.format(spec.variants['dims'].value)
+            r"^COMM_PROFILE\s*=.*",
+            "COMM_PROFILE = {0}".format(spec.variants["profiling"].value).upper(),
+        )
+        makefile.filter(r"^COMP\s*=.*", "COMP = {0}".format(self.compiler.name))
+        makefile.filter(
+            r"^DEBUG\s*=.*", "DEBUG = {0}".format(spec.variants["debug"].value).upper()
+        )
+        makefile.filter(r"^USE_ARRAYVIEW\s*=.*", "USE_ARRAY_VIEW = FALSE")
+        makefile.filter(
+            r"^USE_MPI\s*=.*",
+            "USE_MPI = {0}".format(spec.variants["mpi"].value).upper(),
+        )
+        makefile.filter(r"^USE_CXX11\s*=.*", "USE_CXX11 = TRUE")
+        makefile.filter(r"^USE_VOLRENDER\s*=.*", "USE_VOLRENDER = FALSE")
+        makefile.filter(
+            r"^USE_PARALLELVOLRENDER\s*=.*", "USE_PARALLELVOLRENDER = FALSE"
         )
         makefile.filter(
-            r'^PROFILE\s*=.*',
-            'PROFILE = {0}'.format(
-                spec.variants['profiling'].value
-            ).upper()
-        )
-        makefile.filter(
-            r'^TRACE_PROFILE\s*=.*',
-            'TRACE_PROFILE = {0}'.format(
-                spec.variants['profiling'].value
-            ).upper()
-        )
-        makefile.filter(
-            r'^COMM_PROFILE\s*=.*',
-            'COMM_PROFILE = {0}'.format(
-                spec.variants['profiling'].value
-            ).upper()
-        )
-        makefile.filter(
-            r'^COMP\s*=.*',
-            'COMP = {0}'.format(self.compiler.name)
-        )
-        makefile.filter(
-            r'^DEBUG\s*=.*',
-            'DEBUG = {0}'.format(spec.variants['debug'].value).upper()
-        )
-        makefile.filter(
-            r'^USE_ARRAYVIEW\s*=.*',
-            'USE_ARRAY_VIEW = FALSE'
-        )
-        makefile.filter(
-            r'^USE_MPI\s*=.*',
-            'USE_MPI = {0}'.format(spec.variants['mpi'].value).upper()
-        )
-        makefile.filter(
-            r'^USE_CXX11\s*=.*',
-            'USE_CXX11 = TRUE'
-        )
-        makefile.filter(
-            r'^USE_VOLRENDER\s*=.*',
-            'USE_VOLRENDER = FALSE'
-        )
-        makefile.filter(
-            r'^USE_PARALLELVOLRENDER\s*=.*',
-            'USE_PARALLELVOLRENDER = FALSE'
-        )
-        makefile.filter(
-            r'^USE_PROFPARSER\s*=.*',
-            'USE_PROFPARSER = {0}'.format(
-                spec.variants['profiling'].value
-            ).upper()
+            r"^USE_PROFPARSER\s*=.*",
+            "USE_PROFPARSER = {0}".format(spec.variants["profiling"].value).upper(),
         )
 
         # A bit risky here deleting all /usr and /opt X
         # library default search paths in makefile
         makefile.filter(
-            r'^.*\b(usr|opt)\b.*$',
-            '# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS'
+            r"^.*\b(usr|opt)\b.*$",
+            "# Spack removed INCLUDE_LOCATIONS and LIBRARY_LOCATIONS",
         )
 
         # Read GNUmakefile into array
-        with open('GNUmakefile', 'r') as file:
+        with open("GNUmakefile", "r") as file:
             contents = file.readlines()
 
         # Edit GNUmakefile includes and libraries to point to Spack
@@ -165,34 +132,33 @@ class Amrvis(MakefilePackage):
         # INCLUDE_LOCATIONS at the beginning of the makefile.
         line_offset = 0
         count = 0
-        for lib in ['libsm', 'libice', 'libxpm', 'libx11',
-                    'libxt', 'libxext', 'motif']:
+        for lib in ["libsm", "libice", "libxpm", "libx11", "libxt", "libxext", "motif"]:
             contents.insert(
                 line_offset + count,
-                'LIBRARY_LOCATIONS += {0}\n'.format(spec[lib].prefix.lib)
+                "LIBRARY_LOCATIONS += {0}\n".format(spec[lib].prefix.lib),
             )
             contents.insert(
                 line_offset + count + 1,
-                'INCLUDE_LOCATIONS += {0}\n'.format(spec[lib].prefix.include)
+                "INCLUDE_LOCATIONS += {0}\n".format(spec[lib].prefix.include),
             )
             count += 1
 
         # Write GNUmakefile
-        with open('GNUmakefile', 'w') as file:
+        with open("GNUmakefile", "w") as file:
             file.writelines(contents)
 
     def setup_build_environment(self, env):
         # We don't want an AMREX_HOME the user may have set already
-        env.unset('AMREX_HOME')
+        env.unset("AMREX_HOME")
         # Help force Amrvis to not pick up random system compilers
-        if '+mpi' in self.spec:
-            env.set('MPI_HOME', self.spec['mpi'].prefix)
-            env.set('CC', self.spec['mpi'].mpicc)
-            env.set('CXX', self.spec['mpi'].mpicxx)
-            env.set('F77', self.spec['mpi'].mpif77)
-            env.set('FC', self.spec['mpi'].mpifc)
+        if "+mpi" in self.spec:
+            env.set("MPI_HOME", self.spec["mpi"].prefix)
+            env.set("CC", self.spec["mpi"].mpicc)
+            env.set("CXX", self.spec["mpi"].mpicxx)
+            env.set("F77", self.spec["mpi"].mpif77)
+            env.set("FC", self.spec["mpi"].mpifc)
 
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        install('*.ex', prefix.bin)
+        install("*.ex", prefix.bin)

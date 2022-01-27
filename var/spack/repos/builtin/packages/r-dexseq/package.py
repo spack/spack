@@ -19,24 +19,24 @@ class RDexseq(RPackage):
 
     bioc = "DEXSeq"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('1.36.0', commit='f0a361af6954fcc2abb2db801c26e303570669b2')
+    version("1.36.0", commit="f0a361af6954fcc2abb2db801c26e303570669b2")
 
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-geneplotter', type=('build', 'run'))
-    depends_on('r-genefilter', type=('build', 'run'))
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biomart', type=('build', 'run'))
-    depends_on('r-hwriter', type=('build', 'run'))
-    depends_on('r-rsamtools', type=('build', 'run'))
-    depends_on('r-statmod', type=('build', 'run'))
-    depends_on('r-biocparallel', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-summarizedexperiment', type=('build', 'run'))
-    depends_on('r-iranges@2.5.17:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.23.7:', type=('build', 'run'))
-    depends_on('r-deseq2@1.9.11:', type=('build', 'run'))
-    depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-rcolorbrewer', type=('build', 'run'))
-    depends_on('r-s4vectors@0.23.18:', type=('build', 'run'))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-geneplotter", type=("build", "run"))
+    depends_on("r-genefilter", type=("build", "run"))
+    depends_on("r-biocgenerics", type=("build", "run"))
+    depends_on("r-biomart", type=("build", "run"))
+    depends_on("r-hwriter", type=("build", "run"))
+    depends_on("r-rsamtools", type=("build", "run"))
+    depends_on("r-statmod", type=("build", "run"))
+    depends_on("r-biocparallel", type=("build", "run"))
+    depends_on("r-biobase", type=("build", "run"))
+    depends_on("r-summarizedexperiment", type=("build", "run"))
+    depends_on("r-iranges@2.5.17:", type=("build", "run"))
+    depends_on("r-genomicranges@1.23.7:", type=("build", "run"))
+    depends_on("r-deseq2@1.9.11:", type=("build", "run"))
+    depends_on("r-annotationdbi", type=("build", "run"))
+    depends_on("r-rcolorbrewer", type=("build", "run"))
+    depends_on("r-s4vectors@0.23.18:", type=("build", "run"))

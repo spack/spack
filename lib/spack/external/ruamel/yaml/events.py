@@ -17,14 +17,17 @@ class Event(object):
         self.comment = comment
 
     def __repr__(self):
-        attributes = [key for key in ['anchor', 'tag', 'implicit', 'value',
-                                      'flow_style', 'style']
-                      if hasattr(self, key)]
-        arguments = ', '.join(['%s=%r' % (key, getattr(self, key))
-                               for key in attributes])
+        attributes = [
+            key
+            for key in ["anchor", "tag", "implicit", "value", "flow_style", "style"]
+            if hasattr(self, key)
+        ]
+        arguments = ", ".join(
+            ["%s=%r" % (key, getattr(self, key)) for key in attributes]
+        )
         if self.comment not in [None, CommentCheck]:
-            arguments += ', comment={!r}'.format(self.comment)
-        return '%s(%s)' % (self.__class__.__name__, arguments)
+            arguments += ", comment={!r}".format(self.comment)
+        return "%s(%s)" % (self.__class__.__name__, arguments)
 
 
 class NodeEvent(Event):
@@ -34,8 +37,16 @@ class NodeEvent(Event):
 
 
 class CollectionStartEvent(NodeEvent):
-    def __init__(self, anchor, tag, implicit, start_mark=None, end_mark=None,
-                 flow_style=None, comment=None):
+    def __init__(
+        self,
+        anchor,
+        tag,
+        implicit,
+        start_mark=None,
+        end_mark=None,
+        flow_style=None,
+        comment=None,
+    ):
         Event.__init__(self, start_mark, end_mark, comment)
         self.anchor = anchor
         self.tag = tag
@@ -46,12 +57,12 @@ class CollectionStartEvent(NodeEvent):
 class CollectionEndEvent(Event):
     pass
 
+
 # Implementations.
 
 
 class StreamStartEvent(Event):
-    def __init__(self, start_mark=None, end_mark=None, encoding=None,
-                 comment=None):
+    def __init__(self, start_mark=None, end_mark=None, encoding=None, comment=None):
         Event.__init__(self, start_mark, end_mark, comment)
         self.encoding = encoding
 
@@ -61,8 +72,15 @@ class StreamEndEvent(Event):
 
 
 class DocumentStartEvent(Event):
-    def __init__(self, start_mark=None, end_mark=None,
-                 explicit=None, version=None, tags=None, comment=None):
+    def __init__(
+        self,
+        start_mark=None,
+        end_mark=None,
+        explicit=None,
+        version=None,
+        tags=None,
+        comment=None,
+    ):
         Event.__init__(self, start_mark, end_mark, comment)
         self.explicit = explicit
         self.version = version
@@ -70,8 +88,7 @@ class DocumentStartEvent(Event):
 
 
 class DocumentEndEvent(Event):
-    def __init__(self, start_mark=None, end_mark=None,
-                 explicit=None, comment=None):
+    def __init__(self, start_mark=None, end_mark=None, explicit=None, comment=None):
         Event.__init__(self, start_mark, end_mark, comment)
         self.explicit = explicit
 
@@ -81,8 +98,17 @@ class AliasEvent(NodeEvent):
 
 
 class ScalarEvent(NodeEvent):
-    def __init__(self, anchor, tag, implicit, value,
-                 start_mark=None, end_mark=None, style=None, comment=None):
+    def __init__(
+        self,
+        anchor,
+        tag,
+        implicit,
+        value,
+        start_mark=None,
+        end_mark=None,
+        style=None,
+        comment=None,
+    ):
         NodeEvent.__init__(self, anchor, start_mark, end_mark, comment)
         self.tag = tag
         self.implicit = implicit

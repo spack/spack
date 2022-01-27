@@ -37,13 +37,11 @@ formatters = {}
 #: standard arguments for updating completion scripts
 #: we iterate through these when called with --update-completion
 update_completion_args = {
-    "bash":  {
+    "bash": {
         "aliases": True,
         "format": "bash",
-        "header": os.path.join(
-            spack.paths.share_path, "bash", "spack-completion.in"),
-        "update": os.path.join(
-            spack.paths.share_path, "spack-completion.bash"),
+        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.in"),
+        "update": os.path.join(spack.paths.share_path, "spack-completion.bash"),
     },
 }
 
@@ -56,68 +54,92 @@ def formatter(func):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        "--update-completion", action='store_true', default=False,
-        help="regenerate spack's tab completion scripts")
+        "--update-completion",
+        action="store_true",
+        default=False,
+        help="regenerate spack's tab completion scripts",
+    )
 
     subparser.add_argument(
-        '-a', '--aliases', action='store_true', default=False,
-        help='include command aliases')
+        "-a",
+        "--aliases",
+        action="store_true",
+        default=False,
+        help="include command aliases",
+    )
     subparser.add_argument(
-        '--format', default='names', choices=formatters,
-        help='format to be used to print the output (default: names)')
+        "--format",
+        default="names",
+        choices=formatters,
+        help="format to be used to print the output (default: names)",
+    )
     subparser.add_argument(
-        '--header', metavar='FILE', default=None, action='store',
-        help='prepend contents of FILE to the output (useful for rst format)')
+        "--header",
+        metavar="FILE",
+        default=None,
+        action="store",
+        help="prepend contents of FILE to the output (useful for rst format)",
+    )
     subparser.add_argument(
-        '--update', metavar='FILE', default=None, action='store',
-        help='write output to the specified file, if any command is newer')
+        "--update",
+        metavar="FILE",
+        default=None,
+        action="store",
+        help="write output to the specified file, if any command is newer",
+    )
     subparser.add_argument(
-        'rst_files', nargs=argparse.REMAINDER,
-        help='list of rst files to search for `_cmd-spack-<cmd>` cross-refs')
+        "rst_files",
+        nargs=argparse.REMAINDER,
+        help="list of rst files to search for `_cmd-spack-<cmd>` cross-refs",
+    )
 
 
 class SpackArgparseRstWriter(ArgparseRstWriter):
     """RST writer tailored for spack documentation."""
 
-    def __init__(self, prog, out=None, aliases=False,
-                 documented_commands=[],
-                 rst_levels=['-', '-', '^', '~', ':', '`']):
+    def __init__(
+        self,
+        prog,
+        out=None,
+        aliases=False,
+        documented_commands=[],
+        rst_levels=["-", "-", "^", "~", ":", "`"],
+    ):
         out = sys.stdout if out is None else out
-        super(SpackArgparseRstWriter, self).__init__(
-            prog, out, aliases, rst_levels)
+        super(SpackArgparseRstWriter, self).__init__(prog, out, aliases, rst_levels)
         self.documented = documented_commands
 
     def usage(self, *args):
         string = super(SpackArgparseRstWriter, self).usage(*args)
 
-        cmd = self.parser.prog.replace(' ', '-')
+        cmd = self.parser.prog.replace(" ", "-")
         if cmd in self.documented:
-            string += '\n:ref:`More documentation <cmd-{0}>`\n'.format(cmd)
+            string += "\n:ref:`More documentation <cmd-{0}>`\n".format(cmd)
 
         return string
 
 
 class SubcommandWriter(ArgparseWriter):
     def format(self, cmd):
-        return '    ' * self.level + cmd.prog + '\n'
+        return "    " * self.level + cmd.prog + "\n"
 
 
 _positional_to_subroutine = {
-    'package': '_all_packages',
-    'spec': '_all_packages',
-    'filter': '_all_packages',
-    'installed': '_installed_packages',
-    'compiler': '_installed_compilers',
-    'section': '_config_sections',
-    'env': '_environments',
-    'extendable': '_extensions',
-    'keys': '_keys',
-    'help_command': '_subcommands',
-    'mirror': '_mirrors',
-    'virtual': '_providers',
-    'namespace': '_repos',
-    'hash': '_all_resource_hashes',
-    'pytest': '_tests',
+    "package": "_all_packages",
+    "spec": "_all_packages",
+    "filter": "_all_packages",
+    "installed": "_installed_packages",
+    "compiler": "_installed_compilers",
+    "section": "_config_sections",
+    "env": "_environments",
+    "extendable": "_extensions",
+    "keys": "_keys",
+    "help_command": "_subcommands",
+    "mirror": "_mirrors",
+    "virtual": "_providers",
+    "namespace": "_repos",
+    "hash": "_all_resource_hashes",
+    "pytest": "_tests",
 }
 
 
@@ -133,7 +155,9 @@ class BashCompletionWriter(ArgparseCompletionWriter):
     else
         {1}
     fi
-""".format(self.optionals(optionals), self.positionals(positionals))
+""".format(
+                self.optionals(optionals), self.positionals(positionals)
+            )
         elif subcommands:
             return """
     if $list_options
@@ -142,11 +166,15 @@ class BashCompletionWriter(ArgparseCompletionWriter):
     else
         {1}
     fi
-""".format(self.optionals(optionals), self.subcommands(subcommands))
+""".format(
+                self.optionals(optionals), self.subcommands(subcommands)
+            )
         else:
             return """
     {0}
-""".format(self.optionals(optionals))
+""".format(
+                self.optionals(optionals)
+            )
 
     def positionals(self, positionals):
         # If match found, return function name
@@ -159,10 +187,10 @@ class BashCompletionWriter(ArgparseCompletionWriter):
         return 'SPACK_COMPREPLY=""'
 
     def optionals(self, optionals):
-        return 'SPACK_COMPREPLY="{0}"'.format(' '.join(optionals))
+        return 'SPACK_COMPREPLY="{0}"'.format(" ".join(optionals))
 
     def subcommands(self, subcommands):
-        return 'SPACK_COMPREPLY="{0}"'.format(' '.join(subcommands))
+        return 'SPACK_COMPREPLY="{0}"'.format(" ".join(subcommands))
 
 
 @formatter
@@ -174,16 +202,16 @@ def subcommands(args, out):
 
 
 def rst_index(out):
-    out.write('\n')
+    out.write("\n")
 
     index = spack.main.index_commands()
-    sections = index['long']
+    sections = index["long"]
 
     dmax = max(len(section_descriptions.get(s, s)) for s in sections) + 2
     cmax = max(len(c) for _, c in sections.items()) + 60
 
-    row = "%s  %s\n" % ('=' * dmax, '=' * cmax)
-    line = '%%-%ds  %%s\n' % dmax
+    row = "%s  %s\n" % ("=" * dmax, "=" * cmax)
+    line = "%%-%ds  %%s\n" % dmax
 
     out.write(row)
     out.write(line % (" Category ", " Commands "))
@@ -192,10 +220,10 @@ def rst_index(out):
         description = section_descriptions.get(section, section)
 
         for i, cmd in enumerate(sorted(commands)):
-            description = description.capitalize() if i == 0 else ''
-            ref = ':ref:`%s <spack-%s>`' % (cmd, cmd)
-            comma = ',' if i != len(commands) - 1 else ''
-            bar = '| ' if i % 8 == 0 else '  '
+            description = description.capitalize() if i == 0 else ""
+            ref = ":ref:`%s <spack-%s>`" % (cmd, cmd)
+            comma = "," if i != len(commands) - 1 else ""
+            bar = "| " if i % 8 == 0 else "  "
             out.write(line % (description, bar + ref + comma))
     out.write(row)
 
@@ -211,17 +239,16 @@ def rst(args, out):
     for filename in args.rst_files:
         with open(filename) as f:
             for line in f:
-                match = re.match(r'\.\. _cmd-(spack-.*):', line)
+                match = re.match(r"\.\. _cmd-(spack-.*):", line)
                 if match:
                     documented_commands.add(match.group(1).strip())
 
     # print an index to each command
     rst_index(out)
-    out.write('\n')
+    out.write("\n")
 
     # print sections for each command and subcommand
-    writer = SpackArgparseRstWriter(
-        parser.prog, out, args.aliases, documented_commands)
+    writer = SpackArgparseRstWriter(parser.prog, out, args.aliases, documented_commands)
     writer.write(parser)
 
 
@@ -264,8 +291,8 @@ def _commands(parser, args):
         tty.die("No such file: '%s'" % args.header)
 
     if args.update:
-        tty.msg('Updating file: %s' % args.update)
-        with open(args.update, 'w') as f:
+        tty.msg("Updating file: %s" % args.update)
+        with open(args.update, "w") as f:
             prepend_header(args, f)
             formatter(args, f)
 
@@ -292,9 +319,7 @@ def update_completion(parser, args):
 
 def commands(parser, args):
     if args.update_completion:
-        if args.format != 'names' or any([
-                args.aliases, args.update, args.header
-        ]):
+        if args.format != "names" or any([args.aliases, args.update, args.header]):
             tty.die("--update-completion can only be specified alone.")
 
         # this runs the command multiple times with different arguments

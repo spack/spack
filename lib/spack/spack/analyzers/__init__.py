@@ -27,8 +27,7 @@ for a in analyzers:
 
 
 def list_all():
-    """A helper function to list all analyzers and their descriptions
-    """
+    """A helper function to list all analyzers and their descriptions"""
     for name, analyzer in analyzer_types.items():
         print("%-25s: %-35s" % (name, analyzer.description))
 

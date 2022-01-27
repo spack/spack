@@ -10,13 +10,16 @@ class Disktype(MakefilePackage):
     """A fork of the disktype disk and disk image format detection tool."""
 
     homepage = "https://github.com/kamwoods/disktype"
-    url      = "https://github.com/kamwoods/disktype/archive/9.2.1.tar.gz"
+    url = "https://github.com/kamwoods/disktype/archive/9.2.1.tar.gz"
 
-    version('9.2.1', sha256='fb274d6ce6b69c0d36eb23fcc9f01db3c32c3996b404900d46bb743ce4fa8154')
+    version(
+        "9.2.1",
+        sha256="fb274d6ce6b69c0d36eb23fcc9f01db3c32c3996b404900d46bb743ce4fa8154",
+    )
 
-    build_directory = 'src'
+    build_directory = "src"
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         with working_dir(self.build_directory):
-            install('disktype', prefix.bin)
+            install("disktype", prefix.bin)

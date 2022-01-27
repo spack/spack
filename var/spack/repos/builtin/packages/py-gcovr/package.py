@@ -15,9 +15,11 @@ class PyGcovr(PythonPackage):
     homepage = "https://gcovr.com/"
     pypi = "gcovr/gcovr-4.2.tar.gz"
 
-    version('4.2', sha256='5aae34dc81e51600cfecbbbce3c3a80ce3f7548bc0aa1faa4b74ecd18f6fca3f')
+    version(
+        "4.2", sha256="5aae34dc81e51600cfecbbbce3c3a80ce3f7548bc0aa1faa4b74ecd18f6fca3f"
+    )
 
-    depends_on('python@2.7:,3.5:', type=('build', 'run'))
-    depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py-lxml', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("python@2.7:,3.5:", type=("build", "run"))
+    depends_on("py-jinja2", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))

@@ -12,7 +12,10 @@ class PyFortranformat(PythonPackage):
     homepage = "http://bitbucket.org/brendanarnold/py-fortranformat"
     pypi = "fortranformat/fortranformat-0.2.5.tar.gz"
 
-    version('0.2.5', sha256='6b5fbc1f129c7a70543c3a81f334fb4d57f07df2834b22ce69f6d7e8539cd3f9')
+    version(
+        "0.2.5",
+        sha256="6b5fbc1f129c7a70543c3a81f334fb4d57f07df2834b22ce69f6d7e8539cd3f9",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -15,7 +15,10 @@ class Damageproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/damageproto"
     xorg_mirror_path = "proto/damageproto-1.2.1.tar.gz"
 
-    version('1.2.1', sha256='f65ccbf1de9750a527ea6e85694085b179f2d06495cbdb742b3edb2149fef303')
+    version(
+        "1.2.1",
+        sha256="f65ccbf1de9750a527ea6e85694085b179f2d06495cbdb742b3edb2149fef303",
+    )
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

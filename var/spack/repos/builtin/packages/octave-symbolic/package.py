@@ -16,6 +16,9 @@ class OctaveSymbolic(OctavePackage, SourceforgePackage):
     homepage = "https://octave.sourceforge.io/symbolic/"
     sourceforge_mirror_path = "octave/symbolic-2.9.0.tar.gz"
 
-    version('2.9.0', sha256='089ec44a0a49417a8b78797e87f338da6a6e227509f3080724996483d39b23cb')
+    version(
+        "2.9.0",
+        sha256="089ec44a0a49417a8b78797e87f338da6a6e227509f3080724996483d39b23cb",
+    )
 
-    extends('octave@4.2.0:')
+    extends("octave@4.2.0:")

@@ -11,7 +11,10 @@ class PyBlis(PythonPackage):
     homepage = "https://github.com/explosion/cython-blis"
     pypi = "blis/blis-0.4.1.tar.gz"
 
-    version('0.4.1', sha256='d69257d317e86f34a7f230a2fd1f021fd2a1b944137f40d8cdbb23bd334cd0c4')
+    version(
+        "0.4.1",
+        sha256="d69257d317e86f34a7f230a2fd1f021fd2a1b944137f40d8cdbb23bd334cd0c4",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.15:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.15:", type=("build", "run"))

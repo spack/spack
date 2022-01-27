@@ -13,6 +13,9 @@ class PerlListMoreutilsXs(PerlPackage):
     a backend, the API is not public and can change without any warning."""
 
     homepage = "https://metacpan.org/pod/List::MoreUtils::XS"
-    url      = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-XS-0.428.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-XS-0.428.tar.gz"
 
-    version('0.428', sha256='9d9fe621429dfe7cf2eb1299c192699ddebf060953e5ebdc1b4e293c6d6dd62d')
+    version(
+        "0.428",
+        sha256="9d9fe621429dfe7cf2eb1299c192699ddebf060953e5ebdc1b4e293c6d6dd62d",
+    )

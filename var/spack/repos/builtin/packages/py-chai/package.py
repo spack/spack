@@ -12,6 +12,9 @@ class PyChai(PythonPackage):
     homepage = "https://github.com/agoragames/chai"
     pypi = "chai/chai-1.1.2.tar.gz"
 
-    version('1.1.2', sha256='ff8d2b6855f660cd23cd5ec79bd10264d39f24f6235773331b48e7fcd637d6cc')
+    version(
+        "1.1.2",
+        sha256="ff8d2b6855f660cd23cd5ec79bd10264d39f24f6235773331b48e7fcd637d6cc",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

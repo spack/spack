@@ -8,9 +8,12 @@ from spack import *
 
 class Chrpath(AutotoolsPackage):
     """chrpath: Modifies the dynamic library load path (rpath and runpath)
-       of compiled programs and libraries."""
+    of compiled programs and libraries."""
 
     homepage = "https://directory.fsf.org/wiki/Chrpath"
-    url      = "https://cfhcable.dl.sourceforge.net/project/pisilinux/source/chrpath-0.16.tar.gz"
+    url = "https://cfhcable.dl.sourceforge.net/project/pisilinux/source/chrpath-0.16.tar.gz"
 
-    version('0.16', sha256='bb0d4c54bac2990e1bdf8132f2c9477ae752859d523e141e72b3b11a12c26e7b')
+    version(
+        "0.16",
+        sha256="bb0d4c54bac2990e1bdf8132f2c9477ae752859d523e141e72b3b11a12c26e7b",
+    )

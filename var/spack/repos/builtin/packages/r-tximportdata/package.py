@@ -17,6 +17,6 @@ class RTximportdata(RPackage):
     as an offset for different expression of gene-level counts."""
 
     homepage = "https://github.com/mikelove/tximport"
-    git      = "https://git.bioconductor.org/packages/tximportData"
+    git = "https://git.bioconductor.org/packages/tximportData"
 
-    version('1.18.0', commit='24945f8dd1e4e441ad5145fb7a37a1630912f929')
+    version("1.18.0", commit="24945f8dd1e4e441ad5145fb7a37a1630912f929")

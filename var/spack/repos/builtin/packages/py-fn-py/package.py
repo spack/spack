@@ -11,8 +11,11 @@ class PyFnPy(PythonPackage):
     to enjoy FP."""
 
     homepage = "https://github.com/fnpy/fn.py"
-    url      = "https://github.com/fnpy/fn.py/archive/v0.5.2.tar.gz"
+    url = "https://github.com/fnpy/fn.py/archive/v0.5.2.tar.gz"
 
-    version('0.5.2', sha256='fda2253d792867a79514496932630622df9340f214a2f4b2d597b60a8cc3d96b')
+    version(
+        "0.5.2",
+        sha256="fda2253d792867a79514496932630622df9340f214a2f4b2d597b60a8cc3d96b",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

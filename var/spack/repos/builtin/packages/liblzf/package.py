@@ -14,6 +14,8 @@ class Liblzf(AutotoolsPackage):
     in portable C."""
 
     homepage = "http://oldhome.schmorp.de/marc/liblzf.html"
-    url      = "http://dist.schmorp.de/liblzf/liblzf-3.6.tar.gz"
+    url = "http://dist.schmorp.de/liblzf/liblzf-3.6.tar.gz"
 
-    version('3.6', sha256='9c5de01f7b9ccae40c3f619d26a7abec9986c06c36d260c179cedd04b89fb46a')
+    version(
+        "3.6", sha256="9c5de01f7b9ccae40c3f619d26a7abec9986c06c36d260c179cedd04b89fb46a"
+    )

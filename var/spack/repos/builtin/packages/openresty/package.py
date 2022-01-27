@@ -14,14 +14,23 @@ class Openresty(AutotoolsPackage):
     """
 
     homepage = "https://github.com/openresty"
-    url      = "https://github.com/openresty/openresty/releases/download/v1.15.8.2/openresty-1.15.8.2.tar.gz"
+    url = "https://github.com/openresty/openresty/releases/download/v1.15.8.2/openresty-1.15.8.2.tar.gz"
 
-    version('1.15.8.2',    sha256='bf92af41d3ad22880047a8b283fc213d59c7c1b83f8dae82e50d14b64d73ac38')
-    version('1.15.8.1',    sha256='89a1238ca177692d6903c0adbea5bdf2a0b82c383662a73c03ebf5ef9f570842')
-    version('1.13.6.2',    sha256='946e1958273032db43833982e2cec0766154a9b5cb8e67868944113208ff2942')
+    version(
+        "1.15.8.2",
+        sha256="bf92af41d3ad22880047a8b283fc213d59c7c1b83f8dae82e50d14b64d73ac38",
+    )
+    version(
+        "1.15.8.1",
+        sha256="89a1238ca177692d6903c0adbea5bdf2a0b82c383662a73c03ebf5ef9f570842",
+    )
+    version(
+        "1.13.6.2",
+        sha256="946e1958273032db43833982e2cec0766154a9b5cb8e67868944113208ff2942",
+    )
 
-    depends_on('pcre', type='build')
+    depends_on("pcre", type="build")
 
     def configure_args(self):
-        args = ['--without-http_rewrite_module']
+        args = ["--without-http_rewrite_module"]
         return args

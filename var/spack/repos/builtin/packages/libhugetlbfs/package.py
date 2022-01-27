@@ -8,12 +8,15 @@ from spack import *
 
 class Libhugetlbfs(MakefilePackage):
     """libhugetlbfs is a library which provides easy access
-       to huge pages of memory."""
+    to huge pages of memory."""
 
     homepage = "https://github.com/libhugetlbfs/libhugetlbfs"
-    url      = "https://github.com/libhugetlbfs/libhugetlbfs/releases/download/2.22/libhugetlbfs-2.22.tar.gz"
+    url = "https://github.com/libhugetlbfs/libhugetlbfs/releases/download/2.22/libhugetlbfs-2.22.tar.gz"
 
-    version('2.22', sha256='94dca9ea2c527cd77bf28904094fe4708865a85122d416bfccc8f4b73b9a6785')
+    version(
+        "2.22",
+        sha256="94dca9ea2c527cd77bf28904094fe4708865a85122d416bfccc8f4b73b9a6785",
+    )
 
     def install(self, spec, prefix):
-        make('install', "PREFIX=%s" % prefix)
+        make("install", "PREFIX=%s" % prefix)

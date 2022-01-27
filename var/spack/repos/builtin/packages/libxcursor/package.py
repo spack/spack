@@ -12,12 +12,15 @@ class Libxcursor(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXcursor"
     xorg_mirror_path = "lib/libXcursor-1.1.14.tar.gz"
 
-    version('1.1.14', sha256='be0954faf274969ffa6d95b9606b9c0cfee28c13b6fc014f15606a0c8b05c17b')
+    version(
+        "1.1.14",
+        sha256="be0954faf274969ffa6d95b9606b9c0cfee28c13b6fc014f15606a0c8b05c17b",
+    )
 
-    depends_on('libxrender@0.8.2:')
-    depends_on('libxfixes')
-    depends_on('libx11')
+    depends_on("libxrender@0.8.2:")
+    depends_on("libxfixes")
+    depends_on("libx11")
 
-    depends_on('fixesproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("fixesproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

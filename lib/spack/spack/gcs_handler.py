@@ -10,16 +10,16 @@ import spack.util.web as web_util
 
 
 def gcs_open(req, *args, **kwargs):
-    """Open a reader stream to a blob object on GCS
-    """
+    """Open a reader stream to a blob object on GCS"""
     import spack.util.gcs as gcs_util
 
     url = url_util.parse(req.get_full_url())
     gcsblob = gcs_util.GCSBlob(url)
 
     if not gcsblob.exists():
-        raise web_util.SpackWebError('GCS blob {0} does not exist'.format(
-                                     gcsblob.blob_path))
+        raise web_util.SpackWebError(
+            "GCS blob {0} does not exist".format(gcsblob.blob_path)
+        )
     stream = gcsblob.get_blob_byte_stream()
     headers = gcsblob.get_blob_headers()
 

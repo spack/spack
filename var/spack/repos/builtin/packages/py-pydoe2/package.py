@@ -12,10 +12,13 @@ class PyPydoe2(PythonPackage):
     experimental designs."""
 
     homepage = "https://github.com/clicumu/pyDOE2"
-    pypi     = "pyDOE2/pyDOE2-1.3.0.tar.gz"
+    pypi = "pyDOE2/pyDOE2-1.3.0.tar.gz"
 
-    version('1.3.0', sha256='5492b0f984af52da3af20b1cd61deb21b067c858e65243ec3ba573375f0d6720')
+    version(
+        "1.3.0",
+        sha256="5492b0f984af52da3af20b1cd61deb21b067c858e65243ec3ba573375f0d6720",
+    )
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-numpy',              type=('build', 'run'))
-    depends_on('py-scipy',              type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))

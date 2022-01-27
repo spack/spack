@@ -11,13 +11,13 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='monitor_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="monitor_command")
 
     # This adds the monitor group to the subparser
     spack.monitor.get_monitor_group(subparser)
 
     # Spack Monitor Uploads
-    monitor_parser = sp.add_parser('upload', description="upload to spack monitor")
+    monitor_parser = sp.add_parser("upload", description="upload to spack monitor")
     monitor_parser.add_argument("upload_dir", help="directory root to upload")
 
 

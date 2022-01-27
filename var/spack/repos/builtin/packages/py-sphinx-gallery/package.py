@@ -14,10 +14,16 @@ class PySphinxGallery(PythonPackage):
     homepage = "https://sphinx-gallery.github.io"
     pypi = "sphinx-gallery/sphinx-gallery-0.7.0.tar.gz"
 
-    version('0.7.0', sha256='05ead72c947718ab4183c33a598e29743e771dcf75aec84c53048423bd2f4580')
-    version('0.4.0', sha256='a286cf2eea47ce838a0754ecef617616afb1f40e41e52fe765723464f52e0c2f')
+    version(
+        "0.7.0",
+        sha256="05ead72c947718ab4183c33a598e29743e771dcf75aec84c53048423bd2f4580",
+    )
+    version(
+        "0.4.0",
+        sha256="a286cf2eea47ce838a0754ecef617616afb1f40e41e52fe765723464f52e0c2f",
+    )
 
-    depends_on('py-setuptools')
-    depends_on('py-matplotlib')
-    depends_on('pil')
-    depends_on('py-sphinx')
+    depends_on("py-setuptools")
+    depends_on("py-matplotlib")
+    depends_on("pil")
+    depends_on("py-sphinx")

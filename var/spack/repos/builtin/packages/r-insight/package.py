@@ -20,8 +20,11 @@ class RInsight(RPackage):
     missing."""
 
     homepage = "https://easystats.github.io/insight/"
-    cran     = "insight"
+    cran = "insight"
 
-    version('0.14.1', sha256='0e7761997a46ee33039cdeff1779dbc210de3644e4444c6e893e4ef2f12cc129')
+    version(
+        "0.14.1",
+        sha256="0e7761997a46ee33039cdeff1779dbc210de3644e4444c6e893e4ef2f12cc129",
+    )
 
-    depends_on('r@3.4:', type=('build', 'run'))
+    depends_on("r@3.4:", type=("build", "run"))

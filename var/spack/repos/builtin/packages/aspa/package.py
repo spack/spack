@@ -12,30 +12,32 @@ class Aspa(MakefilePackage):
     """
 
     homepage = "http://www.exmatex.org/aspa.html"
-    git      = "https://github.com/exmatex/ASPA.git"
+    git = "https://github.com/exmatex/ASPA.git"
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    variant('mpi', default=True, description='Build with MPI Support')
+    variant("mpi", default=True, description="Build with MPI Support")
 
-    depends_on('lapack')
-    depends_on('blas')
-    depends_on('mpi', when='+mpi')
-    depends_on('hdf5')
+    depends_on("lapack")
+    depends_on("blas")
+    depends_on("mpi", when="+mpi")
+    depends_on("hdf5")
 
-    patch('fix_common_errors.patch')
+    patch("fix_common_errors.patch")
 
     @property
     def build_targets(self):
         targets = [
-            '--directory=exec',
-            '--file=Makefile',
-            'LIBS={0} {1} {2}'.format(self.spec['lapack'].libs.ld_flags,
-                                      self.spec['blas'].libs.ld_flags,
-                                      self.spec['hdf5'].libs.ld_flags),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx)
+            "--directory=exec",
+            "--file=Makefile",
+            "LIBS={0} {1} {2}".format(
+                self.spec["lapack"].libs.ld_flags,
+                self.spec["blas"].libs.ld_flags,
+                self.spec["hdf5"].libs.ld_flags,
+            ),
+            "CXX={0}".format(self.spec["mpi"].mpicxx),
         ]
         return targets
 
@@ -43,10 +45,10 @@ class Aspa(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.doc)
         mkdirp(prefix.input)
-        install('exec/aspa', prefix.bin)
-        install('exec/README', prefix.doc)
-        install('exec/aspa.inp', prefix.input)
-        install('exec/kriging_model_centers.txt', prefix.input)
-        install('exec/point_data.txt', prefix.input)
-        install('exec/value_data.txt', prefix.input)
-        install('doc/*.*', prefix.doc)
+        install("exec/aspa", prefix.bin)
+        install("exec/README", prefix.doc)
+        install("exec/aspa.inp", prefix.input)
+        install("exec/kriging_model_centers.txt", prefix.input)
+        install("exec/point_data.txt", prefix.input)
+        install("exec/value_data.txt", prefix.input)
+        install("doc/*.*", prefix.doc)

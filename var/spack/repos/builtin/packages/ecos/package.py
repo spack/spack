@@ -11,20 +11,23 @@ class Ecos(MakefilePackage):
     """A lightweight conic solver for second-order cone programming."""
 
     homepage = "https://github.com/embotech/ecos"
-    url      = "https://github.com/embotech/ecos/archive/2.0.7.tar.gz"
+    url = "https://github.com/embotech/ecos/archive/2.0.7.tar.gz"
 
-    version('2.0.7',    sha256='bdb6a84f7d150820459bd0a796cb64ffbb019afb95dc456d22acc2dafb2e70e0')
+    version(
+        "2.0.7",
+        sha256="bdb6a84f7d150820459bd0a796cb64ffbb019afb95dc456d22acc2dafb2e70e0",
+    )
 
-    build_targets = ['all', 'shared']
+    build_targets = ["all", "shared"]
 
     def install(self, spec, prefix):
-        install_tree('include', prefix.include)
+        install_tree("include", prefix.include)
 
         mkdir(prefix.lib)
-        install('libecos.a', prefix.lib)
-        install('libecos_bb.a', prefix.lib)
-        install('libecos.so', prefix.lib)
+        install("libecos.a", prefix.lib)
+        install("libecos_bb.a", prefix.lib)
+        install("libecos.so", prefix.lib)
 
         mkdir(prefix.bin)
-        install('runecos', prefix.bin)
-        install('runecosexp', prefix.bin)
+        install("runecos", prefix.bin)
+        install("runecosexp", prefix.bin)

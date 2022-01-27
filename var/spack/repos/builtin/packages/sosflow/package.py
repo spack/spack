@@ -12,24 +12,24 @@ class Sosflow(CMakePackage):
     observation, introspection, feedback, and control of HPC applications."""
 
     homepage = "https://github.com/cdwdirect/sos_flow/wiki"
-    git      = "https://github.com/cdwdirect/sos_flow.git"
+    git = "https://github.com/cdwdirect/sos_flow.git"
 
-    version('spack', tag='spack-build-v0.9901')
+    version("spack", tag="spack-build-v0.9901")
 
-    depends_on('libevpath')
-    depends_on('sqlite@3:')
-    depends_on('pkgconfig')
-    depends_on('mpi')
+    depends_on("libevpath")
+    depends_on("sqlite@3:")
+    depends_on("pkgconfig")
+    depends_on("mpi")
 
     def setup_build_environment(self, env):
-        env.set('SOS_HOST_KNOWN_AS', 'SPACK-SOS-BUILD')
-        env.set('SOS_HOST_NODE_NAME', 'SPACK-SOS-NODE')
-        env.set('SOS_HOST_DETAILED', 'SPACK-SOS-DETAILED')
+        env.set("SOS_HOST_KNOWN_AS", "SPACK-SOS-BUILD")
+        env.set("SOS_HOST_NODE_NAME", "SPACK-SOS-NODE")
+        env.set("SOS_HOST_DETAILED", "SPACK-SOS-DETAILED")
 
     def setup_run_environment(self, env):
-        env.set('SOS_ROOT', self.spec.prefix)
-        env.set('SOS_BUILD_DIR', self.spec.prefix)
-        env.set('SOS_CMD_PORT', '22500')
-        env.set('SOS_WORK', env['HOME'])
-        env.set('SOS_EVPATH_MEETUP', env['HOME'])
-        env.set('SOS_ENV_SET', 'true')
+        env.set("SOS_ROOT", self.spec.prefix)
+        env.set("SOS_BUILD_DIR", self.spec.prefix)
+        env.set("SOS_CMD_PORT", "22500")
+        env.set("SOS_WORK", env["HOME"])
+        env.set("SOS_EVPATH_MEETUP", env["HOME"])
+        env.set("SOS_ENV_SET", "true")

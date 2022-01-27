@@ -13,9 +13,9 @@ class RMarray(RPackage):
     input, diagnostic plots, normalization and quality checking."""
 
     homepage = "https://www.maths.usyd.edu.au/u/jeany/"
-    bioc     = "marray"
+    bioc = "marray"
 
-    version('1.68.0', commit='67b3080486abdba7dd19fccd7fb731b0e8b5b3f9')
+    version("1.68.0", commit="67b3080486abdba7dd19fccd7fb731b0e8b5b3f9")
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-limma', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-limma", type=("build", "run"))

@@ -13,12 +13,14 @@ class PyPromise(PythonPackage):
     using promises in Python."""
 
     homepage = "https://github.com/syrusakbary/promise"
-    pypi     = "promise/promise-2.3.tar.gz"
+    pypi = "promise/promise-2.3.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('2.3', sha256='dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0')
+    version(
+        "2.3", sha256="dfd18337c523ba4b6a58801c164c1904a9d4d1b1747c7d5dbf45b693a49d93d0"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-typing@3.6.4:', when='^python@:3.4', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six", type=("build", "run"))
+    depends_on("py-typing@3.6.4:", when="^python@:3.4", type=("build", "run"))

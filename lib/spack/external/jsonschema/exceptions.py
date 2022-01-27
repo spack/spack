@@ -63,14 +63,18 @@ class _Error(Exception):
 
     def __unicode__(self):
         essential_for_verbose = (
-            self.validator, self.validator_value, self.instance, self.schema,
+            self.validator,
+            self.validator_value,
+            self.instance,
+            self.schema,
         )
         if any(m is _unset for m in essential_for_verbose):
             return self.message
 
         pschema = pprint.pformat(self.schema, width=72)
         pinstance = pprint.pformat(self.instance, width=72)
-        return self.message + textwrap.dedent("""
+        return self.message + textwrap.dedent(
+            """
 
             Failed validating %r in %s%s:
             %s
@@ -91,6 +95,7 @@ class _Error(Exception):
     if PY3:
         __str__ = __unicode__
     else:
+
         def __str__(self):
             return unicode(self).encode("utf-8")
 
@@ -125,8 +130,16 @@ class _Error(Exception):
 
     def _contents(self):
         attrs = (
-            "message", "cause", "context", "validator", "validator_value",
-            "path", "schema_path", "instance", "schema", "parent",
+            "message",
+            "cause",
+            "context",
+            "validator",
+            "validator_value",
+            "path",
+            "schema_path",
+            "instance",
+            "schema",
+            "parent",
         )
         return dict((attr, getattr(self, attr)) for attr in attrs)
 
@@ -175,6 +188,7 @@ class UndefinedTypeCheck(Exception):
     if PY3:
         __str__ = __unicode__
     else:
+
         def __str__(self):
             return unicode(self).encode("utf-8")
 
@@ -192,18 +206,23 @@ class UnknownType(Exception):
     def __unicode__(self):
         pschema = pprint.pformat(self.schema, width=72)
         pinstance = pprint.pformat(self.instance, width=72)
-        return textwrap.dedent("""
+        return (
+            textwrap.dedent(
+                """
             Unknown type %r for validator with schema:
             %s
 
             While checking instance:
             %s
             """.rstrip()
-        ) % (self.type, _utils.indent(pschema), _utils.indent(pinstance))
+            )
+            % (self.type, _utils.indent(pschema), _utils.indent(pinstance))
+        )
 
     if PY3:
         __str__ = __unicode__
     else:
+
         def __str__(self):
             return unicode(self).encode("utf-8")
 
@@ -224,6 +243,7 @@ class FormatError(Exception):
     if PY3:
         __str__ = __unicode__
     else:
+
         def __str__(self):
             return self.message.encode("utf-8")
 
@@ -316,9 +336,11 @@ def by_relevance(weak=WEAK_MATCHES, strong=STRONG_MATCHES):
         strong (set):
             a collection of validator names to consider to be "strong"
     """
+
     def relevance(error):
         validator = error.validator
         return -len(error.path), validator not in weak, validator in strong
+
     return relevance
 
 

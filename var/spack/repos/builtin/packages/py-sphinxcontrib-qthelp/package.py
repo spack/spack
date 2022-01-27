@@ -18,7 +18,10 @@ class PySphinxcontribQthelp(PythonPackage):
     # import any modules.
     import_modules = []
 
-    version('1.0.2', sha256='79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f')
+    version(
+        "1.0.2",
+        sha256="79465ce11ae5694ff165becda529a600c754f4bc459778778c7017374d4d406f",
+    )
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

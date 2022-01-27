@@ -12,6 +12,9 @@ class PyYajl(PythonPackage):
     homepage = "https://github.com/rtyler/py-yajl"
     pypi = "yajl/yajl-0.3.5.tar.gz"
 
-    version('0.3.5', sha256='432321ea613692a4782a2368a300f57b59c64a3c8508c7465af3fdc045e7bcc2')
+    version(
+        "0.3.5",
+        sha256="432321ea613692a4782a2368a300f57b59c64a3c8508c7465af3fdc045e7bcc2",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

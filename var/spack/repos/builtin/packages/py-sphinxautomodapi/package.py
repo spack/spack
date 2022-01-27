@@ -12,7 +12,9 @@ class PySphinxautomodapi(PythonPackage):
     homepage = "https://sphinx-automodapi.readthedocs.io/en/latest/"
     pypi = "sphinx-automodapi/sphinx-automodapi-0.9.tar.gz"
 
-    version('0.9', sha256='71a69e1a7ab8d849f416d7431db854d7b1925f749ba6345bc7d88f288892871d')
+    version(
+        "0.9", sha256="71a69e1a7ab8d849f416d7431db854d7b1925f749ba6345bc7d88f288892871d"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx@1.3:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-sphinx@1.3:", type=("build", "run"))

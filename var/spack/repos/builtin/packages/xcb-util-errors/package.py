@@ -15,11 +15,13 @@ class XcbUtilErrors(AutotoolsPackage):
     the X protocol but which have traditionally been provided by Xlib."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xcb-util-errors-1.0.tar.gz"
+    url = "https://xcb.freedesktop.org/dist/xcb-util-errors-1.0.tar.gz"
 
-    version('1.0', sha256='7752a722e580efdbada30632cb23aed35c18757399ac3b547b59fd7257cf5e33')
+    version(
+        "1.0", sha256="7752a722e580efdbada30632cb23aed35c18757399ac3b547b59fd7257cf5e33"
+    )
 
-    depends_on('libxcb@1.4:')
+    depends_on("libxcb@1.4:")
 
-    depends_on('xcb-proto')
-    depends_on('pkgconfig', type='build')
+    depends_on("xcb-proto")
+    depends_on("pkgconfig", type="build")

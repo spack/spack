@@ -12,21 +12,21 @@ class PerlStarFusion(Package):
     and spanning reads to a reference annotation set."""
 
     homepage = "https://github.com/STAR-Fusion/STAR-Fusion"
-    git      = "https://github.com/STAR-Fusion/STAR-Fusion.git"
+    git = "https://github.com/STAR-Fusion/STAR-Fusion.git"
 
-    version('master', commit='8c5a541')
+    version("master", commit="8c5a541")
 
-    extends('perl')
+    extends("perl")
 
-    depends_on('star', type=('build', 'run'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('perl-set-intervaltree', type=('build', 'run'))
-    depends_on('perl-dbi', type=('build', 'run'))
-    depends_on('perl-db-file', type=('build', 'run'))
-    depends_on('perl-uri', type=('build', 'run'))
+    depends_on("star", type=("build", "run"))
+    depends_on("perl", type=("build", "run"))
+    depends_on("perl-set-intervaltree", type=("build", "run"))
+    depends_on("perl-dbi", type=("build", "run"))
+    depends_on("perl-db-file", type=("build", "run"))
+    depends_on("perl-uri", type=("build", "run"))
 
     def install(self, spec, prefix):
         mkdirp(perl_lib_dir)
-        install(join_path('PerlLib', '*.pm'), perl_lib_dir)
-        install_tree('util', prefix.bin)
-        install('STAR-Fusion', prefix.bin)
+        install(join_path("PerlLib", "*.pm"), perl_lib_dir)
+        install_tree("util", prefix.bin)
+        install("STAR-Fusion", prefix.bin)

@@ -10,10 +10,11 @@ methods and allow configuration when instantiating the cache class.
 """
 from time import time as gettime
 
+
 class BasicCache(object):
     def __init__(self, maxentries=128):
         self.maxentries = maxentries
-        self.prunenum = int(maxentries - maxentries/8)
+        self.prunenum = int(maxentries - maxentries / 8)
         self._dict = {}
 
     def clear(self):
@@ -42,12 +43,11 @@ class BasicCache(object):
         return entry.value
 
     def _prunelowestweight(self):
-        """ prune out entries with lowest weight. """
+        """prune out entries with lowest weight."""
         numentries = len(self._dict)
         if numentries >= self.maxentries:
             # evict according to entry's weight
-            items = [(entry.weight, key)
-                        for key, entry in self._dict.items()]
+            items = [(entry.weight, key) for key, entry in self._dict.items()]
             items.sort()
             index = numentries - self.prunenum
             if index > 0:
@@ -55,24 +55,26 @@ class BasicCache(object):
                     # in MT situations the element might be gone
                     self.delentry(key, raising=False)
 
+
 class BuildcostAccessCache(BasicCache):
-    """ A BuildTime/Access-counting cache implementation.
-        the weight of a value is computed as the product of
+    """A BuildTime/Access-counting cache implementation.
+    the weight of a value is computed as the product of
 
-            num-accesses-of-a-value * time-to-build-the-value
+        num-accesses-of-a-value * time-to-build-the-value
 
-        The values with the least such weights are evicted
-        if the cache maxentries threshold is superceded.
-        For implementation flexibility more than one object
-        might be evicted at a time.
+    The values with the least such weights are evicted
+    if the cache maxentries threshold is superceded.
+    For implementation flexibility more than one object
+    might be evicted at a time.
     """
+
     # time function to use for measuring build-times
 
     def _build(self, key, builder):
         start = gettime()
         val = builder()
         end = gettime()
-        return WeightedCountingEntry(val, end-start)
+        return WeightedCountingEntry(val, end - start)
 
 
 class WeightedCountingEntry(object):
@@ -83,11 +85,13 @@ class WeightedCountingEntry(object):
     def value(self):
         self.weight += self._oneweight
         return self._value
+
     value = property(value)
 
+
 class AgingCache(BasicCache):
-    """ This cache prunes out cache entries that are too old.
-    """
+    """This cache prunes out cache entries that are too old."""
+
     def __init__(self, maxentries=128, maxseconds=10.0):
         super(AgingCache, self).__init__(maxentries)
         self.maxseconds = maxseconds
@@ -103,6 +107,7 @@ class AgingCache(BasicCache):
         val = builder()
         entry = AgingEntry(val, gettime() + self.maxseconds)
         return entry
+
 
 class AgingEntry(object):
     def __init__(self, value, expirationtime):

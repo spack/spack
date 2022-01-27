@@ -21,15 +21,15 @@ class RCodex(RPackage):
     sequencing data."""
 
     homepage = "https://www.bioconductor.org/packages/release/bioc/html/CODEX.html"
-    git      = "https://git.bioconductor.org/packages/CODEX"
+    git = "https://git.bioconductor.org/packages/CODEX"
 
-    version('1.22.0', commit='aa0ee4278111a46e0c790312b0526ba07aab22eb')
-    version('1.18.0', commit='9a95cccc7ff3fe587636317e21e39a07dddf80bc')
+    version("1.22.0", commit="aa0ee4278111a46e0c790312b0526ba07aab22eb")
+    version("1.18.0", commit="9a95cccc7ff3fe587636317e21e39a07dddf80bc")
 
-    depends_on('r@3.2.3:', type=('build', 'run'))
-    depends_on('r-rsamtools', type=('build', 'run'))
-    depends_on('r-genomeinfodb', type=('build', 'run'))
-    depends_on('r-bsgenome-hsapiens-ucsc-hg19', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on("r@3.2.3:", type=("build", "run"))
+    depends_on("r-rsamtools", type=("build", "run"))
+    depends_on("r-genomeinfodb", type=("build", "run"))
+    depends_on("r-bsgenome-hsapiens-ucsc-hg19", type=("build", "run"))
+    depends_on("r-iranges", type=("build", "run"))
+    depends_on("r-biostrings", type=("build", "run"))
+    depends_on("r-s4vectors", type=("build", "run"))

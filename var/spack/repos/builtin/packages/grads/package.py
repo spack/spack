@@ -15,12 +15,15 @@ class Grads(AutotoolsPackage):
     HDF (version 4 and 5), and BUFR (for station data)."""
 
     homepage = "http://cola.gmu.edu/grads/grads.php"
-    url      = "ftp://cola.gmu.edu/grads/2.2/grads-2.2.1-src.tar.gz"
+    url = "ftp://cola.gmu.edu/grads/2.2/grads-2.2.1-src.tar.gz"
 
-    version('2.2.1', sha256='695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206')
+    version(
+        "2.2.1",
+        sha256="695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206",
+    )
 
-    variant('geotiff', default=True, description="Enable GeoTIFF support")
-    variant('shapefile', default=True, description="Enable Shapefile support")
+    variant("geotiff", default=True, description="Enable GeoTIFF support")
+    variant("shapefile", default=True, description="Enable Shapefile support")
 
     """
     # FIXME: Fails with undeclared functions (tdefi, tdef, ...) in gauser.c
@@ -32,34 +35,30 @@ class Grads(AutotoolsPackage):
     depends_on('netcdf-c', when='+netcdf')
     """
 
-    depends_on('libgeotiff', when='+geotiff')
-    depends_on('shapelib', when='+shapefile')
-    depends_on('udunits')
-    depends_on('libgd')
-    depends_on('libxmu')
-    depends_on('cairo +X +pdf +fc +ft')
-    depends_on('readline')
-    depends_on('pkgconfig', type='build')
+    depends_on("libgeotiff", when="+geotiff")
+    depends_on("shapelib", when="+shapefile")
+    depends_on("udunits")
+    depends_on("libgd")
+    depends_on("libxmu")
+    depends_on("cairo +X +pdf +fc +ft")
+    depends_on("readline")
+    depends_on("pkgconfig", type="build")
 
     def setup_build_environment(self, env):
-        env.set('SUPPLIBS', '/')
+        env.set("SUPPLIBS", "/")
 
     def setup_run_environment(self, env):
-        env.set('GADDIR', self.prefix.data)
+        env.set("GADDIR", self.prefix.data)
 
-    @run_after('install')
+    @run_after("install")
     def copy_data(self):
         with working_dir(self.build_directory):
-            install_tree('data', self.prefix.data)
+            install_tree("data", self.prefix.data)
         with working_dir(self.package_dir):
-            install('udpt', self.prefix.data)
-            filter_file(
-                r'({lib})',
-                self.prefix.lib,
-                self.prefix.data.udpt
-            )
+            install("udpt", self.prefix.data)
+            filter_file(r"({lib})", self.prefix.lib, self.prefix.data.udpt)
 
     def configure_args(self):
         args = []
-        args.extend(self.with_or_without('geotiff'))
+        args.extend(self.with_or_without("geotiff"))
         return args

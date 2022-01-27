@@ -8,14 +8,14 @@ from spack import *
 
 class SstTransports(CMakePackage):
     """Provides transports like uGNI and verbs
-       that run in the simulator"""
+    that run in the simulator"""
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/jjwilke/sst-transports.git"
 
-    maintainers = ['jjwilke']
+    maintainers = ["jjwilke"]
 
-    version('master',  branch='master')
+    version("master", branch="master")
 
     depends_on("sst-macro")
 

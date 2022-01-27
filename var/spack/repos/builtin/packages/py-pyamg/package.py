@@ -11,12 +11,15 @@ class PyPyamg(PythonPackage):
     a convenient Python interface."""
 
     homepage = "https://github.com/pyamg/pyamg"
-    url      = "https://github.com/pyamg/pyamg/archive/v4.0.0.zip"
+    url = "https://github.com/pyamg/pyamg/archive/v4.0.0.zip"
 
     # A list of GitHub accounts to notify when the package is updated.
-    maintainers = ['benc303']
+    maintainers = ["benc303"]
 
-    version('4.0.0', sha256="015d5e706e6e54d3de82e05fdb173c30d8b27cb8a117ab584cd62ad41d9ea042")
+    version(
+        "4.0.0",
+        sha256="015d5e706e6e54d3de82e05fdb173c30d8b27cb8a117ab584cd62ad41d9ea042",
+    )
 
     # Dependencies. A generic python dependency is added implicity by the
     # PythonPackage class.

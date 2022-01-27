@@ -13,17 +13,20 @@ class Ncio(CMakePackage):
     This is part of NOAA's NCEPLIBS project."""
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-ncio"
-    url      = "https://github.com/NOAA-EMC/NCEPLIBS-ncio/archive/refs/tags/v1.0.0.tar.gz"
+    url = "https://github.com/NOAA-EMC/NCEPLIBS-ncio/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ['edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ["edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
 
-    version('1.0.0', sha256='2e2630b26513bf7b0665619c6c3475fe171a9d8b930e9242f5546ddf54749bd4')
+    version(
+        "1.0.0",
+        sha256="2e2630b26513bf7b0665619c6c3475fe171a9d8b930e9242f5546ddf54749bd4",
+    )
 
-    depends_on('mpi')
-    depends_on('netcdf-fortran')
+    depends_on("mpi")
+    depends_on("netcdf-fortran")
 
     def setup_run_environment(self, env):
-        lib = find_libraries('libncio', root=self.prefix, shared=False, recursive=True)
-        env.set('NCIO_LIB', lib[0])
-        env.set('NCIO_INC', join_path(self.prefix, 'include'))
-        env.set('NCIO_LIBDIR', lib[0])
+        lib = find_libraries("libncio", root=self.prefix, shared=False, recursive=True)
+        env.set("NCIO_LIB", lib[0])
+        env.set("NCIO_INC", join_path(self.prefix, "include"))
+        env.set("NCIO_LIBDIR", lib[0])

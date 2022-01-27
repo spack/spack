@@ -27,47 +27,47 @@ from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
 __all__ = [
-    'FileFilter',
-    'FileList',
-    'HeaderList',
-    'LibraryList',
-    'ancestor',
-    'can_access',
-    'change_sed_delimiter',
-    'copy_mode',
-    'filter_file',
-    'find',
-    'find_headers',
-    'find_all_headers',
-    'find_libraries',
-    'find_system_libraries',
-    'fix_darwin_install_name',
-    'force_remove',
-    'force_symlink',
-    'chgrp',
-    'chmod_x',
-    'copy',
-    'install',
-    'copy_tree',
-    'install_tree',
-    'is_exe',
-    'join_path',
-    'last_modification_time_recursive',
-    'mkdirp',
-    'partition_path',
-    'prefixes',
-    'remove_dead_links',
-    'remove_directory_contents',
-    'remove_if_dead_link',
-    'remove_linked_tree',
-    'set_executable',
-    'set_install_permissions',
-    'touch',
-    'touchp',
-    'traverse_tree',
-    'unset_executable_mode',
-    'working_dir',
-    'keep_modification_time'
+    "FileFilter",
+    "FileList",
+    "HeaderList",
+    "LibraryList",
+    "ancestor",
+    "can_access",
+    "change_sed_delimiter",
+    "copy_mode",
+    "filter_file",
+    "find",
+    "find_headers",
+    "find_all_headers",
+    "find_libraries",
+    "find_system_libraries",
+    "fix_darwin_install_name",
+    "force_remove",
+    "force_symlink",
+    "chgrp",
+    "chmod_x",
+    "copy",
+    "install",
+    "copy_tree",
+    "install_tree",
+    "is_exe",
+    "join_path",
+    "last_modification_time_recursive",
+    "mkdirp",
+    "partition_path",
+    "prefixes",
+    "remove_dead_links",
+    "remove_directory_contents",
+    "remove_if_dead_link",
+    "remove_linked_tree",
+    "set_executable",
+    "set_install_permissions",
+    "touch",
+    "touchp",
+    "traverse_tree",
+    "unset_executable_mode",
+    "working_dir",
+    "keep_modification_time",
 ]
 
 
@@ -82,10 +82,11 @@ def possible_library_filenames(library_names):
     library filenames that may be found on the system (e.g. libfoo.so). This
     generates the library filenames that may appear on any OS.
     """
-    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    lib_extensions = ["a", "la", "so", "tbd", "dylib"]
     return set(
-        '.'.join((lib, extension)) for lib, extension in
-        itertools.product(library_names, lib_extensions))
+        ".".join((lib, extension))
+        for lib, extension in itertools.product(library_names, lib_extensions)
+    )
 
 
 def paths_containing_libs(paths, library_names):
@@ -136,19 +137,21 @@ def filter_file(regex, repl, *filenames, **kwargs):
             file is copied verbatim. Default is to filter until the end of the
             file.
     """
-    string = kwargs.get('string', False)
-    backup = kwargs.get('backup', False)
-    ignore_absent = kwargs.get('ignore_absent', False)
-    stop_at = kwargs.get('stop_at', None)
+    string = kwargs.get("string", False)
+    backup = kwargs.get("backup", False)
+    ignore_absent = kwargs.get("ignore_absent", False)
+    stop_at = kwargs.get("stop_at", None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
-        unescaped = repl.replace(r'\\', '\\')
+        unescaped = repl.replace(r"\\", "\\")
 
         def replace_groups_with_groupid(m):
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
-            return re.sub(r'\\([1-9])', groupid_to_group, unescaped)
+
+            return re.sub(r"\\([1-9])", groupid_to_group, unescaped)
+
         repl = replace_groups_with_groupid
 
     if string:
@@ -179,16 +182,16 @@ def filter_file(regex, repl, *filenames, **kwargs):
         try:
             extra_kwargs = {}
             if sys.version_info > (3, 0):
-                extra_kwargs = {'errors': 'surrogateescape'}
+                extra_kwargs = {"errors": "surrogateescape"}
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified
-            with open(tmp_filename, mode='r', **extra_kwargs) as input_file:
-                with open(filename, mode='w', **extra_kwargs) as output_file:
+            with open(tmp_filename, mode="r", **extra_kwargs) as input_file:
+                with open(filename, mode="w", **extra_kwargs) as output_file:
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
                     # input_file.next() implicitly via the for loop
-                    for line in iter(input_file.readline, ''):
+                    for line in iter(input_file.readline, ""):
                         if stop_at is not None:
                             current_position = input_file.tell()
                             if stop_at == line.strip():
@@ -202,9 +205,9 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # If we stopped filtering at some point, reopen the file in
             # binary mode and copy verbatim the remaining part
             if current_position and stop_at:
-                with open(tmp_filename, mode='rb') as input_file:
+                with open(tmp_filename, mode="rb") as input_file:
                     input_file.seek(current_position)
-                    with open(filename, mode='ab') as output_file:
+                    with open(filename, mode="ab") as output_file:
                         output_file.writelines(input_file.readlines())
 
         except BaseException:
@@ -243,26 +246,26 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         new_delim (str): The delimiter to replace with
         *filenames: One or more files to search and replace
     """
-    assert(len(old_delim) == 1)
-    assert(len(new_delim) == 1)
+    assert len(old_delim) == 1
+    assert len(new_delim) == 1
 
     # TODO: handle these cases one day?
-    assert(old_delim != '"')
-    assert(old_delim != "'")
-    assert(new_delim != '"')
-    assert(new_delim != "'")
+    assert old_delim != '"'
+    assert old_delim != "'"
+    assert new_delim != '"'
+    assert new_delim != "'"
 
     whole_lines = "^s@([^@]*)@(.*)@[gIp]$"
-    whole_lines = whole_lines.replace('@', old_delim)
+    whole_lines = whole_lines.replace("@", old_delim)
 
     single_quoted = r"'s@((?:\\'|[^@'])*)@((?:\\'|[^'])*)@[gIp]?'"
-    single_quoted = single_quoted.replace('@', old_delim)
+    single_quoted = single_quoted.replace("@", old_delim)
 
     double_quoted = r'"s@((?:\\"|[^@"])*)@((?:\\"|[^"])*)@[gIp]?"'
-    double_quoted = double_quoted.replace('@', old_delim)
+    double_quoted = double_quoted.replace("@", old_delim)
 
-    repl = r's@\1@\2@g'
-    repl = repl.replace('@', new_delim)
+    repl = r"s@\1@\2@g"
+    repl = repl.replace("@", new_delim)
 
     for f in filenames:
         filter_file(whole_lines, repl, f)
@@ -321,8 +324,7 @@ def chmod_x(entry, perms):
 
 
 def copy_mode(src, dest):
-    """Set the mode of dest to that of src unless it is a link.
-    """
+    """Set the mode of dest to that of src unless it is a link."""
     if os.path.islink(dest):
         return
     src_mode = os.stat(src).st_mode
@@ -363,9 +365,9 @@ def copy(src, dest, _permissions=False):
             not a directory
     """
     if _permissions:
-        tty.debug('Installing {0} to {1}'.format(src, dest))
+        tty.debug("Installing {0} to {1}".format(src, dest))
     else:
-        tty.debug('Copying {0} to {1}'.format(src, dest))
+        tty.debug("Copying {0} to {1}".format(src, dest))
 
     files = glob.glob(src)
     if not files:
@@ -373,7 +375,9 @@ def copy(src, dest, _permissions=False):
     if len(files) > 1 and not os.path.isdir(dest):
         raise ValueError(
             "'{0}' matches multiple files but '{1}' is not a directory".format(
-                src, dest))
+                src, dest
+            )
+        )
 
     for src in files:
         # Expand dest to its eventual full path if it is a directory.
@@ -448,9 +452,9 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         ValueError: if *src* is a parent directory of *dest*
     """
     if _permissions:
-        tty.debug('Installing {0} to {1}'.format(src, dest))
+        tty.debug("Installing {0} to {1}".format(src, dest))
     else:
-        tty.debug('Copying {0} to {1}'.format(src, dest))
+        tty.debug("Copying {0} to {1}".format(src, dest))
 
     abs_dest = os.path.abspath(dest)
     if not abs_dest.endswith(os.path.sep):
@@ -468,15 +472,20 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         # Stop early to avoid unnecessary recursion if being asked to copy
         # from a parent directory.
         if abs_dest.startswith(abs_src):
-            raise ValueError('Cannot copy ancestor directory {0} into {1}'.
-                             format(abs_src, abs_dest))
+            raise ValueError(
+                "Cannot copy ancestor directory {0} into {1}".format(abs_src, abs_dest)
+            )
 
         mkdirp(abs_dest)
 
-        for s, d in traverse_tree(abs_src, abs_dest, order='pre',
-                                  follow_symlinks=not symlinks,
-                                  ignore=ignore,
-                                  follow_nonexisting=True):
+        for s, d in traverse_tree(
+            abs_src,
+            abs_dest,
+            order="pre",
+            follow_symlinks=not symlinks,
+            ignore=ignore,
+            follow_nonexisting=True,
+        ):
             if os.path.islink(s):
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
@@ -484,8 +493,9 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                     if os.path.isabs(target):
                         new_target = re.sub(abs_src, abs_dest, target)
                         if new_target != target:
-                            tty.debug("Redirecting link {0} to {1}"
-                                      .format(target, new_target))
+                            tty.debug(
+                                "Redirecting link {0} to {1}".format(target, new_target)
+                            )
                             target = new_target
 
                     os.symlink(target, d)
@@ -532,10 +542,9 @@ def get_filetype(path_name):
     """
     Return the output of file path_name as a string to identify file type.
     """
-    file = Executable('file')
-    file.add_default_env('LC_ALL', 'C')
-    output = file('-b', '-h', '%s' % path_name,
-                  output=str, error=str)
+    file = Executable("file")
+    file.add_default_env("LC_ALL", "C")
+    output = file("-b", "-h", "%s" % path_name, output=str, error=str)
     return output.strip()
 
 
@@ -565,16 +574,16 @@ def mkdirp(*paths, **kwargs):
             intermediate get the same permissions specified in the arguments to
             mkdirp -- default value is 'args'
     """
-    mode = kwargs.get('mode', None)
-    group = kwargs.get('group', None)
-    default_perms = kwargs.get('default_perms', 'args')
+    mode = kwargs.get("mode", None)
+    group = kwargs.get("group", None)
+    default_perms = kwargs.get("default_perms", "args")
 
     for path in paths:
         if not os.path.exists(path):
             try:
                 # detect missing intermediate folders
                 intermediate_folders = []
-                last_parent = ''
+                last_parent = ""
 
                 intermediate_path = os.path.dirname(path)
 
@@ -601,10 +610,10 @@ def mkdirp(*paths, **kwargs):
                 # ones and if mode_intermediate has been specified, otherwise
                 # intermediate folders list is not populated at all and default
                 # OS mode will be used
-                if default_perms == 'args':
+                if default_perms == "args":
                     intermediate_mode = mode
                     intermediate_group = group
-                elif default_perms == 'parents':
+                elif default_perms == "parents":
                     stat_info = os.stat(last_parent)
                     intermediate_mode = stat_info.st_mode
                     intermediate_group = stat_info.st_gid
@@ -617,10 +626,12 @@ def mkdirp(*paths, **kwargs):
                     if intermediate_mode is not None:
                         os.chmod(intermediate_path, intermediate_mode)
                     if intermediate_group is not None:
-                        chgrp_if_not_world_writable(intermediate_path,
-                                                    intermediate_group)
-                        os.chmod(intermediate_path,
-                                 intermediate_mode)  # reset sticky bit after
+                        chgrp_if_not_world_writable(
+                            intermediate_path, intermediate_group
+                        )
+                        os.chmod(
+                            intermediate_path, intermediate_mode
+                        )  # reset sticky bit after
 
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
@@ -631,7 +642,7 @@ def mkdirp(*paths, **kwargs):
 
 def force_remove(*paths):
     """Remove files without printing errors.  Like ``rm -f``, does NOT
-       remove directories."""
+    remove directories."""
     for path in paths:
         try:
             os.remove(path)
@@ -641,7 +652,7 @@ def force_remove(*paths):
 
 @contextmanager
 def working_dir(dirname, **kwargs):
-    if kwargs.get('create', False):
+    if kwargs.get("create", False):
         mkdirp(dirname)
 
     orig_dir = os.getcwd()
@@ -674,10 +685,10 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     """
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
-    assert os.path.isdir(directory_name), \
-        'Invalid directory: ' + directory_name
-    assert os.path.isabs(directory_name), \
+    assert os.path.isdir(directory_name), "Invalid directory: " + directory_name
+    assert os.path.isabs(directory_name), (
         '"directory_name" must contain an absolute path: ' + directory_name
+    )
 
     directory_basename = os.path.basename(directory_name)
 
@@ -685,10 +696,10 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         assert os.path.isabs(tmp_root)
 
     tmp_dir = tempfile.mkdtemp(dir=tmp_root)
-    tty.debug('Temporary directory created [{0}]'.format(tmp_dir))
+    tty.debug("Temporary directory created [{0}]".format(tmp_dir))
 
     shutil.move(src=directory_name, dst=tmp_dir)
-    tty.debug('Directory moved [src={0}, dest={1}]'.format(directory_name, tmp_dir))
+    tty.debug("Directory moved [src={0}, dest={1}]".format(directory_name, tmp_dir))
 
     try:
         yield tmp_dir
@@ -701,17 +712,17 @@ def replace_directory_transaction(directory_name, tmp_root=None):
                 shutil.rmtree(directory_name)
             shutil.move(
                 src=os.path.join(tmp_dir, directory_basename),
-                dst=os.path.dirname(directory_name)
+                dst=os.path.dirname(directory_name),
             )
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
-        tty.debug('Directory recovered [{0}]'.format(directory_name))
+        tty.debug("Directory recovered [{0}]".format(directory_name))
         raise
     else:
         # Otherwise delete the temporary directory
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        tty.debug('Temporary directory deleted [{0}]'.format(tmp_dir))
+        tty.debug("Temporary directory deleted [{0}]".format(tmp_dir))
 
 
 def hash_directory(directory, ignore=[]):
@@ -735,7 +746,7 @@ def hash_directory(directory, ignore=[]):
                 # TODO: if caching big files becomes an issue, convert this to
                 # TODO: read in chunks. Currently it's used only for testing
                 # TODO: purposes.
-                with open(filename, 'rb') as f:
+                with open(filename, "rb") as f:
                     md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
@@ -746,14 +757,14 @@ def write_tmp_and_move(filename):
     """Write to a temporary file, then move into place."""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
-    tmp = os.path.join(dirname, '.%s.tmp' % basename)
-    with open(tmp, 'w') as f:
+    tmp = os.path.join(dirname, ".%s.tmp" % basename)
+    with open(tmp, "w") as f:
         yield f
     shutil.move(tmp, filename)
 
 
 @contextmanager
-def open_if_filename(str_or_file, mode='r'):
+def open_if_filename(str_or_file, mode="r"):
     """Takes either a path or a file object, and opens it if it is a path.
 
     If it's a file object, just yields the file object.
@@ -767,7 +778,7 @@ def open_if_filename(str_or_file, mode='r'):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
+    perms = os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY
     fd = None
     try:
         fd = os.open(path, perms)
@@ -778,8 +789,7 @@ def touch(path):
 
 
 def touchp(path):
-    """Like ``touch``, but creates any parent directories needed for the file.
-    """
+    """Like ``touch``, but creates any parent directories needed for the file."""
     mkdirp(os.path.dirname(path))
     touch(path)
 
@@ -810,8 +820,7 @@ def ancestor(dir, n=1):
 def get_single_file(directory):
     fnames = os.listdir(directory)
     if len(fnames) != 1:
-        raise ValueError("Expected exactly 1 file, got {0}"
-                         .format(str(len(fnames))))
+        raise ValueError("Expected exactly 1 file, got {0}".format(str(len(fnames))))
     return fnames[0]
 
 
@@ -842,7 +851,7 @@ def can_access(file_name):
     return os.access(file_name, os.R_OK | os.W_OK)
 
 
-def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
+def traverse_tree(source_root, dest_root, rel_path="", **kwargs):
     """Traverse two filesystem trees simultaneously.
 
     Walks the LinkTree directory in pre or post order.  Yields each
@@ -874,16 +883,16 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
-    follow_nonexisting = kwargs.get('follow_nonexisting', True)
-    follow_links = kwargs.get('follow_link', False)
+    follow_nonexisting = kwargs.get("follow_nonexisting", True)
+    follow_links = kwargs.get("follow_link", False)
 
     # Yield in pre or post order?
-    order = kwargs.get('order', 'pre')
-    if order not in ('pre', 'post'):
+    order = kwargs.get("order", "pre")
+    if order not in ("pre", "post"):
         raise ValueError("Order must be 'pre' or 'post'.")
 
     # List of relative paths to ignore under the src root.
-    ignore = kwargs.get('ignore', None) or (lambda filename: False)
+    ignore = kwargs.get("ignore", None) or (lambda filename: False)
 
     # Don't descend into ignored directories
     if ignore(rel_path):
@@ -893,7 +902,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     dest_path = os.path.join(dest_root, rel_path)
 
     # preorder yields directories before children
-    if order == 'pre':
+    if order == "pre":
         yield (source_path, dest_path)
 
     for f in os.listdir(source_path):
@@ -906,13 +915,13 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         # target is relative to the link, then that may not resolve properly
         # relative to our cwd - see resolve_link_target_relative_to_the_link
         if os.path.isdir(source_child) and (
-                follow_links or not os.path.islink(source_child)):
+            follow_links or not os.path.islink(source_child)
+        ):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(
-                    source_root, dest_root, rel_child, **kwargs)
+                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
                 for t in tuples:
                     yield t
 
@@ -920,7 +929,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         elif not ignore(os.path.join(rel_path, f)):
             yield (source_child, dest_child)
 
-    if order == 'post':
+    if order == "post":
         yield (source_path, dest_path)
 
 
@@ -938,9 +947,11 @@ def set_executable(path):
 def last_modification_time_recursive(path):
     path = os.path.abspath(path)
     times = [os.stat(path).st_mtime]
-    times.extend(os.stat(os.path.join(root, name)).st_mtime
-                 for root, dirs, files in os.walk(path)
-                 for name in dirs + files)
+    times.extend(
+        os.stat(os.path.join(root, name)).st_mtime
+        for root, dirs, files in os.walk(path)
+        for name in dirs + files
+    )
     return max(times)
 
 
@@ -1017,9 +1028,9 @@ def safe_remove(*files_or_dirs):
     # Sort them so that shorter paths like "/foo/bar" come before
     # nested paths like "/foo/bar/baz.yaml". This simplifies the
     # handling of temporary copies below
-    sorted_matches = sorted([
-        os.path.abspath(x) for x in itertools.chain(*glob_matches)
-    ], key=len)
+    sorted_matches = sorted(
+        [os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=len
+    )
 
     # Copy files and directories in a temporary location
     removed, dst_root = {}, tempfile.mkdtemp()
@@ -1034,7 +1045,7 @@ def safe_remove(*files_or_dirs):
                 continue
             # The monotonic ID is a simple way to make the filename
             # or directory name unique in the temporary folder
-            basename = os.path.basename(file_or_dir) + '-{0}'.format(id)
+            basename = os.path.basename(file_or_dir) + "-{0}".format(id)
             temporary_path = os.path.join(dst_root, basename)
             shutil.move(file_or_dir, temporary_path)
             removed[file_or_dir] = temporary_path
@@ -1062,11 +1073,11 @@ def fix_darwin_install_name(path):
     libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
         # fix install name first:
-        install_name_tool = Executable('install_name_tool')
-        install_name_tool('-id', lib, lib)
-        otool = Executable('otool')
-        long_deps = otool('-L', lib, output=str).split('\n')
-        deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
+        install_name_tool = Executable("install_name_tool")
+        install_name_tool("-id", lib, lib)
+        otool = Executable("otool")
+        long_deps = otool("-L", lib, output=str).split("\n")
+        deps = [dep.partition(" ")[0][1::] for dep in long_deps[2:-1]]
         # fix all dependencies:
         for dep in deps:
             for loc in libs:
@@ -1076,7 +1087,7 @@ def fix_darwin_install_name(path):
                 # but we don't know builddir (nor how symbolic links look
                 # in builddir). We thus only compare the basenames.
                 if os.path.basename(dep) == os.path.basename(loc):
-                    install_name_tool('-change', dep, loc, lib)
+                    install_name_tool("-change", dep, loc, lib)
                     break
 
 
@@ -1205,9 +1216,9 @@ class FileList(Sequence):
         Returns:
             list: A list of directories
         """
-        return list(dedupe(
-            os.path.dirname(x) for x in self.files if os.path.dirname(x)
-        ))
+        return list(
+            dedupe(os.path.dirname(x) for x in self.files if os.path.dirname(x))
+        )
 
     @property
     def basenames(self):
@@ -1243,11 +1254,11 @@ class FileList(Sequence):
     def __len__(self):
         return len(self.files)
 
-    def joined(self, separator=' '):
+    def joined(self, separator=" "):
         return separator.join(self.files)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(' + repr(self.files) + ')'
+        return self.__class__.__name__ + "(" + repr(self.files) + ")"
 
     def __str__(self):
         return self.joined()
@@ -1264,7 +1275,7 @@ class HeaderList(FileList):
     # as "xinclude" will cause false matches.
     # Avoid matching paths such as <prefix>/include/something/detail/include,
     # e.g. in the CUDA Toolkit which ships internal libc++ headers.
-    include_regex = re.compile(r'(.*?)(\binclude\b)(.*)')
+    include_regex = re.compile(r"(.*?)(\binclude\b)(.*)")
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
@@ -1329,7 +1340,7 @@ class HeaderList(FileList):
             name = x
 
             # Valid extensions include: ['.cuh', '.hpp', '.hh', '.h']
-            for ext in ['.cuh', '.hpp', '.hh', '.h']:
+            for ext in [".cuh", ".hpp", ".hh", ".h"]:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -1351,7 +1362,7 @@ class HeaderList(FileList):
         Returns:
             str: A joined list of include flags
         """
-        return ' '.join(['-I' + x for x in self.directories])
+        return " ".join(["-I" + x for x in self.directories])
 
     @property
     def macro_definitions(self):
@@ -1366,7 +1377,7 @@ class HeaderList(FileList):
         Returns:
             str: A joined list of macro definitions
         """
-        return ' '.join(self._macro_definitions)
+        return " ".join(self._macro_definitions)
 
     @property
     def cpp_flags(self):
@@ -1384,7 +1395,7 @@ class HeaderList(FileList):
         """
         cpp_flags = self.include_flags
         if self.macro_definitions:
-            cpp_flags += ' ' + self.macro_definitions
+            cpp_flags += " " + self.macro_definitions
         return cpp_flags
 
     def add_macro(self, macro):
@@ -1423,24 +1434,32 @@ def find_headers(headers, root, recursive=False):
     if isinstance(headers, six.string_types):
         headers = [headers]
     elif not isinstance(headers, Sequence):
-        message = '{0} expects a string or sequence of strings as the '
-        message += 'first argument [got {1} instead]'
+        message = "{0} expects a string or sequence of strings as the "
+        message += "first argument [got {1} instead]"
         message = message.format(find_headers.__name__, type(headers))
         raise TypeError(message)
 
     # Construct the right suffix for the headers
     suffixes = [
         # C
-        'h',
+        "h",
         # C++
-        'hpp', 'hxx', 'hh', 'H', 'txx', 'tcc', 'icc',
+        "hpp",
+        "hxx",
+        "hh",
+        "H",
+        "txx",
+        "tcc",
+        "icc",
         # Fortran
-        'mod', 'inc',
+        "mod",
+        "inc",
     ]
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers
-               for suffix in suffixes]
+    headers = [
+        "{0}.{1}".format(header, suffix) for header in headers for suffix in suffixes
+    ]
 
     return HeaderList(find(root, headers, recursive))
 
@@ -1455,7 +1474,7 @@ def find_all_headers(root):
     Returns:
         List of all headers found in ``root`` and subdirectories.
     """
-    return find_headers('*', root=root, recursive=True)
+    return find_headers("*", root=root, recursive=True)
 
 
 class LibraryList(FileList):
@@ -1489,11 +1508,11 @@ class LibraryList(FileList):
 
         for x in self.basenames:
             name = x
-            if x.startswith('lib'):
+            if x.startswith("lib"):
                 name = x[3:]
 
             # Valid extensions include: ['.dylib', '.so', '.a']
-            for ext in ['.dylib', '.so', '.a']:
+            for ext in [".dylib", ".so", ".a"]:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -1515,7 +1534,7 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of search flags
         """
-        return ' '.join(['-L' + x for x in self.directories])
+        return " ".join(["-L" + x for x in self.directories])
 
     @property
     def link_flags(self):
@@ -1528,7 +1547,7 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of link flags
         """
-        return ' '.join(['-l' + name for name in self.names])
+        return " ".join(["-l" + name for name in self.names])
 
     @property
     def ld_flags(self):
@@ -1541,7 +1560,7 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of search flags and link flags
         """
-        return self.search_flags + ' ' + self.link_flags
+        return self.search_flags + " " + self.link_flags
 
 
 def find_system_libraries(libraries, shared=True):
@@ -1578,20 +1597,19 @@ def find_system_libraries(libraries, shared=True):
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
     elif not isinstance(libraries, Sequence):
-        message = '{0} expects a string or sequence of strings as the '
-        message += 'first argument [got {1} instead]'
-        message = message.format(find_system_libraries.__name__,
-                                 type(libraries))
+        message = "{0} expects a string or sequence of strings as the "
+        message += "first argument [got {1} instead]"
+        message = message.format(find_system_libraries.__name__, type(libraries))
         raise TypeError(message)
 
     libraries_found = []
     search_locations = [
-        '/lib64',
-        '/lib',
-        '/usr/lib64',
-        '/usr/lib',
-        '/usr/local/lib64',
-        '/usr/local/lib',
+        "/lib64",
+        "/lib",
+        "/usr/lib64",
+        "/usr/lib",
+        "/usr/local/lib64",
+        "/usr/local/lib",
     ]
 
     for library in libraries:
@@ -1632,18 +1650,18 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
     elif not isinstance(libraries, Sequence):
-        message = '{0} expects a string or sequence of strings as the '
-        message += 'first argument [got {1} instead]'
+        message = "{0} expects a string or sequence of strings as the "
+        message += "first argument [got {1} instead]"
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
     # Construct the right suffix for the library
     if shared is True:
-        suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+        suffix = "dylib" if sys.platform == "darwin" else "so"
     else:
-        suffix = 'a'
+        suffix = "a"
     # List of libraries we are searching with suffixes
-    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
+    libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries]
 
     if not recursive:
         # If not recursive, look for the libraries directly in root
@@ -1653,7 +1671,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
-    for subdir in ('lib', 'lib64'):
+    for subdir in ("lib", "lib64"):
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
             continue
@@ -1706,10 +1724,12 @@ def files_in(*search_paths):
     """
     files = []
     for d in filter(can_access_dir, search_paths):
-        files.extend(filter(
-            lambda x: os.path.isfile(x[1]),
-            [(f, os.path.join(d, f)) for f in os.listdir(d)]
-        ))
+        files.extend(
+            filter(
+                lambda x: os.path.isfile(x[1]),
+                [(f, os.path.join(d, f)) for f in os.listdir(d)],
+            )
+        )
     return files
 
 
@@ -1733,7 +1753,7 @@ def search_paths_for_executables(*path_hints):
         path = os.path.abspath(path)
         executable_paths.append(path)
 
-        bin_dir = os.path.join(path, 'bin')
+        bin_dir = os.path.join(path, "bin")
         if os.path.isdir(bin_dir):
             executable_paths.append(bin_dir)
 
@@ -1758,13 +1778,13 @@ def partition_path(path, entry=None):
         try:
             entries = path.split(os.sep)
             i = entries.index(entry)
-            if '' in entries:
+            if "" in entries:
                 i -= 1
-            return paths[:i], paths[i], paths[i + 1:]
+            return paths[:i], paths[i], paths[i + 1 :]
         except ValueError:
             pass
 
-    return paths, '', []
+    return paths, "", []
 
 
 def prefixes(path):
@@ -1792,7 +1812,7 @@ def prefixes(path):
     parts = path.strip(os.sep).split(os.sep)
     if path.startswith(os.sep):
         parts.insert(0, os.sep)
-    paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
+    paths = [os.path.join(*parts[: i + 1]) for i in range(len(parts))]
 
     try:
         paths.remove(os.sep)
@@ -1800,7 +1820,7 @@ def prefixes(path):
         pass
 
     try:
-        paths.remove('.')
+        paths.remove(".")
     except ValueError:
         pass
 

@@ -27,30 +27,31 @@ class Node(object):
         #     else:
         #         value = repr(value)
         value = repr(value)
-        return '%s(tag=%r, value=%s)' % (self.__class__.__name__,
-                                         self.tag, value)
+        return "%s(tag=%r, value=%s)" % (self.__class__.__name__, self.tag, value)
 
     def dump(self, indent=0):
         if isinstance(self.value, basestring):
-            print('{0}{1}(tag={!r}, value={!r})'.format(
-                '  ' * indent, self.__class__.__name__, self.tag, self.value))
+            print(
+                "{0}{1}(tag={!r}, value={!r})".format(
+                    "  " * indent, self.__class__.__name__, self.tag, self.value
+                )
+            )
             if self.comment:
-                print('    {0}comment: {1})'.format(
-                    '  ' * indent, self.comment))
+                print("    {0}comment: {1})".format("  " * indent, self.comment))
             return
-        print('{0}{1}(tag={!r})'.format(
-            '  ' * indent, self.__class__.__name__, self.tag))
+        print(
+            "{0}{1}(tag={!r})".format("  " * indent, self.__class__.__name__, self.tag)
+        )
         if self.comment:
-            print('    {0}comment: {1})'.format(
-                '  ' * indent, self.comment))
+            print("    {0}comment: {1})".format("  " * indent, self.comment))
         for v in self.value:
             if isinstance(v, tuple):
                 for v1 in v:
-                    v1.dump(indent+1)
+                    v1.dump(indent + 1)
             elif isinstance(v, Node):
-                v.dump(indent+1)
+                v.dump(indent + 1)
             else:
-                print('Node value type?', type(v))
+                print("Node value type?", type(v))
 
 
 class ScalarNode(Node):
@@ -62,25 +63,35 @@ class ScalarNode(Node):
       | -> literal style
       > ->
     """
-    id = 'scalar'
 
-    def __init__(self, tag, value, start_mark=None, end_mark=None, style=None,
-                 comment=None):
+    id = "scalar"
+
+    def __init__(
+        self, tag, value, start_mark=None, end_mark=None, style=None, comment=None
+    ):
         Node.__init__(self, tag, value, start_mark, end_mark, comment=comment)
         self.style = style
 
 
 class CollectionNode(Node):
-    def __init__(self, tag, value, start_mark=None, end_mark=None,
-                 flow_style=None, comment=None, anchor=None):
+    def __init__(
+        self,
+        tag,
+        value,
+        start_mark=None,
+        end_mark=None,
+        flow_style=None,
+        comment=None,
+        anchor=None,
+    ):
         Node.__init__(self, tag, value, start_mark, end_mark, comment=comment)
         self.flow_style = flow_style
         self.anchor = anchor
 
 
 class SequenceNode(CollectionNode):
-    id = 'sequence'
+    id = "sequence"
 
 
 class MappingNode(CollectionNode):
-    id = 'mapping'
+    id = "mapping"

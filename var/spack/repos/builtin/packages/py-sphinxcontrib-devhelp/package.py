@@ -18,7 +18,10 @@ class PySphinxcontribDevhelp(PythonPackage):
     # import any modules.
     import_modules = []
 
-    version('1.0.1', sha256='6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34')
+    version(
+        "1.0.1",
+        sha256="6c64b077937330a9128a4da74586e8c2130262f014689b4b89e2d08ee7294a34",
+    )
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

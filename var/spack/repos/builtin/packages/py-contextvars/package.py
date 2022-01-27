@@ -11,7 +11,9 @@ class PyContextvars(PythonPackage):
     homepage = "https://github.com/MagicStack/contextvars"
     pypi = "contextvars/contextvars-2.4.tar.gz"
 
-    version('2.4', sha256='f38c908aaa59c14335eeea12abea5f443646216c4e29380d7bf34d2018e2c39e')
+    version(
+        "2.4", sha256="f38c908aaa59c14335eeea12abea5f443646216c4e29380d7bf34d2018e2c39e"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-immutables@0.9:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-immutables@0.9:", type=("build", "run"))

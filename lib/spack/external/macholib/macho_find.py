@@ -9,12 +9,12 @@ def print_file(fp, path):
 
 def main():
     print(
-        "WARNING: 'macho_find' is deprecated, "
-        "use 'python -mmacholib dump' instead")
+        "WARNING: 'macho_find' is deprecated, " "use 'python -mmacholib dump' instead"
+    )
     _main(print_file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:

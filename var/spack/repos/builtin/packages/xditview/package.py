@@ -12,12 +12,15 @@ class Xditview(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xditview"
     xorg_mirror_path = "app/xditview-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='73ad88cfc879edcc6ede65999c11d670da27575388126795d71f3ad60286d379')
+    version(
+        "1.0.4",
+        sha256="73ad88cfc879edcc6ede65999c11d670da27575388126795d71f3ad60286d379",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxmu')
-    depends_on('libxt')
-    depends_on('libx11')
+    depends_on("libxaw")
+    depends_on("libxmu")
+    depends_on("libxt")
+    depends_on("libx11")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

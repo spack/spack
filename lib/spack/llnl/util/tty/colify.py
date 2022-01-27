@@ -18,29 +18,27 @@ from llnl.util.tty.color import cextra, clen
 
 
 class ColumnConfig:
-
     def __init__(self, cols):
         self.cols = cols
         self.line_length = 0
         self.valid = True
-        self.widths = [0] * cols   # does not include ansi colors
+        self.widths = [0] * cols  # does not include ansi colors
 
     def __repr__(self):
-        attrs = [(a, getattr(self, a))
-                 for a in dir(self) if not a.startswith("__")]
+        attrs = [(a, getattr(self, a)) for a in dir(self) if not a.startswith("__")]
         return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
 
 
 def config_variable_cols(elts, console_width, padding, cols=0):
     """Variable-width column fitting algorithm.
 
-       This function determines the most columns that can fit in the
-       screen width.  Unlike uniform fitting, where all columns take
-       the width of the longest element in the list, each column takes
-       the width of its own longest element. This packs elements more
-       efficiently on screen.
+    This function determines the most columns that can fit in the
+    screen width.  Unlike uniform fitting, where all columns take
+    the width of the longest element in the list, each column takes
+    the width of its own longest element. This packs elements more
+    efficiently on screen.
 
-       If cols is nonzero, force
+    If cols is nonzero, force
     """
     if cols < 0:
         raise ValueError("cols must be non-negative.")
@@ -64,8 +62,8 @@ def config_variable_cols(elts, console_width, padding, cols=0):
 
                 if conf.widths[col] < (length + p):
                     conf.line_length += length + p - conf.widths[col]
-                    conf.widths[col]  = length + p
-                    conf.valid = (conf.line_length < console_width)
+                    conf.widths[col] = length + p
+                    conf.valid = conf.line_length < console_width
 
     try:
         config = next(conf for conf in reversed(configs) if conf.valid)
@@ -81,9 +79,9 @@ def config_variable_cols(elts, console_width, padding, cols=0):
 def config_uniform_cols(elts, console_width, padding, cols=0):
     """Uniform-width column fitting algorithm.
 
-       Determines the longest element in the list, and determines how
-       many columns of that width will fit on screen.  Returns a
-       corresponding column config.
+    Determines the longest element in the list, and determines how
+    many columns of that width will fit on screen.  Returns a
+    corresponding column config.
     """
     if cols < 0:
         raise ValueError("cols must be non-negative.")
@@ -122,18 +120,19 @@ def colify(elts, **options):
             and fit less data on the screen
     """
     # Get keyword arguments or set defaults
-    cols         = options.pop("cols", 0)
-    output       = options.pop("output", sys.stdout)
-    indent       = options.pop("indent", 0)
-    padding      = options.pop("padding", 2)
-    tty          = options.pop('tty', None)
-    method       = options.pop("method", "variable")
+    cols = options.pop("cols", 0)
+    output = options.pop("output", sys.stdout)
+    indent = options.pop("indent", 0)
+    padding = options.pop("padding", 2)
+    tty = options.pop("tty", None)
+    method = options.pop("method", "variable")
     console_cols = options.pop("width", None)
 
     if options:
         raise TypeError(
             "'%s' is an invalid keyword argument for this function."
-            % next(options.iterkeys()))
+            % next(options.iterkeys())
+        )
 
     # elts needs to be an array of strings so we can count the elements
     elts = [text_type(elt) for elt in elts]
@@ -141,10 +140,10 @@ def colify(elts, **options):
         return (0, ())
 
     # environment size is of the form "<rows>x<cols>"
-    env_size = os.environ.get('COLIFY_SIZE')
+    env_size = os.environ.get("COLIFY_SIZE")
     if env_size:
         try:
-            r, c = env_size.split('x')
+            r, c = env_size.split("x")
             console_rows, console_cols = int(r), int(c)
             tty = True
         except BaseException:
@@ -180,7 +179,7 @@ def colify(elts, **options):
             elt = col * rows + row
             width = config.widths[col] + cextra(elts[elt])
             if col < cols - 1:
-                fmt = '%%-%ds' % width
+                fmt = "%%-%ds" % width
                 output.write(fmt % elts[elt])
             else:
                 # Don't pad the rightmost column (sapces can wrap on
@@ -198,15 +197,15 @@ def colify(elts, **options):
 def colify_table(table, **options):
     """Version of ``colify()`` for data expressed in rows, (list of lists).
 
-       Same as regular colify but:
+    Same as regular colify but:
 
-       1. This takes a list of lists, where each sub-list must be the
-          same length, and each is interpreted as a row in a table.
-          Regular colify displays a sequential list of values in columns.
+    1. This takes a list of lists, where each sub-list must be the
+       same length, and each is interpreted as a row in a table.
+       Regular colify displays a sequential list of values in columns.
 
-       2. Regular colify will always print with 1 column when the output
-          is not a tty.  This will always print with same dimensions of
-          the table argument.
+    2. Regular colify will always print with 1 column when the output
+       is not a tty.  This will always print with same dimensions of
+       the table argument.
 
     """
     if table is None:
@@ -221,20 +220,20 @@ def colify_table(table, **options):
             for row in table:
                 yield row[i]
 
-    if 'cols' in options:
+    if "cols" in options:
         raise ValueError("Cannot override columsn in colify_table.")
-    options['cols'] = columns
+    options["cols"] = columns
 
     # don't reduce to 1 column for non-tty
-    options['tty'] = True
+    options["tty"] = True
 
     colify(transpose(), **options)
 
 
 def colified(elts, **options):
     """Invokes the ``colify()`` function but returns the result as a string
-       instead of writing it to an output string."""
+    instead of writing it to an output string."""
     sio = StringIO()
-    options['output'] = sio
+    options["output"] = sio
     colify(elts, **options)
     return sio.getvalue()

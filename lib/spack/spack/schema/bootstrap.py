@@ -6,42 +6,37 @@
 
 #: Schema of a single source
 _source_schema = {
-    'type': 'object',
-    'properties': {
-        'name': {'type': 'string'},
-        'description': {'type': 'string'},
-        'type': {'type': 'string'},
-        'info': {'type': 'object'}
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "type": {"type": "string"},
+        "info": {"type": "object"},
     },
-    'additionalProperties': False,
-    'required': ['name', 'description', 'type']
+    "additionalProperties": False,
+    "required": ["name", "description", "type"],
 }
 
 properties = {
-    'bootstrap': {
-        'type': 'object',
-        'properties': {
-            'enable': {'type': 'boolean'},
-            'root': {
-                'type': 'string'
+    "bootstrap": {
+        "type": "object",
+        "properties": {
+            "enable": {"type": "boolean"},
+            "root": {"type": "string"},
+            "sources": {"type": "array", "items": _source_schema},
+            "trusted": {
+                "type": "object",
+                "patternProperties": {r"\w[\w-]*": {"type": "boolean"}},
             },
-            'sources': {
-                'type': 'array',
-                'items': _source_schema
-            },
-            'trusted': {
-                'type': 'object',
-                'patternProperties': {r'\w[\w-]*': {'type': 'boolean'}}
-            }
-        }
+        },
     }
 }
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack bootstrap configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack bootstrap configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

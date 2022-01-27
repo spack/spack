@@ -10,6 +10,9 @@ class PerlTestWarn(PerlPackage):
     """Perl extension to test methods for warnings"""
 
     homepage = "https://metacpan.org/pod/Test::Warn"
-    url      = "http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Test-Warn-0.30.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/C/CH/CHORNY/Test-Warn-0.30.tar.gz"
 
-    version('0.30', sha256='8197555b94189d919349a03f7058f83861f145af9bee59f505bfe47562144e41')
+    version(
+        "0.30",
+        sha256="8197555b94189d919349a03f7058f83861f145af9bee59f505bfe47562144e41",
+    )

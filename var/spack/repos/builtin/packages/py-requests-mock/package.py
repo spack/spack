@@ -12,6 +12,9 @@ class PyRequestsMock(PythonPackage):
     homepage = "https://requests-mock.readthedocs.io/"
     pypi = "requests-mock/requests-mock-1.7.0.tar.gz"
 
-    version('1.7.0', sha256='88d3402dd8b3c69a9e4f9d3a73ad11b15920c6efd36bc27bf1f701cf4a8e4646')
+    version(
+        "1.7.0",
+        sha256="88d3402dd8b3c69a9e4f9d3a73ad11b15920c6efd36bc27bf1f701cf4a8e4646",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

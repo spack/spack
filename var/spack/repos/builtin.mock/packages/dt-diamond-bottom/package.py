@@ -8,7 +8,8 @@ from spack import *
 
 class DtDiamondBottom(Package):
     """This package has an indirect diamond dependency on dt-diamond-bottom"""
+
     homepage = "http://www.example.com"
     url = "http://www.example.com/dt-diamond-bottom-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")

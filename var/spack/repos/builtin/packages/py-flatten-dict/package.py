@@ -12,11 +12,14 @@ class PyFlattenDict(PythonPackage):
     in Python"""
 
     homepage = "https://github.com/ianlini/flatten-dict"
-    pypi     = "flatten-dict/flatten-dict-0.3.0.tar.gz"
+    pypi = "flatten-dict/flatten-dict-0.3.0.tar.gz"
 
-    version('0.3.0', sha256='0ccc43f15c7c84c5ef387ad19254f6769a32d170313a1bcbf4ce582089313d7e')
+    version(
+        "0.3.0",
+        sha256="0ccc43f15c7c84c5ef387ad19254f6769a32d170313a1bcbf4ce582089313d7e",
+    )
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.12:1', type=('build', 'run'))
-    depends_on('py-pathlib2@2.3:2', type=('build', 'run'))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six@1.12:1", type=("build", "run"))
+    depends_on("py-pathlib2@2.3:2", type=("build", "run"))

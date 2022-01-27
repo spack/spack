@@ -13,17 +13,20 @@ class PyCtgan(PythonPackage):
     high fidelity."""
 
     homepage = "https://github.com/sdv-dev/CTGAN"
-    pypi     = "ctgan/ctgan-0.5.0.tar.gz"
+    pypi = "ctgan/ctgan-0.5.0.tar.gz"
 
-    version('0.5.0', sha256='b8a5dbf21dab2d2e2690013f13feb0922f5bad13440b15bc031ce9d58c7fb988')
+    version(
+        "0.5.0",
+        sha256="b8a5dbf21dab2d2e2690013f13feb0922f5bad13440b15bc031ce9d58c7fb988",
+    )
 
-    depends_on('python@3.6:',                       type=('build', 'run'))
-    depends_on('py-setuptools',                     type='build')
-    depends_on('py-packaging@20:21',                type=('build', 'run'))
-    depends_on('py-numpy@1.18:1.19',                type=('build', 'run'), when='^python@3.6')
-    depends_on('py-numpy@1.20:1',                   type=('build', 'run'), when='^python@3.7:')
-    depends_on('py-pandas@1.1.3:1',                 type=('build', 'run'))
-    depends_on('py-scikit-learn@0.24:1',            type=('build', 'run'))
-    depends_on('py-torch@1.8.0:1',                  type=('build', 'run'))
-    depends_on('py-torchvision@0.9',                type=('build', 'run'))
-    depends_on('py-rdt@0.6.1:0.6',                  type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-packaging@20:21", type=("build", "run"))
+    depends_on("py-numpy@1.18:1.19", type=("build", "run"), when="^python@3.6")
+    depends_on("py-numpy@1.20:1", type=("build", "run"), when="^python@3.7:")
+    depends_on("py-pandas@1.1.3:1", type=("build", "run"))
+    depends_on("py-scikit-learn@0.24:1", type=("build", "run"))
+    depends_on("py-torch@1.8.0:1", type=("build", "run"))
+    depends_on("py-torchvision@0.9", type=("build", "run"))
+    depends_on("py-rdt@0.6.1:0.6", type=("build", "run"))

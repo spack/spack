@@ -24,6 +24,9 @@ class Gts(AutotoolsPackage):
     homepage = "http://gts.sourceforge.net/index.html"
     url = "http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz"
 
-    version('121130', sha256='c23f72ab74bbf65599f8c0b599d6336fabe1ec2a09c19b70544eeefdc069b73b')
+    version(
+        "121130",
+        sha256="c23f72ab74bbf65599f8c0b599d6336fabe1ec2a09c19b70544eeefdc069b73b",
+    )
 
-    depends_on('glib')
+    depends_on("glib")

@@ -3,9 +3,10 @@
 """
 __version__ = "0.2.dev2"
 
-__all__ = ['IniConfig', 'ParseError']
+__all__ = ["IniConfig", "ParseError"]
 
 COMMENTCHARS = "#;"
+
 
 class ParseError(Exception):
     def __init__(self, path, lineno, msg):
@@ -15,7 +16,8 @@ class ParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return "%s:%s: %s" %(self.path, self.lineno+1, self.msg)
+        return "%s:%s: %s" % (self.path, self.lineno + 1, self.msg)
+
 
 class SectionWrapper(object):
     def __init__(self, config, name):
@@ -33,8 +35,10 @@ class SectionWrapper(object):
 
     def __iter__(self):
         section = self.config.sections.get(self.name, [])
+
         def lineof(key):
             return self.config.lineof(self.name, key)
+
         for name in sorted(section, key=lineof):
             yield name
 
@@ -45,7 +49,7 @@ class SectionWrapper(object):
 
 class IniConfig(object):
     def __init__(self, path, data=None):
-        self.path = str(path) # convenience
+        self.path = str(path)  # convenience
         if data is None:
             f = open(self.path)
             try:
@@ -60,15 +64,15 @@ class IniConfig(object):
 
         for lineno, section, name, value in tokens:
             if section is None:
-                self._raise(lineno, 'no section header defined')
+                self._raise(lineno, "no section header defined")
             self._sources[section, name] = lineno
             if name is None:
                 if section in self.sections:
-                    self._raise(lineno, 'duplicate section %r'%(section, ))
+                    self._raise(lineno, "duplicate section %r" % (section,))
                 self.sections[section] = {}
             else:
                 if name in self.sections[section]:
-                    self._raise(lineno, 'duplicate name %r'%(name, ))
+                    self._raise(lineno, "duplicate name %r" % (name,))
                 self.sections[section][name] = value
 
     def _raise(self, lineno, msg):
@@ -85,20 +89,20 @@ class IniConfig(object):
             # new section
             elif name is not None and data is None:
                 if not name:
-                    self._raise(lineno, 'empty section name')
+                    self._raise(lineno, "empty section name")
                 section = name
                 result.append((lineno, section, None, None))
             # continuation
             elif name is None and data is not None:
                 if not result:
-                    self._raise(lineno, 'unexpected value continuation')
+                    self._raise(lineno, "unexpected value continuation")
                 last = result.pop()
                 last_name, last_data = last[-2:]
                 if last_name is None:
-                    self._raise(lineno, 'unexpected value continuation')
+                    self._raise(lineno, "unexpected value continuation")
 
                 if last_data:
-                    data = '%s\n%s' % (last_data, data)
+                    data = "%s\n%s" % (last_data, data)
                 result.append(last[:-1] + (data,))
         return result
 
@@ -111,7 +115,7 @@ class IniConfig(object):
         if not line:
             return None, None
         # section
-        if line[0] == '[':
+        if line[0] == "[":
             realline = line
             for c in COMMENTCHARS:
                 line = line.split(c)[0].rstrip()
@@ -121,14 +125,14 @@ class IniConfig(object):
         # value
         elif not line[0].isspace():
             try:
-                name, value = line.split('=', 1)
+                name, value = line.split("=", 1)
                 if ":" in name:
                     raise ValueError()
             except ValueError:
                 try:
                     name, value = line.split(":", 1)
                 except ValueError:
-                    self._raise(lineno, 'unexpected line: %r' % line)
+                    self._raise(lineno, "unexpected line: %r" % line)
             return name.strip(), value.strip()
         # continuation
         else:
@@ -156,6 +160,7 @@ class IniConfig(object):
 
     def __contains__(self, arg):
         return arg in self.sections
+
 
 def iscommentline(line):
     c = line.lstrip()[:1]

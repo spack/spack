@@ -13,9 +13,12 @@ class PyAstropyHelpers(PythonPackage):
     projects that wish to leverage this work."""
 
     homepage = "https://github.com/astropy/astropy-helpers"
-    url      = "https://github.com/astropy/astropy-helpers/archive/v4.0.1.tar.gz"
+    url = "https://github.com/astropy/astropy-helpers/archive/v4.0.1.tar.gz"
 
-    version('4.0.1',  sha256='88602971c3b63d6aaa6074d013f995d1e234acb3d517d70d7fcebd30cdaf5c89')
+    version(
+        "4.0.1",
+        sha256="88602971c3b63d6aaa6074d013f995d1e234acb3d517d70d7fcebd30cdaf5c89",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools@30.3:', type='build')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools@30.3:", type="build")

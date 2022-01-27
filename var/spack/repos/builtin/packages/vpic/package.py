@@ -9,22 +9,23 @@ from spack import *
 
 class Vpic(CMakePackage):
     """VPIC is a general purpose particle-in-cell simulation code for modeling
-       kinetic plasmas in one, two, or three spatial dimensions. It employs a
-       second-order, explicit, leapfrog algorithm to update charged particle
-       positions and velocities in order to solve the relativistic kinetic
-       equation for each species in the plasma, along with a full Maxwell
-       description for the electric and magnetic fields evolved via a second-
-       order finite-difference-time-domain (FDTD) solve.
+    kinetic plasmas in one, two, or three spatial dimensions. It employs a
+    second-order, explicit, leapfrog algorithm to update charged particle
+    positions and velocities in order to solve the relativistic kinetic
+    equation for each species in the plasma, along with a full Maxwell
+    description for the electric and magnetic fields evolved via a second-
+    order finite-difference-time-domain (FDTD) solve.
     """
+
     homepage = "https://github.com/lanl/vpic"
-    git      = "https://github.com/lanl/vpic.git"
+    git = "https://github.com/lanl/vpic.git"
 
-    version('develop', branch='master', submodules=True)
+    version("develop", branch="master", submodules=True)
 
-    depends_on("cmake@3.1:", type='build')
-    depends_on('mpi')
+    depends_on("cmake@3.1:", type="build")
+    depends_on("mpi")
 
     def cmake_args(self):
-        options = ['-DENABLE_INTEGRATED_TESTS=ON', '-DENABLE_UNIT_TESTS=ON']
+        options = ["-DENABLE_INTEGRATED_TESTS=ON", "-DENABLE_UNIT_TESTS=ON"]
 
         return options

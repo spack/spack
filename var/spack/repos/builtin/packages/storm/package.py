@@ -14,17 +14,29 @@ class Storm(Package):
     """
 
     homepage = "https://storm.apache.org/"
-    url      = "https://archive.apache.org/dist/storm/apache-storm-2.2.0/apache-storm-2.2.0.tar.gz"
+    url = "https://archive.apache.org/dist/storm/apache-storm-2.2.0/apache-storm-2.2.0.tar.gz"
     list_url = "https://archive.apache.org/dist/storm/"
     list_depth = 1
 
-    version('2.2.0', sha256='f621163f349a8e85130bc3d2fbb34e3b08f9c039ccac5474f3724e47a3a38675')
-    version('2.1.0', sha256='e279a495dda42af7d9051543989f74a1435a5bda53e795a1de4a1def32027fc4')
-    version('2.0.0', sha256='0a4a6f985242a99f899a01bd01dacf9365f381e2acc473caa84073fbe84f6703')
-    version('1.2.3', sha256='d45322253db06353a521284f31b30bd964dab859f3a279a305bd79112803425a')
+    version(
+        "2.2.0",
+        sha256="f621163f349a8e85130bc3d2fbb34e3b08f9c039ccac5474f3724e47a3a38675",
+    )
+    version(
+        "2.1.0",
+        sha256="e279a495dda42af7d9051543989f74a1435a5bda53e795a1de4a1def32027fc4",
+    )
+    version(
+        "2.0.0",
+        sha256="0a4a6f985242a99f899a01bd01dacf9365f381e2acc473caa84073fbe84f6703",
+    )
+    version(
+        "1.2.3",
+        sha256="d45322253db06353a521284f31b30bd964dab859f3a279a305bd79112803425a",
+    )
 
-    depends_on('java@8', type=('build', 'run'))
-    depends_on('zookeeper', type='run')
+    depends_on("java@8", type=("build", "run"))
+    depends_on("zookeeper", type="run")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

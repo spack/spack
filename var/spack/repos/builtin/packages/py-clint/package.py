@@ -12,7 +12,10 @@ class PyClint(PythonPackage):
     homepage = "https://github.com/kennethreitz-archive/clint"
     pypi = "clint/clint-0.5.1.tar.gz"
 
-    version('0.5.1', sha256='05224c32b1075563d0b16d0015faaf9da43aa214e4a2140e51f08789e7a4c5aa')
+    version(
+        "0.5.1",
+        sha256="05224c32b1075563d0b16d0015faaf9da43aa214e4a2140e51f08789e7a4c5aa",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-args', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-args", type=("build", "run"))

@@ -14,9 +14,18 @@ class RInline(RPackage):
     conventions."""
 
     homepage = "https://cloud.r-project.org/package=inline"
-    url      = "https://cloud.r-project.org/src/contrib/inline_0.3.14.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/inline_0.3.14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/inline"
 
-    version('0.3.17', sha256='792857b2ebd408d6523424d2f6bb7297e241d4b28ab32372f6a9240c8cd554f3')
-    version('0.3.15', sha256='ff043fe13c1991a3b285bed256ff4a9c0ba10bee764225a34b285875b7d69c68')
-    version('0.3.14', sha256='fd34d6bf965148d26d983a022a0ff7bc1a5831f6ca066deee3f6139894dfc931')
+    version(
+        "0.3.17",
+        sha256="792857b2ebd408d6523424d2f6bb7297e241d4b28ab32372f6a9240c8cd554f3",
+    )
+    version(
+        "0.3.15",
+        sha256="ff043fe13c1991a3b285bed256ff4a9c0ba10bee764225a34b285875b7d69c68",
+    )
+    version(
+        "0.3.14",
+        sha256="fd34d6bf965148d26d983a022a0ff7bc1a5831f6ca066deee3f6139894dfc931",
+    )

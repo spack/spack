@@ -12,12 +12,15 @@ class Editres(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/editres"
     xorg_mirror_path = "app/editres-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='85f4664ca582effb01ee972d006124569b757b9a08ae6608c3f45fc36b3b7b1a')
+    version(
+        "1.0.6",
+        sha256="85f4664ca582effb01ee972d006124569b757b9a08ae6608c3f45fc36b3b7b1a",
+    )
 
-    depends_on('libxaw')
-    depends_on('libx11')
-    depends_on('libxt')
-    depends_on('libxmu')
+    depends_on("libxaw")
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxmu")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

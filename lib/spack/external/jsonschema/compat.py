@@ -19,12 +19,11 @@ if PY3:
     zip = zip
     from functools import lru_cache
     from io import StringIO as NativeIO
-    from urllib.parse import (
-        unquote, urljoin, urlunsplit, SplitResult, urlsplit
-    )
+    from urllib.parse import unquote, urljoin, urlunsplit, SplitResult, urlsplit
     from urllib.request import pathname2url, urlopen
-    str_types = str,
-    int_types = int,
+
+    str_types = (str,)
+    int_types = (int,)
     iteritems = operator.methodcaller("items")
 else:
     from itertools import izip as zip  # noqa
@@ -32,6 +31,7 @@ else:
     from urlparse import urljoin, urlunsplit, SplitResult, urlsplit
     from urllib import pathname2url, unquote  # noqa
     import urllib2  # noqa
+
     def urlopen(*args, **kwargs):
         return contextlib.closing(urllib2.urlopen(*args, **kwargs))
 

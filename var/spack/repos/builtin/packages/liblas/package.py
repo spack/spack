@@ -12,43 +12,52 @@ class Liblas(CMakePackage):
     """
 
     homepage = "https://liblas.org/"
-    url      = "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
+    url = "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
 
-    version('1.8.1', sha256='9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76')
+    version(
+        "1.8.1",
+        sha256="9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76",
+    )
 
     # libLAS linkage of GDAL and libgeotiff enhances spatial coordinate system
     # description and provides data reprojection support.
     # Ref.: https://liblas.org/compilation.html#optional-libraries
-    variant('endian',  default=False, description='Build with "Endian-aware" option')
-    variant('gdal',    default=False, description='Build with GDAL for enhanced performance')
-    variant('geotiff', default=True,  description='Build with GeoTIFF for enhanced performance')
-    variant('laszip',  default=False, description='Build with LasZip')
+    variant("endian", default=False, description='Build with "Endian-aware" option')
+    variant(
+        "gdal", default=False, description="Build with GDAL for enhanced performance"
+    )
+    variant(
+        "geotiff",
+        default=True,
+        description="Build with GeoTIFF for enhanced performance",
+    )
+    variant("laszip", default=False, description="Build with LasZip")
 
-    depends_on('libgeotiff')
-    depends_on('boost@:1.69.0')
-    depends_on('laszip', when='+laszip')
-    depends_on('gdal', when='+gdal')
+    depends_on("libgeotiff")
+    depends_on("boost@:1.69.0")
+    depends_on("laszip", when="+laszip")
+    depends_on("gdal", when="+gdal")
 
     def cmake_args(self):
         args = []
-        if '+endian' in self.spec:
-            args.append('-DWITH_ENDIANAWARE=ON')
+        if "+endian" in self.spec:
+            args.append("-DWITH_ENDIANAWARE=ON")
         else:
-            args.append('-DWITH_ENDIANAWARE=OFF')
+            args.append("-DWITH_ENDIANAWARE=OFF")
 
-        if '+gdal' in self.spec:
-            args.append('-DWITH_GDAL=ON')
+        if "+gdal" in self.spec:
+            args.append("-DWITH_GDAL=ON")
         else:
-            args.append('-DWITH_GDAL=OFF')
+            args.append("-DWITH_GDAL=OFF")
 
-        if '+geotiff' in self.spec:
-            args.append('-DWITH_GEOTIFF=ON')
+        if "+geotiff" in self.spec:
+            args.append("-DWITH_GEOTIFF=ON")
         else:
-            args.append('-DWITH_GEOTIFF=OFF')
+            args.append("-DWITH_GEOTIFF=OFF")
 
-        if '+laszip' in self.spec:
-            args.append('-DWITH_LASZIP=ON')
+        if "+laszip" in self.spec:
+            args.append("-DWITH_LASZIP=ON")
         else:
-            args.append('-DWITH_LASZIP=OFF')
+            args.append("-DWITH_LASZIP=OFF")
 
         return args

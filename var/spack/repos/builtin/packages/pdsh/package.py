@@ -12,18 +12,21 @@ class Pdsh(AutotoolsPackage):
     """
 
     homepage = "https://github.com/grondo/pdsh"
-    url      = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
+    url = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
 
-    version('2.31', sha256='0ee066ce395703285cf4f6cf00b54b7097d12457a4b1c146bc6f33d8ba73caa7')
+    version(
+        "2.31",
+        sha256="0ee066ce395703285cf4f6cf00b54b7097d12457a4b1c146bc6f33d8ba73caa7",
+    )
 
-    variant('ssh', default=True, description="Build with ssh module")
+    variant("ssh", default=True, description="Build with ssh module")
 
-    variant('static_modules', default=True, description="Build with static modules")
+    variant("static_modules", default=True, description="Build with static modules")
 
     def configure_args(self):
         args = []
-        if '+ssh' in self.spec:
-            args.append('--with-ssh')
-        if '+static_modules' in self.spec:
-            args.append('--enable-static-modules')
+        if "+ssh" in self.spec:
+            args.append("--with-ssh")
+        if "+static_modules" in self.spec:
+            args.append("--enable-static-modules")
         return args

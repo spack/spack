@@ -14,8 +14,11 @@ class PyTorchsummary(PythonPackage):
     homepage = "https://github.com/sksq96/pytorch-summary"
     pypi = "torchsummary/torchsummary-1.5.1.tar.gz"
 
-    version('1.5.1', sha256='981bf689e22e0cf7f95c746002f20a24ad26aa6b9d861134a14bc6ce92230590')
+    version(
+        "1.5.1",
+        sha256="981bf689e22e0cf7f95c746002f20a24ad26aa6b9d861134a14bc6ce92230590",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-torch', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-torch", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))

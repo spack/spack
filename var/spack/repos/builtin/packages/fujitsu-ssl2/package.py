@@ -104,9 +104,7 @@ class FujitsuSsl2(Package):
                 libslist.append("libfjlapack.so")
             libslist.append("libscalapack.a")
 
-        libslist.extend(
-            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"]
-        )
+        libslist.extend(["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"])
 
         if "+parallel" in spec:  # parallel
             libslist.extend(["libfjomphk.so", "libfjomp.so"])
@@ -136,17 +134,11 @@ class FujitsuSsl2(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         path = self.prefix.include
-        env.append_flags(
-            "fcc_ENV", "-idirafter " + path
-        )
-        env.append_flags(
-            "FCC_ENV", "-idirafter " + path
-        )
+        env.append_flags("fcc_ENV", "-idirafter " + path)
+        env.append_flags("FCC_ENV", "-idirafter " + path)
 
     @property
     def headers(self):
-        path = join_path(
-            self.spec.prefix, "clang-comp"
-        )
-        headers = find_headers('cssl', path, recursive=True)
+        path = join_path(self.spec.prefix, "clang-comp")
+        headers = find_headers("cssl", path, recursive=True)
         return headers

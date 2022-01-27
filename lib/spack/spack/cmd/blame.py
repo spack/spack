@@ -26,39 +26,62 @@ level = "long"
 def setup_parser(subparser):
     view_group = subparser.add_mutually_exclusive_group()
     view_group.add_argument(
-        '-t', '--time', dest='view', action='store_const', const='time',
-        default='time', help='sort by last modification date (default)')
+        "-t",
+        "--time",
+        dest="view",
+        action="store_const",
+        const="time",
+        default="time",
+        help="sort by last modification date (default)",
+    )
     view_group.add_argument(
-        '-p', '--percent', dest='view', action='store_const', const='percent',
-        help='sort by percent of code')
+        "-p",
+        "--percent",
+        dest="view",
+        action="store_const",
+        const="percent",
+        help="sort by percent of code",
+    )
     view_group.add_argument(
-        '-g', '--git', dest='view', action='store_const', const='git',
-        help='show git blame output instead of summary')
+        "-g",
+        "--git",
+        dest="view",
+        action="store_const",
+        const="git",
+        help="show git blame output instead of summary",
+    )
     subparser.add_argument(
-        "--json", action="store_true", default=False,
-        help="output blame as machine-readable json records")
+        "--json",
+        action="store_true",
+        default=False,
+        help="output blame as machine-readable json records",
+    )
 
     subparser.add_argument(
-        'package_or_file', help='name of package to show contributions for, '
-        'or path to a file in the spack repo')
+        "package_or_file",
+        help="name of package to show contributions for, "
+        "or path to a file in the spack repo",
+    )
 
 
 def print_table(rows, last_mod, total_lines, emails):
     """
     Given a set of rows with authors and lines, print a table.
     """
-    table = [['LAST_COMMIT', 'LINES', '%', 'AUTHOR', 'EMAIL']]
+    table = [["LAST_COMMIT", "LINES", "%", "AUTHOR", "EMAIL"]]
     for author, nlines in rows:
-        table += [[
-            pretty_date(last_mod[author]),
-            nlines,
-            round(nlines / float(total_lines) * 100, 1),
-            author,
-            emails[author]]]
+        table += [
+            [
+                pretty_date(last_mod[author]),
+                nlines,
+                round(nlines / float(total_lines) * 100, 1),
+                author,
+                emails[author],
+            ]
+        ]
 
-    table += [[''] * 5]
-    table += [[pretty_date(max(last_mod.values())), total_lines, '100.0'] +
-              [''] * 3]
+    table += [[""] * 5]
+    table += [[pretty_date(max(last_mod.values())), total_lines, "100.0"] + [""] * 3]
 
     colify_table(table)
 
@@ -70,17 +93,22 @@ def dump_json(rows, last_mod, total_lines, emails):
     result = {}
     authors = []
     for author, nlines in rows:
-        authors.append({
-            "last_commit": pretty_date(last_mod[author]),
-            "lines": nlines,
-            "percentage": round(nlines / float(total_lines) * 100, 1),
-            "author": author,
-            "email": emails[author]
-        })
+        authors.append(
+            {
+                "last_commit": pretty_date(last_mod[author]),
+                "lines": nlines,
+                "percentage": round(nlines / float(total_lines) * 100, 1),
+                "author": author,
+                "email": emails[author],
+            }
+        )
 
-    result['authors'] = authors
-    result["totals"] = {"last_commit": pretty_date(max(last_mod.values())),
-                        "lines": total_lines, "percentage": "100.0"}
+    result["authors"] = authors
+    result["totals"] = {
+        "last_commit": pretty_date(max(last_mod.values())),
+        "lines": total_lines,
+        "percentage": "100.0",
+    }
 
     sjson.dump(result, sys.stdout)
 
@@ -89,7 +117,7 @@ def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack blame'")
-    git = which('git', required=True)
+    git = which("git", required=True)
 
     # Get name of file to blame
     blame_file = None
@@ -100,16 +128,16 @@ def blame(parser, args):
 
     if not blame_file:
         pkg = spack.repo.get(args.package_or_file)
-        blame_file = pkg.module.__file__.rstrip('c')  # .pyc -> .py
+        blame_file = pkg.module.__file__.rstrip("c")  # .pyc -> .py
 
     # get git blame for the package
     with working_dir(spack.paths.prefix):
-        if args.view == 'git':
-            git('blame', blame_file)
+        if args.view == "git":
+            git("blame", blame_file)
             return
         else:
-            output = git('blame', '--line-porcelain', blame_file, output=str)
-            lines = output.split('\n')
+            output = git("blame", "--line-porcelain", blame_file, output=str)
+            lines = output.split("\n")
 
     # Histogram authors
     counts = {}
@@ -117,28 +145,27 @@ def blame(parser, args):
     last_mod = {}
     total_lines = 0
     for line in lines:
-        match = re.match(r'^author (.*)', line)
+        match = re.match(r"^author (.*)", line)
         if match:
             author = match.group(1)
 
-        match = re.match(r'^author-mail (.*)', line)
+        match = re.match(r"^author-mail (.*)", line)
         if match:
             email = match.group(1)
 
-        match = re.match(r'^author-time (.*)', line)
+        match = re.match(r"^author-time (.*)", line)
         if match:
             mod = int(match.group(1))
             last_mod[author] = max(last_mod.setdefault(author, 0), mod)
 
         # ignore comments
-        if re.match(r'^\t[^#]', line):
+        if re.match(r"^\t[^#]", line):
             counts[author] = counts.setdefault(author, 0) + 1
             emails.setdefault(author, email)
             total_lines += 1
 
-    if args.view == 'time':
-        rows = sorted(
-            counts.items(), key=lambda t: last_mod[t[0]], reverse=True)
+    if args.view == "time":
+        rows = sorted(counts.items(), key=lambda t: last_mod[t[0]], reverse=True)
     else:  # args.view == 'percent'
         rows = sorted(counts.items(), key=lambda t: t[1], reverse=True)
 

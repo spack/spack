@@ -19,4 +19,4 @@ when ``importlib`` is not completely usable.
 try:
     from .importlib_importer import load_source  # noqa
 except ImportError:
-    from .imp_importer import load_source        # noqa
+    from .imp_importer import load_source  # noqa

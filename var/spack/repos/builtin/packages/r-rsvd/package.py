@@ -25,11 +25,17 @@ class RRsvd(RPackage):
     <arXiv:1608.02148>."""
 
     homepage = "https://github.com/erichson/rSVD"
-    url      = "https://cloud.r-project.org/src/contrib/rsvd_1.0.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/rsvd_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rsvd"
 
-    version('1.0.3', sha256='13560e0fc3ae6927c4cc4d5ad816b1f640a2a445b712a5a612ab17ea0ce179bb')
-    version('1.0.2', sha256='c8fe5c18bf7bcfe32604a897e3a7caae39b49e47e93edad9e4d07657fc392a3a')
+    version(
+        "1.0.3",
+        sha256="13560e0fc3ae6927c4cc4d5ad816b1f640a2a445b712a5a612ab17ea0ce179bb",
+    )
+    version(
+        "1.0.2",
+        sha256="c8fe5c18bf7bcfe32604a897e3a7caae39b49e47e93edad9e4d07657fc392a3a",
+    )
 
-    depends_on('r@3.2.2:', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on("r@3.2.2:", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))

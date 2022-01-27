@@ -12,8 +12,10 @@ class Dracut(AutotoolsPackage):
     framework."""
 
     homepage = "https://github.com/dracutdevs/dracut"
-    url      = "https://github.com/dracutdevs/dracut/archive/050.tar.gz"
+    url = "https://github.com/dracutdevs/dracut/archive/050.tar.gz"
 
-    version('050', sha256='f9dbf18597e5929221365964293212c8c9ffb7d84529c5a338c834ecab06e333')
+    version(
+        "050", sha256="f9dbf18597e5929221365964293212c8c9ffb7d84529c5a338c834ecab06e333"
+    )
 
-    depends_on('kmod')
+    depends_on("kmod")

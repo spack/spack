@@ -24,14 +24,17 @@ class GrOsmosdr(CMakePackage):
     gnuradio .cfile input through libgnuradio-blocks"""
 
     homepage = "https://osmocom.org/projects/gr-osmosdr/wiki/GrOsmoSDR"
-    url      = "https://github.com/osmocom/gr-osmosdr/archive/v0.2.2.tar.gz"
+    url = "https://github.com/osmocom/gr-osmosdr/archive/v0.2.2.tar.gz"
 
-    maintainers = ['aweits']
+    maintainers = ["aweits"]
 
-    variant('hackrf', default=True, description='Support HackRF Hardware')
+    variant("hackrf", default=True, description="Support HackRF Hardware")
 
-    version('0.2.2', sha256='5a7ce7afee38a56191b5d16cb4a91c92476729ff16ed09cbba5a3851ac619713')
+    version(
+        "0.2.2",
+        sha256="5a7ce7afee38a56191b5d16cb4a91c92476729ff16ed09cbba5a3851ac619713",
+    )
 
-    depends_on('gnuradio')
-    depends_on('swig', type='build')
-    depends_on('hackrf-host', when='+hackrf')
+    depends_on("gnuradio")
+    depends_on("swig", type="build")
+    depends_on("hackrf-host", when="+hackrf")

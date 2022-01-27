@@ -15,11 +15,17 @@ class RDesc(RPackage):
     homepage = "https://github.com/r-lib/desc"
     cran = "desc"
 
-    version('1.4.0', sha256='8220e4c706449b8121b822e70b1414f391ef419aed574836a234c63b83e5d649')
-    version('1.2.0', sha256='e66fb5d4fc7974bc558abcdc107a1f258c9177a29dcfcf9164bc6b33dd08dae8')
+    version(
+        "1.4.0",
+        sha256="8220e4c706449b8121b822e70b1414f391ef419aed574836a234c63b83e5d649",
+    )
+    version(
+        "1.2.0",
+        sha256="e66fb5d4fc7974bc558abcdc107a1f258c9177a29dcfcf9164bc6b33dd08dae8",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-crayon', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-assertthat', when='@:1.2', type=('build', 'run'))
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"))
+    depends_on("r-crayon", type=("build", "run"))
+    depends_on("r-rprojroot", type=("build", "run"))
+    depends_on("r-assertthat", when="@:1.2", type=("build", "run"))

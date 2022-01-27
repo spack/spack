@@ -13,9 +13,12 @@ class Xmlto(AutotoolsPackage):
     backends."""
 
     homepage = "https://pagure.io/xmlto"
-    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
+    url = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
 
-    version('0.0.28', sha256='2f986b7c9a0e9ac6728147668e776d405465284e13c74d4146c9cbc51fd8aad3')
+    version(
+        "0.0.28",
+        sha256="2f986b7c9a0e9ac6728147668e776d405465284e13c74d4146c9cbc51fd8aad3",
+    )
 
     # FIXME: missing a lot of dependencies
-    depends_on('libxslt')
+    depends_on("libxslt")

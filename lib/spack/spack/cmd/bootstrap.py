@@ -26,72 +26,66 @@ def _add_scope_option(parser):
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
     parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        help="configuration scope to read/modify"
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        help="configuration scope to read/modify",
     )
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(dest='subcommand')
+    sp = subparser.add_subparsers(dest="subcommand")
 
-    status = sp.add_parser('status', help='get the status of Spack')
+    status = sp.add_parser("status", help="get the status of Spack")
     status.add_argument(
-        '--optional', action='store_true', default=False,
-        help='show the status of rarely used optional dependencies'
+        "--optional",
+        action="store_true",
+        default=False,
+        help="show the status of rarely used optional dependencies",
     )
     status.add_argument(
-        '--dev', action='store_true', default=False,
-        help='show the status of dependencies needed to develop Spack'
+        "--dev",
+        action="store_true",
+        default=False,
+        help="show the status of dependencies needed to develop Spack",
     )
 
-    enable = sp.add_parser('enable', help='enable bootstrapping')
+    enable = sp.add_parser("enable", help="enable bootstrapping")
     _add_scope_option(enable)
 
-    disable = sp.add_parser('disable', help='disable bootstrapping')
+    disable = sp.add_parser("disable", help="disable bootstrapping")
     _add_scope_option(disable)
 
     reset = sp.add_parser(
-        'reset', help='reset bootstrapping configuration to Spack defaults'
+        "reset", help="reset bootstrapping configuration to Spack defaults"
     )
-    spack.cmd.common.arguments.add_common_arguments(
-        reset, ['yes_to_all']
-    )
+    spack.cmd.common.arguments.add_common_arguments(reset, ["yes_to_all"])
 
-    root = sp.add_parser(
-        'root', help='get/set the root bootstrap directory'
-    )
+    root = sp.add_parser("root", help="get/set the root bootstrap directory")
     _add_scope_option(root)
     root.add_argument(
-        'path', nargs='?', default=None,
-        help='set the bootstrap directory to this value'
+        "path",
+        nargs="?",
+        default=None,
+        help="set the bootstrap directory to this value",
     )
 
-    list = sp.add_parser(
-        'list', help='list the methods available for bootstrapping'
-    )
+    list = sp.add_parser("list", help="list the methods available for bootstrapping")
     _add_scope_option(list)
 
-    trust = sp.add_parser(
-        'trust', help='trust a bootstrapping method'
-    )
+    trust = sp.add_parser("trust", help="trust a bootstrapping method")
     _add_scope_option(trust)
-    trust.add_argument(
-        'name', help='name of the method to be trusted'
-    )
+    trust.add_argument("name", help="name of the method to be trusted")
 
-    untrust = sp.add_parser(
-        'untrust', help='untrust a bootstrapping method'
-    )
+    untrust = sp.add_parser("untrust", help="untrust a bootstrapping method")
     _add_scope_option(untrust)
-    untrust.add_argument(
-        'name', help='name of the method to be untrusted'
-    )
+    untrust.add_argument("name", help="name of the method to be untrusted")
 
 
 def _enable_or_disable(args):
     # Set to True if we called "enable", otherwise set to false
-    value = args.subcommand == 'enable'
-    spack.config.set('bootstrap:enable', value, scope=args.scope)
+    value = args.subcommand == "enable"
+    spack.config.set("bootstrap:enable", value, scope=args.scope)
 
 
 def _reset(args):
@@ -99,52 +93,47 @@ def _reset(args):
         msg = [
             "Bootstrapping configuration is being reset to Spack's defaults. "
             "Current configuration will be lost.\n",
-            "Do you want to continue?"
+            "Do you want to continue?",
         ]
-        ok_to_continue = llnl.util.tty.get_yes_or_no(
-            ''.join(msg), default=True
-        )
+        ok_to_continue = llnl.util.tty.get_yes_or_no("".join(msg), default=True)
         if not ok_to_continue:
-            raise RuntimeError('Aborting')
+            raise RuntimeError("Aborting")
 
     for scope in spack.config.config.file_scopes:
         # The default scope should stay untouched
-        if scope.name == 'defaults':
+        if scope.name == "defaults":
             continue
 
         # If we are in an env scope we can't delete a file, but the best we
         # can do is nullify the corresponding configuration
-        if (scope.name.startswith('env') and
-                spack.config.get('bootstrap', scope=scope.name)):
-            spack.config.set('bootstrap', {}, scope=scope.name)
+        if scope.name.startswith("env") and spack.config.get(
+            "bootstrap", scope=scope.name
+        ):
+            spack.config.set("bootstrap", {}, scope=scope.name)
             continue
 
         # If we are outside of an env scope delete the bootstrap.yaml file
-        bootstrap_yaml = os.path.join(scope.path, 'bootstrap.yaml')
-        backup_file = bootstrap_yaml + '.bkp'
+        bootstrap_yaml = os.path.join(scope.path, "bootstrap.yaml")
+        backup_file = bootstrap_yaml + ".bkp"
         if os.path.exists(bootstrap_yaml):
             shutil.move(bootstrap_yaml, backup_file)
 
 
 def _root(args):
     if args.path:
-        spack.config.set('bootstrap:root', args.path, scope=args.scope)
+        spack.config.set("bootstrap:root", args.path, scope=args.scope)
 
-    root = spack.config.get('bootstrap:root', default=None, scope=args.scope)
+    root = spack.config.get("bootstrap:root", default=None, scope=args.scope)
     if root:
         root = spack.util.path.canonicalize_path(root)
     print(root)
 
 
 def _list(args):
-    sources = spack.config.get(
-        'bootstrap:sources', default=None, scope=args.scope
-    )
+    sources = spack.config.get("bootstrap:sources", default=None, scope=args.scope)
 
     if not sources:
-        llnl.util.tty.msg(
-            "No method available for bootstrapping Spack's dependencies"
-        )
+        llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
 
     def _print_method(source, trusted):
@@ -160,51 +149,53 @@ def _list(args):
         elif trusted is False:
             trust_str = "@*r{UNTRUSTED}"
 
-        fmt("Name", source['name'] + ' ' + trust_str)
+        fmt("Name", source["name"] + " " + trust_str)
         print()
-        fmt("  Type", source['type'])
+        fmt("  Type", source["type"])
         print()
 
-        info_lines = ['\n']
-        for key, value in source.get('info', {}).items():
-            info_lines.append(' ' * 4 + '@*{{{0}}}: {1}\n'.format(key, value))
+        info_lines = ["\n"]
+        for key, value in source.get("info", {}).items():
+            info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
         if len(info_lines) > 1:
-            fmt("  Info", ''.join(info_lines))
+            fmt("  Info", "".join(info_lines))
 
-        description_lines = ['\n']
-        for line in source['description'].split('\n'):
-            description_lines.append(' ' * 4 + line + '\n')
+        description_lines = ["\n"]
+        for line in source["description"].split("\n"):
+            description_lines.append(" " * 4 + line + "\n")
 
-        fmt("  Description", ''.join(description_lines))
+        fmt("  Description", "".join(description_lines))
 
-    trusted = spack.config.get('bootstrap:trusted', {})
+    trusted = spack.config.get("bootstrap:trusted", {})
     for s in sources:
-        _print_method(s, trusted.get(s['name'], None))
+        _print_method(s, trusted.get(s["name"], None))
 
 
 def _write_trust_state(args, value):
     name = args.name
-    sources = spack.config.get('bootstrap:sources')
+    sources = spack.config.get("bootstrap:sources")
 
-    matches = [s for s in sources if s['name'] == name]
+    matches = [s for s in sources if s["name"] == name]
     if not matches:
-        names = [s['name'] for s in sources]
-        msg = ('there is no bootstrapping method named "{0}". Valid '
-               'method names are: {1}'.format(name, ', '.join(names)))
+        names = [s["name"] for s in sources]
+        msg = (
+            'there is no bootstrapping method named "{0}". Valid '
+            "method names are: {1}".format(name, ", ".join(names))
+        )
         raise RuntimeError(msg)
 
     if len(matches) > 1:
-        msg = ('there is more than one bootstrapping method named "{0}". '
-               'Please delete all methods but one from bootstrap.yaml '
-               'before proceeding').format(name)
+        msg = (
+            'there is more than one bootstrapping method named "{0}". '
+            "Please delete all methods but one from bootstrap.yaml "
+            "before proceeding"
+        ).format(name)
         raise RuntimeError(msg)
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
-    scope = args.scope or spack.config.default_modify_scope('bootstrap')
-    spack.config.add(
-        'bootstrap:trusted:{0}:{1}'.format(name, str(value)), scope=scope
-    )
+    scope = args.scope or spack.config.default_modify_scope("bootstrap")
+    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(value)), scope=scope)
 
 
 def _trust(args):
@@ -220,11 +211,11 @@ def _untrust(args):
 
 
 def _status(args):
-    sections = ['core', 'buildcache']
+    sections = ["core", "buildcache"]
     if args.optional:
-        sections.append('optional')
+        sections.append("optional")
     if args.dev:
-        sections.append('develop')
+        sections.append("develop")
 
     header = "@*b{{Spack v{0} - {1}}}".format(
         spack.spack_version, spack.bootstrap.spec_for_current_python()
@@ -241,9 +232,11 @@ def _status(args):
             if status_msg:
                 print(llnl.util.tty.color.colorize(status_msg))
         print()
-    legend = ('Spack will take care of bootstrapping any missing dependency marked'
-              ' as [@*y{B}]. Dependencies marked as [@*y{-}] are instead required'
-              ' to be found on the system.')
+    legend = (
+        "Spack will take care of bootstrapping any missing dependency marked"
+        " as [@*y{B}]. Dependencies marked as [@*y{-}] are instead required"
+        " to be found on the system."
+    )
     if missing:
         print(llnl.util.tty.color.colorize(legend))
         print()
@@ -251,13 +244,13 @@ def _status(args):
 
 def bootstrap(parser, args):
     callbacks = {
-        'status': _status,
-        'enable': _enable_or_disable,
-        'disable': _enable_or_disable,
-        'reset': _reset,
-        'root': _root,
-        'list': _list,
-        'trust': _trust,
-        'untrust': _untrust
+        "status": _status,
+        "enable": _enable_or_disable,
+        "disable": _enable_or_disable,
+        "reset": _reset,
+        "root": _root,
+        "list": _list,
+        "trust": _trust,
+        "untrust": _untrust,
     }
     callbacks[args.subcommand](args)

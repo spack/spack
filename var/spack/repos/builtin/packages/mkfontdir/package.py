@@ -14,9 +14,12 @@ class Mkfontdir(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/mkfontdir"
     xorg_mirror_path = "app/mkfontdir-1.0.7.tar.gz"
 
-    version('1.0.7', sha256='bccc5fb7af1b614eabe4a22766758c87bfc36d66191d08c19d2fa97674b7b5b7')
+    version(
+        "1.0.7",
+        sha256="bccc5fb7af1b614eabe4a22766758c87bfc36d66191d08c19d2fa97674b7b5b7",
+    )
 
-    depends_on('mkfontscale', type='run')
+    depends_on("mkfontscale", type="run")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

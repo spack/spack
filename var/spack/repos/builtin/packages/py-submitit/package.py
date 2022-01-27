@@ -12,10 +12,13 @@ class PySubmitit(PythonPackage):
     homepage = "https://github.com/facebookincubator/submitit"
     pypi = "submitit/submitit-1.3.3.tar.gz"
 
-    version('1.3.3', sha256='efaa77b2df9ea9ee02545478cbfc377853ddf8016bff59df6988bebcf51ffa7e')
+    version(
+        "1.3.3",
+        sha256="efaa77b2df9ea9ee02545478cbfc377853ddf8016bff59df6988bebcf51ffa7e",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on('py-cloudpickle@1.2.1:', type=('build', 'run'))
-    depends_on('py-typing-extensions@3.7.4.2:', type=('build', 'run'))
+    depends_on("py-cloudpickle@1.2.1:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4.2:", type=("build", "run"))

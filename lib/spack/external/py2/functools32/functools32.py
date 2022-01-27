@@ -8,14 +8,24 @@
 #   Copyright (C) 2006-2010 Python Software Foundation.
 # See C source code for _functools credits/copyright
 
-__all__ = ['update_wrapper', 'wraps', 'WRAPPER_ASSIGNMENTS', 'WRAPPER_UPDATES',
-           'total_ordering', 'cmp_to_key', 'lru_cache', 'reduce', 'partial']
+__all__ = [
+    "update_wrapper",
+    "wraps",
+    "WRAPPER_ASSIGNMENTS",
+    "WRAPPER_UPDATES",
+    "total_ordering",
+    "cmp_to_key",
+    "lru_cache",
+    "reduce",
+    "partial",
+]
 
 from _functools import partial, reduce
 from collections import MutableMapping, namedtuple
 from .reprlib32 import recursive_repr as _recursive_repr
 from weakref import proxy as _proxy
 import sys as _sys
+
 try:
     from thread import allocate_lock as Lock
 except ImportError:
@@ -25,11 +35,13 @@ except ImportError:
 ### OrderedDict
 ################################################################################
 
+
 class _Link(object):
-    __slots__ = 'prev', 'next', 'key', '__weakref__'
+    __slots__ = "prev", "next", "key", "__weakref__"
+
 
 class OrderedDict(dict):
-    'Dictionary that remembers insertion order'
+    "Dictionary that remembers insertion order"
     # An inherited dict maps keys to values.
     # The inherited dict provides __getitem__, __len__, __contains__, and get.
     # The remaining methods are order-aware.
@@ -44,13 +56,13 @@ class OrderedDict(dict):
     # Those hard references disappear when a key is deleted from an OrderedDict.
 
     def __init__(self, *args, **kwds):
-        '''Initialize an ordered dictionary.  The signature is the same as
+        """Initialize an ordered dictionary.  The signature is the same as
         regular dictionaries, but keyword arguments are not recommended because
         their insertion order is arbitrary.
 
-        '''
+        """
         if len(args) > 1:
-            raise TypeError('expected at most 1 arguments, got %d' % len(args))
+            raise TypeError("expected at most 1 arguments, got %d" % len(args))
         try:
             self.__root
         except AttributeError:
@@ -60,9 +72,10 @@ class OrderedDict(dict):
             self.__map = {}
         self.__update(*args, **kwds)
 
-    def __setitem__(self, key, value,
-                    dict_setitem=dict.__setitem__, proxy=_proxy, Link=_Link):
-        'od.__setitem__(i, y) <==> od[i]=y'
+    def __setitem__(
+        self, key, value, dict_setitem=dict.__setitem__, proxy=_proxy, Link=_Link
+    ):
+        "od.__setitem__(i, y) <==> od[i]=y"
         # Setting a new item creates a new link at the end of the linked list,
         # and the inherited dictionary is updated with the new key/value pair.
         if key not in self:
@@ -75,7 +88,7 @@ class OrderedDict(dict):
         dict_setitem(self, key, value)
 
     def __delitem__(self, key, dict_delitem=dict.__delitem__):
-        'od.__delitem__(y) <==> del od[y]'
+        "od.__delitem__(y) <==> del od[y]"
         # Deleting an existing item uses self.__map to find the link which gets
         # removed by updating the links in the predecessor and successor nodes.
         dict_delitem(self, key)
@@ -86,7 +99,7 @@ class OrderedDict(dict):
         link_next.prev = link_prev
 
     def __iter__(self):
-        'od.__iter__() <==> iter(od)'
+        "od.__iter__() <==> iter(od)"
         # Traverse the linked list in order.
         root = self.__root
         curr = root.next
@@ -95,7 +108,7 @@ class OrderedDict(dict):
             curr = curr.next
 
     def __reversed__(self):
-        'od.__reversed__() <==> reversed(od)'
+        "od.__reversed__() <==> reversed(od)"
         # Traverse the linked list in reverse order.
         root = self.__root
         curr = root.prev
@@ -104,19 +117,19 @@ class OrderedDict(dict):
             curr = curr.prev
 
     def clear(self):
-        'od.clear() -> None.  Remove all items from od.'
+        "od.clear() -> None.  Remove all items from od."
         root = self.__root
         root.prev = root.next = root
         self.__map.clear()
         dict.clear(self)
 
     def popitem(self, last=True):
-        '''od.popitem() -> (k, v), return and remove a (key, value) pair.
+        """od.popitem() -> (k, v), return and remove a (key, value) pair.
         Pairs are returned in LIFO order if last is true or FIFO order if false.
 
-        '''
+        """
         if not self:
-            raise KeyError('dictionary is empty')
+            raise KeyError("dictionary is empty")
         root = self.__root
         if last:
             link = root.prev
@@ -134,12 +147,12 @@ class OrderedDict(dict):
         return key, value
 
     def move_to_end(self, key, last=True):
-        '''Move an existing element to the end (or beginning if last==False).
+        """Move an existing element to the end (or beginning if last==False).
 
         Raises KeyError if the element does not exist.
         When last=True, acts like a fast version of self[key]=self.pop(key).
 
-        '''
+        """
         link = self.__map[key]
         link_prev = link.prev
         link_next = link.next
@@ -159,11 +172,11 @@ class OrderedDict(dict):
 
     def __sizeof__(self):
         sizeof = _sys.getsizeof
-        n = len(self) + 1                       # number of links including root
-        size = sizeof(self.__dict__)            # instance dictionary
-        size += sizeof(self.__map) * 2          # internal dict and inherited dict
-        size += sizeof(self.__hardroot) * n     # link objects
-        size += sizeof(self.__root) * n         # proxy objects
+        n = len(self) + 1  # number of links including root
+        size = sizeof(self.__dict__)  # instance dictionary
+        size += sizeof(self.__map) * 2  # internal dict and inherited dict
+        size += sizeof(self.__hardroot) * n  # link objects
+        size += sizeof(self.__root) * n  # proxy objects
         return size
 
     update = __update = MutableMapping.update
@@ -175,11 +188,11 @@ class OrderedDict(dict):
     __marker = object()
 
     def pop(self, key, default=__marker):
-        '''od.pop(k[,d]) -> v, remove specified key and return the corresponding
+        """od.pop(k[,d]) -> v, remove specified key and return the corresponding
         value.  If key is not found, d is returned if given, otherwise KeyError
         is raised.
 
-        '''
+        """
         if key in self:
             result = self[key]
             del self[key]
@@ -189,7 +202,7 @@ class OrderedDict(dict):
         return default
 
     def setdefault(self, key, default=None):
-        'od.setdefault(k[,d]) -> od.get(k,d), also set od[k]=d if k not in od'
+        "od.setdefault(k[,d]) -> od.get(k,d), also set od[k]=d if k not in od"
         if key in self:
             return self[key]
         self[key] = default
@@ -197,13 +210,13 @@ class OrderedDict(dict):
 
     @_recursive_repr()
     def __repr__(self):
-        'od.__repr__() <==> repr(od)'
+        "od.__repr__() <==> repr(od)"
         if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self.items()))
+            return "%s()" % (self.__class__.__name__,)
+        return "%s(%r)" % (self.__class__.__name__, list(self.items()))
 
     def __reduce__(self):
-        'Return state information for pickling'
+        "Return state information for pickling"
         items = [[k, self[k]] for k in self]
         inst_dict = vars(self).copy()
         for k in vars(OrderedDict()):
@@ -213,49 +226,52 @@ class OrderedDict(dict):
         return self.__class__, (items,)
 
     def copy(self):
-        'od.copy() -> a shallow copy of od'
+        "od.copy() -> a shallow copy of od"
         return self.__class__(self)
 
     @classmethod
     def fromkeys(cls, iterable, value=None):
-        '''OD.fromkeys(S[, v]) -> New ordered dictionary with keys from S.
+        """OD.fromkeys(S[, v]) -> New ordered dictionary with keys from S.
         If not specified, the value defaults to None.
 
-        '''
+        """
         self = cls()
         for key in iterable:
             self[key] = value
         return self
 
     def __eq__(self, other):
-        '''od.__eq__(y) <==> od==y.  Comparison to another OD is order-sensitive
+        """od.__eq__(y) <==> od==y.  Comparison to another OD is order-sensitive
         while comparison to a regular mapping is order-insensitive.
 
-        '''
+        """
         if isinstance(other, OrderedDict):
-            return len(self)==len(other) and \
-                   all(p==q for p, q in zip(self.items(), other.items()))
+            return len(self) == len(other) and all(
+                p == q for p, q in zip(self.items(), other.items())
+            )
         return dict.__eq__(self, other)
+
 
 # update_wrapper() and wraps() are tools to help write
 # wrapper functions that can handle naive introspection
 
-WRAPPER_ASSIGNMENTS = ('__module__', '__name__', '__doc__')
-WRAPPER_UPDATES = ('__dict__',)
-def update_wrapper(wrapper,
-                   wrapped,
-                   assigned = WRAPPER_ASSIGNMENTS,
-                   updated = WRAPPER_UPDATES):
+WRAPPER_ASSIGNMENTS = ("__module__", "__name__", "__doc__")
+WRAPPER_UPDATES = ("__dict__",)
+
+
+def update_wrapper(
+    wrapper, wrapped, assigned=WRAPPER_ASSIGNMENTS, updated=WRAPPER_UPDATES
+):
     """Update a wrapper function to look like the wrapped function
 
-       wrapper is the function to be updated
-       wrapped is the original function
-       assigned is a tuple naming the attributes assigned directly
-       from the wrapped function to the wrapper function (defaults to
-       functools.WRAPPER_ASSIGNMENTS)
-       updated is a tuple naming the attributes of the wrapper that
-       are updated with the corresponding attribute from the wrapped
-       function (defaults to functools.WRAPPER_UPDATES)
+    wrapper is the function to be updated
+    wrapped is the original function
+    assigned is a tuple naming the attributes assigned directly
+    from the wrapped function to the wrapper function (defaults to
+    functools.WRAPPER_ASSIGNMENTS)
+    updated is a tuple naming the attributes of the wrapper that
+    are updated with the corresponding attribute from the wrapped
+    function (defaults to functools.WRAPPER_UPDATES)
     """
     wrapper.__wrapped__ = wrapped
     for attr in assigned:
@@ -270,40 +286,47 @@ def update_wrapper(wrapper,
     # Return the wrapper so this can be used as a decorator via partial()
     return wrapper
 
-def wraps(wrapped,
-          assigned = WRAPPER_ASSIGNMENTS,
-          updated = WRAPPER_UPDATES):
+
+def wraps(wrapped, assigned=WRAPPER_ASSIGNMENTS, updated=WRAPPER_UPDATES):
     """Decorator factory to apply update_wrapper() to a wrapper function
 
-       Returns a decorator that invokes update_wrapper() with the decorated
-       function as the wrapper argument and the arguments to wraps() as the
-       remaining arguments. Default arguments are as for update_wrapper().
-       This is a convenience function to simplify applying partial() to
-       update_wrapper().
+    Returns a decorator that invokes update_wrapper() with the decorated
+    function as the wrapper argument and the arguments to wraps() as the
+    remaining arguments. Default arguments are as for update_wrapper().
+    This is a convenience function to simplify applying partial() to
+    update_wrapper().
     """
-    return partial(update_wrapper, wrapped=wrapped,
-                   assigned=assigned, updated=updated)
+    return partial(update_wrapper, wrapped=wrapped, assigned=assigned, updated=updated)
+
 
 def total_ordering(cls):
     """Class decorator that fills in missing ordering methods"""
     convert = {
-        '__lt__': [('__gt__', lambda self, other: not (self < other or self == other)),
-                   ('__le__', lambda self, other: self < other or self == other),
-                   ('__ge__', lambda self, other: not self < other)],
-        '__le__': [('__ge__', lambda self, other: not self <= other or self == other),
-                   ('__lt__', lambda self, other: self <= other and not self == other),
-                   ('__gt__', lambda self, other: not self <= other)],
-        '__gt__': [('__lt__', lambda self, other: not (self > other or self == other)),
-                   ('__ge__', lambda self, other: self > other or self == other),
-                   ('__le__', lambda self, other: not self > other)],
-        '__ge__': [('__le__', lambda self, other: (not self >= other) or self == other),
-                   ('__gt__', lambda self, other: self >= other and not self == other),
-                   ('__lt__', lambda self, other: not self >= other)]
+        "__lt__": [
+            ("__gt__", lambda self, other: not (self < other or self == other)),
+            ("__le__", lambda self, other: self < other or self == other),
+            ("__ge__", lambda self, other: not self < other),
+        ],
+        "__le__": [
+            ("__ge__", lambda self, other: not self <= other or self == other),
+            ("__lt__", lambda self, other: self <= other and not self == other),
+            ("__gt__", lambda self, other: not self <= other),
+        ],
+        "__gt__": [
+            ("__lt__", lambda self, other: not (self > other or self == other)),
+            ("__ge__", lambda self, other: self > other or self == other),
+            ("__le__", lambda self, other: not self > other),
+        ],
+        "__ge__": [
+            ("__le__", lambda self, other: (not self >= other) or self == other),
+            ("__gt__", lambda self, other: self >= other and not self == other),
+            ("__lt__", lambda self, other: not self >= other),
+        ],
     }
     roots = set(dir(cls)) & set(convert)
     if not roots:
-        raise ValueError('must define at least one ordering operation: < > <= >=')
-    root = max(roots)       # prefer __lt__ to __le__ to __gt__ to __ge__
+        raise ValueError("must define at least one ordering operation: < > <= >=")
+    root = max(roots)  # prefer __lt__ to __le__ to __gt__ to __ge__
     for opname, opfunc in convert[root]:
         if opname not in roots:
             opfunc.__name__ = opname
@@ -311,28 +334,41 @@ def total_ordering(cls):
             setattr(cls, opname, opfunc)
     return cls
 
+
 def cmp_to_key(mycmp):
     """Convert a cmp= function into a key= function"""
+
     class K(object):
-        __slots__ = ['obj']
+        __slots__ = ["obj"]
+
         def __init__(self, obj):
             self.obj = obj
+
         def __lt__(self, other):
             return mycmp(self.obj, other.obj) < 0
+
         def __gt__(self, other):
             return mycmp(self.obj, other.obj) > 0
+
         def __eq__(self, other):
             return mycmp(self.obj, other.obj) == 0
+
         def __le__(self, other):
             return mycmp(self.obj, other.obj) <= 0
+
         def __ge__(self, other):
             return mycmp(self.obj, other.obj) >= 0
+
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
+
         __hash__ = None
+
     return K
 
+
 _CacheInfo = namedtuple("CacheInfo", "hits misses maxsize currsize")
+
 
 def lru_cache(maxsize=100):
     """Least-recently-used cache decorator.
@@ -354,15 +390,16 @@ def lru_cache(maxsize=100):
     # The internals of the lru_cache are encapsulated for thread safety and
     # to allow the implementation to change (including a possible C version).
 
-    def decorating_function(user_function,
-                tuple=tuple, sorted=sorted, len=len, KeyError=KeyError):
+    def decorating_function(
+        user_function, tuple=tuple, sorted=sorted, len=len, KeyError=KeyError
+    ):
 
         hits, misses = [0], [0]
-        kwd_mark = (object(),)          # separates positional and keyword args
-        lock = Lock()                   # needed because OrderedDict isn't threadsafe
+        kwd_mark = (object(),)  # separates positional and keyword args
+        lock = Lock()  # needed because OrderedDict isn't threadsafe
 
         if maxsize is None:
-            cache = dict()              # simple cache without ordering or size limit
+            cache = dict()  # simple cache without ordering or size limit
 
             @wraps(user_function)
             def wrapper(*args, **kwds):
@@ -379,8 +416,9 @@ def lru_cache(maxsize=100):
                 cache[key] = result
                 misses[0] += 1
                 return result
+
         else:
-            cache = OrderedDict()           # ordered least recent to most recent
+            cache = OrderedDict()  # ordered least recent to most recent
             cache_popitem = cache.popitem
             cache_renew = cache.move_to_end
 
@@ -392,17 +430,17 @@ def lru_cache(maxsize=100):
                 with lock:
                     try:
                         result = cache[key]
-                        cache_renew(key)    # record recent use of this key
+                        cache_renew(key)  # record recent use of this key
                         hits[0] += 1
                         return result
                     except KeyError:
                         pass
                 result = user_function(*args, **kwds)
                 with lock:
-                    cache[key] = result     # record recent use of this key
+                    cache[key] = result  # record recent use of this key
                     misses[0] += 1
                     if len(cache) > maxsize:
-                        cache_popitem(0)    # purge least recently used cache entry
+                        cache_popitem(0)  # purge least recently used cache entry
                 return result
 
         def cache_info():

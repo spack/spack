@@ -15,13 +15,19 @@ class ROpenxlsx(RPackage):
     packages with the added benefit of removing the dependency on Java."""
 
     homepage = "https://github.com/awalker89/openxlsx"
-    url      = "https://cloud.r-project.org/src/contrib/openxlsx_4.1.0.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/openxlsx_4.1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/openxlsx"
 
-    version('4.2.3', sha256='cdef89d826e50bef772af3e5eae935ca0316626a6e22f55f7631eac733b5e46f')
-    version('4.1.0.1', sha256='8b7011debe14714de035ef42797c8caa923162d5dc3cc3c2a299fc10eff3d4d1')
+    version(
+        "4.2.3",
+        sha256="cdef89d826e50bef772af3e5eae935ca0316626a6e22f55f7631eac733b5e46f",
+    )
+    version(
+        "4.1.0.1",
+        sha256="8b7011debe14714de035ef42797c8caa923162d5dc3cc3c2a299fc10eff3d4d1",
+    )
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-zip', type=('build', 'run'))
-    depends_on('r-stringi', when='@4.2.3:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-zip", type=("build", "run"))
+    depends_on("r-stringi", when="@4.2.3:", type=("build", "run"))

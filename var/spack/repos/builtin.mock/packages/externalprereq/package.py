@@ -8,6 +8,6 @@ from spack import *
 
 class Externalprereq(Package):
     homepage = "http://somewhere.com"
-    url      = "http://somewhere.com/prereq-1.0.tar.gz"
+    url = "http://somewhere.com/prereq-1.0.tar.gz"
 
-    version('1.4', 'f1234567890abcdef1234567890abcde')
+    version("1.4", "f1234567890abcdef1234567890abcde")

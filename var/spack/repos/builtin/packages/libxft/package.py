@@ -16,12 +16,15 @@ class Libxft(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXft"
     xorg_mirror_path = "lib/libXft-2.3.2.tar.gz"
 
-    version('2.3.2', sha256='26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507')
+    version(
+        "2.3.2",
+        sha256="26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507",
+    )
 
-    depends_on('freetype@2.1.6:')
-    depends_on('fontconfig@2.5.92:')
-    depends_on('libx11')
-    depends_on('libxrender@0.8.2:')
+    depends_on("freetype@2.1.6:")
+    depends_on("fontconfig@2.5.92:")
+    depends_on("libx11")
+    depends_on("libxrender@0.8.2:")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

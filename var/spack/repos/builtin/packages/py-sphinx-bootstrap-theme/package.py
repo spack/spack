@@ -11,6 +11,9 @@ class PySphinxBootstrapTheme(PythonPackage):
 
     pypi = "sphinx-bootstrap-theme/sphinx-bootstrap-theme-0.4.13.tar.gz"
 
-    version('0.4.13', sha256='47f7719e56304026f285455bbb115525d227a6e23341d4b7f6f0b48b2eface82')
+    version(
+        "0.4.13",
+        sha256="47f7719e56304026f285455bbb115525d227a6e23341d4b7f6f0b48b2eface82",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

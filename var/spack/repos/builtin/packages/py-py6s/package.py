@@ -16,10 +16,13 @@ class PyPy6s(PythonPackage):
     homepage = "https://py6s.rtwilson.com/"
     pypi = "py6s/Py6S-1.8.0.tar.gz"
 
-    version('1.8.0', sha256='256162d2f1f558e601d4f79022c037a0051838ba307b9f4d1f5fcf0b46a0c277')
+    version(
+        "1.8.0",
+        sha256="256162d2f1f558e601d4f79022c037a0051838ba307b9f4d1f5fcf0b46a0c277",
+    )
 
-    depends_on('python@3:', type=('build', 'run'), when='@1.8.0')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pysolar@0.6',    type=('build', 'run'))
-    depends_on('py-matplotlib',     type=('build', 'run'))
-    depends_on('py-scipy',          type=('build', 'run'))
+    depends_on("python@3:", type=("build", "run"), when="@1.8.0")
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pysolar@0.6", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))

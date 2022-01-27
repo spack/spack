@@ -10,6 +10,9 @@ class PerlTextCsv(PerlPackage):
     """Comma-separated values manipulator (using XS or PurePerl)"""
 
     homepage = "https://metacpan.org/pod/Text::CSV"
-    url      = "http://search.cpan.org/CPAN/authors/id/I/IS/ISHIGAKI/Text-CSV-1.95.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/I/IS/ISHIGAKI/Text-CSV-1.95.tar.gz"
 
-    version('1.95', sha256='7e0a11d9c1129a55b68a26aa4b37c894279df255aa63ec8341d514ab848dbf61')
+    version(
+        "1.95",
+        sha256="7e0a11d9c1129a55b68a26aa4b37c894279df255aa63ec8341d514ab848dbf61",
+    )

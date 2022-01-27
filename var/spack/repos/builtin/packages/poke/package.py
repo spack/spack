@@ -5,17 +5,20 @@
 
 
 class Poke(AutotoolsPackage, GNUMirrorPackage):
-    """"The extensible editor for structured binary data"""
+    """ "The extensible editor for structured binary data"""
+
     homepage = "https://www.jemarch.net/poke.html"
-    gnu_mirror_path = 'poke/poke-1.0.tar.gz'
+    gnu_mirror_path = "poke/poke-1.0.tar.gz"
 
-    maintainers = ['ChristianTackeGSI']
+    maintainers = ["ChristianTackeGSI"]
 
-    version('1.0', sha256='de930b8700c0772b3c2cd0d0ca35f50fd3d77bdf82c6251eb516b49e8ca25b0a')
+    version(
+        "1.0", sha256="de930b8700c0772b3c2cd0d0ca35f50fd3d77bdf82c6251eb516b49e8ca25b0a"
+    )
 
-    depends_on('pkgconfig')
-    depends_on('readline')
-    depends_on('bdw-gc')
-    depends_on('json-c')
+    depends_on("pkgconfig")
+    depends_on("readline")
+    depends_on("bdw-gc")
+    depends_on("json-c")
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

@@ -13,7 +13,10 @@ class RZeallot(RPackage):
     the left-hand side of the assignment."""
 
     homepage = "https://github.com/nteetor/zeallot"
-    url      = "https://cloud.r-project.org/src/contrib/zeallot_0.1.0.tar.gz"
-    listurl  = "https://cloud.r-project.org/src/contrib/Archive/zeallot"
+    url = "https://cloud.r-project.org/src/contrib/zeallot_0.1.0.tar.gz"
+    listurl = "https://cloud.r-project.org/src/contrib/Archive/zeallot"
 
-    version('0.1.0', sha256='439f1213c97c8ddef9a1e1499bdf81c2940859f78b76bc86ba476cebd88ba1e9')
+    version(
+        "0.1.0",
+        sha256="439f1213c97c8ddef9a1e1499bdf81c2940859f78b76bc86ba476cebd88ba1e9",
+    )

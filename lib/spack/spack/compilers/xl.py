@@ -9,25 +9,22 @@ from spack.version import ver
 
 class Xl(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['xlc']
+    cc_names = ["xlc"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['xlC', 'xlc++']
+    cxx_names = ["xlC", "xlc++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['xlf']
+    f77_names = ["xlf"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
+    fc_names = ["xlf90", "xlf95", "xlf2003", "xlf2008"]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'xl/xlc',
-                  'cxx': 'xl/xlc++',
-                  'f77': 'xl/xlf',
-                  'fc': 'xl/xlf90'}
+    link_paths = {"cc": "xl/xlc", "cxx": "xl/xlc++", "f77": "xl/xlf", "fc": "xl/xlf90"}
 
-    version_argument = '-qversion'
-    version_regex = r'([0-9]?[0-9]\.[0-9])'
+    version_argument = "-qversion"
+    version_regex = r"([0-9]?[0-9]\.[0-9])"
 
     @property
     def verbose_flag(self):
@@ -35,11 +32,11 @@ class Xl(Compiler):
 
     @property
     def debug_flags(self):
-        return ['-g', '-g0', '-g1', '-g2', '-g8', '-g9']
+        return ["-g", "-g0", "-g1", "-g2", "-g8", "-g9"]
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4', '-O5', '-Ofast']
+        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4", "-O5", "-Ofast"]
 
     @property
     def openmp_flag(self):
@@ -47,35 +44,28 @@ class Xl(Compiler):
 
     @property
     def cxx11_flag(self):
-        if self.real_version < ver('13.1'):
-            raise UnsupportedCompilerFlag(self,
-                                          "the C++11 standard",
-                                          "cxx11_flag",
-                                          "< 13.1")
+        if self.real_version < ver("13.1"):
+            raise UnsupportedCompilerFlag(
+                self, "the C++11 standard", "cxx11_flag", "< 13.1"
+            )
         else:
             return "-qlanglvl=extended0x"
 
     @property
     def c99_flag(self):
-        if self.real_version >= ver('13.1.1'):
-            return '-std=gnu99'
-        if self.real_version >= ver('10.1'):
-            return '-qlanglvl=extc99'
-        raise UnsupportedCompilerFlag(self,
-                                      'the C99 standard',
-                                      'c99_flag',
-                                      '< 10.1')
+        if self.real_version >= ver("13.1.1"):
+            return "-std=gnu99"
+        if self.real_version >= ver("10.1"):
+            return "-qlanglvl=extc99"
+        raise UnsupportedCompilerFlag(self, "the C99 standard", "c99_flag", "< 10.1")
 
     @property
     def c11_flag(self):
-        if self.real_version >= ver('13.1.2'):
-            return '-std=gnu11'
-        if self.real_version >= ver('12.1'):
-            return '-qlanglvl=extc1x'
-        raise UnsupportedCompilerFlag(self,
-                                      'the C11 standard',
-                                      'c11_flag',
-                                      '< 12.1')
+        if self.real_version >= ver("13.1.2"):
+            return "-std=gnu11"
+        if self.real_version >= ver("12.1"):
+            return "-qlanglvl=extc1x"
+        raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 12.1")
 
     @property
     def cc_pic_flag(self):

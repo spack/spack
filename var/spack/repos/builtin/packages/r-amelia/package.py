@@ -16,12 +16,15 @@ class RAmelia(RPackage):
     years for each of several countries)."""
 
     homepage = "https://gking.harvard.edu/amelia"
-    url      = "https://cloud.r-project.org/src/contrib/Amelia_1.7.6.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/Amelia_1.7.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Amelia"
 
-    version('1.7.6',  sha256='63c08d374aaf78af46c34dc78da719b3085e58d9fabdc76c6460d5193a621bea')
+    version(
+        "1.7.6",
+        sha256="63c08d374aaf78af46c34dc78da719b3085e58d9fabdc76c6460d5193a621bea",
+    )
 
-    depends_on('r@3.0.2:',        type=('build', 'run'))
-    depends_on('r-rcpp@0.11:',    type=('build', 'run'))
-    depends_on('r-foreign',       type=('build', 'run'))
-    depends_on('r-rcpparmadillo', type=('build', 'run'))
+    depends_on("r@3.0.2:", type=("build", "run"))
+    depends_on("r-rcpp@0.11:", type=("build", "run"))
+    depends_on("r-foreign", type=("build", "run"))
+    depends_on("r-rcpparmadillo", type=("build", "run"))

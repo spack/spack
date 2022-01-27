@@ -34,6 +34,7 @@ from jsonschema.compat import (
 #       https://github.com/pyga/ebb-lint/issues/7
 # Imported for backwards compatibility.
 from jsonschema.exceptions import ErrorTree
+
 ErrorTree
 
 
@@ -128,6 +129,7 @@ def validates(version):
         if meta_schema_id:
             meta_schemas[meta_schema_id] = cls
         return cls
+
     return _validates
 
 
@@ -654,8 +656,7 @@ class RefResolver(object):
 
         self._scopes_stack = [base_uri]
         self.store = _utils.URIDict(
-            (id, validator.META_SCHEMA)
-            for id, validator in iteritems(meta_schemas)
+            (id, validator.META_SCHEMA) for id, validator in iteritems(meta_schemas)
         )
         self.store.update(store)
         self.store[base_uri] = referrer

@@ -8,10 +8,14 @@ from spack import *
 
 class PyPychecker(PythonPackage):
     """Python source code checking tool."""
-    homepage = "http://pychecker.sourceforge.net/"
-    url      = "http://sourceforge.net/projects/pychecker/files/pychecker/0.8.19/pychecker-0.8.19.tar.gz"
 
-    version('0.8.19', sha256='44fb26668f74aca3738f02d072813762a37ce1242f50dbff573720fa2e953279')
+    homepage = "http://pychecker.sourceforge.net/"
+    url = "http://sourceforge.net/projects/pychecker/files/pychecker/0.8.19/pychecker-0.8.19.tar.gz"
+
+    version(
+        "0.8.19",
+        sha256="44fb26668f74aca3738f02d072813762a37ce1242f50dbff573720fa2e953279",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

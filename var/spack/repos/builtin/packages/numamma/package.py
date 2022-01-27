@@ -11,19 +11,20 @@ class Numamma(CMakePackage):
     memory access patterns of applications."""
 
     homepage = "https://numamma.github.io/numamma/"
-    url     = "https://github.com/numamma/numamma/archive/numamma-1.1.1.tar.gz"
-    maintainers = ['trahay']
+    url = "https://github.com/numamma/numamma/archive/numamma-1.1.1.tar.gz"
+    maintainers = ["trahay"]
 
-    version('1.1.1', sha256='f79ca22a95df33a1af529ddd653d043f7f0d32a6d196e559aee8bef8fc74771f')
+    version(
+        "1.1.1",
+        sha256="f79ca22a95df33a1af529ddd653d043f7f0d32a6d196e559aee8bef8fc74771f",
+    )
 
-    depends_on('numap')
-    depends_on('libbacktrace')
-    depends_on('numactl')
-    depends_on('libelf')
+    depends_on("numap")
+    depends_on("libbacktrace")
+    depends_on("numactl")
+    depends_on("libelf")
 
     def cmake_args(self):
         spec = self.spec
-        cmake_args = [
-            "-DBACKTRACE_DIR:PATH={0}".format(spec["libbacktrace"].prefix)
-        ]
+        cmake_args = ["-DBACKTRACE_DIR:PATH={0}".format(spec["libbacktrace"].prefix)]
         return cmake_args

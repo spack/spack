@@ -15,11 +15,14 @@ class Fstobdf(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/fstobdf"
     xorg_mirror_path = "app/fstobdf-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d')
+    version(
+        "1.0.6",
+        sha256="bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d",
+    )
 
-    depends_on('libx11')
-    depends_on('libfs')
+    depends_on("libx11")
+    depends_on("libfs")
 
-    depends_on('xproto@7.0.25:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.25:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

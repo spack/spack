@@ -11,18 +11,24 @@ class Kineto(CMakePackage):
     and hardware performance counters."""
 
     homepage = "https://github.com/pytorch/kineto"
-    git      = "https://github.com/pytorch/kineto.git"
+    git = "https://github.com/pytorch/kineto.git"
 
-    version('master', branch='master', submodules=True)
-    version('2021-05-12', commit='a631215ac294805d5360e0ecceceb34de6557ba8', submodules=True)  # py-torch@1.9
-    version('2021-03-16', commit='ce98f8b95b2ee5ffed257ca90090cd8adcf15b53', submodules=True)  # py-torch@1.8.1
-    version('2021-02-04', commit='258d9a471f8d3a50a0f52b85c3fe0902f65489df', submodules=True)  # py-torch@1.8.0
+    version("master", branch="master", submodules=True)
+    version(
+        "2021-05-12", commit="a631215ac294805d5360e0ecceceb34de6557ba8", submodules=True
+    )  # py-torch@1.9
+    version(
+        "2021-03-16", commit="ce98f8b95b2ee5ffed257ca90090cd8adcf15b53", submodules=True
+    )  # py-torch@1.8.1
+    version(
+        "2021-02-04", commit="258d9a471f8d3a50a0f52b85c3fe0902f65489df", submodules=True
+    )  # py-torch@1.8.0
 
-    root_cmakelists_dir = 'libkineto'
+    root_cmakelists_dir = "libkineto"
 
-    depends_on('cmake@3.5:', type='build')
-    depends_on('ninja', type='build')
-    depends_on('python', type='build')
-    depends_on('cuda')
+    depends_on("cmake@3.5:", type="build")
+    depends_on("ninja", type="build")
+    depends_on("python", type="build")
+    depends_on("cuda")
 
-    generator = 'Ninja'
+    generator = "Ninja"

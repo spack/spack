@@ -12,10 +12,10 @@ class RChampdata(RPackage):
     Provides datasets needed for ChAMP including a test dataset and blood
     controls for CNA analysis."""
 
-    bioc     = "ChAMPdata"
+    bioc = "ChAMPdata"
 
-    version('2.22.0', commit='eeedd4c477fac79f00743da8ff7da064221c5f3d')
+    version("2.22.0", commit="eeedd4c477fac79f00743da8ff7da064221c5f3d")
 
-    depends_on('r@3.3:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.22.4:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.16.1:', type=('build', 'run'))
+    depends_on("r@3.3:", type=("build", "run"))
+    depends_on("r-genomicranges@1.22.4:", type=("build", "run"))
+    depends_on("r-biocgenerics@0.16.1:", type=("build", "run"))

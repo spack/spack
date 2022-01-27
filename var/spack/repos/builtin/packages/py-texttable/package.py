@@ -13,6 +13,9 @@ class PyTexttable(PythonPackage):
     homepage = "https://github.com/foutaise/texttable/"
     pypi = "texttable/texttable-1.6.1.tar.gz"
 
-    version('1.6.1', sha256='2b60a5304ccfbeac80ffae7350d7c2f5d7a24e9aab5036d0f82489746419d9b2')
+    version(
+        "1.6.1",
+        sha256="2b60a5304ccfbeac80ffae7350d7c2f5d7a24e9aab5036d0f82489746419d9b2",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -13,7 +13,10 @@ class PyPytestCheckLinks(PythonPackage):
     homepage = "https://github.com/jupyterlab/pytest-check-links"
     pypi = "pytest-check-links/pytest_check_links-0.3.4.tar.gz"
 
-    version('0.3.4', sha256='4b3216548431bf9796557e8ee8fd8e5e77a69a4690b3b2f9bcf6fb5af16a502b')
+    version(
+        "0.3.4",
+        sha256="4b3216548431bf9796557e8ee8fd8e5e77a69a4690b3b2f9bcf6fb5af16a502b",
+    )
 
-    depends_on('py-setuptools@17.1:', type='build')
-    depends_on('py-pbr@1.9:', type='build')
+    depends_on("py-setuptools@17.1:", type="build")
+    depends_on("py-pbr@1.9:", type="build")

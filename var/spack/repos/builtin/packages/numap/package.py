@@ -11,10 +11,10 @@ class Numap(CMakePackage):
     hardware performance monitoring unit (PMU)."""
 
     homepage = "https://github.com/numap-library/numap"
-    git      = "https://github.com/numap-library/numap.git"
-    maintainers = ['trahay']
+    git = "https://github.com/numap-library/numap.git"
+    maintainers = ["trahay"]
 
-    version('master',  branch='master')
-    version('2019-09-06', commit='ffcdb88c64b59b7a3220eb1077d2b237029ca96a')
+    version("master", branch="master")
+    version("2019-09-06", commit="ffcdb88c64b59b7a3220eb1077d2b237029ca96a")
 
-    depends_on('libpfm4')
+    depends_on("libpfm4")

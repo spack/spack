@@ -13,10 +13,10 @@ class PySyned(PythonPackage):
     exported to the different add-ons."""
 
     homepage = "https://github.com/oasys-kit/syned"
-    git      = "https://github.com/oasys-kit/syned.git"
+    git = "https://github.com/oasys-kit/syned.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('py-numpy')
-    depends_on('py-scipy')
-    depends_on('py-setuptools')
+    depends_on("py-numpy")
+    depends_on("py-scipy")
+    depends_on("py-setuptools")

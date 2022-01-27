@@ -6,8 +6,9 @@ class V1Provider(Package):
     """Mimic the real netlib-lapack, that may be built on top of an
     optimized blas.
     """
+
     homepage = "https://dev.null"
 
-    version('1.0')
+    version("1.0")
 
-    provides('v1')
+    provides("v1")

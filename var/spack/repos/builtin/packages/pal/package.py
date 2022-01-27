@@ -13,17 +13,20 @@ class Pal(AutotoolsPackage):
     where appropriate."""
 
     homepage = "https://github.com/Starlink/pal"
-    url      = "https://github.com/Starlink/pal/releases/download/v0.9.8/pal-0.9.8.tar.gz"
+    url = "https://github.com/Starlink/pal/releases/download/v0.9.8/pal-0.9.8.tar.gz"
 
-    version('0.9.8', sha256='191fde8c4f45d6807d4b011511344014966bb46e44029a4481d070cd5e7cc697')
+    version(
+        "0.9.8",
+        sha256="191fde8c4f45d6807d4b011511344014966bb46e44029a4481d070cd5e7cc697",
+    )
 
-    depends_on('sofa-c')
-    depends_on('erfa')
+    depends_on("sofa-c")
+    depends_on("erfa")
 
-    variant('starlink', default=False, description='Build with starlink support.')
+    variant("starlink", default=False, description="Build with starlink support.")
 
     def configure_args(self):
         args = []
-        if '~starlink' in self.spec:
-            args.append('--without-starlink')
+        if "~starlink" in self.spec:
+            args.append("--without-starlink")
         return args

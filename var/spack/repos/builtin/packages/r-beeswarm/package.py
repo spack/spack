@@ -10,7 +10,10 @@ class RBeeswarm(RPackage):
     """beeswarm: The Bee Swarm Plot, an Alternative to Stripchart"""
 
     homepage = "https://www.cbs.dtu.dk/~eklund/beeswarm/"
-    url      = "https://cloud.r-project.org/src/contrib/beeswarm_0.2.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/beeswarm_0.2.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/beeswarm"
 
-    version('0.2.3', sha256='0115425e210dced05da8e162c8455526a47314f72e441ad2a33dcab3f94ac843')
+    version(
+        "0.2.3",
+        sha256="0115425e210dced05da8e162c8455526a47314f72e441ad2a33dcab3f94ac843",
+    )

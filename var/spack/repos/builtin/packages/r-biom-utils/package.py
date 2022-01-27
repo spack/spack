@@ -12,9 +12,11 @@ class RBiomUtils(RPackage):
     """
 
     homepage = "https://github.com/braithwaite/BIOM.utils/"
-    url      = "https://cloud.r-project.org/src/contrib/BIOM.utils_0.9.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/BIOM.utils_0.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/biom/"
 
-    version('0.9', sha256='e7024469fb38e275aa78fbfcce15b9a7661317f632a7e9b8124695e076839375')
+    version(
+        "0.9", sha256="e7024469fb38e275aa78fbfcce15b9a7661317f632a7e9b8124695e076839375"
+    )
 
-    depends_on('r@3:', type=('build', 'run'))
+    depends_on("r@3:", type=("build", "run"))

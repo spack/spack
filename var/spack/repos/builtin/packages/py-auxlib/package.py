@@ -12,9 +12,12 @@ class PyAuxlib(PythonPackage):
     homepage = "https://github.com/kalefranz/auxlib"
     pypi = "auxlib/auxlib-0.0.43.tar.gz"
 
-    version('0.0.43', sha256='0f175637e96a090a785767ce28483cf1aeec316a19afce9b2fbd113e1122786a')
+    version(
+        "0.0.43",
+        sha256="0f175637e96a090a785767ce28483cf1aeec316a19afce9b2fbd113e1122786a",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-ordereddict', type=('build', 'run'), when='^python@:2.6')
-    depends_on('py-wheel', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-enum34", type=("build", "run"), when="^python@:3.3")
+    depends_on("py-ordereddict", type=("build", "run"), when="^python@:2.6")
+    depends_on("py-wheel", type=("build", "run"))

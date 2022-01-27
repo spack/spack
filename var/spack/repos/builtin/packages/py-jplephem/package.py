@@ -13,8 +13,10 @@ class PyJplephem(PythonPackage):
 
     pypi = "jplephem/jplephem-2.9.tar.gz"
 
-    version('2.9', sha256='9dffb9f3d3f6d996ade875102431fe385e8ea422da25c8ba17b0508d9ca1282b')
+    version(
+        "2.9", sha256="9dffb9f3d3f6d996ade875102431fe385e8ea422da25c8ba17b0508d9ca1282b"
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))

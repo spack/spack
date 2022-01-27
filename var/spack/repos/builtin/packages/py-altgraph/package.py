@@ -8,13 +8,15 @@ from spack import *
 
 class PyAltgraph(PythonPackage):
     """
-      altgraph is a fork of graphlib: a graph (network)
-      package for constructing graphs, BFS and DFS traversals,
-      topological sort, shortest paths, etc. with graphviz output.
+    altgraph is a fork of graphlib: a graph (network)
+    package for constructing graphs, BFS and DFS traversals,
+    topological sort, shortest paths, etc. with graphviz output.
     """
 
     pypi = "altgraph/altgraph-0.16.1.tar.gz"
 
-    version('0.16.1', "ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c")
+    version(
+        "0.16.1", "ddf5320017147ba7b810198e0b6619bd7b5563aa034da388cea8546b877f9b0c"
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

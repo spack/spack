@@ -6,32 +6,33 @@
 
 class Cohmm(MakefilePackage):
     """An anticipated important use-case for next-generation supercomputing
-        is multiscale modeling, in which continuum equations for large-scale
-        material deformation are augmented with high-fidelity, fine-scale
-        simulations that provide constitutive data on demand.
+    is multiscale modeling, in which continuum equations for large-scale
+    material deformation are augmented with high-fidelity, fine-scale
+    simulations that provide constitutive data on demand.
     """
-    tags = ['proxy-app']
+
+    tags = ["proxy-app"]
 
     homepage = "http://www.exmatex.org/cohmm.html"
-    git      = "https://github.com/exmatex/CoHMM.git"
+    git = "https://github.com/exmatex/CoHMM.git"
 
-    version('develop', branch='sad')
+    version("develop", branch="sad")
 
-    variant('openmp', default=True, description='Build with OpenMP Support')
-    variant('gnuplot', default=False, description='Enable gnu plot Support')
-    depends_on('gnuplot', when='+gnuplot')
+    variant("openmp", default=True, description="Build with OpenMP Support")
+    variant("gnuplot", default=False, description="Enable gnu plot Support")
+    depends_on("gnuplot", when="+gnuplot")
 
     def edit(self, spec, prefix):
-        if '+openmp' in spec:
-            filter_file('DO_OPENMP = O.*', 'DO_OPENMP = ON', 'Makefile')
-        if '+gnuplot' in spec:
-            filter_file('DO_GNUPLOT = O.*', 'DO_GNUPLOT = ON', 'Makefile')
+        if "+openmp" in spec:
+            filter_file("DO_OPENMP = O.*", "DO_OPENMP = ON", "Makefile")
+        if "+gnuplot" in spec:
+            filter_file("DO_GNUPLOT = O.*", "DO_GNUPLOT = ON", "Makefile")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.input)
         mkdirp(prefix.doc)
-        install('cohmm', prefix.bin)
-        install('README.md', prefix.doc)
-        install('LICENSE.md', prefix.doc)
-        install('input/*.*', prefix.input)
+        install("cohmm", prefix.bin)
+        install("README.md", prefix.doc)
+        install("LICENSE.md", prefix.doc)
+        install("input/*.*", prefix.input)

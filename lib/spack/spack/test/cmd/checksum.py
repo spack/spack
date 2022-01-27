@@ -13,14 +13,17 @@ import spack.cmd.checksum
 import spack.repo
 from spack.main import SpackCommand
 
-spack_checksum = SpackCommand('checksum')
+spack_checksum = SpackCommand("checksum")
 
 
-@pytest.mark.parametrize('arguments,expected', [
-    (['--batch', 'patch'], (True, False, False)),
-    (['--latest', 'patch'], (False, True, False)),
-    (['--preferred', 'patch'], (False, False, True)),
-])
+@pytest.mark.parametrize(
+    "arguments,expected",
+    [
+        (["--batch", "patch"], (True, False, False)),
+        (["--latest", "patch"], (False, True, False)),
+        (["--preferred", "patch"], (False, False, True)),
+    ],
+)
 def test_checksum_args(arguments, expected):
     parser = argparse.ArgumentParser()
     spack.cmd.checksum.setup_parser(parser)
@@ -29,32 +32,35 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
-@pytest.mark.parametrize('arguments,expected', [
-    (['--batch', 'preferred-test'], 'version of preferred-test'),
-    (['--latest', 'preferred-test'], 'Found 1 version'),
-    (['--preferred', 'preferred-test'], 'Found 1 version'),
-])
+@pytest.mark.parametrize(
+    "arguments,expected",
+    [
+        (["--batch", "preferred-test"], "version of preferred-test"),
+        (["--latest", "preferred-test"], "Found 1 version"),
+        (["--preferred", "preferred-test"], "Found 1 version"),
+    ],
+)
 def test_checksum(arguments, expected, mock_packages, mock_stage):
     output = spack_checksum(*arguments)
     assert expected in output
-    assert 'version(' in output
+    assert "version(" in output
 
 
-def test_checksum_interactive(
-        mock_packages, mock_fetch, mock_stage, monkeypatch):
+def test_checksum_interactive(mock_packages, mock_fetch, mock_stage, monkeypatch):
     def _get_number(*args, **kwargs):
         return 1
-    monkeypatch.setattr(tty, 'get_number', _get_number)
 
-    output = spack_checksum('preferred-test')
-    assert 'version of preferred-test' in output
-    assert 'version(' in output
+    monkeypatch.setattr(tty, "get_number", _get_number)
+
+    output = spack_checksum("preferred-test")
+    assert "version of preferred-test" in output
+    assert "version(" in output
 
 
 def test_checksum_versions(mock_packages, mock_fetch, mock_stage):
-    pkg = spack.repo.get('preferred-test')
+    pkg = spack.repo.get("preferred-test")
 
     versions = [str(v) for v in pkg.versions if not v.isdevelop()]
-    output = spack_checksum('preferred-test', versions[0])
-    assert 'Found 1 version' in output
-    assert 'version(' in output
+    output = spack_checksum("preferred-test", versions[0])
+    assert "Found 1 version" in output
+    assert "version(" in output

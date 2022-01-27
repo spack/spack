@@ -30,36 +30,29 @@ class PpopenApplFvm(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('master', branch='APPL/FVM')
+    version("master", branch="APPL/FVM")
 
-    depends_on('mpi')
-    depends_on('metis@:4')
+    depends_on("mpi")
+    depends_on("metis@:4")
 
     def edit(self, spec, prefix):
-        mkdirp('bin')
-        mkdirp('lib')
-        mkdirp('include')
-        fflags = ['-O3']
-        if spec.satisfies('%gcc'):
-            fflags.append('-ffree-line-length-none')
-        makefile_in = FileFilter('Makefile.in')
+        mkdirp("bin")
+        mkdirp("lib")
+        mkdirp("include")
+        fflags = ["-O3"]
+        if spec.satisfies("%gcc"):
+            fflags.append("-ffree-line-length-none")
+        makefile_in = FileFilter("Makefile.in")
+        makefile_in.filter(r"^PREFIX *=.*$", "PREFIX = {0}".format(prefix))
         makefile_in.filter(
-            r'^PREFIX *=.*$',
-            'PREFIX = {0}'.format(prefix)
+            r"^METISDIR *=.*$", "METISDIR = {0}".format(spec["metis"].prefix.lib)
         )
-        makefile_in.filter(
-            r'^METISDIR *=.*$',
-            'METISDIR = {0}'.format(spec['metis'].prefix.lib)
-        )
-        makefile_in.filter('mpifrtpx', spec['mpi'].mpifc)
-        makefile_in.filter('frtpx', spack_fc)
-        makefile_in.filter('-Kfast', ' '.join(fflags))
-        makefile_in.filter(
-            ',openmp',
-            ' {0}'.format(self.compiler.openmp_flag)
-        )
+        makefile_in.filter("mpifrtpx", spec["mpi"].mpifc)
+        makefile_in.filter("frtpx", spack_fc)
+        makefile_in.filter("-Kfast", " ".join(fflags))
+        makefile_in.filter(",openmp", " {0}".format(self.compiler.openmp_flag))
 
         def install(self, spec, prefix):
-            make('install')
-            install_tree('examples', prefix.examples)
-            install_tree('doc', prefix.doc)
+            make("install")
+            install_tree("examples", prefix.examples)
+            install_tree("doc", prefix.doc)

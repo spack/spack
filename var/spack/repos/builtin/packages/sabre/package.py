@@ -9,21 +9,21 @@ from spack import *
 
 class Sabre(MakefilePackage):
     """Sabre is a tool that will demultiplex barcoded reads into separate
-       files. It will work on both single-end and paired-end data in fastq
-       format. It simply compares the provided barcodes with each read and
-       separates the read into its appropriate barcode file, after stripping
-       the barcode from the read (and also stripping the quality values of
-       the barcode bases). If a read does not have a recognized barcode,
-       then it is put into the unknown file.
+    files. It will work on both single-end and paired-end data in fastq
+    format. It simply compares the provided barcodes with each read and
+    separates the read into its appropriate barcode file, after stripping
+    the barcode from the read (and also stripping the quality values of
+    the barcode bases). If a read does not have a recognized barcode,
+    then it is put into the unknown file.
     """
 
     homepage = "https://github.com/najoshi/sabre"
-    git      = "https://github.com/najoshi/sabre.git"
+    git = "https://github.com/najoshi/sabre.git"
 
-    version('2013-09-27', commit='039a55e500ba07b7e6432ea6ec2ddcfb3471d949')
+    version("2013-09-27", commit="039a55e500ba07b7e6432ea6ec2ddcfb3471d949")
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('sabre', prefix.bin)
+        install("sabre", prefix.bin)

@@ -7,5 +7,5 @@
 class AutotoolsConditionalVariantsTest(AutotoolsPackage):
     homepage = "https://www.example.com"
     has_code = False
-    version('1.0')
-    variant('example', default=True, description='nope', when='@2.0:')
+    version("1.0")
+    variant("example", default=True, description="nope", when="@2.0:")

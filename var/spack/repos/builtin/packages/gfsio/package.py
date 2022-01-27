@@ -13,15 +13,18 @@ class Gfsio(CMakePackage):
     This is part of the NOAA NCEPLIBS project."""
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio"
-    url      = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio/archive/refs/tags/v1.4.1.tar.gz"
+    url = "https://github.com/NOAA-EMC/NCEPLIBS-gfsio/archive/refs/tags/v1.4.1.tar.gz"
 
-    maintainers = ['t-brown', 'kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
+    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
 
-    version('1.4.1', sha256='eab106302f520600decc4f9665d7c6a55e7b4901fab6d9ef40f29702b89b69b1')
+    version(
+        "1.4.1",
+        sha256="eab106302f520600decc4f9665d7c6a55e7b4901fab6d9ef40f29702b89b69b1",
+    )
 
     def setup_run_environment(self, env):
-        lib = find_libraries('libgfsio', root=self.prefix, shared=False, recursive=True)
+        lib = find_libraries("libgfsio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy
-        for suffix in ('4', ''):
-            env.set('GFSIO_LIB' + suffix, lib[0])
-            env.set('GFSIO_INC' + suffix, join_path(self.prefix, 'include'))
+        for suffix in ("4", ""):
+            env.set("GFSIO_LIB" + suffix, lib[0])
+            env.set("GFSIO_INC" + suffix, join_path(self.prefix, "include"))

@@ -10,6 +10,9 @@ class PerlMroCompat(PerlPackage):
     """Provides several utilities for dealing with method resolution order."""
 
     homepage = "https://metacpan.org/pod/MRO::Compat"
-    url      = "http://search.cpan.org/CPAN/authors/id/H/HA/HAARG/MRO-Compat-0.13.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/H/HA/HAARG/MRO-Compat-0.13.tar.gz"
 
-    version('0.13', sha256='8a2c3b6ccc19328d5579d02a7d91285e2afd85d801f49d423a8eb16f323da4f8')
+    version(
+        "0.13",
+        sha256="8a2c3b6ccc19328d5579d02a7d91285e2afd85d801f49d423a8eb16f323da4f8",
+    )

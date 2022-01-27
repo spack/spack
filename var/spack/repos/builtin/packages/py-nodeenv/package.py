@@ -12,6 +12,9 @@ class PyNodeenv(PythonPackage):
     homepage = "https://github.com/ekalinin/nodeenv"
     pypi = "nodeenv/nodeenv-1.3.3.tar.gz"
 
-    version('1.3.3', sha256='ad8259494cf1c9034539f6cced78a1da4840a4b157e23640bc4a0c0546b0cb7a')
+    version(
+        "1.3.3",
+        sha256="ad8259494cf1c9034539f6cced78a1da4840a4b157e23640bc4a0c0546b0cb7a",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

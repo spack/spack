@@ -9,6 +9,7 @@ from pyrsistent._transformations import transform
 def _bitcount(val):
     return bin(val).count("1")
 
+
 BRANCH_FACTOR = 32
 BIT_MASK = BRANCH_FACTOR - 1
 SHIFT = _bitcount(BIT_MASK)
@@ -29,7 +30,8 @@ class PythonPVector(object):
     """
     Support structure for PVector that implements structural sharing for vectors using a trie.
     """
-    __slots__ = ('_count', '_shift', '_root', '_tail', '_tail_offset', '__weakref__')
+
+    __slots__ = ("_count", "_shift", "_root", "_tail", "_tail_offset", "__weakref__")
 
     def __new__(cls, count, shift, root, tail):
         self = super(PythonPVector, cls).__new__(cls)
@@ -65,7 +67,7 @@ class PythonPVector(object):
         return self.extend(other)
 
     def __repr__(self):
-        return 'pvector({0})'.format(str(self.tolist()))
+        return "pvector({0})".format(str(self.tolist()))
 
     def __str__(self):
         return self.__repr__()
@@ -79,7 +81,11 @@ class PythonPVector(object):
         return not self.__eq__(other)
 
     def __eq__(self, other):
-        return self is other or (hasattr(other, '__len__') and self._count == len(other)) and compare_pvector(self, other, operator.eq)
+        return (
+            self is other
+            or (hasattr(other, "__len__") and self._count == len(other))
+            and compare_pvector(self, other, operator.eq)
+        )
 
     def __gt__(self, other):
         return compare_pvector(self, other, operator.gt)
@@ -144,20 +150,32 @@ class PythonPVector(object):
 
         evolver = self.evolver()
         for i in range(0, len(args), 2):
-            evolver[args[i]] = args[i+1]
+            evolver[args[i]] = args[i + 1]
 
         return evolver.persistent()
 
     class Evolver(object):
-        __slots__ = ('_count', '_shift', '_root', '_tail', '_tail_offset', '_dirty_nodes',
-                     '_extra_tail', '_cached_leafs', '_orig_pvector')
+        __slots__ = (
+            "_count",
+            "_shift",
+            "_root",
+            "_tail",
+            "_tail_offset",
+            "_dirty_nodes",
+            "_extra_tail",
+            "_cached_leafs",
+            "_orig_pvector",
+        )
 
         def __init__(self, v):
             self._reset(v)
 
         def __getitem__(self, index):
             if not isinstance(index, Integral):
-                raise TypeError("'%s' object cannot be interpreted as an index" % type(index).__name__)
+                raise TypeError(
+                    "'%s' object cannot be interpreted as an index"
+                    % type(index).__name__
+                )
 
             if index < 0:
                 index += self._count + len(self._extra_tail)
@@ -192,7 +210,10 @@ class PythonPVector(object):
 
         def __setitem__(self, index, val):
             if not isinstance(index, Integral):
-                raise TypeError("'%s' object cannot be interpreted as an index" % type(index).__name__)
+                raise TypeError(
+                    "'%s' object cannot be interpreted as an index"
+                    % type(index).__name__
+                )
 
             if index < 0:
                 index += self._count + len(self._extra_tail)
@@ -239,7 +260,9 @@ class PythonPVector(object):
         def __delitem__(self, key):
             if self._orig_pvector:
                 # All structural sharing bets are off, base evolver on _extra_tail only
-                l = PythonPVector(self._count, self._shift, self._root, self._tail).tolist()
+                l = PythonPVector(
+                    self._count, self._shift, self._root, self._tail
+                ).tolist()
                 l.extend(self._extra_tail)
                 self._reset(_EMPTY_PVECTOR)
                 self._extra_tail = l
@@ -249,7 +272,9 @@ class PythonPVector(object):
         def persistent(self):
             result = self._orig_pvector
             if self.is_dirty():
-                result = PythonPVector(self._count, self._shift, self._root, self._tail).extend(self._extra_tail)
+                result = PythonPVector(
+                    self._count, self._shift, self._root, self._tail
+                ).extend(self._extra_tail)
                 self._reset(result)
 
             return result
@@ -269,7 +294,9 @@ class PythonPVector(object):
         #  of PVector) so we're keeping this implementation for now.
 
         if not isinstance(i, Integral):
-            raise TypeError("'%s' object cannot be interpreted as an index" % type(i).__name__)
+            raise TypeError(
+                "'%s' object cannot be interpreted as an index" % type(i).__name__
+            )
 
         if i < 0:
             i += self._count
@@ -280,7 +307,12 @@ class PythonPVector(object):
                 new_tail[i & BIT_MASK] = val
                 return PythonPVector(self._count, self._shift, self._root, new_tail)
 
-            return PythonPVector(self._count, self._shift, self._do_set(self._shift, self._root, i, val), self._tail)
+            return PythonPVector(
+                self._count,
+                self._shift,
+                self._do_set(self._shift, self._root, i, val),
+                self._tail,
+            )
 
         if i == self._count:
             return self.append(val)
@@ -315,7 +347,7 @@ class PythonPVector(object):
         new_shift = self._shift
 
         # Overflow root?
-        if (self._count >> SHIFT) > (1 << self._shift): # >>>
+        if (self._count >> SHIFT) > (1 << self._shift):  # >>>
             new_root = [self._root, self._new_path(self._shift, self._tail)]
             new_shift += SHIFT
         else:
@@ -345,7 +377,7 @@ class PythonPVector(object):
 
     def _mutating_fill_tail(self, offset, sequence):
         max_delta_len = BRANCH_FACTOR - len(self._tail)
-        delta = sequence[offset:offset + max_delta_len]
+        delta = sequence[offset : offset + max_delta_len]
         self._tail.extend(delta)
         delta_len = len(delta)
         self._count += delta_len
@@ -389,7 +421,9 @@ class PythonPVector(object):
 
         sub_index = ((self._count - 1) >> level) & BIT_MASK  # >>>
         if len(parent) > sub_index:
-            ret[sub_index] = self._push_tail(level - SHIFT, parent[sub_index], tail_node)
+            ret[sub_index] = self._push_tail(
+                level - SHIFT, parent[sub_index], tail_node
+            )
             return ret
 
         ret.append(self._new_path(level - SHIFT, tail_node))
@@ -410,6 +444,7 @@ class PythonPVector(object):
         l = self.tolist()
         l.remove(value)
         return _EMPTY_PVECTOR.extend(l)
+
 
 @six.add_metaclass(ABCMeta)
 class PVector(object):
@@ -680,6 +715,7 @@ PVector.register(PythonPVector)
 Sequence.register(PVector)
 Hashable.register(PVector)
 
+
 def python_pvector(iterable=()):
     """
     Create a new persistent vector containing the elements in iterable.
@@ -690,13 +726,16 @@ def python_pvector(iterable=()):
     """
     return _EMPTY_PVECTOR.extend(iterable)
 
+
 try:
     # Use the C extension as underlying trie implementation if it is available
     import os
-    if os.environ.get('PYRSISTENT_NO_C_EXTENSION'):
+
+    if os.environ.get("PYRSISTENT_NO_C_EXTENSION"):
         pvector = python_pvector
     else:
         from pvectorc import pvector
+
         PVector.register(type(pvector()))
 except ImportError:
     pvector = python_pvector

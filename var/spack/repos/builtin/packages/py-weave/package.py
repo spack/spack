@@ -17,8 +17,12 @@ class PyWeave(PythonPackage):
     homepage = "https://www.github.com/scipy/weave"
     pypi = "weave/weave-0.17.0.tar.gz"
 
-    version('0.17.0', sha256='2703f3ae6d23ad47b5f09b6bcb7affd0fb587120a0c973e7be40ef24de709998', deprecated=True)
+    version(
+        "0.17.0",
+        sha256="2703f3ae6d23ad47b5f09b6bcb7affd0fb587120a0c973e7be40ef24de709998",
+        deprecated=True,
+    )
 
-    depends_on('python@2.6:2.8', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("python@2.6:2.8", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))

@@ -26,80 +26,90 @@ class HdfEos5(AutotoolsPackage):
     # In basename expansions, 0 is raw version,
     # 1 is for version with dots => underscores
     version_list = [
-        {'version': '5.1.16',
-            'sha256': '7054de24b90b6d9533329ef8dc89912c5227c83fb447792103279364e13dd452',
-            'basename': 'HDF-EOS{0}.tar.Z'},
-        {'version': '5.1.15',
-            'sha256': 'fbf4d085f9bf6ffad259aee1e9f60cf060e7e99c447894ad8955df02de83c92c',
-            'basename': 'hdfeos{1}.zip'}
+        {
+            "version": "5.1.16",
+            "sha256": "7054de24b90b6d9533329ef8dc89912c5227c83fb447792103279364e13dd452",
+            "basename": "HDF-EOS{0}.tar.Z",
+        },
+        {
+            "version": "5.1.15",
+            "sha256": "fbf4d085f9bf6ffad259aee1e9f60cf060e7e99c447894ad8955df02de83c92c",
+            "basename": "hdfeos{1}.zip",
+        },
     ]
 
     for vrec in version_list:
-        ver = vrec['version']
-        sha256 = vrec['sha256']
+        ver = vrec["version"]
+        sha256 = vrec["sha256"]
         version(ver, sha256=sha256)
 
-    variant('shared', default=True,
-            description='Build shared libraries (can be used with +static)')
-    variant('static', default=True,
-            description='Build shared libraries (can be used with +shared)')
+    variant(
+        "shared",
+        default=True,
+        description="Build shared libraries (can be used with +static)",
+    )
+    variant(
+        "static",
+        default=True,
+        description="Build shared libraries (can be used with +shared)",
+    )
 
-    conflicts('~static', when='~shared',
-              msg='At least one of +static or +shared must be set')
+    conflicts(
+        "~static", when="~shared", msg="At least one of +static or +shared must be set"
+    )
 
-    maintainers = ['payerle']
+    maintainers = ["payerle"]
 
     # Build dependencies
-    depends_on('hdf5+hl')
+    depends_on("hdf5+hl")
 
     # The standard Makefile.am, etc. add a --single_module flag to LDFLAGS
     # to pass to the linker.
     # That appears to be only recognized by the Darwin linker, remove it
     # if we are not running on darwin/
     if sys.platform != "darwin":
-        patch('hdf-eos5.nondarwin-no-single_module.patch')
+        patch("hdf-eos5.nondarwin-no-single_module.patch")
 
     def url_for_version(self, version):
-        vrec = [x for x in self.version_list
-                if x['version'] == version.dotted.string]
+        vrec = [x for x in self.version_list if x["version"] == version.dotted.string]
         if vrec:
-            fname = vrec[0]['basename'].format(version.dotted,
-                                               version.underscored)
-            sha256 = vrec[0]['sha256']
+            fname = vrec[0]["basename"].format(version.dotted, version.underscored)
+            sha256 = vrec[0]["sha256"]
             myurl = self.url.format(sha256, fname)
             return myurl
         else:
-            sys.exit('ERROR: cannot generate URL for version {0};'
-                     'version/checksum not found in version_list'.format(
-                         version))
+            sys.exit(
+                "ERROR: cannot generate URL for version {0};"
+                "version/checksum not found in version_list".format(version)
+            )
 
     def configure_args(self):
         extra_args = []
 
         # Package really wants h5cc to be used
-        if self.spec['mpi']:
-            extra_args.append('CC={0}/bin/h5pcc -Df2cFortran'.format(
-                self.spec['hdf5'].prefix))
+        if self.spec["mpi"]:
+            extra_args.append(
+                "CC={0}/bin/h5pcc -Df2cFortran".format(self.spec["hdf5"].prefix)
+            )
         else:
-            extra_args.append('CC={0}/bin/h5cc -Df2cFortran'.format(
-                self.spec['hdf5'].prefix))
+            extra_args.append(
+                "CC={0}/bin/h5cc -Df2cFortran".format(self.spec["hdf5"].prefix)
+            )
 
         # We always build PIC code
-        extra_args.append('--with-pic')
+        extra_args.append("--with-pic")
         # We always enable installation of include directories
-        extra_args.append('--enable-install-include')
+        extra_args.append("--enable-install-include")
 
         # Set shared/static appropriately
-        extra_args.extend(self.enable_or_disable('shared'))
-        extra_args.extend(self.enable_or_disable('static'))
+        extra_args.extend(self.enable_or_disable("shared"))
+        extra_args.extend(self.enable_or_disable("static"))
 
         # Provide config args for dependencies
-        extra_args.append('--with-hdf5={0}'.format(self.spec['hdf5'].prefix))
-        if 'szip' in self.spec:
-            extra_args.append('--with-szlib={0}'.format(
-                self.spec['szip'].prefix))
-        if 'zlib' in self.spec:
-            extra_args.append('--with-zlib={0}'.format(
-                self.spec['zlib'].prefix))
+        extra_args.append("--with-hdf5={0}".format(self.spec["hdf5"].prefix))
+        if "szip" in self.spec:
+            extra_args.append("--with-szlib={0}".format(self.spec["szip"].prefix))
+        if "zlib" in self.spec:
+            extra_args.append("--with-zlib={0}".format(self.spec["zlib"].prefix))
 
         return extra_args

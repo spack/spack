@@ -10,8 +10,11 @@ class PyAffine(PythonPackage):
     """Matrices describing affine transformation of the plane."""
 
     homepage = "https://github.com/sgillies/affine"
-    url      = "https://github.com/sgillies/affine/archive/2.1.0.zip"
+    url = "https://github.com/sgillies/affine/archive/2.1.0.zip"
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    version('2.1.0', sha256='b67b7dee9a9865185a931758a3e347ad8583d0ac985895b90985a477ccfa4745')
+    version(
+        "2.1.0",
+        sha256="b67b7dee9a9865185a931758a3e347ad8583d0ac985895b90985a477ccfa4745",
+    )

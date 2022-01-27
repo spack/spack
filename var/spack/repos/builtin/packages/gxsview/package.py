@@ -14,33 +14,40 @@ class Gxsview(QMakePackage):
     Also, this software is capable of exporting in 2D(png, jpg, and xpm)
     or 3D(stl, vtk, vtp and ply) formats."""
 
-    homepage = "https://www.nmri.go.jp/study/research_organization/risk/gxsview/en/index.html"
-    url      = "https://www.nmri.go.jp/study/research_organization/risk/gxsview/download/gxsview-2021.07.01-src.zip"
+    homepage = (
+        "https://www.nmri.go.jp/study/research_organization/risk/gxsview/en/index.html"
+    )
+    url = "https://www.nmri.go.jp/study/research_organization/risk/gxsview/download/gxsview-2021.07.01-src.zip"
 
     # Support email for questions ohnishi@m.mpat.go.jp
-    maintainers = ['cessenat']
+    maintainers = ["cessenat"]
 
-    version('2021.07.01', '000f9b4721d4ee03b02730dbbfe83947f96a60a183342b127f0b6b63b03e8f9a')
+    version(
+        "2021.07.01", "000f9b4721d4ee03b02730dbbfe83947f96a60a183342b127f0b6b63b03e8f9a"
+    )
 
-    depends_on('fontconfig')
-    depends_on('qt@5.14.0:+opengl+gui')
-    depends_on('vtk@8.0:+qt+opengl2')  # +mpi+python are optional
-    conflicts('%gcc@:7.2.0', msg='Requires C++17 compiler support')  # need C++17 standard
+    depends_on("fontconfig")
+    depends_on("qt@5.14.0:+opengl+gui")
+    depends_on("vtk@8.0:+qt+opengl2")  # +mpi+python are optional
+    conflicts(
+        "%gcc@:7.2.0", msg="Requires C++17 compiler support"
+    )  # need C++17 standard
 
-    build_directory = 'gui'
+    build_directory = "gui"
 
     def qmake_args(self):
-        vtk_suffix = self.spec['vtk'].version.up_to(2)
-        vtk_lib_dir = self.spec['vtk'].prefix.lib
-        vtk_include_dir = join_path(self.spec['vtk'].prefix.include,
-                                    'vtk-{0}'.format(vtk_suffix))
+        vtk_suffix = self.spec["vtk"].version.up_to(2)
+        vtk_lib_dir = self.spec["vtk"].prefix.lib
+        vtk_include_dir = join_path(
+            self.spec["vtk"].prefix.include, "vtk-{0}".format(vtk_suffix)
+        )
         args = [
-            'VTK_LIB_DIR={0}'.format(vtk_lib_dir),
-            'VTK_INC_DIR={0}'.format(vtk_include_dir),
-            'VTK_MAJOR_VER={0}'.format(str(vtk_suffix)),
+            "VTK_LIB_DIR={0}".format(vtk_lib_dir),
+            "VTK_INC_DIR={0}".format(vtk_include_dir),
+            "VTK_MAJOR_VER={0}".format(str(vtk_suffix)),
         ]
         return args
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install(join_path('gui', 'gxsview'), prefix.bin)
+        install(join_path("gui", "gxsview"), prefix.bin)

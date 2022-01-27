@@ -15,69 +15,92 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/wget/"
     gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
-    version('1.21.2', sha256='e6d4c76be82c676dd7e8c61a29b2ac8510ae108a810b5d1d18fc9a1d2c9a2497')
-    version('1.21.1', sha256='59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e')
-    version('1.21',   sha256='b3bc1a9bd0c19836c9709c318d41c19c11215a07514f49f89b40b9d50ab49325')
-    version('1.20.3', sha256='31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e')
-    version('1.19.1', sha256='9e4f12da38cc6167d0752d934abe27c7b1599a9af294e73829be7ac7b5b4da40')
-    version('1.17',   sha256='3e04ad027c5b6ebd67c616eec13e66fbedb3d4d8cbe19cc29dadde44b92bda55')
-    version('1.16',   sha256='b977fc10ac7a72d987d48136251aeb332f2dced1aabd50d6d56bdf72e2b79101')
+    version(
+        "1.21.2",
+        sha256="e6d4c76be82c676dd7e8c61a29b2ac8510ae108a810b5d1d18fc9a1d2c9a2497",
+    )
+    version(
+        "1.21.1",
+        sha256="59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e",
+    )
+    version(
+        "1.21",
+        sha256="b3bc1a9bd0c19836c9709c318d41c19c11215a07514f49f89b40b9d50ab49325",
+    )
+    version(
+        "1.20.3",
+        sha256="31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e",
+    )
+    version(
+        "1.19.1",
+        sha256="9e4f12da38cc6167d0752d934abe27c7b1599a9af294e73829be7ac7b5b4da40",
+    )
+    version(
+        "1.17",
+        sha256="3e04ad027c5b6ebd67c616eec13e66fbedb3d4d8cbe19cc29dadde44b92bda55",
+    )
+    version(
+        "1.16",
+        sha256="b977fc10ac7a72d987d48136251aeb332f2dced1aabd50d6d56bdf72e2b79101",
+    )
 
-    variant('ssl', default='openssl', values=('gnutls', 'openssl'),
-            description='Specify SSL backend')
-    variant('zlib', default=True,
-            description='Enable zlib support')
-    variant('libpsl', default=False,
-            description='Enable support for libpsl cookie checking')
-    variant('pcre', default=False,
-            description='Enable PCRE style regular expressions')
-    variant('python', default=False,
-            description='Enable Python support')
+    variant(
+        "ssl",
+        default="openssl",
+        values=("gnutls", "openssl"),
+        description="Specify SSL backend",
+    )
+    variant("zlib", default=True, description="Enable zlib support")
+    variant(
+        "libpsl", default=False, description="Enable support for libpsl cookie checking"
+    )
+    variant("pcre", default=False, description="Enable PCRE style regular expressions")
+    variant("python", default=False, description="Enable Python support")
 
-    depends_on('gnutls',  when='ssl=gnutls')
-    depends_on('openssl', when='ssl=openssl')
+    depends_on("gnutls", when="ssl=gnutls")
+    depends_on("openssl", when="ssl=openssl")
 
-    depends_on('gettext', type='build')
-    depends_on('python@3:', type='build', when='+python')
+    depends_on("gettext", type="build")
+    depends_on("python@3:", type="build", when="+python")
 
-    depends_on('zlib', when='+zlib')
-    depends_on('libpsl', when='+libpsl')
-    depends_on('pcre', when='+pcre')
+    depends_on("zlib", when="+zlib")
+    depends_on("libpsl", when="+libpsl")
+    depends_on("pcre", when="+pcre")
 
-    depends_on('perl@5.12.0:', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('iconv')
+    depends_on("perl@5.12.0:", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("iconv")
 
-    depends_on('valgrind', type='test')
+    depends_on("valgrind", type="test")
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"
 
     def configure_args(self):
         spec = self.spec
 
         args = [
-            '--with-ssl={0}'.format(spec.variants['ssl'].value),
-            '--without-included-regex',
+            "--with-ssl={0}".format(spec.variants["ssl"].value),
+            "--without-included-regex",
         ]
 
-        if '+zlib' in spec:
-            args.append('--with-zlib')
+        if "+zlib" in spec:
+            args.append("--with-zlib")
         else:
-            args.append('--without-zlib')
+            args.append("--without-zlib")
 
-        if '+libpsl' in spec:
-            args.append('--with-libpsl')
+        if "+libpsl" in spec:
+            args.append("--with-libpsl")
         else:
-            args.append('--without-libpsl')
+            args.append("--without-libpsl")
 
-        if '+pcre' in spec:
-            args.append('--enable-pcre')
+        if "+pcre" in spec:
+            args.append("--enable-pcre")
         else:
-            args.append('--disable-pcre')
+            args.append("--disable-pcre")
 
         if self.run_tests:
-            args.append('--enable-valgrind-tests')
+            args.append("--enable-valgrind-tests")
         else:
-            args.append('--disable-valgrind-tests')
+            args.append("--disable-valgrind-tests")
 
         return args

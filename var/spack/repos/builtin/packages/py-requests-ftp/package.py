@@ -10,9 +10,12 @@ class PyRequestsFtp(PythonPackage):
     """FTP Transport Adapter for Requests.."""
 
     homepage = "https://github.com/Lukasa/requests-ftp"
-    pypi     = "requests-ftp/requests-ftp-0.3.1.tar.gz"
+    pypi = "requests-ftp/requests-ftp-0.3.1.tar.gz"
 
-    version('0.3.1', sha256='7504ceb5cba8a5c0135ed738596820a78c5f2be92d79b29f96ba99b183d8057a')
+    version(
+        "0.3.1",
+        sha256="7504ceb5cba8a5c0135ed738596820a78c5f2be92d79b29f96ba99b183d8057a",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-requests', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-requests", type=("build", "run"))

@@ -13,7 +13,10 @@ class RClisymbols(RPackage):
     (see <https://github.com/sindresorhus/figures>)."""
 
     homepage = "https://github.com/gaborcsardi/clisymbols"
-    url      = "https://cloud.r-project.org/src/contrib/clisymbols_1.2.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/clisymbols_1.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/clisymbols"
 
-    version('1.2.0', sha256='0649f2ce39541820daee3ed408d765eddf83db5db639b493561f4e5fbf88efe0')
+    version(
+        "1.2.0",
+        sha256="0649f2ce39541820daee3ed408d765eddf83db5db639b493561f4e5fbf88efe0",
+    )

@@ -15,9 +15,12 @@ class Logstash(Package):
     """
 
     homepage = "https://artifacts.elastic.co"
-    url      = "https://artifacts.elastic.co/downloads/logstash/logstash-6.6.0.tar.gz"
+    url = "https://artifacts.elastic.co/downloads/logstash/logstash-6.6.0.tar.gz"
 
-    version('6.6.0', sha256='5a9a8b9942631e9d4c3dfb8d47075276e8c2cff343841145550cc0c1cfe7bba7')
+    version(
+        "6.6.0",
+        sha256="5a9a8b9942631e9d4c3dfb8d47075276e8c2cff343841145550cc0c1cfe7bba7",
+    )
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

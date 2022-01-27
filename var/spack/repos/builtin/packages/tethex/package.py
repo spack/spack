@@ -14,19 +14,25 @@ class Tethex(CMakePackage):
     """
 
     homepage = "https://github.com/martemyev/tethex"
-    url      = "https://github.com/martemyev/tethex/archive/v0.0.7.tar.gz"
-    git      = "https://github.com/martemyev/tethex.git"
+    url = "https://github.com/martemyev/tethex/archive/v0.0.7.tar.gz"
+    git = "https://github.com/martemyev/tethex.git"
 
-    version('develop', branch='master')
-    version('0.0.7', sha256='5f93f434c6d110be3d8d0eba69336864d0e5a26aba2d444eb25adbd2caf73645')
+    version("develop", branch="master")
+    version(
+        "0.0.7",
+        sha256="5f93f434c6d110be3d8d0eba69336864d0e5a26aba2d444eb25adbd2caf73645",
+    )
 
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
+    variant(
+        "build_type",
+        default="Release",
+        description="The build type to build",
+        values=("Debug", "Release"),
+    )
 
-    depends_on('cmake@2.8:', type='build')
+    depends_on("cmake@2.8:", type="build")
 
     def install(self, spec, prefix):
         # install by hand
         mkdirp(prefix.bin)
-        install('tethex', prefix.bin)
+        install("tethex", prefix.bin)

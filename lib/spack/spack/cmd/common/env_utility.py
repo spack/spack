@@ -17,24 +17,27 @@ from spack.util.environment import dump_environment, pickle_environment
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['clean', 'dirty'])
+    arguments.add_common_arguments(subparser, ["clean", "dirty"])
     subparser.add_argument(
-        '--dump', metavar="FILE",
-        help="dump a source-able environment to FILE"
+        "--dump", metavar="FILE", help="dump a source-able environment to FILE"
     )
     subparser.add_argument(
-        '--pickle', metavar="FILE",
-        help="dump a pickled source-able environment to FILE"
+        "--pickle",
+        metavar="FILE",
+        help="dump a pickled source-able environment to FILE",
     )
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        metavar='spec [--] [cmd]...',
-        help="specs of package environment to emulate")
-    subparser.epilog\
-        = 'If a command is not specified, the environment will be printed ' \
-        'to standard output (cf /usr/bin/env) unless --dump and/or --pickle ' \
-        'are specified.\n\nIf a command is specified and spec is ' \
-        'multi-word, then the -- separator is obligatory.'
+        "spec",
+        nargs=argparse.REMAINDER,
+        metavar="spec [--] [cmd]...",
+        help="specs of package environment to emulate",
+    )
+    subparser.epilog = (
+        "If a command is not specified, the environment will be printed "
+        "to standard output (cf /usr/bin/env) unless --dump and/or --pickle "
+        "are specified.\n\nIf a command is specified and spec is "
+        "multi-word, then the -- separator is obligatory."
+    )
 
 
 def emulate_env_utility(cmd_name, context, args):
@@ -45,11 +48,11 @@ def emulate_env_utility(cmd_name, context, args):
     # caller put a '--' between the spec and the command to be
     # executed.  If there is no '--', assume that the spec is the
     # first argument.
-    sep = '--'
+    sep = "--"
     if sep in args.spec:
         s = args.spec.index(sep)
         spec = args.spec[:s]
-        cmd = args.spec[s + 1:]
+        cmd = args.spec[s + 1 :]
     else:
         spec = args.spec[0]
         cmd = args.spec[1:]
@@ -73,8 +76,7 @@ def emulate_env_utility(cmd_name, context, args):
 
     if args.pickle:
         # Dump a source-able environment to a pickle file.
-        tty.msg(
-            "Pickling a source-able environment to {0}".format(args.pickle))
+        tty.msg("Pickling a source-able environment to {0}".format(args.pickle))
         pickle_environment(args.pickle)
 
     if cmd:

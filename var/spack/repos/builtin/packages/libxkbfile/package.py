@@ -12,10 +12,13 @@ class Libxkbfile(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libxkbfile"
     xorg_mirror_path = "lib/libxkbfile-1.0.9.tar.gz"
 
-    version('1.0.9', sha256='95df50570f38e720fb79976f603761ae6eff761613eb56f258c3cb6bab4fd5e3')
+    version(
+        "1.0.9",
+        sha256="95df50570f38e720fb79976f603761ae6eff761613eb56f258c3cb6bab4fd5e3",
+    )
 
-    depends_on('libx11')
+    depends_on("libx11")
 
-    depends_on('kbproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("kbproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

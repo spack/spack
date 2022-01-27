@@ -16,93 +16,112 @@ class Amp(CMakePackage):
     homepage = "https://bitbucket.org/AdvancedMultiPhysics/amp"
     hg = homepage
 
-    version('develop')
+    version("develop")
 
-    variant('boost', default=True, description='Build with support for Boost')
-    variant('hdf5', default=True, description='Build with support for HDF5')
-    variant('hypre', default=True, description='Build with support for hypre')
-    variant('libmesh', default=True, description='Build with libmesh support')
-    variant('mpi', default=True, description='Build with MPI support')
-    variant('netcdf', default=True, description='Build with NetCDF support')
-    variant('petsc', default=True, description='Build with Petsc support')
-    variant('shared', default=True, description='Build shared libraries')
-    variant('silo', default=True, description='Build with support for Silo')
-    variant('sundials', default=True, description='Build with support for Sundials')
-    variant('trilinos', default=True, description='Build with support for Trilinos')
-    variant('zlib', default=True, description='Build with support for zlib')
+    variant("boost", default=True, description="Build with support for Boost")
+    variant("hdf5", default=True, description="Build with support for HDF5")
+    variant("hypre", default=True, description="Build with support for hypre")
+    variant("libmesh", default=True, description="Build with libmesh support")
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("netcdf", default=True, description="Build with NetCDF support")
+    variant("petsc", default=True, description="Build with Petsc support")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("silo", default=True, description="Build with support for Silo")
+    variant("sundials", default=True, description="Build with support for Sundials")
+    variant("trilinos", default=True, description="Build with support for Trilinos")
+    variant("zlib", default=True, description="Build with support for zlib")
 
     # Everything should be compiled position independent (-fpic)
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('boost', when='+boost')
-    depends_on('hdf5', when='+hdf5')
-    depends_on('hypre', when='+hypre')
-    depends_on('libmesh', when='+libmesh')
-    depends_on('netcdf-c', when='+netcdf')
-    depends_on('petsc', when='+petsc')
-    depends_on('silo', when='+silo')
-    depends_on('sundials', when='+sundials')
-    depends_on('trilinos', when='+trilinos')
-    depends_on('zlib', when="+zlib")
+    depends_on("blas")
+    depends_on("lapack")
+    depends_on("boost", when="+boost")
+    depends_on("hdf5", when="+hdf5")
+    depends_on("hypre", when="+hypre")
+    depends_on("libmesh", when="+libmesh")
+    depends_on("netcdf-c", when="+netcdf")
+    depends_on("petsc", when="+petsc")
+    depends_on("silo", when="+silo")
+    depends_on("sundials", when="+sundials")
+    depends_on("trilinos", when="+trilinos")
+    depends_on("zlib", when="+zlib")
 
     # MPI related dependencies
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            self.define('TPL_URL', 'https://bitbucket.org/AdvancedMultiPhysics/tpl-builder'),
-            self.define('AMP_DATA_URL', 'https://bitbucket.org/AdvancedMultiPhysics/amp/downloads/AMP-Data.tar.gz'),
-            self.define('AMP_ENABLE_TESTS', 'OFF'),
-            self.define('AMP_ENABLE_EXAMPLES', 'OFF'),
-            self.define('AMP_ENABLE_CXX11', 'ON'),
-            self.define('CXX_STD', '11'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define('USE_MPI', '0'),
+            self.define(
+                "TPL_URL", "https://bitbucket.org/AdvancedMultiPhysics/tpl-builder"
+            ),
+            self.define(
+                "AMP_DATA_URL",
+                "https://bitbucket.org/AdvancedMultiPhysics/amp/downloads/AMP-Data.tar.gz",
+            ),
+            self.define("AMP_ENABLE_TESTS", "OFF"),
+            self.define("AMP_ENABLE_EXAMPLES", "OFF"),
+            self.define("AMP_ENABLE_CXX11", "ON"),
+            self.define("CXX_STD", "11"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("USE_MPI", "0"),
         ]
 
-        if '+mpi' in spec:
-            options.extend([
-                self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc),
-                self.define('CMAKE_CXX_COMPILER', spec['mpi'].mpicxx),
-                self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc),
-                self.define('MPI_COMPILER', '1'),
-                self.define('MPIEXEC', spec['mpi'].prefix.bin),
-            ])
+        if "+mpi" in spec:
+            options.extend(
+                [
+                    self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
+                    self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
+                    self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                    self.define("MPI_COMPILER", "1"),
+                    self.define("MPIEXEC", spec["mpi"].prefix.bin),
+                ]
+            )
         else:
-            options.extend([
-                self.define('CMAKE_C_COMPILER', self.compiler.cc),
-                self.define('CMAKE_CXX_COMPILER', self.compiler.cxx),
-                self.define('CMAKE_Fortran_COMPILER', self.compiler.fc),
-            ])
+            options.extend(
+                [
+                    self.define("CMAKE_C_COMPILER", self.compiler.cc),
+                    self.define("CMAKE_CXX_COMPILER", self.compiler.cxx),
+                    self.define("CMAKE_Fortran_COMPILER", self.compiler.fc),
+                ]
+            )
 
         tpl_list = ["LAPACK"]
-        blas, lapack = spec['blas'].libs, spec['lapack'].libs
-        options.extend([
-            self.define('TPL_LAPACK_INSTALL_DIR', spec['lapack'].prefix),
-            self.define('TPL_BLAS_LIBRARY_NAMES', ';'.join(blas.names)),
-            self.define('TPL_BLAS_LIBRARY_DIRS', ';'.join(blas.directories)),
-            self.define('TPL_LAPACK_LIBRARY_NAMES', ';'.join(lapack.names)),
-            self.define('TPL_LAPACK_LIBRARY_DIRS', ';'.join(lapack.directories)),
-        ])
+        blas, lapack = spec["blas"].libs, spec["lapack"].libs
+        options.extend(
+            [
+                self.define("TPL_LAPACK_INSTALL_DIR", spec["lapack"].prefix),
+                self.define("TPL_BLAS_LIBRARY_NAMES", ";".join(blas.names)),
+                self.define("TPL_BLAS_LIBRARY_DIRS", ";".join(blas.directories)),
+                self.define("TPL_LAPACK_LIBRARY_NAMES", ";".join(lapack.names)),
+                self.define("TPL_LAPACK_LIBRARY_DIRS", ";".join(lapack.directories)),
+            ]
+        )
 
         for vname in (
-            'boost', 'hdf5', 'hypre', 'libmesh', 'petsc',
-            'silo', 'sundials', 'trilinos', 'zlib',
+            "boost",
+            "hdf5",
+            "hypre",
+            "libmesh",
+            "petsc",
+            "silo",
+            "sundials",
+            "trilinos",
+            "zlib",
         ):
-            if '+' + vname in spec:
+            if "+" + vname in spec:
                 tpl_list.append(vname.upper())
-                options.append(self.define(
-                    'TPL_{0}_INSTALL_DIR'.format(vname.upper()),
-                    spec[vname].prefix
-                ))
+                options.append(
+                    self.define(
+                        "TPL_{0}_INSTALL_DIR".format(vname.upper()), spec[vname].prefix
+                    )
+                )
 
-        if '+netcdf' in spec:
+        if "+netcdf" in spec:
             tpl_list.append("NETCDF")
-            options.append(self.define(
-                'TPL_NETCDF_INSTALL_DIR', spec['netcdf-c'].prefix
-            ))
+            options.append(
+                self.define("TPL_NETCDF_INSTALL_DIR", spec["netcdf-c"].prefix)
+            )
 
-        options.append(self.define('TPL_LIST', ';'.join(tpl_list)))
+        options.append(self.define("TPL_LIST", ";".join(tpl_list)))
         return options

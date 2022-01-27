@@ -15,45 +15,58 @@ class Talass(CMakePackage):
     alone."""
 
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
-    git      = "git@bitbucket.org:cedmav/talass.git"
+    git = "git@bitbucket.org:cedmav/talass.git"
 
-    version('2018-10-29', commit='5d459c0dd89e733fa301391908a5b79fe2850ad7')
+    version("2018-10-29", commit="5d459c0dd89e733fa301391908a5b79fe2850ad7")
 
     # The default precision and index space sizes
-    variant('precision', default='32', values=('32', '64'),
-            description='Precision of the function values')
-    variant('global', default='32', values=('16', '32', '64'),
-            description='Number of bits used for the global index space')
-    variant('local', default='32', values=('16', '32', '64'),
-            description='Number of bits used for the local index space')
+    variant(
+        "precision",
+        default="32",
+        values=("32", "64"),
+        description="Precision of the function values",
+    )
+    variant(
+        "global",
+        default="32",
+        values=("16", "32", "64"),
+        description="Number of bits used for the global index space",
+    )
+    variant(
+        "local",
+        default="32",
+        values=("16", "32", "64"),
+        description="Number of bits used for the local index space",
+    )
 
-    root_cmakelists_dir = 'StreamingTopology'
+    root_cmakelists_dir = "StreamingTopology"
 
     def cmake_args(self):
         variants = self.spec.variants
 
         args = []
 
-        if int(variants['local'].value) > int(variants['global'].value):
-            msg = ('The global index space (%d bits) must be at least as '
-                   'large as the local index space (% bits)')
+        if int(variants["local"].value) > int(variants["global"].value):
+            msg = (
+                "The global index space (%d bits) must be at least as "
+                "large as the local index space (% bits)"
+            )
             raise InstallError(
-                msg % (variants['global'].value, variants['local'].value))
+                msg % (variants["global"].value, variants["local"].value)
+            )
 
-        if variants['precision'].value == '32':
-            args.append('-DFUNCTION_TYPE=float')
-        elif variants['precision'].value == '64':
-            args.append('-DFUNCTION_TYPE=double')
+        if variants["precision"].value == "32":
+            args.append("-DFUNCTION_TYPE=float")
+        elif variants["precision"].value == "64":
+            args.append("-DFUNCTION_TYPE=double")
 
         # Set global index space
-        args.append('-DGLOBAL_INDEX_TYPE=uint{0}_t'.format(
-            variants['global'].value))
+        args.append("-DGLOBAL_INDEX_TYPE=uint{0}_t".format(variants["global"].value))
 
         # Set local index space
-        args.append('-DLOCAL_INDEX_TYPE=uint{0}_t'.format(
-            variants['local'].value))
+        args.append("-DLOCAL_INDEX_TYPE=uint{0}_t".format(variants["local"].value))
 
         # Deal with the PROJECT_INSTALL_PREFIX to enable Talass super builds
-        args.append('-DPROJECT_INSTALL_PREFIX=%s' % self.prefix)
+        args.append("-DPROJECT_INSTALL_PREFIX=%s" % self.prefix)
 
         return args

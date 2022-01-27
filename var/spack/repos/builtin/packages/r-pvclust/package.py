@@ -16,9 +16,12 @@ class RPvclust(RPackage):
     probability) value for each cluster in a dendrogram."""
 
     homepage = "https://cloud.r-project.org/package=pvclust"
-    url      = "https://cloud.r-project.org/src/contrib/pvclust_2.2-0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/pvclust_2.2-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pvclust"
 
-    version('2.2-0', sha256='7892853bacd413b5a921006429641ad308a344ca171b3081c15e4c522a8b0201')
+    version(
+        "2.2-0",
+        sha256="7892853bacd413b5a921006429641ad308a344ca171b3081c15e4c522a8b0201",
+    )
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))

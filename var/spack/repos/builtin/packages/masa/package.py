@@ -8,46 +8,42 @@ from spack import *
 
 class Masa(AutotoolsPackage):
     """MASA (Manufactured Analytical Solution Abstraction) is a library
-       written in C++ (with C, python and Fortran90 interfaces) which
-       provides a suite of manufactured solutions for the software
-       verification of partial differential equation solvers in multiple
-       dimensions."""
+    written in C++ (with C, python and Fortran90 interfaces) which
+    provides a suite of manufactured solutions for the software
+    verification of partial differential equation solvers in multiple
+    dimensions."""
 
     homepage = "https://github.com/manufactured-solutions/MASA"
-    git      = "https://github.com/manufactured-solutions/MASA.git"
+    git = "https://github.com/manufactured-solutions/MASA.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    variant('fortran', default=True,
-            description='Compile with Fortran interfaces')
-    variant('python',  default=True,
-            description='Compile with Python interfaces')
+    variant("fortran", default=True, description="Compile with Fortran interfaces")
+    variant("python", default=True, description="Compile with Python interfaces")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('swig',     type='build')
-    depends_on('python', when='+python')
-    depends_on('metaphysicl')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("swig", type="build")
+    depends_on("python", when="+python")
+    depends_on("metaphysicl")
 
     def configure_args(self):
         options = []
 
-        options.extend([
-            '--with-metaphysicl=%s' % self.spec['metaphysicl'].prefix
-        ])
+        options.extend(["--with-metaphysicl=%s" % self.spec["metaphysicl"].prefix])
 
-        if '+fortran' in self.spec:
-            options.extend(['--enable-fortran-interfaces'])
+        if "+fortran" in self.spec:
+            options.extend(["--enable-fortran-interfaces"])
 
-        if '+python' in self.spec:
-            options.extend(['--enable-python-interfaces'])
+        if "+python" in self.spec:
+            options.extend(["--enable-python-interfaces"])
 
         return options
 
     def setup_build_environment(self, env):
         # Unfortunately can't use this because MASA overwrites it
         # env.set('CXXFLAGS', self.compiler.cxx11_flag)
-        env.set('CXX', "{0} {1}".format(self.compiler.cxx, self.compiler.cxx11_flag))
-        if self.spec.satisfies('%apple-clang'):
-            env.set('CFLAGS', '-Wno-implicit-function-declaration')
+        env.set("CXX", "{0} {1}".format(self.compiler.cxx, self.compiler.cxx11_flag))
+        if self.spec.satisfies("%apple-clang"):
+            env.set("CFLAGS", "-Wno-implicit-function-declaration")

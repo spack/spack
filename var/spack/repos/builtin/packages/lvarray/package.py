@@ -35,69 +35,68 @@ class Lvarray(CMakePackage, CudaPackage):
     """LvArray portable HPC containers."""
 
     homepage = "https://github.com/GEOSX/lvarray"
-    git      = "https://github.com/GEOSX/LvArray.git"
-    tags     = ['radiuss']
+    git = "https://github.com/GEOSX/LvArray.git"
+    tags = ["radiuss"]
 
-    maintainers = ['corbett5']
+    maintainers = ["corbett5"]
 
-    version('develop', branch='develop', submodules=False)
-    version('main', branch='main', submodules=False)
-    version('0.2.2', tag='v0.2.2', submodules=False)
-    version('0.2.1', tag='v0.2.1', submodules=False)
-    version('0.1.0', tag='v0.1.0', submodules=True)
+    version("develop", branch="develop", submodules=False)
+    version("main", branch="main", submodules=False)
+    version("0.2.2", tag="v0.2.2", submodules=False)
+    version("0.2.1", tag="v0.2.1", submodules=False)
+    version("0.1.0", tag="v0.1.0", submodules=True)
 
-    variant('shared', default=True, description='Build Shared Libs')
-    variant('umpire', default=False, description='Build Umpire support')
-    variant('chai', default=False, description='Build Chai support')
-    variant('caliper', default=False, description='Build Caliper support')
-    variant('pylvarray', default=False, description='Build Python support')
-    variant('tests', default=True, description='Build tests')
-    variant('benchmarks', default=False, description='Build benchmarks')
-    variant('examples', default=False, description='Build examples')
-    variant('docs', default=False, description='Build docs')
-    variant('addr2line', default=True,
-            description='Build support for addr2line.')
+    variant("shared", default=True, description="Build Shared Libs")
+    variant("umpire", default=False, description="Build Umpire support")
+    variant("chai", default=False, description="Build Chai support")
+    variant("caliper", default=False, description="Build Caliper support")
+    variant("pylvarray", default=False, description="Build Python support")
+    variant("tests", default=True, description="Build tests")
+    variant("benchmarks", default=False, description="Build benchmarks")
+    variant("examples", default=False, description="Build examples")
+    variant("docs", default=False, description="Build docs")
+    variant("addr2line", default=True, description="Build support for addr2line.")
 
-    depends_on('blt', when='@0.2.0:', type='build')
+    depends_on("blt", when="@0.2.0:", type="build")
 
-    depends_on('camp')
-    depends_on('camp+cuda', when='+cuda')
+    depends_on("camp")
+    depends_on("camp+cuda", when="+cuda")
 
-    depends_on('raja')
-    depends_on('raja+cuda', when='+cuda')
+    depends_on("raja")
+    depends_on("raja+cuda", when="+cuda")
 
     # At the moment Umpire doesn't support shared when building with CUDA.
-    depends_on('umpire', when='+umpire')
-    depends_on('umpire+cuda~shared', when='+umpire+cuda')
+    depends_on("umpire", when="+umpire")
+    depends_on("umpire+cuda~shared", when="+umpire+cuda")
 
-    depends_on('chai+raja', when='+chai')
-    depends_on('chai+raja+cuda', when='+chai+cuda')
+    depends_on("chai+raja", when="+chai")
+    depends_on("chai+raja+cuda", when="+chai+cuda")
 
-    depends_on('caliper', when='+caliper')
+    depends_on("caliper", when="+caliper")
 
-    depends_on('python +shared +pic', type=('build', 'link', 'run'), when='+pylvarray')
-    depends_on('py-numpy@1.19:', type=('build', 'link', 'run'), when='+pylvarray')
-    depends_on('py-scipy@1.5.2:', type=('build', 'run'), when='+pylvarray')
+    depends_on("python +shared +pic", type=("build", "link", "run"), when="+pylvarray")
+    depends_on("py-numpy@1.19:", type=("build", "link", "run"), when="+pylvarray")
+    depends_on("py-scipy@1.5.2:", type=("build", "run"), when="+pylvarray")
 
-    depends_on('doxygen@1.8.13:', when='+docs', type='build')
-    depends_on('py-sphinx@1.6.3:', when='+docs', type='build')
+    depends_on("doxygen@1.8.13:", when="+docs", type="build")
+    depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
-    phases = ['hostconfig', 'cmake', 'build', 'install']
+    phases = ["hostconfig", "cmake", "build", "install"]
 
-    @run_after('build')
+    @run_after("build")
     @on_package_attributes(run_tests=True)
     def check(self):
         """Searches the CMake-generated Makefile for the target ``test``
         and runs it if found.
         """
         with working_dir(self.build_directory):
-            ctest('-V', '--force-new-ctest-process', '-j 1')
+            ctest("-V", "--force-new-ctest-process", "-j 1")
 
-    @run_after('build')
+    @run_after("build")
     def build_docs(self):
-        if '+docs' in self.spec:
+        if "+docs" in self.spec:
             with working_dir(self.build_directory):
-                make('docs')
+                make("docs")
 
     def _get_sys_type(self, spec):
         sys_type = str(spec.architecture)
@@ -107,14 +106,17 @@ class Lvarray(CMakePackage, CudaPackage):
         return sys_type
 
     def _get_host_config_path(self, spec):
-        var = ''
-        if '+cuda' in spec:
-            var = '-'.join([var, 'cuda'])
+        var = ""
+        if "+cuda" in spec:
+            var = "-".join([var, "cuda"])
 
-        hostname = socket.gethostname().rstrip('1234567890')
-        host_config_path = "%s-%s-%s%s.cmake" % (hostname,
-                                                 self._get_sys_type(spec),
-                                                 spec.compiler, var)
+        hostname = socket.gethostname().rstrip("1234567890")
+        host_config_path = "%s-%s-%s%s.cmake" % (
+            hostname,
+            self._get_sys_type(spec),
+            spec.compiler,
+            var,
+        )
 
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
@@ -154,7 +156,7 @@ class Lvarray(CMakePackage, CudaPackage):
         # Find and record what CMake is used
         ##############################################
 
-        cmake_exe = spec['cmake'].command.path
+        cmake_exe = spec["cmake"].command.path
         cmake_exe = os.path.realpath(cmake_exe)
 
         host_config_path = self._get_host_config_path(spec)
@@ -169,8 +171,8 @@ class Lvarray(CMakePackage, CudaPackage):
             cfg.write("# CMake executable path: %s\n" % cmake_exe)
             cfg.write("#{0}\n\n".format("-" * 80))
 
-            if 'blt' in spec:
-                cfg.write(cmake_cache_entry('BLT_SOURCE_DIR', spec['blt'].prefix))
+            if "blt" in spec:
+                cfg.write(cmake_cache_entry("BLT_SOURCE_DIR", spec["blt"].prefix))
 
             #######################
             # Compiler Settings
@@ -183,12 +185,12 @@ class Lvarray(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
             # use global spack compiler flags
-            cflags = ' '.join(spec.compiler_flags['cflags'])
-            cxxflags = ' '.join(spec.compiler_flags['cxxflags'])
+            cflags = " ".join(spec.compiler_flags["cflags"])
+            cxxflags = " ".join(spec.compiler_flags["cxxflags"])
 
             if "%intel" in spec:
-                cflags += ' -qoverride-limits'
-                cxxflags += ' -qoverride-limits'
+                cflags += " -qoverride-limits"
+                cxxflags += " -qoverride-limits"
 
             if cflags:
                 cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
@@ -197,17 +199,18 @@ class Lvarray(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
 
             release_flags = "-O3 -DNDEBUG"
-            cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE",
-                                         release_flags))
+            cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE", release_flags))
             reldebinf_flags = "-O3 -g -DNDEBUG"
-            cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_RELWITHDEBINFO",
-                                         reldebinf_flags))
+            cfg.write(
+                cmake_cache_string("CMAKE_CXX_FLAGS_RELWITHDEBINFO", reldebinf_flags)
+            )
             debug_flags = "-O0 -g"
             cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", debug_flags))
 
             if "%clang arch=linux-rhel7-ppc64le" in spec:
-                cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS",
-                                            "-Wl,--no-toc-optimize"))
+                cfg.write(
+                    cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", "-Wl,--no-toc-optimize")
+                )
 
             if "+cuda" in spec:
                 cfg.write("#{0}\n".format("-" * 80))
@@ -217,34 +220,45 @@ class Lvarray(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_option("ENABLE_CUDA", True))
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_STANDARD", 14))
 
-                cudatoolkitdir = spec['cuda'].prefix
-                cfg.write(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
-                                            cudatoolkitdir))
+                cudatoolkitdir = spec["cuda"].prefix
+                cfg.write(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
                 cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_COMPILER", cudacompiler))
 
-                cmake_cuda_flags = ('-restrict --expt-extended-lambda -Werror '
-                                    'cross-execution-space-call,reorder,'
-                                    'deprecated-declarations')
+                cmake_cuda_flags = (
+                    "-restrict --expt-extended-lambda -Werror "
+                    "cross-execution-space-call,reorder,"
+                    "deprecated-declarations"
+                )
 
                 archSpecifiers = ("-mtune", "-mcpu", "-march", "-qtune", "-qarch")
                 for archSpecifier in archSpecifiers:
-                    for compilerArg in spec.compiler_flags['cxxflags']:
+                    for compilerArg in spec.compiler_flags["cxxflags"]:
                         if compilerArg.startswith(archSpecifier):
-                            cmake_cuda_flags += ' -Xcompiler ' + compilerArg
+                            cmake_cuda_flags += " -Xcompiler " + compilerArg
 
-                if not spec.satisfies('cuda_arch=none'):
-                    cuda_arch = spec.variants['cuda_arch'].value
-                    cmake_cuda_flags += ' -arch sm_{0}'.format(cuda_arch[0])
+                if not spec.satisfies("cuda_arch=none"):
+                    cuda_arch = spec.variants["cuda_arch"].value
+                    cmake_cuda_flags += " -arch sm_{0}".format(cuda_arch[0])
 
                 cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS", cmake_cuda_flags))
 
-                cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS_RELEASE",
-                                             "-O3 -Xcompiler -O3 -DNDEBUG"))
-                cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS_RELWITHDEBINFO",
-                                             "-O3 -g -lineinfo -Xcompiler -O3"))
-                cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS_DEBUG",
-                                             "-O0 -Xcompiler -O0 -g -G"))
+                cfg.write(
+                    cmake_cache_string(
+                        "CMAKE_CUDA_FLAGS_RELEASE", "-O3 -Xcompiler -O3 -DNDEBUG"
+                    )
+                )
+                cfg.write(
+                    cmake_cache_string(
+                        "CMAKE_CUDA_FLAGS_RELWITHDEBINFO",
+                        "-O3 -g -lineinfo -Xcompiler -O3",
+                    )
+                )
+                cfg.write(
+                    cmake_cache_string(
+                        "CMAKE_CUDA_FLAGS_DEBUG", "-O0 -Xcompiler -O0 -g -G"
+                    )
+                )
 
             else:
                 cfg.write(cmake_cache_option("ENABLE_CUDA", False))
@@ -253,13 +267,13 @@ class Lvarray(CMakePackage, CudaPackage):
             cfg.write("# CAMP\n")
             cfg.write("#{0}\n\n".format("-" * 80))
 
-            cfg.write(cmake_cache_entry("CAMP_DIR", spec['camp'].prefix))
+            cfg.write(cmake_cache_entry("CAMP_DIR", spec["camp"].prefix))
 
             cfg.write("#{0}\n".format("-" * 80))
             cfg.write("# RAJA\n")
             cfg.write("#{0}\n\n".format("-" * 80))
 
-            cfg.write(cmake_cache_entry("RAJA_DIR", spec['raja'].prefix))
+            cfg.write(cmake_cache_entry("RAJA_DIR", spec["raja"].prefix))
 
             cfg.write("#{0}\n".format("-" * 80))
             cfg.write("# Umpire\n")
@@ -267,7 +281,7 @@ class Lvarray(CMakePackage, CudaPackage):
 
             if "+umpire" in spec:
                 cfg.write(cmake_cache_option("ENABLE_UMPIRE", True))
-                cfg.write(cmake_cache_entry("UMPIRE_DIR", spec['umpire'].prefix))
+                cfg.write(cmake_cache_entry("UMPIRE_DIR", spec["umpire"].prefix))
             else:
                 cfg.write(cmake_cache_option("ENABLE_UMPIRE", False))
 
@@ -277,7 +291,7 @@ class Lvarray(CMakePackage, CudaPackage):
 
             if "+chai" in spec:
                 cfg.write(cmake_cache_option("ENABLE_CHAI", True))
-                cfg.write(cmake_cache_entry("CHAI_DIR", spec['chai'].prefix))
+                cfg.write(cmake_cache_entry("CHAI_DIR", spec["chai"].prefix))
             else:
                 cfg.write(cmake_cache_option("ENABLE_CHAI", False))
 
@@ -291,43 +305,47 @@ class Lvarray(CMakePackage, CudaPackage):
                 cfg.write("#{0}\n\n".format("-" * 80))
 
                 cfg.write(cmake_cache_option("ENABLE_CALIPER", True))
-                cfg.write(cmake_cache_entry("CALIPER_DIR", spec['caliper'].prefix))
+                cfg.write(cmake_cache_entry("CALIPER_DIR", spec["caliper"].prefix))
             else:
                 cfg.write(cmake_cache_option("ENABLE_CALIPER", False))
 
-            cfg.write('#{0}\n'.format('-' * 80))
-            cfg.write('# Python\n')
-            cfg.write('#{0}\n\n'.format('-' * 80))
-            if '+pylvarray' in spec:
-                cfg.write(cmake_cache_option('ENABLE_PYLVARRAY', True))
-                python_exe = os.path.join(spec['python'].prefix.bin, 'python3')
-                cfg.write(cmake_cache_entry('Python3_EXECUTABLE', python_exe))
+            cfg.write("#{0}\n".format("-" * 80))
+            cfg.write("# Python\n")
+            cfg.write("#{0}\n\n".format("-" * 80))
+            if "+pylvarray" in spec:
+                cfg.write(cmake_cache_option("ENABLE_PYLVARRAY", True))
+                python_exe = os.path.join(spec["python"].prefix.bin, "python3")
+                cfg.write(cmake_cache_entry("Python3_EXECUTABLE", python_exe))
             else:
-                cfg.write(cmake_cache_option('ENABLE_PYLVARRAY', False))
+                cfg.write(cmake_cache_option("ENABLE_PYLVARRAY", False))
 
             cfg.write("#{0}\n".format("-" * 80))
             cfg.write("# Documentation\n")
             cfg.write("#{0}\n\n".format("-" * 80))
             if "+docs" in spec:
                 cfg.write(cmake_cache_option("ENABLE_DOCS", True))
-                sphinx_dir = spec['py-sphinx'].prefix
-                cfg.write(cmake_cache_string('SPHINX_EXECUTABLE',
-                                             os.path.join(sphinx_dir,
-                                                          'bin',
-                                                          'sphinx-build')))
+                sphinx_dir = spec["py-sphinx"].prefix
+                cfg.write(
+                    cmake_cache_string(
+                        "SPHINX_EXECUTABLE",
+                        os.path.join(sphinx_dir, "bin", "sphinx-build"),
+                    )
+                )
 
-                doxygen_dir = spec['doxygen'].prefix
-                cfg.write(cmake_cache_string('DOXYGEN_EXECUTABLE',
-                                             os.path.join(doxygen_dir,
-                                                          'bin',
-                                                          'doxygen')))
+                doxygen_dir = spec["doxygen"].prefix
+                cfg.write(
+                    cmake_cache_string(
+                        "DOXYGEN_EXECUTABLE",
+                        os.path.join(doxygen_dir, "bin", "doxygen"),
+                    )
+                )
             else:
                 cfg.write(cmake_cache_option("ENABLE_DOCS", False))
 
             cfg.write("#{0}\n".format("-" * 80))
             cfg.write("# addr2line\n")
             cfg.write("#{0}\n\n".format("-" * 80))
-            cfg.write(cmake_cache_option('ENABLE_ADDR2LINE', '+addr2line' in spec))
+            cfg.write(cmake_cache_option("ENABLE_ADDR2LINE", "+addr2line" in spec))
 
             cfg.write("#{0}\n".format("-" * 80))
             cfg.write("# Other\n")
@@ -338,25 +356,26 @@ class Lvarray(CMakePackage, CudaPackage):
         host_config_path = self._get_host_config_path(spec)
 
         options = []
-        options.extend(['-C', host_config_path])
+        options.extend(["-C", host_config_path])
 
         # Shared libs
-        options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
 
-        if '~tests~examples~benchmarks' in spec:
-            options.append('-DENABLE_TESTS=OFF')
+        if "~tests~examples~benchmarks" in spec:
+            options.append("-DENABLE_TESTS=OFF")
         else:
-            options.append('-DENABLE_TESTS=ON')
+            options.append("-DENABLE_TESTS=ON")
 
-        if '~test' in spec:
-            options.append('-DDISABLE_UNIT_TESTS=ON')
-        elif "+tests" in spec and ('%intel' in spec or '%xl' in spec):
-            warnings.warn('The LvArray unit tests take an excessive amount of'
-                          ' time to build with the Intel or IBM compilers.')
+        if "~test" in spec:
+            options.append("-DDISABLE_UNIT_TESTS=ON")
+        elif "+tests" in spec and ("%intel" in spec or "%xl" in spec):
+            warnings.warn(
+                "The LvArray unit tests take an excessive amount of"
+                " time to build with the Intel or IBM compilers."
+            )
 
-        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
-        options.append(self.define_from_variant('ENABLE_BENCHMARKS',
-                                                'benchmarks'))
-        options.append(self.define_from_variant('ENABLE_DOCS', 'docs'))
+        options.append(self.define_from_variant("ENABLE_EXAMPLES", "examples"))
+        options.append(self.define_from_variant("ENABLE_BENCHMARKS", "benchmarks"))
+        options.append(self.define_from_variant("ENABLE_DOCS", "docs"))
 
         return options

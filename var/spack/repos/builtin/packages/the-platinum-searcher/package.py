@@ -10,13 +10,13 @@ class ThePlatinumSearcher(Package):
     """Fast parallel recursive grep alternative"""
 
     homepage = "https://github.com/monochromegane/the_platinum_searcher"
-    go       = "github.com/monochromegane/the_platinum_searcher/..."
+    go = "github.com/monochromegane/the_platinum_searcher/..."
 
-    version('head')
+    version("head")
 
-    extends("go", type='build')
+    extends("go", type="build")
 
     def install(self, spec, prefix):
-        env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']
-        go('install', self.package, env=env)
-        install_tree('bin', prefix.bin)
+        env["GOPATH"] = self.stage.source_path + ":" + env["GOPATH"]
+        go("install", self.package, env=env)
+        install_tree("bin", prefix.bin)

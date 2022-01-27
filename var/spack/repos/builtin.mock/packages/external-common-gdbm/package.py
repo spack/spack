@@ -8,6 +8,6 @@ from spack import *
 
 class ExternalCommonGdbm(Package):
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
-    url      = "https://ftpmirror.gnu.org/gdbm/gdbm-1.18.1.tar.gz"
+    url = "https://ftpmirror.gnu.org/gdbm/gdbm-1.18.1.tar.gz"
 
-    version('1.18.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
+    version("1.18.1", "be78e48cdfc1a7ad90efff146dce6cfe")

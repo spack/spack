@@ -8,7 +8,8 @@ from spack import *
 
 class GitTopLevel(Package):
     """Mock package that uses git for fetching."""
+
     homepage = "http://www.git-fetch-example.com"
 
-    git = 'https://example.com/some/git/repo'
-    version('1.0')
+    git = "https://example.com/some/git/repo"
+    version("1.0")

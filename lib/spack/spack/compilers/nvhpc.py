@@ -8,28 +8,30 @@ from spack.compiler import Compiler
 
 class Nvhpc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['nvc']
+    cc_names = ["nvc"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['nvc++']
+    cxx_names = ["nvc++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['nvfortran']
+    f77_names = ["nvfortran"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['nvfortran']
+    fc_names = ["nvfortran"]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc':  'nvhpc/nvc',
-                  'cxx': 'nvhpc/nvc++',
-                  'f77': 'nvhpc/nvfortran',
-                  'fc':  'nvhpc/nvfortran'}
+    link_paths = {
+        "cc": "nvhpc/nvc",
+        "cxx": "nvhpc/nvc++",
+        "f77": "nvhpc/nvfortran",
+        "fc": "nvhpc/nvfortran",
+    }
 
-    PrgEnv = 'PrgEnv-nvhpc'
-    PrgEnv_compiler = 'nvhpc'
+    PrgEnv = "PrgEnv-nvhpc"
+    PrgEnv_compiler = "nvhpc"
 
-    version_argument = '--version'
-    version_regex = r'nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?'
+    version_argument = "--version"
+    version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 
     @property
     def verbose_flag(self):
@@ -37,11 +39,11 @@ class Nvhpc(Compiler):
 
     @property
     def debug_flags(self):
-        return ['-g', '-gopt']
+        return ["-g", "-gopt"]
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
+        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     @property
     def openmp_flag(self):
@@ -65,26 +67,26 @@ class Nvhpc(Compiler):
 
     @property
     def c99_flag(self):
-        return '-c99'
+        return "-c99"
 
     @property
     def c11_flag(self):
-        return '-c11'
+        return "-c11"
 
     @property
     def cxx11_flag(self):
-        return '--c++11'
+        return "--c++11"
 
     @property
     def cxx14_flag(self):
-        return '--c++14'
+        return "--c++14"
 
     @property
     def cxx17_flag(self):
-        return '--c++17'
+        return "--c++17"
 
     @property
     def stdcxx_libs(self):
-        return ('-c++libs', )
+        return ("-c++libs",)
 
-    required_libs = ['libnvc', 'libnvf']
+    required_libs = ["libnvc", "libnvf"]

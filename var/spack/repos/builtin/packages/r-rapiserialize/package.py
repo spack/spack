@@ -19,9 +19,12 @@ class RRapiserialize(RPackage):
     author of the serialization code made available by this package."""
 
     homepage = "https://cloud.r-project.org/web/packages/RApiSerialize/index.html"
-    url      = "https://cloud.r-project.org/src/contrib/RApiSerialize_0.1.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/RApiSerialize_0.1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RApiSerialize"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.1.0', sha256='324d42c655c27b4647d194bfcd7c675da95c67ea3a74ce99853502022792a23e')
+    version(
+        "0.1.0",
+        sha256="324d42c655c27b4647d194bfcd7c675da95c67ea3a74ce99853502022792a23e",
+    )

@@ -8,10 +8,10 @@ from spack import *
 
 class Externaltool(Package):
     homepage = "http://somewhere.com"
-    url      = "http://somewhere.com/tool-1.0.tar.gz"
+    url = "http://somewhere.com/tool-1.0.tar.gz"
 
-    version('1.0', '1234567890abcdef1234567890abcdef')
-    version('0.9', '1234567890abcdef1234567890abcdef')
-    version('0.8.1', '1234567890abcdef1234567890abcdef')
+    version("1.0", "1234567890abcdef1234567890abcdef")
+    version("0.9", "1234567890abcdef1234567890abcdef")
+    version("0.8.1", "1234567890abcdef1234567890abcdef")
 
-    depends_on('externalprereq')
+    depends_on("externalprereq")

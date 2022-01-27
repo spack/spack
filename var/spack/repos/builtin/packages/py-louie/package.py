@@ -13,9 +13,13 @@ class PyLouie(PythonPackage):
     recipe in the Python Cookbook."""
 
     homepage = "https://github.com/11craft/louie/"
-    url      = "https://github.com/11craft/louie/archive/2.0.tar.gz"
+    url = "https://github.com/11craft/louie/archive/2.0.tar.gz"
 
-    version('2.0', sha256='ac274ef672511357fc15d784df841c238ae13d00964094571eebabb0b14c54b2')
-    version('1.1', sha256='4bc227171fc546d1a527ee3059fa17df6d35a0acc10db1f942dd3da42ad96408')
+    version(
+        "2.0", sha256="ac274ef672511357fc15d784df841c238ae13d00964094571eebabb0b14c54b2"
+    )
+    version(
+        "1.1", sha256="4bc227171fc546d1a527ee3059fa17df6d35a0acc10db1f942dd3da42ad96408"
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

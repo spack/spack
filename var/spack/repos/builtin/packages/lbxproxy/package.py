@@ -19,15 +19,18 @@ class Lbxproxy(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/lbxproxy"
     xorg_mirror_path = "app/lbxproxy-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='db36251c9656c7da720f31e10df384f8946a9a5395915371b60d9423ad8f6a80')
+    version(
+        "1.0.3",
+        sha256="db36251c9656c7da720f31e10df384f8946a9a5395915371b60d9423ad8f6a80",
+    )
 
-    depends_on('libxext')
-    depends_on('liblbxutil')
-    depends_on('libx11')
-    depends_on('libice')
+    depends_on("libxext")
+    depends_on("liblbxutil")
+    depends_on("libx11")
+    depends_on("libice")
 
-    depends_on('xtrans')
-    depends_on('xproxymanagementprotocol')
-    depends_on('bigreqsproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xtrans")
+    depends_on("xproxymanagementprotocol")
+    depends_on("bigreqsproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

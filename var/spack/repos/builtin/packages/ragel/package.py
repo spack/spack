@@ -15,10 +15,14 @@ class Ragel(AutotoolsPackage):
     recognition of a regular language. Code embedding is done using
     inline operators that do not disrupt the regular language syntax.
     """
+
     homepage = "https://www.colm.net/open-source/ragel"
-    git      = "git://colm.net/ragel.git"
-    url      = "https://www.colm.net/files/ragel/ragel-6.10.tar.gz"
+    git = "git://colm.net/ragel.git"
+    url = "https://www.colm.net/files/ragel/ragel-6.10.tar.gz"
 
-    version('6.10', sha256='5f156edb65d20b856d638dd9ee2dfb43285914d9aa2b6ec779dac0270cd56c3f')
+    version(
+        "6.10",
+        sha256="5f156edb65d20b856d638dd9ee2dfb43285914d9aa2b6ec779dac0270cd56c3f",
+    )
 
-    depends_on('colm', type='build')
+    depends_on("colm", type="build")

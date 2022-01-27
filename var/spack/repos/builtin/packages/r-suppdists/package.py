@@ -14,9 +14,12 @@ class RSuppdists(RPackage):
     distributions."""
 
     homepage = "https://cloud.r-project.org/package=SuppDists"
-    url      = "https://cloud.r-project.org/src/contrib/SuppDists_1.1-9.5.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/SuppDists_1.1-9.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SuppDists"
 
-    version('1.1-9.5', sha256='680b67145c07d44e200275e08e48602fe19cd99fb106c05422b3f4a244c071c4')
+    version(
+        "1.1-9.5",
+        sha256="680b67145c07d44e200275e08e48602fe19cd99fb106c05422b3f4a244c071c4",
+    )
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))

@@ -12,15 +12,15 @@ class Stinger(CMakePackage):
     to millions of updates per second."""
 
     homepage = "http://www.stingergraph.com/"
-    git      = "https://github.com/stingergraph/stinger.git"
+    git = "https://github.com/stingergraph/stinger.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     parallel = False
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
-            install_tree('./bin', prefix.bin)
-            install_tree('./lib', prefix.lib)
-            install_tree('./include', prefix.include)
-            install_tree('./share', prefix.share)
+            install_tree("./bin", prefix.bin)
+            install_tree("./lib", prefix.lib)
+            install_tree("./include", prefix.include)
+            install_tree("./share", prefix.share)

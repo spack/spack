@@ -10,11 +10,11 @@ class Cotter(CMakePackage):
     """Andre Offringa's cotter pre-processing pipeline."""
 
     homepage = "https://github.com/MWATelescope/cotter"
-    git      = "https://github.com/MWATelescope/cotter.git"
+    git = "https://github.com/MWATelescope/cotter.git"
 
-    version('master', branch='master')
-    version('20190205', commit='b7b07f3298a8d57b9dfff0b72fc21e68b23a42da')
+    version("master", branch="master")
+    version("20190205", commit="b7b07f3298a8d57b9dfff0b72fc21e68b23a42da")
 
-    depends_on('erfa')
-    depends_on('pal')
-    depends_on('aoflagger')
+    depends_on("erfa")
+    depends_on("pal")
+    depends_on("aoflagger")

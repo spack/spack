@@ -12,6 +12,9 @@ class PerlTimedate(PerlPackage):
     modules by David Muir on CPAN."""
 
     homepage = "https://metacpan.org/release/TimeDate"
-    url      = "https://cpan.metacpan.org/authors/id/G/GB/GBARR/TimeDate-2.30.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/G/GB/GBARR/TimeDate-2.30.tar.gz"
 
-    version('2.30', sha256='75bd254871cb5853a6aa0403ac0be270cdd75c9d1b6639f18ecba63c15298e86')
+    version(
+        "2.30",
+        sha256="75bd254871cb5853a6aa0403ac0be270cdd75c9d1b6639f18ecba63c15298e86",
+    )

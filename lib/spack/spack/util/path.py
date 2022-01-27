@@ -21,16 +21,17 @@ import spack.paths
 import spack.util.spack_yaml as syaml
 
 __all__ = [
-    'substitute_config_variables',
-    'substitute_path_variables',
-    'canonicalize_path']
+    "substitute_config_variables",
+    "substitute_path_variables",
+    "canonicalize_path",
+]
 
 # Substitutions to perform
 replacements = {
-    'spack': spack.paths.prefix,
-    'user': getpass.getuser(),
-    'tempdir': tempfile.gettempdir(),
-    'user_cache_path': spack.paths.user_cache_path,
+    "spack": spack.paths.prefix,
+    "user": getpass.getuser(),
+    "tempdir": tempfile.gettempdir(),
+    "user_cache_path": spack.paths.user_cache_path,
 }
 
 # This is intended to be longer than the part of the install path
@@ -50,7 +51,7 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 #: Padded paths comprise directories with this name (or some prefix of it). :
 #: It starts with two underscores to make it unlikely that prefix matches would
 #: include some other component of the intallation path.
-SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
+SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
 @memoized
@@ -58,14 +59,19 @@ def get_system_path_max():
     # Choose a conservative default
     sys_max_path_length = 256
     try:
-        path_max_proc  = subprocess.Popen(['getconf', 'PATH_MAX', '/'],
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.STDOUT)
+        path_max_proc = subprocess.Popen(
+            ["getconf", "PATH_MAX", "/"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
         proc_output = str(path_max_proc.communicate()[0].decode())
         sys_max_path_length = int(proc_output)
     except (ValueError, subprocess.CalledProcessError, OSError):
-        tty.msg('Unable to find system max path length, using: {0}'.format(
-            sys_max_path_length))
+        tty.msg(
+            "Unable to find system max path length, using: {0}".format(
+                sys_max_path_length
+            )
+        )
 
     return sys_max_path_length
 
@@ -87,20 +93,21 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
+
     env = ev.active_environment()
     if env:
-        replacements.update({'env': env.path})
+        replacements.update({"env": env.path})
     else:
         # If a previous invocation added env, remove it
-        replacements.pop('env', None)
+        replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip('${}')
+        m = match.group(0).strip("${}")
         return replacements.get(m.lower(), match.group(0))
 
     # Replace $var or ${var}.
-    return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
+    return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
 def substitute_path_variables(path):
@@ -186,7 +193,7 @@ def longest_prefix_re(string, capture=True):
     return "(%s%s%s?)" % (
         "" if capture else "?:",
         string[0],
-        longest_prefix_re(string[1:], capture=False)
+        longest_prefix_re(string[1:], capture=False),
     )
 
 
@@ -221,7 +228,7 @@ def padding_filter(string):
         longest_prefix = longest_prefix_re(pad)
         regex = (
             r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
-            r"(/{pad})+"         # the padding string repeated one or more times
+            r"(/{pad})+"  # the padding string repeated one or more times
             r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
         )
         regex = regex.replace("/", os.sep)
@@ -232,8 +239,9 @@ def padding_filter(string):
         return "%s%s[padded-to-%d-chars]" % (
             match.group(1),
             os.sep,
-            len(match.group(0))
+            len(match.group(0)),
         )
+
     return _filter_re.sub(replacer, string)
 
 

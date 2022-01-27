@@ -15,7 +15,10 @@ class Xineramaproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/xineramaproto"
     xorg_mirror_path = "proto/xineramaproto-1.2.1.tar.gz"
 
-    version('1.2.1', sha256='d99e121edf7b310008d7371ac5dbe3aa2810996d476b754dc78477cc26e5e7c1')
+    version(
+        "1.2.1",
+        sha256="d99e121edf7b310008d7371ac5dbe3aa2810996d476b754dc78477cc26e5e7c1",
+    )
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

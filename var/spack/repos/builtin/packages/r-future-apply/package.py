@@ -18,14 +18,20 @@ class RFutureApply(RPackage):
     framework."""
 
     homepage = "https://github.com/HenrikBengtsson/future.apply"
-    url      = "https://cloud.r-project.org/src/contrib/future.apply_1.3.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/future.apply_1.3.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/future.apply"
 
-    version('1.7.0', sha256='2ffa6adb55f239918ce9679b7eac8dcc4bf2e6bed35c9cbedf4bf90d906345db')
-    version('1.3.0', sha256='6374eca49bb81e05c013509c8e324cf9c5d023f9f8217b29ce7b7e12025ca371')
+    version(
+        "1.7.0",
+        sha256="2ffa6adb55f239918ce9679b7eac8dcc4bf2e6bed35c9cbedf4bf90d906345db",
+    )
+    version(
+        "1.3.0",
+        sha256="6374eca49bb81e05c013509c8e324cf9c5d023f9f8217b29ce7b7e12025ca371",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-future@1.13.0:', type=('build', 'run'))
-    depends_on('r-future@1.17.0:', when='@1.7.0:', type=('build', 'run'))
-    depends_on('r-globals@0.12.4:', type=('build', 'run'))
-    depends_on('r-globals@0.12.5:', when='@1.7.0:', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-future@1.13.0:", type=("build", "run"))
+    depends_on("r-future@1.17.0:", when="@1.7.0:", type=("build", "run"))
+    depends_on("r-globals@0.12.4:", type=("build", "run"))
+    depends_on("r-globals@0.12.5:", when="@1.7.0:", type=("build", "run"))

@@ -16,10 +16,24 @@ class RDbi(RPackage):
     homepage = "https://dbi.r-dbi.org"
     cran = "DBI"
 
-    version('1.1.1', sha256='572ab3b8a6421d0ac3e7665c4c842826f1723af98fca25d4f43edb419e771344')
-    version('1.1.0', sha256='a96db7fa39a58f1ed34c6e78d8f5f7e4cf0882afb301323b5c6975d6729203e4')
-    version('1.0.0', sha256='ff16f118eb3f759183441835e932b87358dd80ab9800ce576a8f3df1b6f01cf5')
-    version('0.4-1', sha256='eff14a9af4975f23f8e1f4347d82c33c32c0b4f4f3e11370c582a89aeb8ac68e')
-    version('0.7', sha256='2557d5d59a45620ec9de340c2c25eec4cc478d3fc3f8b87979cf337c5bcfde11')
+    version(
+        "1.1.1",
+        sha256="572ab3b8a6421d0ac3e7665c4c842826f1723af98fca25d4f43edb419e771344",
+    )
+    version(
+        "1.1.0",
+        sha256="a96db7fa39a58f1ed34c6e78d8f5f7e4cf0882afb301323b5c6975d6729203e4",
+    )
+    version(
+        "1.0.0",
+        sha256="ff16f118eb3f759183441835e932b87358dd80ab9800ce576a8f3df1b6f01cf5",
+    )
+    version(
+        "0.4-1",
+        sha256="eff14a9af4975f23f8e1f4347d82c33c32c0b4f4f3e11370c582a89aeb8ac68e",
+    )
+    version(
+        "0.7", sha256="2557d5d59a45620ec9de340c2c25eec4cc478d3fc3f8b87979cf337c5bcfde11"
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))

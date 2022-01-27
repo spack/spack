@@ -8,13 +8,15 @@ from spack import *
 
 
 class PyHtmlgen(PythonPackage):
-    """Library to generate HTML from classes.
-    """
+    """Library to generate HTML from classes."""
 
     homepage = "https://github.com/srittau/python-htmlgen"
-    url      = "https://github.com/srittau/python-htmlgen/archive/v1.2.2.tar.gz"
+    url = "https://github.com/srittau/python-htmlgen/archive/v1.2.2.tar.gz"
 
-    version('1.2.2', sha256='9dc60e10511f0fd13014659514c6c333498c21779173deb585cd4964ea667770')
+    version(
+        "1.2.2",
+        sha256="9dc60e10511f0fd13014659514c6c333498c21779173deb585cd4964ea667770",
+    )
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

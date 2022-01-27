@@ -30,8 +30,8 @@ ssb::2048:1:AAAAAAAAAAAAAAAA:AAAAAAAAAA::::::::::
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
-    assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-    assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+    assert keys[0] == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    assert keys[1] == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 
 
 def test_parse_gpg_output_case_two():
@@ -47,7 +47,7 @@ grp:::::::::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 1
-    assert keys[0] == 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    assert keys[0] == "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 
 def test_parse_gpg_output_case_three():
@@ -66,28 +66,28 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
     keys = spack.util.gpg._parse_secret_keys_output(output)
 
     assert len(keys) == 2
-    assert keys[0] == 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'
-    assert keys[1] == 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
+    assert keys[0] == "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+    assert keys[1] == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 
 
-@pytest.mark.requires_executables('gpg2')
+@pytest.mark.requires_executables("gpg2")
 def test_really_long_gnupghome_dir(tmpdir, has_socket_dir):
     if not has_socket_dir:
-        pytest.skip('This test requires /var/run/user/$(id -u)')
+        pytest.skip("This test requires /var/run/user/$(id -u)")
 
     N = 960
     tdir = str(tmpdir)
     while len(tdir) < N:
-        tdir = os.path.join(tdir, 'filler')
+        tdir = os.path.join(tdir, "filler")
 
     tdir = tdir[:N].rstrip(os.sep)
-    tdir += '0' * (N - len(tdir))
+    tdir += "0" * (N - len(tdir))
 
     with spack.util.gpg.gnupghome_override(tdir):
         spack.util.gpg.create(
-            name='Spack testing 1',
-            email='test@spack.io',
-            comment='Spack testing key',
-            expires='0'
+            name="Spack testing 1",
+            email="test@spack.io",
+            comment="Spack testing key",
+            expires="0",
         )
         spack.util.gpg.list(True, True)

@@ -19,9 +19,9 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content1 = content1.replace(spec1.package.__class__.__name__, "TestPackage")
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    content2 = content2.replace(spec2.package.__class__.__name__, "TestPackage")
     if eq:
         assert content1 == content2
     else:
@@ -30,11 +30,11 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content1 = content1.replace(spec1.package.__class__.__name__, "TestPackage")
     hash1 = spec1.package.content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    content2 = content2.replace(spec2.package.__class__.__name__, "TestPackage")
     hash2 = spec2.package.content_hash(content=content2)
 
     if eq:
@@ -104,13 +104,13 @@ def test_content_hash_different_variants(mock_packages, config):
 
 def test_content_hash_cannot_get_details_from_ast(mock_packages, config):
     """Packages hash-test1 and hash-test3 would be considered the same
-       except that hash-test3 conditionally executes a phase based on
-       a "when" directive that Spack cannot evaluate by examining the
-       AST. This test ensures that Spack can compute a content hash
-       for hash-test3. If Spack cannot determine when a phase applies,
-       it adds it by default, so the test also ensures that the hashes
-       differ where Spack includes a phase on account of AST-examination
-       failure.
+    except that hash-test3 conditionally executes a phase based on
+    a "when" directive that Spack cannot evaluate by examining the
+    AST. This test ensures that Spack can compute a content hash
+    for hash-test3. If Spack cannot determine when a phase applies,
+    it adds it by default, so the test also ensures that the hashes
+    differ where Spack includes a phase on account of AST-examination
+    failure.
     """
     spec3 = Spec("hash-test1@1.7").concretized()
     spec4 = Spec("hash-test3@1.7").concretized()
@@ -190,9 +190,9 @@ class HasManyDirectives:
         pass
 
 {directives}
-""".format(directives="\n".join(
-    "    %s()" % name for name in spack.directives.directive_names
-))
+""".format(
+    directives="\n".join("    %s()" % name for name in spack.directives.directive_names)
+)
 
 
 def test_remove_all_directives():
@@ -310,23 +310,26 @@ def test_remove_complex_package_logic_filtered():
     assert unparsed == complex_package_logic_filtered
 
 
-@pytest.mark.parametrize("package_spec,expected_hash", [
-    ("amdfftw",      "tivb752zddjgvfkogfs7cnnvp5olj6co"),
-    ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-    ("llvm",         "g3hoqf4rhprd3da7byp5nzco6tcwliiy"),
-    # has @when("@4.1.0") and raw unicode literals
-    ("mfem",         "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-    ("mfem@4.0.0",   "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
-    ("mfem@4.1.0",   "gxastq64to74qt4he4knpyjfdhh5auel"),
-    # has @when("@1.5.0:")
-    ("py-torch",     "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-    ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-    ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
-    # has a print with multiple arguments
-    ("legion",       "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
-    # has nested `with when()` blocks and loops
-    ("trilinos",     "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
-])
+@pytest.mark.parametrize(
+    "package_spec,expected_hash",
+    [
+        ("amdfftw", "tivb752zddjgvfkogfs7cnnvp5olj6co"),
+        ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
+        ("llvm", "g3hoqf4rhprd3da7byp5nzco6tcwliiy"),
+        # has @when("@4.1.0") and raw unicode literals
+        ("mfem", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+        ("mfem@4.0.0", "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
+        ("mfem@4.1.0", "gxastq64to74qt4he4knpyjfdhh5auel"),
+        # has @when("@1.5.0:")
+        ("py-torch", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+        ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
+        ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
+        # has a print with multiple arguments
+        ("legion", "zdpawm4avw3fllxcutvmqb5c3bj5twqt"),
+        # has nested `with when()` blocks and loops
+        ("trilinos", "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
+    ],
+)
 def test_package_hash_consistency(package_spec, expected_hash):
     """Ensure that that package hash is consistent python version to version.
 

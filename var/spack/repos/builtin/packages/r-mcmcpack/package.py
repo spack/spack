@@ -18,13 +18,16 @@ class RMcmcpack(RPackage):
     Metropolis sampling algorithm, and tools for visualization are provided."""
 
     homepage = "https://cran.r-project.org/package=MCMCpack"
-    cran     = "MCMCpack"
+    cran = "MCMCpack"
 
-    version('1.5-0', sha256='795ffd3d62bf14d3ecb3f5307bd329cd75798cf4b270ff0e768bc71a35de0ace')
+    version(
+        "1.5-0",
+        sha256="795ffd3d62bf14d3ecb3f5307bd329cd75798cf4b270ff0e768bc71a35de0ace",
+    )
 
-    depends_on('r@3.6:', type=('build', 'run'))
-    depends_on('r-coda@0.11-3:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-mcmc', type=('build', 'run'))
-    depends_on('r-quantreg', type=('build', 'run'))
+    depends_on("r@3.6:", type=("build", "run"))
+    depends_on("r-coda@0.11-3:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-mcmc", type=("build", "run"))
+    depends_on("r-quantreg", type=("build", "run"))

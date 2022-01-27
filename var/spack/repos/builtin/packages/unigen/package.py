@@ -16,18 +16,20 @@ class Unigen(MakefilePackage):
     generic root format."""
 
     homepage = "https://www.gsi.de/work/wissenschaftliche_netzwerke/helmholtz_virtuelle_institute/unigen.htm"
-    url      = "https://github.com/FairRootGroup/UniGen/archive/v2.3.tar.gz"
+    url = "https://github.com/FairRootGroup/UniGen/archive/v2.3.tar.gz"
 
-    tags = ['hep']
+    tags = ["hep"]
 
-    version('2.3', sha256='8783bcabbdf8c50dab6e93153cff9cfb267a9a9e61aef51bf1e17679ba42a717')
-    patch('unigen-2.3.patch', level=0)
+    version(
+        "2.3", sha256="8783bcabbdf8c50dab6e93153cff9cfb267a9a9e61aef51bf1e17679ba42a717"
+    )
+    patch("unigen-2.3.patch", level=0)
 
-    depends_on('root', type=('build', 'link'))
+    depends_on("root", type=("build", "link"))
 
     def build(self, spec, prefix):
-        mkdirp(join_path(self.build_directory, 'lib'))
-        make('TOPDIR=' + self.build_directory, 'all')
+        mkdirp(join_path(self.build_directory, "lib"))
+        make("TOPDIR=" + self.build_directory, "all")
 
     def install(self, spec, prefix):
-        make('DESTDIR=' + prefix, 'TOPDIR=' + self.build_directory, 'install')
+        make("DESTDIR=" + prefix, "TOPDIR=" + self.build_directory, "install")

@@ -36,7 +36,7 @@ class CachedCMakePackage(CMakePackage):
     sidestep certain parsing bugs in extremely long ``cmake`` commands, and to
     avoid system limits on the length of the command line."""
 
-    phases = ['initconfig', 'cmake', 'build', 'install']
+    phases = ["initconfig", "cmake", "build", "install"]
 
     @property
     def cache_name(self):
@@ -52,7 +52,7 @@ class CachedCMakePackage(CMakePackage):
         return os.path.join(self.stage.source_path, self.cache_name)
 
     def flag_handler(self, name, flags):
-        if name in ('cflags', 'cxxflags', 'cppflags', 'fflags'):
+        if name in ("cflags", "cxxflags", "cppflags", "fflags"):
             return (None, None, None)  # handled in the cmake cache
         return (flags, None, None)
 
@@ -65,9 +65,11 @@ class CachedCMakePackage(CMakePackage):
         # Fortran compiler is optional
         if "FC" in os.environ:
             spack_fc_entry = cmake_cache_path(
-                "CMAKE_Fortran_COMPILER", os.environ['FC'])
+                "CMAKE_Fortran_COMPILER", os.environ["FC"]
+            )
             system_fc_entry = cmake_cache_path(
-                "CMAKE_Fortran_COMPILER", self.compiler.fc)
+                "CMAKE_Fortran_COMPILER", self.compiler.fc
+            )
         else:
             spack_fc_entry = "# No Fortran compiler defined in spec"
             system_fc_entry = "# No Fortran compiler defined in spec"
@@ -78,33 +80,29 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}".format("-" * 60),
             "# Compiler Spec: {0}".format(spec.compiler),
             "#------------------{0}".format("-" * 60),
-            'if(DEFINED ENV{SPACK_CC})\n',
-            '  ' + cmake_cache_path(
-                "CMAKE_C_COMPILER", os.environ['CC']),
-            '  ' + cmake_cache_path(
-                "CMAKE_CXX_COMPILER", os.environ['CXX']),
-            '  ' + spack_fc_entry,
-            'else()\n',
-            '  ' + cmake_cache_path(
-                "CMAKE_C_COMPILER", self.compiler.cc),
-            '  ' + cmake_cache_path(
-                "CMAKE_CXX_COMPILER", self.compiler.cxx),
-            '  ' + system_fc_entry,
-            'endif()\n'
+            "if(DEFINED ENV{SPACK_CC})\n",
+            "  " + cmake_cache_path("CMAKE_C_COMPILER", os.environ["CC"]),
+            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", os.environ["CXX"]),
+            "  " + spack_fc_entry,
+            "else()\n",
+            "  " + cmake_cache_path("CMAKE_C_COMPILER", self.compiler.cc),
+            "  " + cmake_cache_path("CMAKE_CXX_COMPILER", self.compiler.cxx),
+            "  " + system_fc_entry,
+            "endif()\n",
         ]
 
         # use global spack compiler flags
-        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        cppflags = " ".join(spec.compiler_flags["cppflags"])
         if cppflags:
             # avoid always ending up with ' ' with no flags defined
-            cppflags += ' '
-        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+            cppflags += " "
+        cflags = cppflags + " ".join(spec.compiler_flags["cflags"])
         if cflags:
             entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
-        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
         if cxxflags:
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
-        fflags = ' '.join(spec.compiler_flags['fflags'])
+        fflags = " ".join(spec.compiler_flags["fflags"])
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
 
@@ -113,7 +111,7 @@ class CachedCMakePackage(CMakePackage):
     def initconfig_mpi_entries(self):
         spec = self.spec
 
-        if not spec.satisfies('^mpi'):
+        if not spec.satisfies("^mpi"):
             return []
 
         entries = [
@@ -122,32 +120,27 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        entries.append(cmake_cache_path("MPI_C_COMPILER",
-                                        spec['mpi'].mpicc))
-        entries.append(cmake_cache_path("MPI_CXX_COMPILER",
-                                        spec['mpi'].mpicxx))
-        entries.append(cmake_cache_path("MPI_Fortran_COMPILER",
-                                        spec['mpi'].mpifc))
+        entries.append(cmake_cache_path("MPI_C_COMPILER", spec["mpi"].mpicc))
+        entries.append(cmake_cache_path("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
+        entries.append(cmake_cache_path("MPI_Fortran_COMPILER", spec["mpi"].mpifc))
 
         # Check for slurm
         using_slurm = False
-        slurm_checks = ['+slurm',
-                        'schedulers=slurm',
-                        'process_managers=slurm']
-        if any(spec['mpi'].satisfies(variant) for variant in slurm_checks):
+        slurm_checks = ["+slurm", "schedulers=slurm", "process_managers=slurm"]
+        if any(spec["mpi"].satisfies(variant) for variant in slurm_checks):
             using_slurm = True
 
         # Determine MPIEXEC
         if using_slurm:
-            if spec['mpi'].external:
+            if spec["mpi"].external:
                 # Heuristic until we have dependents on externals
-                mpiexec = '/usr/bin/srun'
+                mpiexec = "/usr/bin/srun"
             else:
-                mpiexec = os.path.join(spec['slurm'].prefix.bin, 'srun')
+                mpiexec = os.path.join(spec["slurm"].prefix.bin, "srun")
         else:
-            mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
+            mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpirun")
             if not os.path.exists(mpiexec):
-                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
+                mpiexec = os.path.join(spec["mpi"].prefix.bin, "mpiexec")
 
         if not os.path.exists(mpiexec):
             msg = "Unable to determine MPIEXEC, %s tests may fail" % self.name
@@ -156,9 +149,8 @@ class CachedCMakePackage(CMakePackage):
         else:
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
             # vs the older versions which expect MPIEXEC
-            if self.spec["cmake"].satisfies('@3.10:'):
-                entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE",
-                                                mpiexec))
+            if self.spec["cmake"].satisfies("@3.10:"):
+                entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", mpiexec))
             else:
                 entries.append(cmake_cache_path("MPIEXEC", mpiexec))
 
@@ -179,24 +171,26 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        if spec.satisfies('^cuda'):
+        if spec.satisfies("^cuda"):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))
 
-            cudatoolkitdir = spec['cuda'].prefix
-            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR",
-                                            cudatoolkitdir))
+            cudatoolkitdir = spec["cuda"].prefix
+            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
-            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER",
-                                            cudacompiler))
+            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
 
-            if spec.satisfies('^mpi'):
-                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
-                                                "${MPI_CXX_COMPILER}"))
+            if spec.satisfies("^mpi"):
+                entries.append(
+                    cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${MPI_CXX_COMPILER}")
+                )
             else:
-                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
-                                                "${CMAKE_CXX_COMPILER}"))
+                entries.append(
+                    cmake_cache_path(
+                        "CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"
+                    )
+                )
 
         return entries
 
@@ -205,30 +199,31 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}".format("-" * 60),
             "# !!!! This is a generated file, edit at own risk !!!!",
             "#------------------{0}".format("-" * 60),
-            "# CMake executable path: {0}".format(
-                self.spec['cmake'].command.path),
+            "# CMake executable path: {0}".format(self.spec["cmake"].command.path),
             "#------------------{0}\n".format("-" * 60),
         ]
 
     def initconfig(self, spec, prefix):
-        cache_entries = (self.std_initconfig_entries() +
-                         self.initconfig_compiler_entries() +
-                         self.initconfig_mpi_entries() +
-                         self.initconfig_hardware_entries() +
-                         self.initconfig_package_entries())
+        cache_entries = (
+            self.std_initconfig_entries()
+            + self.initconfig_compiler_entries()
+            + self.initconfig_mpi_entries()
+            + self.initconfig_hardware_entries()
+            + self.initconfig_package_entries()
+        )
 
-        with open(self.cache_name, 'w') as f:
+        with open(self.cache_name, "w") as f:
             for entry in cache_entries:
-                f.write('%s\n' % entry)
-            f.write('\n')
+                f.write("%s\n" % entry)
+            f.write("\n")
 
     @property
     def std_cmake_args(self):
         args = super(CachedCMakePackage, self).std_cmake_args
-        args.extend(['-C', self.cache_path])
+        args.extend(["-C", self.cache_path])
         return args
 
-    @run_after('install')
+    @run_after("install")
     def install_cmake_cache(self):
         mkdirp(self.spec.prefix.share.cmake)
         install(self.cache_path, self.spec.prefix.share.cmake)

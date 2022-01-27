@@ -36,66 +36,86 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subcommand')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 
     # Parse
-    parse_parser = sp.add_parser('parse', help='attempt to parse a url')
+    parse_parser = sp.add_parser("parse", help="attempt to parse a url")
 
+    parse_parser.add_argument("url", help="url to parse")
     parse_parser.add_argument(
-        'url',
-        help='url to parse')
-    parse_parser.add_argument(
-        '-s', '--spider', action='store_true',
-        help='spider the source page for versions')
+        "-s",
+        "--spider",
+        action="store_true",
+        help="spider the source page for versions",
+    )
 
     # List
-    list_parser = sp.add_parser('list', help='list urls in all packages')
+    list_parser = sp.add_parser("list", help="list urls in all packages")
 
     list_parser.add_argument(
-        '-c', '--color', action='store_true',
-        help='color the parsed version and name in the urls shown '
-             '(versions will be cyan, name red)')
+        "-c",
+        "--color",
+        action="store_true",
+        help="color the parsed version and name in the urls shown "
+        "(versions will be cyan, name red)",
+    )
     list_parser.add_argument(
-        '-e', '--extrapolation', action='store_true',
-        help='color the versions used for extrapolation as well '
-             '(additional versions will be green, names magenta)')
+        "-e",
+        "--extrapolation",
+        action="store_true",
+        help="color the versions used for extrapolation as well "
+        "(additional versions will be green, names magenta)",
+    )
 
     excl_args = list_parser.add_mutually_exclusive_group()
 
     excl_args.add_argument(
-        '-n', '--incorrect-name', action='store_true',
-        help='only list urls for which the name was incorrectly parsed')
+        "-n",
+        "--incorrect-name",
+        action="store_true",
+        help="only list urls for which the name was incorrectly parsed",
+    )
     excl_args.add_argument(
-        '-N', '--correct-name', action='store_true',
-        help='only list urls for which the name was correctly parsed')
+        "-N",
+        "--correct-name",
+        action="store_true",
+        help="only list urls for which the name was correctly parsed",
+    )
     excl_args.add_argument(
-        '-v', '--incorrect-version', action='store_true',
-        help='only list urls for which the version was incorrectly parsed')
+        "-v",
+        "--incorrect-version",
+        action="store_true",
+        help="only list urls for which the version was incorrectly parsed",
+    )
     excl_args.add_argument(
-        '-V', '--correct-version', action='store_true',
-        help='only list urls for which the version was correctly parsed')
+        "-V",
+        "--correct-version",
+        action="store_true",
+        help="only list urls for which the version was correctly parsed",
+    )
 
     # Summary
     sp.add_parser(
-        'summary',
-        help='print a summary of how well we are parsing package urls')
+        "summary", help="print a summary of how well we are parsing package urls"
+    )
 
     # Stats
     stats_parser = sp.add_parser(
-        'stats',
-        help='print statistics on versions and checksums for all packages')
+        "stats", help="print statistics on versions and checksums for all packages"
+    )
     stats_parser.add_argument(
-        "--show-issues", action="store_true",
-        help="show packages with issues (md5 hashes, http urls)"
+        "--show-issues",
+        action="store_true",
+        help="show packages with issues (md5 hashes, http urls)",
     )
 
 
 def url(parser, args):
     action = {
-        'parse':   url_parse,
-        'list':    url_list,
-        'summary': url_summary,
-        'stats':   url_stats,
+        "parse": url_parse,
+        "list": url_list,
+        "summary": url_summary,
+        "stats": url_stats,
     }
 
     action[args.subcommand](args)
@@ -104,43 +124,43 @@ def url(parser, args):
 def url_parse(args):
     url = args.url
 
-    tty.msg('Parsing URL: {0}'.format(url))
+    tty.msg("Parsing URL: {0}".format(url))
     print()
 
-    ver,  vs, vl, vi, vregex = parse_version_offset(url)
-    tty.msg('Matched version regex {0:>2}: r{1!r}'.format(vi, vregex))
+    ver, vs, vl, vi, vregex = parse_version_offset(url)
+    tty.msg("Matched version regex {0:>2}: r{1!r}".format(vi, vregex))
 
     name, ns, nl, ni, nregex = parse_name_offset(url, ver)
-    tty.msg('Matched  name   regex {0:>2}: r{1!r}'.format(ni, nregex))
+    tty.msg("Matched  name   regex {0:>2}: r{1!r}".format(ni, nregex))
 
     print()
-    tty.msg('Detected:')
+    tty.msg("Detected:")
     try:
         print_name_and_version(url)
     except UrlParseError as e:
         tty.error(str(e))
 
-    print('    name:    {0}'.format(name))
-    print('    version: {0}'.format(ver))
+    print("    name:    {0}".format(name))
+    print("    version: {0}".format(ver))
     print()
 
-    tty.msg('Substituting version 9.9.9b:')
-    newurl = substitute_version(url, '9.9.9b')
+    tty.msg("Substituting version 9.9.9b:")
+    newurl = substitute_version(url, "9.9.9b")
     print_name_and_version(newurl)
 
     if args.spider:
         print()
-        tty.msg('Spidering for versions:')
+        tty.msg("Spidering for versions:")
         versions = find_versions_of_archive(url)
 
         if not versions:
-            print('  Found no versions for {0}'.format(name))
+            print("  Found no versions for {0}".format(name))
             return
 
         max_len = max(len(str(v)) for v in versions)
 
         for v in sorted(versions):
-            print('{0:{1}}  {2}'.format(v, max_len, versions[v]))
+            print("{0:{1}}  {2}".format(v, max_len, versions[v]))
 
 
 def url_list(args):
@@ -148,11 +168,11 @@ def url_list(args):
 
     # Gather set of URLs from all packages
     for pkg in spack.repo.path.all_packages():
-        url = getattr(pkg, 'url', None)
+        url = getattr(pkg, "url", None)
         urls = url_list_parsing(args, urls, url, pkg)
 
         for params in pkg.versions.values():
-            url = params.get('url', None)
+            url = params.get("url", None)
             urls = url_list_parsing(args, urls, url, pkg)
 
     # Print URLs
@@ -168,31 +188,31 @@ def url_list(args):
 
 def url_summary(args):
     # Collect statistics on how many URLs were correctly parsed
-    total_urls       = 0
-    correct_names    = 0
+    total_urls = 0
+    correct_names = 0
     correct_versions = 0
 
     # Collect statistics on which regexes were matched and how often
-    name_regex_dict     = dict()
-    right_name_count    = defaultdict(int)
-    wrong_name_count    = defaultdict(int)
+    name_regex_dict = dict()
+    right_name_count = defaultdict(int)
+    wrong_name_count = defaultdict(int)
 
-    version_regex_dict  = dict()
+    version_regex_dict = dict()
     right_version_count = defaultdict(int)
     wrong_version_count = defaultdict(int)
 
-    tty.msg('Generating a summary of URL parsing in Spack...')
+    tty.msg("Generating a summary of URL parsing in Spack...")
 
     # Loop through all packages
     for pkg in spack.repo.path.all_packages():
         urls = set()
 
-        url = getattr(pkg, 'url', None)
+        url = getattr(pkg, "url", None)
         if url:
             urls.add(url)
 
         for params in pkg.versions.values():
-            url = params.get('url', None)
+            url = params.get("url", None)
             if url:
                 urls.add(url)
 
@@ -226,44 +246,59 @@ def url_summary(args):
                 pass
 
     print()
-    print('    Total URLs found:          {0}'.format(total_urls))
-    print('    Names correctly parsed:    {0:>4}/{1:>4} ({2:>6.2%})'.format(
-        correct_names, total_urls, correct_names / total_urls))
-    print('    Versions correctly parsed: {0:>4}/{1:>4} ({2:>6.2%})'.format(
-        correct_versions, total_urls, correct_versions / total_urls))
+    print("    Total URLs found:          {0}".format(total_urls))
+    print(
+        "    Names correctly parsed:    {0:>4}/{1:>4} ({2:>6.2%})".format(
+            correct_names, total_urls, correct_names / total_urls
+        )
+    )
+    print(
+        "    Versions correctly parsed: {0:>4}/{1:>4} ({2:>6.2%})".format(
+            correct_versions, total_urls, correct_versions / total_urls
+        )
+    )
     print()
 
-    tty.msg('Statistics on name regular expressions:')
+    tty.msg("Statistics on name regular expressions:")
 
     print()
-    print('    Index   Right   Wrong   Total   Regular Expression')
+    print("    Index   Right   Wrong   Total   Regular Expression")
     for ni in sorted(name_regex_dict.keys()):
-        print('    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}'.format(
-            ni,
-            right_name_count[ni],
-            wrong_name_count[ni],
-            right_name_count[ni] + wrong_name_count[ni],
-            name_regex_dict[ni])
+        print(
+            "    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}".format(
+                ni,
+                right_name_count[ni],
+                wrong_name_count[ni],
+                right_name_count[ni] + wrong_name_count[ni],
+                name_regex_dict[ni],
+            )
         )
     print()
 
-    tty.msg('Statistics on version regular expressions:')
+    tty.msg("Statistics on version regular expressions:")
 
     print()
-    print('    Index   Right   Wrong   Total   Regular Expression')
+    print("    Index   Right   Wrong   Total   Regular Expression")
     for vi in sorted(version_regex_dict.keys()):
-        print('    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}'.format(
-            vi,
-            right_version_count[vi],
-            wrong_version_count[vi],
-            right_version_count[vi] + wrong_version_count[vi],
-            version_regex_dict[vi])
+        print(
+            "    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}".format(
+                vi,
+                right_version_count[vi],
+                wrong_version_count[vi],
+                right_version_count[vi] + wrong_version_count[vi],
+                version_regex_dict[vi],
+            )
         )
     print()
 
     # Return statistics, only for testing purposes
-    return (total_urls, correct_names, correct_versions,
-            right_name_count, right_version_count)
+    return (
+        total_urls,
+        correct_names,
+        correct_versions,
+        right_name_count,
+        right_version_count,
+    )
 
 
 def url_stats(args):
@@ -282,14 +317,14 @@ def url_stats(args):
             self.total += 1
 
             url_type = fetcher.url_attr
-            self.url_type[url_type or 'no code'] += 1
+            self.url_type[url_type or "no code"] += 1
 
-            if url_type == 'url':
-                digest = getattr(fetcher, 'digest', None)
+            if url_type == "url":
+                digest = getattr(fetcher, "digest", None)
                 if digest:
                     algo = crypto.hash_algo_for_digest(digest)
                 else:
-                    algo = 'no checksum'
+                    algo = "no checksum"
                 self.checksums[algo] += 1
 
                 if algo == "md5":
@@ -304,15 +339,15 @@ def url_stats(args):
                     http_urls = issues["http urls"]
                     http_urls[pkg_name].append(fetcher.url)
 
-            elif url_type == 'git':
-                if getattr(fetcher, 'commit', None):
-                    self.git_type['commit'] += 1
-                elif getattr(fetcher, 'branch', None):
-                    self.git_type['branch'] += 1
-                elif getattr(fetcher, 'tag', None):
-                    self.git_type['tag'] += 1
+            elif url_type == "git":
+                if getattr(fetcher, "commit", None):
+                    self.git_type["commit"] += 1
+                elif getattr(fetcher, "branch", None):
+                    self.git_type["branch"] += 1
+                elif getattr(fetcher, "tag", None):
+                    self.git_type["tag"] += 1
                 else:
-                    self.git_type['no ref'] += 1
+                    self.git_type["no ref"] += 1
 
     npkgs = 0
     version_stats = UrlStats()
@@ -348,9 +383,16 @@ def url_stats(args):
             fmt += "%12d%8.1f%%%12d%8.1f%%"
             v = getattr(version_stats, stat_name).get(name, 0)
             r = getattr(resource_stats, stat_name).get(name, 0)
-            print(fmt % (name,
-                         v, v / version_stats.total * 100,
-                         r, r / resource_stats.total * 100))
+            print(
+                fmt
+                % (
+                    name,
+                    v,
+                    v / version_stats.total * 100,
+                    r,
+                    r / resource_stats.total * 100,
+                )
+            )
 
     print_line()
     print("%-20s%12s%9s%12s%9s" % ("stat", "versions", "%", "resources", "%"))
@@ -404,14 +446,14 @@ def print_name_and_version(url):
         url (str): The url to parse
     """
     name, ns, nl, ntup, ver, vs, vl, vtup = substitution_offsets(url)
-    underlines = [' '] * max(ns + nl, vs + vl)
+    underlines = [" "] * max(ns + nl, vs + vl)
     for i in range(ns, ns + nl):
-        underlines[i] = '-'
+        underlines[i] = "-"
     for i in range(vs, vs + vl):
-        underlines[i] = '~'
+        underlines[i] = "~"
 
-    print('    {0}'.format(url))
-    print('    {0}'.format(''.join(underlines)))
+    print("    {0}".format(url))
+    print("    {0}".format("".join(underlines)))
 
 
 def url_list_parsing(args, urls, url, pkg):
@@ -432,12 +474,10 @@ def url_list_parsing(args, urls, url, pkg):
             # Attempt to parse the name
             try:
                 name = parse_name(url)
-                if (args.correct_name and
-                    name_parsed_correctly(pkg, name)):
+                if args.correct_name and name_parsed_correctly(pkg, name):
                     # Add correctly parsed URLs
                     urls.add(url)
-                elif (args.incorrect_name and
-                      not name_parsed_correctly(pkg, name)):
+                elif args.incorrect_name and not name_parsed_correctly(pkg, name):
                     # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableNameError:
@@ -448,12 +488,12 @@ def url_list_parsing(args, urls, url, pkg):
             # Attempt to parse the version
             try:
                 version = parse_version(url)
-                if (args.correct_version and
-                    version_parsed_correctly(pkg, version)):
+                if args.correct_version and version_parsed_correctly(pkg, version):
                     # Add correctly parsed URLs
                     urls.add(url)
-                elif (args.incorrect_version and
-                      not version_parsed_correctly(pkg, version)):
+                elif args.incorrect_version and not version_parsed_correctly(
+                    pkg, version
+                ):
                     # Add incorrectly parsed URLs
                     urls.add(url)
             except UndetectableVersionError:
@@ -519,13 +559,22 @@ def remove_prefix(pkg_name):
         str: the name of the package with any build system prefix removed
     """
     prefixes = [
-        'r-', 'py-', 'tcl-', 'lua-', 'perl-', 'ruby-', 'llvm-',
-        'intel-', 'votca-', 'octave-', 'gtkorvo-'
+        "r-",
+        "py-",
+        "tcl-",
+        "lua-",
+        "perl-",
+        "ruby-",
+        "llvm-",
+        "intel-",
+        "votca-",
+        "octave-",
+        "gtkorvo-",
     ]
 
-    prefix = next((p for p in prefixes if pkg_name.startswith(p)), '')
+    prefix = next((p for p in prefixes if pkg_name.startswith(p)), "")
 
-    return pkg_name[len(prefix):]
+    return pkg_name[len(prefix) :]
 
 
 def remove_separators(version):
@@ -543,8 +592,8 @@ def remove_separators(version):
     """
     version = str(version)
 
-    version = version.replace('.', '')
-    version = version.replace('_', '')
-    version = version.replace('-', '')
+    version = version.replace(".", "")
+    version = version.replace("_", "")
+    version = version.replace("-", "")
 
     return version

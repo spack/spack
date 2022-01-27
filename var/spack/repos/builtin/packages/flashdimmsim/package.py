@@ -8,23 +8,24 @@ from spack import *
 
 class Flashdimmsim(Package):
     """FlashDIMMSim: a reasonably accurate flash DIMM simulator."""
+
     homepage = "https://github.com/slunk/FlashDIMMSim"
-    git      = "https://github.com/slunk/FlashDIMMSim.git"
+    git = "https://github.com/slunk/FlashDIMMSim.git"
 
-    version('master',  branch='master')
+    version("master", branch="master")
 
-    build_directory = 'src'
+    build_directory = "src"
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
-            make()               # build program
-            make('libfdsim.so')  # build shared library
+            make()  # build program
+            make("libfdsim.so")  # build shared library
 
             mkdir(prefix.bin)
             mkdir(prefix.lib)
             mkdir(prefix.include)
 
-            install_tree('ini', join_path(prefix, 'ini'))
-            install('FDSim', prefix.bin)
-            install('libfdsim.so', prefix.lib)
-            install('*.h', prefix.include)
+            install_tree("ini", join_path(prefix, "ini"))
+            install("FDSim", prefix.bin)
+            install("libfdsim.so", prefix.lib)
+            install("*.h", prefix.include)

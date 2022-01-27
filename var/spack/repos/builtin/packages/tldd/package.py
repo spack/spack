@@ -10,19 +10,18 @@ class Tldd(MakefilePackage):
     """A program similar to ldd(1) but showing the output as a tree."""
 
     homepage = "https://gitlab.com/miscripts/tldd"
-    git      = "https://gitlab.com/miscripts/tldd.git"
+    git = "https://gitlab.com/miscripts/tldd.git"
 
-    version('2018-10-05', commit='61cb512cc992ea6cbb7239e99ec7ac92ea072507')
-    version('master', branch='master')
+    version("2018-10-05", commit="61cb512cc992ea6cbb7239e99ec7ac92ea072507")
+    version("master", branch="master")
 
-    depends_on('pstreams@0.8.0:')
+    depends_on("pstreams@0.8.0:")
 
     def patch(self):
         filter_file(
-            r'#include <pstreams/pstream.h>',
-            r'#include <pstream.h>',
-            'tldd.cc')
+            r"#include <pstreams/pstream.h>", r"#include <pstream.h>", "tldd.cc"
+        )
 
     @property
     def install_targets(self):
-        return ['install', 'PREFIX={0}'.format(self.prefix)]
+        return ["install", "PREFIX={0}".format(self.prefix)]

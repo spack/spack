@@ -17,7 +17,9 @@ def _cmp_raises_type_error(self, other):
     other operators at all.
     """
     __tracebackhide__ = True
-    raise TypeError('Comparison operators other than == and != not supported by approx objects')
+    raise TypeError(
+        "Comparison operators other than == and != not supported by approx objects"
+    )
 
 
 # builtin pytest.approx helper
@@ -40,8 +42,8 @@ class ApproxBase(object):
 
     def __eq__(self, actual):
         return all(
-            a == self._approx_scalar(x)
-            for a, x in self._yield_comparisons(actual))
+            a == self._approx_scalar(x) for a, x in self._yield_comparisons(actual)
+        )
 
     __hash__ = None
 
@@ -73,8 +75,9 @@ class ApproxNumpy(ApproxBase):
     def __repr__(self):
         # It might be nice to rewrite this function to account for the
         # shape of the array...
-        return "approx({0!r})".format(list(
-            self._approx_scalar(x) for x in self.expected))
+        return "approx({0!r})".format(
+            list(self._approx_scalar(x) for x in self.expected)
+        )
 
     if sys.version_info[0] == 2:
         __cmp__ = _cmp_raises_type_error
@@ -109,9 +112,9 @@ class ApproxMapping(ApproxBase):
     """
 
     def __repr__(self):
-        return "approx({0!r})".format(dict(
-            (k, self._approx_scalar(v))
-            for k, v in self.expected.items()))
+        return "approx({0!r})".format(
+            dict((k, self._approx_scalar(v)) for k, v in self.expected.items())
+        )
 
     def __eq__(self, actual):
         if set(actual.keys()) != set(self.expected.keys()):
@@ -136,8 +139,9 @@ class ApproxSequence(ApproxBase):
         seq_type = type(self.expected)
         if seq_type not in (tuple, list, set):
             seq_type = list
-        return "approx({0!r})".format(seq_type(
-            self._approx_scalar(x) for x in self.expected))
+        return "approx({0!r})".format(
+            seq_type(self._approx_scalar(x) for x in self.expected)
+        )
 
     def __eq__(self, actual):
         if len(actual) != len(self.expected):
@@ -171,14 +175,14 @@ class ApproxScalar(ApproxBase):
         # If a sensible tolerance can't be calculated, self.tolerance will
         # raise a ValueError.  In this case, display '???'.
         try:
-            vetted_tolerance = '{:.1e}'.format(self.tolerance)
+            vetted_tolerance = "{:.1e}".format(self.tolerance)
         except ValueError:
-            vetted_tolerance = '???'
+            vetted_tolerance = "???"
 
         if sys.version_info[0] == 2:
-            return '{0} +- {1}'.format(self.expected, vetted_tolerance)
+            return "{0} +- {1}".format(self.expected, vetted_tolerance)
         else:
-            return u'{0} \u00b1 {1}'.format(self.expected, vetted_tolerance)
+            return u"{0} \u00b1 {1}".format(self.expected, vetted_tolerance)
 
     def __eq__(self, actual):
         """
@@ -217,6 +221,7 @@ class ApproxScalar(ApproxBase):
         absolute tolerance or a relative tolerance, depending on what the user
         specified or which would be larger.
         """
+
         def set_default(x, default):
             return x if x is not None else default
 
@@ -225,7 +230,9 @@ class ApproxScalar(ApproxBase):
         absolute_tolerance = set_default(self.abs, 1e-12)
 
         if absolute_tolerance < 0:
-            raise ValueError("absolute tolerance can't be negative: {0}".format(absolute_tolerance))
+            raise ValueError(
+                "absolute tolerance can't be negative: {0}".format(absolute_tolerance)
+            )
         if math.isnan(absolute_tolerance):
             raise ValueError("absolute tolerance can't be NaN.")
 
@@ -243,7 +250,9 @@ class ApproxScalar(ApproxBase):
         relative_tolerance = set_default(self.rel, 1e-6) * abs(self.expected)
 
         if relative_tolerance < 0:
-            raise ValueError("relative tolerance can't be negative: {0}".format(absolute_tolerance))
+            raise ValueError(
+                "relative tolerance can't be negative: {0}".format(absolute_tolerance)
+            )
         if math.isnan(relative_tolerance):
             raise ValueError("relative tolerance can't be NaN.")
 
@@ -438,9 +447,10 @@ def _is_numpy_array(obj):
     import inspect
 
     for cls in inspect.getmro(type(obj)):
-        if cls.__module__ == 'numpy':
+        if cls.__module__ == "numpy":
             try:
                 import numpy as np
+
                 return isinstance(obj, np.ndarray)
             except ImportError:
                 pass
@@ -449,6 +459,7 @@ def _is_numpy_array(obj):
 
 
 # builtin pytest.raises helper
+
 
 def raises(expected_exception, *args, **kwargs):
     """
@@ -553,8 +564,9 @@ def raises(expected_exception, *args, **kwargs):
 
     """
     __tracebackhide__ = True
-    msg = ("exceptions must be old-style classes or"
-           " derived from BaseException, not %s")
+    msg = (
+        "exceptions must be old-style classes or" " derived from BaseException, not %s"
+    )
     if isinstance(expected_exception, tuple):
         for exc in expected_exception:
             if not isclass(exc):
@@ -573,7 +585,7 @@ def raises(expected_exception, *args, **kwargs):
             message += " matching '{0}'".format(match_expr)
         return RaisesContext(expected_exception, message, match_expr)
     elif isinstance(args[0], str):
-        code, = args
+        (code,) = args
         assert isinstance(code, str)
         frame = sys._getframe(1)
         loc = frame.f_locals.copy()

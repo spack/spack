@@ -15,12 +15,17 @@ class RMatr(RPackage):
     environment for statistical computing."""
 
     homepage = "https://github.com/MG-RAST/matR"
-    url      = "https://cloud.r-project.org/src/contrib/matR_0.9.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/matR_0.9.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/matR"
 
-    version('0.9.1', sha256='554aeff37b27d0f17ddeb62b2e1004aa1f29190300e4946b1bec1d7c2bde82e3')
-    version('0.9', sha256='5750e6a876cf85fe66038292adefbfcb18e2584fa2e841f39dbe67f3c51b3052')
+    version(
+        "0.9.1",
+        sha256="554aeff37b27d0f17ddeb62b2e1004aa1f29190300e4946b1bec1d7c2bde82e3",
+    )
+    version(
+        "0.9", sha256="5750e6a876cf85fe66038292adefbfcb18e2584fa2e841f39dbe67f3c51b3052"
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-mgraster', type=('build', 'run'))
-    depends_on('r-biom-utils', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-mgraster", type=("build", "run"))
+    depends_on("r-biom-utils", type=("build", "run"))

@@ -8,11 +8,11 @@ from _pytest._code.code import ExceptionInfo, ReprFileLocation, TerminalRepr
 from _pytest.fixtures import FixtureRequest
 
 
-DOCTEST_REPORT_CHOICE_NONE = 'none'
-DOCTEST_REPORT_CHOICE_CDIFF = 'cdiff'
-DOCTEST_REPORT_CHOICE_NDIFF = 'ndiff'
-DOCTEST_REPORT_CHOICE_UDIFF = 'udiff'
-DOCTEST_REPORT_CHOICE_ONLY_FIRST_FAILURE = 'only_first_failure'
+DOCTEST_REPORT_CHOICE_NONE = "none"
+DOCTEST_REPORT_CHOICE_CDIFF = "cdiff"
+DOCTEST_REPORT_CHOICE_NDIFF = "ndiff"
+DOCTEST_REPORT_CHOICE_UDIFF = "udiff"
+DOCTEST_REPORT_CHOICE_ONLY_FIRST_FAILURE = "only_first_failure"
 
 DOCTEST_REPORT_CHOICES = (
     DOCTEST_REPORT_CHOICE_NONE,
@@ -24,27 +24,46 @@ DOCTEST_REPORT_CHOICES = (
 
 
 def pytest_addoption(parser):
-    parser.addini('doctest_optionflags', 'option flags for doctests',
-                  type="args", default=["ELLIPSIS"])
-    parser.addini("doctest_encoding", 'encoding used for doctest files', default="utf-8")
+    parser.addini(
+        "doctest_optionflags",
+        "option flags for doctests",
+        type="args",
+        default=["ELLIPSIS"],
+    )
+    parser.addini(
+        "doctest_encoding", "encoding used for doctest files", default="utf-8"
+    )
     group = parser.getgroup("collect")
-    group.addoption("--doctest-modules",
-                    action="store_true", default=False,
-                    help="run doctests in all .py modules",
-                    dest="doctestmodules")
-    group.addoption("--doctest-report",
-                    type=str.lower, default="udiff",
-                    help="choose another output format for diffs on doctest failure",
-                    choices=DOCTEST_REPORT_CHOICES,
-                    dest="doctestreport")
-    group.addoption("--doctest-glob",
-                    action="append", default=[], metavar="pat",
-                    help="doctests file matching pattern, default: test*.txt",
-                    dest="doctestglob")
-    group.addoption("--doctest-ignore-import-errors",
-                    action="store_true", default=False,
-                    help="ignore doctest ImportErrors",
-                    dest="doctest_ignore_import_errors")
+    group.addoption(
+        "--doctest-modules",
+        action="store_true",
+        default=False,
+        help="run doctests in all .py modules",
+        dest="doctestmodules",
+    )
+    group.addoption(
+        "--doctest-report",
+        type=str.lower,
+        default="udiff",
+        help="choose another output format for diffs on doctest failure",
+        choices=DOCTEST_REPORT_CHOICES,
+        dest="doctestreport",
+    )
+    group.addoption(
+        "--doctest-glob",
+        action="append",
+        default=[],
+        metavar="pat",
+        help="doctests file matching pattern, default: test*.txt",
+        dest="doctestglob",
+    )
+    group.addoption(
+        "--doctest-ignore-import-errors",
+        action="store_true",
+        default=False,
+        help="ignore doctest ImportErrors",
+        dest="doctest_ignore_import_errors",
+    )
 
 
 def pytest_collect_file(path, parent):
@@ -57,9 +76,9 @@ def pytest_collect_file(path, parent):
 
 
 def _is_doctest(config, path, parent):
-    if path.ext in ('.txt', '.rst') and parent.session.isinitpath(path):
+    if path.ext in (".txt", ".rst") and parent.session.isinitpath(path):
         return True
-    globs = config.getoption("doctestglob") or ['test*.txt']
+    globs = config.getoption("doctestglob") or ["test*.txt"]
     for glob in globs:
         if path.check(fnmatch=glob):
             return True
@@ -67,7 +86,6 @@ def _is_doctest(config, path, parent):
 
 
 class ReprFailDoctest(TerminalRepr):
-
     def __init__(self, reprlocation, lines):
         self.reprlocation = reprlocation
         self.lines = lines
@@ -90,7 +108,9 @@ class DoctestItem(pytest.Item):
         if self.dtest is not None:
             self.fixture_request = _setup_fixtures(self)
             globs = dict(getfixture=self.fixture_request.getfixturevalue)
-            for name, value in self.fixture_request.getfixturevalue('doctest_namespace').items():
+            for name, value in self.fixture_request.getfixturevalue(
+                "doctest_namespace"
+            ).items():
                 globs[name] = value
             self.dtest.globs.update(globs)
 
@@ -100,8 +120,8 @@ class DoctestItem(pytest.Item):
 
     def repr_failure(self, excinfo):
         import doctest
-        if excinfo.errisinstance((doctest.DocTestFailure,
-                                  doctest.UnexpectedException)):
+
+        if excinfo.errisinstance((doctest.DocTestFailure, doctest.UnexpectedException)):
             doctestfailure = excinfo.value
             example = doctestfailure.example
             test = doctestfailure.test
@@ -117,23 +137,26 @@ class DoctestItem(pytest.Item):
             if lineno is not None:
                 lines = doctestfailure.test.docstring.splitlines(False)
                 # add line numbers to the left of the error message
-                lines = ["%03d %s" % (i + test.lineno + 1, x)
-                         for (i, x) in enumerate(lines)]
+                lines = [
+                    "%03d %s" % (i + test.lineno + 1, x) for (i, x) in enumerate(lines)
+                ]
                 # trim docstring error lines to 10
-                lines = lines[max(example.lineno - 9, 0):example.lineno + 1]
+                lines = lines[max(example.lineno - 9, 0) : example.lineno + 1]
             else:
-                lines = ['EXAMPLE LOCATION UNKNOWN, not showing all tests of that example']
-                indent = '>>>'
+                lines = [
+                    "EXAMPLE LOCATION UNKNOWN, not showing all tests of that example"
+                ]
+                indent = ">>>"
                 for line in example.source.splitlines():
-                    lines.append('??? %s %s' % (indent, line))
-                    indent = '...'
+                    lines.append("??? %s %s" % (indent, line))
+                    indent = "..."
             if excinfo.errisinstance(doctest.DocTestFailure):
-                lines += checker.output_difference(example,
-                                                   doctestfailure.got, report_choice).split("\n")
+                lines += checker.output_difference(
+                    example, doctestfailure.got, report_choice
+                ).split("\n")
             else:
                 inner_excinfo = ExceptionInfo(excinfo.value.exc_info)
-                lines += ["UNEXPECTED EXCEPTION: %s" %
-                          repr(inner_excinfo.value)]
+                lines += ["UNEXPECTED EXCEPTION: %s" % repr(inner_excinfo.value)]
                 lines += traceback.format_exception(*excinfo.value.exc_info)
             return ReprFailDoctest(reprlocation, lines)
         else:
@@ -145,15 +168,17 @@ class DoctestItem(pytest.Item):
 
 def _get_flag_lookup():
     import doctest
-    return dict(DONT_ACCEPT_TRUE_FOR_1=doctest.DONT_ACCEPT_TRUE_FOR_1,
-                DONT_ACCEPT_BLANKLINE=doctest.DONT_ACCEPT_BLANKLINE,
-                NORMALIZE_WHITESPACE=doctest.NORMALIZE_WHITESPACE,
-                ELLIPSIS=doctest.ELLIPSIS,
-                IGNORE_EXCEPTION_DETAIL=doctest.IGNORE_EXCEPTION_DETAIL,
-                COMPARISON_FLAGS=doctest.COMPARISON_FLAGS,
-                ALLOW_UNICODE=_get_allow_unicode_flag(),
-                ALLOW_BYTES=_get_allow_bytes_flag(),
-                )
+
+    return dict(
+        DONT_ACCEPT_TRUE_FOR_1=doctest.DONT_ACCEPT_TRUE_FOR_1,
+        DONT_ACCEPT_BLANKLINE=doctest.DONT_ACCEPT_BLANKLINE,
+        NORMALIZE_WHITESPACE=doctest.NORMALIZE_WHITESPACE,
+        ELLIPSIS=doctest.ELLIPSIS,
+        IGNORE_EXCEPTION_DETAIL=doctest.IGNORE_EXCEPTION_DETAIL,
+        COMPARISON_FLAGS=doctest.COMPARISON_FLAGS,
+        ALLOW_UNICODE=_get_allow_unicode_flag(),
+        ALLOW_BYTES=_get_allow_bytes_flag(),
+    )
 
 
 def get_optionflags(parent):
@@ -177,11 +202,12 @@ class DoctestTextfile(pytest.Module):
         text = self.fspath.read_text(encoding)
         filename = str(self.fspath)
         name = self.fspath.basename
-        globs = {'__name__': '__main__'}
+        globs = {"__name__": "__main__"}
 
         optionflags = get_optionflags(self)
-        runner = doctest.DebugRunner(verbose=0, optionflags=optionflags,
-                                     checker=_get_checker())
+        runner = doctest.DebugRunner(
+            verbose=0, optionflags=optionflags, checker=_get_checker()
+        )
         _fix_spoof_python2(runner, encoding)
 
         parser = doctest.DocTestParser()
@@ -195,29 +221,32 @@ def _check_all_skipped(test):
     option set.
     """
     import doctest
+
     all_skipped = all(x.options.get(doctest.SKIP, False) for x in test.examples)
     if all_skipped:
-        pytest.skip('all tests skipped by +SKIP option')
+        pytest.skip("all tests skipped by +SKIP option")
 
 
 class DoctestModule(pytest.Module):
     def collect(self):
         import doctest
+
         if self.fspath.basename == "conftest.py":
             module = self.config.pluginmanager._importconftest(self.fspath)
         else:
             try:
                 module = self.fspath.pyimport()
             except ImportError:
-                if self.config.getvalue('doctest_ignore_import_errors'):
-                    pytest.skip('unable to import module %r' % self.fspath)
+                if self.config.getvalue("doctest_ignore_import_errors"):
+                    pytest.skip("unable to import module %r" % self.fspath)
                 else:
                     raise
         # uses internal doctest module parsing mechanism
         finder = doctest.DocTestFinder()
         optionflags = get_optionflags(self)
-        runner = doctest.DebugRunner(verbose=0, optionflags=optionflags,
-                                     checker=_get_checker())
+        runner = doctest.DebugRunner(
+            verbose=0, optionflags=optionflags, checker=_get_checker()
+        )
 
         for test in finder.find(module, module.__name__):
             if test.examples:  # skip empty doctests
@@ -228,13 +257,15 @@ def _setup_fixtures(doctest_item):
     """
     Used by DoctestTextfile and DoctestItem to setup fixture information.
     """
+
     def func():
         pass
 
     doctest_item.funcargs = {}
     fm = doctest_item.session._fixturemanager
-    doctest_item._fixtureinfo = fm.getfixtureinfo(node=doctest_item, func=func,
-                                                  cls=None, funcargs=False)
+    doctest_item._fixtureinfo = fm.getfixtureinfo(
+        node=doctest_item, func=func, cls=None, funcargs=False
+    )
     fixture_request = FixtureRequest(doctest_item)
     fixture_request._fillfixtures()
     return fixture_request
@@ -250,7 +281,7 @@ def _get_checker():
     An inner class is used to avoid importing "doctest" at the module
     level.
     """
-    if hasattr(_get_checker, 'LiteralsOutputChecker'):
+    if hasattr(_get_checker, "LiteralsOutputChecker"):
         return _get_checker.LiteralsOutputChecker()
 
     import doctest
@@ -268,8 +299,7 @@ def _get_checker():
         _bytes_literal_re = re.compile(r"(\W|^)[bB]([rR]?[\'\"])", re.UNICODE)
 
         def check_output(self, want, got, optionflags):
-            res = doctest.OutputChecker.check_output(self, want, got,
-                                                     optionflags)
+            res = doctest.OutputChecker.check_output(self, want, got, optionflags)
             if res:
                 return True
 
@@ -279,8 +309,9 @@ def _get_checker():
                 return False
 
             else:  # pragma: no cover
+
                 def remove_prefixes(regex, txt):
-                    return re.sub(regex, r'\1\2', txt)
+                    return re.sub(regex, r"\1\2", txt)
 
                 if allow_unicode:
                     want = remove_prefixes(self._unicode_literal_re, want)
@@ -288,8 +319,7 @@ def _get_checker():
                 if allow_bytes:
                     want = remove_prefixes(self._bytes_literal_re, want)
                     got = remove_prefixes(self._bytes_literal_re, got)
-                res = doctest.OutputChecker.check_output(self, want, got,
-                                                         optionflags)
+                res = doctest.OutputChecker.check_output(self, want, got, optionflags)
                 return res
 
     _get_checker.LiteralsOutputChecker = LiteralsOutputChecker
@@ -301,7 +331,8 @@ def _get_allow_unicode_flag():
     Registers and returns the ALLOW_UNICODE flag.
     """
     import doctest
-    return doctest.register_optionflag('ALLOW_UNICODE')
+
+    return doctest.register_optionflag("ALLOW_UNICODE")
 
 
 def _get_allow_bytes_flag():
@@ -309,7 +340,8 @@ def _get_allow_bytes_flag():
     Registers and returns the ALLOW_BYTES flag.
     """
     import doctest
-    return doctest.register_optionflag('ALLOW_BYTES')
+
+    return doctest.register_optionflag("ALLOW_BYTES")
 
 
 def _get_report_choice(key):
@@ -338,13 +370,13 @@ def _fix_spoof_python2(runner, encoding):
     This fixes the problem related in issue #2434.
     """
     from _pytest.compat import _PY2
+
     if not _PY2:
         return
 
     from doctest import _SpoofOut
 
     class UnicodeSpoof(_SpoofOut):
-
         def getvalue(self):
             result = _SpoofOut.getvalue(self)
             if encoding:
@@ -354,7 +386,7 @@ def _fix_spoof_python2(runner, encoding):
     runner._fakeout = UnicodeSpoof()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def doctest_namespace():
     """
     Inject names into the doctest namespace.

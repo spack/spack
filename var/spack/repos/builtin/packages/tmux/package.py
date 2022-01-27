@@ -17,27 +17,72 @@ class Tmux(AutotoolsPackage):
     homepage = "https://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
-    version('3.2a', sha256='551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f')
-    version('3.2', sha256='664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399')
-    version('3.1c', sha256='918f7220447bef33a1902d4faff05317afd9db4ae1c9971bef5c787ac6c88386')
-    version('3.1b', sha256='d93f351d50af05a75fe6681085670c786d9504a5da2608e481c47cf5e1486db9')
-    version('3.1a', sha256='10687cbb02082b8b9e076cf122f1b783acc2157be73021b4bedb47e958f4e484')
-    version('3.1', sha256='979bf38db2c36193de49149aaea5c540d18e01ccc27cf76e2aff5606bd186722')
-    version('3.0a', sha256='4ad1df28b4afa969e59c08061b45082fdc49ff512f30fc8e43217d7b0e5f8db9')
-    version('3.0', sha256='9edcd78df80962ee2e6471a8f647602be5ded62bb41c574172bb3dc3d0b9b4b4')
-    version('2.9a', sha256='839d167a4517a6bffa6b6074e89a9a8630547b2dea2086f1fad15af12ab23b25')
-    version('2.9', sha256='34901232f486fd99f3a39e864575e658b5d49f43289ccc6ee57c365f2e2c2980')
-    version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
-    version('2.7', sha256='9ded7d100313f6bc5a87404a4048b3745d61f2332f99ec1400a7c4ed9485d452')
-    version('2.6', sha256='b17cd170a94d7b58c0698752e1f4f263ab6dc47425230df7e53a6435cc7cd7e8')
-    version('2.5', sha256='ae135ec37c1bf6b7750a84e3a35e93d91033a806943e034521c8af51b12d95df')
-    version('2.4', sha256='757d6b13231d0d9dd48404968fc114ac09e005d475705ad0cd4b7166f799b349')
-    version('2.3', sha256='55313e132f0f42de7e020bf6323a1939ee02ab79c48634aa07475db41573852b')
-    version('2.2', sha256='bc28541b64f99929fe8e3ae7a02291263f3c97730781201824c0f05d7c8e19e4')
-    version('2.1', sha256='31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176')
-    version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
+    version(
+        "3.2a",
+        sha256="551553a4f82beaa8dadc9256800bcc284d7c000081e47aa6ecbb6ff36eacd05f",
+    )
+    version(
+        "3.2", sha256="664d345338c11cbe429d7ff939b92a5191e231a7c1ef42f381cebacb1e08a399"
+    )
+    version(
+        "3.1c",
+        sha256="918f7220447bef33a1902d4faff05317afd9db4ae1c9971bef5c787ac6c88386",
+    )
+    version(
+        "3.1b",
+        sha256="d93f351d50af05a75fe6681085670c786d9504a5da2608e481c47cf5e1486db9",
+    )
+    version(
+        "3.1a",
+        sha256="10687cbb02082b8b9e076cf122f1b783acc2157be73021b4bedb47e958f4e484",
+    )
+    version(
+        "3.1", sha256="979bf38db2c36193de49149aaea5c540d18e01ccc27cf76e2aff5606bd186722"
+    )
+    version(
+        "3.0a",
+        sha256="4ad1df28b4afa969e59c08061b45082fdc49ff512f30fc8e43217d7b0e5f8db9",
+    )
+    version(
+        "3.0", sha256="9edcd78df80962ee2e6471a8f647602be5ded62bb41c574172bb3dc3d0b9b4b4"
+    )
+    version(
+        "2.9a",
+        sha256="839d167a4517a6bffa6b6074e89a9a8630547b2dea2086f1fad15af12ab23b25",
+    )
+    version(
+        "2.9", sha256="34901232f486fd99f3a39e864575e658b5d49f43289ccc6ee57c365f2e2c2980"
+    )
+    version(
+        "2.8", sha256="7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba"
+    )
+    version(
+        "2.7", sha256="9ded7d100313f6bc5a87404a4048b3745d61f2332f99ec1400a7c4ed9485d452"
+    )
+    version(
+        "2.6", sha256="b17cd170a94d7b58c0698752e1f4f263ab6dc47425230df7e53a6435cc7cd7e8"
+    )
+    version(
+        "2.5", sha256="ae135ec37c1bf6b7750a84e3a35e93d91033a806943e034521c8af51b12d95df"
+    )
+    version(
+        "2.4", sha256="757d6b13231d0d9dd48404968fc114ac09e005d475705ad0cd4b7166f799b349"
+    )
+    version(
+        "2.3", sha256="55313e132f0f42de7e020bf6323a1939ee02ab79c48634aa07475db41573852b"
+    )
+    version(
+        "2.2", sha256="bc28541b64f99929fe8e3ae7a02291263f3c97730781201824c0f05d7c8e19e4"
+    )
+    version(
+        "2.1", sha256="31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176"
+    )
+    version(
+        "1.9a",
+        sha256="c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5",
+    )
 
     # used by configure to e.g. find libtinfo
-    depends_on('pkgconfig', type='build')
-    depends_on('libevent')
-    depends_on('ncurses')
+    depends_on("pkgconfig", type="build")
+    depends_on("libevent")
+    depends_on("ncurses")

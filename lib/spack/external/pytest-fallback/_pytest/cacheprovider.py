@@ -34,7 +34,7 @@ class Cache(object):
             return config.rootdir.join(cache_dir)
 
     def makedir(self, name):
-        """ return a directory path object with the given name.  If the
+        """return a directory path object with the given name.  If the
         directory does not yet exist, it will be created.  You can use it
         to manage files likes e. g. store/retrieve database
         dumps across test sessions.
@@ -48,10 +48,10 @@ class Cache(object):
         return self._cachedir.ensure_dir("d", name)
 
     def _getvaluepath(self, key):
-        return self._cachedir.join('v', *key.split('/'))
+        return self._cachedir.join("v", *key.split("/"))
 
     def get(self, key, default):
-        """ return cached value for the given key.  If no value
+        """return cached value for the given key.  If no value
         was yet cached or the value cannot be read, the specified
         default is returned.
 
@@ -71,7 +71,7 @@ class Cache(object):
         return default
 
     def set(self, key, value):
-        """ save value for the given key.
+        """save value for the given key.
 
         :param key: must be a ``/`` separated value. Usually the first
              name is the name of your plugin or your application.
@@ -84,26 +84,33 @@ class Cache(object):
             path.dirpath().ensure_dir()
         except (py.error.EEXIST, py.error.EACCES):
             self.config.warn(
-                code='I9', message='could not create cache path %s' % (path,)
+                code="I9", message="could not create cache path %s" % (path,)
             )
             return
         try:
-            f = path.open('w')
+            f = path.open("w")
         except py.error.ENOTDIR:
             self.config.warn(
-                code='I9', message='cache could not write path %s' % (path,))
+                code="I9", message="cache could not write path %s" % (path,)
+            )
         else:
             with f:
-                self.trace("cache-write %s: %r" % (key, value,))
+                self.trace(
+                    "cache-write %s: %r"
+                    % (
+                        key,
+                        value,
+                    )
+                )
                 json.dump(value, f, indent=2, sort_keys=True)
 
 
 class LFPlugin:
-    """ Plugin which implements the --lf (run last-failing) option """
+    """Plugin which implements the --lf (run last-failing) option"""
 
     def __init__(self, config):
         self.config = config
-        active_keys = 'lf', 'failedfirst'
+        active_keys = "lf", "failedfirst"
         self.active = any(config.getvalue(key) for key in active_keys)
         self.lastfailed = config.cache.get("cache/lastfailed", {})
         self._previously_failed_count = None
@@ -113,7 +120,7 @@ class LFPlugin:
             if not self._previously_failed_count:
                 mode = "run all (no recorded failures)"
             else:
-                noun = 'failure' if self._previously_failed_count == 1 else 'failures'
+                noun = "failure" if self._previously_failed_count == 1 else "failures"
                 suffix = " first" if self.config.getvalue("failedfirst") else ""
                 mode = "rerun previous {count} {noun}{suffix}".format(
                     count=self._previously_failed_count, suffix=suffix, noun=noun
@@ -121,19 +128,17 @@ class LFPlugin:
             return "run-last-failure: %s" % mode
 
     def pytest_runtest_logreport(self, report):
-        if (report.when == 'call' and report.passed) or report.skipped:
+        if (report.when == "call" and report.passed) or report.skipped:
             self.lastfailed.pop(report.nodeid, None)
         elif report.failed:
             self.lastfailed[report.nodeid] = True
 
     def pytest_collectreport(self, report):
-        passed = report.outcome in ('passed', 'skipped')
+        passed = report.outcome in ("passed", "skipped")
         if passed:
             if report.nodeid in self.lastfailed:
                 self.lastfailed.pop(report.nodeid)
-                self.lastfailed.update(
-                    (item.nodeid, True)
-                    for item in report.result)
+                self.lastfailed.update((item.nodeid, True) for item in report.result)
         else:
             self.lastfailed[report.nodeid] = True
 
@@ -170,28 +175,41 @@ class LFPlugin:
 def pytest_addoption(parser):
     group = parser.getgroup("general")
     group.addoption(
-        '--lf', '--last-failed', action='store_true', dest="lf",
+        "--lf",
+        "--last-failed",
+        action="store_true",
+        dest="lf",
         help="rerun only the tests that failed "
-             "at the last run (or all if none failed)")
+        "at the last run (or all if none failed)",
+    )
     group.addoption(
-        '--ff', '--failed-first', action='store_true', dest="failedfirst",
+        "--ff",
+        "--failed-first",
+        action="store_true",
+        dest="failedfirst",
         help="run all tests but run the last failures first.  "
-             "This may re-order tests and thus lead to "
-             "repeated fixture setup/teardown")
+        "This may re-order tests and thus lead to "
+        "repeated fixture setup/teardown",
+    )
     group.addoption(
-        '--cache-show', action='store_true', dest="cacheshow",
-        help="show cache contents, don't perform collection or tests")
+        "--cache-show",
+        action="store_true",
+        dest="cacheshow",
+        help="show cache contents, don't perform collection or tests",
+    )
     group.addoption(
-        '--cache-clear', action='store_true', dest="cacheclear",
-        help="remove all cache contents at start of test run.")
-    parser.addini(
-        "cache_dir", default='.cache',
-        help="cache directory path.")
+        "--cache-clear",
+        action="store_true",
+        dest="cacheclear",
+        help="remove all cache contents at start of test run.",
+    )
+    parser.addini("cache_dir", default=".cache", help="cache directory path.")
 
 
 def pytest_cmdline_main(config):
     if config.option.cacheshow:
         from _pytest.main import wrap_session
+
         return wrap_session(config, cacheshow)
 
 
@@ -225,6 +243,7 @@ def pytest_report_header(config):
 
 def cacheshow(config, session):
     from pprint import pprint
+
     tw = py.io.TerminalWriter()
     tw.line("cachedir: " + str(config.cache._cachedir))
     if not config.cache._cachedir.check():
@@ -238,8 +257,7 @@ def cacheshow(config, session):
         key = valpath.relto(vdir).replace(valpath.sep, "/")
         val = config.cache.get(key, dummy)
         if val is dummy:
-            tw.line("%s contains unreadable content, "
-                    "will be ignored" % key)
+            tw.line("%s contains unreadable content, " "will be ignored" % key)
         else:
             tw.line("%s contains:" % key)
             stream = py.io.TextIO()
@@ -255,6 +273,5 @@ def cacheshow(config, session):
             #    print("%s/" % p.relto(basedir))
             if p.isfile():
                 key = p.relto(basedir)
-                tw.line("%s is a file of length %d" % (
-                        key, p.size()))
+                tw.line("%s is a file of length %d" % (key, p.size()))
     return 0

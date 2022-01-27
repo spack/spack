@@ -12,6 +12,9 @@ class PerlDbi(PerlPackage):
     database interface independent of the actual database being used."""
 
     homepage = "https://dbi.perl.org/"
-    url      = "http://search.cpan.org/CPAN/authors/id/T/TI/TIMB/DBI-1.636.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/T/TI/TIMB/DBI-1.636.tar.gz"
 
-    version('1.636',  sha256='8f7ddce97c04b4b7a000e65e5d05f679c964d62c8b02c94c1a7d815bb2dd676c')
+    version(
+        "1.636",
+        sha256="8f7ddce97c04b4b7a000e65e5d05f679c964d62c8b02c94c1a7d815bb2dd676c",
+    )

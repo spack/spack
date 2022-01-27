@@ -12,7 +12,10 @@ class PyPythonEditor(PythonPackage):
 
     pypi = "python-editor/python-editor-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='51fda6bcc5ddbbb7063b2af7509e43bd84bfc32a4ff71349ec7847713882327b')
+    version(
+        "1.0.4",
+        sha256="51fda6bcc5ddbbb7063b2af7509e43bd84bfc32a4ff71349ec7847713882327b",
+    )
 
-    depends_on('python@2.7.0:2.7,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7.0:2.7,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -17,17 +17,20 @@ class RCaretensemble(RPackage):
     models using a GLM."""
 
     homepage = "https://github.com/zachmayer/caretEnsemble"
-    url      = "https://cloud.r-project.org/src/contrib/caretEnsemble_2.0.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/caretEnsemble_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/caretEnsemble"
 
-    version('2.0.1', sha256='7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88')
+    version(
+        "2.0.1",
+        sha256="7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-pbapply', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
-    depends_on('r-data-table', type=('build', 'run'))
-    depends_on('r-caret', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-pbapply", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
+    depends_on("r-plyr", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))
+    depends_on("r-data-table", type=("build", "run"))
+    depends_on("r-caret", type=("build", "run"))

@@ -21,33 +21,24 @@ from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
 from spack.reporters.junit import JUnit
 
-report_writers = {
-    None: Reporter,
-    'junit': JUnit,
-    'cdash': CDash
-}
+report_writers = {None: Reporter, "junit": JUnit, "cdash": CDash}
 
 #: Allowed report formats
 valid_formats = list(report_writers.keys())
 
-__all__ = [
-    'valid_formats',
-    'collect_info'
-]
+__all__ = ["valid_formats", "collect_info"]
 
 
 def fetch_log(pkg, do_fn, dir):
     log_files = {
-        '_install_task': pkg.build_log_path,
-        'do_test': os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
+        "_install_task": pkg.build_log_path,
+        "do_test": os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
     }
     try:
-        with codecs.open(log_files[do_fn.__name__], 'r', 'utf-8') as f:
-            return ''.join(f.readlines())
+        with codecs.open(log_files[do_fn.__name__], "r", "utf-8") as f:
+            return "".join(f.readlines())
     except Exception:
-        return 'Cannot open log for {0}'.format(
-            pkg.spec.cshort_spec
-        )
+        return "Cannot open log for {0}".format(pkg.spec.cshort_spec)
 
 
 class InfoCollector(object):
@@ -65,6 +56,7 @@ class InfoCollector(object):
         specs (list of Spec): specs whose install information will
            be recorded
     """
+
     def __init__(self, wrap_class, do_fn, specs, dir):
         #: Class for which to wrap a function
         self.wrap_class = wrap_class
@@ -83,45 +75,38 @@ class InfoCollector(object):
     def __enter__(self):
         # Initialize the spec report with the data that is available upfront.
         for input_spec in self.input_specs:
-            name_fmt = '{0}_{1}'
-            name = name_fmt.format(input_spec.name,
-                                   input_spec.dag_hash(length=7))
+            name_fmt = "{0}_{1}"
+            name = name_fmt.format(input_spec.name, input_spec.dag_hash(length=7))
 
             spec = {
-                'name': name,
-                'nerrors': None,
-                'nfailures': None,
-                'npackages': None,
-                'time': None,
-                'timestamp': time.strftime(
-                    "%a, %d %b %Y %H:%M:%S", time.gmtime()
-                ),
-                'properties': [],
-                'packages': []
+                "name": name,
+                "nerrors": None,
+                "nfailures": None,
+                "npackages": None,
+                "time": None,
+                "timestamp": time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime()),
+                "properties": [],
+                "packages": [],
             }
 
             self.specs.append(spec)
 
-            Property = collections.namedtuple('Property', ['name', 'value'])
-            spec['properties'].append(
-                Property('architecture', input_spec.architecture)
-            )
-            spec['properties'].append(
-                Property('compiler', input_spec.compiler))
+            Property = collections.namedtuple("Property", ["name", "value"])
+            spec["properties"].append(Property("architecture", input_spec.architecture))
+            spec["properties"].append(Property("compiler", input_spec.compiler))
 
             # Check which specs are already installed and mark them as skipped
             # only for install_task
-            if self.do_fn == '_install_task':
-                for dep in filter(lambda x: x.package.installed,
-                                  input_spec.traverse()):
+            if self.do_fn == "_install_task":
+                for dep in filter(lambda x: x.package.installed, input_spec.traverse()):
                     package = {
-                        'name': dep.name,
-                        'id': dep.dag_hash(),
-                        'elapsed_time': '0.0',
-                        'result': 'skipped',
-                        'message': 'Spec already installed'
+                        "name": dep.name,
+                        "id": dep.dag_hash(),
+                        "elapsed_time": "0.0",
+                        "result": "skipped",
+                        "message": "Spec already installed",
                     }
-                    spec['packages'].append(package)
+                    spec["packages"].append(package)
 
         def gather_info(do_fn):
             """Decorates do_fn to gather useful information for
@@ -130,11 +115,12 @@ class InfoCollector(object):
             It's defined here to capture the environment and build
             this context as the installations proceed.
             """
+
             @functools.wraps(do_fn)
             def wrapper(instance, *args, **kwargs):
                 if isinstance(instance, spack.package.PackageBase):
                     pkg = instance
-                elif hasattr(args[0], 'pkg'):
+                elif hasattr(args[0], "pkg"):
                     pkg = args[0].pkg
                 else:
                     raise Exception
@@ -143,12 +129,12 @@ class InfoCollector(object):
                 installed_already = pkg.installed
 
                 package = {
-                    'name': pkg.name,
-                    'id': pkg.spec.dag_hash(),
-                    'elapsed_time': None,
-                    'result': None,
-                    'message': None,
-                    'installed_from_binary_cache': False
+                    "name": pkg.name,
+                    "id": pkg.spec.dag_hash(),
+                    "elapsed_time": None,
+                    "result": None,
+                    "message": None,
+                    "installed_from_binary_cache": False,
                 }
 
                 # Append the package to the correct spec report. In some
@@ -159,11 +145,8 @@ class InfoCollector(object):
                 for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
                     name = name_fmt.format(s.name, s.dag_hash(length=7))
                     try:
-                        item = next((
-                            x for x in self.specs
-                            if x['name'] == name
-                        ))
-                        item['packages'].append(package)
+                        item = next((x for x in self.specs if x["name"] == name))
+                        item["packages"].append(package)
                     except StopIteration:
                         pass
 
@@ -171,42 +154,45 @@ class InfoCollector(object):
                 value = None
                 try:
                     value = do_fn(instance, *args, **kwargs)
-                    package['result'] = 'success'
-                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
-                    package['installed_from_binary_cache'] = \
-                        pkg.installed_from_binary_cache
-                    if do_fn.__name__ == '_install_task' and installed_already:
+                    package["result"] = "success"
+                    package["stdout"] = fetch_log(pkg, do_fn, self.dir)
+                    package[
+                        "installed_from_binary_cache"
+                    ] = pkg.installed_from_binary_cache
+                    if do_fn.__name__ == "_install_task" and installed_already:
                         return
 
                 except spack.build_environment.InstallError as e:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
-                    package['result'] = 'failure'
-                    package['message'] = e.message or 'Installation failure'
-                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
-                    package['stdout'] += package['message']
-                    package['exception'] = e.traceback
+                    package["result"] = "failure"
+                    package["message"] = e.message or "Installation failure"
+                    package["stdout"] = fetch_log(pkg, do_fn, self.dir)
+                    package["stdout"] += package["message"]
+                    package["exception"] = e.traceback
                     raise
 
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
-                    package['result'] = 'error'
-                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
-                    package['message'] = str(e) or 'Unknown error'
-                    package['exception'] = traceback.format_exc()
+                    package["result"] = "error"
+                    package["stdout"] = fetch_log(pkg, do_fn, self.dir)
+                    package["message"] = str(e) or "Unknown error"
+                    package["exception"] = traceback.format_exc()
                     raise
 
                 finally:
-                    package['elapsed_time'] = time.time() - start_time
+                    package["elapsed_time"] = time.time() - start_time
 
                 return value
 
             return wrapper
 
-        setattr(self.wrap_class, self.do_fn, gather_info(
-            getattr(self.wrap_class, self.do_fn)
-        ))
+        setattr(
+            self.wrap_class,
+            self.do_fn,
+            gather_info(getattr(self.wrap_class, self.do_fn)),
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
@@ -214,16 +200,14 @@ class InfoCollector(object):
         setattr(self.wrap_class, self.do_fn, self._backup_do_fn)
 
         for spec in self.specs:
-            spec['npackages'] = len(spec['packages'])
-            spec['nfailures'] = len(
-                [x for x in spec['packages'] if x['result'] == 'failure']
+            spec["npackages"] = len(spec["packages"])
+            spec["nfailures"] = len(
+                [x for x in spec["packages"] if x["result"] == "failure"]
             )
-            spec['nerrors'] = len(
-                [x for x in spec['packages'] if x['result'] == 'error']
+            spec["nerrors"] = len(
+                [x for x in spec["packages"] if x["result"] == "error"]
             )
-            spec['time'] = sum([
-                float(x['elapsed_time']) for x in spec['packages']
-            ])
+            spec["time"] = sum([float(x["elapsed_time"]) for x in spec["packages"]])
 
 
 class collect_info(object):
@@ -261,19 +245,19 @@ class collect_info(object):
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
+
     def __init__(self, cls, function, format_name, args):
         self.cls = cls
         self.function = function
         self.filename = None
         if args.cdash_upload_url:
-            self.format_name = 'cdash'
-            self.filename = 'cdash_report'
+            self.format_name = "cdash"
+            self.filename = "cdash_report"
         else:
             self.format_name = format_name
         # Check that the format is valid.
         if self.format_name not in valid_formats:
-            raise ValueError('invalid report type: {0}'
-                             .format(self.format_name))
+            raise ValueError("invalid report type: {0}".format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
     def __call__(self, type, dir=os.getcwd()):
@@ -288,7 +272,8 @@ class collect_info(object):
         if self.format_name:
             # Start the collector and patch self.function on appropriate class
             self.collector = InfoCollector(
-                self.cls, self.function, self.specs, self.dir)
+                self.cls, self.function, self.specs, self.dir
+            )
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -297,6 +282,6 @@ class collect_info(object):
             # original PackageInstaller._install_task
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
-            report_data = {'specs': self.collector.specs}
-            report_fn = getattr(self.report_writer, '%s_report' % self.type)
+            report_data = {"specs": self.collector.specs}
+            report_fn = getattr(self.report_writer, "%s_report" % self.type)
             report_fn(self.filename, report_data)

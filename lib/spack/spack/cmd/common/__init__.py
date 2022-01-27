@@ -35,8 +35,9 @@ def shell_init_instructions(cmd, equivalent):
         color.colorize("@*c{For fish:}"),
         "  source %s/setup-env.fish" % spack.paths.share_path,
         "",
-        "Or, if you do not want to use shell support, run " + (
-            "one of these" if shell_specific else "this") + " instead:",
+        "Or, if you do not want to use shell support, run "
+        + ("one of these" if shell_specific else "this")
+        + " instead:",
         "",
     ]
 
@@ -56,5 +57,5 @@ def shell_init_instructions(cmd, equivalent):
         "without any path components (such as `bin/spack`).",
     ]
 
-    msg += ['']
+    msg += [""]
     tty.error(*msg)

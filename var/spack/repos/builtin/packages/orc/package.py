@@ -11,33 +11,35 @@ class Orc(CMakePackage):
     workloads."""
 
     homepage = "https://orc.apache.org/"
-    url      = "https://github.com/apache/orc/archive/rel/release-1.6.5.tar.gz"
+    url = "https://github.com/apache/orc/archive/rel/release-1.6.5.tar.gz"
 
-    version('1.6.5',  sha256='df5885db8fa2e4435db8d486c6c7fc4e2c565d6197eee27729cf9cbdf36353c0')
+    version(
+        "1.6.5",
+        sha256="df5885db8fa2e4435db8d486c6c7fc4e2c565d6197eee27729cf9cbdf36353c0",
+    )
 
-    depends_on('maven')
-    depends_on('openssl')
-    depends_on('zlib@1.2.11:')
-    depends_on('pcre')
-    depends_on('protobuf@3.5.1:')
-    depends_on('zstd@1.4.5:')
-    depends_on('googletest@1.8.0:')
-    depends_on('snappy@1.1.7:')
-    depends_on('lz4@1.7.5:')
+    depends_on("maven")
+    depends_on("openssl")
+    depends_on("zlib@1.2.11:")
+    depends_on("pcre")
+    depends_on("protobuf@3.5.1:")
+    depends_on("zstd@1.4.5:")
+    depends_on("googletest@1.8.0:")
+    depends_on("snappy@1.1.7:")
+    depends_on("lz4@1.7.5:")
 
-    patch('thirdparty.patch')
+    patch("thirdparty.patch")
 
     def cmake_args(self):
         args = []
-        args.append('-DCMAKE_CXX_FLAGS=' + self.compiler.cxx_pic_flag)
-        args.append('-DCMAKE_C_FLAGS=' + self.compiler.cc_pic_flag)
-        args.append('-DINSTALL_VENDORED_LIBS:BOOL=OFF')
-        args.append('-DBUILD_LIBHDFSPP:BOOL=OFF')
-        args.append('-DBUILD_TOOLS:BOOL=OFF')
-        args.append('-DBUILD_CPP_TESTS:BOOL=OFF')
+        args.append("-DCMAKE_CXX_FLAGS=" + self.compiler.cxx_pic_flag)
+        args.append("-DCMAKE_C_FLAGS=" + self.compiler.cc_pic_flag)
+        args.append("-DINSTALL_VENDORED_LIBS:BOOL=OFF")
+        args.append("-DBUILD_LIBHDFSPP:BOOL=OFF")
+        args.append("-DBUILD_TOOLS:BOOL=OFF")
+        args.append("-DBUILD_CPP_TESTS:BOOL=OFF")
 
-        for x in ('snappy', 'zlib', 'zstd', 'lz4', 'protobuf'):
-            args.append('-D{0}_HOME={1}'.format(x.upper(),
-                                                self.spec[x].prefix))
+        for x in ("snappy", "zlib", "zstd", "lz4", "protobuf"):
+            args.append("-D{0}_HOME={1}".format(x.upper(), self.spec[x].prefix))
 
         return args

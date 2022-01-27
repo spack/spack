@@ -14,9 +14,12 @@ class PyF90wrap(PythonPackage):
     homepage = "https://github.com/jameskermode/f90wrap"
     pypi = "f90wrap/f90wrap-0.2.3.tar.gz"
 
-    version('0.2.3', sha256='5577ea92934c5aad378df21fb0805b5fb433d6f2b8b9c1bf1a9ec1e3bf842cff')
+    version(
+        "0.2.3",
+        sha256="5577ea92934c5aad378df21fb0805b5fb433d6f2b8b9c1bf1a9ec1e3bf842cff",
+    )
 
     # TODO errors with python 3.6 due to UnicodeDecodeError
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.3.0:', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.3.0:", type=("build", "run"))

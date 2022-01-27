@@ -11,16 +11,19 @@ class Distcc(AutotoolsPackage):
     code across several machines on a network."""
 
     homepage = "https://github.com/distcc/distcc"
-    url      = "https://github.com/distcc/distcc/archive/v3.3.3.tar.gz"
+    url = "https://github.com/distcc/distcc/archive/v3.3.3.tar.gz"
 
-    version('3.3.3', sha256='b7f37d314704fbaf006d747514ff6e4d0d722102ef7d2aea132f97cf170f5169')
+    version(
+        "3.3.3",
+        sha256="b7f37d314704fbaf006d747514ff6e4d0d722102ef7d2aea132f97cf170f5169",
+    )
 
-    depends_on('popt')
-    depends_on('libiberty')
+    depends_on("popt")
+    depends_on("libiberty")
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+        bash = which("bash")
+        bash("./autogen.sh")
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path("PATH", self.prefix.sbin)

@@ -8,15 +8,15 @@ from spack import *
 
 class Mlhka(Package):
     """A maximum likelihood ratio test of natural selection, using polymorphism
-       and divergence data."""
+    and divergence data."""
 
     homepage = "https://wright.eeb.utoronto.ca"
-    git      = "https://github.com/rossibarra/MLHKA.git"
+    git = "https://github.com/rossibarra/MLHKA.git"
 
-    version('2.1', commit='e735ddd39073af58da21b00b27dea203736e5467')
+    version("2.1", commit="e735ddd39073af58da21b00b27dea203736e5467")
 
     def install(self, spec, prefix):
-        cxx = which('c++')
-        cxx('MLHKA_version{0}.cpp'.format(self.version), '-o', 'MLHKA')
+        cxx = which("c++")
+        cxx("MLHKA_version{0}.cpp".format(self.version), "-o", "MLHKA")
         mkdirp(prefix.bin)
-        install('MLHKA', prefix.bin)
+        install("MLHKA", prefix.bin)

@@ -18,10 +18,13 @@ class Osi(AutotoolsPackage):
     solvers and has rudimentary support for integer programming."""
 
     homepage = "https://projects.coin-or.org/Osi"
-    url      = "https://github.com/coin-or/Osi/archive/releases/0.108.6.tar.gz"
+    url = "https://github.com/coin-or/Osi/archive/releases/0.108.6.tar.gz"
 
-    depends_on('coinutils')
+    depends_on("coinutils")
 
-    version('0.108.6', sha256='984a5886825e2da9bf44d8a665f4b92812f0700e451c12baf9883eaa2315fad5')
+    version(
+        "0.108.6",
+        sha256="984a5886825e2da9bf44d8a665f4b92812f0700e451c12baf9883eaa2315fad5",
+    )
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

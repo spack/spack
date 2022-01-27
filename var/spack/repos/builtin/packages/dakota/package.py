@@ -25,40 +25,48 @@ class Dakota(CMakePackage):
 
     """
 
-    homepage = 'https://dakota.sandia.gov/'
-    url = 'https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz'
+    homepage = "https://dakota.sandia.gov/"
+    url = "https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.12-release-public.src.tar.gz"
 
-    version('6.12', sha256='4d69f9cbb0c7319384ab9df27643ff6767eb410823930b8fbd56cc9de0885bc9')
-    version('6.9', sha256='989b689278964b96496e3058b8ef5c2724d74bcd232f898fe450c51eba7fe0c2')
-    version('6.3', sha256='0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52')
+    version(
+        "6.12",
+        sha256="4d69f9cbb0c7319384ab9df27643ff6767eb410823930b8fbd56cc9de0885bc9",
+    )
+    version(
+        "6.9", sha256="989b689278964b96496e3058b8ef5c2724d74bcd232f898fe450c51eba7fe0c2"
+    )
+    version(
+        "6.3", sha256="0fbc310105860d77bb5c96de0e8813d75441fca1a5e6dfaf732aa095c4488d52"
+    )
 
-    variant('shared', default=True,
-            description='Enables the build of shared libraries')
-    variant('mpi', default=True, description='Activates MPI support')
+    variant("shared", default=True, description="Enables the build of shared libraries")
+    variant("mpi", default=True, description="Activates MPI support")
 
     # Generic 'lapack' provider won't work, dakota searches for
     # 'LAPACKConfig.cmake' or 'lapack-config.cmake' on the path
-    depends_on('netlib-lapack')
+    depends_on("netlib-lapack")
 
-    depends_on('blas')
-    depends_on('mpi', when='+mpi')
+    depends_on("blas")
+    depends_on("mpi", when="+mpi")
 
-    depends_on('python')
-    depends_on('perl-data-dumper', type='build', when='@6.12:')
-    depends_on('boost@:1.68.0', when='@:6.12')
-    depends_on('cmake@2.8.9:', type='build')
+    depends_on("python")
+    depends_on("perl-data-dumper", type="build", when="@6.12:")
+    depends_on("boost@:1.68.0", when="@:6.12")
+    depends_on("cmake@2.8.9:", type="build")
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
-        if '+mpi' in spec:
-            args.extend([
-                '-DDAKOTA_HAVE_MPI:BOOL=ON',
-                '-DMPI_CXX_COMPILER:STRING=%s' % join_path(spec['mpi'].mpicxx),
-            ])
+        if "+mpi" in spec:
+            args.extend(
+                [
+                    "-DDAKOTA_HAVE_MPI:BOOL=ON",
+                    "-DMPI_CXX_COMPILER:STRING=%s" % join_path(spec["mpi"].mpicxx),
+                ]
+            )
 
         return args

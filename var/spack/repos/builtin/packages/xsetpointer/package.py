@@ -12,11 +12,14 @@ class Xsetpointer(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xsetpointer"
     xorg_mirror_path = "app/xsetpointer-1.0.1.tar.gz"
 
-    version('1.0.1', sha256='54be93b20fd6f1deac67246d6e214a60b02dcfbf05295e43751f7a04edb986ac')
+    version(
+        "1.0.1",
+        sha256="54be93b20fd6f1deac67246d6e214a60b02dcfbf05295e43751f7a04edb986ac",
+    )
 
-    depends_on('libxi', type='link')
-    depends_on('libx11', type='link')
-    depends_on('inputproto@1.4:')
+    depends_on("libxi", type="link")
+    depends_on("libx11", type="link")
+    depends_on("inputproto@1.4:")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

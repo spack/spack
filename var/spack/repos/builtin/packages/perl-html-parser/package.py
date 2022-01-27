@@ -10,8 +10,11 @@ class PerlHtmlParser(PerlPackage):
     """HTML parser class"""
 
     homepage = "https://metacpan.org/pod/HTML::Parser"
-    url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTML-Parser-3.72.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTML-Parser-3.72.tar.gz"
 
-    version('3.72', sha256='ec28c7e1d9e67c45eca197077f7cdc41ead1bb4c538c7f02a3296a4bb92f608b')
+    version(
+        "3.72",
+        sha256="ec28c7e1d9e67c45eca197077f7cdc41ead1bb4c538c7f02a3296a4bb92f608b",
+    )
 
-    depends_on('perl-html-tagset', type=('build', 'run'))
+    depends_on("perl-html-tagset", type=("build", "run"))

@@ -16,7 +16,7 @@ def _splitnode(nodeid):
         ['testing', 'code', 'test_excinfo.py']
         ['testing', 'code', 'test_excinfo.py', 'TestFormattedExcinfo', '()']
     """
-    if nodeid == '':
+    if nodeid == "":
         # If there is no root node at all, return an empty list so the caller's logic can remain sane
         return []
     parts = nodeid.split(SEP)
@@ -34,4 +34,4 @@ def ischildnode(baseid, nodeid):
     node_parts = _splitnode(nodeid)
     if len(node_parts) < len(base_parts):
         return False
-    return node_parts[:len(base_parts)] == base_parts
+    return node_parts[: len(base_parts)] == base_parts

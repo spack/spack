@@ -11,6 +11,9 @@ class RubyHpricot(RubyPackage):
     """
 
     homepage = "https://github.com/hpricot/hpricot"
-    url      = "https://github.com/hpricot/hpricot/archive/0.8.6.tar.gz"
+    url = "https://github.com/hpricot/hpricot/archive/0.8.6.tar.gz"
 
-    version('0.8.6', sha256='792f63cebe2f2b02058974755b4c8a3aef52e5daf37f779a34885d5ff2876017')
+    version(
+        "0.8.6",
+        sha256="792f63cebe2f2b02058974755b4c8a3aef52e5daf37f779a34885d5ff2876017",
+    )

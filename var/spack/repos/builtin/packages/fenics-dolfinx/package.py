@@ -15,9 +15,18 @@ class FenicsDolfinx(CMakePackage):
     maintainers = ["chrisrichardson", "garth-wells", "nate-sime"]
 
     version("main", branch="main")
-    version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed")
-    version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
-    version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
+    version(
+        "0.3.0",
+        sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed",
+    )
+    version(
+        "0.2.0",
+        sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4",
+    )
+    version(
+        "0.1.0",
+        sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33",
+    )
 
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
@@ -51,22 +60,19 @@ class FenicsDolfinx(CMakePackage):
     depends_on("fenics-basix@0.2.0", type=("build", "link"), when="@0.2.0")
     depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
 
-    conflicts('%gcc@:8', msg='Improved C++17 support required')
+    conflicts("%gcc@:8", msg="Improved C++17 support required")
 
     root_cmakelists_dir = "cpp"
 
     def cmake_args(self):
         args = [
             "-DDOLFINX_SKIP_BUILD_TESTS=True",
-            "-DDOLFINX_ENABLE_KAHIP=%s" % (
-                'ON' if "+kahip" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_PARMETIS=%s" % (
-                'ON' if "+parmetis" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_SLEPC=%s" % (
-                'ON' if "+slepc" in self.spec else 'OFF'),
-            "-DDOLFINX_ENABLE_ADIOS2=%s" % (
-                'ON' if "+adios2" in self.spec else 'OFF'),
-            "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
+            "-DDOLFINX_ENABLE_KAHIP=%s" % ("ON" if "+kahip" in self.spec else "OFF"),
+            "-DDOLFINX_ENABLE_PARMETIS=%s"
+            % ("ON" if "+parmetis" in self.spec else "OFF"),
+            "-DDOLFINX_ENABLE_SLEPC=%s" % ("ON" if "+slepc" in self.spec else "OFF"),
+            "-DDOLFINX_ENABLE_ADIOS2=%s" % ("ON" if "+adios2" in self.spec else "OFF"),
+            "-DPython3_ROOT_DIR=%s" % self.spec["python"].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]
         return args

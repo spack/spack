@@ -8,30 +8,30 @@ class Token(object):
         self.end_mark = end_mark
 
     def __repr__(self):
-        attributes = [key for key in self.__dict__
-                      if not key.endswith('_mark')]
+        attributes = [key for key in self.__dict__ if not key.endswith("_mark")]
         attributes.sort()
-        arguments = ', '.join(['%s=%r' % (key, getattr(self, key))
-                               for key in attributes])
-        return '%s(%s)' % (self.__class__.__name__, arguments)
+        arguments = ", ".join(
+            ["%s=%r" % (key, getattr(self, key)) for key in attributes]
+        )
+        return "%s(%s)" % (self.__class__.__name__, arguments)
 
     def add_post_comment(self, comment):
-        if not hasattr(self, '_comment'):
+        if not hasattr(self, "_comment"):
             self._comment = [None, None]
         self._comment[0] = comment
 
     def add_pre_comments(self, comments):
-        if not hasattr(self, '_comment'):
+        if not hasattr(self, "_comment"):
             self._comment = [None, None]
         assert self._comment[1] is None
         self._comment[1] = comments
 
     def get_comment(self):
-        return getattr(self, '_comment', None)
+        return getattr(self, "_comment", None)
 
     @property
     def comment(self):
-        return getattr(self, '_comment', None)
+        return getattr(self, "_comment", None)
 
     def move_comment(self, target):
         """move a comment from this token to target (normally next token)
@@ -44,13 +44,13 @@ class Token(object):
         # don't push beyond last element
         if isinstance(target, StreamEndToken):
             return
-        delattr(self, '_comment')
+        delattr(self, "_comment")
         tc = target.comment
         if not tc:  # target comment, just insert
             target._comment = c
             return self
         if c[0] and tc[0] or c[1] and tc[1]:
-            raise NotImplementedError('overlap in comment %r %r' % c, tc)
+            raise NotImplementedError("overlap in comment %r %r" % c, tc)
         if c[0]:
             tc[0] = c[0]
         if c[1]:
@@ -58,7 +58,7 @@ class Token(object):
         return self
 
     def split_comment(self):
-        """ split the post part of a comment, and return it
+        """split the post part of a comment, and return it
         as comment to be added. Delete second part if [None, None]
          abc:  # this goes to sequence
            # this goes to first element
@@ -69,15 +69,16 @@ class Token(object):
             return None  # nothing to do
         ret_val = [comment[0], None]
         if comment[1] is None:
-            delattr(self, '_comment')
+            delattr(self, "_comment")
         return ret_val
 
 
 # class BOMToken(Token):
 #     id = '<byte order mark>'
 
+
 class DirectiveToken(Token):
-    id = '<directive>'
+    id = "<directive>"
 
     def __init__(self, name, value, start_mark, end_mark):
         Token.__init__(self, start_mark, end_mark)
@@ -86,15 +87,15 @@ class DirectiveToken(Token):
 
 
 class DocumentStartToken(Token):
-    id = '<document start>'
+    id = "<document start>"
 
 
 class DocumentEndToken(Token):
-    id = '<document end>'
+    id = "<document end>"
 
 
 class StreamStartToken(Token):
-    id = '<stream start>'
+    id = "<stream start>"
 
     def __init__(self, start_mark=None, end_mark=None, encoding=None):
         Token.__init__(self, start_mark, end_mark)
@@ -102,55 +103,55 @@ class StreamStartToken(Token):
 
 
 class StreamEndToken(Token):
-    id = '<stream end>'
+    id = "<stream end>"
 
 
 class BlockSequenceStartToken(Token):
-    id = '<block sequence start>'
+    id = "<block sequence start>"
 
 
 class BlockMappingStartToken(Token):
-    id = '<block mapping start>'
+    id = "<block mapping start>"
 
 
 class BlockEndToken(Token):
-    id = '<block end>'
+    id = "<block end>"
 
 
 class FlowSequenceStartToken(Token):
-    id = '['
+    id = "["
 
 
 class FlowMappingStartToken(Token):
-    id = '{'
+    id = "{"
 
 
 class FlowSequenceEndToken(Token):
-    id = ']'
+    id = "]"
 
 
 class FlowMappingEndToken(Token):
-    id = '}'
+    id = "}"
 
 
 class KeyToken(Token):
-    id = '?'
+    id = "?"
 
 
 class ValueToken(Token):
-    id = ':'
+    id = ":"
 
 
 class BlockEntryToken(Token):
-    id = '-'
+    id = "-"
 
 
 class FlowEntryToken(Token):
-    id = ','
+    id = ","
 
 
 class AliasToken(Token):
-    id = '<alias>'
+    id = "<alias>"
 
     def __init__(self, value, start_mark, end_mark):
         Token.__init__(self, start_mark, end_mark)
@@ -158,7 +159,7 @@ class AliasToken(Token):
 
 
 class AnchorToken(Token):
-    id = '<anchor>'
+    id = "<anchor>"
 
     def __init__(self, value, start_mark, end_mark):
         Token.__init__(self, start_mark, end_mark)
@@ -166,7 +167,7 @@ class AnchorToken(Token):
 
 
 class TagToken(Token):
-    id = '<tag>'
+    id = "<tag>"
 
     def __init__(self, value, start_mark, end_mark):
         Token.__init__(self, start_mark, end_mark)
@@ -174,7 +175,7 @@ class TagToken(Token):
 
 
 class ScalarToken(Token):
-    id = '<scalar>'
+    id = "<scalar>"
 
     def __init__(self, value, plain, start_mark, end_mark, style=None):
         Token.__init__(self, start_mark, end_mark)
@@ -184,12 +185,12 @@ class ScalarToken(Token):
 
 
 class CommentToken(Token):
-    id = '<comment>'
+    id = "<comment>"
 
     def __init__(self, value, start_mark, end_mark):
         Token.__init__(self, start_mark, end_mark)
         self.value = value
 
     def reset(self):
-        if hasattr(self, 'pre_done'):
-            delattr(self, 'pre_done')
+        if hasattr(self, "pre_done"):
+            delattr(self, "pre_done")

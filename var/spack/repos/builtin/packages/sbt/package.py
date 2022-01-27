@@ -9,16 +9,28 @@ from spack import *
 class Sbt(Package):
     """Scala Build Tool"""
 
-    homepage = 'https://www.scala-sbt.org'
-    url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
+    homepage = "https://www.scala-sbt.org"
+    url = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
-    version('1.1.6', sha256='f545b530884e3abbca026df08df33d5a15892e6d98da5b8c2297413d1c7b68c1')
-    version('1.1.5', sha256='8303d7496bc70eb441e8136bd29ffc295c629dadecefa4e7a475176ab4d282d5')
-    version('1.1.4', sha256='2fbd592b1cfd7bc3612154a32925d5843b602490e8c8977a53fa86b35e308341')
-    version('0.13.17', sha256='25f782ccb2ad6d54e13ce6cec0afa3d2328874c508d68ee34e2f742e99f2c847')
+    version(
+        "1.1.6",
+        sha256="f545b530884e3abbca026df08df33d5a15892e6d98da5b8c2297413d1c7b68c1",
+    )
+    version(
+        "1.1.5",
+        sha256="8303d7496bc70eb441e8136bd29ffc295c629dadecefa4e7a475176ab4d282d5",
+    )
+    version(
+        "1.1.4",
+        sha256="2fbd592b1cfd7bc3612154a32925d5843b602490e8c8977a53fa86b35e308341",
+    )
+    version(
+        "0.13.17",
+        sha256="25f782ccb2ad6d54e13ce6cec0afa3d2328874c508d68ee34e2f742e99f2c847",
+    )
 
-    depends_on('java')
+    depends_on("java")
 
     def install(self, spec, prefix):
-        install_tree('bin',  prefix.bin)
-        install_tree('conf', prefix.conf)
+        install_tree("bin", prefix.bin)
+        install_tree("conf", prefix.conf)

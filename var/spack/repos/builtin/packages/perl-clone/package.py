@@ -10,6 +10,9 @@ class PerlClone(PerlPackage):
     """Clone - recursively copy Perl datatypes"""
 
     homepage = "https://metacpan.org/pod/Clone"
-    url      = "https://cpan.metacpan.org/authors/id/G/GA/GARU/Clone-0.41.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/G/GA/GARU/Clone-0.41.tar.gz"
 
-    version('0.41', sha256='e8c056dcf4bc8889079a09412af70194a54a269689ba72edcd91291a46a51518')
+    version(
+        "0.41",
+        sha256="e8c056dcf4bc8889079a09412af70194a54a269689ba72edcd91291a46a51518",
+    )

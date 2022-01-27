@@ -18,12 +18,13 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.epilog = 'If called without argument returns ' \
-                       'the list of all valid virtual packages'
+    subparser.epilog = (
+        "If called without argument returns " "the list of all valid virtual packages"
+    )
     subparser.add_argument(
-        'virtual_package',
-        nargs='*',
-        help='find packages that provide this virtual package'
+        "virtual_package",
+        nargs="*",
+        help="find packages that provide this virtual package",
     )
 
 
@@ -33,7 +34,7 @@ def providers(parser, args):
     buffer = six.StringIO()
     isatty = sys.stdout.isatty()
     if isatty:
-        buffer.write('Virtual packages:\n')
+        buffer.write("Virtual packages:\n")
     colify.colify(valid_virtuals, output=buffer, tty=isatty, indent=4)
     valid_virtuals_str = buffer.getvalue()
 
@@ -50,8 +51,8 @@ def providers(parser, args):
         str(s) for s in specs if not s.virtual or s.name not in valid_virtuals
     ]
     if non_virtual:
-        msg = 'non-virtual specs cannot be part of the query '
-        msg += '[{0}]\n'.format(', '.join(non_virtual))
+        msg = "non-virtual specs cannot be part of the query "
+        msg += "[{0}]\n".format(", ".join(non_virtual))
         msg += valid_virtuals_str
         raise ValueError(msg)
 
@@ -60,4 +61,4 @@ def providers(parser, args):
         if sys.stdout.isatty():
             print("{0}:".format(spec))
         spack.cmd.display_specs(sorted(spack.repo.path.providers_for(spec)))
-        print('')
+        print("")

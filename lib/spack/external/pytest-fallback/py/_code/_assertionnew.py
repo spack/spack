@@ -12,23 +12,66 @@ from py._code.assertion import _format_explanation, BuiltinAssertionError
 
 if sys.platform.startswith("java") and sys.version_info < (2, 5, 2):
     # See http://bugs.jython.org/issue1497
-    _exprs = ("BoolOp", "BinOp", "UnaryOp", "Lambda", "IfExp", "Dict",
-              "ListComp", "GeneratorExp", "Yield", "Compare", "Call",
-              "Repr", "Num", "Str", "Attribute", "Subscript", "Name",
-              "List", "Tuple")
-    _stmts = ("FunctionDef", "ClassDef", "Return", "Delete", "Assign",
-              "AugAssign", "Print", "For", "While", "If", "With", "Raise",
-              "TryExcept", "TryFinally", "Assert", "Import", "ImportFrom",
-              "Exec", "Global", "Expr", "Pass", "Break", "Continue")
+    _exprs = (
+        "BoolOp",
+        "BinOp",
+        "UnaryOp",
+        "Lambda",
+        "IfExp",
+        "Dict",
+        "ListComp",
+        "GeneratorExp",
+        "Yield",
+        "Compare",
+        "Call",
+        "Repr",
+        "Num",
+        "Str",
+        "Attribute",
+        "Subscript",
+        "Name",
+        "List",
+        "Tuple",
+    )
+    _stmts = (
+        "FunctionDef",
+        "ClassDef",
+        "Return",
+        "Delete",
+        "Assign",
+        "AugAssign",
+        "Print",
+        "For",
+        "While",
+        "If",
+        "With",
+        "Raise",
+        "TryExcept",
+        "TryFinally",
+        "Assert",
+        "Import",
+        "ImportFrom",
+        "Exec",
+        "Global",
+        "Expr",
+        "Pass",
+        "Break",
+        "Continue",
+    )
     _expr_nodes = set(getattr(ast, name) for name in _exprs)
     _stmt_nodes = set(getattr(ast, name) for name in _stmts)
+
     def _is_ast_expr(node):
         return node.__class__ in _expr_nodes
+
     def _is_ast_stmt(node):
         return node.__class__ in _stmt_nodes
+
 else:
+
     def _is_ast_expr(node):
         return isinstance(node, ast.expr)
+
     def _is_ast_stmt(node):
         return isinstance(node, ast.stmt)
 
@@ -50,14 +93,18 @@ def interpret(source, frame, should_fail=False):
         failure = sys.exc_info()[1]
         return getfailure(failure)
     if should_fail:
-        return ("(assertion failed, but when it was re-run for "
-                "printing intermediate values, it did not fail.  Suggestions: "
-                "compute assert expression before the assert or use --no-assert)")
+        return (
+            "(assertion failed, but when it was re-run for "
+            "printing intermediate values, it did not fail.  Suggestions: "
+            "compute assert expression before the assert or use --no-assert)"
+        )
+
 
 def run(offending_line, frame=None):
     if frame is None:
         frame = py.code.Frame(sys._getframe(1))
     return interpret(offending_line, frame)
+
 
 def getfailure(failure):
     explanation = _format_explanation(failure.explanation)
@@ -75,40 +122,35 @@ def getfailure(failure):
 
 
 operator_map = {
-    ast.BitOr : "|",
-    ast.BitXor : "^",
-    ast.BitAnd : "&",
-    ast.LShift : "<<",
-    ast.RShift : ">>",
-    ast.Add : "+",
-    ast.Sub : "-",
-    ast.Mult : "*",
-    ast.Div : "/",
-    ast.FloorDiv : "//",
-    ast.Mod : "%",
-    ast.Eq : "==",
-    ast.NotEq : "!=",
-    ast.Lt : "<",
-    ast.LtE : "<=",
-    ast.Gt : ">",
-    ast.GtE : ">=",
-    ast.Pow : "**",
-    ast.Is : "is",
-    ast.IsNot : "is not",
-    ast.In : "in",
-    ast.NotIn : "not in"
+    ast.BitOr: "|",
+    ast.BitXor: "^",
+    ast.BitAnd: "&",
+    ast.LShift: "<<",
+    ast.RShift: ">>",
+    ast.Add: "+",
+    ast.Sub: "-",
+    ast.Mult: "*",
+    ast.Div: "/",
+    ast.FloorDiv: "//",
+    ast.Mod: "%",
+    ast.Eq: "==",
+    ast.NotEq: "!=",
+    ast.Lt: "<",
+    ast.LtE: "<=",
+    ast.Gt: ">",
+    ast.GtE: ">=",
+    ast.Pow: "**",
+    ast.Is: "is",
+    ast.IsNot: "is not",
+    ast.In: "in",
+    ast.NotIn: "not in",
 }
 
-unary_map = {
-    ast.Not : "not %s",
-    ast.Invert : "~%s",
-    ast.USub : "-%s",
-    ast.UAdd : "+%s"
-}
+unary_map = {ast.Not: "not %s", ast.Invert: "~%s", ast.USub: "-%s", ast.UAdd: "+%s"}
 
 
 class DebugInterpreter(ast.NodeVisitor):
-    """Interpret AST nodes to gleam useful debugging information. """
+    """Interpret AST nodes to gleam useful debugging information."""
 
     def __init__(self, frame):
         self.frame = frame
@@ -133,7 +175,7 @@ class DebugInterpreter(ast.NodeVisitor):
                 raise Failure()
             return None, None
         else:
-            raise AssertionError("can't handle %s" %(node,))
+            raise AssertionError("can't handle %s" % (node,))
 
     def _compile(self, source, mode="eval"):
         return compile(source, "<assertion interpretation>", mode)
@@ -165,13 +207,13 @@ class DebugInterpreter(ast.NodeVisitor):
         for op, next_op in zip(comp.ops, comp.comparators):
             next_explanation, next_result = self.visit(next_op)
             op_symbol = operator_map[op.__class__]
-            explanation = "%s %s %s" % (left_explanation, op_symbol,
-                                        next_explanation)
+            explanation = "%s %s %s" % (left_explanation, op_symbol, next_explanation)
             source = "__exprinfo_left %s __exprinfo_right" % (op_symbol,)
             co = self._compile(source)
             try:
-                result = self.frame.eval(co, __exprinfo_left=left_result,
-                                         __exprinfo_right=next_result)
+                result = self.frame.eval(
+                    co, __exprinfo_left=left_result, __exprinfo_right=next_result
+                )
             except Exception:
                 raise Failure(explanation)
             try:
@@ -217,13 +259,13 @@ class DebugInterpreter(ast.NodeVisitor):
         left_explanation, left_result = self.visit(binop.left)
         right_explanation, right_result = self.visit(binop.right)
         symbol = operator_map[binop.op.__class__]
-        explanation = "(%s %s %s)" % (left_explanation, symbol,
-                                      right_explanation)
+        explanation = "(%s %s %s)" % (left_explanation, symbol, right_explanation)
         source = "__exprinfo_left %s __exprinfo_right" % (symbol,)
         co = self._compile(source)
         try:
-            result = self.frame.eval(co, __exprinfo_left=left_result,
-                                     __exprinfo_right=right_result)
+            result = self.frame.eval(
+                co, __exprinfo_left=left_result, __exprinfo_right=right_result
+            )
         except Exception:
             raise Failure(explanation)
         return explanation, result
@@ -231,7 +273,7 @@ class DebugInterpreter(ast.NodeVisitor):
     def visit_Call(self, call):
         func_explanation, func = self.visit(call.func)
         arg_explanations = []
-        ns = {"__exprinfo_func" : func}
+        ns = {"__exprinfo_func": func}
         arguments = []
         for arg in call.args:
             arg_explanation, arg_result = self.visit(arg)
@@ -292,9 +334,12 @@ class DebugInterpreter(ast.NodeVisitor):
             result = self.frame.eval(co, __exprinfo_expr=source_result)
         except Exception:
             raise Failure(explanation)
-        explanation = "%s\n{%s = %s.%s\n}" % (self.frame.repr(result),
-                                              self.frame.repr(result),
-                                              source_explanation, attr.attr)
+        explanation = "%s\n{%s = %s.%s\n}" % (
+            self.frame.repr(result),
+            self.frame.repr(result),
+            source_explanation,
+            attr.attr,
+        )
         # Check if the attr is from an instance.
         source = "%r in getattr(__exprinfo_expr, '__dict__', {})"
         source = source % (attr.attr,)
@@ -311,8 +356,9 @@ class DebugInterpreter(ast.NodeVisitor):
 
     def visit_Assert(self, assrt):
         test_explanation, test_result = self.visit(assrt.test)
-        if test_explanation.startswith("False\n{False =") and \
-                test_explanation.endswith("\n"):
+        if test_explanation.startswith("False\n{False =") and test_explanation.endswith(
+            "\n"
+        ):
             test_explanation = test_explanation[15:-2]
         explanation = "assert %s" % (test_explanation,)
         if not test_result:
@@ -325,11 +371,15 @@ class DebugInterpreter(ast.NodeVisitor):
     def visit_Assign(self, assign):
         value_explanation, value_result = self.visit(assign.value)
         explanation = "... = %s" % (value_explanation,)
-        name = ast.Name("__exprinfo_expr", ast.Load(),
-                        lineno=assign.value.lineno,
-                        col_offset=assign.value.col_offset)
-        new_assign = ast.Assign(assign.targets, name, lineno=assign.lineno,
-                                col_offset=assign.col_offset)
+        name = ast.Name(
+            "__exprinfo_expr",
+            ast.Load(),
+            lineno=assign.value.lineno,
+            col_offset=assign.value.col_offset,
+        )
+        new_assign = ast.Assign(
+            assign.targets, name, lineno=assign.lineno, col_offset=assign.col_offset
+        )
         mod = ast.Module([new_assign])
         co = self._compile(mod, "exec")
         try:

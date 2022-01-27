@@ -12,13 +12,19 @@ class PyQuantities(PythonPackage):
     homepage = "https://python-quantities.readthedocs.org"
     pypi = "quantities/quantities-0.12.1.tar.gz"
 
-    version('0.12.1', sha256='0a03e8511db603c57ca80dee851c43f08d0457f4d592bcac2e154570756cb934')
-    version('0.11.1', sha256='4382098a501b55bf0fdb3dba2061a161041253697d78811ecfd7c55449836660',
-            url="https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip")
+    version(
+        "0.12.1",
+        sha256="0a03e8511db603c57ca80dee851c43f08d0457f4d592bcac2e154570756cb934",
+    )
+    version(
+        "0.11.1",
+        sha256="4382098a501b55bf0fdb3dba2061a161041253697d78811ecfd7c55449836660",
+        url="https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip",
+    )
 
-    conflicts('^py-numpy@1.13:', when='@:0.11')
+    conflicts("^py-numpy@1.13:", when="@:0.11")
 
-    depends_on('python@2.6.0:')
+    depends_on("python@2.6.0:")
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.4.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.4.0:", type=("build", "run"))

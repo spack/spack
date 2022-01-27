@@ -15,7 +15,10 @@ class PyCythonBbox(PythonPackage):
     homepage = "https://github.com/samson-wang/cython_bbox.git"
     pypi = "cython-bbox/cython_bbox-0.1.3.tar.gz"
 
-    version('0.1.3', sha256='82e2d887534ecc10d3507489a05b11259f3baacd29eee37e6d8c97e1ffb16554')
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    version(
+        "0.1.3",
+        sha256="82e2d887534ecc10d3507489a05b11259f3baacd29eee37e6d8c97e1ffb16554",
+    )
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
+    depends_on("py-numpy", type=("build", "run"))

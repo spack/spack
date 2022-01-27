@@ -11,12 +11,14 @@ class PyFastrlock(PythonPackage):
     optimistic lock for CPython."""
 
     homepage = "https://github.com/scoder/fastrlock"
-    url      = "https://github.com/scoder/fastrlock/archive/0.5.tar.gz"
+    url = "https://github.com/scoder/fastrlock/archive/0.5.tar.gz"
 
-    version('0.5', sha256='756dd8aa9af9848caa9bbf814c4dec1065ee38cc38768158e616ec11b6f45cc8')
+    version(
+        "0.5", sha256="756dd8aa9af9848caa9bbf814c4dec1065ee38cc38768158e616ec11b6f45cc8"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
 
     def install_options(self, spec, prefix):
-        return ['--with-cython']
+        return ["--with-cython"]

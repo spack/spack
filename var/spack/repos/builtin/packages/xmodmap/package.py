@@ -16,10 +16,13 @@ class Xmodmap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmodmap"
     xorg_mirror_path = "app/xmodmap-1.0.9.tar.gz"
 
-    version('1.0.9', sha256='73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef')
+    version(
+        "1.0.9",
+        sha256="73427a996f0fcda2a2c7ac96cfc4edd5985aeb13b48053f55ae7f63a668fadef",
+    )
 
-    depends_on('libx11')
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.25:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.25:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

@@ -10,12 +10,12 @@ class Dlib(CMakePackage):
     data and to solve computer vision problems."""
 
     homepage = "https://github.com/dorian3d/DLib"
-    git      = "https://github.com/dorian3d/DLib.git"
+    git = "https://github.com/dorian3d/DLib.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+core+features2d+highgui+imgproc+imgcodecs')
+    depends_on("cmake@3.0:", type="build")
+    depends_on("opencv+calib3d+core+features2d+highgui+imgproc+imgcodecs")
     # Because concretizer is broken...
     # TODO: remove when original concretizer is obsolete
-    depends_on('opencv+flann')
+    depends_on("opencv+flann")

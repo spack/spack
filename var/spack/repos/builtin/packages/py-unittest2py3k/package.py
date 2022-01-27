@@ -13,7 +13,10 @@ class PyUnittest2py3k(PythonPackage):
 
     pypi = "unittest2py3k/unittest2py3k-0.5.1.tar.gz"
 
-    version('0.5.1', sha256='78249c5f1ac508a34d9d131d43a89d77bf154186f3ea5f7a6b993d3f3535d403')
+    version(
+        "0.5.1",
+        sha256="78249c5f1ac508a34d9d131d43a89d77bf154186f3ea5f7a6b993d3f3535d403",
+    )
 
-    depends_on('python@3:')
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3:")
+    depends_on("py-setuptools", type="build")

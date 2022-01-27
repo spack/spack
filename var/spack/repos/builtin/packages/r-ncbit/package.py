@@ -8,12 +8,15 @@ from spack import *
 
 class RNcbit(RPackage):
     """Making NCBI taxonomic data locally available and searchable as an R
-       object."""
+    object."""
 
     homepage = "https://cloud.r-project.org/package=ncbit"
-    url      = "https://cloud.r-project.org/src/contrib/ncbit_2013.03.29.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/ncbit_2013.03.29.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ncbit"
 
-    version('2013.03.29', sha256='4480271f14953615c8ddc2e0666866bb1d0964398ba0fab6cc29046436820738')
+    version(
+        "2013.03.29",
+        sha256="4480271f14953615c8ddc2e0666866bb1d0964398ba0fab6cc29046436820738",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))

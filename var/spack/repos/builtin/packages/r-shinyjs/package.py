@@ -17,13 +17,16 @@ class RShinyjs(RPackage):
     also be used to easily call your own custom JavaScript functions from R."""
 
     homepage = "https://deanattali.com/shinyjs/"
-    cran     = "shinyjs"
+    cran = "shinyjs"
 
-    version('2.0.0', sha256='c2cdd9fab41f6b46bb41b288cd9b3fb3a7fe9627b664e3a58a0cb5dd4c19f8ff')
+    version(
+        "2.0.0",
+        sha256="c2cdd9fab41f6b46bb41b288cd9b3fb3a7fe9627b664e3a58a0cb5dd4c19f8ff",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-digest@0.6.8:', type=('build', 'run'))
-    depends_on('r-htmltools@0.2.9:', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-shiny@1.0.0:', type=('build', 'run'))
-    depends_on('pandoc', type='build')
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-digest@0.6.8:", type=("build", "run"))
+    depends_on("r-htmltools@0.2.9:", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"))
+    depends_on("r-shiny@1.0.0:", type=("build", "run"))
+    depends_on("pandoc", type="build")

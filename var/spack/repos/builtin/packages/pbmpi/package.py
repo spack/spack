@@ -7,23 +7,22 @@ from spack import *
 
 
 class Pbmpi(MakefilePackage):
-    """A Bayesian software for phylogenetic reconstruction using mixture models
-    """
+    """A Bayesian software for phylogenetic reconstruction using mixture models"""
 
     homepage = "https://megasun.bch.umontreal.ca/People/lartillot/www/index.htm"
-    git      = "https://github.com/bayesiancook/pbmpi.git"
+    git = "https://github.com/bayesiancook/pbmpi.git"
 
-    version('partition', branch='partition')
+    version("partition", branch="partition")
 
-    depends_on('mpi')
-    depends_on('libfabric')
+    depends_on("mpi")
+    depends_on("libfabric")
 
-    build_directory = 'sources'
+    build_directory = "sources"
 
-    @run_before('build')
+    @run_before("build")
     def make_data_dir(self):
-        mkdirp(self.stage.source_path, 'data')
+        mkdirp(self.stage.source_path, "data")
 
     def install(self, spec, prefix):
-        install_tree('data', prefix.bin)
-        install_tree('sources', prefix.sources)
+        install_tree("data", prefix.bin)
+        install_tree("sources", prefix.sources)

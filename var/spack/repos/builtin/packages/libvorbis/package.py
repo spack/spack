@@ -13,14 +13,20 @@ class Libvorbis(AutotoolsPackage):
     bitrates from 16 to 128 kbps/channel."""
 
     homepage = "https://xiph.org/vorbis/"
-    url      = "http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.5.tar.gz"
+    url = "http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.5.tar.gz"
 
-    version('1.3.7', sha256='0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab')
-    version('1.3.5', sha256='6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce')
+    version(
+        "1.3.7",
+        sha256="0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab",
+    )
+    version(
+        "1.3.5",
+        sha256="6efbcecdd3e5dfbf090341b485da9d176eb250d893e3eb378c428a2db38301ce",
+    )
 
-    depends_on('libogg')
+    depends_on("libogg")
 
-    depends_on('pkgconfig', type='build')
+    depends_on("pkgconfig", type="build")
 
     # `make check` crashes when run in parallel
     parallel = False

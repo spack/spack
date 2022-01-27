@@ -17,16 +17,19 @@ class Xrx(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xrx"
     xorg_mirror_path = "app/xrx-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='1ffa1c2af28587c6ed7ded3af2e62e93bad8f9900423d09c45b1d59449d15134')
+    version(
+        "1.0.4",
+        sha256="1ffa1c2af28587c6ed7ded3af2e62e93bad8f9900423d09c45b1d59449d15134",
+    )
 
-    depends_on('libx11')
-    depends_on('libxt')
-    depends_on('libxext')
-    depends_on('libxau')
-    depends_on('libice')
-    depends_on('libxaw')
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxext")
+    depends_on("libxau")
+    depends_on("libice")
+    depends_on("libxaw")
 
-    depends_on('xtrans')
-    depends_on('xproxymanagementprotocol')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xtrans")
+    depends_on("xproxymanagementprotocol")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

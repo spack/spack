@@ -12,6 +12,9 @@ class PyPep8(PythonPackage):
     homepage = "https://pep8.readthedocs.org/"
     pypi = "pep8/pep8-1.7.1.tar.gz"
 
-    version('1.7.1', sha256='fe249b52e20498e59e0b5c5256aa52ee99fc295b26ec9eaa85776ffdb9fe6374')
+    version(
+        "1.7.1",
+        sha256="fe249b52e20498e59e0b5c5256aa52ee99fc295b26ec9eaa85776ffdb9fe6374",
+    )
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))

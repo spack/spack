@@ -16,25 +16,39 @@ class Astyle(MakefilePackage):
     # Gentoo alternative
     # url = "https://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
-    version('3.1',    sha256='cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7')
-    version('3.0.1',  sha256='6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd')
-    version('2.06',   sha256='3b7212210dc139e8f648e004b758c0be1b3ceb1694b22a879202d2b833db7c7e')
-    version('2.05.1', sha256='fbdfc6f1966a972d19a215927266c76d4183eee235ed1e2bd7ec551c2a270eac')
-    version('2.04',   sha256='70b37f4853c418d1e2632612967eebf1bdb93dfbe558c51d7d013c9b4e116b60')
+    version(
+        "3.1", sha256="cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7"
+    )
+    version(
+        "3.0.1",
+        sha256="6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd",
+    )
+    version(
+        "2.06",
+        sha256="3b7212210dc139e8f648e004b758c0be1b3ceb1694b22a879202d2b833db7c7e",
+    )
+    version(
+        "2.05.1",
+        sha256="fbdfc6f1966a972d19a215927266c76d4183eee235ed1e2bd7ec551c2a270eac",
+    )
+    version(
+        "2.04",
+        sha256="70b37f4853c418d1e2632612967eebf1bdb93dfbe558c51d7d013c9b4e116b60",
+    )
 
     parallel = False
 
     @property
     def build_directory(self):
-        return join_path(self.stage.source_path, 'build', self.compiler.name)
+        return join_path(self.stage.source_path, "build", self.compiler.name)
 
     def edit(self, spec, prefix):
-        makefile = join_path(self.build_directory, 'Makefile')
-        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
+        makefile = join_path(self.build_directory, "Makefile")
+        filter_file(r"^CXX\s*=.*", "CXX=%s" % spack_cxx, makefile)
         # If the group is not a user account, the installation will fail,
         # so remove the -o $ (USER) -g $ (USER) parameter.
-        filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
+        filter_file(r"^INSTALL=.*", "INSTALL=install", makefile)
 
     @property
     def install_targets(self):
-        return ['install', 'prefix={0}'.format(self.prefix)]
+        return ["install", "prefix={0}".format(self.prefix)]

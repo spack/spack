@@ -17,16 +17,22 @@ class RColourpicker(RPackage):
     select colours to use in your R code."""
 
     homepage = "https://github.com/daattali/colourpicker"
-    cran     = "colourpicker"
+    cran = "colourpicker"
 
-    version('1.1.1', sha256='a0d09982b048b143e2c3438ccec039dd20d6f892fa0dedc9fdcb0d40de883ce0')
-    version('1.1.0', sha256='2dfbb6262d187d3b17357ff9c22670ced3621feda5b2a2a500558478e4d551e2')
+    version(
+        "1.1.1",
+        sha256="a0d09982b048b143e2c3438ccec039dd20d6f892fa0dedc9fdcb0d40de883ce0",
+    )
+    version(
+        "1.1.0",
+        sha256="2dfbb6262d187d3b17357ff9c22670ced3621feda5b2a2a500558478e4d551e2",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-htmlwidgets@0.7:', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-miniui@0.1.1:', type=('build', 'run'))
-    depends_on('r-shiny@0.11.1:', type=('build', 'run'))
-    depends_on('r-shinyjs@2.0.0:', type=('build', 'run'))
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-htmltools", type=("build", "run"))
+    depends_on("r-htmlwidgets@0.7:", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"))
+    depends_on("r-miniui@0.1.1:", type=("build", "run"))
+    depends_on("r-shiny@0.11.1:", type=("build", "run"))
+    depends_on("r-shinyjs@2.0.0:", type=("build", "run"))

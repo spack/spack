@@ -15,6 +15,7 @@ from .cpus import cpus_available
 
 class ErrorFromWorker(object):
     """Wrapper class to report an error from a worker process"""
+
     def __init__(self, exc_cls, exc, tb):
         """Create an error object from an exception raised from
         the worker process.
@@ -27,7 +28,7 @@ class ErrorFromWorker(object):
         """
         self.pid = os.getpid()
         self.error_message = str(exc)
-        self.stacktrace_message = ''.join(traceback.format_exception(exc_cls, exc, tb))
+        self.stacktrace_message = "".join(traceback.format_exception(exc_cls, exc, tb))
 
     @property
     def stacktrace(self):
@@ -45,6 +46,7 @@ class Task(object):
     We are using a wrapper class instead of a decorator since the class
     is pickleable, while a decorator with an inner closure is not.
     """
+
     def __init__(self, func):
         self.func = func
 
@@ -67,18 +69,16 @@ def raise_if_errors(*results, **kwargs):
     Raise:
         RuntimeError: if ErrorFromWorker objects are in the results
     """
-    debug = kwargs.get('debug', False)  # This can be a keyword only arg in Python 3
+    debug = kwargs.get("debug", False)  # This can be a keyword only arg in Python 3
     errors = [x for x in results if isinstance(x, ErrorFromWorker)]
     if not errors:
         return
 
-    msg = '\n'.join([
-        error.stacktrace if debug else str(error) for error in errors
-    ])
+    msg = "\n".join([error.stacktrace if debug else str(error) for error in errors])
 
-    error_fmt = '{0}'
+    error_fmt = "{0}"
     if len(errors) > 1 and not debug:
-        error_fmt = 'errors occurred during concretization of the environment:\n{0}'
+        error_fmt = "errors occurred during concretization of the environment:\n{0}"
 
     raise RuntimeError(error_fmt.format(msg))
 
@@ -127,7 +127,7 @@ def parallel_map(func, arguments, max_processes=None, debug=False):
         RuntimeError: if any error occurred in the worker processes
     """
     task_wrapper = Task(func)
-    if sys.platform != 'darwin':
+    if sys.platform != "darwin":
         with pool(processes=num_processes(max_processes=max_processes)) as p:
             results = p.map(task_wrapper, arguments)
     else:

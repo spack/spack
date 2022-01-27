@@ -64,6 +64,7 @@ class FormatChecker(object):
         def _checks(func):
             self.checkers[format] = (func, raises)
             return func
+
         return _checks
 
     cls_checks = classmethod(checks)
@@ -99,7 +100,8 @@ class FormatChecker(object):
             cause = e
         if not result:
             raise FormatError(
-                "%r is not a %r" % (instance, format), cause=cause,
+                "%r is not a %r" % (instance, format),
+                cause=cause,
             )
 
     def conforms(self, instance, format):
@@ -173,6 +175,7 @@ def _checks_drafts(
             func,
         )
         return func
+
     return wrap
 
 
@@ -188,7 +191,10 @@ _ipv4_re = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
 
 @_checks_drafts(
-    draft3="ip-address", draft4="ipv4", draft6="ipv4", draft7="ipv4",
+    draft3="ip-address",
+    draft4="ipv4",
+    draft6="ipv4",
+    draft7="ipv4",
 )
 def is_ipv4(instance):
     if not isinstance(instance, str_types):
@@ -202,7 +208,8 @@ if hasattr(socket, "inet_pton"):
     # FIXME: Really this only should raise struct.error, but see the sadness
     #        that is https://twistedmatrix.com/trac/ticket/9409
     @_checks_drafts(
-        name="ipv6", raises=(socket.error, struct.error, ValueError),
+        name="ipv6",
+        raises=(socket.error, struct.error, ValueError),
     )
     def is_ipv6(instance):
         if not isinstance(instance, str_types):
@@ -237,6 +244,7 @@ try:
 except ImportError:
     pass
 else:
+
     @_checks_drafts(draft7="idn-hostname", raises=idna.IDNAError)
     def is_idn_host_name(instance):
         if not isinstance(instance, str_types):
@@ -253,6 +261,7 @@ except ImportError:
     except ImportError:
         pass
     else:
+
         @_checks_drafts(name="uri")
         def is_uri(instance):
             if not isinstance(instance, str_types):
@@ -270,6 +279,7 @@ except ImportError:
             return validate_rfc3986(instance, rule="URI_reference")
 
 else:
+
     @_checks_drafts(draft7="iri", raises=ValueError)
     def is_iri(instance):
         if not isinstance(instance, str_types):
@@ -308,6 +318,7 @@ except ImportError:
         validate_rfc3339 = None
 
 if validate_rfc3339:
+
     @_checks_drafts(name="date-time")
     def is_datetime(instance):
         if not isinstance(instance, str_types):
@@ -347,14 +358,15 @@ try:
 except ImportError:
     pass
 else:
+
     def is_css_color_code(instance):
         return webcolors.normalize_hex(instance)
 
     @_checks_drafts(draft3="color", raises=(ValueError, TypeError))
     def is_css21_color(instance):
         if (
-            not isinstance(instance, str_types) or
-            instance.lower() in webcolors.css21_names_to_hex
+            not isinstance(instance, str_types)
+            or instance.lower() in webcolors.css21_names_to_hex
         ):
             return True
         return is_css_color_code(instance)
@@ -370,6 +382,7 @@ try:
 except ImportError:
     pass
 else:
+
     @_checks_drafts(
         draft6="json-pointer",
         draft7="json-pointer",
@@ -412,6 +425,7 @@ try:
 except ImportError:
     pass
 else:
+
     @_checks_drafts(
         draft6="uri-template",
         draft7="uri-template",

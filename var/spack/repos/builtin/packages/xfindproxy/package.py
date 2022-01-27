@@ -17,12 +17,15 @@ class Xfindproxy(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xfindproxy"
     xorg_mirror_path = "app/xfindproxy-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='fa6152fcf9c16fbb2ef52259731df5df899a39a86894b0508456613f26ff924a')
+    version(
+        "1.0.4",
+        sha256="fa6152fcf9c16fbb2ef52259731df5df899a39a86894b0508456613f26ff924a",
+    )
 
-    depends_on('libice')
-    depends_on('libxt')
+    depends_on("libice")
+    depends_on("libxt")
 
-    depends_on('xproto')
-    depends_on('xproxymanagementprotocol')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto")
+    depends_on("xproxymanagementprotocol")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

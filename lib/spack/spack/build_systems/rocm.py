@@ -90,31 +90,41 @@ class ROCmPackage(PackageBase):
     # https://llvm.org/docs/AMDGPUUsage.html
     # Possible architectures
     amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx90a', 'gfx1010',
-        'gfx1011', 'gfx1012'
+        "gfx701",
+        "gfx801",
+        "gfx802",
+        "gfx803",
+        "gfx900",
+        "gfx906",
+        "gfx908",
+        "gfx90a",
+        "gfx1010",
+        "gfx1011",
+        "gfx1012",
     )
 
-    variant('rocm', default=False, description='Enable ROCm support')
+    variant("rocm", default=False, description="Enable ROCm support")
 
     # possible amd gpu targets for rocm builds
-    variant('amdgpu_target',
-            description='AMD GPU architecture',
-            values=spack.variant.any_combination_of(*amdgpu_targets),
-            when='+rocm')
+    variant(
+        "amdgpu_target",
+        description="AMD GPU architecture",
+        values=spack.variant.any_combination_of(*amdgpu_targets),
+        when="+rocm",
+    )
 
-    depends_on('llvm-amdgpu', when='+rocm')
-    depends_on('hsa-rocr-dev', when='+rocm')
-    depends_on('hip', when='+rocm')
+    depends_on("llvm-amdgpu", when="+rocm")
+    depends_on("hsa-rocr-dev", when="+rocm")
+    depends_on("hip", when="+rocm")
 
-    conflicts('^blt@:0.3.6', when='+rocm')
+    conflicts("^blt@:0.3.6", when="+rocm")
 
     # need amd gpu type for rocm builds
-    conflicts('amdgpu_target=none', when='+rocm')
+    conflicts("amdgpu_target=none", when="+rocm")
 
     # Make sure amdgpu_targets cannot be used without +rocm
     for value in amdgpu_targets:
-        conflicts('~rocm', when='amdgpu_target=' + value)
+        conflicts("~rocm", when="amdgpu_target=" + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case
@@ -123,7 +133,7 @@ class ROCmPackage(PackageBase):
     @staticmethod
     def hip_flags(amdgpu_target):
         archs = ",".join(amdgpu_target)
-        return '--amdgpu-target={0}'.format(archs)
+        return "--amdgpu-target={0}".format(archs)
 
     # HIP version vs Architecture
 

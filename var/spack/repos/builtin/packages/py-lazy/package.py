@@ -11,6 +11,8 @@ class PyLazy(PythonPackage):
 
     pypi = "lazy/lazy-1.2.zip"
 
-    version('1.2', sha256='127ea610418057b953f0d102bed83f2c367be13b59f8d0ddf3b8a86c7d31b970')
+    version(
+        "1.2", sha256="127ea610418057b953f0d102bed83f2c367be13b59f8d0ddf3b8a86c7d31b970"
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

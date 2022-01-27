@@ -23,28 +23,29 @@ level = "short"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='external_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
 
-    find_parser = sp.add_parser(
-        'find', help='add external packages to packages.yaml'
+    find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
+    find_parser.add_argument(
+        "--not-buildable",
+        action="store_true",
+        default=False,
+        help="packages with detected externals won't be built with Spack",
     )
     find_parser.add_argument(
-        '--not-buildable', action='store_true', default=False,
-        help="packages with detected externals won't be built with Spack")
-    find_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.config.default_modify_scope('packages'),
-        help="configuration scope to modify")
-    spack.cmd.common.arguments.add_common_arguments(find_parser, ['tags'])
-    find_parser.add_argument('packages', nargs=argparse.REMAINDER)
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("packages"),
+        help="configuration scope to modify",
+    )
+    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags"])
+    find_parser.add_argument("packages", nargs=argparse.REMAINDER)
 
-    sp.add_parser(
-        'list', help='list detectable packages, by repository and name'
-    )
+    sp.add_parser("list", help="list detectable packages, by repository and name")
 
 
 def external_find(args):
@@ -64,8 +65,8 @@ def external_find(args):
         # Since tags are cached it's much faster to construct what we need
         # to search directly, rather than filtering after the fact
         packages_to_check = [
-            spack.repo.get(pkg) for pkg in
-            spack.repo.path.packages_with_tags(*args.tags)
+            spack.repo.get(pkg)
+            for pkg in spack.repo.path.packages_with_tags(*args.tags)
         ]
 
     # If the list of packages is empty, search for every possible package
@@ -77,13 +78,14 @@ def external_find(args):
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )
     if new_entries:
-        path = spack.config.config.get_config_filename(args.scope, 'packages')
-        msg = ('The following specs have been detected on this system '
-               'and added to {0}')
+        path = spack.config.config.get_config_filename(args.scope, "packages")
+        msg = (
+            "The following specs have been detected on this system " "and added to {0}"
+        )
         tty.msg(msg.format(path))
         spack.cmd.display_specs(new_entries)
     else:
-        tty.msg('No new external packages detected')
+        tty.msg("No new external packages detected")
 
 
 def external_list(args):
@@ -97,5 +99,5 @@ def external_list(args):
 
 
 def external(parser, args):
-    action = {'find': external_find, 'list': external_list}
+    action = {"find": external_find, "list": external_list}
     action[args.external_command](args)

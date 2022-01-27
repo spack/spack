@@ -17,10 +17,13 @@ class RS2(RPackage):
     information about geometries."""
 
     homepage = "https://r-spatial.github.io/s2/"
-    cran     = "s2"
+    cran = "s2"
 
-    version('1.0.4', sha256='3c274ebae33aa5473f94afb3066c6f388aced17ff3b5f6add9edcc9af22b985e')
+    version(
+        "1.0.4",
+        sha256="3c274ebae33aa5473f94afb3066c6f388aced17ff3b5f6add9edcc9af22b985e",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-wk', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-wk", type=("build", "run"))

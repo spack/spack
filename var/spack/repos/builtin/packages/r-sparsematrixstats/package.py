@@ -16,11 +16,11 @@ class RSparsematrixstats(RPackage):
     Bengtsson."""
 
     homepage = "https://bioconductor.org/packages/sparseMatrixStats/"
-    git      = "https://git.bioconductor.org/packages/sparseMatrixStats"
+    git = "https://git.bioconductor.org/packages/sparseMatrixStats"
 
-    version('1.2.1', commit='9726f3d5e0f03b50c332d85d5e4c339c18b0494c')
+    version("1.2.1", commit="9726f3d5e0f03b50c332d85d5e4c339c18b0494c")
 
-    depends_on('r-matrixgenerics', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on("r-matrixgenerics", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-matrixstats", type=("build", "run"))

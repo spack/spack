@@ -17,22 +17,25 @@ class Compiz(AutotoolsPackage, XorgPackage):
     homepage = "http://www.compiz.org/"
     xorg_mirror_path = "app/compiz-0.7.8.tar.gz"
 
-    version('0.7.8', sha256='b46f52b776cc78e85357a07688d04b36ec19c65eadeaf6f6cfcca7b8515e6503')
+    version(
+        "0.7.8",
+        sha256="b46f52b776cc78e85357a07688d04b36ec19c65eadeaf6f6cfcca7b8515e6503",
+    )
 
-    depends_on('libxcb')
-    depends_on('libxcomposite')
-    depends_on('libxfixes')
-    depends_on('libxdamage')
-    depends_on('libxrandr')
-    depends_on('libxinerama')
-    depends_on('libice')
-    depends_on('libsm')
-    depends_on('libxml2')
-    depends_on('libxslt')
+    depends_on("libxcb")
+    depends_on("libxcomposite")
+    depends_on("libxfixes")
+    depends_on("libxdamage")
+    depends_on("libxrandr")
+    depends_on("libxinerama")
+    depends_on("libice")
+    depends_on("libsm")
+    depends_on("libxml2")
+    depends_on("libxslt")
 
     # TODO: add dependencies
     # libstartup-notification-1.0 >= 0.7
-    depends_on('libxrender')
-    depends_on('libpng')
-    depends_on('glib')
-    depends_on('gconf')
+    depends_on("libxrender")
+    depends_on("libpng")
+    depends_on("glib")
+    depends_on("gconf")

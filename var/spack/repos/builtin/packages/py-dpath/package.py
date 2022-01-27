@@ -9,13 +9,16 @@ from spack import *
 
 class PyDpath(PythonPackage):
     """A python library for accessing and searching dictionaries via
-       /slashed/paths ala xpath."""
+    /slashed/paths ala xpath."""
 
     homepage = "https://github.com/akesterson/dpath-python"
-    pypi     = "dpath/dpath-2.0.1.tar.gz"
+    pypi = "dpath/dpath-2.0.1.tar.gz"
 
-    version('2.0.1', sha256='bea06b5f4ff620a28dfc9848cf4d6b2bfeed34238edeb8ebe815c433b54eb1fa')
+    version(
+        "2.0.1",
+        sha256="bea06b5f4ff620a28dfc9848cf4d6b2bfeed34238edeb8ebe815c433b54eb1fa",
+    )
 
-    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on("python@2.7:", type=("build", "run"))
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

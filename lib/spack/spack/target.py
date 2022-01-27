@@ -21,6 +21,7 @@ def _ensure_other_is_target(method):
     """In a single argument method, ensure that the argument is an
     instance of ``Target``.
     """
+
     @functools.wraps(method)
     def _impl(self, other):
         if isinstance(other, six.string_types):
@@ -57,8 +58,10 @@ class Target(object):
 
     @_ensure_other_is_target
     def __eq__(self, other):
-        return (self.microarchitecture == other.microarchitecture and
-                self.module_name == other.module_name)
+        return (
+            self.microarchitecture == other.microarchitecture
+            and self.module_name == other.module_name
+        )
 
     def __ne__(self, other):
         # This method is necessary as long as we support Python 2. In Python 3
@@ -89,7 +92,7 @@ class Target(object):
         # TODO: just the name. We can use that information to reconstruct an
         # TODO: "old" micro-architecture or check the current definition.
         target_info = dict_or_value
-        return Target(target_info['name'])
+        return Target(target_info["name"])
 
     def to_dict_or_value(self):
         """Returns a dict or a value representing the current target.
@@ -101,7 +104,7 @@ class Target(object):
         """
         # Generic targets represent either an architecture
         # family (like x86_64) or a custom micro-architecture
-        if self.microarchitecture.vendor == 'generic':
+        if self.microarchitecture.vendor == "generic":
             return str(self)
 
         return syaml.syaml_dict(
@@ -110,9 +113,8 @@ class Target(object):
 
     def __repr__(self):
         cls_name = self.__class__.__name__
-        fmt = cls_name + '({0}, {1})'
-        return fmt.format(repr(self.microarchitecture),
-                          repr(self.module_name))
+        fmt = cls_name + "({0}, {1})"
+        return fmt.format(repr(self.microarchitecture), repr(self.module_name))
 
     def __str__(self):
         return str(self.microarchitecture)
@@ -131,20 +133,20 @@ class Target(object):
         # Mixed toolchains are not supported yet
         if isinstance(compiler, spack.compiler.Compiler):
             if spack.compilers.is_mixed_toolchain(compiler):
-                msg = ('microarchitecture specific optimizations are not '
-                       'supported yet on mixed compiler toolchains [check'
-                       ' {0.name}@{0.version} for further details]')
+                msg = (
+                    "microarchitecture specific optimizations are not "
+                    "supported yet on mixed compiler toolchains [check"
+                    " {0.name}@{0.version} for further details]"
+                )
                 warnings.warn(msg.format(compiler))
-                return ''
+                return ""
 
         # Try to check if the current compiler comes with a version number or
         # has an unexpected suffix. If so, treat it as a compiler with a
         # custom spec.
         compiler_version = compiler.version
-        version_number, suffix = archspec.cpu.version_components(
-            compiler.version
-        )
-        if not version_number or suffix not in ('', 'apple'):
+        version_number, suffix = archspec.cpu.version_components(compiler.version)
+        if not version_number or suffix not in ("", "apple"):
             # Try to deduce the underlying version of the compiler, regardless
             # of its name in compilers.yaml. Depending on where this function
             # is called we might get either a CompilerSpec or a fully fledged

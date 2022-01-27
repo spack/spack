@@ -10,11 +10,14 @@ class PyIocapture(PythonPackage):
     """Capture stdout, stderr easily."""
 
     homepage = "https://github.com/oinume/iocapture"
-    pypi     = "iocapture/iocapture-0.1.2.tar.gz"
+    pypi = "iocapture/iocapture-0.1.2.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.1.2', sha256='86670e1808bcdcd4f70112f43da72ae766f04cd8311d1071ce6e0e0a72e37ee8')
+    version(
+        "0.1.2",
+        sha256="86670e1808bcdcd4f70112f43da72ae766f04cd8311d1071ce6e0e0a72e37ee8",
+    )
 
-    depends_on('python@2.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

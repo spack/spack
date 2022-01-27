@@ -306,9 +306,7 @@ def assoc(inst, **changes):
         a = getattr(attrs, k, NOTHING)
         if a is NOTHING:
             raise AttrsAttributeNotFoundError(
-                "{k} is not an attrs attribute on {cl}.".format(
-                    k=k, cl=new.__class__
-                )
+                "{k} is not an attrs attribute on {cl}.".format(k=k, cl=new.__class__)
             )
         _obj_setattr(new, k, v)
     return new

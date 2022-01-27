@@ -14,9 +14,9 @@ import shutil
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
 
-__all__ = ['LinkTree']
+__all__ = ["LinkTree"]
 
-empty_file_name = '.spack-empty'
+empty_file_name = ".spack-empty"
 
 
 def remove_link(src, dest):
@@ -39,30 +39,31 @@ class LinkTree(object):
     symlinked to, to prevent the source directory from ever being
     modified.
     """
+
     def __init__(self, source_root):
         if not os.path.exists(source_root):
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
 
-    def find_conflict(self, dest_root, ignore=None,
-                      ignore_file_conflicts=False):
+    def find_conflict(self, dest_root, ignore=None, ignore_file_conflicts=False):
         """Returns the first file in dest that conflicts with src"""
         ignore = ignore or (lambda x: False)
         conflicts = self.find_dir_conflicts(dest_root, ignore)
 
         if not ignore_file_conflicts:
             conflicts.extend(
-                dst for src, dst
-                in self.get_file_map(dest_root, ignore).items()
-                if os.path.exists(dst))
+                dst
+                for src, dst in self.get_file_map(dest_root, ignore).items()
+                if os.path.exists(dst)
+            )
 
         if conflicts:
             return conflicts[0]
 
     def find_dir_conflicts(self, dest_root, ignore):
         conflicts = []
-        kwargs = {'follow_nonexisting': False, 'ignore': ignore}
+        kwargs = {"follow_nonexisting": False, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
@@ -73,7 +74,7 @@ class LinkTree(object):
 
     def get_file_map(self, dest_root, ignore):
         merge_map = {}
-        kwargs = {'follow_nonexisting': True, 'ignore': ignore}
+        kwargs = {"follow_nonexisting": True, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if not os.path.isdir(src):
                 merge_map[src] = dest
@@ -96,7 +97,8 @@ class LinkTree(object):
 
     def unmerge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(
-                self._root, dest_root, ignore=ignore, order='post'):
+            self._root, dest_root, ignore=ignore, order="post"
+        ):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
                     continue
@@ -112,8 +114,14 @@ class LinkTree(object):
                 if os.path.exists(marker):
                     os.remove(marker)
 
-    def merge(self, dest_root, ignore_conflicts=False, ignore=None,
-              link=os.symlink, relative=False):
+    def merge(
+        self,
+        dest_root,
+        ignore_conflicts=False,
+        ignore=None,
+        link=os.symlink,
+        relative=False,
+    ):
         """Link all files in src into dest, creating directories
            if necessary.
 
@@ -135,7 +143,8 @@ class LinkTree(object):
             ignore = lambda x: False
 
         conflict = self.find_conflict(
-            dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts)
+            dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts
+        )
         if conflict:
             raise MergeConflictError(conflict)
 
@@ -169,7 +178,7 @@ class LinkTree(object):
 
 
 class MergeConflictError(Exception):
-
     def __init__(self, path):
         super(MergeConflictError, self).__init__(
-            "Package merge blocked by file: %s" % path)
+            "Package merge blocked by file: %s" % path
+        )

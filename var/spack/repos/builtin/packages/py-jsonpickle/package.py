@@ -10,11 +10,17 @@ class PyJsonpickle(PythonPackage):
     homepage = "https://github.com/jsonpickle/jsonpickle"
     pypi = "jsonpickle/jsonpickle-1.4.1.tar.gz"
 
-    version('2.0.0', sha256='0be49cba80ea6f87a168aa8168d717d00c6ca07ba83df3cec32d3b30bfe6fb9a')
-    version('1.4.1', sha256='e8d4b7cd0bd6826001a74377df1079a76ad8bae0f909282de2554164c837c8ba')
+    version(
+        "2.0.0",
+        sha256="0be49cba80ea6f87a168aa8168d717d00c6ca07ba83df3cec32d3b30bfe6fb9a",
+    )
+    version(
+        "1.4.1",
+        sha256="e8d4b7cd0bd6826001a74377df1079a76ad8bae0f909282de2554164c837c8ba",
+    )
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools@42:', type='build', when='@2.0.0:')
-    depends_on('py-setuptools-scm@3.4.1:+toml', type='build')
-    depends_on("py-importlib-metadata", when="^python@:3.7", type=('build', 'run'))
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@42:", type="build", when="@2.0.0:")
+    depends_on("py-setuptools-scm@3.4.1:+toml", type="build")
+    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))

@@ -21,63 +21,73 @@ class Avizo(Package):
 
     manual_download = True
 
-    version('2020.1',
-            sha256='9321aaa276567eebf116e268353c33a4c930d768d22793f921338e1d8cefe991',
-            url="file://{0}/Avizo-20201-Linux64-gcc48.bin".format(os.getcwd()),
-            expand=False)
-    version('2019.4',
-            sha256='a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248',
-            url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
-            expand=False)
-    version('2019.3',
-            sha256='be109df81e2f7238f234862367841dae05e76cc62218c1f36b1d9bc9514ce5f7',
-            url="file://{0}/Avizo-20193-Linux64-gcc48.bin".format(os.getcwd()),
-            expand=False)
-    version('9.7.0',
-            sha256='9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
-            url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
-            expand=False)
+    version(
+        "2020.1",
+        sha256="9321aaa276567eebf116e268353c33a4c930d768d22793f921338e1d8cefe991",
+        url="file://{0}/Avizo-20201-Linux64-gcc48.bin".format(os.getcwd()),
+        expand=False,
+    )
+    version(
+        "2019.4",
+        sha256="a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248",
+        url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
+        expand=False,
+    )
+    version(
+        "2019.3",
+        sha256="be109df81e2f7238f234862367841dae05e76cc62218c1f36b1d9bc9514ce5f7",
+        url="file://{0}/Avizo-20193-Linux64-gcc48.bin".format(os.getcwd()),
+        expand=False,
+    )
+    version(
+        "9.7.0",
+        sha256="9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b",
+        url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
+        expand=False,
+    )
 
-    gcc_ver = {
-        "9.7.0": "44",
-        "2019.3": "48",
-        "2019.4": "48",
-        "2020.1": "48"
-    }
+    gcc_ver = {"9.7.0": "44", "2019.3": "48", "2019.4": "48", "2020.1": "48"}
 
     install_dir = {
-        "9.7.0": 'Avizo-9.7.0',
-        "2019.3": join_path('..', 'Avizo'),
-        "2019.4": join_path('..', 'Avizo'),
-        "2020.1": join_path('..', 'Avizo')
+        "9.7.0": "Avizo-9.7.0",
+        "2019.3": join_path("..", "Avizo"),
+        "2019.4": join_path("..", "Avizo"),
+        "2020.1": join_path("..", "Avizo"),
     }
 
     # Licensing
     license_required = True
-    license_comment = '#'
-    license_files = ['share/license/password.dat']
-    license_vars = ['MCSLMD_LICENSE_FILE']
+    license_comment = "#"
+    license_files = ["share/license/password.dat"]
+    license_vars = ["MCSLMD_LICENSE_FILE"]
 
     def setup_run_environment(self, env):
-        env.set('MCSLMD_LICENSE_FILE', join_path(self.prefix.share.license,
-                                                 'password.dat'))
+        env.set(
+            "MCSLMD_LICENSE_FILE", join_path(self.prefix.share.license, "password.dat")
+        )
 
     def install(self, spec, prefix):
         ver = self.version.joined
-        sh = which('sh')
-        sh('Avizo-{0}-Linux64-gcc{1}.bin'
-           .format(ver, self.gcc_ver[self.version.string]),
-           '--noexec', '--keep')
+        sh = which("sh")
+        sh(
+            "Avizo-{0}-Linux64-gcc{1}.bin".format(
+                ver, self.gcc_ver[self.version.string]
+            ),
+            "--noexec",
+            "--keep",
+        )
 
-        with working_dir('Avizo'):
-            avizo_tar = tarfile.open(name='Avizo-{0}-Linux64-gcc{1}.tar.bz2'
-                                     .format(self.version, self.gcc_ver
-                                             [self.version.string]))
+        with working_dir("Avizo"):
+            avizo_tar = tarfile.open(
+                name="Avizo-{0}-Linux64-gcc{1}.tar.bz2".format(
+                    self.version, self.gcc_ver[self.version.string]
+                )
+            )
             avizo_tar.extractall()
 
             with working_dir(self.install_dir[self.version.string]):
-                install_tree('bin', prefix.bin)
-                install_tree('lib', prefix.lib)
-                install_tree('data', prefix.data)
-                install_tree('share', prefix.share)
-                install_tree('python', prefix.python)
+                install_tree("bin", prefix.bin)
+                install_tree("lib", prefix.lib)
+                install_tree("data", prefix.data)
+                install_tree("share", prefix.share)
+                install_tree("python", prefix.python)

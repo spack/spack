@@ -14,10 +14,13 @@ class PyJupyterPackaging7(PythonPackage):
     # of concretizing build dependencies separately, this package should be removed.
 
     homepage = "https://github.com/jupyter/jupyter-packaging"
-    pypi     = "jupyter_packaging/jupyter-packaging-0.7.12.tar.gz"
+    pypi = "jupyter_packaging/jupyter-packaging-0.7.12.tar.gz"
 
-    version('0.7.12', sha256='b140325771881a7df7b7f2d14997b619063fe75ae756b9025852e4346000bbb8')
+    version(
+        "0.7.12",
+        sha256="b140325771881a7df7b7f2d14997b619063fe75ae756b9025852e4346000bbb8",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-packaging', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))

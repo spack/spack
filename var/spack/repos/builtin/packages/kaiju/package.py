@@ -11,19 +11,22 @@ class Kaiju(MakefilePackage):
     of high-throughput sequencing reads."""
 
     homepage = "https://github.com/bioinformatics-centre/kaiju"
-    url      = "https://github.com/bioinformatics-centre/kaiju/archive/v1.6.2.zip"
+    url = "https://github.com/bioinformatics-centre/kaiju/archive/v1.6.2.zip"
 
-    version('1.6.2', sha256='2685fed7e27ddeb26530fd60a4b388f2d5f3e29aaa79f8e2e6abcbac64075db8')
+    version(
+        "1.6.2",
+        sha256="2685fed7e27ddeb26530fd60a4b388f2d5f3e29aaa79f8e2e6abcbac64075db8",
+    )
 
-    build_directory = 'src'
+    build_directory = "src"
 
-    depends_on('perl-io-compress', type='run')
-    depends_on('py-htseq', type='run')
+    depends_on("perl-io-compress", type="run")
+    depends_on("py-htseq", type="run")
 
     def edit(self, spec, prefix):
         # Replace ftp:// with https://
-        makedb = FileFilter('util/makeDB.sh')
-        makedb.filter('ftp://', 'https://', string=True)
+        makedb = FileFilter("util/makeDB.sh")
+        makedb.filter("ftp://", "https://", string=True)
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        install_tree("bin", prefix.bin)

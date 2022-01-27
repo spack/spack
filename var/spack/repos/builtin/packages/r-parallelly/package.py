@@ -23,5 +23,11 @@ class RParallelly(RPackage):
     homepage = "https://github.com/HenrikBengtsson/parallelly"
     cran = "parallelly"
 
-    version('1.28.1', sha256='f4ae883b18409adb83c561ed69427e740e1b50bf85ef57f48c3f2edf837cc663')
-    version('1.23.0', sha256='376ce2381587380a4da60f9563710d63084a605f93aa364e9349f2523e83bc08')
+    version(
+        "1.28.1",
+        sha256="f4ae883b18409adb83c561ed69427e740e1b50bf85ef57f48c3f2edf837cc663",
+    )
+    version(
+        "1.23.0",
+        sha256="376ce2381587380a4da60f9563710d63084a605f93aa364e9349f2523e83bc08",
+    )

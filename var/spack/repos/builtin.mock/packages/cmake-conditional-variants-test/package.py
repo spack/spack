@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 class CmakeConditionalVariantsTest(CMakePackage):
     homepage = "https://dev.null"
-    version('1.0')
-    variant('example', default=True, description='nope', when='@2.0:')
+    version("1.0")
+    variant("example", default=True, description="nope", when="@2.0:")

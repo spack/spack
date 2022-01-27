@@ -15,15 +15,15 @@ class RAromaLight(RPackage):
     utilized in other packages, or be wrapped up in higher-level classes."""
 
     homepage = "https://www.aroma-project.org/"
-    git      = "https://git.bioconductor.org/packages/aroma.light"
+    git = "https://git.bioconductor.org/packages/aroma.light"
 
-    version('3.20.0', commit='02cde7fa166259bce73c396a87dca2ecc8249c39')
-    version('3.16.0', commit='fc16179fc4bee8954c5415d7cd13e3112b75b4fd')
+    version("3.20.0", commit="02cde7fa166259bce73c396a87dca2ecc8249c39")
+    version("3.16.0", commit="fc16179fc4bee8954c5415d7cd13e3112b75b4fd")
 
-    depends_on('r@2.15.2:', type=('build', 'run'))
-    depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
-    depends_on('r-r-oo@1.22.0:', type=('build', 'run'))
-    depends_on('r-r-oo@1.23.0:', when='@3.20.0:', type=('build', 'run'))
-    depends_on('r-r-utils@2.9.0:', type=('build', 'run'))
-    depends_on('r-matrixstats@0.54.0:', type=('build', 'run'))
-    depends_on('r-matrixstats@0.55.0:', when='@3.20.0:', type=('build', 'run'))
+    depends_on("r@2.15.2:", type=("build", "run"))
+    depends_on("r-r-methodss3@1.7.1:", type=("build", "run"))
+    depends_on("r-r-oo@1.22.0:", type=("build", "run"))
+    depends_on("r-r-oo@1.23.0:", when="@3.20.0:", type=("build", "run"))
+    depends_on("r-r-utils@2.9.0:", type=("build", "run"))
+    depends_on("r-matrixstats@0.54.0:", type=("build", "run"))
+    depends_on("r-matrixstats@0.55.0:", when="@3.20.0:", type=("build", "run"))

@@ -17,25 +17,31 @@ class RNmf(RPackage):
     computations on multicore machines."""
 
     homepage = "https://renozao.github.io/NMF"
-    url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 
-    version('0.23.0', sha256='0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753')
-    version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
+    version(
+        "0.23.0",
+        sha256="0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753",
+    )
+    version(
+        "0.21.0",
+        sha256="3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
-    depends_on('r-registry', type=('build', 'run'))
-    depends_on('r-rngtools@1.2.3:', type=('build', 'run'))
-    depends_on('r-cluster', type=('build', 'run'))
-    depends_on('r-stringr@1.0.0:', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-gridbase', type=('build', 'run'))
-    depends_on('r-colorspace', type=('build', 'run'))
-    depends_on('r-rcolorbrewer', type=('build', 'run'))
-    depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-doparallel', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-biocmanager', when='@0.23.0', type=('build', 'run'))
-    depends_on('r-biobase', when='@0.23.0', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-pkgmaker@0.20:", type=("build", "run"))
+    depends_on("r-registry", type=("build", "run"))
+    depends_on("r-rngtools@1.2.3:", type=("build", "run"))
+    depends_on("r-cluster", type=("build", "run"))
+    depends_on("r-stringr@1.0.0:", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
+    depends_on("r-gridbase", type=("build", "run"))
+    depends_on("r-colorspace", type=("build", "run"))
+    depends_on("r-rcolorbrewer", type=("build", "run"))
+    depends_on("r-foreach", type=("build", "run"))
+    depends_on("r-doparallel", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-reshape2", type=("build", "run"))
+    depends_on("r-biocmanager", when="@0.23.0", type=("build", "run"))
+    depends_on("r-biobase", when="@0.23.0", type=("build", "run"))

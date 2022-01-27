@@ -16,16 +16,19 @@ class Snpeff(Package, SourceforgePackage):
     homepage = "http://snpeff.sourceforge.net/"
     sourceforge_mirror_path = "snpeff/snpEff_latest_core.zip"
 
-    version('2017-11-24', sha256='d55a7389a78312947c1e7dadf5e6897b42d3c6e942e7c1b8ec68bb35d2ae2244')
+    version(
+        "2017-11-24",
+        sha256="d55a7389a78312947c1e7dadf5e6897b42d3c6e942e7c1b8ec68bb35d2ae2244",
+    )
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on("jdk", type=("build", "run"))
 
     def install(self, spec, prefix):
-        install_tree('snpEff', prefix.bin)
+        install_tree("snpEff", prefix.bin)
 
         # Set up a helper script to call java on the jar files,
         # explicitly codes the path for java and the jar files.
-        scripts = ['snpEff', 'SnpSift']
+        scripts = ["snpEff", "SnpSift"]
 
         for script in scripts:
             script_sh = join_path(os.path.dirname(__file__), script + ".sh")
@@ -35,9 +38,12 @@ class Snpeff(Package, SourceforgePackage):
 
             # Munge the helper script to explicitly point to java and the
             # jar file.
-            java = self.spec['java'].prefix.bin.java
-            kwargs = {'backup': False}
-            filter_file('^java', java, script_path, **kwargs)
-            filter_file(script + '.jar',
-                        join_path(prefix.bin, script + '.jar'),
-                        script_path, **kwargs)
+            java = self.spec["java"].prefix.bin.java
+            kwargs = {"backup": False}
+            filter_file("^java", java, script_path, **kwargs)
+            filter_file(
+                script + ".jar",
+                join_path(prefix.bin, script + ".jar"),
+                script_path,
+                **kwargs
+            )

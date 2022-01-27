@@ -7,21 +7,20 @@ from spack import *
 
 
 class Cquery(CMakePackage):
-    """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees.
-    """
+    """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees."""
 
     homepage = "https://github.com/cquery-project/cquery"
-    git      = "https://github.com/cquery-project/cquery.git"
+    git = "https://github.com/cquery-project/cquery.git"
 
-    version('2018-08-23', commit='70c755b2e390d3edfb594a84a7531beb26b2bc07',
-            submodules=True)
+    version(
+        "2018-08-23", commit="70c755b2e390d3edfb594a84a7531beb26b2bc07", submodules=True
+    )
 
-    depends_on('llvm')
+    depends_on("llvm")
 
     # trivial patch (missing header) by mueller@kip.uni-heidelberg.de
-    patch('fix-gcc10.patch', level=0, when='%gcc@10.0:')
+    patch("fix-gcc10.patch", level=0, when="%gcc@10.0:")
 
     def cmake_args(self):
-        args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=YES',
-                '-DSYSTEM_CLANG=ON']
+        args = ["-DCMAKE_EXPORT_COMPILE_COMMANDS=YES", "-DSYSTEM_CLANG=ON"]
         return args

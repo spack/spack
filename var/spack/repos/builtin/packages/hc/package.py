@@ -12,12 +12,15 @@ class Hc(MakefilePackage):
     density distributions and plate velocities."""
 
     homepage = "https://geodynamics.org/cig/software/hc/"
-    url      = "https://geodynamics.org/cig/software/hc/hc-1.0.7.tar.gz"
+    url = "https://geodynamics.org/cig/software/hc/hc-1.0.7.tar.gz"
 
-    version('1.0.7', sha256='7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed')
+    version(
+        "1.0.7",
+        sha256="7499ea76ac4739a9c0941bd57d124fb681fd387c8d716ebb358e6af3395103ed",
+    )
 
-    depends_on('gmt@4.2.1:4')
-    depends_on('netcdf-c')
+    depends_on("gmt@4.2.1:4")
+    depends_on("netcdf-c")
 
     # Build phase fails in parallel with the following error messages:
     # /usr/bin/ld: cannot find -lrick
@@ -26,13 +29,13 @@ class Hc(MakefilePackage):
     parallel = False
 
     def setup_build_environment(self, env):
-        env.set('GMTHOME', self.spec['gmt'].prefix)
-        env.set('NETCDFHOME', self.spec['netcdf-c'].prefix)
-        env.set('HC_HOME', self.prefix)
-        env.unset('ARCH')
+        env.set("GMTHOME", self.spec["gmt"].prefix)
+        env.set("NETCDFHOME", self.spec["netcdf-c"].prefix)
+        env.set("HC_HOME", self.prefix)
+        env.unset("ARCH")
 
     def install(self, spec, prefix):
         # Most files are installed during the build stage.
         # Manually install header files as well.
-        for header in find('.', '*.h'):
+        for header in find(".", "*.h"):
             install(header, prefix.include)

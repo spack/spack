@@ -12,4 +12,6 @@ class Xf86dgaproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/xf86dgaproto"
     xorg_mirror_path = "proto/xf86dgaproto-2.1.tar.gz"
 
-    version('2.1', sha256='73bc6fc830cce5a0ec9c750d4702601fc0fca12d6353ede8b4c0092c9c4ca2af')
+    version(
+        "2.1", sha256="73bc6fc830cce5a0ec9c750d4702601fc0fca12d6353ede8b4c0092c9c4ca2af"
+    )

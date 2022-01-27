@@ -23,27 +23,37 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-V', '--version', action='store_true', dest='python_version',
-        help='print the Python version number and exit')
+        "-V",
+        "--version",
+        action="store_true",
+        dest="python_version",
+        help="print the Python version number and exit",
+    )
+    subparser.add_argument("-c", dest="python_command", help="command to execute")
     subparser.add_argument(
-        '-c', dest='python_command', help='command to execute')
+        "-i",
+        dest="python_interpreter",
+        help="python interpreter",
+        choices=["python", "ipython"],
+        default="python",
+    )
     subparser.add_argument(
-        '-i', dest='python_interpreter', help='python interpreter',
-        choices=['python', 'ipython'], default='python')
+        "-m", dest="module", action="store", help="run library module as a script"
+    )
     subparser.add_argument(
-        '-m', dest='module', action='store',
-        help='run library module as a script')
+        "--path",
+        action="store_true",
+        dest="show_path",
+        help="show path to python interpreter that spack uses",
+    )
     subparser.add_argument(
-        '--path', action='store_true', dest='show_path',
-        help='show path to python interpreter that spack uses')
-    subparser.add_argument(
-        'python_args', nargs=argparse.REMAINDER,
-        help="file to run plus arguments")
+        "python_args", nargs=argparse.REMAINDER, help="file to run plus arguments"
+    )
 
 
 def python(parser, args, unknown_args):
     if args.python_version:
-        print('Python', platform.python_version())
+        print("Python", platform.python_version())
         return
 
     if args.show_path:
@@ -51,7 +61,7 @@ def python(parser, args, unknown_args):
         return
 
     if args.module:
-        sys.argv = ['spack-python'] + unknown_args + args.python_args
+        sys.argv = ["spack-python"] + unknown_args + args.python_args
         runpy.run_module(args.module, run_name="__main__", alter_sys=True)
         return
 
@@ -87,38 +97,45 @@ def ipython_interpreter(args):
     if args.python_args:
         IPython.start_ipython(argv=args.python_args)
     elif args.python_command:
-        IPython.start_ipython(argv=['-c', args.python_command])
+        IPython.start_ipython(argv=["-c", args.python_command])
     else:
-        header = ("Spack version %s\nPython %s, %s %s"
-                  % (spack.spack_version, platform.python_version(),
-                     platform.system(), platform.machine()))
+        header = "Spack version %s\nPython %s, %s %s" % (
+            spack.spack_version,
+            platform.python_version(),
+            platform.system(),
+            platform.machine(),
+        )
 
         __name__ = "__main__"  # noqa
         IPython.embed(module="__main__", header=header)
 
 
 def python_interpreter(args):
-    """A python interpreter is the default interpreter
-    """
+    """A python interpreter is the default interpreter"""
     # Fake a main python shell by setting __name__ to __main__.
-    console = code.InteractiveConsole({'__name__': '__main__',
-                                       'spack': spack})
+    console = code.InteractiveConsole({"__name__": "__main__", "spack": spack})
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
         if os.path.isfile(startup_file):
             with open(startup_file) as startup:
-                console.runsource(startup.read(), startup_file, 'exec')
+                console.runsource(startup.read(), startup_file, "exec")
 
     if args.python_command:
         console.runsource(args.python_command)
     elif args.python_args:
         sys.argv = args.python_args
         with open(args.python_args[0]) as file:
-            console.runsource(file.read(), args.python_args[0], 'exec')
+            console.runsource(file.read(), args.python_args[0], "exec")
     else:
         # Provides readline support, allowing user to use arrow keys
-        console.push('import readline')
+        console.push("import readline")
 
-        console.interact("Spack version %s\nPython %s, %s %s"
-                         % (spack.spack_version, platform.python_version(),
-                            platform.system(), platform.machine()))
+        console.interact(
+            "Spack version %s\nPython %s, %s %s"
+            % (
+                spack.spack_version,
+                platform.python_version(),
+                platform.system(),
+                platform.machine(),
+            )
+        )

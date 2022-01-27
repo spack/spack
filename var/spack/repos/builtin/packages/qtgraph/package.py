@@ -10,25 +10,25 @@ from spack import *
 
 class Qtgraph(QMakePackage):
     """The baseline library used in the CUDA-centric Open|SpeedShop Graphical
-       User Interface (GUI) which allows Graphviz DOT formatted data to be
-       imported into a Qt application by wrapping the Graphviz libcgraph and
-       libgvc within the Qt Graphics View Framework."""
+    User Interface (GUI) which allows Graphviz DOT formatted data to be
+    imported into a Qt application by wrapping the Graphviz libcgraph and
+    libgvc within the Qt Graphics View Framework."""
 
     homepage = "https://github.com/OpenSpeedShop/QtGraph"
-    git      = "https://github.com/OpenSpeedShop/QtGraph.git"
+    git = "https://github.com/OpenSpeedShop/QtGraph.git"
 
-    version('develop', branch='master')
-    version('1.0.0.0', branch='1.0.0.0')
+    version("develop", branch="master")
+    version("1.0.0.0", branch="1.0.0.0")
 
     # qtgraph depends on these packages
-    depends_on('qt@5.10.0:', when='@1.0.0.0:')
+    depends_on("qt@5.10.0:", when="@1.0.0.0:")
 
-    depends_on("graphviz@2.40.1:", when='@develop')
-    depends_on("graphviz@2.40.1", when='@1.0.0.0:')
+    depends_on("graphviz@2.40.1:", when="@develop")
+    depends_on("graphviz@2.40.1", when="@1.0.0.0:")
 
     def setup_build_environment(self, env):
-        env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
-        env.set('INSTALL_ROOT', self.prefix)
+        env.set("GRAPHVIZ_ROOT", self.spec["graphviz"].prefix)
+        env.set("INSTALL_ROOT", self.prefix)
 
     def setup_run_environment(self, env):
         # What library suffix should be used based on library existence
@@ -39,7 +39,9 @@ class Qtgraph(QMakePackage):
 
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
-        env.prepend_path('LD_LIBRARY_PATH', join_path(
-            lib_dir, '{0}'.format(self.spec['qt'].version.up_to(3))))
+        env.prepend_path(
+            "LD_LIBRARY_PATH",
+            join_path(lib_dir, "{0}".format(self.spec["qt"].version.up_to(3))),
+        )
 
-        env.prepend_path('CPATH', self.prefix.include.QtGraph)
+        env.prepend_path("CPATH", self.prefix.include.QtGraph)

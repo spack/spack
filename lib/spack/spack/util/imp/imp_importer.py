@@ -56,12 +56,12 @@ def prepend_open(f, *args, **kwargs):
     See the ``importlib``-based importer for a faster way to do this in
     later versions of python.
     """
-    text = kwargs.get('text', None)
+    text = kwargs.get("text", None)
 
     with open(f, *args) as f:
-        with tempfile.NamedTemporaryFile(mode='w+') as tf:
+        with tempfile.NamedTemporaryFile(mode="w+") as tf:
             if text:
-                tf.write(text + '\n')
+                tf.write(text + "\n")
             tf.write(f.read())
             tf.seek(0)
             yield tf.file

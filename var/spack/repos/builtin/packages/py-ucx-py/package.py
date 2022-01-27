@@ -13,13 +13,16 @@ class PyUcxPy(PythonPackage):
     homepage = "https://ucx-py.readthedocs.io/en/latest/"
     url = "https://github.com/rapidsai/ucx-py/archive/v0.16.0.tar.gz"
 
-    version('0.16.0', sha256='12c1c982ee337b8dc026d3a6e8e63d96bf021c5c555fe173642908d3c3bec36e')
+    version(
+        "0.16.0",
+        sha256="12c1c982ee337b8dc026d3a6e8e63d96bf021c5c555fe173642908d3c3bec36e",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-cython@0.29.14:2', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-psutil', type=('build', 'run'))
-    depends_on('py-pynvml', type=('build', 'run'))
-    depends_on('ucx')
-    depends_on('hwloc')
+    depends_on("py-setuptools", type="build")
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-cython@0.29.14:2", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-psutil", type=("build", "run"))
+    depends_on("py-pynvml", type=("build", "run"))
+    depends_on("ucx")
+    depends_on("hwloc")

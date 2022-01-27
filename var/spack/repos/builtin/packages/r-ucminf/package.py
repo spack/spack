@@ -14,7 +14,10 @@ class RUcminf(RPackage):
     for easy interchange with 'optim'."""
 
     homepage = "https://cloud.r-project.org/package=ucminf"
-    url      = "https://cloud.r-project.org/src/contrib/ucminf_1.1-4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/ucminf_1.1-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ucminf"
 
-    version('1.1-4', sha256='a2eb382f9b24e949d982e311578518710f8242070b3aa3314a331c1e1e7f6f07')
+    version(
+        "1.1-4",
+        sha256="a2eb382f9b24e949d982e311578518710f8242070b3aa3314a331c1e1e7f6f07",
+    )

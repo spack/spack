@@ -17,10 +17,13 @@ class RAssertiveMatrices(RPackage):
     to use assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.matrices"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.matrices_0.0-2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/assertive.matrices_0.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.matrices"
 
-    version('0.0-2', sha256='3462a7a7e11d7cc24180330d48cc3067cf92eab1699b3e4813deec66d99f5e9b')
+    version(
+        "0.0-2",
+        sha256="3462a7a7e11d7cc24180330d48cc3067cf92eab1699b3e4813deec66d99f5e9b",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-2:", type=("build", "run"))

@@ -18,23 +18,21 @@ class Fj(Package):
 
     homepage = "https://www.fujitsu.com/us/"
 
-    maintainers = ['t-karatsu']
+    maintainers = ["t-karatsu"]
 
     def install(self, spec, prefix):
         raise InstallError(
-            'Fujitsu compilers are not installable yet, but can be '
-            'detected on a system where they are supplied by vendor'
+            "Fujitsu compilers are not installable yet, but can be "
+            "detected on a system where they are supplied by vendor"
         )
 
-    executables = ['^fcc', '^FCC', '^frt']
+    executables = ["^fcc", "^FCC", "^frt"]
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(r'\((?:FCC|FRT)\) ([a-z\d.]+)')
+        version_regex = re.compile(r"\((?:FCC|FRT)\) ([a-z\d.]+)")
         try:
-            output = spack.compiler.get_compiler_version_output(
-                exe, '--version'
-            )
+            output = spack.compiler.get_compiler_version_output(exe, "--version")
             match = version_regex.search(output)
             if match:
                 return match.group(1)
@@ -47,10 +45,10 @@ class Fj(Package):
     def determine_variants(cls, exes, version_str):
         compilers = {}
         for exe in exes:
-            if 'fcc' in exe:
-                compilers['c'] = exe
-            if 'FCC' in exe:
-                compilers['cxx'] = exe
-            if 'frt' in exe:
-                compilers['fortran'] = exe
-        return '', {'compilers': compilers}
+            if "fcc" in exe:
+                compilers["c"] = exe
+            if "FCC" in exe:
+                compilers["cxx"] = exe
+            if "frt" in exe:
+                compilers["fortran"] = exe
+        return "", {"compilers": compilers}

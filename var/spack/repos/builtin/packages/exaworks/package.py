@@ -7,24 +7,24 @@ from spack import *
 
 
 class Exaworks(BundlePackage):
-    '''
+    """
     Virtual package for the Exaworks SDK packages.
-    '''
+    """
 
-    homepage = 'https://exaworks.org/'
-    maintainers = ['andre-merzky']
+    homepage = "https://exaworks.org/"
+    maintainers = ["andre-merzky"]
 
-    version('0.1.0')
+    version("0.1.0")
 
-    depends_on('stc',                     type=('build', 'run'))
+    depends_on("stc", type=("build", "run"))
 
-    depends_on('flux-core',               type=('build', 'run'))
-    depends_on('flux-sched',              type=('build', 'run'))
+    depends_on("flux-core", type=("build", "run"))
+    depends_on("flux-sched", type=("build", "run"))
 
-    depends_on('py-parsl',                type=('build', 'run'))
+    depends_on("py-parsl", type=("build", "run"))
 
-    depends_on('py-radical-gtod',         type=('build', 'run'))
-    depends_on('py-radical-utils',        type=('build', 'run'))
-    depends_on('py-radical-saga',         type=('build', 'run'))
-    depends_on('py-radical-pilot',        type=('build', 'run'))
-    depends_on('py-radical-entk',         type=('build', 'run'))
+    depends_on("py-radical-gtod", type=("build", "run"))
+    depends_on("py-radical-utils", type=("build", "run"))
+    depends_on("py-radical-saga", type=("build", "run"))
+    depends_on("py-radical-pilot", type=("build", "run"))
+    depends_on("py-radical-entk", type=("build", "run"))

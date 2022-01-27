@@ -15,7 +15,10 @@ class Xtrans(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libxtrans"
     xorg_mirror_path = "lib/xtrans-1.3.5.tar.gz"
 
-    version('1.3.5', sha256='b7a577c1b6c75030145e53b4793db9c88f9359ac49e7d771d4385d21b3e5945d')
+    version(
+        "1.3.5",
+        sha256="b7a577c1b6c75030145e53b4793db9c88f9359ac49e7d771d4385d21b3e5945d",
+    )
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

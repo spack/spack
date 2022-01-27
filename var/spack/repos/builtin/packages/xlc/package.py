@@ -18,25 +18,23 @@ class Xlc(Package):
 
     homepage = "https://www.ibm.com/support/knowledgecenter/SSXVZZ_16.1.1/com.ibm.compilers.linux.doc/welcome.html"
 
-    variant('r', default=True, description='The _r version of compilers')
+    variant("r", default=True, description="The _r version of compilers")
 
     def install(self, spec, prefix):
         raise InstallError(
-            'XL compilers are not installable yet, but can be '
-            'detected on a system where they are supplied by vendor'
+            "XL compilers are not installable yet, but can be "
+            "detected on a system where they are supplied by vendor"
         )
 
-    executables = [r'xlc', r'xlC', r'xlc\+\+']
+    executables = [r"xlc", r"xlC", r"xlc\+\+"]
 
     @classmethod
     def determine_version(cls, exe):
-        version_regex = re.compile(r'([0-9]?[0-9]\.[0-9])')
+        version_regex = re.compile(r"([0-9]?[0-9]\.[0-9])")
         try:
-            output = spack.compiler.get_compiler_version_output(
-                exe, '-qversion'
-            )
+            output = spack.compiler.get_compiler_version_output(exe, "-qversion")
             # Exclude spurious Fortran compilers
-            if 'Fortran' in output:
+            if "Fortran" in output:
                 return None
 
             match = version_regex.search(output)
@@ -52,31 +50,31 @@ class Xlc(Package):
         variants = collections.defaultdict(dict)
         for exe in exes:
             # Determine the variant of the spec
-            variant_str = '+r' if '_r' in exe else '~r'
-            if 'xlc++' in exe:
-                variants[variant_str]['cxx'] = exe
+            variant_str = "+r" if "_r" in exe else "~r"
+            if "xlc++" in exe:
+                variants[variant_str]["cxx"] = exe
                 continue
 
-            if 'xlc' in exe:
-                variants[variant_str]['c'] = exe
+            if "xlc" in exe:
+                variants[variant_str]["c"] = exe
                 continue
 
         results = []
         for variant_str, compilers in variants.items():
-            results.append((variant_str, {'compilers': compilers}))
+            results.append((variant_str, {"compilers": compilers}))
 
         return results
 
     @property
     def cc(self):
         if self.spec.external:
-            return self.spec.extra_attributes['compilers']['c']
+            return self.spec.extra_attributes["compilers"]["c"]
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg
 
     @property
     def cxx(self):
         if self.spec.external:
-            return self.spec.extra_attributes['compilers']['cxx']
+            return self.spec.extra_attributes["compilers"]["cxx"]
         msg = "cannot retrieve C compiler [spec is not concrete]"
         assert self.spec.concrete, msg

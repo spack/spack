@@ -21,11 +21,11 @@ from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFi
 
 #: TCL specific part of the configuration
 def configuration(module_set_name):
-    config_path = 'modules:%s:tcl' % module_set_name
+    config_path = "modules:%s:tcl" % module_set_name
     config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
+    if not config and module_set_name == "default":
         # return old format for backward compatibility
-        return spack.config.get('modules:tcl', {})
+        return spack.config.get("modules:tcl", {})
     return config
 
 
@@ -40,11 +40,12 @@ def make_configuration(spec, module_set_name):
         return configuration_registry[key]
     except KeyError:
         return configuration_registry.setdefault(
-            key, TclConfiguration(spec, module_set_name))
+            key, TclConfiguration(spec, module_set_name)
+        )
 
 
 def make_layout(spec, module_set_name):
-    """Returns the layout information for spec """
+    """Returns the layout information for spec"""
     conf = make_configuration(spec, module_set_name)
     return TclFileLayout(conf)
 
@@ -61,7 +62,7 @@ class TclConfiguration(BaseConfiguration):
     @property
     def conflicts(self):
         """Conflicts for this module file"""
-        return self.conf.get('conflict', [])
+        return self.conf.get("conflict", [])
 
 
 class TclFileLayout(BaseFileLayout):
@@ -74,7 +75,7 @@ class TclContext(BaseContext):
     @tengine.context_property
     def prerequisites(self):
         """List of modules that needs to be loaded automatically."""
-        return self._create_module_list_of('specs_to_prereq')
+        return self._create_module_list_of("specs_to_prereq")
 
     @tengine.context_property
     def conflicts(self):
@@ -85,19 +86,21 @@ class TclContext(BaseContext):
         for item in self.conf.conflicts:
             if len([x for x in f.parse(item)]) > 1:
                 for naming_dir, conflict_dir in zip(
-                        projection.split('/'), item.split('/')
+                    projection.split("/"), item.split("/")
                 ):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming '
-                        message += 'scheme [{spec}]\n\n'
+                        message = "conflict scheme does not match naming "
+                        message += "scheme [{spec}]\n\n"
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your '
-                        message += '`modules.yaml` configuration file **\n'
-                        tty.error(message.format(spec=self.spec,
-                                                 nformat=projection,
-                                                 cformat=item))
-                        raise SystemExit('Module generation aborted.')
+                        message += "** You may want to check your "
+                        message += "`modules.yaml` configuration file **\n"
+                        tty.error(
+                            message.format(
+                                spec=self.spec, nformat=projection, cformat=item
+                            )
+                        )
+                        raise SystemExit("Module generation aborted.")
                 item = self.spec.format(item)
             fmts.append(item)
         # Substitute spec tokens if present
@@ -106,4 +109,5 @@ class TclContext(BaseContext):
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
-    default_template = os.path.join('modules', 'modulefile.tcl')
+
+    default_template = os.path.join("modules", "modulefile.tcl")

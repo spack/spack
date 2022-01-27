@@ -20,11 +20,14 @@ class RTfisher(RPackage):
     p-Values", submitted."""
 
     homepage = "https://cloud.r-project.org/package=TFisher"
-    url      = "https://cloud.r-project.org/src/contrib/TFisher_0.2.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/TFisher_0.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/TFisher"
 
-    version('0.2.0', sha256='bd9b7484d6fba0165841596275b446f85ba446d40e92f3b9cb37381a3827e76f')
+    version(
+        "0.2.0",
+        sha256="bd9b7484d6fba0165841596275b446f85ba446d40e92f3b9cb37381a3827e76f",
+    )
 
-    depends_on('r-sn', type=('build', 'run'))
-    depends_on('r-mvtnorm', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on("r-sn", type=("build", "run"))
+    depends_on("r-mvtnorm", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))

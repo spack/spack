@@ -16,29 +16,35 @@ class Clapack(MakefilePackage):
     compiler."""
 
     homepage = "https://www.netlib.org/clapack/"
-    url      = "https://www.netlib.org/clapack/clapack.tgz"
+    url = "https://www.netlib.org/clapack/clapack.tgz"
 
-    version('3.2.1', sha256='6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac')
+    version(
+        "3.2.1",
+        sha256="6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac",
+    )
 
-    variant('external-blas', default=True,
-            description='Build with external BLAS (ATLAS here).')
+    variant(
+        "external-blas",
+        default=True,
+        description="Build with external BLAS (ATLAS here).",
+    )
 
-    depends_on('atlas', when='+external-blas')
+    depends_on("atlas", when="+external-blas")
 
     def edit(self, spec, prefix):
-        copy('make.inc.example', 'make.inc')
-        if '+external-blas' in spec:
-            make_inc = FileFilter('make.inc')
-            make_inc.filter(r'^BLASLIB.*',
-                            'BLASLIB = ../../libcblaswr.a -lcblas -latlas')
-            makefile = FileFilter('Makefile')
-            makefile.filter(r'^lib.*',
-                            'lib: variants lapacklib tmglib')
+        copy("make.inc.example", "make.inc")
+        if "+external-blas" in spec:
+            make_inc = FileFilter("make.inc")
+            make_inc.filter(
+                r"^BLASLIB.*", "BLASLIB = ../../libcblaswr.a -lcblas -latlas"
+            )
+            makefile = FileFilter("Makefile")
+            makefile.filter(r"^lib.*", "lib: variants lapacklib tmglib")
 
     def build(self, spec, prefix):
-        make('f2clib')
-        make('cblaswrap' if '+external-blas' in spec else 'blaslib')
-        make('lib')
+        make("f2clib")
+        make("cblaswrap" if "+external-blas" in spec else "blaslib")
+        make("lib")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

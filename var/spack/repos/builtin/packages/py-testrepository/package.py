@@ -12,9 +12,12 @@ class PyTestrepository(PythonPackage):
     homepage = "https://launchpad.net/testrepository"
     pypi = "testrepository/testrepository-0.0.20.tar.gz"
 
-    version('0.0.20', sha256='752449bc98c20253ec4611c40564aea93d435a5bf3ff672208e01cc10e5858eb')
+    version(
+        "0.0.20",
+        sha256="752449bc98c20253ec4611c40564aea93d435a5bf3ff672208e01cc10e5858eb",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-fixtures', type=('build', 'run'))
-    depends_on('py-python-subunit@0.0.18:', type=('build', 'run'))
-    depends_on('py-testtools@0.9.30:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-fixtures", type=("build", "run"))
+    depends_on("py-python-subunit@0.0.18:", type=("build", "run"))
+    depends_on("py-testtools@0.9.30:", type=("build", "run"))

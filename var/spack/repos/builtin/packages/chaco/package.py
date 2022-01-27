@@ -10,18 +10,18 @@ class Chaco(CMakePackage):
     """Graph partitioning library"""
 
     homepage = "https://gitlab.com/truchas/tpl-forks/chaco"
-    git      = "https://gitlab.com/truchas/tpl-forks/chaco.git"
+    git = "https://gitlab.com/truchas/tpl-forks/chaco.git"
 
-    maintainers = ['pbrady']
+    maintainers = ["pbrady"]
 
-    version('develop', branch="truchas")
-    version('2020-07-16', commit='92a877b381933d12b02507413897f696d81b4682', preferred=True)
+    version("develop", branch="truchas")
+    version(
+        "2020-07-16", commit="92a877b381933d12b02507413897f696d81b4682", preferred=True
+    )
 
-    variant('shared', default=True, description="build shared library")
+    variant("shared", default=True, description="build shared library")
 
-    depends_on('cmake@3.16:', type='build')
+    depends_on("cmake@3.16:", type="build")
 
     def cmake_args(self):
-        return [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
-        ]
+        return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]

@@ -12,6 +12,9 @@ class PyPytimeparse(PythonPackage):
     homepage = "https://github.com/wroberts/pytimeparse"
     pypi = "pytimeparse/pytimeparse-1.1.8.tar.gz"
 
-    version('1.1.8', sha256='e86136477be924d7e670646a98561957e8ca7308d44841e21f5ddea757556a0a')
+    version(
+        "1.1.8",
+        sha256="e86136477be924d7e670646a98561957e8ca7308d44841e21f5ddea757556a0a",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

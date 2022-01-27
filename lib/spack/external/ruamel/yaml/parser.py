@@ -71,16 +71,16 @@ from __future__ import absolute_import
 # flow_mapping_entry: { ALIAS ANCHOR TAG SCALAR FLOW-SEQUENCE-START
 #                                                    FLOW-MAPPING-START KEY }
 
-__all__ = ['Parser', 'RoundTripParser', 'ParserError']
+__all__ = ["Parser", "RoundTripParser", "ParserError"]
 
 # need to have full path, as pkg_resources tries to load parser.py in __init__.py
 # only to not do anything with the package afterwards
 # and for Jython too
-from ruamel.yaml.error import MarkedYAMLError                  # NOQA
-from ruamel.yaml.tokens import *                               # NOQA
-from ruamel.yaml.events import *                               # NOQA
-from ruamel.yaml.scanner import *                              # NOQA
-from ruamel.yaml.compat import utf8                            # NOQA
+from ruamel.yaml.error import MarkedYAMLError  # NOQA
+from ruamel.yaml.tokens import *  # NOQA
+from ruamel.yaml.events import *  # NOQA
+from ruamel.yaml.scanner import *  # NOQA
+from ruamel.yaml.compat import utf8  # NOQA
 
 
 class ParserError(MarkedYAMLError):
@@ -92,8 +92,8 @@ class Parser(object):
     # do not give many comments here.
 
     DEFAULT_TAGS = {
-        u'!':   u'!',
-        u'!!':  u'tag:yaml.org,2002:',
+        u"!": u"!",
+        u"!!": u"tag:yaml.org,2002:",
     }
 
     def __init__(self):
@@ -148,8 +148,9 @@ class Parser(object):
         # Parse the stream start.
         token = self.get_token()
         token.move_comment(self.peek_token())
-        event = StreamStartEvent(token.start_mark, token.end_mark,
-                                 encoding=token.encoding)
+        event = StreamStartEvent(
+            token.start_mark, token.end_mark, encoding=token.encoding
+        )
 
         # Prepare the next state.
         self.state = self.parse_implicit_document_start
@@ -159,13 +160,11 @@ class Parser(object):
     def parse_implicit_document_start(self):
 
         # Parse an implicit document.
-        if not self.check_token(DirectiveToken, DocumentStartToken,
-                                StreamEndToken):
+        if not self.check_token(DirectiveToken, DocumentStartToken, StreamEndToken):
             self.tag_handles = self.DEFAULT_TAGS
             token = self.peek_token()
             start_mark = end_mark = token.start_mark
-            event = DocumentStartEvent(start_mark, end_mark,
-                                       explicit=False)
+            event = DocumentStartEvent(start_mark, end_mark, explicit=False)
 
             # Prepare the next state.
             self.states.append(self.parse_document_end)
@@ -188,22 +187,25 @@ class Parser(object):
             start_mark = token.start_mark
             version, tags = self.process_directives()
             if not self.check_token(DocumentStartToken):
-                raise ParserError(None, None,
-                                  "expected '<document start>', but found %r"
-                                  % self.peek_token().id,
-                                  self.peek_token().start_mark)
+                raise ParserError(
+                    None,
+                    None,
+                    "expected '<document start>', but found %r" % self.peek_token().id,
+                    self.peek_token().start_mark,
+                )
             token = self.get_token()
             end_mark = token.end_mark
             event = DocumentStartEvent(
-                start_mark, end_mark,
-                explicit=True, version=version, tags=tags)
+                start_mark, end_mark, explicit=True, version=version, tags=tags
+            )
             self.states.append(self.parse_document_end)
             self.state = self.parse_document_content
         else:
             # Parse the end of the stream.
             token = self.get_token()
-            event = StreamEndEvent(token.start_mark, token.end_mark,
-                                   comment=token.comment)
+            event = StreamEndEvent(
+                token.start_mark, token.end_mark, comment=token.comment
+            )
             assert not self.states
             assert not self.marks
             self.state = None
@@ -228,8 +230,8 @@ class Parser(object):
 
     def parse_document_content(self):
         if self.check_token(
-           DirectiveToken,
-           DocumentStartToken, DocumentEndToken, StreamEndToken):
+            DirectiveToken, DocumentStartToken, DocumentEndToken, StreamEndToken
+        ):
             event = self.process_empty_scalar(self.peek_token().start_mark)
             self.state = self.states.pop()
             return event
@@ -241,25 +243,29 @@ class Parser(object):
         self.tag_handles = {}
         while self.check_token(DirectiveToken):
             token = self.get_token()
-            if token.name == u'YAML':
+            if token.name == u"YAML":
                 if self.yaml_version is not None:
                     raise ParserError(
-                        None, None,
-                        "found duplicate YAML directive", token.start_mark)
+                        None, None, "found duplicate YAML directive", token.start_mark
+                    )
                 major, minor = token.value
                 if major != 1:
                     raise ParserError(
-                        None, None,
-                        "found incompatible YAML document (version 1.* is "
-                        "required)",
-                        token.start_mark)
+                        None,
+                        None,
+                        "found incompatible YAML document (version 1.* is " "required)",
+                        token.start_mark,
+                    )
                 self.yaml_version = token.value
-            elif token.name == u'TAG':
+            elif token.name == u"TAG":
                 handle, prefix = token.value
                 if handle in self.tag_handles:
-                    raise ParserError(None, None,
-                                      "duplicate tag handle %r" % utf8(handle),
-                                      token.start_mark)
+                    raise ParserError(
+                        None,
+                        None,
+                        "duplicate tag handle %r" % utf8(handle),
+                        token.start_mark,
+                    )
                 self.tag_handles[handle] = prefix
         if self.tag_handles:
             value = self.yaml_version, self.tag_handles.copy()
@@ -331,9 +337,11 @@ class Parser(object):
                 if handle is not None:
                     if handle not in self.tag_handles:
                         raise ParserError(
-                            "while parsing a node", start_mark,
+                            "while parsing a node",
+                            start_mark,
                             "found undefined tag handle %r" % utf8(handle),
-                            tag_mark)
+                            tag_mark,
+                        )
                     tag = self.transform_tag(handle, suffix)
                 else:
                     tag = suffix
@@ -345,39 +353,43 @@ class Parser(object):
             if start_mark is None:
                 start_mark = end_mark = self.peek_token().start_mark
             event = None
-            implicit = (tag is None or tag == u'!')
+            implicit = tag is None or tag == u"!"
             if indentless_sequence and self.check_token(BlockEntryToken):
                 end_mark = self.peek_token().end_mark
-                event = SequenceStartEvent(anchor, tag, implicit,
-                                           start_mark, end_mark)
+                event = SequenceStartEvent(anchor, tag, implicit, start_mark, end_mark)
                 self.state = self.parse_indentless_sequence_entry
             else:
                 if self.check_token(ScalarToken):
                     token = self.get_token()
                     end_mark = token.end_mark
-                    if (token.plain and tag is None) or tag == u'!':
+                    if (token.plain and tag is None) or tag == u"!":
                         implicit = (True, False)
                     elif tag is None:
                         implicit = (False, True)
                     else:
                         implicit = (False, False)
                     event = ScalarEvent(
-                        anchor, tag, implicit, token.value,
-                        start_mark, end_mark, style=token.style,
-                        comment=token.comment
+                        anchor,
+                        tag,
+                        implicit,
+                        token.value,
+                        start_mark,
+                        end_mark,
+                        style=token.style,
+                        comment=token.comment,
                     )
                     self.state = self.states.pop()
                 elif self.check_token(FlowSequenceStartToken):
                     end_mark = self.peek_token().end_mark
                     event = SequenceStartEvent(
-                        anchor, tag, implicit,
-                        start_mark, end_mark, flow_style=True)
+                        anchor, tag, implicit, start_mark, end_mark, flow_style=True
+                    )
                     self.state = self.parse_flow_sequence_first_entry
                 elif self.check_token(FlowMappingStartToken):
                     end_mark = self.peek_token().end_mark
                     event = MappingStartEvent(
-                        anchor, tag, implicit,
-                        start_mark, end_mark, flow_style=True)
+                        anchor, tag, implicit, start_mark, end_mark, flow_style=True
+                    )
                     self.state = self.parse_flow_mapping_first_key
                 elif block and self.check_token(BlockSequenceStartToken):
                     end_mark = self.peek_token().start_mark
@@ -390,7 +402,11 @@ class Parser(object):
                         comment = pt.split_comment()
                     # print('pt1', comment)
                     event = SequenceStartEvent(
-                        anchor, tag, implicit, start_mark, end_mark,
+                        anchor,
+                        tag,
+                        implicit,
+                        start_mark,
+                        end_mark,
                         flow_style=False,
                         comment=comment,
                     )
@@ -399,25 +415,34 @@ class Parser(object):
                     end_mark = self.peek_token().start_mark
                     comment = self.peek_token().comment
                     event = MappingStartEvent(
-                        anchor, tag, implicit, start_mark, end_mark,
-                        flow_style=False, comment=comment)
+                        anchor,
+                        tag,
+                        implicit,
+                        start_mark,
+                        end_mark,
+                        flow_style=False,
+                        comment=comment,
+                    )
                     self.state = self.parse_block_mapping_first_key
                 elif anchor is not None or tag is not None:
                     # Empty scalars are allowed even if a tag or an anchor is
                     # specified.
-                    event = ScalarEvent(anchor, tag, (implicit, False), u'',
-                                        start_mark, end_mark)
+                    event = ScalarEvent(
+                        anchor, tag, (implicit, False), u"", start_mark, end_mark
+                    )
                     self.state = self.states.pop()
                 else:
                     if block:
-                        node = 'block'
+                        node = "block"
                     else:
-                        node = 'flow'
+                        node = "flow"
                     token = self.peek_token()
                     raise ParserError(
-                        "while parsing a %s node" % node, start_mark,
+                        "while parsing a %s node" % node,
+                        start_mark,
                         "expected the node content, but found %r" % token.id,
-                        token.start_mark)
+                        token.start_mark,
+                    )
         return event
 
     # block_sequence ::= BLOCK-SEQUENCE-START (BLOCK-ENTRY block_node?)*
@@ -443,12 +468,15 @@ class Parser(object):
         if not self.check_token(BlockEndToken):
             token = self.peek_token()
             raise ParserError(
-                "while parsing a block collection", self.marks[-1],
-                "expected <block end>, but found %r" %
-                token.id, token.start_mark)
+                "while parsing a block collection",
+                self.marks[-1],
+                "expected <block end>, but found %r" % token.id,
+                token.start_mark,
+            )
         token = self.get_token()  # BlockEndToken
-        event = SequenceEndEvent(token.start_mark, token.end_mark,
-                                 comment=token.comment)
+        event = SequenceEndEvent(
+            token.start_mark, token.end_mark, comment=token.comment
+        )
         self.state = self.states.pop()
         self.marks.pop()
         return event
@@ -464,16 +492,18 @@ class Parser(object):
         if self.check_token(BlockEntryToken):
             token = self.get_token()
             token.move_comment(self.peek_token())
-            if not self.check_token(BlockEntryToken,
-                                    KeyToken, ValueToken, BlockEndToken):
+            if not self.check_token(
+                BlockEntryToken, KeyToken, ValueToken, BlockEndToken
+            ):
                 self.states.append(self.parse_indentless_sequence_entry)
                 return self.parse_block_node()
             else:
                 self.state = self.parse_indentless_sequence_entry
                 return self.process_empty_scalar(token.end_mark)
         token = self.peek_token()
-        event = SequenceEndEvent(token.start_mark, token.start_mark,
-                                 comment=token.comment)
+        event = SequenceEndEvent(
+            token.start_mark, token.start_mark, comment=token.comment
+        )
         self.state = self.states.pop()
         return event
 
@@ -500,13 +530,14 @@ class Parser(object):
         if not self.check_token(BlockEndToken):
             token = self.peek_token()
             raise ParserError(
-                "while parsing a block mapping", self.marks[-1],
+                "while parsing a block mapping",
+                self.marks[-1],
                 "expected <block end>, but found %r" % token.id,
-                token.start_mark)
+                token.start_mark,
+            )
         token = self.get_token()
         token.move_comment(self.peek_token())
-        event = MappingEndEvent(token.start_mark, token.end_mark,
-                                comment=token.comment)
+        event = MappingEndEvent(token.start_mark, token.end_mark, comment=token.comment)
         self.state = self.states.pop()
         self.marks.pop()
         return event
@@ -551,31 +582,33 @@ class Parser(object):
                 else:
                     token = self.peek_token()
                     raise ParserError(
-                        "while parsing a flow sequence", self.marks[-1],
+                        "while parsing a flow sequence",
+                        self.marks[-1],
                         "expected ',' or ']', but got %r" % token.id,
-                        token.start_mark)
+                        token.start_mark,
+                    )
 
             if self.check_token(KeyToken):
                 token = self.peek_token()
-                event = MappingStartEvent(None, None, True,
-                                          token.start_mark, token.end_mark,
-                                          flow_style=True)
+                event = MappingStartEvent(
+                    None, None, True, token.start_mark, token.end_mark, flow_style=True
+                )
                 self.state = self.parse_flow_sequence_entry_mapping_key
                 return event
             elif not self.check_token(FlowSequenceEndToken):
                 self.states.append(self.parse_flow_sequence_entry)
                 return self.parse_flow_node()
         token = self.get_token()
-        event = SequenceEndEvent(token.start_mark, token.end_mark,
-                                 comment=token.comment)
+        event = SequenceEndEvent(
+            token.start_mark, token.end_mark, comment=token.comment
+        )
         self.state = self.states.pop()
         self.marks.pop()
         return event
 
     def parse_flow_sequence_entry_mapping_key(self):
         token = self.get_token()
-        if not self.check_token(ValueToken,
-                                FlowEntryToken, FlowSequenceEndToken):
+        if not self.check_token(ValueToken, FlowEntryToken, FlowSequenceEndToken):
             self.states.append(self.parse_flow_sequence_entry_mapping_value)
             return self.parse_flow_node()
         else:
@@ -620,13 +653,16 @@ class Parser(object):
                 else:
                     token = self.peek_token()
                     raise ParserError(
-                        "while parsing a flow mapping", self.marks[-1],
+                        "while parsing a flow mapping",
+                        self.marks[-1],
                         "expected ',' or '}', but got %r" % token.id,
-                        token.start_mark)
+                        token.start_mark,
+                    )
             if self.check_token(KeyToken):
                 token = self.get_token()
-                if not self.check_token(ValueToken,
-                                        FlowEntryToken, FlowMappingEndToken):
+                if not self.check_token(
+                    ValueToken, FlowEntryToken, FlowMappingEndToken
+                ):
                     self.states.append(self.parse_flow_mapping_value)
                     return self.parse_flow_node()
                 else:
@@ -636,8 +672,7 @@ class Parser(object):
                 self.states.append(self.parse_flow_mapping_empty_value)
                 return self.parse_flow_node()
         token = self.get_token()
-        event = MappingEndEvent(token.start_mark, token.end_mark,
-                                comment=token.comment)
+        event = MappingEndEvent(token.start_mark, token.end_mark, comment=token.comment)
         self.state = self.states.pop()
         self.marks.pop()
         return event
@@ -661,15 +696,27 @@ class Parser(object):
         return self.process_empty_scalar(self.peek_token().start_mark)
 
     def process_empty_scalar(self, mark):
-        return ScalarEvent(None, None, (True, False), u'', mark, mark)
+        return ScalarEvent(None, None, (True, False), u"", mark, mark)
 
 
 class RoundTripParser(Parser):
     """roundtrip is a safe loader, that wants to see the unmangled tag"""
+
     def transform_tag(self, handle, suffix):
         # return self.tag_handles[handle]+suffix
-        if handle == '!!' and suffix in (u'null', u'bool', u'int', u'float', u'binary',
-                                         u'timestamp', u'omap', u'pairs', u'set', u'str',
-                                         u'seq', u'map'):
+        if handle == "!!" and suffix in (
+            u"null",
+            u"bool",
+            u"int",
+            u"float",
+            u"binary",
+            u"timestamp",
+            u"omap",
+            u"pairs",
+            u"set",
+            u"str",
+            u"seq",
+            u"map",
+        ):
             return Parser.transform_tag(self, handle, suffix)
-        return handle+suffix
+        return handle + suffix

@@ -17,12 +17,15 @@ class RPhilentropy(RPackage):
     univariate or multivariate probability functions."""
 
     homepage = "https://github.com/HajkD/philentropy"
-    url      = "https://cloud.r-project.org/src/contrib/philentropy_0.4.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/philentropy_0.4.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/philentropy"
 
-    version('0.4.0', sha256='bfd30bf5635aab6a82716299a87d44cf96c7ab7f4ee069843869bcc85c357127')
+    version(
+        "0.4.0",
+        sha256="bfd30bf5635aab6a82716299a87d44cf96c7ab7f4ee069843869bcc85c357127",
+    )
 
-    depends_on('r@3.1.2:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-kernsmooth', type=('build', 'run'))
+    depends_on("r@3.1.2:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-kernsmooth", type=("build", "run"))

@@ -17,12 +17,15 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-f', '--force', action='store_true',
-        help="activate without first activating dependencies")
+        "-f",
+        "--force",
+        action="store_true",
+        help="activate without first activating dependencies",
+    )
     subparser.add_argument(
-        '-v', '--view', metavar='VIEW', type=str,
-        help="the view to operate on")
-    arguments.add_common_arguments(subparser, ['installed_spec'])
+        "-v", "--view", metavar="VIEW", type=str, help="the view to operate on"
+    )
+    arguments.add_common_arguments(subparser, ["installed_spec"])
 
 
 def activate(parser, args):

@@ -18,11 +18,17 @@ class RSpam(RPackage):
     <doi:10.18637/jss.v036.i10>; see 'citation("spam")' for details."""
 
     homepage = "https://www.math.uzh.ch/pages/spam/"
-    url      = "https://cloud.r-project.org/src/contrib/spam_2.3-0.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/spam_2.3-0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spam"
 
-    version('2.6-0', sha256='638fdd658e94f7544b46f6b6568b20a9f390bcd703aff572a3a5249fef66be5c')
-    version('2.3-0.2', sha256='848fa95c0a71ac82af6344539af7b1c33563c687f06ead42851a68b621fff533')
+    version(
+        "2.6-0",
+        sha256="638fdd658e94f7544b46f6b6568b20a9f390bcd703aff572a3a5249fef66be5c",
+    )
+    version(
+        "2.3-0.2",
+        sha256="848fa95c0a71ac82af6344539af7b1c33563c687f06ead42851a68b621fff533",
+    )
 
-    depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r-dotcall64', type=('build', 'run'))
+    depends_on("r@3.1:", type=("build", "run"))
+    depends_on("r-dotcall64", type=("build", "run"))

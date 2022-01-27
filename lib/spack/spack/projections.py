@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 def get_projection(projections, spec):
     """
     Get the projection for a spec from a projections dict.
@@ -11,6 +12,6 @@ def get_projection(projections, spec):
     for spec_like, projection in projections.items():
         if spec.satisfies(spec_like, strict=True):
             return projection
-        elif spec_like == 'all':
+        elif spec_like == "all":
             all_projection = projection
     return all_projection

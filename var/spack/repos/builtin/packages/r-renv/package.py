@@ -16,6 +16,9 @@ class RRenv(RPackage):
     reproducible."""
 
     homepage = "https://rstudio.github.io/renv/"
-    cran     = "renv"
+    cran = "renv"
 
-    version('0.13.2', sha256='41f208ed957e27c50cbd8b0fff77a434bad963707df85e462419e2edb6719a4a')
+    version(
+        "0.13.2",
+        sha256="41f208ed957e27c50cbd8b0fff77a434bad963707df85e462419e2edb6719a4a",
+    )

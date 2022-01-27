@@ -23,13 +23,14 @@ def gcs_client():
         import google.auth
         from google.cloud import storage
     except ImportError as ex:
-        tty.error('{0}, google-cloud-storage python module is missing.'.format(ex) +
-                  ' Please install to use the gs:// backend.')
+        tty.error(
+            "{0}, google-cloud-storage python module is missing.".format(ex)
+            + " Please install to use the gs:// backend."
+        )
         sys.exit(1)
 
     storage_credentials, storage_project = google.auth.default()
-    storage_client = storage.Client(storage_project,
-                                    storage_credentials)
+    storage_client = storage.Client(storage_project, storage_credentials)
     return storage_client
 
 
@@ -38,20 +39,24 @@ class GCSBucket(object):
     Create a wrapper object for a GCS Bucket. Provides methods to wrap spack
     related tasks, such as destroy.
     """
+
     def __init__(self, url, client=None):
         """Constructor for GCSBucket objects
 
-           Args:
-             url (str): The url pointing to the GCS bucket to build an object out of
-             client (google.cloud.storage.client.Client): A pre-defined storage
-                    client that will be used to access the GCS bucket.
+        Args:
+          url (str): The url pointing to the GCS bucket to build an object out of
+          client (google.cloud.storage.client.Client): A pre-defined storage
+                 client that will be used to access the GCS bucket.
         """
-        if url.scheme != 'gs':
-            raise ValueError('Can not create GCS bucket connection with scheme {SCHEME}'
-                             .format(SCHEME=url.scheme))
+        if url.scheme != "gs":
+            raise ValueError(
+                "Can not create GCS bucket connection with scheme {SCHEME}".format(
+                    SCHEME=url.scheme
+                )
+            )
         self.url = url
         self.name = self.url.netloc
-        if self.url.path[0] == '/':
+        if self.url.path[0] == "/":
             self.prefix = self.url.path[1:]
         else:
             self.prefix = self.url.path
@@ -59,12 +64,13 @@ class GCSBucket(object):
         self.client = client or gcs_client()
 
         self.bucket = None
-        tty.debug('New GCS bucket:')
+        tty.debug("New GCS bucket:")
         tty.debug("    name: {0}".format(self.name))
         tty.debug("    prefix: {0}".format(self.prefix))
 
     def exists(self):
         from google.cloud.exceptions import NotFound
+
         if not self.bucket:
             try:
                 self.bucket = self.client.bucket(self.name)
@@ -97,8 +103,9 @@ class GCSBucket(object):
                       If false, print absolute blob paths (useful for
                          destruction of bucket)
         """
-        tty.debug('Getting GCS blobs... Recurse {0} -- Rel: {1}'.format(
-            recursive, relative))
+        tty.debug(
+            "Getting GCS blobs... Recurse {0} -- Rel: {1}".format(recursive, relative)
+        )
 
         converter = str
         if relative:
@@ -108,11 +115,11 @@ class GCSBucket(object):
             all_blobs = self.bucket.list_blobs(prefix=self.prefix)
             blob_list = []
 
-            base_dirs = len(self.prefix.split('/')) + 1
+            base_dirs = len(self.prefix.split("/")) + 1
 
             for blob in all_blobs:
                 if not recursive:
-                    num_dirs = len(blob.name.split('/'))
+                    num_dirs = len(blob.name.split("/"))
                     if num_dirs <= base_dirs:
                         blob_list.append(converter(blob.name))
                 else:
@@ -131,6 +138,7 @@ class GCSBucket(object):
         Uses GCS Batch operations to bundle several delete operations together.
         """
         from google.cloud.exceptions import NotFound
+
         tty.debug("Bucket.destroy(recursive={0})".format(recursive))
         try:
             bucket_blobs = self.get_all_blobs(recursive=recursive, relative=False)
@@ -143,8 +151,9 @@ class GCSBucket(object):
                         blob = self.blob(bucket_blobs[j])
                         blob.delete()
         except NotFound as ex:
-            tty.error("{0}, Could not delete a blob in bucket {1}.".format(
-                      ex, self.name))
+            tty.error(
+                "{0}, Could not delete a blob in bucket {1}.".format(ex, self.name)
+            )
             sys.exit(1)
 
 
@@ -153,25 +162,32 @@ class GCSBlob(object):
 
     Wraps some blob methods for spack functionality
     """
+
     def __init__(self, url, client=None):
 
         self.url = url
-        if url.scheme != 'gs':
-            raise ValueError('Can not create GCS blob connection with scheme: {SCHEME}'
-                             .format(SCHEME=url.scheme))
+        if url.scheme != "gs":
+            raise ValueError(
+                "Can not create GCS blob connection with scheme: {SCHEME}".format(
+                    SCHEME=url.scheme
+                )
+            )
 
         self.client = client or gcs_client()
 
         self.bucket = GCSBucket(url)
 
-        self.blob_path = self.url.path.lstrip('/')
+        self.blob_path = self.url.path.lstrip("/")
 
         tty.debug("New GCSBlob")
         tty.debug("  blob_path = {0}".format(self.blob_path))
 
         if not self.bucket.exists():
-            tty.warn("The bucket {0} does not exist, it will be created"
-                     .format(self.bucket.name))
+            tty.warn(
+                "The bucket {0} does not exist, it will be created".format(
+                    self.bucket.name
+                )
+            )
             self.bucket.create()
 
     def get(self):
@@ -179,6 +195,7 @@ class GCSBlob(object):
 
     def exists(self):
         from google.cloud.exceptions import NotFound
+
         try:
             blob = self.bucket.blob(self.blob_path)
             exists = blob.exists()
@@ -189,6 +206,7 @@ class GCSBlob(object):
 
     def delete_blob(self):
         from google.cloud.exceptions import NotFound
+
         try:
             blob = self.bucket.blob(self.blob_path)
             blob.delete()
@@ -200,16 +218,16 @@ class GCSBlob(object):
         blob.upload_from_filename(local_file_path)
 
     def get_blob_byte_stream(self):
-        return self.bucket.get_blob(self.blob_path).open(mode='rb')
+        return self.bucket.get_blob(self.blob_path).open(mode="rb")
 
     def get_blob_headers(self):
         blob = self.bucket.get_blob(self.blob_path)
 
         headers = {
-            'Content-type': blob.content_type,
-            'Content-encoding': blob.content_encoding,
-            'Content-language': blob.content_language,
-            'MD5Hash': blob.md5_hash
+            "Content-type": blob.content_type,
+            "Content-encoding": blob.content_encoding,
+            "Content-language": blob.content_language,
+            "MD5Hash": blob.md5_hash,
         }
 
         return headers

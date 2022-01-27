@@ -11,7 +11,10 @@ class PyXvfbwrapper(PythonPackage):
 
     pypi = "xvfbwrapper/xvfbwrapper-0.2.9.tar.gz"
 
-    version('0.2.9', sha256='bcf4ae571941b40254faf7a73432dfc119ad21ce688f1fdec533067037ecfc24')
+    version(
+        "0.2.9",
+        sha256="bcf4ae571941b40254faf7a73432dfc119ad21ce688f1fdec533067037ecfc24",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
     # Eventually add xvfb!

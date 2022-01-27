@@ -10,60 +10,69 @@ class Serf(SConsPackage):
     """Apache Serf - a high performance C-based HTTP client library
     built upon the Apache Portable Runtime (APR) library"""
 
-    homepage  = 'https://serf.apache.org/'
-    url       = 'https://archive.apache.org/dist/serf/serf-1.3.9.tar.bz2'
+    homepage = "https://serf.apache.org/"
+    url = "https://archive.apache.org/dist/serf/serf-1.3.9.tar.bz2"
 
-    maintainers = ['cosmicexplorer']
+    maintainers = ["cosmicexplorer"]
 
-    version('1.3.9', sha256='549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc')
-    version('1.3.8', sha256='e0500be065dbbce490449837bb2ab624e46d64fc0b090474d9acaa87c82b2590')
+    version(
+        "1.3.9",
+        sha256="549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc",
+    )
+    version(
+        "1.3.8",
+        sha256="e0500be065dbbce490449837bb2ab624e46d64fc0b090474d9acaa87c82b2590",
+    )
 
-    variant('debug', default=False,
-            description='Enable debugging info and strict compile warnings')
+    variant(
+        "debug",
+        default=False,
+        description="Enable debugging info and strict compile warnings",
+    )
 
-    depends_on('apr')
-    depends_on('apr-util')
-    depends_on('openssl')
-    depends_on('python+pythoncmd', type='build')
-    depends_on('scons@2.3.0:', type='build')
-    depends_on('uuid')
-    depends_on('zlib')
+    depends_on("apr")
+    depends_on("apr-util")
+    depends_on("openssl")
+    depends_on("python+pythoncmd", type="build")
+    depends_on("scons@2.3.0:", type="build")
+    depends_on("uuid")
+    depends_on("zlib")
 
-    patch('py3syntax.patch')
-    patch('py3-hashbang.patch')
+    patch("py3syntax.patch")
+    patch("py3-hashbang.patch")
 
     def build_args(self, spec, prefix):
         args = {
-            'PREFIX': prefix,
-            'APR': spec['apr'].prefix,
-            'APU': spec['apr-util'].prefix,
-            'OPENSSL': spec['openssl'].prefix,
-            'ZLIB': spec['zlib'].prefix,
-            'DEBUG': 'yes' if '+debug' in spec else 'no',
+            "PREFIX": prefix,
+            "APR": spec["apr"].prefix,
+            "APU": spec["apr-util"].prefix,
+            "OPENSSL": spec["openssl"].prefix,
+            "ZLIB": spec["zlib"].prefix,
+            "DEBUG": "yes" if "+debug" in spec else "no",
         }
 
         # SCons doesn't pass Spack environment variables to the
         # execution environment. Therefore, we can't use Spack's compiler
         # wrappers. Use the actual compilers. SCons seems to RPATH things
         # on its own anyway.
-        args['CC'] = self.compiler.cc
+        args["CC"] = self.compiler.cc
 
         # Old versions of serf ignore the ZLIB variable on non-Windows platforms.
         # Also, there is no UUID variable to specify its installation location.
         # Pass explicit link flags for both.
         library_dirs = []
         include_dirs = []
-        for dep in spec.dependencies(deptype='link'):
+        for dep in spec.dependencies(deptype="link"):
             query = self.spec[dep.name]
             library_dirs.extend(query.libs.directories)
             include_dirs.extend(query.headers.directories)
 
         rpath = self.compiler.cc_rpath_arg
-        args['LINKFLAGS'] = '-L' + ' -L'.join(library_dirs)
-        args['LINKFLAGS'] += ' ' + rpath + (' ' + rpath).join(library_dirs)
-        args['CPPFLAGS'] = '-I' + ' -I'.join(include_dirs)
+        args["LINKFLAGS"] = "-L" + " -L".join(library_dirs)
+        args["LINKFLAGS"] += " " + rpath + (" " + rpath).join(library_dirs)
+        args["CPPFLAGS"] = "-I" + " -I".join(include_dirs)
 
-        return [key + '=' + value for key, value in args.items()]
+        return [key + "=" + value for key, value in args.items()]
 
     def build_test(self):
         # FIXME: Several test failures:
@@ -86,4 +95,4 @@ class Serf(SConsPackage):
         #
         # These seem to be related to:
         # https://groups.google.com/forum/#!topic/serf-dev/YEFTTdF1Qwc
-        scons('check')
+        scons("check")

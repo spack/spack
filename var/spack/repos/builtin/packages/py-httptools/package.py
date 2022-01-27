@@ -12,7 +12,10 @@ class PyHttptools(PythonPackage):
     homepage = "https://github.com/MagicStack/httptools"
     pypi = "httptools/httptools-0.1.1.tar.gz"
 
-    version('0.1.1', sha256='41b573cf33f64a8f8f3400d0a7faf48e1888582b6f6e02b82b9bd4f0bf7497ce')
+    version(
+        "0.1.1",
+        sha256="41b573cf33f64a8f8f3400d0a7faf48e1888582b6f6e02b82b9bd4f0bf7497ce",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")

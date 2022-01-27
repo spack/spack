@@ -20,75 +20,120 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    maintainers = ['robertmaynard', 'kmorel', 'vicentebolea']
+    maintainers = ["robertmaynard", "kmorel", "vicentebolea"]
 
-    url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
-    git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
-    tags     = ['e4s']
+    url = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
+    git = "https://gitlab.kitware.com/vtk/vtk-m.git"
+    tags = ["e4s"]
 
-    version('master', branch='master')
-    version('release', branch='release')
-    version('1.7.0', sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4", preferred=True)
-    version('1.6.0', sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76")
-    version('1.5.5', commit="d2d1c854adc8c0518802f153b48afd17646b6252")
-    version('1.5.4', commit="bbba2a1967b271cc393abd043716d957bca97972")
-    version('1.5.3', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
-    version('1.5.2', commit="c49390f2537c5ba8cf25bd39aa5c212d6eafcf61")
-    version('1.5.1', sha256="64c19e66c0d579cfb21bb0df10d649b523b470b0c9a6c2ea5fd979dfeda2c25e")
-    version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
-    version('1.4.0', sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a")
-    version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
-    version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
-    version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
+    version("master", branch="master")
+    version("release", branch="release")
+    version(
+        "1.7.0",
+        sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4",
+        preferred=True,
+    )
+    version(
+        "1.6.0",
+        sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76",
+    )
+    version("1.5.5", commit="d2d1c854adc8c0518802f153b48afd17646b6252")
+    version("1.5.4", commit="bbba2a1967b271cc393abd043716d957bca97972")
+    version("1.5.3", commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
+    version("1.5.2", commit="c49390f2537c5ba8cf25bd39aa5c212d6eafcf61")
+    version(
+        "1.5.1",
+        sha256="64c19e66c0d579cfb21bb0df10d649b523b470b0c9a6c2ea5fd979dfeda2c25e",
+    )
+    version(
+        "1.5.0",
+        sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8",
+    )
+    version(
+        "1.4.0",
+        sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a",
+    )
+    version(
+        "1.3.0",
+        sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e",
+    )
+    version(
+        "1.2.0",
+        sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763",
+    )
+    version(
+        "1.1.0",
+        sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18",
+    )
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
-    variant('build_type', default='Release', description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+    )
     variant("shared", default=False, description="build shared libs")
 
-    variant("doubleprecision", default=True,
-            description='enable double precision')
+    variant("doubleprecision", default=True, description="enable double precision")
     variant("logging", default=False, description="build logging support")
     variant("ascent_types", default=True, description="build support for ascent types")
-    variant("virtuals", default=False, description="enable support for deprecated virtual functions")
+    variant(
+        "virtuals",
+        default=False,
+        description="enable support for deprecated virtual functions",
+    )
     variant("mpi", default=False, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
-    variant("64bitids", default=False,
-            description="enable 64 bits ids")
+    variant("64bitids", default=False, description="enable 64 bits ids")
     variant("testlib", default=False, description="build test library")
 
     # Device variants
     # CudaPackage provides cuda variant
     # ROCmPackage provides rocm variant
     variant("kokkos", default=False, description="build using Kokkos backend")
-    variant("cuda_native", default=True, description="build using native cuda backend", when="+cuda")
-    variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
-    variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
+    variant(
+        "cuda_native",
+        default=True,
+        description="build using native cuda backend",
+        when="+cuda",
+    )
+    variant(
+        "openmp", default=(sys.platform != "darwin"), description="build openmp support"
+    )
+    variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
 
-    depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
+    depends_on("cmake@3.12:", type="build")  # CMake >= 3.12
     depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18
 
-    conflicts('%gcc@:4.10',
-              msg='vtk-m requires gcc >= 5. Please install a newer version')
+    conflicts(
+        "%gcc@:4.10", msg="vtk-m requires gcc >= 5. Please install a newer version"
+    )
 
-    depends_on('cuda@10.1.0:', when='+cuda_native')
+    depends_on("cuda@10.1.0:", when="+cuda_native")
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
     # VTK-m uses the default Kokkos backend
-    depends_on('kokkos', when='+kokkos')
+    depends_on("kokkos", when="+kokkos")
     # VTK-m native CUDA and Kokkos CUDA backends are not compatible
-    depends_on('kokkos ~cuda', when='+kokkos +cuda +cuda_native')
-    depends_on('kokkos +cuda', when='+kokkos +cuda ~cuda_native')
+    depends_on("kokkos ~cuda", when="+kokkos +cuda +cuda_native")
+    depends_on("kokkos +cuda", when="+kokkos +cuda ~cuda_native")
     for cuda_arch in CudaPackage.cuda_arch_values:
-        depends_on("kokkos cuda_arch=%s" % cuda_arch, when="+kokkos +cuda ~cuda_native cuda_arch=%s" % cuda_arch)
+        depends_on(
+            "kokkos cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda ~cuda_native cuda_arch=%s" % cuda_arch,
+        )
     # VTK-m uses the Kokkos HIP backend.
     # If Kokkos provides multiple backends, the HIP backend may or
     # may not be used for VTK-m depending on the default selected by Kokkos
-    depends_on('kokkos +rocm', when='+kokkos +rocm')
+    depends_on("kokkos +rocm", when="+kokkos +rocm")
     # Propagate AMD GPU target to kokkos for +rocm
     for amdgpu_value in ROCmPackage.amdgpu_targets:
-        depends_on("kokkos amdgpu_target=%s" % amdgpu_value, when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value)
+        depends_on(
+            "kokkos amdgpu_target=%s" % amdgpu_value,
+            when="+kokkos +rocm amdgpu_target=%s" % amdgpu_value,
+        )
 
     depends_on("rocm-cmake@3.7:", when="+rocm")
     depends_on("hip@3.7:", when="+rocm")
@@ -98,25 +143,37 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+shared", when="+cuda_native")
 
-    conflicts("+cuda", when="cuda_arch=none",
-              msg="vtk-m +cuda requires that cuda_arch be set")
+    conflicts(
+        "+cuda", when="cuda_arch=none", msg="vtk-m +cuda requires that cuda_arch be set"
+    )
 
     def cmake_args(self):
         spec = self.spec
         options = []
-        gpu_name_table = {'30': 'kepler',  '32': 'kepler',  '35': 'kepler',
-                          '50': 'maxwell', '52': 'maxwell', '53': 'maxwell',
-                          '60': 'pascal',  '61': 'pascal',  '62': 'pascal',
-                          '70': 'volta',   '72': 'turing',  '75': 'turing',
-                          '80': 'ampere',  '86': 'ampere'}
-        with working_dir('spack-build', create=True):
+        gpu_name_table = {
+            "30": "kepler",
+            "32": "kepler",
+            "35": "kepler",
+            "50": "maxwell",
+            "52": "maxwell",
+            "53": "maxwell",
+            "60": "pascal",
+            "61": "pascal",
+            "62": "pascal",
+            "70": "volta",
+            "72": "turing",
+            "75": "turing",
+            "80": "ampere",
+            "86": "ampere",
+        }
+        with working_dir("spack-build", create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs logic
             # force building statically with cuda
             if "+shared" in spec:
-                options.append('-DBUILD_SHARED_LIBS=ON')
+                options.append("-DBUILD_SHARED_LIBS=ON")
             else:
-                options.append('-DBUILD_SHARED_LIBS=OFF')
+                options.append("-DBUILD_SHARED_LIBS=OFF")
 
             # double precision
             if "+doubleprecision" in spec:
@@ -126,18 +183,22 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
             # logging support
             if "+logging" in spec:
-                if not spec.satisfies('@1.3.0:'):
-                    raise InstallError('logging is not supported for\
-                            vtkm version lower than 1.3')
+                if not spec.satisfies("@1.3.0:"):
+                    raise InstallError(
+                        "logging is not supported for\
+                            vtkm version lower than 1.3"
+                    )
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=OFF")
 
             # mpi support
             if "+mpi" in spec:
-                if not spec.satisfies('@1.3.0:'):
-                    raise InstallError('mpi is not supported for\
-                            vtkm version lower than 1.3')
+                if not spec.satisfies("@1.3.0:"):
+                    raise InstallError(
+                        "mpi is not supported for\
+                            vtkm version lower than 1.3"
+                    )
                 options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_MPI:BOOL=OFF")
@@ -168,24 +229,26 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
 
             # Support for the testing header files
-            if "+testlib" in spec and spec.satisfies('@1.7.0:'):
+            if "+testlib" in spec and spec.satisfies("@1.7.0:"):
                 options.append("-DVTKm_ENABLE_TESTING_LIBRARY:BOOL=ON")
 
-            if spec.variants["build_type"].value != 'Release':
+            if spec.variants["build_type"].value != "Release":
                 options.append("-DVTKm_NO_ASSERT:BOOL=ON")
 
             # cuda support
             if "+cuda_native" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
-                options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
-                               env["SPACK_CXX"]))
-                if 'cuda_arch' in spec.variants:
-                    cuda_value = spec.variants['cuda_arch'].value
+                options.append(
+                    "-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"])
+                )
+                if "cuda_arch" in spec.variants:
+                    cuda_value = spec.variants["cuda_arch"].value
                     cuda_arch = cuda_value[0]
                     if cuda_arch in gpu_name_table:
                         vtkm_cuda_arch = gpu_name_table[cuda_arch]
-                        options.append('-DVTKm_CUDA_Architecture={0}'.format(
-                                       vtkm_cuda_arch))
+                        options.append(
+                            "-DVTKm_CUDA_Architecture={0}".format(vtkm_cuda_arch)
+                        )
                 else:
                     # this fix is necessary if compiling platform has cuda, but
                     # no devices (this is common for front end nodes on hpc
@@ -198,16 +261,17 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             if "+rocm" in spec:
                 options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
 
-                archs = ",".join(self.spec.variants['amdgpu_target'].value)
-                options.append(
-                    "-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
+                archs = ",".join(self.spec.variants["amdgpu_target"].value)
+                options.append("-DCMAKE_HIP_ARCHITECTURES:STRING={0}".format(archs))
 
             # openmp support
             if "+openmp" in spec:
                 # openmp is added since version 1.3.0
-                if not spec.satisfies('@1.3.0:'):
-                    raise InstallError('OpenMP is not supported for\
-                            vtkm version lower than 1.3')
+                if not spec.satisfies("@1.3.0:"):
+                    raise InstallError(
+                        "OpenMP is not supported for\
+                            vtkm version lower than 1.3"
+                    )
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=OFF")
@@ -338,32 +402,33 @@ vtkm_add_target_information(VTKmSmokeTest
                             DEVICE_SOURCES main.cxx)
 """
 
-            with open("main.cxx", 'w') as f:
+            with open("main.cxx", "w") as f:
                 f.write(source)
-            with open("CMakeLists.txt", 'w') as f:
+            with open("CMakeLists.txt", "w") as f:
                 f.write(cmakelists)
             builddir = "build"
             with working_dir(builddir, create=True):
-                cmake = Executable(spec['cmake'].prefix.bin + "/cmake")
-                cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
+                cmake = Executable(spec["cmake"].prefix.bin + "/cmake")
+                cmakefiledir = spec["vtk-m"].prefix.lib + "/cmake"
                 cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
                 cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
                 cmake(*(["--build", "."]))
                 try:
-                    test = Executable('./VTKmSmokeTest')
+                    test = Executable("./VTKmSmokeTest")
                     output = test(output=str)
                 except ProcessError:
                     output = ""
                 print(output)
                 if "+cuda_native" in spec:
-                    expected_device = 'Cuda'
+                    expected_device = "Cuda"
                 elif "+kokkos" in spec:
-                    expected_device = 'Kokkos'
+                    expected_device = "Kokkos"
                 elif "+tbb" in spec:
-                    expected_device = 'TBB'
+                    expected_device = "TBB"
                 elif "+openmp" in spec:
-                    expected_device = 'OpenMP'
-                expected = """\
+                    expected_device = "OpenMP"
+                expected = (
+                    """\
 -------------------------------------------
 Testing No Argument Kernel
 -------------------------------------------
@@ -371,24 +436,27 @@ Testing Kernel + ArrayHandle PrepareForOutput
 -------------------------------------------
 Testing Kernel + ArrayHandle PrepareForInPlace
 -------------------------------------------
-Ran tests on: """ + expected_device + "\n"
+Ran tests on: """
+                    + expected_device
+                    + "\n"
+                )
                 success = output == expected
                 if success:
                     print("Test success")
                 if not success:
                     print("Produced output does not match expected output.")
                     print("Expected output:")
-                    print('-' * 80)
+                    print("-" * 80)
                     print(expected)
-                    print('-' * 80)
+                    print("-" * 80)
                     print("Produced output:")
-                    print('-' * 80)
+                    print("-" * 80)
                     print(output)
-                    print('-' * 80)
+                    print("-" * 80)
                     raise RuntimeError("VTK-m install check failed")
         shutil.rmtree(checkdir)
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec

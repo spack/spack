@@ -39,24 +39,26 @@ def set_up_license(pkg):
             write_license_file(pkg, license_path)
             # Open up file in user's favorite $EDITOR for editing
             editor_exe = None
-            if 'VISUAL' in os.environ:
-                editor_exe = Executable(os.environ['VISUAL'])
+            if "VISUAL" in os.environ:
+                editor_exe = Executable(os.environ["VISUAL"])
                 # gvim runs in the background by default so we force it to run
                 # in the foreground to make sure the license file is updated
                 # before we try to install
-                if 'gvim' in os.environ['VISUAL']:
-                    editor_exe.add_default_arg('-f')
-            elif 'EDITOR' in os.environ:
-                editor_exe = Executable(os.environ['EDITOR'])
+                if "gvim" in os.environ["VISUAL"]:
+                    editor_exe.add_default_arg("-f")
+            elif "EDITOR" in os.environ:
+                editor_exe = Executable(os.environ["EDITOR"])
             else:
-                editor_exe = which('vim', 'vi', 'emacs', 'nano')
+                editor_exe = which("vim", "vi", "emacs", "nano")
             if editor_exe is None:
                 raise EnvironmentError(
-                    'No text editor found! Please set the VISUAL and/or EDITOR'
-                    ' environment variable(s) to your preferred text editor.')
+                    "No text editor found! Please set the VISUAL and/or EDITOR"
+                    " environment variable(s) to your preferred text editor."
+                )
 
             def editor_wrapper(exe, args):
                 editor_exe(license_path)
+
             editor(license_path, _exec_func=editor_wrapper)
         else:
             # Use already existing license file
@@ -64,15 +66,19 @@ def set_up_license(pkg):
 
     # If not a file, what about an environment variable?
     elif pkg.license_vars:
-        tty.warn("A license is required to use %s. Please set %s to the "
-                 "full pathname to the license file, or port@host if you"
-                 " store your license keys on a dedicated license server" %
-                 (pkg.name, ' or '.join(pkg.license_vars)))
+        tty.warn(
+            "A license is required to use %s. Please set %s to the "
+            "full pathname to the license file, or port@host if you"
+            " store your license keys on a dedicated license server"
+            % (pkg.name, " or ".join(pkg.license_vars))
+        )
 
     # If not a file or variable, suggest a website for further info
     elif pkg.license_url:
-        tty.warn("A license is required to use %s. See %s for details" %
-                 (pkg.name, pkg.license_url))
+        tty.warn(
+            "A license is required to use %s. See %s for details"
+            % (pkg.name, pkg.license_url)
+        )
 
     # If all else fails, you're on your own
     else:
@@ -109,7 +115,9 @@ def write_license_file(pkg, license_path):
    file UNCHANGED. The system may be configured if:
 
     - A license file is installed in a default location.
-""".format(pkg.name)
+""".format(
+        pkg.name
+    )
 
     if envvars:
         txt += """\
@@ -117,7 +125,9 @@ def write_license_file(pkg, license_path):
       a module file:
 
 {0}
-""".format(envvars)
+""".format(
+            envvars
+        )
 
     txt += """\
  * Otherwise, depending on the license you have, enter AT THE BEGINNING of
@@ -130,14 +140,18 @@ def write_license_file(pkg, license_path):
    this Spack-global file (relative to the installation prefix).
 
 {0}
-""".format(linktargets)
+""".format(
+        linktargets
+    )
 
     if url:
         txt += """\
  * For further information on licensing, see:
 
 {0}
-""".format(url)
+""".format(
+            url
+        )
 
     txt += """\
  Recap:
@@ -149,7 +163,7 @@ def write_license_file(pkg, license_path):
         os.makedirs(os.path.dirname(license_path))
 
     # Output
-    with open(license_path, 'w') as f:
+    with open(license_path, "w") as f:
         for line in txt.splitlines():
             f.write("{0}{1}\n".format(pkg.license_comment, line))
         f.close()
@@ -180,5 +194,4 @@ def symlink_license(pkg):
 
         if os.path.exists(target):
             os.symlink(target, link_name)
-            tty.msg("Added local symlink %s to global license file" %
-                    link_name)
+            tty.msg("Added local symlink %s to global license file" % link_name)

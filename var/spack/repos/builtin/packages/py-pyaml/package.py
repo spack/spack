@@ -8,15 +8,18 @@ from spack import *
 
 class PyPyaml(PythonPackage):
     """PyYAML-based python module to produce pretty and readable
-       YAML-serialized data."""
+    YAML-serialized data."""
 
-    maintainers = ['Kerilk', 'liuyangzhuan']
+    maintainers = ["Kerilk", "liuyangzhuan"]
 
     homepage = "https://github.com/mk-fg/pretty-yaml"
-    pypi     = "pyaml/pyaml-21.8.3.tar.gz"
+    pypi = "pyaml/pyaml-21.8.3.tar.gz"
 
-    version('21.8.3', sha256='a1636d63c476328a07213d0b7111bb63570f1ab8a3eddf60522630250c23d975')
+    version(
+        "21.8.3",
+        sha256="a1636d63c476328a07213d0b7111bb63570f1ab8a3eddf60522630250c23d975",
+    )
 
-    depends_on('python@2.7:2,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on("python@2.7:2,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pyyaml", type=("build", "run"))

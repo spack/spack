@@ -5,8 +5,13 @@ This is a good source for looking at the various reporting hooks.
 from __future__ import absolute_import, division, print_function
 
 import itertools
-from _pytest.main import EXIT_OK, EXIT_TESTSFAILED, EXIT_INTERRUPTED, \
-    EXIT_USAGEERROR, EXIT_NOTESTSCOLLECTED
+from _pytest.main import (
+    EXIT_OK,
+    EXIT_TESTSFAILED,
+    EXIT_INTERRUPTED,
+    EXIT_USAGEERROR,
+    EXIT_NOTESTSCOLLECTED,
+)
 import pytest
 import py
 import sys
@@ -19,60 +24,103 @@ import _pytest._pluggy as pluggy
 
 def pytest_addoption(parser):
     group = parser.getgroup("terminal reporting", "reporting", after="general")
-    group._addoption('-v', '--verbose', action="count",
-                     dest="verbose", default=0, help="increase verbosity."),
-    group._addoption('-q', '--quiet', action="count",
-                     dest="quiet", default=0, help="decrease verbosity."),
-    group._addoption('-r',
-                     action="store", dest="reportchars", default='', metavar="chars",
-                     help="show extra test summary info as specified by chars (f)ailed, "
-                     "(E)error, (s)skipped, (x)failed, (X)passed, "
-                     "(p)passed, (P)passed with output, (a)all except pP. "
-                     "Warnings are displayed at all times except when "
-                     "--disable-warnings is set")
-    group._addoption('--disable-warnings', '--disable-pytest-warnings', default=False,
-                     dest='disable_warnings', action='store_true',
-                     help='disable warnings summary')
-    group._addoption('-l', '--showlocals',
-                     action="store_true", dest="showlocals", default=False,
-                     help="show locals in tracebacks (disabled by default).")
-    group._addoption('--tb', metavar="style",
-                     action="store", dest="tbstyle", default='auto',
-                     choices=['auto', 'long', 'short', 'no', 'line', 'native'],
-                     help="traceback print mode (auto/long/short/line/native/no).")
-    group._addoption('--fulltrace', '--full-trace',
-                     action="store_true", default=False,
-                     help="don't cut any tracebacks (default is to cut).")
-    group._addoption('--color', metavar="color",
-                     action="store", dest="color", default='auto',
-                     choices=['yes', 'no', 'auto'],
-                     help="color terminal output (yes/no/auto).")
+    group._addoption(
+        "-v",
+        "--verbose",
+        action="count",
+        dest="verbose",
+        default=0,
+        help="increase verbosity.",
+    ),
+    group._addoption(
+        "-q",
+        "--quiet",
+        action="count",
+        dest="quiet",
+        default=0,
+        help="decrease verbosity.",
+    ),
+    group._addoption(
+        "-r",
+        action="store",
+        dest="reportchars",
+        default="",
+        metavar="chars",
+        help="show extra test summary info as specified by chars (f)ailed, "
+        "(E)error, (s)skipped, (x)failed, (X)passed, "
+        "(p)passed, (P)passed with output, (a)all except pP. "
+        "Warnings are displayed at all times except when "
+        "--disable-warnings is set",
+    )
+    group._addoption(
+        "--disable-warnings",
+        "--disable-pytest-warnings",
+        default=False,
+        dest="disable_warnings",
+        action="store_true",
+        help="disable warnings summary",
+    )
+    group._addoption(
+        "-l",
+        "--showlocals",
+        action="store_true",
+        dest="showlocals",
+        default=False,
+        help="show locals in tracebacks (disabled by default).",
+    )
+    group._addoption(
+        "--tb",
+        metavar="style",
+        action="store",
+        dest="tbstyle",
+        default="auto",
+        choices=["auto", "long", "short", "no", "line", "native"],
+        help="traceback print mode (auto/long/short/line/native/no).",
+    )
+    group._addoption(
+        "--fulltrace",
+        "--full-trace",
+        action="store_true",
+        default=False,
+        help="don't cut any tracebacks (default is to cut).",
+    )
+    group._addoption(
+        "--color",
+        metavar="color",
+        action="store",
+        dest="color",
+        default="auto",
+        choices=["yes", "no", "auto"],
+        help="color terminal output (yes/no/auto).",
+    )
 
 
 def pytest_configure(config):
     config.option.verbose -= config.option.quiet
     reporter = TerminalReporter(config, sys.stdout)
-    config.pluginmanager.register(reporter, 'terminalreporter')
+    config.pluginmanager.register(reporter, "terminalreporter")
     if config.option.debug or config.option.traceconfig:
+
         def mywriter(tags, args):
             msg = " ".join(map(str, args))
             reporter.write_line("[traceconfig] " + msg)
+
         config.trace.root.setprocessor("pytest:config", mywriter)
 
 
 def getreportopt(config):
     reportopts = ""
     reportchars = config.option.reportchars
-    if not config.option.disable_warnings and 'w' not in reportchars:
-        reportchars += 'w'
-    elif config.option.disable_warnings and 'w' in reportchars:
-        reportchars = reportchars.replace('w', '')
+    if not config.option.disable_warnings and "w" not in reportchars:
+        reportchars += "w"
+    elif config.option.disable_warnings and "w" in reportchars:
+        reportchars = reportchars.replace("w", "")
     if reportchars:
         for char in reportchars:
-            if char not in reportopts and char != 'a':
+            if char not in reportopts and char != "a":
                 reportopts += char
-            elif char == 'a':
-                reportopts = 'fEsxXw'
+            elif char == "a":
+                reportopts = "fEsxXw"
     return reportopts
 
 
@@ -117,7 +165,7 @@ class WarningReport:
             if isinstance(self.fslocation, tuple) and len(self.fslocation) >= 2:
                 filename, linenum = self.fslocation[:2]
                 relpath = py.path.local(filename).relto(config.invocation_dir)
-                return '%s:%s' % (relpath, linenum)
+                return "%s:%s" % (relpath, linenum)
             else:
                 return str(self.fslocation)
         return None
@@ -126,6 +174,7 @@ class WarningReport:
 class TerminalReporter:
     def __init__(self, config, file=None):
         import _pytest.config
+
         self.config = config
         self.verbosity = self.config.option.verbose
         self.showheader = self.verbosity >= 0
@@ -137,15 +186,14 @@ class TerminalReporter:
         self.startdir = py.path.local()
         if file is None:
             file = sys.stdout
-        self._tw = self.writer = _pytest.config.create_terminal_writer(config,
-                                                                       file)
+        self._tw = self.writer = _pytest.config.create_terminal_writer(config, file)
         self.currentfspath = None
         self.reportchars = getreportopt(config)
         self.hasmarkup = self._tw.hasmarkup
         self.isatty = file.isatty()
 
     def hasopt(self, char):
-        char = {'xfailed': 'x', 'skipped': 's'}.get(char, char)
+        char = {"xfailed": "x", "skipped": "s"}.get(char, char)
         return char in self.reportchars
 
     def write_fspath_result(self, nodeid, res):
@@ -189,12 +237,12 @@ class TerminalReporter:
 
         The rest of the keyword arguments are markup instructions.
         """
-        erase = markup.pop('erase', False)
+        erase = markup.pop("erase", False)
         if erase:
             fill_count = self._tw.fullwidth - len(line)
-            fill = ' ' * fill_count
+            fill = " " * fill_count
         else:
-            fill = ''
+            fill = ""
         line = str(line)
         self._tw.write("\r" + line + fill, **markup)
 
@@ -215,8 +263,9 @@ class TerminalReporter:
 
     def pytest_logwarning(self, code, fslocation, message, nodeid):
         warnings = self.stats.setdefault("warnings", [])
-        warning = WarningReport(code=code, fslocation=fslocation,
-                                message=message, nodeid=nodeid)
+        warning = WarningReport(
+            code=code, fslocation=fslocation, message=message, nodeid=nodeid
+        )
         warnings.append(warning)
 
     def pytest_plugin_registered(self, plugin):
@@ -228,7 +277,7 @@ class TerminalReporter:
             self.write_line(msg)
 
     def pytest_deselected(self, items):
-        self.stats.setdefault('deselected', []).extend(items)
+        self.stats.setdefault("deselected", []).extend(items)
 
     def pytest_runtest_logstart(self, nodeid, location):
         # ensure that the path is printed before the
@@ -250,7 +299,7 @@ class TerminalReporter:
             # probably passed setup/teardown
             return
         if self.verbosity <= 0:
-            if not hasattr(rep, 'node') and self.showfspath:
+            if not hasattr(rep, "node") and self.showfspath:
                 self.write_fspath_result(rep.nodeid, letter)
             else:
                 self._tw.write(letter)
@@ -259,18 +308,18 @@ class TerminalReporter:
                 word, markup = word
             else:
                 if rep.passed:
-                    markup = {'green': True}
+                    markup = {"green": True}
                 elif rep.failed:
-                    markup = {'red': True}
+                    markup = {"red": True}
                 elif rep.skipped:
-                    markup = {'yellow': True}
+                    markup = {"yellow": True}
             line = self._locationline(rep.nodeid, *rep.location)
-            if not hasattr(rep, 'node'):
+            if not hasattr(rep, "node"):
                 self.write_ensure_prefix(line, word, **markup)
                 # self._tw.write(word, **markup)
             else:
                 self.ensure_newline()
-                if hasattr(rep, 'node'):
+                if hasattr(rep, "node"):
                     self._tw.write("[%s] " % rep.node.gateway.id)
                 self._tw.write(word, **markup)
                 self._tw.write(" " + line)
@@ -295,13 +344,15 @@ class TerminalReporter:
         if self.config.option.verbose < 0:
             return
 
-        errors = len(self.stats.get('error', []))
-        skipped = len(self.stats.get('skipped', []))
+        errors = len(self.stats.get("error", []))
+        skipped = len(self.stats.get("skipped", []))
         if final:
             line = "collected "
         else:
             line = "collecting "
-        line += str(self._numcollected) + " item" + ('' if self._numcollected == 1 else 's')
+        line += (
+            str(self._numcollected) + " item" + ("" if self._numcollected == 1 else "s")
+        )
         if errors:
             line += " / %d errors" % errors
         if skipped:
@@ -309,7 +360,7 @@ class TerminalReporter:
         if self.isatty:
             self.rewrite(line, bold=True, erase=True)
             if final:
-                self.write('\n')
+                self.write("\n")
         else:
             self.write_line(line)
 
@@ -324,17 +375,24 @@ class TerminalReporter:
         self.write_sep("=", "test session starts", bold=True)
         verinfo = platform.python_version()
         msg = "platform %s -- Python %s" % (sys.platform, verinfo)
-        if hasattr(sys, 'pypy_version_info'):
+        if hasattr(sys, "pypy_version_info"):
             verinfo = ".".join(map(str, sys.pypy_version_info[:3]))
             msg += "[pypy-%s-%s]" % (verinfo, sys.pypy_version_info[3])
         msg += ", pytest-%s, py-%s, pluggy-%s" % (
-               pytest.__version__, py.__version__, pluggy.__version__)
-        if self.verbosity > 0 or self.config.option.debug or \
-           getattr(self.config.option, 'pastebin', None):
+            pytest.__version__,
+            py.__version__,
+            pluggy.__version__,
+        )
+        if (
+            self.verbosity > 0
+            or self.config.option.debug
+            or getattr(self.config.option, "pastebin", None)
+        ):
             msg += " -- " + str(sys.executable)
         self.write_line(msg)
         lines = self.config.hook.pytest_report_header(
-            config=self.config, startdir=self.startdir)
+            config=self.config, startdir=self.startdir
+        )
         self._write_report_lines_from_hooks(lines)
 
     def _write_report_lines_from_hooks(self, lines):
@@ -351,21 +409,21 @@ class TerminalReporter:
         plugininfo = config.pluginmanager.list_plugin_distinfo()
         if plugininfo:
 
-            lines.append(
-                "plugins: %s" % ", ".join(_plugin_nameversions(plugininfo)))
+            lines.append("plugins: %s" % ", ".join(_plugin_nameversions(plugininfo)))
         return lines
 
     def pytest_collection_finish(self, session):
         if self.config.option.collectonly:
             self._printcollecteditems(session.items)
-            if self.stats.get('failed'):
+            if self.stats.get("failed"):
                 self._tw.sep("!", "collection failures")
-                for rep in self.stats.get('failed'):
+                for rep in self.stats.get("failed"):
                     rep.toterminal(self._tw)
                 return 1
             return 0
         lines = self.config.hook.pytest_report_collectionfinish(
-            config=self.config, startdir=self.startdir, items=session.items)
+            config=self.config, startdir=self.startdir, items=session.items
+        )
         self._write_report_lines_from_hooks(lines)
 
     def _printcollecteditems(self, items):
@@ -376,7 +434,7 @@ class TerminalReporter:
             if self.config.option.verbose < -1:
                 counts = {}
                 for item in items:
-                    name = item.nodeid.split('::', 1)[0]
+                    name = item.nodeid.split("::", 1)[0]
                     counts[name] = counts.get(name, 0) + 1
                 for name, count in sorted(counts.items()):
                     self._tw.line("%s: %d" % (name, count))
@@ -391,10 +449,10 @@ class TerminalReporter:
         for item in items:
             needed_collectors = item.listchain()[1:]  # strip root node
             while stack:
-                if stack == needed_collectors[:len(stack)]:
+                if stack == needed_collectors[: len(stack)]:
                     break
                 stack.pop()
-            for col in needed_collectors[len(stack):]:
+            for col in needed_collectors[len(stack) :]:
                 stack.append(col)
                 # if col.name == "()":
                 #    continue
@@ -407,11 +465,16 @@ class TerminalReporter:
         outcome.get_result()
         self._tw.line("")
         summary_exit_codes = (
-            EXIT_OK, EXIT_TESTSFAILED, EXIT_INTERRUPTED, EXIT_USAGEERROR,
-            EXIT_NOTESTSCOLLECTED)
+            EXIT_OK,
+            EXIT_TESTSFAILED,
+            EXIT_INTERRUPTED,
+            EXIT_USAGEERROR,
+            EXIT_NOTESTSCOLLECTED,
+        )
         if exitstatus in summary_exit_codes:
-            self.config.hook.pytest_terminal_summary(terminalreporter=self,
-                                                     exitstatus=exitstatus)
+            self.config.hook.pytest_terminal_summary(
+                terminalreporter=self, exitstatus=exitstatus
+            )
             self.summary_errors()
             self.summary_failures()
             self.summary_warnings()
@@ -426,7 +489,7 @@ class TerminalReporter:
         self._keyboardinterrupt_memo = excinfo.getrepr(funcargs=True)
 
     def pytest_unconfigure(self):
-        if hasattr(self, '_keyboardinterrupt_memo'):
+        if hasattr(self, "_keyboardinterrupt_memo"):
             self._report_keyboardinterrupt()
 
     def _report_keyboardinterrupt(self):
@@ -437,18 +500,22 @@ class TerminalReporter:
             if self.config.option.fulltrace:
                 excrepr.toterminal(self._tw)
             else:
-                self._tw.line("to show a full traceback on KeyboardInterrupt use --fulltrace", yellow=True)
+                self._tw.line(
+                    "to show a full traceback on KeyboardInterrupt use --fulltrace",
+                    yellow=True,
+                )
                 excrepr.reprcrash.toterminal(self._tw)
 
     def _locationline(self, nodeid, fspath, lineno, domain):
         def mkrel(nodeid):
             line = self.config.cwd_relative_nodeid(nodeid)
             if domain and line.endswith(domain):
-                line = line[:-len(domain)]
+                line = line[: -len(domain)]
                 values = domain.split("[")
-                values[0] = values[0].replace('.', '::')  # don't replace '.' in params
+                values[0] = values[0].replace(".", "::")  # don't replace '.' in params
                 line += "[".join(values)
             return line
+
         # collect_fspath comes from testid which has a "/"-normalized path
 
         if fspath:
@@ -460,7 +527,7 @@ class TerminalReporter:
         return res + " "
 
     def _getfailureheadline(self, rep):
-        if hasattr(rep, 'location'):
+        if hasattr(rep, "location"):
             fspath, lineno, domain = rep.location
             return domain
         else:
@@ -481,7 +548,7 @@ class TerminalReporter:
     def getreports(self, name):
         values = []
         for x in self.stats.get(name, []):
-            if not hasattr(x, '_pdbshown'):
+            if not hasattr(x, "_pdbshown"):
                 values.append(x)
         return values
 
@@ -491,22 +558,24 @@ class TerminalReporter:
             if not all_warnings:
                 return
 
-            grouped = itertools.groupby(all_warnings, key=lambda wr: wr.get_location(self.config))
+            grouped = itertools.groupby(
+                all_warnings, key=lambda wr: wr.get_location(self.config)
+            )
 
             self.write_sep("=", "warnings summary", yellow=True, bold=False)
             for location, warnings in grouped:
-                self._tw.line(str(location) or '<undetermined location>')
+                self._tw.line(str(location) or "<undetermined location>")
                 for w in warnings:
                     lines = w.message.splitlines()
-                    indented = '\n'.join('  ' + x for x in lines)
+                    indented = "\n".join("  " + x for x in lines)
                     self._tw.line(indented)
                 self._tw.line()
-            self._tw.line('-- Docs: http://doc.pytest.org/en/latest/warnings.html')
+            self._tw.line("-- Docs: http://doc.pytest.org/en/latest/warnings.html")
 
     def summary_passes(self):
         if self.config.option.tbstyle != "no":
             if self.hasopt("P"):
-                reports = self.getreports('passed')
+                reports = self.getreports("passed")
                 if not reports:
                     return
                 self.write_sep("=", "PASSES")
@@ -517,15 +586,15 @@ class TerminalReporter:
 
     def print_teardown_sections(self, rep):
         for secname, content in rep.sections:
-            if 'teardown' in secname:
-                self._tw.sep('-', secname)
+            if "teardown" in secname:
+                self._tw.sep("-", secname)
                 if content[-1:] == "\n":
                     content = content[:-1]
                 self._tw.line(content)
 
     def summary_failures(self):
         if self.config.option.tbstyle != "no":
-            reports = self.getreports('failed')
+            reports = self.getreports("failed")
             if not reports:
                 return
             self.write_sep("=", "FAILURES")
@@ -535,22 +604,22 @@ class TerminalReporter:
                     self.write_line(line)
                 else:
                     msg = self._getfailureheadline(rep)
-                    markup = {'red': True, 'bold': True}
+                    markup = {"red": True, "bold": True}
                     self.write_sep("_", msg, **markup)
                     self._outrep_summary(rep)
-                    for report in self.getreports(''):
-                        if report.nodeid == rep.nodeid and report.when == 'teardown':
+                    for report in self.getreports(""):
+                        if report.nodeid == rep.nodeid and report.when == "teardown":
                             self.print_teardown_sections(report)
 
     def summary_errors(self):
         if self.config.option.tbstyle != "no":
-            reports = self.getreports('error')
+            reports = self.getreports("error")
             if not reports:
                 return
             self.write_sep("=", "ERRORS")
-            for rep in self.stats['error']:
+            for rep in self.stats["error"]:
                 msg = self._getfailureheadline(rep)
-                if not hasattr(rep, 'when'):
+                if not hasattr(rep, "when"):
                     # collect
                     msg = "ERROR collecting " + msg
                 elif rep.when == "setup":
@@ -572,7 +641,7 @@ class TerminalReporter:
         session_duration = time.time() - self._sessionstarttime
         (line, color) = build_summary_stats_line(self.stats)
         msg = "%s in %.2f seconds" % (line, session_duration)
-        markup = {color: True, 'bold': True}
+        markup = {color: True, "bold": True}
 
         if self.verbosity >= 0:
             self.write_sep("=", msg, **markup)
@@ -580,9 +649,10 @@ class TerminalReporter:
             self.write_line(msg, **markup)
 
     def summary_deselected(self):
-        if 'deselected' in self.stats:
-            self.write_sep("=", "%d tests deselected" % (
-                len(self.stats['deselected'])), bold=True)
+        if "deselected" in self.stats:
+            self.write_sep(
+                "=", "%d tests deselected" % (len(self.stats["deselected"])), bold=True
+            )
 
 
 def repr_pythonversion(v=None):
@@ -604,8 +674,9 @@ def flatten(values):
 
 
 def build_summary_stats_line(stats):
-    keys = ("failed passed skipped deselected "
-            "xfailed xpassed warnings error").split()
+    keys = (
+        "failed passed skipped deselected " "xfailed xpassed warnings error"
+    ).split()
     unknown_key_seen = False
     for key in stats.keys():
         if key not in keys:
@@ -623,14 +694,14 @@ def build_summary_stats_line(stats):
     else:
         line = "no tests ran"
 
-    if 'failed' in stats or 'error' in stats:
-        color = 'red'
-    elif 'warnings' in stats or unknown_key_seen:
-        color = 'yellow'
-    elif 'passed' in stats:
-        color = 'green'
+    if "failed" in stats or "error" in stats:
+        color = "red"
+    elif "warnings" in stats or unknown_key_seen:
+        color = "yellow"
+    elif "passed" in stats:
+        color = "green"
     else:
-        color = 'yellow'
+        color = "yellow"
 
     return (line, color)
 
@@ -639,7 +710,7 @@ def _plugin_nameversions(plugininfo):
     values = []
     for plugin, dist in plugininfo:
         # gets us name and version!
-        name = '{dist.project_name}-{dist.version}'.format(dist=dist)
+        name = "{dist.project_name}-{dist.version}".format(dist=dist)
         # questionable convenience, but it keeps things short
         if name.startswith("pytest-"):
             name = name[7:]

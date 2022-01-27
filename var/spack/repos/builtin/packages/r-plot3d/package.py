@@ -14,12 +14,17 @@ class RPlot3d(RPackage):
     oceanography."""
 
     homepage = "https://cloud.r-project.org/package=plot3D"
-    url      = "https://cloud.r-project.org/src/contrib/plot3D_1.1.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/plot3D_1.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/plot3D"
 
-    version('1.3', sha256='b9e4ec2789e34ad249318900e186868650e1a33466b385cb492a45466db3dfc9')
-    version('1.1.1', sha256='f6fe4a001387132626fc553ed1d5720d448b8064eb5a6917458a798e1d381632')
+    version(
+        "1.3", sha256="b9e4ec2789e34ad249318900e186868650e1a33466b385cb492a45466db3dfc9"
+    )
+    version(
+        "1.1.1",
+        sha256="f6fe4a001387132626fc553ed1d5720d448b8064eb5a6917458a798e1d381632",
+    )
 
-    depends_on('r+X', type=('build', 'run'))
-    depends_on('r@2.15:', type=('build', 'run'))
-    depends_on('r-misc3d', type=('build', 'run'))
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r@2.15:", type=("build", "run"))
+    depends_on("r-misc3d", type=("build", "run"))

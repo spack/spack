@@ -18,13 +18,22 @@ class RForeach(RPackage):
     facilitates executing the loop in parallel."""
 
     homepage = "https://cloud.r-project.org/package=foreach"
-    url      = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/foreach"
 
-    version('1.5.1', sha256='fb5ad69e295618c52b2ac7dff84a0771462870a97345374d43b3de2dc31a68e1')
-    version('1.4.7', sha256='95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160')
-    version('1.4.3', sha256='1ef03f770f726a62e3753f2402eb26b226245958fa99d570d003fc9e47d35881')
+    version(
+        "1.5.1",
+        sha256="fb5ad69e295618c52b2ac7dff84a0771462870a97345374d43b3de2dc31a68e1",
+    )
+    version(
+        "1.4.7",
+        sha256="95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160",
+    )
+    version(
+        "1.4.3",
+        sha256="1ef03f770f726a62e3753f2402eb26b226245958fa99d570d003fc9e47d35881",
+    )
 
-    depends_on('r@2.5.0:', type=('build', 'run'))
-    depends_on('r-codetools', type=('build', 'run'))
-    depends_on('r-iterators', type=('build', 'run'))
+    depends_on("r@2.5.0:", type=("build", "run"))
+    depends_on("r-codetools", type=("build", "run"))
+    depends_on("r-iterators", type=("build", "run"))

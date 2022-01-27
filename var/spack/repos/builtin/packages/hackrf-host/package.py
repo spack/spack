@@ -9,14 +9,17 @@ class HackrfHost(CMakePackage):
     Radio platform."""
 
     homepage = "https://github.com/mossmann/hackrf"
-    url      = "https://github.com/mossmann/hackrf/archive/v2018.01.1.tar.gz"
+    url = "https://github.com/mossmann/hackrf/archive/v2018.01.1.tar.gz"
 
-    maintainers = ['aweits']
+    maintainers = ["aweits"]
 
-    root_cmakelists_dir = 'host'
+    root_cmakelists_dir = "host"
 
-    version('2018.01.1', sha256='84dbb5536d3aa5bd6b25d50df78d591e6c3431d752de051a17f4cb87b7963ec3')
+    version(
+        "2018.01.1",
+        sha256="84dbb5536d3aa5bd6b25d50df78d591e6c3431d752de051a17f4cb87b7963ec3",
+    )
 
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on('libusb@1.0.18:')
-    depends_on('fftw@3.3.5:')
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on("libusb@1.0.18:")
+    depends_on("fftw@3.3.5:")

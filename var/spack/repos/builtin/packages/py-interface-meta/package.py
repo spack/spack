@@ -13,8 +13,11 @@ class PyInterfaceMeta(PythonPackage):
     homepage = "https://github.com/matthewwardrop/interface_meta"
     pypi = "interface_meta/interface_meta-1.2.4.tar.gz"
 
-    version('1.2.4', sha256='4c7725dd4b80f97b7eecfb26023e1a8a7cdbb6d6a7207a8e93f9d4bfef9ee566')
+    version(
+        "1.2.4",
+        sha256="4c7725dd4b80f97b7eecfb26023e1a8a7cdbb6d6a7207a8e93f9d4bfef9ee566",
+    )
 
-    depends_on('python@3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setupmeta', type='build')
+    depends_on("python@3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setupmeta", type="build")

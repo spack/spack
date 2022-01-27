@@ -12,18 +12,18 @@ class Dnstracer(Package):
     the servers which know the data."""
 
     homepage = "https://github.com/Orc/dnstracer"
-    git      = "https://github.com/Orc/dnstracer.git"
+    git = "https://github.com/Orc/dnstracer.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    phases = ['configure', 'build', 'install']
+    phases = ["configure", "build", "install"]
 
     def configure(self, spec, prefix):
-        configure = Executable('./configure.sh')
-        configure('--prefix={0}'.format(prefix))
+        configure = Executable("./configure.sh")
+        configure("--prefix={0}".format(prefix))
 
     def build(self, spec, prefix):
         make()
 
     def install(self, spec, prefix):
-        make('install')
+        make("install")

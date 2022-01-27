@@ -25,7 +25,7 @@ def data():
     global _data
     if not _data:
         json_dir = os.path.abspath(os.path.dirname(__file__))
-        json_file = os.path.join(json_dir, 'images.json')
+        json_file = os.path.join(json_dir, "images.json")
         with open(json_file) as f:
             _data = json.load(f)
     return _data
@@ -45,12 +45,12 @@ def build_info(image, spack_version):
     # Don't handle error here, as a wrong image should have been
     # caught by the JSON schema
     image_data = data()["images"][image]
-    build_image = image_data.get('build', None)
+    build_image = image_data.get("build", None)
     if not build_image:
         return None, None
 
     # Translate version from git to docker if necessary
-    build_tag = image_data['build_tags'].get(spack_version, spack_version)
+    build_tag = image_data["build_tags"].get(spack_version, spack_version)
 
     return build_image, build_tag
 
@@ -72,7 +72,7 @@ def os_package_manager_for(image):
 
 def all_bootstrap_os():
     """Return a list of all the OS that can be used to bootstrap Spack"""
-    return list(data()['images'])
+    return list(data()["images"])
 
 
 def commands_for(package_manager):
@@ -86,7 +86,7 @@ def commands_for(package_manager):
         A tuple of (update, install, clean) commands.
     """
     info = data()["os_package_managers"][package_manager]
-    return info['update'], info['install'], info['clean']
+    return info["update"], info["install"], info["clean"]
 
 
 def bootstrap_template_for(image):
@@ -97,11 +97,17 @@ def _verify_ref(url, ref, enforce_sha):
     # Do a checkout in a temporary directory
     msg = 'Cloning "{0}" to verify ref "{1}"'.format(url, ref)
     tty.info(msg, stream=sys.stderr)
-    git = executable.which('git', required=True)
+    git = executable.which("git", required=True)
     with fs.temporary_dir():
-        git('clone', '-q', url, '.')
-        sha = git('rev-parse', '-q', ref + '^{commit}',
-                  output=str, error=os.devnull, fail_on_error=False)
+        git("clone", "-q", url, ".")
+        sha = git(
+            "rev-parse",
+            "-q",
+            ref + "^{commit}",
+            output=str,
+            error=os.devnull,
+            fail_on_error=False,
+        )
         if git.returncode:
             msg = '"{0}" is not a valid reference for "{1}"'
             raise RuntimeError(msg.format(sha, url))
@@ -121,13 +127,13 @@ def checkout_command(url, ref, enforce_sha, verify):
         enforce_sha (bool): if true turns every
         verify (bool):
     """
-    url = url or 'https://github.com/spack/spack.git'
-    ref = ref or 'develop'
+    url = url or "https://github.com/spack/spack.git"
+    ref = ref or "develop"
     enforce_sha, verify = bool(enforce_sha), bool(verify)
     # If we want to enforce a sha or verify the ref we need
     # to checkout the repository locally
     if enforce_sha or verify:
         ref = _verify_ref(url, ref, enforce_sha)
 
-    command = 'git clone {0} . && git checkout {1} '.format(url, ref)
+    command = "git clone {0} . && git checkout {1} ".format(url, ref)
     return command

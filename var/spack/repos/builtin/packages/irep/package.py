@@ -3,16 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 class Irep(CMakePackage):
     """IREP is a tool that enables mixed-language simulation codes to use a
     common, Lua-based format for their input decks. Essentially, the input
     format is a set of tables -- Lua's one (and only?) data structure."""
 
     homepage = "https://irep.readthedocs.io/"
-    url      = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
+    url = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ['tomstitt', 'kennyweiss']
+    maintainers = ["tomstitt", "kennyweiss"]
 
-    version('1.0.0', 'b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4')
+    version("1.0.0", "b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4")
 
-    depends_on('lua-lang')
+    depends_on("lua-lang")

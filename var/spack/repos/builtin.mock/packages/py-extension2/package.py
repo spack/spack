@@ -9,20 +9,20 @@ from spack import *
 
 class PyExtension2(PythonPackage):
     """A package which extends python. It also depends on another
-       package which extends the same package."""
+    package which extends the same package."""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/extension2-1.0.tar.gz"
+    url = "http://www.example.com/extension2-1.0.tar.gz"
 
     # Override settings in base class
     maintainers = []
 
     extends("python")
-    depends_on('py-extension1', type=('build', 'run'))
+    depends_on("py-extension1", type=("build", "run"))
 
-    version('1.0', '00000000000000000000000000000210')
+    version("1.0", "00000000000000000000000000000210")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with open(os.path.join(prefix.bin, 'py-extension2'), 'w+') as fout:
+        with open(os.path.join(prefix.bin, "py-extension2"), "w+") as fout:
             fout.write(str(spec.version))

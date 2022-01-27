@@ -9,10 +9,10 @@ class Sse2neon(Package):
     NEON intrinsics."""
 
     homepage = "https://github.com/DLTcollab/sse2neon"
-    git      = "https://github.com/DLTcollab/sse2neon.git"
+    git = "https://github.com/DLTcollab/sse2neon.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install('*.h', prefix.include)
+        install("*.h", prefix.include)

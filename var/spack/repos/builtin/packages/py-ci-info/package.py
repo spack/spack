@@ -14,9 +14,12 @@ class PyCiInfo(PythonPackage):
     """
 
     homepage = "https://github.com/mgxd/ci-info"
-    pypi     = "ci-info/ci-info-0.2.0.tar.gz"
+    pypi = "ci-info/ci-info-0.2.0.tar.gz"
 
-    version('0.2.0', sha256='dd70632c977feb8797b1e633507166b64ad5f57183cebb2b0ea56934abba4616')
+    version(
+        "0.2.0",
+        sha256="dd70632c977feb8797b1e633507166b64ad5f57183cebb2b0ea56934abba4616",
+    )
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

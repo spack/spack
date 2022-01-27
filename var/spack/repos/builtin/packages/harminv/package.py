@@ -14,21 +14,23 @@ class Harminv(AutotoolsPackage):
     frequencies, decay constants, amplitudes, and phases of those sinusoids."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Harminv"
-    url      = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
+    url = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
     list_url = "http://ab-initio.mit.edu/harminv/old"
 
-    version('1.4', sha256='e1b923c508a565f230aac04e3feea23b888b47d8e19b08816a97ee4444233670')
+    version(
+        "1.4", sha256="e1b923c508a565f230aac04e3feea23b888b47d8e19b08816a97ee4444233670"
+    )
 
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on("blas")
+    depends_on("lapack")
 
     def configure_args(self):
         spec = self.spec
-        lapack = spec['lapack'].libs
-        blas = spec['blas'].libs
+        lapack = spec["lapack"].libs
+        blas = spec["blas"].libs
 
         return [
-            '--enable-shared',
-            '--with-blas={0}'.format(blas.ld_flags),
-            '--with-lapack={0}'.format(lapack.ld_flags),
+            "--enable-shared",
+            "--with-blas={0}".format(blas.ld_flags),
+            "--with-lapack={0}".format(lapack.ld_flags),
         ]

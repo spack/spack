@@ -15,12 +15,15 @@ class RZcompositions(RPackage):
     (2015) <doi:10.1016/j.chemolab.2015.02.019>)."""
 
     homepage = "https://cloud.r-project.org/package=zCompositions"
-    url      = "https://cloud.r-project.org/src/contrib/zCompositions_1.3.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/zCompositions_1.3.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/zCompositions"
 
-    version('1.3.4', sha256='ae22c86fe92368a26265933f42eecc518b9b69e7d9b698bc31bfaabfc3c48e95')
+    version(
+        "1.3.4",
+        sha256="ae22c86fe92368a26265933f42eecc518b9b69e7d9b698bc31bfaabfc3c48e95",
+    )
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-nada', type=('build', 'run'))
-    depends_on('r-truncnorm', type=('build', 'run'))
+    depends_on("r@2.14.0:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-nada", type=("build", "run"))
+    depends_on("r-truncnorm", type=("build", "run"))

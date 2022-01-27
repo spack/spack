@@ -10,22 +10,29 @@ from spack import *
 
 class Nekrs(Package, CudaPackage, ROCmPackage):
     """nekRS is an open-source Navier Stokes solver based on the spectral
-       element method targeting classical processors and hardware accelerators
-       like GPUs"""
+    element method targeting classical processors and hardware accelerators
+    like GPUs"""
 
     homepage = "https://github.com/Nek5000/nekRS"
-    git      = "https://github.com/Nek5000/nekRS.git"
+    git = "https://github.com/Nek5000/nekRS.git"
 
-    tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
-            'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
+    tags = [
+        "cfd",
+        "flow",
+        "hpc",
+        "solver",
+        "navier-stokes",
+        "spectral-elements",
+        "fluid",
+        "ecp",
+        "ecp-apps",
+    ]
 
-    maintainers = ['thilinarmtb', 'stgeke']
+    maintainers = ["thilinarmtb", "stgeke"]
 
-    version('21.0', tag='v21.0')
+    version("21.0", tag="v21.0")
 
-    variant('opencl',
-            default=False,
-            description='Activates support for OpenCL')
+    variant("opencl", default=False, description="Activates support for OpenCL")
 
     # Conflicts:
     # nekrs includes following packages, but in order to build as part of
@@ -35,32 +42,31 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
     #     conflicts('^' + pkg, msg=(pkg + " is built into nekRS"))
 
     # Dependencies
-    depends_on('mpi')
-    depends_on('git')
-    depends_on('cmake')
+    depends_on("mpi")
+    depends_on("git")
+    depends_on("cmake")
 
-    @run_before('install')
+    @run_before("install")
     def fortran_check(self):
         if not self.compiler.f77:
-            msg = 'Cannot build NekRS without a Fortran 77 compiler.'
+            msg = "Cannot build NekRS without a Fortran 77 compiler."
             raise RuntimeError(msg)
 
     # Following 4 methods are stolen from OCCA since we are using OCCA
     # shipped with nekRS.
     def _setup_runtime_flags(self, s_env):
         spec = self.spec
-        s_env.set('OCCA_CXX', self.compiler.cxx)
+        s_env.set("OCCA_CXX", self.compiler.cxx)
 
-        cxxflags = spec.compiler_flags['cxxflags']
+        cxxflags = spec.compiler_flags["cxxflags"]
         if cxxflags:
             # Run-time compiler flags:
-            s_env.set('OCCA_CXXFLAGS', ' '.join(cxxflags))
+            s_env.set("OCCA_CXXFLAGS", " ".join(cxxflags))
 
-        if '+cuda' in spec:
-            cuda_dir = spec['cuda'].prefix
+        if "+cuda" in spec:
+            cuda_dir = spec["cuda"].prefix
             # Run-time CUDA compiler:
-            s_env.set('OCCA_CUDA_COMPILER',
-                      join_path(cuda_dir, 'bin', 'nvcc'))
+            s_env.set("OCCA_CUDA_COMPILER", join_path(cuda_dir, "bin", "nvcc"))
 
     def setup_build_environment(self, env):
         spec = self.spec
@@ -74,32 +80,31 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
         # get the cxxflags twice - once from the Spack compiler wrapper and
         # second time from OCCA - however, only the second one will be seen in
         # the verbose output, so we keep both.
-        cxxflags = spec.compiler_flags['cxxflags']
+        cxxflags = spec.compiler_flags["cxxflags"]
         if cxxflags:
-            env.set('CXXFLAGS', ' '.join(cxxflags))
+            env.set("CXXFLAGS", " ".join(cxxflags))
 
         # For the cuda, openmp, and opencl variants, set the environment
         # variable OCCA_{CUDA,OPENMP,OPENCL}_ENABLED only if the variant is
         # disabled. Otherwise, let OCCA autodetect what is available.
 
-        if '+cuda' in spec:
-            cuda_dir = spec['cuda'].prefix
-            cuda_libs_list = ['libcuda', 'libcudart', 'libOpenCL']
-            cuda_libs = find_libraries(cuda_libs_list,
-                                       cuda_dir,
-                                       shared=True,
-                                       recursive=True)
-            env.set('OCCA_INCLUDE_PATH', cuda_dir.include)
-            env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
-            env.set('OCCA_CUDA_ENABLED', '1')
+        if "+cuda" in spec:
+            cuda_dir = spec["cuda"].prefix
+            cuda_libs_list = ["libcuda", "libcudart", "libOpenCL"]
+            cuda_libs = find_libraries(
+                cuda_libs_list, cuda_dir, shared=True, recursive=True
+            )
+            env.set("OCCA_INCLUDE_PATH", cuda_dir.include)
+            env.set("OCCA_LIBRARY_PATH", ":".join(cuda_libs.directories))
+            env.set("OCCA_CUDA_ENABLED", "1")
         else:
-            env.set('OCCA_CUDA_ENABLED', '0')
+            env.set("OCCA_CUDA_ENABLED", "0")
 
-        env.set('OCCA_OPENCL_ENABLED', '1' if '+opencl' in spec else '0')
-        env.set('OCCA_HIP_ENABLED', '1' if '+rocm' in spec else '0')
+        env.set("OCCA_OPENCL_ENABLED", "1" if "+opencl" in spec else "0")
+        env.set("OCCA_HIP_ENABLED", "1" if "+rocm" in spec else "0")
 
         # Setup run-time environment for testing.
-        env.set('OCCA_VERBOSE', '1')
+        env.set("OCCA_VERBOSE", "1")
         self._setup_runtime_flags(env)
 
     def setup_run_environment(self, env):
@@ -112,22 +117,22 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
         self._setup_runtime_flags(env)
 
     def install(self, spec, prefix):
-        script_dir = 'scripts'
+        script_dir = "scripts"
 
         with working_dir(script_dir):
             # Make sure nekmpi wrapper uses srun when we know OpenMPI
             # is not built with mpiexec
-            if '^openmpi~legacylaunchers' in spec:
-                filter_file(r'mpirun -np', 'srun -n', 'nrsmpi')
-                filter_file(r'mpirun -np', 'srun -n', 'nrspre')
-                filter_file(r'mpirun -np', 'srun -n', 'nrsbmpi')
+            if "^openmpi~legacylaunchers" in spec:
+                filter_file(r"mpirun -np", "srun -n", "nrsmpi")
+                filter_file(r"mpirun -np", "srun -n", "nrspre")
+                filter_file(r"mpirun -np", "srun -n", "nrsbmpi")
 
         makenrs = Executable(os.path.join(os.getcwd(), "makenrs"))
 
         makenrs.add_default_env("NEKRS_INSTALL_DIR", prefix)
-        makenrs.add_default_env("NEKRS_CC", spec['mpi'].mpicc)
-        makenrs.add_default_env("NEKRS_CXX", spec['mpi'].mpicxx)
-        makenrs.add_default_env("NEKRS_FC", spec['mpi'].mpifc)
+        makenrs.add_default_env("NEKRS_CC", spec["mpi"].mpicc)
+        makenrs.add_default_env("NEKRS_CXX", spec["mpi"].mpicxx)
+        makenrs.add_default_env("NEKRS_FC", spec["mpi"].mpifc)
         makenrs.add_default_env("TRAVIS", "true")
 
         makenrs(output=str, error=str, fail_on_error=True)

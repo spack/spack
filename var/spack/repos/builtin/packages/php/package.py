@@ -15,29 +15,56 @@ class Php(AutotoolsPackage):
     """
 
     homepage = "https://php.net/"
-    url      = "https://github.com/php/php-src/archive/php-7.3.13.tar.gz"
+    url = "https://github.com/php/php-src/archive/php-7.3.13.tar.gz"
 
-    version('7.4.1',     sha256='4d9d7c5681bec3af38a935d033657dce09a9913498f8022d7ca163a7f2f493a7')
-    version('7.4.0',     sha256='91d34b48025ab9789216df89e247b6904912eeeaeff38c300ef314bdda8920b0')
-    version('7.3.13',    sha256='e68b8d9e659f2993eee912f05860e546fdc18e459f31cd2771f404df21285f0b')
-    version('7.3.12',    sha256='d0672ea84c0ab184f636acff3230d376d89a2067d59a87a2f1842361ee1f97d6')
-    version('7.3.11',    sha256='4d861b2f3bc640ded8b591ce87250161392a6244a3c84042da0c06fd8c500eb2')
-    version('7.2.26',    sha256='da132a836cec8021c00f22952e6044d91628ee3d2ef92a95d65cf91bad810600')
-    version('7.2.25',    sha256='049b2d291c45cb889d15fcd2bac6da7d15ca5d535d272d2f8879fb834bbf276e')
-    version('7.2.24',    sha256='334c9915733f6a29e1462f64038b1b4b1b21cb18f4f5f980add86792b5550ab3')
-    version('7.1.33',    sha256='f80a795a09328a9441bae4a8a60fa0d6d43ec5adc98f5aa5f51d06f4522c07fe')
+    version(
+        "7.4.1",
+        sha256="4d9d7c5681bec3af38a935d033657dce09a9913498f8022d7ca163a7f2f493a7",
+    )
+    version(
+        "7.4.0",
+        sha256="91d34b48025ab9789216df89e247b6904912eeeaeff38c300ef314bdda8920b0",
+    )
+    version(
+        "7.3.13",
+        sha256="e68b8d9e659f2993eee912f05860e546fdc18e459f31cd2771f404df21285f0b",
+    )
+    version(
+        "7.3.12",
+        sha256="d0672ea84c0ab184f636acff3230d376d89a2067d59a87a2f1842361ee1f97d6",
+    )
+    version(
+        "7.3.11",
+        sha256="4d861b2f3bc640ded8b591ce87250161392a6244a3c84042da0c06fd8c500eb2",
+    )
+    version(
+        "7.2.26",
+        sha256="da132a836cec8021c00f22952e6044d91628ee3d2ef92a95d65cf91bad810600",
+    )
+    version(
+        "7.2.25",
+        sha256="049b2d291c45cb889d15fcd2bac6da7d15ca5d535d272d2f8879fb834bbf276e",
+    )
+    version(
+        "7.2.24",
+        sha256="334c9915733f6a29e1462f64038b1b4b1b21cb18f4f5f980add86792b5550ab3",
+    )
+    version(
+        "7.1.33",
+        sha256="f80a795a09328a9441bae4a8a60fa0d6d43ec5adc98f5aa5f51d06f4522c07fe",
+    )
 
-    depends_on('autoconf',   type='build')
-    depends_on('automake',   type='build')
-    depends_on('libtool',    type='build')
-    depends_on('m4',         type='build')
-    depends_on('pkgconfig',  type='build')
-    depends_on('bison',      type='build')
-    depends_on('re2c',       type='build')
-    depends_on('libxml2')
-    depends_on('sqlite')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("bison", type="build")
+    depends_on("re2c", type="build")
+    depends_on("libxml2")
+    depends_on("sqlite")
 
-    patch('sbang.patch')
+    patch("sbang.patch")
 
     def patch(self):
         """
@@ -50,14 +77,16 @@ class Php(AutotoolsPackage):
         if len(self.prefix.bin.php) + 2 <= shebang_limit:
             return
 
-        new_sbang_line = '#!/bin/bash %s' % sbang.sbang_install_path()
+        new_sbang_line = "#!/bin/bash %s" % sbang.sbang_install_path()
         original_bang = '-b "$(PHP_PHARCMD_BANG)"'
-        makefile = join_path('ext', 'phar', 'Makefile.frag')
+        makefile = join_path("ext", "phar", "Makefile.frag")
         filter_file(
             original_bang,
             original_bang + ' -z "{0}"'.format(new_sbang_line),
-            makefile, string=True)
+            makefile,
+            string=True,
+        )
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./buildconf', '--force')
+        bash = which("bash")
+        bash("./buildconf", "--force")

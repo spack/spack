@@ -12,11 +12,15 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
 
     pypi = "backports.shutil_get_terminal_size/backports.shutil_get_terminal_size-1.0.0.tar.gz"
 
-    py_namespace = 'backports'
+    py_namespace = "backports"
 
-    version('1.0.0', sha256='713e7a8228ae80341c70586d1cc0a8caa5207346927e23d09dcbcaf18eadec80', deprecated=True)
+    version(
+        "1.0.0",
+        sha256="713e7a8228ae80341c70586d1cc0a8caa5207346927e23d09dcbcaf18eadec80",
+        deprecated=True,
+    )
 
     # newer setuptools version mess with "namespace" packages in an
     # incompatible way cf. https://github.com/pypa/setuptools/issues/900
-    depends_on('py-setuptools@:30,41:', type='build')
-    depends_on('python@:3.2')
+    depends_on("py-setuptools@:30,41:", type="build")
+    depends_on("python@:3.2")

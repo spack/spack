@@ -67,16 +67,21 @@ Pluggy currently consists of functionality for:
 import sys
 import inspect
 
-__version__ = '0.4.0'
+__version__ = "0.4.0"
 
-__all__ = ["PluginManager", "PluginValidationError", "HookCallError",
-           "HookspecMarker", "HookimplMarker"]
+__all__ = [
+    "PluginManager",
+    "PluginValidationError",
+    "HookCallError",
+    "HookspecMarker",
+    "HookimplMarker",
+]
 
 _py3 = sys.version_info > (3, 0)
 
 
 class HookspecMarker:
-    """ Decorator helper class for marking functions as hook specifications.
+    """Decorator helper class for marking functions as hook specifications.
 
     You can instantiate it with a project_name to get a decorator.
     Calling PluginManager.add_hookspecs later will discover all marked functions
@@ -87,7 +92,7 @@ class HookspecMarker:
         self.project_name = project_name
 
     def __call__(self, function=None, firstresult=False, historic=False):
-        """ if passed a function, directly sets attributes on the function
+        """if passed a function, directly sets attributes on the function
         which will make it discoverable to add_hookspecs().  If passed no
         function, returns a decorator which can be applied to a function
         later using the attributes supplied.
@@ -100,11 +105,15 @@ class HookspecMarker:
         on later registered plugins.
 
         """
+
         def setattr_hookspec_opts(func):
             if historic and firstresult:
                 raise ValueError("cannot have a historic firstresult hook")
-            setattr(func, self.project_name + "_spec",
-                   dict(firstresult=firstresult, historic=historic))
+            setattr(
+                func,
+                self.project_name + "_spec",
+                dict(firstresult=firstresult, historic=historic),
+            )
             return func
 
         if function is not None:
@@ -114,19 +123,26 @@ class HookspecMarker:
 
 
 class HookimplMarker:
-    """ Decorator helper class for marking functions as hook implementations.
+    """Decorator helper class for marking functions as hook implementations.
 
     You can instantiate with a project_name to get a decorator.
     Calling PluginManager.register later will discover all marked functions
     if the PluginManager uses the same project_name.
     """
+
     def __init__(self, project_name):
         self.project_name = project_name
 
-    def __call__(self, function=None, hookwrapper=False, optionalhook=False,
-                 tryfirst=False, trylast=False):
+    def __call__(
+        self,
+        function=None,
+        hookwrapper=False,
+        optionalhook=False,
+        tryfirst=False,
+        trylast=False,
+    ):
 
-        """ if passed a function, directly sets attributes on the function
+        """if passed a function, directly sets attributes on the function
         which will make it discoverable to register().  If passed no function,
         returns a decorator which can be applied to a function later using
         the attributes supplied.
@@ -148,10 +164,18 @@ class HookimplMarker:
         calls).
 
         """
+
         def setattr_hookimpl_opts(func):
-            setattr(func, self.project_name + "_impl",
-                   dict(hookwrapper=hookwrapper, optionalhook=optionalhook,
-                        tryfirst=tryfirst, trylast=trylast))
+            setattr(
+                func,
+                self.project_name + "_impl",
+                dict(
+                    hookwrapper=hookwrapper,
+                    optionalhook=optionalhook,
+                    tryfirst=tryfirst,
+                    trylast=trylast,
+                ),
+            )
             return func
 
         if function is None:
@@ -186,9 +210,7 @@ class _TagTracer:
         content = " ".join(map(str, args))
         indent = "  " * self.indent
 
-        lines = [
-            "%s%s [%s]\n" % (indent, content, ":".join(tags))
-        ]
+        lines = ["%s%s [%s]\n" % (indent, content, ":".join(tags))]
 
         for name, value in extra.items():
             lines.append("%s    %s: %s\n" % (indent, name, value))
@@ -197,7 +219,7 @@ class _TagTracer:
     def processmessage(self, tags, args):
         if self.writer is not None and args:
             lines = self.format_message(tags, args)
-            self.writer(''.join(lines))
+            self.writer("".join(lines))
         try:
             self._tag2proc[tags](tags, args)
         except KeyError:
@@ -231,18 +253,20 @@ class _TagTracerSub:
 
 def _raise_wrapfail(wrap_controller, msg):
     co = wrap_controller.gi_code
-    raise RuntimeError("wrap_controller at %r %s:%d %s" %
-                   (co.co_name, co.co_filename, co.co_firstlineno, msg))
+    raise RuntimeError(
+        "wrap_controller at %r %s:%d %s"
+        % (co.co_name, co.co_filename, co.co_firstlineno, msg)
+    )
 
 
 def _wrapped_call(wrap_controller, func):
-    """ Wrap calling to a function with a generator which needs to yield
+    """Wrap calling to a function with a generator which needs to yield
     exactly once.  The yield point will trigger calling the wrapped function
     and return its _CallOutcome to the yield point.  The generator then needs
     to finish (raise StopIteration) in order for the wrapped call to complete.
     """
     try:
-        next(wrap_controller)   # first yield
+        next(wrap_controller)  # first yield
     except StopIteration:
         _raise_wrapfail(wrap_controller, "did not yield")
     call_outcome = _CallOutcome(func)
@@ -255,9 +279,10 @@ def _wrapped_call(wrap_controller, func):
 
 
 class _CallOutcome:
-    """ Outcome of a function call, either an exception or a proper result.
+    """Outcome of a function call, either an exception or a proper result.
     Calling the ``get_result`` method will return the result or reraise
-    the exception raised when the function was called. """
+    the exception raised when the function was called."""
+
     excinfo = None
 
     def __init__(self, func):
@@ -279,11 +304,14 @@ class _CallOutcome:
                 raise ex[1].with_traceback(ex[2])
             _reraise(*ex)  # noqa
 
+
 if not _py3:
-    exec("""
+    exec(
+        """
 def _reraise(cls, val, tb):
     raise cls, val, tb
-""")
+"""
+    )
 
 
 class _TracedHookExecution:
@@ -306,7 +334,7 @@ class _TracedHookExecution:
 
 
 class PluginManager(object):
-    """ Core Pluginmanager class which manages registration
+    """Core Pluginmanager class which manages registration
     of plugin objects and 1:N hook calling.
 
     You can register new hooks by calling ``add_hookspec(module_or_class)``.
@@ -321,8 +349,8 @@ class PluginManager(object):
     """
 
     def __init__(self, project_name, implprefix=None):
-        """ if implprefix is given implementation functions
-        will be recognized if their name matches the implprefix. """
+        """if implprefix is given implementation functions
+        will be recognized if their name matches the implprefix."""
         self.project_name = project_name
         self._name2plugin = {}
         self._plugin2hookcallers = {}
@@ -330,8 +358,9 @@ class PluginManager(object):
         self.trace = _TagTracer().get("pluginmanage")
         self.hook = _HookRelay(self.trace.root.get("hook"))
         self._implprefix = implprefix
-        self._inner_hookexec = lambda hook, methods, kwargs: \
-            _MultiCall(methods, kwargs, hook.spec_opts).execute()
+        self._inner_hookexec = lambda hook, methods, kwargs: _MultiCall(
+            methods, kwargs, hook.spec_opts
+        ).execute()
 
     def _hookexec(self, hook, methods, kwargs):
         # called from all hookcaller instances.
@@ -339,16 +368,18 @@ class PluginManager(object):
         return self._inner_hookexec(hook, methods, kwargs)
 
     def register(self, plugin, name=None):
-        """ Register a plugin and return its canonical name or None if the name
+        """Register a plugin and return its canonical name or None if the name
         is blocked from registering.  Raise a ValueError if the plugin is already
-        registered. """
+        registered."""
         plugin_name = name or self.get_canonical_name(plugin)
 
         if plugin_name in self._name2plugin or plugin in self._plugin2hookcallers:
             if self._name2plugin.get(plugin_name, -1) is None:
                 return  # blocked plugin, return None to indicate no registration
-            raise ValueError("Plugin already registered: %s=%s\n%s" %
-                            (plugin_name, plugin, self._name2plugin))
+            raise ValueError(
+                "Plugin already registered: %s=%s\n%s"
+                % (plugin_name, plugin, self._name2plugin)
+            )
 
         # XXX if an error happens we should make sure no state has been
         # changed at point of return
@@ -387,8 +418,8 @@ class PluginManager(object):
         return res
 
     def unregister(self, plugin=None, name=None):
-        """ unregister a plugin object and all its contained hook implementations
-        from internal data structures. """
+        """unregister a plugin object and all its contained hook implementations
+        from internal data structures."""
         if name is None:
             assert plugin is not None, "one of name or plugin needs to be specified"
             name = self.get_name(plugin)
@@ -406,17 +437,17 @@ class PluginManager(object):
         return plugin
 
     def set_blocked(self, name):
-        """ block registrations of the given name, unregister if already registered. """
+        """block registrations of the given name, unregister if already registered."""
         self.unregister(name=name)
         self._name2plugin[name] = None
 
     def is_blocked(self, name):
-        """ return True if the name blogs registering plugins of that name. """
+        """return True if the name blogs registering plugins of that name."""
         return name in self._name2plugin and self._name2plugin[name] is None
 
     def add_hookspecs(self, module_or_class):
-        """ add new hook specifications defined in the given module_or_class.
-        Functions are recognized if they have been decorated accordingly. """
+        """add new hook specifications defined in the given module_or_class.
+        Functions are recognized if they have been decorated accordingly."""
         names = []
         for name in dir(module_or_class):
             spec_opts = self.parse_hookspec_opts(module_or_class, name)
@@ -428,43 +459,44 @@ class PluginManager(object):
                 else:
                     # plugins registered this hook without knowing the spec
                     hc.set_specification(module_or_class, spec_opts)
-                    for hookfunction in (hc._wrappers + hc._nonwrappers):
+                    for hookfunction in hc._wrappers + hc._nonwrappers:
                         self._verify_hook(hc, hookfunction)
                 names.append(name)
 
         if not names:
-            raise ValueError("did not find any %r hooks in %r" %
-                             (self.project_name, module_or_class))
+            raise ValueError(
+                "did not find any %r hooks in %r" % (self.project_name, module_or_class)
+            )
 
     def parse_hookspec_opts(self, module_or_class, name):
         method = getattr(module_or_class, name)
         return getattr(method, self.project_name + "_spec", None)
 
     def get_plugins(self):
-        """ return the set of registered plugins. """
+        """return the set of registered plugins."""
         return set(self._plugin2hookcallers)
 
     def is_registered(self, plugin):
-        """ Return True if the plugin is already registered. """
+        """Return True if the plugin is already registered."""
         return plugin in self._plugin2hookcallers
 
     def get_canonical_name(self, plugin):
-        """ Return canonical name for a plugin object. Note that a plugin
+        """Return canonical name for a plugin object. Note that a plugin
         may be registered under a different name which was specified
         by the caller of register(plugin, name). To obtain the name
         of an registered plugin use ``get_name(plugin)`` instead."""
         return getattr(plugin, "__name__", None) or str(id(plugin))
 
     def get_plugin(self, name):
-        """ Return a plugin or None for the given name. """
+        """Return a plugin or None for the given name."""
         return self._name2plugin.get(name)
 
     def has_plugin(self, name):
-        """ Return True if a plugin with the given name is registered. """
+        """Return True if a plugin with the given name is registered."""
         return self.get_plugin(name) is not None
 
     def get_name(self, plugin):
-        """ Return name for registered plugin or None if not registered. """
+        """Return name for registered plugin or None if not registered."""
         for name, val in self._name2plugin.items():
             if plugin == val:
                 return name
@@ -472,46 +504,53 @@ class PluginManager(object):
     def _verify_hook(self, hook, hookimpl):
         if hook.is_historic() and hookimpl.hookwrapper:
             raise PluginValidationError(
-                "Plugin %r\nhook %r\nhistoric incompatible to hookwrapper" %
-                (hookimpl.plugin_name, hook.name))
+                "Plugin %r\nhook %r\nhistoric incompatible to hookwrapper"
+                % (hookimpl.plugin_name, hook.name)
+            )
 
         for arg in hookimpl.argnames:
             if arg not in hook.argnames:
                 raise PluginValidationError(
                     "Plugin %r\nhook %r\nargument %r not available\n"
                     "plugin definition: %s\n"
-                    "available hookargs: %s" %
-                    (hookimpl.plugin_name, hook.name, arg,
-                    _formatdef(hookimpl.function), ", ".join(hook.argnames)))
+                    "available hookargs: %s"
+                    % (
+                        hookimpl.plugin_name,
+                        hook.name,
+                        arg,
+                        _formatdef(hookimpl.function),
+                        ", ".join(hook.argnames),
+                    )
+                )
 
     def check_pending(self):
-        """ Verify that all hooks which have not been verified against
+        """Verify that all hooks which have not been verified against
         a hook specification are optional, otherwise raise PluginValidationError"""
         for name in self.hook.__dict__:
             if name[0] != "_":
                 hook = getattr(self.hook, name)
                 if not hook.has_spec():
-                    for hookimpl in (hook._wrappers + hook._nonwrappers):
+                    for hookimpl in hook._wrappers + hook._nonwrappers:
                         if not hookimpl.optionalhook:
                             raise PluginValidationError(
-                                "unknown hook %r in plugin %r" %
-                                (name, hookimpl.plugin))
+                                "unknown hook %r in plugin %r" % (name, hookimpl.plugin)
+                            )
 
     def list_plugin_distinfo(self):
-        """ return list of distinfo/plugin tuples for all setuptools registered
-        plugins. """
+        """return list of distinfo/plugin tuples for all setuptools registered
+        plugins."""
         return list(self._plugin_distinfo)
 
     def list_name_plugin(self):
-        """ return list of name/plugin pairs. """
+        """return list of name/plugin pairs."""
         return list(self._name2plugin.items())
 
     def get_hookcallers(self, plugin):
-        """ get all hook callers for the specified plugin. """
+        """get all hook callers for the specified plugin."""
         return self._plugin2hookcallers.get(plugin)
 
     def add_hookcall_monitoring(self, before, after):
-        """ add before/after tracing functions for all hooks
+        """add before/after tracing functions for all hooks
         and return an undo function which, when called,
         will remove the added tracers.
 
@@ -526,7 +565,7 @@ class PluginManager(object):
         return _TracedHookExecution(self, before, after).undo
 
     def enable_tracing(self):
-        """ enable tracing of hook calls and return an undo function. """
+        """enable tracing of hook calls and return an undo function."""
         hooktrace = self.hook._trace
 
         def before(hook_name, methods, kwargs):
@@ -541,15 +580,16 @@ class PluginManager(object):
         return self.add_hookcall_monitoring(before, after)
 
     def subset_hook_caller(self, name, remove_plugins):
-        """ Return a new _HookCaller instance for the named method
+        """Return a new _HookCaller instance for the named method
         which manages calls to all registered plugins except the
-        ones from remove_plugins. """
+        ones from remove_plugins."""
         orig = getattr(self.hook, name)
         plugins_to_remove = [plug for plug in remove_plugins if hasattr(plug, name)]
         if plugins_to_remove:
-            hc = _HookCaller(orig.name, orig._hookexec, orig._specmodule_or_class,
-                             orig.spec_opts)
-            for hookimpl in (orig._wrappers + orig._nonwrappers):
+            hc = _HookCaller(
+                orig.name, orig._hookexec, orig._specmodule_or_class, orig.spec_opts
+            )
+            for hookimpl in orig._wrappers + orig._nonwrappers:
                 plugin = hookimpl.plugin
                 if plugin not in plugins_to_remove:
                     hc._add_hookimpl(hookimpl)
@@ -561,7 +601,7 @@ class PluginManager(object):
 
 
 class _MultiCall:
-    """ execute a call into multiple python functions/methods. """
+    """execute a call into multiple python functions/methods."""
 
     # XXX note that the __multicall__ argument is supported only
     # for pytest compatibility reasons.  It was never officially
@@ -588,7 +628,8 @@ class _MultiCall:
                 for argname in hook_impl.argnames:
                     if argname not in all_kwargs:
                         raise HookCallError(
-                            "hook call must provide argument %r" % (argname,))
+                            "hook call must provide argument %r" % (argname,)
+                        )
             if hook_impl.hookwrapper:
                 return _wrapped_call(hook_impl.function(*args), self.execute)
             res = hook_impl.function(*args)
@@ -608,7 +649,7 @@ class _MultiCall:
 
 
 def varnames(func, startindex=None):
-    """ return argument name tuple for a function, method, class or callable.
+    """return argument name tuple for a function, method, class or callable.
 
     In case of a class, its "__init__" method is considered.
     For methods the "self" parameter is not included unless you are passing
@@ -628,7 +669,7 @@ def varnames(func, startindex=None):
     else:
         if not inspect.isfunction(func) and not inspect.ismethod(func):
             try:
-                func = getattr(func, '__call__', func)
+                func = getattr(func, "__call__", func)
             except Exception:
                 return ()
         if startindex is None:
@@ -639,13 +680,13 @@ def varnames(func, startindex=None):
     except AttributeError:
         return ()
     try:
-        x = rawcode.co_varnames[startindex:rawcode.co_argcount]
+        x = rawcode.co_varnames[startindex : rawcode.co_argcount]
     except AttributeError:
         x = ()
     else:
         defaults = func.__defaults__
         if defaults:
-            x = x[:-len(defaults)]
+            x = x[: -len(defaults)]
     try:
         cache["_varnames"] = x
     except TypeError:
@@ -654,7 +695,7 @@ def varnames(func, startindex=None):
 
 
 class _HookRelay:
-    """ hook holder object for performing 1:N hook calls where N is the number
+    """hook holder object for performing 1:N hook calls where N is the number
     of registered plugins.
 
     """
@@ -696,6 +737,7 @@ class _HookCaller(object):
                 if method.plugin == plugin:
                     del wrappers[i]
                     return True
+
         if remove(self._wrappers) is None:
             if remove(self._nonwrappers) is None:
                 raise ValueError("plugin %r not found" % (plugin,))
@@ -730,8 +772,8 @@ class _HookCaller(object):
         self._hookexec(self, self._nonwrappers + self._wrappers, kwargs)
 
     def call_extra(self, methods, kwargs):
-        """ Call the hook with some additional temporarily participating
-        methods using the specified kwargs as call parameters. """
+        """Call the hook with some additional temporarily participating
+        methods using the specified kwargs as call parameters."""
         old = list(self._nonwrappers), list(self._wrappers)
         for method in methods:
             opts = dict(hookwrapper=False, trylast=False, tryfirst=False)
@@ -761,22 +803,22 @@ class HookImpl:
 
 
 class PluginValidationError(Exception):
-    """ plugin failed validation. """
+    """plugin failed validation."""
 
 
 class HookCallError(Exception):
-    """ Hook was called wrongly. """
+    """Hook was called wrongly."""
 
 
-if hasattr(inspect, 'signature'):
+if hasattr(inspect, "signature"):
+
     def _formatdef(func):
-        return "%s%s" % (
-            func.__name__,
-            str(inspect.signature(func))
-        )
+        return "%s%s" % (func.__name__, str(inspect.signature(func)))
+
 else:
+
     def _formatdef(func):
         return "%s%s" % (
             func.__name__,
-            inspect.formatargspec(*inspect.getargspec(func))
+            inspect.formatargspec(*inspect.getargspec(func)),
         )

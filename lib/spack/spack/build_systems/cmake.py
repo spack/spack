@@ -18,7 +18,7 @@ from spack.package import InstallError, PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
-_primary_generator_extractor = re.compile(r'(?:.* - )?(.*)')
+_primary_generator_extractor = re.compile(r"(?:.* - )?(.*)")
 
 
 def _extract_primary_generator(generator):
@@ -69,16 +69,17 @@ class CMakePackage(PackageBase):
     if the generator string does not follow the prescribed format, or if
     the primary generator is not supported.
     """
+
     #: Phases of a CMake package
-    phases = ['cmake', 'build', 'install']
+    phases = ["cmake", "build", "install"]
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'CMakePackage'
+    build_system_class = "CMakePackage"
 
     build_targets = []  # type: List[str]
-    install_targets = ['install']
+    install_targets = ["install"]
 
-    build_time_test_callbacks = ['check']
+    build_time_test_callbacks = ["check"]
 
     #: The build system generator to use.
     #:
@@ -88,26 +89,27 @@ class CMakePackage(PackageBase):
     #:
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
-    generator = 'Unix Makefiles'
+    generator = "Unix Makefiles"
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-    variant('build_type', default='RelWithDebInfo',
-            description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+    )
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
-    variant('ipo', default=False,
-            description='CMake interprocedural optimization')
+    variant("ipo", default=False, description="CMake interprocedural optimization")
     # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-    conflicts('+ipo', when='^cmake@:3.8',
-              msg='+ipo is not supported by CMake < 3.9')
+    conflicts("+ipo", when="^cmake@:3.8", msg="+ipo is not supported by CMake < 3.9")
 
-    depends_on('cmake', type='build')
+    depends_on("cmake", type="build")
 
     @property
     def archive_files(self):
         """Files to archive for packages based on CMake"""
-        return [os.path.join(self.build_directory, 'CMakeCache.txt')]
+        return [os.path.join(self.build_directory, "CMakeCache.txt")]
 
     @property
     def root_cmakelists_dir(self):
@@ -129,7 +131,7 @@ class CMakePackage(PackageBase):
         """
         # standard CMake arguments
         std_cmake_args = CMakePackage._std_args(self)
-        std_cmake_args += getattr(self, 'cmake_flag_args', [])
+        std_cmake_args += getattr(self, "cmake_flag_args", [])
         return std_cmake_args
 
     @staticmethod
@@ -138,56 +140,63 @@ class CMakePackage(PackageBase):
         try:
             generator = pkg.generator
         except AttributeError:
-            generator = 'Unix Makefiles'
+            generator = "Unix Makefiles"
 
         # Make sure a valid generator was chosen
-        valid_primary_generators = ['Unix Makefiles', 'Ninja']
+        valid_primary_generators = ["Unix Makefiles", "Ninja"]
         primary_generator = _extract_primary_generator(generator)
         if primary_generator not in valid_primary_generators:
-            msg  = "Invalid CMake generator: '{0}'\n".format(generator)
+            msg = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
-            msg += "primary generators: '{0}'".\
-                   format("', '".join(valid_primary_generators))
+            msg += "primary generators: '{0}'".format(
+                "', '".join(valid_primary_generators)
+            )
             raise InstallError(msg)
 
         try:
-            build_type = pkg.spec.variants['build_type'].value
+            build_type = pkg.spec.variants["build_type"].value
         except KeyError:
-            build_type = 'RelWithDebInfo'
+            build_type = "RelWithDebInfo"
 
         try:
-            ipo = pkg.spec.variants['ipo'].value
+            ipo = pkg.spec.variants["ipo"].value
         except KeyError:
             ipo = False
 
         define = CMakePackage.define
         args = [
-            '-G', generator,
-            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
-            define('CMAKE_BUILD_TYPE', build_type),
+            "-G",
+            generator,
+            define("CMAKE_INSTALL_PREFIX", pkg.prefix),
+            define("CMAKE_BUILD_TYPE", build_type),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
-        if pkg.spec.satisfies('^cmake@3.9:'):
-            args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
+        if pkg.spec.satisfies("^cmake@3.9:"):
+            args.append(define("CMAKE_INTERPROCEDURAL_OPTIMIZATION", ipo))
 
-        if primary_generator == 'Unix Makefiles':
-            args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
+        if primary_generator == "Unix Makefiles":
+            args.append(define("CMAKE_VERBOSE_MAKEFILE", True))
 
         if platform.mac_ver()[0]:
-            args.extend([
-                define('CMAKE_FIND_FRAMEWORK', "LAST"),
-                define('CMAKE_FIND_APPBUNDLE', "LAST"),
-            ])
+            args.extend(
+                [
+                    define("CMAKE_FIND_FRAMEWORK", "LAST"),
+                    define("CMAKE_FIND_APPBUNDLE", "LAST"),
+                ]
+            )
 
         # Set up CMake rpath
-        args.extend([
-            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
-            define('CMAKE_INSTALL_RPATH',
-                   spack.build_environment.get_rpaths(pkg)),
-            define('CMAKE_PREFIX_PATH',
-                   spack.build_environment.get_cmake_prefix_path(pkg))
-        ])
+        args.extend(
+            [
+                define("CMAKE_INSTALL_RPATH_USE_LINK_PATH", False),
+                define("CMAKE_INSTALL_RPATH", spack.build_environment.get_rpaths(pkg)),
+                define(
+                    "CMAKE_PREFIX_PATH",
+                    spack.build_environment.get_cmake_prefix_path(pkg),
+                ),
+            ]
+        )
         return args
 
     @staticmethod
@@ -218,10 +227,10 @@ class CMakePackage(PackageBase):
         # Create a list of pairs. Each pair includes a configuration
         # option and whether or not that option is activated
         if isinstance(value, bool):
-            kind = 'BOOL'
+            kind = "BOOL"
             value = "ON" if value else "OFF"
         else:
-            kind = 'STRING'
+            kind = "STRING"
             if isinstance(value, (list, tuple)):
                 value = ";".join(str(v) for v in value)
             else:
@@ -277,11 +286,10 @@ class CMakePackage(PackageBase):
             variant = cmake_var.lower()
 
         if variant not in self.variants:
-            raise KeyError(
-                '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.name))
 
         if variant not in self.spec.variants:
-            return ''
+            return ""
 
         value = self.spec.variants[variant].value
         if isinstance(value, (tuple, list)):
@@ -296,37 +304,34 @@ class CMakePackage(PackageBase):
         so cppflags will be added to cflags, cxxflags, and fflags to mimic the
         behavior in other tools."""
         # Has to be dynamic attribute due to caching
-        setattr(self, 'cmake_flag_args', [])
+        setattr(self, "cmake_flag_args", [])
 
-        flag_string = '-DCMAKE_{0}_FLAGS={1}'
-        langs = {'C': 'c', 'CXX': 'cxx', 'Fortran': 'f'}
+        flag_string = "-DCMAKE_{0}_FLAGS={1}"
+        langs = {"C": "c", "CXX": "cxx", "Fortran": "f"}
 
         # Handle language compiler flags
         for lang, pre in langs.items():
-            flag = pre + 'flags'
+            flag = pre + "flags"
             # cmake has no explicit cppflags support -> add it to all langs
-            lang_flags = ' '.join(flags.get(flag, []) + flags.get('cppflags',
-                                                                  []))
+            lang_flags = " ".join(flags.get(flag, []) + flags.get("cppflags", []))
             if lang_flags:
-                self.cmake_flag_args.append(flag_string.format(lang,
-                                                               lang_flags))
+                self.cmake_flag_args.append(flag_string.format(lang, lang_flags))
 
         # Cmake has different linker arguments for different build types.
         # We specify for each of them.
-        if flags['ldflags']:
-            ldflags = ' '.join(flags['ldflags'])
-            ld_string = '-DCMAKE_{0}_LINKER_FLAGS={1}'
+        if flags["ldflags"]:
+            ldflags = " ".join(flags["ldflags"])
+            ld_string = "-DCMAKE_{0}_LINKER_FLAGS={1}"
             # cmake has separate linker arguments for types of builds.
-            for type in ['EXE', 'MODULE', 'SHARED', 'STATIC']:
+            for type in ["EXE", "MODULE", "SHARED", "STATIC"]:
                 self.cmake_flag_args.append(ld_string.format(type, ldflags))
 
         # CMake has libs options separated by language. Apply ours to each.
-        if flags['ldlibs']:
-            libs_flags = ' '.join(flags['ldlibs'])
-            libs_string = '-DCMAKE_{0}_STANDARD_LIBRARIES={1}'
+        if flags["ldlibs"]:
+            libs_flags = " ".join(flags["ldlibs"])
+            libs_string = "-DCMAKE_{0}_STANDARD_LIBRARIES={1}"
             for lang in langs:
-                self.cmake_flag_args.append(libs_string.format(lang,
-                                                               libs_flags))
+                self.cmake_flag_args.append(libs_string.format(lang, libs_flags))
 
     @property
     def build_dirname(self):
@@ -334,7 +339,7 @@ class CMakePackage(PackageBase):
 
         :return: name of the subdirectory for building the package
         """
-        return 'spack-build-%s' % self.spec.dag_hash(7)
+        return "spack-build-%s" % self.spec.dag_hash(7)
 
     @property
     def build_directory(self):
@@ -368,35 +373,33 @@ class CMakePackage(PackageBase):
     def build(self, spec, prefix):
         """Make the build targets"""
         with working_dir(self.build_directory):
-            if self.generator == 'Unix Makefiles':
+            if self.generator == "Unix Makefiles":
                 inspect.getmodule(self).make(*self.build_targets)
-            elif self.generator == 'Ninja':
+            elif self.generator == "Ninja":
                 self.build_targets.append("-v")
                 inspect.getmodule(self).ninja(*self.build_targets)
 
     def install(self, spec, prefix):
         """Make the install targets"""
         with working_dir(self.build_directory):
-            if self.generator == 'Unix Makefiles':
+            if self.generator == "Unix Makefiles":
                 inspect.getmodule(self).make(*self.install_targets)
-            elif self.generator == 'Ninja':
+            elif self.generator == "Ninja":
                 inspect.getmodule(self).ninja(*self.install_targets)
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Searches the CMake-generated Makefile for the target ``test``
         and runs it if found.
         """
         with working_dir(self.build_directory):
-            if self.generator == 'Unix Makefiles':
-                self._if_make_target_execute('test',
-                                             jobs_env='CTEST_PARALLEL_LEVEL')
-                self._if_make_target_execute('check')
-            elif self.generator == 'Ninja':
-                self._if_ninja_target_execute('test',
-                                              jobs_env='CTEST_PARALLEL_LEVEL')
-                self._if_ninja_target_execute('check')
+            if self.generator == "Unix Makefiles":
+                self._if_make_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
+                self._if_make_target_execute("check")
+            elif self.generator == "Ninja":
+                self._if_ninja_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
+                self._if_ninja_target_execute("check")
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

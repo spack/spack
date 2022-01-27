@@ -8,28 +8,32 @@ from spack import *
 
 class Garfieldpp(CMakePackage):
     """Garfield++ is a toolkit for the detailed simulation of particle
-       detectors based on ionisation measurement in gases and semiconductors. """
+    detectors based on ionisation measurement in gases and semiconductors."""
 
     homepage = "https://garfieldpp.web.cern.ch/garfieldpp/"
-    url      = "https://gitlab.cern.ch/garfield/garfieldpp/-/archive/4.0/garfieldpp-4.0.tar.gz"
-    git      = "https://gitlab.cern.ch/garfield/garfieldpp.git"
+    url = (
+        "https://gitlab.cern.ch/garfield/garfieldpp/-/archive/4.0/garfieldpp-4.0.tar.gz"
+    )
+    git = "https://gitlab.cern.ch/garfield/garfieldpp.git"
 
-    tags = ['hep']
+    tags = ["hep"]
 
-    maintainers = ['mirguest']
+    maintainers = ["mirguest"]
 
-    variant('examples', default=False, description="Build garfield examples")
+    variant("examples", default=False, description="Build garfield examples")
 
-    version('master', branch='master')
-    version('4.0', sha256='82bc1f0395213bd30a7cd854426e6757d0b4155e99ffd4405355c9648fa5ada3')
-    version('3.0', sha256='c1282427a784658bc38b71c8e8cfc8c9f5202b185f0854d85f7c9c5a747c5406')
+    version("master", branch="master")
+    version(
+        "4.0", sha256="82bc1f0395213bd30a7cd854426e6757d0b4155e99ffd4405355c9648fa5ada3"
+    )
+    version(
+        "3.0", sha256="c1282427a784658bc38b71c8e8cfc8c9f5202b185f0854d85f7c9c5a747c5406"
+    )
 
-    depends_on('root')
-    depends_on('gsl')
-    depends_on('geant4', when='+examples')
+    depends_on("root")
+    depends_on("gsl")
+    depends_on("geant4", when="+examples")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('WITH_EXAMPLES', 'examples')
-        ]
+        args = [self.define_from_variant("WITH_EXAMPLES", "examples")]
         return args

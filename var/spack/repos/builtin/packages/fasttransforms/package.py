@@ -14,28 +14,34 @@ class Fasttransforms(MakefilePackage):
     polynomial degree and d is the spatial dimension of the problem."""
 
     homepage = "https://github.com/MikaelSlevinsky/FastTransforms"
-    url      = "https://github.com/MikaelSlevinsky/FastTransforms/archive/v0.3.4.tar.gz"
+    url = "https://github.com/MikaelSlevinsky/FastTransforms/archive/v0.3.4.tar.gz"
 
-    version('0.5.0', sha256='9556d0037bd5348a33f15ad6100e32053b6e22cab16a97c504f30d6c52fd0efd')
-    version('0.3.4', sha256='a5c8b5aedbdb40218521d061a7df65ef32ce153d4e19d232957db7e3e63c7e9b')
+    version(
+        "0.5.0",
+        sha256="9556d0037bd5348a33f15ad6100e32053b6e22cab16a97c504f30d6c52fd0efd",
+    )
+    version(
+        "0.3.4",
+        sha256="a5c8b5aedbdb40218521d061a7df65ef32ce153d4e19d232957db7e3e63c7e9b",
+    )
 
-    variant('quadmath', default=False, description="Support 128-bit floats")
+    variant("quadmath", default=False, description="Support 128-bit floats")
 
-    depends_on('blas')
-    depends_on('fftw')
-    depends_on('mpfr')
+    depends_on("blas")
+    depends_on("fftw")
+    depends_on("mpfr")
 
     def build(self, spec, prefix):
         makeargs = ["CC=cc"]
-        if 'openblas' in spec:
+        if "openblas" in spec:
             makeargs += ["FT_BLAS=openblas"]
-        if 'quadmath' in spec:
+        if "quadmath" in spec:
             makeargs += ["FT_QUADMATH=1"]
-        make('assembly', *makeargs)
-        make('lib', *makeargs)
+        make("assembly", *makeargs)
+        make("lib", *makeargs)
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install(join_path('src', '*.h'), prefix.include)
+        install(join_path("src", "*.h"), prefix.include)
         mkdirp(prefix.lib)
-        install('libfasttransforms.' + dso_suffix, prefix.lib)
+        install("libfasttransforms." + dso_suffix, prefix.lib)

@@ -23,9 +23,10 @@ class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     ``llnl.util.lock`` so that all the lock API calls will succeed, but
     the actual locking mechanism can be disabled via ``_enable_locks``.
     """
+
     def __init__(self, *args, **kwargs):
         super(Lock, self).__init__(*args, **kwargs)
-        self._enable = spack.config.get('config:locks', True)
+        self._enable = spack.config.get("config:locks", True)
 
     def _lock(self, op, timeout=0):
         if self._enable:
@@ -61,15 +62,15 @@ def check_lock_safety(path):
         writable = None
         if (mode & stat.S_IWGRP) and (uid != gid):
             # spack is group-writeable and the group is not the owner
-            writable = 'group'
-        elif (mode & stat.S_IWOTH):
+            writable = "group"
+        elif mode & stat.S_IWOTH:
             # spack is world-writeable
-            writable = 'world'
+            writable = "world"
 
         if writable:
-            msg = "Refusing to disable locks: spack is {0}-writable.".format(
-                writable)
+            msg = "Refusing to disable locks: spack is {0}-writable.".format(writable)
             long_msg = (
                 "Running a shared spack without locks is unsafe. You must "
-                "restrict permissions on {0} or enable locks.").format(path)
+                "restrict permissions on {0} or enable locks."
+            ).format(path)
             raise spack.error.SpackError(msg, long_msg)

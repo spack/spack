@@ -15,11 +15,14 @@ class Beforelight(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/beforelight"
     xorg_mirror_path = "app/beforelight-1.0.5.tar.gz"
 
-    version('1.0.5', sha256='93bb3c457d6d5e8def3180fdee07bc84d1b7f0e5378a95812e2193cd51455cdc')
+    version(
+        "1.0.5",
+        sha256="93bb3c457d6d5e8def3180fdee07bc84d1b7f0e5378a95812e2193cd51455cdc",
+    )
 
-    depends_on('libx11')
-    depends_on('libxscrnsaver')
-    depends_on('libxt')
+    depends_on("libx11")
+    depends_on("libxscrnsaver")
+    depends_on("libxt")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

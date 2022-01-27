@@ -13,10 +13,13 @@ class Graphite2(CMakePackage):
     how to combine and position the letters in complex ways."""
 
     homepage = "https://scripts.sil.org/cms/scripts/page.php?site_id=projects&item_id=graphite_home"
-    url      = "https://github.com/silnrsi/graphite/releases/download/1.3.13/graphite2-1.3.13.tgz"
+    url = "https://github.com/silnrsi/graphite/releases/download/1.3.13/graphite2-1.3.13.tgz"
 
-    version('1.3.13', sha256='dd63e169b0d3cf954b397c122551ab9343e0696fb2045e1b326db0202d875f06')
+    version(
+        "1.3.13",
+        sha256="dd63e169b0d3cf954b397c122551ab9343e0696fb2045e1b326db0202d875f06",
+    )
 
-    depends_on('python@3.6:', type='test')
+    depends_on("python@3.6:", type="test")
 
-    patch('regparm.patch')
+    patch("regparm.patch")

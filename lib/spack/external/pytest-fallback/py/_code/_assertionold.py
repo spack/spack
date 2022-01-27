@@ -5,10 +5,12 @@ from py._code.assertion import BuiltinAssertionError, _format_explanation
 
 passthroughex = py.builtin._sysex
 
+
 class Failure:
     def __init__(self, node):
         self.exc, self.value, self.tb = sys.exc_info()
         self.node = node
+
 
 class View(object):
     """View base class.
@@ -83,10 +85,10 @@ class View(object):
             return choices[0]
         else:
             # combine the multiple choices
-            return type('?', tuple(choices), {})
+            return type("?", tuple(choices), {})
 
     def __repr__(self):
-        return '%s(%r)' % (self.__rootclass__.__name__, self.__obj__)
+        return "%s(%r)" % (self.__rootclass__.__name__, self.__obj__)
 
 
 def enumsubclasses(cls):
@@ -98,6 +100,7 @@ def enumsubclasses(cls):
 
 class Interpretable(View):
     """A parse tree node with a few extra methods."""
+
     explanation = None
 
     def is_builtin(self, frame):
@@ -107,8 +110,8 @@ class Interpretable(View):
         # fall-back for unknown expression nodes
         try:
             expr = ast.Expression(self.__obj__)
-            expr.filename = '<eval>'
-            self.__obj__.filename = '<eval>'
+            expr.filename = "<eval>"
+            self.__obj__.filename = "<eval>"
             co = pycodegen.ExpressionCodeGenerator(expr).getCode()
             result = frame.eval(co)
         except passthroughex:
@@ -122,7 +125,7 @@ class Interpretable(View):
         # fall-back for unknown statement nodes
         try:
             expr = ast.Module(None, ast.Stmt([self.__obj__]))
-            expr.filename = '<run>'
+            expr.filename = "<run>"
             co = pycodegen.ModuleCodeGenerator(expr).getCode()
             frame.exec_(co)
         except passthroughex:
@@ -138,7 +141,7 @@ class Name(Interpretable):
     __view__ = ast.Name
 
     def is_local(self, frame):
-        source = '%r in locals() is not globals()' % self.name
+        source = "%r in locals() is not globals()" % self.name
         try:
             return frame.is_true(frame.eval(source))
         except passthroughex:
@@ -147,7 +150,7 @@ class Name(Interpretable):
             return False
 
     def is_global(self, frame):
-        source = '%r in globals()' % self.name
+        source = "%r in globals()" % self.name
         try:
             return frame.is_true(frame.eval(source))
         except passthroughex:
@@ -156,8 +159,7 @@ class Name(Interpretable):
             return False
 
     def is_builtin(self, frame):
-        source = '%r not in locals() and %r not in globals()' % (
-            self.name, self.name)
+        source = "%r not in locals() and %r not in globals()" % (self.name, self.name)
         try:
             return frame.is_true(frame.eval(source))
         except passthroughex:
@@ -170,6 +172,7 @@ class Name(Interpretable):
         if not self.is_local(frame):
             self.explanation = self.name
 
+
 class Compare(Interpretable):
     __view__ = ast.Compare
 
@@ -177,24 +180,28 @@ class Compare(Interpretable):
         expr = Interpretable(self.expr)
         expr.eval(frame)
         for operation, expr2 in self.ops:
-            if hasattr(self, 'result'):
+            if hasattr(self, "result"):
                 # shortcutting in chained expressions
                 if not frame.is_true(self.result):
                     break
             expr2 = Interpretable(expr2)
             expr2.eval(frame)
             self.explanation = "%s %s %s" % (
-                expr.explanation, operation, expr2.explanation)
+                expr.explanation,
+                operation,
+                expr2.explanation,
+            )
             source = "__exprinfo_left %s __exprinfo_right" % operation
             try:
-                self.result = frame.eval(source,
-                                         __exprinfo_left=expr.result,
-                                         __exprinfo_right=expr2.result)
+                self.result = frame.eval(
+                    source, __exprinfo_left=expr.result, __exprinfo_right=expr2.result
+                )
             except passthroughex:
                 raise
             except:
                 raise Failure(self)
             expr = expr2
+
 
 class And(Interpretable):
     __view__ = ast.And
@@ -208,7 +215,8 @@ class And(Interpretable):
             self.result = expr.result
             if not frame.is_true(expr.result):
                 break
-        self.explanation = '(' + ' and '.join(explanations) + ')'
+        self.explanation = "(" + " and ".join(explanations) + ")"
+
 
 class Or(Interpretable):
     __view__ = ast.Or
@@ -222,15 +230,15 @@ class Or(Interpretable):
             self.result = expr.result
             if frame.is_true(expr.result):
                 break
-        self.explanation = '(' + ' or '.join(explanations) + ')'
+        self.explanation = "(" + " or ".join(explanations) + ")"
 
 
 # == Unary operations ==
 keepalive = []
 for astclass, astpattern in {
-    ast.Not    : 'not __exprinfo_expr',
-    ast.Invert : '(~__exprinfo_expr)',
-    }.items():
+    ast.Not: "not __exprinfo_expr",
+    ast.Invert: "(~__exprinfo_expr)",
+}.items():
 
     class UnaryArith(Interpretable):
         __view__ = astclass
@@ -238,11 +246,9 @@ for astclass, astpattern in {
         def eval(self, frame, astpattern=astpattern):
             expr = Interpretable(self.expr)
             expr.eval(frame)
-            self.explanation = astpattern.replace('__exprinfo_expr',
-                                                  expr.explanation)
+            self.explanation = astpattern.replace("__exprinfo_expr", expr.explanation)
             try:
-                self.result = frame.eval(astpattern,
-                                         __exprinfo_expr=expr.result)
+                self.result = frame.eval(astpattern, __exprinfo_expr=expr.result)
             except passthroughex:
                 raise
             except:
@@ -252,13 +258,13 @@ for astclass, astpattern in {
 
 # == Binary operations ==
 for astclass, astpattern in {
-    ast.Add    : '(__exprinfo_left + __exprinfo_right)',
-    ast.Sub    : '(__exprinfo_left - __exprinfo_right)',
-    ast.Mul    : '(__exprinfo_left * __exprinfo_right)',
-    ast.Div    : '(__exprinfo_left / __exprinfo_right)',
-    ast.Mod    : '(__exprinfo_left % __exprinfo_right)',
-    ast.Power  : '(__exprinfo_left ** __exprinfo_right)',
-    }.items():
+    ast.Add: "(__exprinfo_left + __exprinfo_right)",
+    ast.Sub: "(__exprinfo_left - __exprinfo_right)",
+    ast.Mul: "(__exprinfo_left * __exprinfo_right)",
+    ast.Div: "(__exprinfo_left / __exprinfo_right)",
+    ast.Mod: "(__exprinfo_left % __exprinfo_right)",
+    ast.Power: "(__exprinfo_left ** __exprinfo_right)",
+}.items():
 
     class BinaryArith(Interpretable):
         __view__ = astclass
@@ -268,13 +274,15 @@ for astclass, astpattern in {
             left.eval(frame)
             right = Interpretable(self.right)
             right.eval(frame)
-            self.explanation = (astpattern
-                                .replace('__exprinfo_left',  left .explanation)
-                                .replace('__exprinfo_right', right.explanation))
+            self.explanation = astpattern.replace(
+                "__exprinfo_left", left.explanation
+            ).replace("__exprinfo_right", right.explanation)
             try:
-                self.result = frame.eval(astpattern,
-                                         __exprinfo_left=left.result,
-                                         __exprinfo_right=right.result)
+                self.result = frame.eval(
+                    astpattern,
+                    __exprinfo_left=left.result,
+                    __exprinfo_right=right.result,
+                )
             except passthroughex:
                 raise
             except:
@@ -287,10 +295,9 @@ class CallFunc(Interpretable):
     __view__ = ast.CallFunc
 
     def is_bool(self, frame):
-        source = 'isinstance(__exprinfo_value, bool)'
+        source = "isinstance(__exprinfo_value, bool)"
         try:
-            return frame.is_true(frame.eval(source,
-                                            __exprinfo_value=self.result))
+            return frame.is_true(frame.eval(source, __exprinfo_value=self.result))
         except passthroughex:
             raise
         except:
@@ -300,8 +307,8 @@ class CallFunc(Interpretable):
         node = Interpretable(self.node)
         node.eval(frame)
         explanations = []
-        vars = {'__exprinfo_fn': node.result}
-        source = '__exprinfo_fn('
+        vars = {"__exprinfo_fn": node.result}
+        source = "__exprinfo_fn("
         for a in self.args:
             if isinstance(a, ast.Keyword):
                 keyword = a.name
@@ -310,33 +317,32 @@ class CallFunc(Interpretable):
                 keyword = None
             a = Interpretable(a)
             a.eval(frame)
-            argname = '__exprinfo_%d' % len(vars)
+            argname = "__exprinfo_%d" % len(vars)
             vars[argname] = a.result
             if keyword is None:
-                source += argname + ','
+                source += argname + ","
                 explanations.append(a.explanation)
             else:
-                source += '%s=%s,' % (keyword, argname)
-                explanations.append('%s=%s' % (keyword, a.explanation))
+                source += "%s=%s," % (keyword, argname)
+                explanations.append("%s=%s" % (keyword, a.explanation))
         if self.star_args:
             star_args = Interpretable(self.star_args)
             star_args.eval(frame)
-            argname = '__exprinfo_star'
+            argname = "__exprinfo_star"
             vars[argname] = star_args.result
-            source += '*' + argname + ','
-            explanations.append('*' + star_args.explanation)
+            source += "*" + argname + ","
+            explanations.append("*" + star_args.explanation)
         if self.dstar_args:
             dstar_args = Interpretable(self.dstar_args)
             dstar_args.eval(frame)
-            argname = '__exprinfo_kwds'
+            argname = "__exprinfo_kwds"
             vars[argname] = dstar_args.result
-            source += '**' + argname + ','
-            explanations.append('**' + dstar_args.explanation)
-        self.explanation = "%s(%s)" % (
-            node.explanation, ', '.join(explanations))
-        if source.endswith(','):
+            source += "**" + argname + ","
+            explanations.append("**" + dstar_args.explanation)
+        self.explanation = "%s(%s)" % (node.explanation, ", ".join(explanations))
+        if source.endswith(","):
             source = source[:-1]
-        source += ')'
+        source += ")"
         try:
             self.result = frame.eval(source, **vars)
         except passthroughex:
@@ -345,7 +351,8 @@ class CallFunc(Interpretable):
             raise Failure(self)
         if not node.is_builtin(frame) or not self.is_bool(frame):
             r = frame.repr(self.result)
-            self.explanation = '%s\n{%s = %s\n}' % (r, r, self.explanation)
+            self.explanation = "%s\n{%s = %s\n}" % (r, r, self.explanation)
+
 
 class Getattr(Interpretable):
     __view__ = ast.Getattr
@@ -353,29 +360,34 @@ class Getattr(Interpretable):
     def eval(self, frame):
         expr = Interpretable(self.expr)
         expr.eval(frame)
-        source = '__exprinfo_expr.%s' % self.attrname
+        source = "__exprinfo_expr.%s" % self.attrname
         try:
             self.result = frame.eval(source, __exprinfo_expr=expr.result)
         except passthroughex:
             raise
         except:
             raise Failure(self)
-        self.explanation = '%s.%s' % (expr.explanation, self.attrname)
+        self.explanation = "%s.%s" % (expr.explanation, self.attrname)
         # if the attribute comes from the instance, its value is interesting
-        source = ('hasattr(__exprinfo_expr, "__dict__") and '
-                  '%r in __exprinfo_expr.__dict__' % self.attrname)
+        source = (
+            'hasattr(__exprinfo_expr, "__dict__") and '
+            "%r in __exprinfo_expr.__dict__" % self.attrname
+        )
         try:
             from_instance = frame.is_true(
-                frame.eval(source, __exprinfo_expr=expr.result))
+                frame.eval(source, __exprinfo_expr=expr.result)
+            )
         except passthroughex:
             raise
         except:
             from_instance = True
         if from_instance:
             r = frame.repr(self.result)
-            self.explanation = '%s\n{%s = %s\n}' % (r, r, self.explanation)
+            self.explanation = "%s\n{%s = %s\n}" % (r, r, self.explanation)
+
 
 # == Re-interpretation of full statements ==
+
 
 class Assert(Interpretable):
     __view__ = ast.Assert
@@ -384,12 +396,13 @@ class Assert(Interpretable):
         test = Interpretable(self.test)
         test.eval(frame)
         # simplify 'assert False where False = ...'
-        if (test.explanation.startswith('False\n{False = ') and
-            test.explanation.endswith('\n}')):
+        if test.explanation.startswith(
+            "False\n{False = "
+        ) and test.explanation.endswith("\n}"):
             test.explanation = test.explanation[15:-2]
         # print the result as  'assert <explanation>'
         self.result = test.result
-        self.explanation = 'assert ' + test.explanation
+        self.explanation = "assert " + test.explanation
         if not frame.is_true(test.result):
             try:
                 raise BuiltinAssertionError
@@ -398,6 +411,7 @@ class Assert(Interpretable):
             except:
                 raise Failure(self)
 
+
 class Assign(Interpretable):
     __view__ = ast.Assign
 
@@ -405,11 +419,11 @@ class Assign(Interpretable):
         expr = Interpretable(self.expr)
         expr.eval(frame)
         self.result = expr.result
-        self.explanation = '... = ' + expr.explanation
+        self.explanation = "... = " + expr.explanation
         # fall-back-run the rest of the assignment
-        ass = ast.Assign(self.nodes, ast.Name('__exprinfo_expr'))
+        ass = ast.Assign(self.nodes, ast.Name("__exprinfo_expr"))
         mod = ast.Module(None, ast.Stmt([ass]))
-        mod.filename = '<run>'
+        mod.filename = "<run>"
         co = pycodegen.ModuleCodeGenerator(mod).getCode()
         try:
             frame.exec_(co, __exprinfo_expr=expr.result)
@@ -417,6 +431,7 @@ class Assign(Interpretable):
             raise
         except:
             raise Failure(self)
+
 
 class Discard(Interpretable):
     __view__ = ast.Discard
@@ -426,6 +441,7 @@ class Discard(Interpretable):
         expr.eval(frame)
         self.result = expr.result
         self.explanation = expr.explanation
+
 
 class Stmt(Interpretable):
     __view__ = ast.Stmt
@@ -444,11 +460,12 @@ def report_failure(e):
         explanation = ""
     sys.stdout.write("%s: %s%s\n" % (e.exc.__name__, e.value, explanation))
 
+
 def check(s, frame=None):
     if frame is None:
         frame = sys._getframe(1)
         frame = py.code.Frame(frame)
-    expr = parse(s, 'eval')
+    expr = parse(s, "eval")
     assert isinstance(expr, ast.Expression)
     node = Interpretable(expr.node)
     try:
@@ -467,9 +484,10 @@ def check(s, frame=None):
 # API / Entry points
 # #########################################################
 
+
 def interpret(source, frame, should_fail=False):
-    module = Interpretable(parse(source, 'exec').node)
-    #print "got module", module
+    module = Interpretable(parse(source, "exec").node)
+    # print "got module", module
     if isinstance(frame, py.std.types.FrameType):
         frame = py.code.Frame(frame)
     try:
@@ -481,20 +499,24 @@ def interpret(source, frame, should_fail=False):
         raise
     except:
         import traceback
+
         traceback.print_exc()
     if should_fail:
-        return ("(assertion failed, but when it was re-run for "
-                "printing intermediate values, it did not fail.  Suggestions: "
-                "compute assert expression before the assert or use --nomagic)")
+        return (
+            "(assertion failed, but when it was re-run for "
+            "printing intermediate values, it did not fail.  Suggestions: "
+            "compute assert expression before the assert or use --nomagic)"
+        )
     else:
         return None
+
 
 def getmsg(excinfo):
     if isinstance(excinfo, tuple):
         excinfo = py.code.ExceptionInfo(excinfo)
-    #frame, line = gettbline(tb)
-    #frame = py.code.Frame(frame)
-    #return interpret(line, frame)
+    # frame, line = gettbline(tb)
+    # frame = py.code.Frame(frame)
+    # return interpret(line, frame)
 
     tb = excinfo.traceback[-1]
     source = str(tb.statement).strip()
@@ -503,22 +525,24 @@ def getmsg(excinfo):
         raise TypeError("interpret returned non-string %r" % (x,))
     return x
 
+
 def getfailure(e):
     explanation = e.node.nice_explanation()
     if str(e.value):
-        lines = explanation.split('\n')
+        lines = explanation.split("\n")
         lines[0] += "  << %s" % (e.value,)
-        explanation = '\n'.join(lines)
+        explanation = "\n".join(lines)
     text = "%s: %s" % (e.exc.__name__, explanation)
-    if text.startswith('AssertionError: assert '):
+    if text.startswith("AssertionError: assert "):
         text = text[16:]
     return text
+
 
 def run(s, frame=None):
     if frame is None:
         frame = sys._getframe(1)
         frame = py.code.Frame(frame)
-    module = Interpretable(parse(s, 'exec').node)
+    module = Interpretable(parse(s, "exec").node)
     try:
         module.run(frame)
     except Failure:
@@ -526,14 +550,17 @@ def run(s, frame=None):
         report_failure(e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # example:
     def f():
         return 5
+
     def g():
         return 3
+
     def h(x):
-        return 'never'
+        return "never"
+
     check("f() * g() == 5")
     check("not f()")
     check("not (f() and g() or 0)")

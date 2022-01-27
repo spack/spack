@@ -10,10 +10,13 @@ class PyCookies(PythonPackage):
     """Friendlier RFC 6265-compliant cookie parser/renderer"""
 
     homepage = "https://github.com/sashahart/cookies"
-    pypi     = "cookies/cookies-2.2.1.tar.gz"
+    pypi = "cookies/cookies-2.2.1.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('2.2.1', sha256='d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e')
+    version(
+        "2.2.1",
+        sha256="d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

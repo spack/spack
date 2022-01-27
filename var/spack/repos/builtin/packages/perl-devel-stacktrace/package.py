@@ -10,6 +10,9 @@ class PerlDevelStacktrace(PerlPackage):
     """An object representing a stack trace."""
 
     homepage = "https://metacpan.org/pod/Devel::StackTrace"
-    url      = "http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/Devel-StackTrace-2.02.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/Devel-StackTrace-2.02.tar.gz"
 
-    version('2.02', sha256='cbbd96db0ecf194ed140198090eaea0e327d9a378a4aa15f9a34b3138a91931f')
+    version(
+        "2.02",
+        sha256="cbbd96db0ecf194ed140198090eaea0e327d9a378a4aa15f9a34b3138a91931f",
+    )

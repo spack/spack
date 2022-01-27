@@ -21,7 +21,10 @@ def patternProperties(validator, patternProperties, instance, schema):
         for k, v in iteritems(instance):
             if re.search(pattern, k):
                 for error in validator.descend(
-                    v, subschema, path=k, schema_path=pattern,
+                    v,
+                    subschema,
+                    path=k,
+                    schema_path=pattern,
                 ):
                     yield error
 
@@ -73,7 +76,10 @@ def items(validator, items, instance, schema):
     if validator.is_type(items, "array"):
         for (index, item), subschema in zip(enumerate(instance), items):
             for error in validator.descend(
-                item, subschema, path=index, schema_path=index,
+                item,
+                subschema,
+                path=index,
+                schema_path=index,
             ):
                 yield error
     else:
@@ -83,9 +89,8 @@ def items(validator, items, instance, schema):
 
 
 def additionalItems(validator, aI, instance, schema):
-    if (
-        not validator.is_type(instance, "array") or
-        validator.is_type(schema.get("items", {}), "object")
+    if not validator.is_type(instance, "array") or validator.is_type(
+        schema.get("items", {}), "object"
     ):
         return
 
@@ -97,8 +102,7 @@ def additionalItems(validator, aI, instance, schema):
     elif not aI and len(instance) > len(schema.get("items", [])):
         error = "Additional items are not allowed (%s %s unexpected)"
         yield ValidationError(
-            error %
-            extras_msg(instance[len(schema.get("items", [])):])
+            error % extras_msg(instance[len(schema.get("items", [])) :])
         )
 
 
@@ -123,8 +127,10 @@ def exclusiveMinimum(validator, minimum, instance, schema):
 
     if instance <= minimum:
         yield ValidationError(
-            "%r is less than or equal to the minimum of %r" % (
-                instance, minimum,
+            "%r is less than or equal to the minimum of %r"
+            % (
+                instance,
+                minimum,
             ),
         )
 
@@ -135,8 +141,10 @@ def exclusiveMaximum(validator, maximum, instance, schema):
 
     if instance >= maximum:
         yield ValidationError(
-            "%r is greater than or equal to the maximum of %r" % (
-                instance, maximum,
+            "%r is greater than or equal to the maximum of %r"
+            % (
+                instance,
+                maximum,
             ),
         )
 
@@ -146,9 +154,7 @@ def minimum(validator, minimum, instance, schema):
         return
 
     if instance < minimum:
-        yield ValidationError(
-            "%r is less than the minimum of %r" % (instance, minimum)
-        )
+        yield ValidationError("%r is less than the minimum of %r" % (instance, minimum))
 
 
 def maximum(validator, maximum, instance, schema):
@@ -186,19 +192,12 @@ def maxItems(validator, mI, instance, schema):
 
 
 def uniqueItems(validator, uI, instance, schema):
-    if (
-        uI and
-        validator.is_type(instance, "array") and
-        not uniq(instance)
-    ):
+    if uI and validator.is_type(instance, "array") and not uniq(instance):
         yield ValidationError("%r has non-unique elements" % (instance,))
 
 
 def pattern(validator, patrn, instance, schema):
-    if (
-        validator.is_type(instance, "string") and
-        not re.search(patrn, instance)
-    ):
+    if validator.is_type(instance, "string") and not re.search(patrn, instance):
         yield ValidationError("%r does not match %r" % (instance, patrn))
 
 
@@ -235,7 +234,9 @@ def dependencies(validator, dependencies, instance, schema):
                     yield ValidationError(message % (each, property))
         else:
             for error in validator.descend(
-                instance, dependency, schema_path=property,
+                instance,
+                dependency,
+                schema_path=property,
             ):
                 yield error
 
@@ -298,9 +299,7 @@ def required(validator, required, instance, schema):
 
 def minProperties(validator, mP, instance, schema):
     if validator.is_type(instance, "object") and len(instance) < mP:
-        yield ValidationError(
-            "%r does not have enough properties" % (instance,)
-        )
+        yield ValidationError("%r does not have enough properties" % (instance,))
 
 
 def maxProperties(validator, mP, instance, schema):
@@ -349,16 +348,12 @@ def oneOf(validator, oneOf, instance, schema):
     if more_valid:
         more_valid.append(first_valid)
         reprs = ", ".join(repr(schema) for schema in more_valid)
-        yield ValidationError(
-            "%r is valid under each of %s" % (instance, reprs)
-        )
+        yield ValidationError("%r is valid under each of %s" % (instance, reprs))
 
 
 def not_(validator, not_schema, instance, schema):
     if validator.is_valid(instance, not_schema):
-        yield ValidationError(
-            "%r is not allowed for %r" % (not_schema, instance)
-        )
+        yield ValidationError("%r is not allowed for %r" % (not_schema, instance))
 
 
 def if_(validator, if_schema, instance, schema):

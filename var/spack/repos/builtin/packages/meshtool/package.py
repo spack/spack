@@ -10,16 +10,16 @@ class Meshtool(MakefilePackage):
     """Meshtool - A mesh manipulation utility"""
 
     homepage = "https://bitbucket.org/aneic/meshtool/"
-    git      = "https://bitbucket.org/aneic/meshtool.git"
+    git = "https://bitbucket.org/aneic/meshtool.git"
 
-    maintainers = ['MarieHouillon']
+    maintainers = ["MarieHouillon"]
 
-    version('master', branch='master')
+    version("master", branch="master")
     # Version to use with openCARP releases
-    version('oc8.2', commit='6c5cfbd067120901f15a04bf63beec409bda6dc9')
-    version('oc8.1', commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
-    version('oc7.0', commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
+    version("oc8.2", commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
+    version("oc8.1", commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
+    version("oc7.0", commit="6c5cfbd067120901f15a04bf63beec409bda6dc9")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('meshtool', prefix.bin)
+        install("meshtool", prefix.bin)

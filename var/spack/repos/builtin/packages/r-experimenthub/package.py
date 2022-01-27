@@ -16,14 +16,14 @@ class RExperimenthub(RPackage):
     creates and manages a local cache of files retrieved enabling quick and
     reproducible access."""
 
-    bioc     = "ExperimentHub"
+    bioc = "ExperimentHub"
 
-    version('1.16.1', commit='61d51b7ca968d6cc1befe299e0784d9a19ca51f6')
+    version("1.16.1", commit="61d51b7ca968d6cc1befe299e0784d9a19ca51f6")
 
-    depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
-    depends_on('r-annotationhub@2.19.3:', type=('build', 'run'))
-    depends_on('r-biocfilecache@1.5.1:', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-biocmanager', type=('build', 'run'))
-    depends_on('r-curl', type=('build', 'run'))
-    depends_on('r-rappdirs', type=('build', 'run'))
+    depends_on("r-biocgenerics@0.15.10:", type=("build", "run"))
+    depends_on("r-annotationhub@2.19.3:", type=("build", "run"))
+    depends_on("r-biocfilecache@1.5.1:", type=("build", "run"))
+    depends_on("r-s4vectors", type=("build", "run"))
+    depends_on("r-biocmanager", type=("build", "run"))
+    depends_on("r-curl", type=("build", "run"))
+    depends_on("r-rappdirs", type=("build", "run"))

@@ -8,19 +8,26 @@ from spack import *
 
 class Wxpropgrid(Package, SourceforgePackage):
     """wxPropertyGrid is a property sheet control for wxWidgets. In
-       other words, it is a specialized two-column grid for editing
-       properties such as strings, numbers, flagsets, string arrays,
-       and colours."""
+    other words, it is a specialized two-column grid for editing
+    properties such as strings, numbers, flagsets, string arrays,
+    and colours."""
+
     homepage = "http://wxpropgrid.sourceforge.net/"
     sourceforge_mirror_path = "wxpropgrid/wxpropgrid-1.4.15-src.tar.gz"
 
-    version('1.4.15', sha256='f0c9a86656828f592c8e57d2c89401f07f0af6a45b17bbca3990e8d29121c2b8')
+    version(
+        "1.4.15",
+        sha256="f0c9a86656828f592c8e57d2c89401f07f0af6a45b17bbca3990e8d29121c2b8",
+    )
 
     depends_on("wxwidgets")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--with-wxdir=%s" %
-                  spec['wxwidgets'].prefix.bin, "--enable-unicode")
+        configure(
+            "--prefix=%s" % prefix,
+            "--with-wxdir=%s" % spec["wxwidgets"].prefix.bin,
+            "--enable-unicode",
+        )
 
         make()
         make("install")

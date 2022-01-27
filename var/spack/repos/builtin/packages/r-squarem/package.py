@@ -18,10 +18,16 @@ class RSquarem(RPackage):
     <doi:10.18637/jss.v092.i07>."""
 
     homepage = "https://www.jhsph.edu/agingandhealth/People/Faculty_personal_pages/Varadhan.html"
-    url      = "https://cloud.r-project.org/src/contrib/SQUAREM_2017.10-1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/SQUAREM_2017.10-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/SQUAREM"
 
-    version('2021.1', sha256='66e5e18ca29903e4950750bbd810f0f9df85811ee4195ce0a86d939ba8183a58')
-    version('2017.10-1', sha256='9b89905b436f1cf3faa9e3dabc585a76299e729e85ca659bfddb4b7cba11b283')
+    version(
+        "2021.1",
+        sha256="66e5e18ca29903e4950750bbd810f0f9df85811ee4195ce0a86d939ba8183a58",
+    )
+    version(
+        "2017.10-1",
+        sha256="9b89905b436f1cf3faa9e3dabc585a76299e729e85ca659bfddb4b7cba11b283",
+    )
 
-    depends_on('r@3.0:', type=('build', 'run'))
+    depends_on("r@3.0:", type=("build", "run"))

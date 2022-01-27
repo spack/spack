@@ -12,13 +12,16 @@ class Xfs(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xfs"
     xorg_mirror_path = "app/xfs-1.1.4.tar.gz"
 
-    version('1.1.4', sha256='28f89b854d1ff14fa1efa5b408e5e1c4f6a145420310073c4e44705feeb6d23b')
+    version(
+        "1.1.4",
+        sha256="28f89b854d1ff14fa1efa5b408e5e1c4f6a145420310073c4e44705feeb6d23b",
+    )
 
-    depends_on('libxfont@1.4.5:')
-    depends_on('font-util')
+    depends_on("libxfont@1.4.5:")
+    depends_on("font-util")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('fontsproto')
-    depends_on('xtrans')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("fontsproto")
+    depends_on("xtrans")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

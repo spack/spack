@@ -8,18 +8,18 @@ class DevBuildTestDependent(Package):
     homepage = "example.com"
     url = "fake.com"
 
-    version('0.0.0', sha256='0123456789abcdef0123456789abcdef')
+    version("0.0.0", sha256="0123456789abcdef0123456789abcdef")
 
-    phases = ['edit', 'install']
+    phases = ["edit", "install"]
 
-    filename = 'dev-build-test-file.txt'
+    filename = "dev-build-test-file.txt"
     original_string = "This file should be edited"
     replacement_string = "This file has been edited"
 
-    depends_on('dev-build-test-install')
+    depends_on("dev-build-test-install")
 
     def edit(self, spec, prefix):
-        with open(self.filename, 'r+') as f:
+        with open(self.filename, "r+") as f:
             assert f.read() == self.original_string
             f.seek(0)
             f.truncate()

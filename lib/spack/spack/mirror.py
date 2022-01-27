@@ -59,15 +59,13 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None,
-                 name=None):
+    def __init__(self, fetch_url, push_url=None, name=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
 
     def __eq__(self, other):
-        return (self._fetch_url == other._fetch_url and
-                self._push_url == other._push_url)
+        return self._fetch_url == other._fetch_url and self._push_url == other._push_url
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -99,34 +97,28 @@ class Mirror(object):
 
     def to_dict(self):
         if self._push_url is None:
-            return syaml_dict([
-                ('fetch', self._fetch_url),
-                ('push', self._fetch_url)])
+            return syaml_dict([("fetch", self._fetch_url), ("push", self._fetch_url)])
         else:
-            return syaml_dict([
-                ('fetch', self._fetch_url),
-                ('push', self._push_url)])
+            return syaml_dict([("fetch", self._fetch_url), ("push", self._push_url)])
 
     @staticmethod
     def from_dict(d, name=None):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name=name)
+            return Mirror(d["fetch"], d["push"], name=name)
 
     def display(self, max_len=0):
         if self._push_url is None:
             _display_mirror_entry(max_len, self._name, self.fetch_url)
         else:
-            _display_mirror_entry(
-                max_len, self._name, self.fetch_url, "fetch")
-            _display_mirror_entry(
-                max_len, self._name, self.push_url, "push")
+            _display_mirror_entry(max_len, self._name, self.fetch_url, "fetch")
+            _display_mirror_entry(max_len, self._name, self.push_url, "push")
 
     def __str__(self):
         name = self._name
         if name is None:
-            name = ''
+            name = ""
         else:
             name = ' "%s"' % name
 
@@ -134,20 +126,27 @@ class Mirror(object):
             return "[Mirror%s (%s)]" % (name, self._fetch_url)
 
         return "[Mirror%s (fetch: %s, push: %s)]" % (
-            name, self._fetch_url, self._push_url)
+            name,
+            self._fetch_url,
+            self._push_url,
+        )
 
     def __repr__(self):
-        return ''.join((
-            'Mirror(',
-            ', '.join(
-                '%s=%s' % (k, repr(v))
-                for k, v in (
-                    ('fetch_url', self._fetch_url),
-                    ('push_url', self._push_url),
-                    ('name', self._name))
-                if k == 'fetch_url' or v),
-            ')'
-        ))
+        return "".join(
+            (
+                "Mirror(",
+                ", ".join(
+                    "%s=%s" % (k, repr(v))
+                    for k, v in (
+                        ("fetch_url", self._fetch_url),
+                        ("push_url", self._push_url),
+                        ("name", self._name),
+                    )
+                    if k == "fetch_url" or v
+                ),
+                ")",
+            )
+        )
 
     @property
     def name(self):
@@ -156,8 +155,8 @@ class Mirror(object):
     def get_profile(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url.get('profile', None)
-            return self._fetch_url.get('profile', None)
+                return self._push_url.get("profile", None)
+            return self._fetch_url.get("profile", None)
         else:
             return None
 
@@ -170,8 +169,8 @@ class Mirror(object):
     def get_access_pair(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url.get('access_pair', None)
-            return self._fetch_url.get('access_pair', None)
+                return self._push_url.get("access_pair", None)
+            return self._fetch_url.get("access_pair", None)
         else:
             return None
 
@@ -184,8 +183,8 @@ class Mirror(object):
     def get_endpoint_url(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url.get('endpoint_url', None)
-            return self._fetch_url.get('endpoint_url', None)
+                return self._push_url.get("endpoint_url", None)
+            return self._fetch_url.get("endpoint_url", None)
         else:
             return None
 
@@ -198,8 +197,8 @@ class Mirror(object):
     def get_access_token(self, url_type):
         if isinstance(self._fetch_url, dict):
             if url_type == "push":
-                return self._push_url.get('access_token', None)
-            return self._fetch_url.get('access_token', None)
+                return self._push_url.get("access_token", None)
+            return self._fetch_url.get("access_token", None)
         else:
             return None
 
@@ -211,8 +210,9 @@ class Mirror(object):
 
     @property
     def fetch_url(self):
-        return self._fetch_url if _is_string(self._fetch_url) \
-            else self._fetch_url["url"]
+        return (
+            self._fetch_url if _is_string(self._fetch_url) else self._fetch_url["url"]
+        )
 
     @fetch_url.setter
     def fetch_url(self, url):
@@ -222,10 +222,12 @@ class Mirror(object):
     @property
     def push_url(self):
         if self._push_url is None:
-            return self._fetch_url if _is_string(self._fetch_url) \
+            return (
+                self._fetch_url
+                if _is_string(self._fetch_url)
                 else self._fetch_url["url"]
-        return self._push_url if _is_string(self._push_url) \
-            else self._push_url["url"]
+            )
+        return self._push_url if _is_string(self._push_url) else self._push_url["url"]
 
     @push_url.setter
     def push_url(self, url):
@@ -244,8 +246,11 @@ class MirrorCollection(Mapping):
         self._mirrors = collections.OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
-                mirrors.items() if mirrors is not None else
-                spack.config.get('mirrors', scope=scope).items()))
+                mirrors.items()
+                if mirrors is not None
+                else spack.config.get("mirrors", scope=scope).items()
+            )
+        )
 
     def __eq__(self, other):
         return self._mirrors == other._mirrors
@@ -280,12 +285,15 @@ class MirrorCollection(Mapping):
             )
 
     def to_dict(self, recursive=False):
-        return syaml_dict(sorted(
-            (
-                (k, (v.to_dict() if recursive else v))
-                for (k, v) in self._mirrors.items()
-            ), key=operator.itemgetter(0)
-        ))
+        return syaml_dict(
+            sorted(
+                (
+                    (k, (v.to_dict() if recursive else v))
+                    for (k, v) in self._mirrors.items()
+                ),
+                key=operator.itemgetter(0),
+            )
+        )
 
     @staticmethod
     def from_dict(d):
@@ -329,7 +337,7 @@ def _determine_extension(fetcher):
 
             if ext:
                 # Remove any leading dots
-                ext = ext.lstrip('.')
+                ext = ext.lstrip(".")
             else:
                 msg = """\
 Unable to parse extension from {0}.
@@ -351,7 +359,7 @@ Spack not to expand it with the following syntax:
             ext = None
     else:
         # Otherwise we'll make a .tar.gz ourselves
-        ext = 'tar.gz'
+        ext = "tar.gz"
 
     return ext
 
@@ -369,6 +377,7 @@ class MirrorReference(object):
     this includes names generated by previous naming schemes that are no-longer
     reported by ``storage_path`` or ``cosmetic_path``.
     """
+
     def __init__(self, cosmetic_path, global_path=None):
         self.global_path = global_path
         self.cosmetic_path = cosmetic_path
@@ -392,7 +401,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     ext = None
     if spec:
         versions = spec.package.versions.get(spec.package.version, {})
-        ext = versions.get('extension', None)
+        ext = versions.get("extension", None)
     # If the spec does not explicitly specify an extension (the default case),
     # then try to determine it automatically. An extension can only be
     # specified for the primary source of the package (e.g. the source code
@@ -405,7 +414,7 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
 
     global_ref = fetcher.mirror_id()
     if global_ref:
-        global_ref = os.path.join('_source-cache', global_ref)
+        global_ref = os.path.join("_source-cache", global_ref)
     if global_ref and ext:
         global_ref += ".%s" % ext
 
@@ -512,24 +521,21 @@ def create(path, specs, skip_unstable_versions=False):
     parsed = url_util.parse(path)
     mirror_root = url_util.local_file_path(parsed)
     if not mirror_root:
-        raise spack.error.SpackError(
-            'MirrorCaches only work with file:// URLs')
+        raise spack.error.SpackError("MirrorCaches only work with file:// URLs")
 
     # automatically spec-ify anything in the specs array.
-    specs = [
-        s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s)
-        for s in specs]
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
     # Get the absolute path of the root before we start jumping around.
     if not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
         except OSError as e:
-            raise MirrorError(
-                "Cannot create directory '%s':" % mirror_root, str(e))
+            raise MirrorError("Cannot create directory '%s':" % mirror_root, str(e))
 
     mirror_cache = spack.caches.MirrorCache(
-        mirror_root, skip_unstable_versions=skip_unstable_versions)
+        mirror_root, skip_unstable_versions=skip_unstable_versions
+    )
     mirror_stats = MirrorStats()
 
     # Iterate through packages and download all safe tarballs for each
@@ -542,7 +548,7 @@ def create(path, specs, skip_unstable_versions=False):
 
 def add(name, url, scope, args={}):
     """Add a named mirror in the given scope"""
-    mirrors = spack.config.get('mirrors', scope=scope)
+    mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -554,21 +560,23 @@ def add(name, url, scope, args={}):
     key_values = ["s3_access_key_id", "s3_access_token", "s3_profile"]
     # On creation, assume connection data is set for both
     if any(value for value in key_values if value in args):
-        url_dict = {"url": url,
-                    "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
-                    "access_token": args.s3_access_token,
-                    "profile": args.s3_profile,
-                    "endpoint_url": args.s3_endpoint_url}
+        url_dict = {
+            "url": url,
+            "access_pair": (args.s3_access_key_id, args.s3_access_key_secret),
+            "access_token": args.s3_access_token,
+            "profile": args.s3_profile,
+            "endpoint_url": args.s3_endpoint_url,
+        }
         mirror_data = {"fetch": url_dict, "push": url_dict}
 
     items.insert(0, (name, mirror_data))
     mirrors = syaml_dict(items)
-    spack.config.set('mirrors', mirrors, scope=scope)
+    spack.config.set("mirrors", mirrors, scope=scope)
 
 
 def remove(name, scope):
     """Remove the named mirror in the given scope"""
-    mirrors = spack.config.get('mirrors', scope=scope)
+    mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:
         mirrors = syaml_dict()
 
@@ -576,15 +584,15 @@ def remove(name, scope):
         tty.die("No mirror with name %s" % name)
 
     old_value = mirrors.pop(name)
-    spack.config.set('mirrors', mirrors, scope=scope)
+    spack.config.set("mirrors", mirrors, scope=scope)
 
     debug_msg_url = "url %s"
     debug_msg = ["Removed mirror %s with"]
     values = [name]
 
     try:
-        fetch_value = old_value['fetch']
-        push_value = old_value['push']
+        fetch_value = old_value["fetch"]
+        push_value = old_value["push"]
 
         debug_msg.extend(("fetch", debug_msg_url, "and push", debug_msg_url))
         values.extend((fetch_value, push_value))
@@ -638,9 +646,9 @@ class MirrorStats(object):
 
 
 def _add_single_spec(spec, mirror, mirror_stats):
-    tty.msg("Adding package {pkg} to mirror".format(
-        pkg=spec.format("{name}{@version}")
-    ))
+    tty.msg(
+        "Adding package {pkg} to mirror".format(pkg=spec.format("{name}{@version}"))
+    )
     num_retries = 3
     while num_retries > 0:
         try:
@@ -658,12 +666,13 @@ def _add_single_spec(spec, mirror, mirror_stats):
         num_retries -= 1
 
     if exception:
-        if spack.config.get('config:debug'):
+        if spack.config.get("config:debug"):
             traceback.print_exception(file=sys.stderr, *exc_tuple)
         else:
             tty.warn(
-                "Error while fetching %s" % spec.cformat('{name}{@version}'),
-                getattr(exception, 'message', exception))
+                "Error while fetching %s" % spec.cformat("{name}{@version}"),
+                getattr(exception, "message", exception),
+            )
         mirror_stats.error()
 
 
@@ -671,10 +680,10 @@ def push_url_from_directory(output_directory):
     """Given a directory in the local filesystem, return the URL on
     which to push binary packages.
     """
-    scheme = url_util.parse(output_directory, scheme='<missing>').scheme
-    if scheme != '<missing>':
-        raise ValueError('expected a local path, but got a URL instead')
-    mirror_url = 'file://' + output_directory
+    scheme = url_util.parse(output_directory, scheme="<missing>").scheme
+    if scheme != "<missing>":
+        raise ValueError("expected a local path, but got a URL instead")
+    mirror_url = "file://" + output_directory
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
     return url_util.format(mirror.push_url)
 
@@ -689,8 +698,8 @@ def push_url_from_mirror_name(mirror_name):
 
 def push_url_from_mirror_url(mirror_url):
     """Given a mirror URL, return the URL on which to push binary packages."""
-    scheme = url_util.parse(mirror_url, scheme='<missing>').scheme
-    if scheme == '<missing>':
+    scheme = url_util.parse(mirror_url, scheme="<missing>").scheme
+    if scheme == "<missing>":
         raise ValueError('"{0}" is not a valid URL'.format(mirror_url))
     mirror = spack.mirror.MirrorCollection().lookup(mirror_url)
     return url_util.format(mirror.push_url)

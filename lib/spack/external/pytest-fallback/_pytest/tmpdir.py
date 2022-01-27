@@ -19,11 +19,11 @@ class TempdirFactory:
         self.trace = config.trace.get("tmpdir")
 
     def ensuretemp(self, string, dir=1):
-        """ (deprecated) return temporary directory path with
-            the given string as the trailing part.  It is usually
-            better to use the 'tmpdir' function argument which
-            provides an empty unique-per-test-invocation directory
-            and is guaranteed to be empty.
+        """(deprecated) return temporary directory path with
+        the given string as the trailing part.  It is usually
+        better to use the 'tmpdir' function argument which
+        provides an empty unique-per-test-invocation directory
+        and is guaranteed to be empty.
         """
         # py.log._apiwarn(">1.1", "use tmpdir function argument")
         return self.getbasetemp().ensure(string, dir=dir)
@@ -37,13 +37,14 @@ class TempdirFactory:
         if not numbered:
             p = basetemp.mkdir(basename)
         else:
-            p = py.path.local.make_numbered_dir(prefix=basename,
-                                                keep=0, rootdir=basetemp, lock_timeout=None)
+            p = py.path.local.make_numbered_dir(
+                prefix=basename, keep=0, rootdir=basetemp, lock_timeout=None
+            )
         self.trace("mktemp", p)
         return p
 
     def getbasetemp(self):
-        """ return base temporary directory. """
+        """return base temporary directory."""
         try:
             return self._basetemp
         except AttributeError:
@@ -59,12 +60,13 @@ class TempdirFactory:
                 if user:
                     # use a sub-directory in the temproot to speed-up
                     # make_numbered_dir() call
-                    rootdir = temproot.join('pytest-of-%s' % user)
+                    rootdir = temproot.join("pytest-of-%s" % user)
                 else:
                     rootdir = temproot
                 rootdir.ensure(dir=1)
-                basetemp = py.path.local.make_numbered_dir(prefix='pytest-',
-                                                           rootdir=rootdir)
+                basetemp = py.path.local.make_numbered_dir(
+                    prefix="pytest-", rootdir=rootdir
+                )
             self._basetemp = t = basetemp.realpath()
             self.trace("new basetemp", t)
             return t
@@ -78,6 +80,7 @@ def get_user():
     in the current environment (see #1010).
     """
     import getpass
+
     try:
         return getpass.getuser()
     except (ImportError, KeyError):
@@ -98,14 +101,13 @@ def pytest_configure(config):
     mp = MonkeyPatch()
     t = TempdirFactory(config)
     config._cleanup.extend([mp.undo, t.finish])
-    mp.setattr(config, '_tmpdirhandler', t, raising=False)
-    mp.setattr(pytest, 'ensuretemp', t.ensuretemp, raising=False)
+    mp.setattr(config, "_tmpdirhandler", t, raising=False)
+    mp.setattr(pytest, "ensuretemp", t.ensuretemp, raising=False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tmpdir_factory(request):
-    """Return a TempdirFactory instance for the test session.
-    """
+    """Return a TempdirFactory instance for the test session."""
     return request.config._tmpdirhandler
 
 

@@ -11,8 +11,11 @@ class PyGinConfig(PythonPackage):
     Python, based on dependency injection."""
 
     homepage = "https://github.com/google/gin-config"
-    pypi     = "gin-config/gin-config-0.5.0.tar.gz"
+    pypi = "gin-config/gin-config-0.5.0.tar.gz"
 
-    version('0.5.0', sha256='0c6ea5026ded927c8c93c990b01c695257c1df446e45e549a158cfbc79e19ed6')
+    version(
+        "0.5.0",
+        sha256="0c6ea5026ded927c8c93c990b01c695257c1df446e45e549a158cfbc79e19ed6",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

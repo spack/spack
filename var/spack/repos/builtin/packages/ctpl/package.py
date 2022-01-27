@@ -11,18 +11,20 @@ class Ctpl(AutotoolsPackage):
     under the terms of the GNU GPL."""
 
     homepage = "https://github.com/b4n/ctpl"
-    url      = "https://github.com/b4n/ctpl/archive/0.3.tar.gz"
+    url = "https://github.com/b4n/ctpl/archive/0.3.tar.gz"
 
-    version('0.3', sha256='034875ba8e1ce87b7ee85bc7146a6a2b2a6ac0518482b36d65eb67dd09c03d0a')
+    version(
+        "0.3", sha256="034875ba8e1ce87b7ee85bc7146a6a2b2a6ac0518482b36d65eb67dd09c03d0a"
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('gettext',  type='build')
-    depends_on('gtk-doc')
-    depends_on('glib@2.10:')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("gettext", type="build")
+    depends_on("gtk-doc")
+    depends_on("glib@2.10:")
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+        bash = which("bash")
+        bash("./autogen.sh")

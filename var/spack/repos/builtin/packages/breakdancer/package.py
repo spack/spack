@@ -18,24 +18,31 @@ class Breakdancer(CMakePackage):
     100bp) using normally mapped read pairs.."""
 
     homepage = "https://gmt.genome.wustl.edu/packages/breakdancer"
-    url      = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
+    url = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"
 
-    version('1.4.5', sha256='5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6')
-    version('master', submodules='true',
-            git='https://github.com/genome/breakdancer.git', preferred=True)
+    version(
+        "1.4.5",
+        sha256="5d74f3a90f5c69026ebb4cf4cb9ccc51ec8dd49ac7a88595a1efabd5a73e92b6",
+    )
+    version(
+        "master",
+        submodules="true",
+        git="https://github.com/genome/breakdancer.git",
+        preferred=True,
+    )
 
-    phases = ['edit', 'cmake', 'build', 'install']
+    phases = ["edit", "cmake", "build", "install"]
 
-    depends_on('zlib')
+    depends_on("zlib")
 
-    depends_on('ncurses', type='link')
+    depends_on("ncurses", type="link")
 
-    depends_on('perl-statistics-descriptive', type='run')
-    depends_on('perl-math-cdf', type='run')
-    depends_on('perl-gdgraph', type='run')
-    depends_on('perl-gdgraph-histogram', type='run')
-    depends_on('perl-list-moreutils', type='run')
-    depends_on('perl-exporter-tiny', type='run')
+    depends_on("perl-statistics-descriptive", type="run")
+    depends_on("perl-math-cdf", type="run")
+    depends_on("perl-gdgraph", type="run")
+    depends_on("perl-gdgraph-histogram", type="run")
+    depends_on("perl-list-moreutils", type="run")
+    depends_on("perl-exporter-tiny", type="run")
 
     # TODO: remove git submodules, and depend on boost & samtools
 
@@ -43,12 +50,13 @@ class Breakdancer(CMakePackage):
 
     def setup_run_environment(self, env):
         # get the perl tools in the path
-        env.prepend_path('PATH', self.prefix.lib)
+        env.prepend_path("PATH", self.prefix.lib)
 
     def edit(self, spec, prefix):
         # perl tools end up in a silly lib subdirectory, fixing that
-        filter_file(r'set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
-                    \{EXE_VERSION_SUFFIX\}\)',
-                    'set(SUPPORT_LIBDIR lib)',
-                    join_path(self.stage.source_path,
-                              'perl', 'CMakeLists.txt'))
+        filter_file(
+            r"set\(SUPPORT_LIBDIR lib\/breakdancer-max\$ \
+                    \{EXE_VERSION_SUFFIX\}\)",
+            "set(SUPPORT_LIBDIR lib)",
+            join_path(self.stage.source_path, "perl", "CMakeLists.txt"),
+        )

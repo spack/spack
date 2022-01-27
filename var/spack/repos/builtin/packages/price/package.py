@@ -8,14 +8,17 @@ from spack import *
 
 class Price(MakefilePackage):
     """PRICE (Paired-Read Iterative Contig Extension): a de novo genome
-       assembler implemented in C++."""
+    assembler implemented in C++."""
 
     homepage = "http://derisilab.ucsf.edu/software/price/"
-    url      = "https://derisilab.ucsf.edu/software/price/PriceSource140408.tar.gz"
+    url = "https://derisilab.ucsf.edu/software/price/PriceSource140408.tar.gz"
 
-    version('140408', sha256='12276b2b15f4e020a772944a19fd2aaf089d3437cbc71e7486fa8db95014843f')
+    version(
+        "140408",
+        sha256="12276b2b15f4e020a772944a19fd2aaf089d3437cbc71e7486fa8db95014843f",
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('PriceTI', prefix.bin)
-        install('PriceSeqFilter', prefix.bin)
+        install("PriceTI", prefix.bin)
+        install("PriceSeqFilter", prefix.bin)

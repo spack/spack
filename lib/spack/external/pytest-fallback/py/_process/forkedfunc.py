@@ -1,4 +1,3 @@
-
 """
     ForkedFunc provides a way to run a function in a forked process
     and get at its return value, stdout and stderr output as well
@@ -15,21 +14,30 @@ def get_unbuffered_io(fd, filename):
     f = open(str(filename), "w")
     if fd != f.fileno():
         os.dup2(f.fileno(), fd)
+
     class AutoFlush:
         def write(self, data):
             f.write(data)
             f.flush()
+
         def __getattr__(self, name):
             return getattr(f, name)
+
     return AutoFlush()
 
 
 class ForkedFunc:
     EXITSTATUS_EXCEPTION = 3
 
-
-    def __init__(self, fun, args=None, kwargs=None, nice_level=0,
-                 child_on_start=None, child_on_exit=None):
+    def __init__(
+        self,
+        fun,
+        args=None,
+        kwargs=None,
+        nice_level=0,
+        child_on_start=None,
+        child_on_exit=None,
+    ):
         if args is None:
             args = []
         if kwargs is None:
@@ -38,9 +46,9 @@ class ForkedFunc:
         self.args = args
         self.kwargs = kwargs
         self.tempdir = tempdir = py.path.local.mkdtemp()
-        self.RETVAL = tempdir.ensure('retval')
-        self.STDOUT = tempdir.ensure('stdout')
-        self.STDERR = tempdir.ensure('stderr')
+        self.RETVAL = tempdir.ensure("retval")
+        self.STDOUT = tempdir.ensure("stdout")
+        self.STDERR = tempdir.ensure("stderr")
 
         pid = os.fork()
         if pid:  # in parent process
@@ -87,9 +95,9 @@ class ForkedFunc:
                 exitstatus = os.WEXITSTATUS(systemstatus)
         else:
             exitstatus = 0
-        signal = systemstatus & 0x7f
+        signal = systemstatus & 0x7F
         if not exitstatus and not signal:
-            retval = self.RETVAL.open('rb')
+            retval = self.RETVAL.open("rb")
             try:
                 retval_data = retval.read()
             finally:

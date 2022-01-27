@@ -8,16 +8,19 @@ from spack import *
 
 class FastxToolkit(AutotoolsPackage):
     """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+    Short-Reads FASTA/FASTQ files preprocessing."""
 
     homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    url = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
 
-    version('0.0.14', sha256='9e1f00c4c9f286be59ac0e07ddb7504f3b6433c93c5c7941d6e3208306ff5806')
+    version(
+        "0.0.14",
+        sha256="9e1f00c4c9f286be59ac0e07ddb7504f3b6433c93c5c7941d6e3208306ff5806",
+    )
 
-    depends_on('libgtextutils')
+    depends_on("libgtextutils")
 
     # patch implicit fallthrough
     patch("pr-22.patch")
     # fix error [-Werror,-Wpragma-pack]
-    patch('fix_pragma_pack.patch', when='%fj')
+    patch("fix_pragma_pack.patch", when="%fj")

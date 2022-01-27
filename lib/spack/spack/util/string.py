@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-def comma_list(sequence, article=''):
+def comma_list(sequence, article=""):
     if type(sequence) != list:
         sequence = list(sequence)
 
@@ -13,26 +13,26 @@ def comma_list(sequence, article=''):
     elif len(sequence) == 1:
         return sequence[0]
     else:
-        out = ', '.join(str(s) for s in sequence[:-1])
+        out = ", ".join(str(s) for s in sequence[:-1])
         if len(sequence) != 2:
-            out += ','   # oxford comma
-        out += ' '
+            out += ","  # oxford comma
+        out += " "
         if article:
-            out += article + ' '
+            out += article + " "
         out += str(sequence[-1])
         return out
 
 
 def comma_or(sequence):
-    return comma_list(sequence, 'or')
+    return comma_list(sequence, "or")
 
 
 def comma_and(sequence):
-    return comma_list(sequence, 'and')
+    return comma_list(sequence, "and")
 
 
 def quote(sequence, q="'"):
-    return ['%s%s%s' % (q, e, q) for e in sequence]
+    return ["%s%s%s" % (q, e, q) for e in sequence]
 
 
 def plural(n, singular, plural=None, show_n=True):
@@ -48,7 +48,7 @@ def plural(n, singular, plural=None, show_n=True):
     Returns:
         (str): "1 thing" if n == 1 or "n things" if n != 1
     """
-    number = '%s ' % n if show_n else ''
+    number = "%s " % n if show_n else ""
     if n == 1:
         return "%s%s" % (number, singular)
     elif plural is not None:

@@ -15,17 +15,19 @@ class Genomefinisher(Package):
     references."""
 
     homepage = "http://gfinisher.sourceforge.net"
-    url      = "https://sourceforge.net/projects/gfinisher/files/GenomeFinisher_1.4.zip"
+    url = "https://sourceforge.net/projects/gfinisher/files/GenomeFinisher_1.4.zip"
 
-    version('1.4', sha256='8efbebaab4b577c72193f14c2c362b96fb949981fd66d2cca1364839af8bf1e3')
+    version(
+        "1.4", sha256="8efbebaab4b577c72193f14c2c362b96fb949981fd66d2cca1364839af8bf1e3"
+    )
 
-    depends_on('java@8:', type='run')
+    depends_on("java@8:", type="run")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'GenomeFinisher.jar'
+        jar_file = "GenomeFinisher.jar"
         install(jar_file, prefix.bin)
-        install_tree('lib', prefix.lib)
+        install_tree("lib", prefix.lib)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
@@ -36,8 +38,7 @@ class Genomefinisher(Package):
 
         # Munge the helper script to explicitly point to java and the jar file
         # jar file.
-        java = spec['java'].prefix.bin.java
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-        filter_file('^java', java, script, **kwargs)
-        filter_file(jar_file, join_path(prefix.bin, jar_file),
-                    script, **kwargs)
+        java = spec["java"].prefix.bin.java
+        kwargs = {"ignore_absent": False, "backup": False, "string": False}
+        filter_file("^java", java, script, **kwargs)
+        filter_file(jar_file, join_path(prefix.bin, jar_file), script, **kwargs)

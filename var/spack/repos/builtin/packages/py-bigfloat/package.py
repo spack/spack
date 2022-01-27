@@ -10,12 +10,15 @@ class PyBigfloat(PythonPackage):
     """Arbitrary-precision correctly-rounded floating-point arithmetic, via MPFR."""
 
     homepage = "https://github.com/mdickinson/bigfloat"
-    pypi     = "bigfloat/bigfloat-0.4.0.tar.gz"
+    pypi = "bigfloat/bigfloat-0.4.0.tar.gz"
 
-    version('0.4.0', sha256='58b96bde872aca5989d13d82eba3acf2aa1b94e22117dd72a16ba5911b0c0cb8')
+    version(
+        "0.4.0",
+        sha256="58b96bde872aca5989d13d82eba3acf2aa1b94e22117dd72a16ba5911b0c0cb8",
+    )
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('gmp', type='link')
-    depends_on('mpfr', type=('build', 'link'))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six", type=("build", "run"))
+    depends_on("gmp", type="link")
+    depends_on("mpfr", type=("build", "link"))

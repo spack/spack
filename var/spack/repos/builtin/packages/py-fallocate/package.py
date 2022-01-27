@@ -7,13 +7,15 @@ from spack import *
 
 
 class PyFallocate(PythonPackage):
-    """Module to expose posix_fallocate(3), posix_fadvise(3) and fallocate(2)
-    """
+    """Module to expose posix_fallocate(3), posix_fadvise(3) and fallocate(2)"""
 
     homepage = "https://github.com/trbs/fallocate"
     pypi = "fallocate/fallocate-1.6.4.tar.gz"
 
-    version('1.6.4', sha256='85ebeb2786761fbe80d88c52590a610bd3425fc89e188c208a3f261a5bd6acb3')
+    version(
+        "1.6.4",
+        sha256="85ebeb2786761fbe80d88c52590a610bd3425fc89e188c208a3f261a5bd6acb3",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

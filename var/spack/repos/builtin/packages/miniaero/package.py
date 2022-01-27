@@ -9,25 +9,24 @@ from spack import *
 
 class Miniaero(MakefilePackage):
     """Proxy Application. MiniAero is a mini-application for the evaulation
-       of programming models and hardware for next generation platforms.
+    of programming models and hardware for next generation platforms.
     """
 
     homepage = "https://mantevo.org"
-    git      = "https://github.com/Mantevo/miniAero.git"
+    git = "https://github.com/Mantevo/miniAero.git"
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('2016-11-11', commit='f46d135479a5be19ec5d146ccaf0e581aeff4596')
+    version("2016-11-11", commit="f46d135479a5be19ec5d146ccaf0e581aeff4596")
 
-    depends_on('kokkos-legacy')
+    depends_on("kokkos-legacy")
 
     @property
     def build_targets(self):
         targets = [
-            '--directory=kokkos',
-            'CXX=c++',
-            'KOKKOS_PATH={0}'.format(
-                self.spec['kokkos-legacy'].prefix)
+            "--directory=kokkos",
+            "CXX=c++",
+            "KOKKOS_PATH={0}".format(self.spec["kokkos-legacy"].prefix),
         ]
 
         return targets
@@ -37,7 +36,7 @@ class Miniaero(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.doc)
 
-        install('kokkos/miniAero.host', prefix.bin)
-        install('kokkos/README', prefix.doc)
-        install('kokkos/tests/3D_Sod_Serial/miniaero.inp', prefix.bin)
-        install_tree('kokkos/tests', prefix.doc.tests)
+        install("kokkos/miniAero.host", prefix.bin)
+        install("kokkos/README", prefix.doc)
+        install("kokkos/tests/3D_Sod_Serial/miniaero.inp", prefix.bin)
+        install_tree("kokkos/tests", prefix.doc.tests)

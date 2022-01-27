@@ -13,11 +13,14 @@ class PyPyscreeze(PythonPackage):
     and want to locate it on the screen."""
 
     homepage = "https://github.com/asweigart/pyscreeze"
-    pypi     = "PyScreeze/PyScreeze-0.1.27.tar.gz"
+    pypi = "PyScreeze/PyScreeze-0.1.27.tar.gz"
 
-    version('0.1.27', sha256='cba2f264fe4b6c70510061cb2ba6e1da0e3bfecfdbe8a3b2cd6305a2afda9e6b')
+    version(
+        "0.1.27",
+        sha256="cba2f264fe4b6c70510061cb2ba6e1da0e3bfecfdbe8a3b2cd6305a2afda9e6b",
+    )
 
-    depends_on('python@2.7:2,3.2:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('pil', type=('build', 'run'))
-    depends_on('scrot', type='run')
+    depends_on("python@2.7:2,3.2:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("pil", type=("build", "run"))
+    depends_on("scrot", type="run")

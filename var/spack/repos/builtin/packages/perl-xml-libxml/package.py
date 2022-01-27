@@ -15,12 +15,15 @@ class PerlXmlLibxml(PerlPackage):
     programs."""
 
     homepage = "https://metacpan.org/pod/XML::LibXML"
-    url      = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/XML-LibXML-2.0201.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/XML-LibXML-2.0201.tar.gz"
 
-    version('2.0201', sha256='e008700732502b3f1f0890696ec6e2dc70abf526cd710efd9ab7675cae199bc2')
+    version(
+        "2.0201",
+        sha256="e008700732502b3f1f0890696ec6e2dc70abf526cd710efd9ab7675cae199bc2",
+    )
 
-    depends_on('libxml2')
-    depends_on('perl-xml-namespacesupport', type=('build', 'run'))
-    depends_on('perl-xml-sax', type=('build', 'run'))
-    depends_on('perl-xml-sax-base', type=('build', 'run'))
-    depends_on('perl-alien-libxml2', type='build')
+    depends_on("libxml2")
+    depends_on("perl-xml-namespacesupport", type=("build", "run"))
+    depends_on("perl-xml-sax", type=("build", "run"))
+    depends_on("perl-xml-sax-base", type=("build", "run"))
+    depends_on("perl-alien-libxml2", type="build")

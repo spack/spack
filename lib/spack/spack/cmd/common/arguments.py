@@ -15,7 +15,7 @@ import spack.spec
 import spack.store
 from spack.util.pattern import Args
 
-__all__ = ['add_common_arguments']
+__all__ = ["add_common_arguments"]
 
 #: dictionary of argument-generating functions, keyed by name
 _arguments = {}
@@ -58,6 +58,7 @@ class ConstraintAction(argparse.Action):
 
     To obtain the specs from a command the function must be called.
     """
+
     def __call__(self, parser, namespace, values, option_string=None):
         # Query specs from command line
         self.values = values
@@ -71,7 +72,7 @@ class ConstraintAction(argparse.Action):
         # only its installed packages.
         env = ev.active_environment()
         if env:
-            kwargs['hashes'] = set(env.all_hashes())
+            kwargs["hashes"] = set(env.all_hashes())
 
         # return everything for an empty query.
         if not qspecs:
@@ -93,27 +94,31 @@ class SetParallelJobs(argparse.Action):
     The value is is set in the command line configuration scope so that
     it can be retrieved using the spack.config API.
     """
+
     def __call__(self, parser, namespace, jobs, option_string):
         # Jobs is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
         if jobs < 1:
-            msg = 'invalid value for argument "{0}" '\
-                  '[expected a positive integer, got "{1}"]'
+            msg = (
+                'invalid value for argument "{0}" '
+                '[expected a positive integer, got "{1}"]'
+            )
             raise ValueError(msg.format(option_string, jobs))
 
-        spack.config.set('config:build_jobs', jobs, scope='command_line')
+        spack.config.set("config:build_jobs", jobs, scope="command_line")
 
-        setattr(namespace, 'jobs', jobs)
+        setattr(namespace, "jobs", jobs)
 
 
 class DeptypeAction(argparse.Action):
     """Creates a tuple of valid dependency types from a deptype argument."""
+
     def __call__(self, parser, namespace, values, option_string=None):
         deptype = dep.all_deptypes
         if values:
-            deptype = tuple(x.strip() for x in values.split(','))
-            if deptype == ('all',):
-                deptype = 'all'
+            deptype = tuple(x.strip() for x in values.split(","))
+            if deptype == ("all",):
+                deptype = "all"
             deptype = dep.canonical_deptype(deptype)
 
         setattr(namespace, self.dest, deptype)
@@ -123,21 +128,24 @@ class DeptypeAction(argparse.Action):
 @arg
 def constraint():
     return Args(
-        'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
-        help='constraint to select a subset of installed packages',
-        metavar='installed_specs')
+        "constraint",
+        nargs=argparse.REMAINDER,
+        action=ConstraintAction,
+        help="constraint to select a subset of installed packages",
+        metavar="installed_specs",
+    )
 
 
 @arg
 def package():
-    return Args('package', help='package name')
+    return Args("package", help="package name")
 
 
 @arg
 def packages():
     return Args(
-        'packages', nargs='+', help='one or more package names',
-        metavar='package')
+        "packages", nargs="+", help="one or more package names", metavar="package"
+    )
 
 
 # Specs must use `nargs=argparse.REMAINDER` because a single spec can
@@ -145,205 +153,250 @@ def packages():
 # are a collection of optional flags.
 @arg
 def spec():
-    return Args('spec', nargs=argparse.REMAINDER, help='package spec')
+    return Args("spec", nargs=argparse.REMAINDER, help="package spec")
 
 
 @arg
 def specs():
-    return Args(
-        'specs', nargs=argparse.REMAINDER, help='one or more package specs')
+    return Args("specs", nargs=argparse.REMAINDER, help="one or more package specs")
 
 
 @arg
 def installed_spec():
     return Args(
-        'spec', nargs=argparse.REMAINDER, help='installed package spec',
-        metavar='installed_spec')
+        "spec",
+        nargs=argparse.REMAINDER,
+        help="installed package spec",
+        metavar="installed_spec",
+    )
 
 
 @arg
 def installed_specs():
     return Args(
-        'specs', nargs=argparse.REMAINDER,
-        help='one or more installed package specs', metavar='installed_specs')
+        "specs",
+        nargs=argparse.REMAINDER,
+        help="one or more installed package specs",
+        metavar="installed_specs",
+    )
 
 
 @arg
 def yes_to_all():
     return Args(
-        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='assume "yes" is the answer to every confirmation request')
+        "-y",
+        "--yes-to-all",
+        action="store_true",
+        dest="yes_to_all",
+        help='assume "yes" is the answer to every confirmation request',
+    )
 
 
 @arg
 def recurse_dependencies():
     return Args(
-        '-r', '--dependencies', action='store_true',
-        dest='recurse_dependencies',
-        help='recursively traverse spec dependencies')
+        "-r",
+        "--dependencies",
+        action="store_true",
+        dest="recurse_dependencies",
+        help="recursively traverse spec dependencies",
+    )
 
 
 @arg
 def recurse_dependents():
     return Args(
-        '-R', '--dependents', action='store_true', dest='dependents',
-        help='also uninstall any packages that depend on the ones given '
-        'via command line')
+        "-R",
+        "--dependents",
+        action="store_true",
+        dest="dependents",
+        help="also uninstall any packages that depend on the ones given "
+        "via command line",
+    )
 
 
 @arg
 def clean():
     return Args(
-        '--clean',
-        action='store_false',
-        default=spack.config.get('config:dirty'),
-        dest='dirty',
-        help='unset harmful variables in the build environment (default)')
+        "--clean",
+        action="store_false",
+        default=spack.config.get("config:dirty"),
+        dest="dirty",
+        help="unset harmful variables in the build environment (default)",
+    )
 
 
 @arg
 def deptype():
     return Args(
-        '--deptype', action=DeptypeAction, default=dep.all_deptypes,
+        "--deptype",
+        action=DeptypeAction,
+        default=dep.all_deptypes,
         help="comma-separated list of deptypes to traverse\ndefault=%s"
-        % ','.join(dep.all_deptypes))
+        % ",".join(dep.all_deptypes),
+    )
 
 
 @arg
 def dirty():
     return Args(
-        '--dirty',
-        action='store_true',
-        default=spack.config.get('config:dirty'),
-        dest='dirty',
-        help="preserve user environment in spack's build environment (danger!)"
+        "--dirty",
+        action="store_true",
+        default=spack.config.get("config:dirty"),
+        dest="dirty",
+        help="preserve user environment in spack's build environment (danger!)",
     )
 
 
 @arg
 def long():
     return Args(
-        '-l', '--long', action='store_true',
-        help='show dependency hashes as well as versions')
+        "-l",
+        "--long",
+        action="store_true",
+        help="show dependency hashes as well as versions",
+    )
 
 
 @arg
 def very_long():
     return Args(
-        '-L', '--very-long', action='store_true',
-        help='show full dependency hashes as well as versions')
+        "-L",
+        "--very-long",
+        action="store_true",
+        help="show full dependency hashes as well as versions",
+    )
 
 
 @arg
 def tags():
     return Args(
-        '-t', '--tag', action='append', dest='tags', metavar='TAG',
-        help='filter a package query by tag (multiple use allowed)')
+        "-t",
+        "--tag",
+        action="append",
+        dest="tags",
+        metavar="TAG",
+        help="filter a package query by tag (multiple use allowed)",
+    )
 
 
 @arg
 def jobs():
     return Args(
-        '-j', '--jobs', action=SetParallelJobs, type=int, dest='jobs',
-        help='explicitly set number of parallel jobs')
+        "-j",
+        "--jobs",
+        action=SetParallelJobs,
+        type=int,
+        dest="jobs",
+        help="explicitly set number of parallel jobs",
+    )
 
 
 @arg
 def install_status():
     return Args(
-        '-I', '--install-status', action='store_true', default=False,
-        help='show install status of packages. packages can be: '
-        'installed [+], missing and needed by an installed package [-], '
-        'installed in and upstream instance [^], '
-        'or not installed (no annotation)')
+        "-I",
+        "--install-status",
+        action="store_true",
+        default=False,
+        help="show install status of packages. packages can be: "
+        "installed [+], missing and needed by an installed package [-], "
+        "installed in and upstream instance [^], "
+        "or not installed (no annotation)",
+    )
 
 
 @arg
 def no_checksum():
     return Args(
-        '-n', '--no-checksum', action='store_true', default=False,
-        help="do not use checksums to verify downloaded files (unsafe)")
+        "-n",
+        "--no-checksum",
+        action="store_true",
+        default=False,
+        help="do not use checksums to verify downloaded files (unsafe)",
+    )
 
 
 @arg
 def deprecated():
     return Args(
-        '--deprecated', action='store_true', default=False,
-        help='fetch deprecated versions without warning')
+        "--deprecated",
+        action="store_true",
+        default=False,
+        help="fetch deprecated versions without warning",
+    )
 
 
 def add_cdash_args(subparser, add_help):
     cdash_help = {}
     if add_help:
-        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
-        cdash_help['build'] = """The name of the build that will be reported to CDash.
+        cdash_help["upload-url"] = "CDash URL where reports will be uploaded"
+        cdash_help[
+            "build"
+        ] = """The name of the build that will be reported to CDash.
 Defaults to spec of the package to operate on."""
-        cdash_help['site'] = """The site name that will be reported to CDash.
+        cdash_help[
+            "site"
+        ] = """The site name that will be reported to CDash.
 Defaults to current system hostname."""
-        cdash_help['track'] = """Results will be reported to this group on CDash.
+        cdash_help[
+            "track"
+        ] = """Results will be reported to this group on CDash.
 Defaults to Experimental."""
-        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
+        cdash_help[
+            "buildstamp"
+        ] = """Instead of letting the CDash reporter prepare the
 buildstamp which, when combined with build name, site and project,
 uniquely identifies the build, provide this argument to identify
 the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     else:
-        cdash_help['upload-url'] = argparse.SUPPRESS
-        cdash_help['build'] = argparse.SUPPRESS
-        cdash_help['site'] = argparse.SUPPRESS
-        cdash_help['track'] = argparse.SUPPRESS
-        cdash_help['buildstamp'] = argparse.SUPPRESS
+        cdash_help["upload-url"] = argparse.SUPPRESS
+        cdash_help["build"] = argparse.SUPPRESS
+        cdash_help["site"] = argparse.SUPPRESS
+        cdash_help["track"] = argparse.SUPPRESS
+        cdash_help["buildstamp"] = argparse.SUPPRESS
 
     subparser.add_argument(
-        '--cdash-upload-url',
-        default=None,
-        help=cdash_help['upload-url']
+        "--cdash-upload-url", default=None, help=cdash_help["upload-url"]
     )
-    subparser.add_argument(
-        '--cdash-build',
-        default=None,
-        help=cdash_help['build']
-    )
-    subparser.add_argument(
-        '--cdash-site',
-        default=None,
-        help=cdash_help['site']
-    )
+    subparser.add_argument("--cdash-build", default=None, help=cdash_help["build"])
+    subparser.add_argument("--cdash-site", default=None, help=cdash_help["site"])
 
     cdash_subgroup = subparser.add_mutually_exclusive_group()
     cdash_subgroup.add_argument(
-        '--cdash-track',
-        default='Experimental',
-        help=cdash_help['track']
+        "--cdash-track", default="Experimental", help=cdash_help["track"]
     )
     cdash_subgroup.add_argument(
-        '--cdash-buildstamp',
-        default=None,
-        help=cdash_help['buildstamp']
+        "--cdash-buildstamp", default=None, help=cdash_help["buildstamp"]
     )
 
 
 @arg
 def reuse():
     return Args(
-        '--reuse', action='store_true', default=False,
-        help='reuse installed dependencies'
+        "--reuse",
+        action="store_true",
+        default=False,
+        help="reuse installed dependencies",
     )
 
 
 def add_s3_connection_args(subparser, add_help):
     subparser.add_argument(
-        '--s3-access-key-id',
-        help="ID string to use to connect to this S3 mirror")
+        "--s3-access-key-id", help="ID string to use to connect to this S3 mirror"
+    )
     subparser.add_argument(
-        '--s3-access-key-secret',
-        help="Secret string to use to connect to this S3 mirror")
+        "--s3-access-key-secret",
+        help="Secret string to use to connect to this S3 mirror",
+    )
     subparser.add_argument(
-        '--s3-access-token',
-        help="Access Token to use to connect to this S3 mirror")
+        "--s3-access-token", help="Access Token to use to connect to this S3 mirror"
+    )
     subparser.add_argument(
-        '--s3-profile',
+        "--s3-profile",
         help="S3 profile name to use to connect to this S3 mirror",
-        default=None)
+        default=None,
+    )
     subparser.add_argument(
-        '--s3-endpoint-url',
-        help="Access Token to use to connect to this S3 mirror")
+        "--s3-endpoint-url", help="Access Token to use to connect to this S3 mirror"
+    )

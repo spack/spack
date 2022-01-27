@@ -11,11 +11,11 @@ class Mshadow(Package):
     in C++/CUDA."""
 
     homepage = "https://github.com/dmlc/mshadow"
-    git      = "https://github.com/dmlc/mshadow.git"
+    git = "https://github.com/dmlc/mshadow.git"
 
-    version('master', branch='master')
-    version('20170721', commit='20b54f068c1035f0319fa5e5bbfb129c450a5256')
+    version("master", branch="master")
+    version("20170721", commit="20b54f068c1035f0319fa5e5bbfb129c450a5256")
 
     def install(self, spec, prefix):
-        install_tree('mshadow', prefix.include.mshadow)
-        install_tree('make', prefix.make)
+        install_tree("mshadow", prefix.include.mshadow)
+        install_tree("make", prefix.make)

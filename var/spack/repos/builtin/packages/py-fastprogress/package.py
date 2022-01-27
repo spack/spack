@@ -11,10 +11,13 @@ class PyFastprogress(PythonPackage):
     console. Created by Sylvain Gugger for fast.ai."""
 
     homepage = "https://github.com/fastai/fastprogress"
-    pypi     = "fastprogress/fastprogress-1.0.0.tar.gz"
+    pypi = "fastprogress/fastprogress-1.0.0.tar.gz"
 
-    version('1.0.0', sha256='89e28ac1d2a5412aab18ee3f3dfd1ee8b5c1f2f7a44d0add0d0d4f69f0191bfe')
+    version(
+        "1.0.0",
+        sha256="89e28ac1d2a5412aab18ee3f3dfd1ee8b5c1f2f7a44d0add0d0d4f69f0191bfe",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))

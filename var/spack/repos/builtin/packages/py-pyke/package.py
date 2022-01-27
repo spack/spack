@@ -13,10 +13,13 @@ class PyPyke(PythonPackage):
     """
 
     homepage = "https://sourceforge.net/projects/pyke"
-    url      = "https://sourceforge.net/projects/pyke/files/pyke/1.1.1/pyke-1.1.1.zip"
+    url = "https://sourceforge.net/projects/pyke/files/pyke/1.1.1/pyke-1.1.1.zip"
 
-    version('1.1.1', sha256='b0b294f435c6e6d2d4a80badf57d92cb66814dfe21e644a521901209e6a3f8ae')
+    version(
+        "1.1.1",
+        sha256="b0b294f435c6e6d2d4a80badf57d92cb66814dfe21e644a521901209e6a3f8ae",
+    )
 
-    depends_on('python@3:', type=('build', 'run'))
+    depends_on("python@3:", type=("build", "run"))
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -11,9 +11,12 @@ class RDichromat(RPackage):
     different types of color-blindness."""
 
     homepage = "https://cloud.r-project.org/package=dichromat"
-    url      = "https://cloud.r-project.org/src/contrib/dichromat_2.0-0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/dichromat_2.0-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/dichromat"
 
-    version('2.0-0', sha256='31151eaf36f70bdc1172da5ff5088ee51cc0a3db4ead59c7c38c25316d580dd1')
+    version(
+        "2.0-0",
+        sha256="31151eaf36f70bdc1172da5ff5088ee51cc0a3db4ead59c7c38c25316d580dd1",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))

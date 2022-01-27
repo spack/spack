@@ -15,10 +15,13 @@ class XcbUtilRenderutil(AutotoolsPackage):
     the X protocol but which have traditionally been provided by Xlib."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xcb-util-renderutil-0.3.9.tar.gz"
+    url = "https://xcb.freedesktop.org/dist/xcb-util-renderutil-0.3.9.tar.gz"
 
-    version('0.3.9', sha256='55eee797e3214fe39d0f3f4d9448cc53cffe06706d108824ea37bb79fcedcad5')
+    version(
+        "0.3.9",
+        sha256="55eee797e3214fe39d0f3f4d9448cc53cffe06706d108824ea37bb79fcedcad5",
+    )
 
-    depends_on('libxcb@1.4:')
+    depends_on("libxcb@1.4:")
 
-    depends_on('pkgconfig', type='build')
+    depends_on("pkgconfig", type="build")

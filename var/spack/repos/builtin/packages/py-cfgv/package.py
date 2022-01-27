@@ -12,8 +12,11 @@ class PyCfgv(PythonPackage):
     homepage = "https://github.com/asottile/cfgv/"
     pypi = "cfgv/cfgv-2.0.1.tar.gz"
 
-    version('2.0.1', sha256='edb387943b665bf9c434f717bf630fa78aecd53d5900d2e05da6ad6048553144')
+    version(
+        "2.0.1",
+        sha256="edb387943b665bf9c434f717bf630fa78aecd53d5900d2e05da6ad6048553144",
+    )
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six',        type=('build', 'run'))
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six", type=("build", "run"))

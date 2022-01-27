@@ -11,9 +11,12 @@ class RMlbench(RPackage):
     problems, including, e.g., several data sets from the UCI repository."""
 
     homepage = "https://cloud.r-project.org/package=mlbench"
-    url      = "https://cloud.r-project.org/src/contrib/mlbench_2.1-1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/mlbench_2.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mlbench"
 
-    version('2.1-1', sha256='748141d56531a39dc4d37cf0a5165a40b653a04c507e916854053ed77119e0e6')
+    version(
+        "2.1-1",
+        sha256="748141d56531a39dc4d37cf0a5165a40b653a04c507e916854053ed77119e0e6",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))

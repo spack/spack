@@ -13,20 +13,23 @@ class Dicom3tools(MakefilePackage):
     of that such as SPI."""
 
     homepage = "https://www.dclunie.com/dicom3tools.html"
-    url      = "https://www.dclunie.com/dicom3tools/workinprogress/dicom3tools_1.00.snapshot.20210306100017.tar.bz2"
+    url = "https://www.dclunie.com/dicom3tools/workinprogress/dicom3tools_1.00.snapshot.20210306100017.tar.bz2"
 
-    version('1.00.snapshot.20210306100017', sha256='3cc2d6056e349e0ac6a093d231d8f4dd7a77e26ed29c1ebaca945dd5e56c1520')
-
-    variant(
-        'uid_root',
-        default='0.0.0.0',
-        values=lambda x: True,
-        description='default UID Root assignment'
+    version(
+        "1.00.snapshot.20210306100017",
+        sha256="3cc2d6056e349e0ac6a093d231d8f4dd7a77e26ed29c1ebaca945dd5e56c1520",
     )
 
-    depends_on('bzip2', type='build')
-    depends_on('imake', type='build')
-    depends_on('libx11')
+    variant(
+        "uid_root",
+        default="0.0.0.0",
+        values=lambda x: True,
+        description="default UID Root assignment",
+    )
+
+    depends_on("bzip2", type="build")
+    depends_on("imake", type="build")
+    depends_on("libx11")
 
     def edit(self, spec, prefix):
         defines = [
@@ -34,28 +37,28 @@ class Dicom3tools(MakefilePackage):
             '#define InstallIncDir "{0}"'.format(prefix.include),
             '#define InstallLibDir "{0}"'.format(prefix.lib),
             '#define InstallManDir "{0}"'.format(prefix.man),
-            '#define X11LibraryPath "{0}"'.format(spec['libx11'].prefix.lib),
-            '#define X11IncludePath "{0}"'.format(spec['libx11'].prefix.include),
+            '#define X11LibraryPath "{0}"'.format(spec["libx11"].prefix.lib),
+            '#define X11IncludePath "{0}"'.format(spec["libx11"].prefix.include),
         ]
 
-        with working_dir('config'):
-            with open('site.p-def', 'a') as inc:
+        with working_dir("config"):
+            with open("site.p-def", "a") as inc:
                 for define in defines:
-                    inc.write('{0}\n'.format(define))
+                    inc.write("{0}\n".format(define))
 
-            configure = FileFilter('Configure')
-            configure.filter('usegcc=.*', 'usegcc={0}'.format(spack_cc))
-            configure.filter('usegpp=.*', 'usegpp={0}'.format(spack_cxx))
+            configure = FileFilter("Configure")
+            configure.filter("usegcc=.*", "usegcc={0}".format(spack_cc))
+            configure.filter("usegpp=.*", "usegpp={0}".format(spack_cxx))
 
     def build(self, spec, prefix):
-        uid_root = spec.variants['uid_root'].value
-        configure = Executable(join_path('.', 'Configure'))
+        uid_root = spec.variants["uid_root"].value
+        configure = Executable(join_path(".", "Configure"))
         configure()
 
-        imake = which('imake')
-        imake('-I./config', '-DDefaultUIDRoot={0}'.format(uid_root))
-        make('World')
+        imake = which("imake")
+        imake("-I./config", "-DDefaultUIDRoot={0}".format(uid_root))
+        make("World")
 
     def install(self, spec, prefix):
-        make('install')
-        make('install.man')
+        make("install")
+        make("install.man")

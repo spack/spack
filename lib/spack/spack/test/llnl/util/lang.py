@@ -20,7 +20,7 @@ def now():
 
 @pytest.fixture()
 def module_path(tmpdir):
-    m = tmpdir.join('foo.py')
+    m = tmpdir.join("foo.py")
     content = """
 import os.path
 
@@ -32,8 +32,8 @@ path = os.path.join('/usr', 'bin')
     yield str(m)
 
     # Don't leave garbage in the module system
-    if 'foo' in sys.modules:
-        del sys.modules['foo']
+    if "foo" in sys.modules:
+        del sys.modules["foo"]
 
 
 def test_pretty_date():
@@ -83,28 +83,34 @@ def test_pretty_date():
     assert pretty_date(years, now) == "2 years ago"
 
 
-@pytest.mark.parametrize('delta,pretty_string', [
-    (timedelta(days=1), 'a day ago'),
-    (timedelta(days=1), 'yesterday'),
-    (timedelta(days=1), '1 day ago'),
-    (timedelta(weeks=1), '1 week ago'),
-    (timedelta(weeks=3), '3 weeks ago'),
-    (timedelta(days=30), '1 month ago'),
-    (timedelta(days=730), '2 years  ago'),
-])
+@pytest.mark.parametrize(
+    "delta,pretty_string",
+    [
+        (timedelta(days=1), "a day ago"),
+        (timedelta(days=1), "yesterday"),
+        (timedelta(days=1), "1 day ago"),
+        (timedelta(weeks=1), "1 week ago"),
+        (timedelta(weeks=3), "3 weeks ago"),
+        (timedelta(days=30), "1 month ago"),
+        (timedelta(days=730), "2 years  ago"),
+    ],
+)
 def test_pretty_string_to_date_delta(now, delta, pretty_string):
     t1 = now - delta
     t2 = llnl.util.lang.pretty_string_to_date(pretty_string, now)
     assert t1 == t2
 
 
-@pytest.mark.parametrize('format,pretty_string', [
-    ('%Y', '2018'),
-    ('%Y-%m', '2015-03'),
-    ('%Y-%m-%d', '2015-03-28'),
-    ('%Y-%m-%d %H:%M', '2015-03-28 11:12'),
-    ('%Y-%m-%d %H:%M:%S', '2015-03-28 23:34:45'),
-])
+@pytest.mark.parametrize(
+    "format,pretty_string",
+    [
+        ("%Y", "2018"),
+        ("%Y-%m", "2015-03"),
+        ("%Y-%m-%d", "2015-03-28"),
+        ("%Y-%m-%d %H:%M", "2015-03-28 11:12"),
+        ("%Y-%m-%d %H:%M:%S", "2015-03-28 23:34:45"),
+    ],
+)
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
     t2 = llnl.util.lang.pretty_string_to_date(pretty_string, now)
@@ -113,41 +119,41 @@ def test_pretty_string_to_date(format, pretty_string):
 
 def test_match_predicate():
     matcher = match_predicate(lambda x: True)
-    assert matcher('foo')
-    assert matcher('bar')
-    assert matcher('baz')
+    assert matcher("foo")
+    assert matcher("bar")
+    assert matcher("baz")
 
-    matcher = match_predicate(['foo', 'bar'])
-    assert matcher('foo')
-    assert matcher('bar')
-    assert not matcher('baz')
+    matcher = match_predicate(["foo", "bar"])
+    assert matcher("foo")
+    assert matcher("bar")
+    assert not matcher("baz")
 
-    matcher = match_predicate(r'^(foo|bar)$')
-    assert matcher('foo')
-    assert matcher('bar')
-    assert not matcher('baz')
+    matcher = match_predicate(r"^(foo|bar)$")
+    assert matcher("foo")
+    assert matcher("bar")
+    assert not matcher("baz")
 
     with pytest.raises(ValueError):
         matcher = match_predicate(object())
-        matcher('foo')
+        matcher("foo")
 
 
 def test_load_modules_from_file(module_path):
     # Check prerequisites
-    assert 'foo' not in sys.modules
+    assert "foo" not in sys.modules
 
     # Check that the module is loaded correctly from file
-    foo = llnl.util.lang.load_module_from_file('foo', module_path)
-    assert 'foo' in sys.modules
+    foo = llnl.util.lang.load_module_from_file("foo", module_path)
+    assert "foo" in sys.modules
     assert foo.value == 1
-    assert foo.path == os.path.join('/usr', 'bin')
+    assert foo.path == os.path.join("/usr", "bin")
 
     # Check that the module is not reloaded a second time on subsequent calls
     foo.value = 2
-    foo = llnl.util.lang.load_module_from_file('foo', module_path)
-    assert 'foo' in sys.modules
+    foo = llnl.util.lang.load_module_from_file("foo", module_path)
+    assert "foo" in sys.modules
     assert foo.value == 2
-    assert foo.path == os.path.join('/usr', 'bin')
+    assert foo.path == os.path.join("/usr", "bin")
 
 
 def test_uniq():
@@ -161,6 +167,7 @@ def test_key_ordering():
     """Ensure that key ordering works correctly."""
 
     with pytest.raises(TypeError):
+
         @llnl.util.lang.key_ordering
         class ClassThatHasNoCmpKeyMethod(object):
             # this will raise b/c it does not define _cmp_key

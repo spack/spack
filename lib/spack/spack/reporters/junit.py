@@ -11,7 +11,7 @@ import spack.fetch_strategy
 import spack.package
 from spack.reporter import Reporter
 
-__all__ = ['JUnit']
+__all__ = ["JUnit"]
 
 
 class JUnit(Reporter):
@@ -19,11 +19,11 @@ class JUnit(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
-        self.template_file = os.path.join('reports', 'junit.xml')
+        self.template_file = os.path.join("reports", "junit.xml")
 
     def build_report(self, filename, report_data):
         # Write the report
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             env = spack.tengine.make_environment()
             t = env.get_template(self.template_file)
             f.write(t.render(report_data))

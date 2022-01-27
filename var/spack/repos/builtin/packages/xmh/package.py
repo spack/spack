@@ -14,13 +14,16 @@ class Xmh(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmh"
     xorg_mirror_path = "app/xmh-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='f90baf2615a4e1e01232c50cfd36ee4d50ad2fb2f76b8b5831fb796661f194d2')
+    version(
+        "1.0.3",
+        sha256="f90baf2615a4e1e01232c50cfd36ee4d50ad2fb2f76b8b5831fb796661f194d2",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxmu')
-    depends_on('libxt')
-    depends_on('libx11')
+    depends_on("libxaw")
+    depends_on("libxmu")
+    depends_on("libxt")
+    depends_on("libx11")
 
-    depends_on('xbitmaps@1.1.0:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xbitmaps@1.1.0:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

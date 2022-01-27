@@ -15,12 +15,15 @@ class Cgl(AutotoolsPackage):
     with a solver. It does not directly call a solver."""
 
     homepage = "https://projects.coin-or.org/Cgl"
-    url      = "https://github.com/coin-or/Cgl/archive/releases/0.60.3.tar.gz"
+    url = "https://github.com/coin-or/Cgl/archive/releases/0.60.3.tar.gz"
 
-    depends_on('coinutils')
-    depends_on('osi')
-    depends_on('clp')
+    depends_on("coinutils")
+    depends_on("osi")
+    depends_on("clp")
 
-    version('0.60.3', sha256='cfeeedd68feab7c0ce377eb9c7b61715120478f12c4dd0064b05ad640e20f3fb')
+    version(
+        "0.60.3",
+        sha256="cfeeedd68feab7c0ce377eb9c7b61715120478f12c4dd0064b05ad640e20f3fb",
+    )
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

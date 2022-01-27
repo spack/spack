@@ -15,11 +15,14 @@ class XcbUtilKeysyms(AutotoolsPackage):
     the X protocol but which have traditionally been provided by Xlib."""
 
     homepage = "https://xcb.freedesktop.org/"
-    url      = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-0.4.0.tar.gz"
+    url = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-0.4.0.tar.gz"
 
-    version('0.4.0', sha256='0807cf078fbe38489a41d755095c58239e1b67299f14460dec2ec811e96caa96')
+    version(
+        "0.4.0",
+        sha256="0807cf078fbe38489a41d755095c58239e1b67299f14460dec2ec811e96caa96",
+    )
 
-    depends_on('libxcb@1.4:')
+    depends_on("libxcb@1.4:")
 
-    depends_on('xproto@7.0.8:')
-    depends_on('pkgconfig', type='build')
+    depends_on("xproto@7.0.8:")
+    depends_on("pkgconfig", type="build")

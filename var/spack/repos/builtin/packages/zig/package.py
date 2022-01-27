@@ -10,13 +10,15 @@ class Zig(CMakePackage):
     homepage = "https://ziglang.org/"
     git = "https://github.com/ziglang/zig.git"
 
-    version('0.7.1', tag='0.7.1')
+    version("0.7.1", tag="0.7.1")
 
     variant(
-        'build_type', values=('Release', 'RelWithDebInfo', 'MinSizeRel'),
-        default='Release', description='CMake build type'
+        "build_type",
+        values=("Release", "RelWithDebInfo", "MinSizeRel"),
+        default="Release",
+        description="CMake build type",
     )
 
-    depends_on('llvm@11.0.0: targets=all')
+    depends_on("llvm@11.0.0: targets=all")
 
-    provides('ziglang')
+    provides("ziglang")

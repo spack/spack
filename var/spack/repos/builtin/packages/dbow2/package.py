@@ -10,13 +10,15 @@ class Dbow2(CMakePackage):
     representation."""
 
     homepage = "https://github.com/dorian3d/DBoW2"
-    git      = "https://github.com/dorian3d/DBoW2.git"
+    git = "https://github.com/dorian3d/DBoW2.git"
 
-    version('master', branch='master')
-    version('shinsumicco', git='https://github.com/shinsumicco/DBoW2.git', branch='master')
+    version("master", branch="master")
+    version(
+        "shinsumicco", git="https://github.com/shinsumicco/DBoW2.git", branch="master"
+    )
 
-    depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+core+features2d+highgui+imgproc')
-    depends_on('boost')
-    depends_on('dlib')
-    depends_on('eigen', type='link')
+    depends_on("cmake@3.0:", type="build")
+    depends_on("opencv+calib3d+core+features2d+highgui+imgproc")
+    depends_on("boost")
+    depends_on("dlib")
+    depends_on("eigen", type="link")

@@ -13,20 +13,31 @@ class Cloog(Package):
     parameterized polyhedra."""
 
     homepage = "http://www.cloog.org"
-    url      = "http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.1.tar.gz"
+    url = "http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.1.tar.gz"
     list_url = "http://www.bastoul.net/cloog/pages/download"
 
-    version('0.18.1', sha256='02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196')
-    version('0.18.0', sha256='1c4aa8dde7886be9cbe0f9069c334843b21028f61d344a2d685f88cb1dcf2228')
-    version('0.17.0', sha256='f265f5069830c03d2919a7673c0963495437d6d79a8cbd3474cde2d4e3291e04')
+    version(
+        "0.18.1",
+        sha256="02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196",
+    )
+    version(
+        "0.18.0",
+        sha256="1c4aa8dde7886be9cbe0f9069c334843b21028f61d344a2d685f88cb1dcf2228",
+    )
+    version(
+        "0.17.0",
+        sha256="f265f5069830c03d2919a7673c0963495437d6d79a8cbd3474cde2d4e3291e04",
+    )
 
     depends_on("gmp")
     depends_on("isl")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-osl=no",
-                  "--with-isl=%s" % spec['isl'].prefix,
-                  "--with-gmp=%s" % spec['gmp'].prefix)
+        configure(
+            "--prefix=%s" % prefix,
+            "--with-osl=no",
+            "--with-isl=%s" % spec["isl"].prefix,
+            "--with-gmp=%s" % spec["gmp"].prefix,
+        )
         make()
         make("install")

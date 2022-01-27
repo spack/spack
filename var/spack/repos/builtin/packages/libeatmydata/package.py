@@ -13,12 +13,14 @@ class Libeatmydata(AutotoolsPackage):
     this software no longer crash safe."""
 
     homepage = "https://www.flamingspork.com/projects/libeatmydata/"
-    url      = "https://www.flamingspork.com/projects/libeatmydata/libeatmydata-105.tar.gz"
+    url = "https://www.flamingspork.com/projects/libeatmydata/libeatmydata-105.tar.gz"
 
-    version('105', sha256='bdd2d068b6b27cf47cd22aa4c5da43b3d4a05944cfe0ad1b0d843d360ed3a8dd')
+    version(
+        "105", sha256="bdd2d068b6b27cf47cd22aa4c5da43b3d4a05944cfe0ad1b0d843d360ed3a8dd"
+    )
 
-    depends_on('strace', type='test')
+    depends_on("strace", type="test")
 
     def check(self):
         # Tests must run in serial
-        make('check', parallel=False)
+        make("check", parallel=False)

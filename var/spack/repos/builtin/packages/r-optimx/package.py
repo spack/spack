@@ -18,8 +18,11 @@ class ROptimx(RPackage):
     Many methods previously separate are now included here. This is the version
     for CRAN."""
 
-    cran     = "optimx"
+    cran = "optimx"
 
-    version('2020-4.2', sha256='6381c25c322287fc98ab1b2965d3f68c9a92c587c76aca1d33fd6428b2167101')
+    version(
+        "2020-4.2",
+        sha256="6381c25c322287fc98ab1b2965d3f68c9a92c587c76aca1d33fd6428b2167101",
+    )
 
-    depends_on('r-numderiv', type=('build', 'run'))
+    depends_on("r-numderiv", type=("build", "run"))

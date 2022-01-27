@@ -20,10 +20,19 @@ class PyTinyarray(PythonPackage):
 
     # Add a list of GitHub accounts to notify when the
     # package is updated
-    maintainers = ['payerle']
+    maintainers = ["payerle"]
 
-    version('1.2.3', sha256='47a06f801ed4b3d438f4f7098e244cd0c6d7db09428b1bc5ee813e52234dee9f')
-    version('1.2.2', sha256='660d6d8532e1db5efbebae2861e5733a7082486fbdeb47d57d84b8f477d697e4')
-    version('1.2.1', sha256='47a06f801ed4b3d438f4f7098e244cd0c6d7db09428b1bc5ee813e52234dee9f')
+    version(
+        "1.2.3",
+        sha256="47a06f801ed4b3d438f4f7098e244cd0c6d7db09428b1bc5ee813e52234dee9f",
+    )
+    version(
+        "1.2.2",
+        sha256="660d6d8532e1db5efbebae2861e5733a7082486fbdeb47d57d84b8f477d697e4",
+    )
+    version(
+        "1.2.1",
+        sha256="47a06f801ed4b3d438f4f7098e244cd0c6d7db09428b1bc5ee813e52234dee9f",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

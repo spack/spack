@@ -8,23 +8,26 @@ from spack import *
 
 class Grabix(MakefilePackage):
     """Grabix leverages the fantastic BGZF library in samtools to provide
-       random access into text files that have been compressed with bgzip.
-       grabix creates it's own index (.gbi) of the bgzipped file. Once indexed,
-       one can extract arbitrary lines from the file with the grab command.
-       Or choose random lines with the, well, random command.
+    random access into text files that have been compressed with bgzip.
+    grabix creates it's own index (.gbi) of the bgzipped file. Once indexed,
+    one can extract arbitrary lines from the file with the grab command.
+    Or choose random lines with the, well, random command.
     """
 
     homepage = "https://github.com/arq5x/grabix"
-    url      = "https://github.com/arq5x/grabix/archive/v0.1.7.tar.gz"
+    url = "https://github.com/arq5x/grabix/archive/v0.1.7.tar.gz"
 
-    maintainers = ['robqiao']
+    maintainers = ["robqiao"]
 
-    version('0.1.7', sha256='d90735c55c0985a4d751858d7ce9e36ad534fff4103257e8e981e34d5c915b28')
+    version(
+        "0.1.7",
+        sha256="d90735c55c0985a4d751858d7ce9e36ad534fff4103257e8e981e34d5c915b28",
+    )
 
-    conflicts('%gcc@7:', msg='grabix cannot be compiled with newer versions of GCC')
+    conflicts("%gcc@7:", msg="grabix cannot be compiled with newer versions of GCC")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('LICENSE', prefix)
-        install('simrep.chr1.bed', prefix)
-        install('grabix', prefix.bin)
+        install("LICENSE", prefix)
+        install("simrep.chr1.bed", prefix)
+        install("grabix", prefix.bin)

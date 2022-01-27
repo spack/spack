@@ -13,7 +13,10 @@ class Lndir(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/util/lndir"
     xorg_mirror_path = "util/lndir-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='95b2d26fb3cbe702f828146c7a4c7c48001d2da52b062580227b7b68180be902')
+    version(
+        "1.0.3",
+        sha256="95b2d26fb3cbe702f828146c7a4c7c48001d2da52b062580227b7b68180be902",
+    )
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")

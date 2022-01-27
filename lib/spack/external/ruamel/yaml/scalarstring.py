@@ -3,8 +3,12 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-__all__ = ["ScalarString", "PreservedScalarString", "SingleQuotedScalarString",
-           "DoubleQuotedScalarString"]
+__all__ = [
+    "ScalarString",
+    "PreservedScalarString",
+    "SingleQuotedScalarString",
+    "DoubleQuotedScalarString",
+]
 
 try:
     from .compat import text_type
@@ -33,7 +37,7 @@ class DoubleQuotedScalarString(ScalarString):
 
 
 def preserve_literal(s):
-    return PreservedScalarString(s.replace('\r\n', '\n').replace('\r', '\n'))
+    return PreservedScalarString(s.replace("\r\n", "\n").replace("\r", "\n"))
 
 
 def walk_tree(base):
@@ -47,13 +51,13 @@ def walk_tree(base):
     if isinstance(base, dict):
         for k in base:
             v = base[k]
-            if isinstance(v, string_types) and '\n' in v:
+            if isinstance(v, string_types) and "\n" in v:
                 base[k] = preserve_literal(v)
             else:
                 walk_tree(v)
     elif isinstance(base, list):
         for idx, elem in enumerate(base):
-            if isinstance(elem, string_types) and '\n' in elem:
+            if isinstance(elem, string_types) and "\n" in elem:
                 print(elem)
                 base[idx] = preserve_literal(elem)
             else:

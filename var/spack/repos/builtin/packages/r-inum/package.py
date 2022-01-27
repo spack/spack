@@ -11,10 +11,13 @@ class RInum(RPackage):
     including a method of coercing variables in data frames."""
 
     homepage = "https://cloud.r-project.org/package=inum"
-    url      = "https://cloud.r-project.org/src/contrib/inum_1.0-1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/inum_1.0-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/inum"
 
-    version('1.0-1', sha256='3c2f94c13c03607e05817e4859595592068b55e810fed94e29bc181ad248a099')
+    version(
+        "1.0-1",
+        sha256="3c2f94c13c03607e05817e4859595592068b55e810fed94e29bc181ad248a099",
+    )
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-libcoin@1.0-0:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-libcoin@1.0-0:", type=("build", "run"))

@@ -12,6 +12,6 @@ class MultimoduleInheritance(si.BaseWithDirectives):
     homepage = "http://www.example.com"
     url = "http://www.example.com/multimodule-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('openblas', when='+openblas')
+    depends_on("openblas", when="+openblas")

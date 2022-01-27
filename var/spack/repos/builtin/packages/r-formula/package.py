@@ -15,12 +15,24 @@ class RFormula(RPackage):
     <doi:10.18637/jss.v034.i01>)."""
 
     homepage = "https://cloud.r-project.org/package=Formula"
-    url      = "https://cloud.r-project.org/src/contrib/Formula_1.2-2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/Formula_1.2-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Formula"
 
-    version('1.2-4', sha256='cb70e373b5ed2fc8450937fb3321d37dfd22dcc6f07cb872a419d51205125caf')
-    version('1.2-3', sha256='1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872')
-    version('1.2-2', sha256='8def4600fb7457d38db8083733477501b54528974aa216e4adf8871bff4aa429')
-    version('1.2-1', sha256='5db1ef55119b299c9d291e1c5c08e2d51b696303daf4e7295c38ff5fc428360a')
+    version(
+        "1.2-4",
+        sha256="cb70e373b5ed2fc8450937fb3321d37dfd22dcc6f07cb872a419d51205125caf",
+    )
+    version(
+        "1.2-3",
+        sha256="1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872",
+    )
+    version(
+        "1.2-2",
+        sha256="8def4600fb7457d38db8083733477501b54528974aa216e4adf8871bff4aa429",
+    )
+    version(
+        "1.2-1",
+        sha256="5db1ef55119b299c9d291e1c5c08e2d51b696303daf4e7295c38ff5fc428360a",
+    )
 
-    depends_on('r@2.0.0:', type=('build', 'run'))
+    depends_on("r@2.0.0:", type=("build", "run"))

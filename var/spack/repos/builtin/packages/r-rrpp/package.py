@@ -23,13 +23,25 @@ class RRrpp(RPackage):
     fields, as well."""
 
     homepage = "https://github.com/mlcollyer/RRPP"
-    url      = "https://cloud.r-project.org/src/contrib/RRPP_0.3.0.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/RRPP_0.3.0.tar.gz"
     list_url = "https://cron.r-project.org/src/contrib/Archive/RRPP"
 
-    version('0.6.2', sha256='f8ffa318d806184c0e65929ea1b8b6a88bb9e45f77db2da5a83c6fe550b084dc')
-    version('0.4.2', sha256='21a4ebb549d21f66ee9107adf762eee630e478bc740f232f384ba1a6b1cd3bf4')
-    version('0.4.1', sha256='d7cd3b089240d7f7e13f65f0259487669a378ffae062aee33d4dc6ab0f86f899')
-    version('0.3.0', sha256='34fea6ce7a78e4f38398d3b99585bab11a8171bc8b9a4e461b6d984ed1373739')
+    version(
+        "0.6.2",
+        sha256="f8ffa318d806184c0e65929ea1b8b6a88bb9e45f77db2da5a83c6fe550b084dc",
+    )
+    version(
+        "0.4.2",
+        sha256="21a4ebb549d21f66ee9107adf762eee630e478bc740f232f384ba1a6b1cd3bf4",
+    )
+    version(
+        "0.4.1",
+        sha256="d7cd3b089240d7f7e13f65f0259487669a378ffae062aee33d4dc6ab0f86f899",
+    )
+    version(
+        "0.3.0",
+        sha256="34fea6ce7a78e4f38398d3b99585bab11a8171bc8b9a4e461b6d984ed1373739",
+    )
 
-    depends_on('r@3.5.0:', when='@0.6.2:', type=('build', 'run'))
-    depends_on('r-ape', when='@0.6.2:', type=('build', 'run'))
+    depends_on("r@3.5.0:", when="@0.6.2:", type=("build", "run"))
+    depends_on("r-ape", when="@0.6.2:", type=("build", "run"))

@@ -16,14 +16,20 @@ class RShinyfiles(RPackage):
     file saving is available."""
 
     homepage = "https://github.com/thomasp85/shinyFiles"
-    url      = "https://cloud.r-project.org/src/contrib/shinyFiles_0.7.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/shinyFiles_0.7.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/shinyFiles"
 
-    version('0.9.0', sha256='51ad2aad61bcae22fb2c48a79d02bf6f86e36ffc49a3b64e26a76d133a955167')
-    version('0.7.3', sha256='710c8a6191aaf336379bc748daff1160d0d2858e2aee0d98e2ad48e7121d5a05')
+    version(
+        "0.9.0",
+        sha256="51ad2aad61bcae22fb2c48a79d02bf6f86e36ffc49a3b64e26a76d133a955167",
+    )
+    version(
+        "0.7.3",
+        sha256="710c8a6191aaf336379bc748daff1160d0d2858e2aee0d98e2ad48e7121d5a05",
+    )
 
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-shiny@1.1.0:', type=('build', 'run'))
-    depends_on('r-fs@1.2.6:', type=('build', 'run'))
-    depends_on('r-tibble@1.4.2:', type=('build', 'run'))
+    depends_on("r-htmltools", type=("build", "run"))
+    depends_on("r-jsonlite", type=("build", "run"))
+    depends_on("r-shiny@1.1.0:", type=("build", "run"))
+    depends_on("r-fs@1.2.6:", type=("build", "run"))
+    depends_on("r-tibble@1.4.2:", type=("build", "run"))

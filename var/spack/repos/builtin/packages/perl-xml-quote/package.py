@@ -13,6 +13,9 @@ class PerlXmlQuote(PerlPackage):
     utf8, tied, overloaded variables and all the rest of perl "magic"."""
 
     homepage = "https://metacpan.org/pod/XML::Quote"
-    url      = "https://cpan.metacpan.org/authors/id/G/GD/GDSL/XML-Quote-1.02.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/G/GD/GDSL/XML-Quote-1.02.tar.gz"
 
-    version('1.02', sha256='4705b86a8dcc002bffc6ff154ec5c55f0bfb6e99a3f744d1e77ae6541c6af228')
+    version(
+        "1.02",
+        sha256="4705b86a8dcc002bffc6ff154ec5c55f0bfb6e99a3f744d1e77ae6541c6af228",
+    )

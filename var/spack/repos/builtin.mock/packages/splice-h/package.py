@@ -10,13 +10,13 @@ class SpliceH(AutotoolsPackage):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/splice-h-1.0.tar.gz"
+    url = "http://www.example.com/splice-h-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    variant('foo', default=False, description='nope')
-    variant('bar', default=False, description='nope')
-    variant('baz', default=False, description='nope')
+    variant("foo", default=False, description="nope")
+    variant("bar", default=False, description="nope")
+    variant("baz", default=False, description="nope")
 
-    depends_on('splice-z')
-    depends_on('splice-z+foo', when='+foo')
+    depends_on("splice-z")
+    depends_on("splice-z+foo", when="+foo")

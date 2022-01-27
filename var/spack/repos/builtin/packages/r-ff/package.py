@@ -49,18 +49,27 @@ class RFf(RPackage):
     subscript information ('bit',  'bitwhich', ff 'boolean', ri range index, hi
     hybrid index). This allows to work interactively with selections of large
     datasets and quickly  modify selection criteria.  Further high-performance
-    enhancements can be made available upon request.x """
+    enhancements can be made available upon request.x"""
 
     homepage = "https://ff.r-forge.r-project.org/"
-    url      = "https://cloud.r-project.org/src/contrib/ff_2.2-13.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/ff_2.2-13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ff"
 
-    version('4.0.4', sha256='22ecf1811263f27c9fd9f7e13e77f97dcbc0b8ae6f59b76dbaed77569c13d2e5')
-    version('2.2-14', sha256='1c6307847275b1b8ad9e2ffdce3f4df3c9d955dc2e8a45e3fd7bfd2b0926e2f0')
-    version('2.2-13', sha256='8bfb08afe0651ef3c23aaad49208146d5f929af5af12a25262fe7743fa346ddb')
+    version(
+        "4.0.4",
+        sha256="22ecf1811263f27c9fd9f7e13e77f97dcbc0b8ae6f59b76dbaed77569c13d2e5",
+    )
+    version(
+        "2.2-14",
+        sha256="1c6307847275b1b8ad9e2ffdce3f4df3c9d955dc2e8a45e3fd7bfd2b0926e2f0",
+    )
+    version(
+        "2.2-13",
+        sha256="8bfb08afe0651ef3c23aaad49208146d5f929af5af12a25262fe7743fa346ddb",
+    )
 
-    depends_on('r@2.10.1:', type=('build', 'run'))
-    depends_on('r-bit@1.1-13:', type=('build', 'run'))
-    depends_on('r-bit@4.0.0:', when='@4.0.4:', type=('build', 'run'))
+    depends_on("r@2.10.1:", type=("build", "run"))
+    depends_on("r-bit@1.1-13:", type=("build", "run"))
+    depends_on("r-bit@4.0.0:", when="@4.0.4:", type=("build", "run"))
 
-    patch('utk_platform_macros.hpp.patch', when='target=aarch64:')
+    patch("utk_platform_macros.hpp.patch", when="target=aarch64:")

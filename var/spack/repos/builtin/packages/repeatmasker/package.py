@@ -10,36 +10,45 @@ from spack import *
 
 class Repeatmasker(Package):
     """RepeatMasker is a program that screens DNA sequences for interspersed
-       repeats and low complexity DNA sequences."""
+    repeats and low complexity DNA sequences."""
 
     homepage = "https://www.repeatmasker.org"
 
-    version('4.1.2-p1', sha256='4be54bf6c050422b211e24a797feb06fd7954c8b4ee6f3ece94cb6faaf6b0e96')
-    version('4.0.9', sha256='8d67415d89ed301670b7632ea411f794c6e30d8ed0f007a726c4b0a39c8638e5')
-    version('4.0.7', sha256='16faf40e5e2f521146f6692f09561ebef5f6a022feb17031f2ddb3e3aabcf166')
+    version(
+        "4.1.2-p1",
+        sha256="4be54bf6c050422b211e24a797feb06fd7954c8b4ee6f3ece94cb6faaf6b0e96",
+    )
+    version(
+        "4.0.9",
+        sha256="8d67415d89ed301670b7632ea411f794c6e30d8ed0f007a726c4b0a39c8638e5",
+    )
+    version(
+        "4.0.7",
+        sha256="16faf40e5e2f521146f6692f09561ebef5f6a022feb17031f2ddb3e3aabcf166",
+    )
 
-    variant('crossmatch', description='Enable CrossMatch search engine',
-            default=False)
+    variant("crossmatch", description="Enable CrossMatch search engine", default=False)
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('perl-text-soundex', type=('build', 'run'))
-    depends_on('hmmer')
-    depends_on('ncbi-rmblastn')
-    depends_on('trf')
-    depends_on('python', when='@4.1:', type=('build', 'run'))
-    depends_on('py-h5py', when='@4.1:', type=('build', 'run'))
+    depends_on("perl", type=("build", "run"))
+    depends_on("perl-text-soundex", type=("build", "run"))
+    depends_on("hmmer")
+    depends_on("ncbi-rmblastn")
+    depends_on("trf")
+    depends_on("python", when="@4.1:", type=("build", "run"))
+    depends_on("py-h5py", when="@4.1:", type=("build", "run"))
 
-    depends_on('phrap-crossmatch-swat', type=('build', 'run'),
-               when='+crossmatch')
+    depends_on("phrap-crossmatch-swat", type=("build", "run"), when="+crossmatch")
 
-    patch('utf8.patch', when='@:4.0')
+    patch("utf8.patch", when="@:4.0")
 
     def url_for_version(self, version):
-        if version >= Version('4.1.0'):
-            url = 'http://www.repeatmasker.org/RepeatMasker/RepeatMasker-{0}.tar.gz'
+        if version >= Version("4.1.0"):
+            url = "http://www.repeatmasker.org/RepeatMasker/RepeatMasker-{0}.tar.gz"
             return url.format(version)
         else:
-            url = 'http://www.repeatmasker.org/RepeatMasker/RepeatMasker-open-{0}.tar.gz'
+            url = (
+                "http://www.repeatmasker.org/RepeatMasker/RepeatMasker-open-{0}.tar.gz"
+            )
             return url.format(version.dashed)
 
     def install(self, spec, prefix):
@@ -62,50 +71,44 @@ class Repeatmasker(Package):
 
         config_answers = []
 
-        if spec.satisfies('@:4.0.7'):
+        if spec.satisfies("@:4.0.7"):
             # 4.0.9 removes a bunch of the interactive options
-            config_answers.extend(['',
-                                   self.spec['perl'].command.path,
-                                   self.stage.source_path])
+            config_answers.extend(
+                ["", self.spec["perl"].command.path, self.stage.source_path]
+            )
 
         # set path to trf
-        config_answers.append(self.spec['trf'].prefix.bin.trf)
+        config_answers.append(self.spec["trf"].prefix.bin.trf)
 
         # add crossmatch search
-        if '+crossmatch' in spec:
-            crossmatch = self.spec['phrap-crossmatch-swat'].prefix.bin
-            config_answers.extend(['1', crossmatch, 'N'])
+        if "+crossmatch" in spec:
+            crossmatch = self.spec["phrap-crossmatch-swat"].prefix.bin
+            config_answers.extend(["1", crossmatch, "N"])
 
         # set default BLAST search
-        config_answers.extend(['2',
-                               self.spec['ncbi-rmblastn'].prefix.bin,
-                               'Y'])
+        config_answers.extend(["2", self.spec["ncbi-rmblastn"].prefix.bin, "Y"])
 
         # set non-default HMMER search
-        if spec.satisfies('@4.0.9:'):
-            config_answers.extend(['3',
-                                   self.spec['hmmer'].prefix.bin,
-                                   'N'])
+        if spec.satisfies("@4.0.9:"):
+            config_answers.extend(["3", self.spec["hmmer"].prefix.bin, "N"])
         else:
-            config_answers.extend(['4',
-                                   self.spec['hmmer'].prefix.bin,
-                                   'N'])
+            config_answers.extend(["4", self.spec["hmmer"].prefix.bin, "N"])
 
         # end configuration
-        config_answers.append('5')
+        config_answers.append("5")
 
-        config_answers_filename = 'spack-config.in'
+        config_answers_filename = "spack-config.in"
 
-        with open(config_answers_filename, 'w') as f:
-            f.write('\n'.join(config_answers))
+        with open(config_answers_filename, "w") as f:
+            f.write("\n".join(config_answers))
 
-        with open(config_answers_filename, 'r') as f:
-            perl = which('perl')
-            perl('configure', input=f)
+        with open(config_answers_filename, "r") as f:
+            perl = which("perl")
+            perl("configure", input=f)
 
         # fix perl paths
         # every sbang points to perl, so a regex will suffice
-        for f in glob.glob('*.pm'):
-            filter_file('#!.*', '#!%s' % spec['perl'].command, f)
+        for f in glob.glob("*.pm"):
+            filter_file("#!.*", "#!%s" % spec["perl"].command, f)
 
-        install_tree('.', prefix.bin)
+        install_tree(".", prefix.bin)

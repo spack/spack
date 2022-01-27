@@ -8,18 +8,21 @@ from spack import *
 
 class Bonniepp(AutotoolsPackage):
     """Bonnie++ is a benchmark suite that is aimed at performing a number of
-       simple tests of hard drive and file system performance."""
+    simple tests of hard drive and file system performance."""
 
     homepage = "https://doc.coker.com.au/projects/bonnie"
-    url      = "https://www.coker.com.au/bonnie++/bonnie++-1.98.tgz"
+    url = "https://www.coker.com.au/bonnie++/bonnie++-1.98.tgz"
 
-    version('1.98', sha256='6e0bcbc08b78856fd998dd7bcb352d4615a99c26c2dc83d5b8345b102bad0b04')
+    version(
+        "1.98",
+        sha256="6e0bcbc08b78856fd998dd7bcb352d4615a99c26c2dc83d5b8345b102bad0b04",
+    )
 
     def configure_args(self):
         configure_args = []
-        configure_args.append('--enable-debug')
+        configure_args.append("--enable-debug")
         return configure_args
 
     def setup_run_environment(self, env):
         """Prepend the sbin directory to PATH."""
-        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path("PATH", self.prefix.sbin)

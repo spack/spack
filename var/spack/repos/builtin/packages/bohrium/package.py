@@ -16,93 +16,96 @@ class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
     homepage = "https://github.com/bh107/bohrium"
-    url      = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
-    git      = "https://github.com/bh107/bohrium.git"
+    url = "https://github.com/bh107/bohrium/archive/v0.9.0.tar.gz"
+    git = "https://github.com/bh107/bohrium.git"
 
-    maintainers = ['mfherbst']
+    maintainers = ["mfherbst"]
 
     #
     # Versions
     #
     version("develop", branch="master")
-    version('0.9.1', sha256='a8675db35ea4587ef12d5885a1aa19b59fd9c3f1366e239059de8b0f3cf51e04')
-    version('0.9.0', sha256='6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93')
+    version(
+        "0.9.1",
+        sha256="a8675db35ea4587ef12d5885a1aa19b59fd9c3f1366e239059de8b0f3cf51e04",
+    )
+    version(
+        "0.9.0",
+        sha256="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93",
+    )
 
     #
     # Variants
     #
-    variant("cuda", default=True,
-            description="Build with CUDA code generator")
-    variant('opencl', default=True,
-            description="Build with OpenCL code generator")
-    variant('openmp', default=True,
-            description="Build with OpenMP code generator")
+    variant("cuda", default=True, description="Build with CUDA code generator")
+    variant("opencl", default=True, description="Build with OpenCL code generator")
+    variant("openmp", default=True, description="Build with OpenMP code generator")
 
-    variant('node', default=True,
-            description="Build the node vector engine manager")
-    variant('proxy', default=False,
-            description="Build the proxy vector engine manager")
-    variant('python', default=True,
-            description="Build the numpy-like bridge "
-            "to enable use from python")
-    variant('cbridge', default=True,
-            description="Build the bridge interface towards plain C")
+    variant("node", default=True, description="Build the node vector engine manager")
+    variant("proxy", default=False, description="Build the proxy vector engine manager")
+    variant(
+        "python",
+        default=True,
+        description="Build the numpy-like bridge " "to enable use from python",
+    )
+    variant(
+        "cbridge",
+        default=True,
+        description="Build the bridge interface towards plain C",
+    )
 
-    variant('blas', default=True,
-            description="Build with BLAS extension methods")
-    variant('lapack', default=True,
-            description="Build with LAPACK extension methods")
-    variant('opencv', default=True,
-            description="Build with OpenCV extension methods")
+    variant("blas", default=True, description="Build with BLAS extension methods")
+    variant("lapack", default=True, description="Build with LAPACK extension methods")
+    variant("opencv", default=True, description="Build with OpenCV extension methods")
 
     #
     # Conflicts and extensions
     #
-    conflicts('%intel')
-    conflicts('%clang@:3.5')
-    conflicts('%gcc@:4.7')
-    extends('python', when="+python")
+    conflicts("%intel")
+    conflicts("%clang@:3.5")
+    conflicts("%gcc@:4.7")
+    extends("python", when="+python")
 
     # Bohrium needs at least one vector engine and
     # at least one vector engine manager
-    conflicts('~node~proxy')
-    conflicts('~openmp~opencl~cuda')
+    conflicts("~node~proxy")
+    conflicts("~openmp~opencl~cuda")
 
-    conflicts('+cbridge', when='~python')
+    conflicts("+cbridge", when="~python")
 
     #
     # Dependencies
     #
-    depends_on('cmake@2.8:', type="build")
-    depends_on('boost+system+serialization+filesystem+regex')
+    depends_on("cmake@2.8:", type="build")
+    depends_on("boost+system+serialization+filesystem+regex")
 
     # cuda dependencies managed by CudaPackage class
-    depends_on('opencl', when="+opencl")
+    depends_on("opencl", when="+opencl")
 
     # NOTE The lapacke interface and hence netlib-lapack
     #      is the strictly required lapack provider
     #      for bohrium right now.
-    depends_on('netlib-lapack+lapacke', when="+lapack")
-    depends_on('blas', when="+blas")
+    depends_on("netlib-lapack+lapacke", when="+lapack")
+    depends_on("blas", when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv+imgproc', when="+opencv")
-    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
-    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
-    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on("opencv+imgproc", when="+opencv")
+    depends_on("opencv+imgproc+cuda", when="+opencv+cuda")
+    depends_on("opencv+imgproc+openmp", when="+opencv+openmp")
+    depends_on("opencv+imgproc+openmp+cuda", when="+opencv+openmp+cuda")
 
-    depends_on('python', type="build", when="~python")
-    depends_on('python', type=("build", "link", "test"), when="+python")
-    depends_on('py-numpy', type=("build", "test", "run"), when="+python")
-    depends_on('swig', type="build", when="+python")
-    depends_on('py-cython', type="build", when="+python")
-    depends_on('py-virtualenv', type="build", when="+python")
-    depends_on('py-pip', type="build", when="+python")
-    depends_on('py-wheel', type="build", when="+python")
+    depends_on("python", type="build", when="~python")
+    depends_on("python", type=("build", "link", "test"), when="+python")
+    depends_on("py-numpy", type=("build", "test", "run"), when="+python")
+    depends_on("swig", type="build", when="+python")
+    depends_on("py-cython", type="build", when="+python")
+    depends_on("py-virtualenv", type="build", when="+python")
+    depends_on("py-pip", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
 
-    depends_on('zlib', when="+proxy")
+    depends_on("zlib", when="+proxy")
 
-    depends_on('libsigsegv')
+    depends_on("libsigsegv")
 
     @property
     def config_file(self):
@@ -123,7 +126,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         args = [
             # Choose a particular python version
-            "-DPYTHON_EXECUTABLE:FILEPATH=" + spec['python'].command.path,
+            "-DPYTHON_EXECUTABLE:FILEPATH=" + spec["python"].command.path,
             #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during
@@ -198,7 +201,7 @@ class Bohrium(CMakePackage, CudaPackage):
         # TODO Other extension methods are not ready yet,
         #      because of missing packages in Spack
         args += [
-            "-DEXT_CLBLAS=OFF",      # clBLAS missing
+            "-DEXT_CLBLAS=OFF",  # clBLAS missing
             # Bohrium visualizer extension method
             "-DEXT_VISUALIZER=OFF",  # freeglut missing
         ]
@@ -216,7 +219,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Quick tests
     #
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
@@ -228,7 +231,7 @@ class Bohrium(CMakePackage, CudaPackage):
         # Remove the lib/spackenv directory from the PATH variable when
         # executing the tests, becauses it messes with the JIT compilation
         # inside Bohrium
-        paths = os.environ['PATH'].split(':')
+        paths = os.environ["PATH"].split(":")
         paths = [p for p in paths if "spack/env" not in p]
         test_env["PATH"] = ":".join(paths)
 
@@ -248,20 +251,25 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # C++ compiler and compiler flags
         cxx = Executable(self.compiler.cxx)
-        cxx_flags = ["-I", self.prefix.include,
-                     "-I", self.prefix.include.bohrium,
-                     "-L", self.prefix.lib, "-lbh", "-lbhxx"]
+        cxx_flags = [
+            "-I",
+            self.prefix.include,
+            "-I",
+            self.prefix.include.bohrium,
+            "-L",
+            self.prefix.lib,
+            "-lbh",
+            "-lbhxx",
+        ]
 
         # Compile C++ test program
-        file_cxxadd = join_path(os.path.dirname(self.module.__file__),
-                                "cxxadd.cpp")
+        file_cxxadd = join_path(os.path.dirname(self.module.__file__), "cxxadd.cpp")
         cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
         test_cxxadd = Executable("./test_cxxadd")
 
         # Build python test commandline
-        file_pyadd = join_path(os.path.dirname(self.module.__file__),
-                               "pyadd.py")
-        test_pyadd = Executable(spec['python'].command.path + " " + file_pyadd)
+        file_pyadd = join_path(os.path.dirname(self.module.__file__), "pyadd.py")
+        test_pyadd = Executable(spec["python"].command.path + " " + file_pyadd)
 
         # Run tests for each available stack
         for bh_stack in stacks:

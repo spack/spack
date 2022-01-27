@@ -12,7 +12,13 @@ class PyZopeEvent(PythonPackage):
     homepage = "https://github.com/zopefoundation/zope.event"
     pypi = "zope.event/zope.event-4.3.0.tar.gz"
 
-    version('4.5.0', sha256='5e76517f5b9b119acf37ca8819781db6c16ea433f7e2062c4afc2b6fbedb1330')
-    version('4.3.0', sha256='e0ecea24247a837c71c106b0341a7a997e3653da820d21ef6c08b32548f733e7')
+    version(
+        "4.5.0",
+        sha256="5e76517f5b9b119acf37ca8819781db6c16ea433f7e2062c4afc2b6fbedb1330",
+    )
+    version(
+        "4.3.0",
+        sha256="e0ecea24247a837c71c106b0341a7a997e3653da820d21ef6c08b32548f733e7",
+    )
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))

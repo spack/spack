@@ -11,34 +11,32 @@ import spack.spec
 
 
 def test_build_task_errors(install_mockery):
-    with pytest.raises(ValueError, match='must be a package'):
-        inst.BuildTask('abc', None, False, 0, 0, 0, [])
+    with pytest.raises(ValueError, match="must be a package"):
+        inst.BuildTask("abc", None, False, 0, 0, 0, [])
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='must have a concrete spec'):
+    pkg = spack.repo.get("trivial-install-test-package")
+    with pytest.raises(ValueError, match="must have a concrete spec"):
         inst.BuildTask(pkg, None, False, 0, 0, 0, [])
 
-    spec = spack.spec.Spec('trivial-install-test-package')
+    spec = spack.spec.Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
-    with pytest.raises(ValueError, match='must have a build request'):
+    with pytest.raises(ValueError, match="must have a build request"):
         inst.BuildTask(spec.package, None, False, 0, 0, 0, [])
 
     request = inst.BuildRequest(spec.package, {})
-    with pytest.raises(inst.InstallError, match='Cannot create a build task'):
-        inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_REMOVED,
-                       [])
+    with pytest.raises(inst.InstallError, match="Cannot create a build task"):
+        inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_REMOVED, [])
 
 
 def test_build_task_basics(install_mockery):
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 
     # Ensure key properties match expectations
     request = inst.BuildRequest(spec.package, {})
-    task = inst.BuildTask(spec.package, request, False, 0, 0,
-                          inst.STATUS_ADDED, [])
+    task = inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_ADDED, [])
     assert task.explicit  # package was "explicitly" requested
     assert task.priority == len(task.uninstalled_deps)
     assert task.key == (task.priority, task.sequence)
@@ -54,14 +52,13 @@ def test_build_task_basics(install_mockery):
 def test_build_task_strings(install_mockery):
     """Tests of build_task repr and str for coverage purposes."""
     # Using a package with one dependency
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 
     # Ensure key properties match expectations
     request = inst.BuildRequest(spec.package, {})
-    task = inst.BuildTask(spec.package, request, False, 0, 0,
-                          inst.STATUS_ADDED, [])
+    task = inst.BuildTask(spec.package, request, False, 0, 0, inst.STATUS_ADDED, [])
 
     # Cover __repr__
     irep = task.__repr__()

@@ -15,11 +15,14 @@ class Xstdcmap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xstdcmap"
     xorg_mirror_path = "app/xstdcmap-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='b97aaa883a9eedf9c3056ea1a7e818e3d93b63aa1f54193ef481d392bdef5711')
+    version(
+        "1.0.3",
+        sha256="b97aaa883a9eedf9c3056ea1a7e818e3d93b63aa1f54193ef481d392bdef5711",
+    )
 
-    depends_on('libxmu')
-    depends_on('libx11')
+    depends_on("libxmu")
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

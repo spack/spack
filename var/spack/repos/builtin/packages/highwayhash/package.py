@@ -8,33 +8,33 @@ import os
 
 class Highwayhash(MakefilePackage):
     """Strong (well-distributed and unpredictable) hashes:
-        - Portable implementation of SipHash
-        - HighwayHash, a 5x faster SIMD hash with security claims
+    - Portable implementation of SipHash
+    - HighwayHash, a 5x faster SIMD hash with security claims
     """
 
     homepage = "https://github.com/google/highwayhash"
-    git      = "https://github.com/google/highwayhash.git"
+    git = "https://github.com/google/highwayhash.git"
 
-    version('dfcb97', commit='dfcb97ca4fe9277bf9dc1802dd979b071896453b')
+    version("dfcb97", commit="dfcb97ca4fe9277bf9dc1802dd979b071896453b")
 
-    build_targets = ['all', 'libhighwayhash.a']
+    build_targets = ["all", "libhighwayhash.a"]
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.include)
 
         # The following are CPU and compiler flag specific
-        if(os.path.exists('libhighwayhash.a')):
+        if os.path.exists("libhighwayhash.a"):
             mkdirp(prefix.lib)
-            install('libhighwayhash.a', prefix.lib)
-        if(os.path.exists('highwayhash_test')):
-            install('highwayhash_test', prefix.bin)
-        if(os.path.exists('benchmark')):
-            install('benchmark', prefix.bin)
+            install("libhighwayhash.a", prefix.lib)
+        if os.path.exists("highwayhash_test"):
+            install("highwayhash_test", prefix.bin)
+        if os.path.exists("benchmark"):
+            install("benchmark", prefix.bin)
 
         # Always installed
-        install('profiler_example', prefix.bin)
-        install('nanobenchmark_example', prefix.bin)
-        install('vector_test', prefix.bin)
-        install('sip_hash_test', prefix.bin)
-        install('highwayhash/*.h', prefix.include)
+        install("profiler_example", prefix.bin)
+        install("nanobenchmark_example", prefix.bin)
+        install("vector_test", prefix.bin)
+        install("sip_hash_test", prefix.bin)
+        install("highwayhash/*.h", prefix.include)

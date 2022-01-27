@@ -21,17 +21,38 @@ class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""
 
     homepage = "https://blast.ncbi.nlm.nih.gov/"
-    url      = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-src.tar.gz"
+    url = "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.12.0/ncbi-blast-2.12.0+-src.tar.gz"
 
-    maintainers = ['weijianwen']
+    maintainers = ["weijianwen"]
 
-    version('2.12.0', sha256='fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88')
-    version('2.11.0', sha256='d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954')
-    version('2.9.0', sha256='a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257')
-    version('2.8.1', sha256='e03dd1a30e37cb8a859d3788a452c5d70ee1f9102d1ee0f93b2fbd145925118f')
-    version('2.7.1', sha256='10a78d3007413a6d4c983d2acbf03ef84b622b82bd9a59c6bd9fbdde9d0298ca')
-    version('2.6.0',  sha256='0510e1d607d0fb4389eca50d434d5a0be787423b6850b3a4f315abc2ef19c996')
-    version('2.2.30', sha256='26f72d51c81b9497f33b7274109565c36692572faef4d72377f79b7e59910e40')
+    version(
+        "2.12.0",
+        sha256="fda3c9c9d488cad6c1880a98a236d842bcf3610e3e702af61f7a48cf0a714b88",
+    )
+    version(
+        "2.11.0",
+        sha256="d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954",
+    )
+    version(
+        "2.9.0",
+        sha256="a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257",
+    )
+    version(
+        "2.8.1",
+        sha256="e03dd1a30e37cb8a859d3788a452c5d70ee1f9102d1ee0f93b2fbd145925118f",
+    )
+    version(
+        "2.7.1",
+        sha256="10a78d3007413a6d4c983d2acbf03ef84b622b82bd9a59c6bd9fbdde9d0298ca",
+    )
+    version(
+        "2.6.0",
+        sha256="0510e1d607d0fb4389eca50d434d5a0be787423b6850b3a4f315abc2ef19c996",
+    )
+    version(
+        "2.2.30",
+        sha256="26f72d51c81b9497f33b7274109565c36692572faef4d72377f79b7e59910e40",
+    )
 
     # homebrew sez: Fixed upstream in future version > 2.6
     # But this bug sez that it will be fixed in 2.6
@@ -41,110 +62,94 @@ class BlastPlus(AutotoolsPackage):
     # On the other hand, the `find` command is broken and there
     # aren't any .svn dirs in the tree, so I've updated their patch
     # to just comment out the block.
-    patch('blast-make-fix2.5.0.diff', when="@2.5.0:2.6.0")
+    patch("blast-make-fix2.5.0.diff", when="@2.5.0:2.6.0")
 
     # See https://github.com/Homebrew/homebrew-science/issues/2337#issuecomment-170011511
-    @when('@:2.2.31')
+    @when("@:2.2.31")
     def patch(self):
-        filter_file("2.95* | 2.96* | 3.* | 4.* )",
-                    "2.95* | 2.96* | 3.* | 4.* | 5.* )",
-                    "c++/src/build-system/configure",
-                    string=True)
+        filter_file(
+            "2.95* | 2.96* | 3.* | 4.* )",
+            "2.95* | 2.96* | 3.* | 4.* | 5.* )",
+            "c++/src/build-system/configure",
+            string=True,
+        )
 
     # No...
     # depends_on :mysql => :optional
 
-    variant('static', default=False,
-            description='Build with static linkage')
-    variant('jpeg', default=True,
-            description='Build with jpeg support')
-    variant('png', default=True,
-            description='Build with png support')
-    variant('freetype', default=True,
-            description='Build with freetype support')
+    variant("static", default=False, description="Build with static linkage")
+    variant("jpeg", default=True, description="Build with jpeg support")
+    variant("png", default=True, description="Build with png support")
+    variant("freetype", default=True, description="Build with freetype support")
     # variant('hdf5', default=True,
     #        description='Build with hdf5 support')
-    variant('gnutls', default=True,
-            description='Build with gnutls support')
-    variant('openssl', default=True,
-            description='Build with openssl support')
-    variant('zlib', default=True,
-            description='Build with zlib support')
-    variant('bzip2', default=True,
-            description='Build with bzip2 support')
-    variant('lzo', default=True,
-            description='Build with lzo support')
-    variant('pcre', default=True,
-            description='Build with pcre support')
-    variant('perl', default=True,
-            description='Build with perl support')
-    variant('python', default=True,
-            description='Build with python support')
+    variant("gnutls", default=True, description="Build with gnutls support")
+    variant("openssl", default=True, description="Build with openssl support")
+    variant("zlib", default=True, description="Build with zlib support")
+    variant("bzip2", default=True, description="Build with bzip2 support")
+    variant("lzo", default=True, description="Build with lzo support")
+    variant("pcre", default=True, description="Build with pcre support")
+    variant("perl", default=True, description="Build with perl support")
+    variant("python", default=True, description="Build with python support")
 
-    depends_on('jpeg', when='+jpeg')
-    depends_on('libpng', when='+png')
-    depends_on('freetype', when='+freetype')
+    depends_on("jpeg", when="+jpeg")
+    depends_on("libpng", when="+png")
+    depends_on("freetype", when="+freetype")
     # depends_on('hdf5', when='+hdf5')
-    depends_on('gnutls', when='+gnutls')
-    depends_on('openssl', when='+openssl')
-    depends_on('zlib', when='+zlib')
-    depends_on('bzip2', when='+bzip2')
-    depends_on('lzo', when='+lzo')
-    depends_on('pcre', when='+pcre')
+    depends_on("gnutls", when="+gnutls")
+    depends_on("openssl", when="+openssl")
+    depends_on("zlib", when="+zlib")
+    depends_on("bzip2", when="+bzip2")
+    depends_on("lzo", when="+lzo")
+    depends_on("pcre", when="+pcre")
 
-    depends_on('python', when='+python')
-    depends_on('perl', when='+perl')
+    depends_on("python", when="+python")
+    depends_on("perl", when="+perl")
 
-    depends_on('lmdb', when='@2.7.1:')
+    depends_on("lmdb", when="@2.7.1:")
 
-    configure_directory = 'c++'
+    configure_directory = "c++"
 
     def configure_args(self):
-        spec   = self.spec
+        spec = self.spec
 
         config_args = [
-            '--with-bin-release',
-            '--without-debug',
-            '--with-mt',
-            '--without-boost',
+            "--with-bin-release",
+            "--without-debug",
+            "--with-mt",
+            "--without-boost",
         ]
 
-        if spec.target.family != 'aarch64':
-            config_args.append('--with-64')
-        if '+static' in spec:
-            config_args.append('--with-static')
+        if spec.target.family != "aarch64":
+            config_args.append("--with-64")
+        if "+static" in spec:
+            config_args.append("--with-static")
             # FIXME
             # args << "--with-static-exe" unless OS.linux?
             # args << "--with-dll" if build.with? "dll"
         else:
-            config_args.extend([
-                '--with-dll',
-                '--without-static',
-                '--without-static-exe'
-            ])
+            config_args.extend(
+                ["--with-dll", "--without-static", "--without-static-exe"]
+            )
 
-        if '+jpeg' in spec:
+        if "+jpeg" in spec:
+            config_args.append("--with-jpeg={0}".format(self.spec["jpeg"].prefix))
+        else:
+            config_args.append("--without-jpeg")
+
+        if "+png" in spec:
+            config_args.append("--with-png={0}".format(self.spec["libpng"].prefix))
+        else:
+            config_args.append("--without-png")
+
+        if "+freetype" in spec:
             config_args.append(
-                '--with-jpeg={0}'.format(self.spec['jpeg'].prefix)
+                "--with-freetype={0}".format(self.spec["freetype"].prefix)
             )
         else:
-            config_args.append('--without-jpeg')
+            config_args.append("--without-freetype")
 
-        if '+png' in spec:
-            config_args.append(
-                '--with-png={0}'.format(self.spec['libpng'].prefix)
-            )
-        else:
-            config_args.append('--without-png')
-
-        if '+freetype' in spec:
-            config_args.append(
-                '--with-freetype={0}'.format(self.spec['freetype'].prefix)
-            )
-        else:
-            config_args.append('--without-freetype')
-
-        config_args.append('--without-hdf5')
+        config_args.append("--without-hdf5")
         # if '+hdf5' in spec:
         #     # FIXME
         #     config_args.append(
@@ -153,60 +158,44 @@ class BlastPlus(AutotoolsPackage):
         # else:
         #     config_args.append('--without-hdf5')
 
-        if '+zlib' in spec:
-            config_args.append(
-                '--with-z={0}'.format(self.spec['zlib'].prefix)
-            )
+        if "+zlib" in spec:
+            config_args.append("--with-z={0}".format(self.spec["zlib"].prefix))
         else:
-            config_args.append('--without-z')
+            config_args.append("--without-z")
 
-        if '+bzip2' in spec:
-            config_args.append(
-                '--with-bz2={0}'.format(self.spec['bzip2'].prefix)
-            )
+        if "+bzip2" in spec:
+            config_args.append("--with-bz2={0}".format(self.spec["bzip2"].prefix))
         else:
-            config_args.append('--without-bz2')
+            config_args.append("--without-bz2")
 
-        if '+lzo' in spec:
-            config_args.append(
-                '--with-lzo={0}'.format(self.spec['lzo'].prefix)
-            )
+        if "+lzo" in spec:
+            config_args.append("--with-lzo={0}".format(self.spec["lzo"].prefix))
         else:
-            config_args.append('--without-lzo')
+            config_args.append("--without-lzo")
 
-        if '+gnutls' in spec:
-            config_args.append(
-                '--with-gnutls={0}'.format(self.spec['gnutls'].prefix)
-            )
+        if "+gnutls" in spec:
+            config_args.append("--with-gnutls={0}".format(self.spec["gnutls"].prefix))
         else:
-            config_args.append('--without-gnutls')
+            config_args.append("--without-gnutls")
 
-        if '+openssl' in spec:
-            config_args.append(
-                '--with-openssl={0}'.format(self.spec['openssl'].prefix)
-            )
+        if "+openssl" in spec:
+            config_args.append("--with-openssl={0}".format(self.spec["openssl"].prefix))
         else:
-            config_args.append('--without-openssl')
+            config_args.append("--without-openssl")
 
-        if '+pcre' in spec:
-            config_args.append(
-                '--with-pcre={0}'.format(self.spec['pcre'].prefix)
-            )
+        if "+pcre" in spec:
+            config_args.append("--with-pcre={0}".format(self.spec["pcre"].prefix))
         else:
-            config_args.append('--without-pcre')
+            config_args.append("--without-pcre")
 
-        if '+python' in spec:
-            config_args.append(
-                '--with-python={0}'.format(self.spec['python'].home)
-            )
+        if "+python" in spec:
+            config_args.append("--with-python={0}".format(self.spec["python"].home))
         else:
-            config_args.append('--without-python')
+            config_args.append("--without-python")
 
-        if '+perl' in spec:
-            config_args.append(
-                '--with-perl={0}'.format(self.spec['perl'].prefix)
-            )
+        if "+perl" in spec:
+            config_args.append("--with-perl={0}".format(self.spec["perl"].prefix))
         else:
-            config_args.append('--without-python')
+            config_args.append("--without-python")
 
         return config_args

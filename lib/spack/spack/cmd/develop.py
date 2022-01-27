@@ -17,26 +17,35 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-p', '--path', help='Source location of package')
+    subparser.add_argument("-p", "--path", help="Source location of package")
 
     clone_group = subparser.add_mutually_exclusive_group()
     clone_group.add_argument(
-        '--no-clone', action='store_false', dest='clone', default=None,
-        help='Do not clone. The package already exists at the source path')
+        "--no-clone",
+        action="store_false",
+        dest="clone",
+        default=None,
+        help="Do not clone. The package already exists at the source path",
+    )
     clone_group.add_argument(
-        '--clone', action='store_true', dest='clone', default=None,
-        help='Clone the package even if the path already exists')
+        "--clone",
+        action="store_true",
+        dest="clone",
+        default=None,
+        help="Clone the package even if the path already exists",
+    )
 
     subparser.add_argument(
-        '-f', '--force',
-        help='Remove any files or directories that block cloning source code')
+        "-f",
+        "--force",
+        help="Remove any files or directories that block cloning source code",
+    )
 
-    arguments.add_common_arguments(subparser, ['spec'])
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def develop(parser, args):
-    env = spack.cmd.require_active_env(cmd_name='develop')
+    env = spack.cmd.require_active_env(cmd_name="develop")
 
     if not args.spec:
         if args.clone is False:
@@ -44,17 +53,16 @@ def develop(parser, args):
 
         # download all dev specs
         for name, entry in env.dev_specs.items():
-            path = entry.get('path', name)
-            abspath = path if os.path.isabs(path) else os.path.join(
-                env.path, path)
+            path = entry.get("path", name)
+            abspath = path if os.path.isabs(path) else os.path.join(env.path, path)
 
             if os.path.exists(abspath):
-                msg = "Skipping developer download of %s" % entry['spec']
+                msg = "Skipping developer download of %s" % entry["spec"]
                 msg += " because its path already exists."
                 tty.msg(msg)
                 continue
 
-            stage = spack.spec.Spec(entry['spec']).package.stage
+            stage = spack.spec.Spec(entry["spec"]).package.stage
             stage.steal_source(abspath)
 
         if not env.dev_specs:

@@ -16,14 +16,19 @@ class Mixcr(Package):
     gene segments."""
 
     homepage = "https://mixcr.readthedocs.io/en/master/index.html"
-    url      = "https://github.com/milaboratory/mixcr/releases/download/v3.0.2/mixcr-3.0.2.zip"
+    url = (
+        "https://github.com/milaboratory/mixcr/releases/download/v3.0.2/mixcr-3.0.2.zip"
+    )
 
-    version('3.0.2', sha256='b4dcad985053438d5f5590555f399edfbd8cb514e1b9717620ee0ad0b5eb6b33')
+    version(
+        "3.0.2",
+        sha256="b4dcad985053438d5f5590555f399edfbd8cb514e1b9717620ee0ad0b5eb6b33",
+    )
 
-    depends_on('java@8:')
+    depends_on("java@8:")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix)
+        env.prepend_path("PATH", self.prefix)

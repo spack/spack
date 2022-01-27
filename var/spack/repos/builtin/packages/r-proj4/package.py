@@ -14,11 +14,17 @@ class RProj4(RPackage):
     geographic coordinates from one projection and/or datum to another."""
 
     homepage = "https://www.rforge.net/proj4/"
-    url      = "https://cloud.r-project.org/src/contrib/proj4_1.0-8.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/proj4_1.0-8.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/proj4"
 
-    version('1.0-10', sha256='5f396f172a17cfa9821a390f11ff7d3bff3c92ccf585572116dec459c621d1d0')
-    version('1.0-8.1', sha256='a3a2a8f0014fd79fa34b5957440fd38299d8e97f1a802a61a068a6c6cda10a7e')
+    version(
+        "1.0-10",
+        sha256="5f396f172a17cfa9821a390f11ff7d3bff3c92ccf585572116dec459c621d1d0",
+    )
+    version(
+        "1.0-8.1",
+        sha256="a3a2a8f0014fd79fa34b5957440fd38299d8e97f1a802a61a068a6c6cda10a7e",
+    )
 
-    depends_on('r@2.0.0:', type=('build', 'run'))
-    depends_on('proj@4.4.6:5')
+    depends_on("r@2.0.0:", type=("build", "run"))
+    depends_on("proj@4.4.6:5")

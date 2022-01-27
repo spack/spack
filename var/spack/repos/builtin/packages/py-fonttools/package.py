@@ -14,9 +14,12 @@ class PyFonttools(PythonPackage):
     OpenType, AFM and to an extent Type 1 and some Mac-specific formats."""
 
     homepage = "https://github.com/fonttools/fonttools"
-    pypi     = "fonttools/fonttools-4.28.1.zip"
+    pypi = "fonttools/fonttools-4.28.1.zip"
 
-    version('4.28.1', sha256='8c8f84131bf04f3b1dcf99b9763cec35c347164ab6ad006e18d2f99fcab05529')
+    version(
+        "4.28.1",
+        sha256="8c8f84131bf04f3b1dcf99b9763cec35c347164ab6ad006e18d2f99fcab05529",
+    )
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

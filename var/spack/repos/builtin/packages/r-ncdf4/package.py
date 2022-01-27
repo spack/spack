@@ -25,12 +25,24 @@ class RNcdf4(RPackage):
     package does not provide an interface for netcdf version 4 files."""
 
     homepage = "https://cirrus.ucsd.edu/~pierce/ncdf"
-    url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
 
-    version('1.17', sha256='db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6')
-    version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
-    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
-    version('1.15', sha256='d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d')
+    version(
+        "1.17",
+        sha256="db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6",
+    )
+    version(
+        "1.16.1",
+        sha256="0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20",
+    )
+    version(
+        "1.16",
+        sha256="edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253",
+    )
+    version(
+        "1.15",
+        sha256="d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d",
+    )
 
-    depends_on('netcdf-c@4.1:')
+    depends_on("netcdf-c@4.1:")

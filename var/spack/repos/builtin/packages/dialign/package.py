@@ -11,18 +11,21 @@ class Dialign(MakefilePackage):
     by Burkhard Morgenstern et al.."""
 
     homepage = "https://bibiserv.cebitec.uni-bielefeld.de/dialign"
-    url      = "https://bibiserv.cebitec.uni-bielefeld.de/applications/dialign/resources/downloads/dialign-2.2.1-src.tar.gz"
+    url = "https://bibiserv.cebitec.uni-bielefeld.de/applications/dialign/resources/downloads/dialign-2.2.1-src.tar.gz"
 
-    version('2.2.1', sha256='046361bb4ca6e4ab2ac5e634cfcd673f964a887006c09c1b8bd3310fac86f519')
+    version(
+        "2.2.1",
+        sha256="046361bb4ca6e4ab2ac5e634cfcd673f964a887006c09c1b8bd3310fac86f519",
+    )
 
-    build_directory = 'src'
+    build_directory = "src"
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install(join_path('src', 'dialign2-2'), prefix.bin)
+        install(join_path("src", "dialign2-2"), prefix.bin)
 
         mkdirp(prefix.share)
-        install_tree('dialign2_dir', prefix.share)
+        install_tree("dialign2_dir", prefix.share)
 
     def setup_run_environment(self, env):
-        env.set('DIALIGN2_DIR', self.prefix.share)
+        env.set("DIALIGN2_DIR", self.prefix.share)

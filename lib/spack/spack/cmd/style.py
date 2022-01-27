@@ -94,13 +94,12 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     git = which("git", required=True)
 
     # ensure base is in the repo
-    git("show-ref", "--verify", "--quiet", "refs/heads/%s" % base,
-        fail_on_error=False)
+    git("show-ref", "--verify", "--quiet", "refs/heads/%s" % base, fail_on_error=False)
     if git.returncode != 0:
         tty.die(
             "This repository does not have a '%s' branch." % base,
             "spack style needs this branch to determine which files changed.",
-            "Ensure that '%s' exists, or specify files to check explicitly." % base
+            "Ensure that '%s' exists, or specify files to check explicitly." % base,
         )
 
     range = "{0}...".format(base)
@@ -122,10 +121,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     if all_files:
         git_args.append(["ls-files", "--exclude-standard"])
 
-    excludes = [
-        os.path.realpath(os.path.join(root, f))
-        for f in exclude_directories
-    ]
+    excludes = [os.path.realpath(os.path.join(root, f)) for f in exclude_directories]
     changed = set()
 
     for arg_list in git_args:
@@ -291,9 +287,12 @@ def run_flake8(flake8_cmd, file_list, args):
 def run_mypy(mypy_cmd, file_list, args):
     # always run with config from running spack prefix
     mypy_args = [
-        "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
-        "--package", "spack",
-        "--package", "llnl",
+        "--config-file",
+        os.path.join(spack.paths.prefix, "pyproject.toml"),
+        "--package",
+        "spack",
+        "--package",
+        "llnl",
         "--show-error-codes",
     ]
     # not yet, need other updates to enable this
@@ -376,7 +375,7 @@ def style(parser, args):
     if not os.path.exists(spack_script):
         tty.die(
             "This does not look like a valid spack root.",
-            "No such file: '%s'" % spack_script
+            "No such file: '%s'" % spack_script,
         )
 
     file_list = args.files

@@ -15,16 +15,19 @@ class Fluxbox(AutotoolsPackage):
     """
 
     homepage = "http://fluxbox.org/"
-    url      = "http://sourceforge.net/projects/fluxbox/files/fluxbox/1.3.7/fluxbox-1.3.7.tar.gz"
+    url = "http://sourceforge.net/projects/fluxbox/files/fluxbox/1.3.7/fluxbox-1.3.7.tar.gz"
 
-    version('1.3.7', sha256='c99e2baa06fff1e96342b20415059d12ff1fa2917ade0173c75b2fa570295b9f')
+    version(
+        "1.3.7",
+        sha256="c99e2baa06fff1e96342b20415059d12ff1fa2917ade0173c75b2fa570295b9f",
+    )
 
     # Referenced:https://sourceforge.net/p/fluxbox/bugs/1171/
-    patch('fix_zero_comparison.patch')
+    patch("fix_zero_comparison.patch")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('freetype')
-    depends_on('libxrender')
-    depends_on('libxext')
-    depends_on('expat')
-    depends_on('libx11')
+    depends_on("pkgconfig", type="build")
+    depends_on("freetype")
+    depends_on("libxrender")
+    depends_on("libxext")
+    depends_on("expat")
+    depends_on("libx11")

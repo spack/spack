@@ -12,14 +12,14 @@ class Extension1(Package):
     """A package which extends another package"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/extension1-1.0.tar.gz"
+    url = "http://www.example.com/extension1-1.0.tar.gz"
 
-    extends('extendee')
+    extends("extendee")
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', 'abcdef0123456789abcdef0123456789')
+    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("2.0", "abcdef0123456789abcdef0123456789")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with open(os.path.join(prefix.bin, 'extension1'), 'w+') as fout:
+        with open(os.path.join(prefix.bin, "extension1"), "w+") as fout:
             fout.write(str(spec.version))

@@ -10,7 +10,10 @@ class PyGoogle(PythonPackage):
     homepage = "https://breakingcode.wordpress.com/"
     pypi = "google/google-3.0.0.tar.gz"
 
-    version('3.0.0', sha256='143530122ee5130509ad5e989f0512f7cb218b2d4eddbafbad40fd10e8d8ccbe')
+    version(
+        "3.0.0",
+        sha256="143530122ee5130509ad5e989f0512f7cb218b2d4eddbafbad40fd10e8d8ccbe",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-beautifulsoup4', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-beautifulsoup4", type=("build", "run"))

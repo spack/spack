@@ -12,6 +12,9 @@ class Nacos(MavenPackage):
     to build cloud native applications and microservices platform easily."""
 
     homepage = "https://nacos.io/"
-    url      = "https://github.com/alibaba/nacos/archive/1.3.2.tar.gz"
+    url = "https://github.com/alibaba/nacos/archive/1.3.2.tar.gz"
 
-    version('1.3.2', sha256='3d3fdbe4033a9861a26c807d319db7c93f15de6491ddda512f9e5e421c563734')
+    version(
+        "1.3.2",
+        sha256="3d3fdbe4033a9861a26c807d319db7c93f15de6491ddda512f9e5e421c563734",
+    )

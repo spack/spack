@@ -13,7 +13,10 @@ class PyMmtfPython(PythonPackage):
     homepage = "https://github.com/rcsb/mmtf-python"
     pypi = "mmtf-python/mmtf-python-1.1.2.tar.gz"
 
-    version('1.1.2', sha256='a5caa7fcd2c1eaa16638b5b1da2d3276cbd3ed3513f0c2322957912003b6a8df')
+    version(
+        "1.1.2",
+        sha256="a5caa7fcd2c1eaa16638b5b1da2d3276cbd3ed3513f0c2322957912003b6a8df",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-msgpack@0.5.6:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-msgpack@0.5.6:", type=("build", "run"))

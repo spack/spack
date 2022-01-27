@@ -10,8 +10,11 @@ class Yajl(CMakePackage):
     """Yet Another JSON Library (YAJL)"""
 
     homepage = "https://lloyd.github.io/yajl/"
-    url      = "https://github.com/lloyd/yajl/archive/2.1.0.zip"
-    git      = "https://github.com/lloyd/yajl.git"
+    url = "https://github.com/lloyd/yajl/archive/2.1.0.zip"
+    git = "https://github.com/lloyd/yajl.git"
 
-    version('develop', branch='master')
-    version('2.1.0', sha256='7458c4ed10ebe52c54f57e741bbfde69c73495e76e0f6a45d6d1986cf24794bc')
+    version("develop", branch="master")
+    version(
+        "2.1.0",
+        sha256="7458c4ed10ebe52c54f57e741bbfde69c73495e76e0f6a45d6d1986cf24794bc",
+    )

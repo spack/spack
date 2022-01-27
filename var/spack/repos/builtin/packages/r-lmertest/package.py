@@ -18,12 +18,15 @@ class RLmertest(RPackage):
     """
 
     homepage = "https://github.com/runehaubo/lmerTestR"
-    cran     = "lmerTest"
+    cran = "lmerTest"
 
-    version('3.1-3', sha256='35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd')
+    version(
+        "3.1-3",
+        sha256="35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd",
+    )
 
-    depends_on('r@3.2.5:', type=('build', 'run'))
-    depends_on('r-lme4@1.1-10:', type=('build', 'run'))
-    depends_on('r-numderiv', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on("r@3.2.5:", type=("build", "run"))
+    depends_on("r-lme4@1.1-10:", type=("build", "run"))
+    depends_on("r-numderiv", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-ggplot2", type=("build", "run"))

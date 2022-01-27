@@ -15,7 +15,13 @@ class UnittestCpp(CMakePackage):
     means it should be easily portable to just about any platform."""
 
     homepage = "https://github.com/unittest-cpp/unittest-cpp/wiki"
-    url      = "https://github.com/unittest-cpp/unittest-cpp/archive/v1.6.0.tar.gz"
+    url = "https://github.com/unittest-cpp/unittest-cpp/archive/v1.6.0.tar.gz"
 
-    version('2.0.0', sha256='74852198877dc2fdebdc4e5e9bd074018bf8ee03a13de139bfe41f4585b2f5b9')
-    version('1.6.0', sha256='9fa7e797816e16669d68171418b0dc41ec6b7eaf8483f782441f5f159598c3c0')
+    version(
+        "2.0.0",
+        sha256="74852198877dc2fdebdc4e5e9bd074018bf8ee03a13de139bfe41f4585b2f5b9",
+    )
+    version(
+        "1.6.0",
+        sha256="9fa7e797816e16669d68171418b0dc41ec6b7eaf8483f782441f5f159598c3c0",
+    )

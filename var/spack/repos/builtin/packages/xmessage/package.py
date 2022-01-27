@@ -14,10 +14,13 @@ class Xmessage(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmessage"
     xorg_mirror_path = "app/xmessage-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='883099c3952c8cace5bd11d3df2e9ca143fc07375997435d5ff4f2d50353acca')
+    version(
+        "1.0.4",
+        sha256="883099c3952c8cace5bd11d3df2e9ca143fc07375997435d5ff4f2d50353acca",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxt')
+    depends_on("libxaw")
+    depends_on("libxt")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

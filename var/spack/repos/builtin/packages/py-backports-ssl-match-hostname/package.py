@@ -11,9 +11,12 @@ class PyBackportsSslMatchHostname(PythonPackage):
 
     pypi = "backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz"
 
-    py_namespace = 'backports'
+    py_namespace = "backports"
 
-    version('3.5.0.1', sha256='502ad98707319f4a51fa2ca1c677bd659008d27ded9f6380c79e8932e38dcdf2')
+    version(
+        "3.5.0.1",
+        sha256="502ad98707319f4a51fa2ca1c677bd659008d27ded9f6380c79e8932e38dcdf2",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

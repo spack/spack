@@ -12,11 +12,23 @@ class PyRope(PythonPackage):
     homepage = "https://github.com/python-rope/rope"
     pypi = "rope/rope-0.10.5.tar.gz"
 
-    version('0.11.0', sha256='a108c445e1cd897fe19272ab7877d172e7faf3d4148c80e7d20faba42ea8f7b2')
-    version('0.10.7', sha256='a09edfd2034fd50099a67822f9bd851fbd0f4e98d3b87519f6267b60e50d80d1')
-    version('0.10.6', sha256='9700e163f3b05ef4c68133a39d436c253a84b35baf662c2d63407da7bfa08edf')
-    version('0.10.5', sha256='2ff6099e65798f9e27da5026cc7136b4d9b340fc817031ccb4318f61f448127f')
+    version(
+        "0.11.0",
+        sha256="a108c445e1cd897fe19272ab7877d172e7faf3d4148c80e7d20faba42ea8f7b2",
+    )
+    version(
+        "0.10.7",
+        sha256="a09edfd2034fd50099a67822f9bd851fbd0f4e98d3b87519f6267b60e50d80d1",
+    )
+    version(
+        "0.10.6",
+        sha256="9700e163f3b05ef4c68133a39d436c253a84b35baf662c2d63407da7bfa08edf",
+    )
+    version(
+        "0.10.5",
+        sha256="2ff6099e65798f9e27da5026cc7136b4d9b340fc817031ccb4318f61f448127f",
+    )
 
-    patch('fix_readme_unicode.patch', when='@0.10.5:0.11.0')
+    patch("fix_readme_unicode.patch", when="@0.10.5:0.11.0")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

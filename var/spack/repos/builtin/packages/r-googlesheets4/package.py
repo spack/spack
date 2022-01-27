@@ -18,22 +18,25 @@ class RGooglesheets4(RPackage):
     data in a Sheet."""
 
     homepage = "https://github.com/tidyverse/googlesheets4"
-    cran     = "googlesheets4"
+    cran = "googlesheets4"
 
-    version('1.0.0', sha256='0a107d76aac99d6db48d97ce55810c1412b2197f457b8476f676169a36c7cc7a')
+    version(
+        "1.0.0",
+        sha256="0a107d76aac99d6db48d97ce55810c1412b2197f457b8476f676169a36c7cc7a",
+    )
 
-    depends_on('r@3.3:', type=('build', 'run'))
-    depends_on('r-cellranger', type=('build', 'run'))
-    depends_on('r-cli@3.0.0:', type=('build', 'run'))
-    depends_on('r-curl', type=('build', 'run'))
-    depends_on('r-gargle@1.2.0', type=('build', 'run'))
-    depends_on('r-glue@1.3.0:', type=('build', 'run'))
-    depends_on('r-googledrive@2.0.0:', type=('build', 'run'))
-    depends_on('r-httr', type=('build', 'run'))
-    depends_on('r-ids', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-purrr', type=('build', 'run'))
-    depends_on('r-rematch2', type=('build', 'run'))
-    depends_on('r-rlang@0.4.11:', type=('build', 'run'))
-    depends_on('r-tibble@2.1.1:', type=('build', 'run'))
-    depends_on('r-vctrs@0.2.3:', type=('build', 'run'))
+    depends_on("r@3.3:", type=("build", "run"))
+    depends_on("r-cellranger", type=("build", "run"))
+    depends_on("r-cli@3.0.0:", type=("build", "run"))
+    depends_on("r-curl", type=("build", "run"))
+    depends_on("r-gargle@1.2.0", type=("build", "run"))
+    depends_on("r-glue@1.3.0:", type=("build", "run"))
+    depends_on("r-googledrive@2.0.0:", type=("build", "run"))
+    depends_on("r-httr", type=("build", "run"))
+    depends_on("r-ids", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-purrr", type=("build", "run"))
+    depends_on("r-rematch2", type=("build", "run"))
+    depends_on("r-rlang@0.4.11:", type=("build", "run"))
+    depends_on("r-tibble@2.1.1:", type=("build", "run"))
+    depends_on("r-vctrs@0.2.3:", type=("build", "run"))

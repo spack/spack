@@ -11,8 +11,11 @@ class PyPortalocker(PythonPackage):
     locking."""
 
     homepage = "https://github.com/WoLpH/portalocker"
-    url      = "https://github.com/WoLpH/portalocker/archive/v1.6.0.tar.gz"
+    url = "https://github.com/WoLpH/portalocker/archive/v1.6.0.tar.gz"
 
-    version('1.6.0', sha256='084ff315ccb9fb38a7c06155d409da5df29647da7c6d2bc2b24637f9f79001ff')
+    version(
+        "1.6.0",
+        sha256="084ff315ccb9fb38a7c06155d409da5df29647da7c6d2bc2b24637f9f79001ff",
+    )
 
-    depends_on('py-setuptools@38.3.0:', type='build')
+    depends_on("py-setuptools@38.3.0:", type="build")

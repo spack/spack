@@ -10,13 +10,19 @@ class AcpicaTools(MakefilePackage):
     """Debian packaging for the ACPICA user space tools"""
 
     homepage = "https://github.com/ahs3/acpica-tools"
-    url      = "https://github.com/ahs3/acpica-tools/archive/upstream/20200528.tar.gz"
+    url = "https://github.com/ahs3/acpica-tools/archive/upstream/20200528.tar.gz"
 
-    version('20200528',   sha256='07cd3e370b695ab787d25a7165e37eb7b150dca7908f047a6a6486d216cf05a8')
-    version('20200430',   sha256='e3118583bf6e4bb4745d642a863cce1b4fcfdf67558e4ae53df367b7e26b89ac')
+    version(
+        "20200528",
+        sha256="07cd3e370b695ab787d25a7165e37eb7b150dca7908f047a6a6486d216cf05a8",
+    )
+    version(
+        "20200430",
+        sha256="e3118583bf6e4bb4745d642a863cce1b4fcfdf67558e4ae53df367b7e26b89ac",
+    )
 
-    depends_on('flex',  type='build')
-    depends_on('bison', type='build')
+    depends_on("flex", type="build")
+    depends_on("bison", type="build")
 
     def install(self, spec, prefix):
-        make('PREFIX={0}'.format(prefix), 'install')
+        make("PREFIX={0}".format(prefix), "install")

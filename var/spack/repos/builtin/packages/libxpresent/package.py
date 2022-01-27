@@ -13,17 +13,20 @@ class Libxpresent(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXpresent/"
     xorg_mirror_path = "lib/libXpresent-1.0.0.tar.gz"
 
-    version('1.0.0', sha256='92f1bdfb67ae2ffcdb25ad72c02cac5e4912dc9bc792858240df1d7f105946fa')
+    version(
+        "1.0.0",
+        sha256="92f1bdfb67ae2ffcdb25ad72c02cac5e4912dc9bc792858240df1d7f105946fa",
+    )
 
-    depends_on('libx11', type='link')
-    depends_on('libxext', type='link')
-    depends_on('libxfixes', type='link')
-    depends_on('libxrandr', type='link')
+    depends_on("libx11", type="link")
+    depends_on("libxext", type="link")
+    depends_on("libxfixes", type="link")
+    depends_on("libxrandr", type="link")
 
-    depends_on('xproto')
-    depends_on('presentproto@1.0:')
-    depends_on('xextproto')
-    depends_on('fixesproto')
-    depends_on('randrproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto")
+    depends_on("presentproto@1.0:")
+    depends_on("xextproto")
+    depends_on("fixesproto")
+    depends_on("randrproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

@@ -17,19 +17,26 @@ from _pytest.compat import CaptureIO
 
 unicode = py.builtin.text
 
-patchsysdict = {0: 'stdin', 1: 'stdout', 2: 'stderr'}
+patchsysdict = {0: "stdin", 1: "stdout", 2: "stderr"}
 
 
 def pytest_addoption(parser):
     group = parser.getgroup("general")
     group._addoption(
-        '--capture', action="store",
+        "--capture",
+        action="store",
         default="fd" if hasattr(os, "dup") else "sys",
-        metavar="method", choices=['fd', 'sys', 'no'],
-        help="per-test capturing method: one of fd|sys|no.")
+        metavar="method",
+        choices=["fd", "sys", "no"],
+        help="per-test capturing method: one of fd|sys|no.",
+    )
     group._addoption(
-        '-s', action="store_const", const="no", dest="capture",
-        help="shortcut for --capture=no.")
+        "-s",
+        action="store_const",
+        const="no",
+        dest="capture",
+        help="shortcut for --capture=no.",
+    )
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -50,6 +57,7 @@ def pytest_load_initial_conftests(early_config, parser, args):
     def silence_logging_at_shutdown():
         if "logging" in sys.modules:
             sys.modules["logging"].raiseExceptions = False
+
     early_config.add_cleanup(silence_logging_at_shutdown)
 
     # finally trigger conftest loading but while capturing (issue93)
@@ -181,7 +189,7 @@ def capfd(request):
     """
     if "capsys" in request.fixturenames:
         request.raiseerror(error_capsysfderror)
-    if not hasattr(os, 'dup'):
+    if not hasattr(os, "dup"):
         pytest.skip("capfd funcarg needs os.dup")
     request.node._capfuncarg = c = CaptureFixture(FDCapture, request)
     return c
@@ -193,8 +201,9 @@ class CaptureFixture:
         self.request = request
 
     def _start(self):
-        self._capture = MultiCapture(out=True, err=True, in_=False,
-                                     Capture=self.captureclass)
+        self._capture = MultiCapture(
+            out=True, err=True, in_=False, Capture=self.captureclass
+        )
         self._capture.start_capturing()
 
     def close(self):
@@ -211,7 +220,7 @@ class CaptureFixture:
 
     @contextlib.contextmanager
     def disabled(self):
-        capmanager = self.request.config.pluginmanager.getplugin('capturemanager')
+        capmanager = self.request.config.pluginmanager.getplugin("capturemanager")
         capmanager.suspendcapture_item(self.request.node, "call", in_=True)
         try:
             yield
@@ -220,8 +229,8 @@ class CaptureFixture:
 
 
 def safe_text_dupfile(f, mode, default_encoding="UTF8"):
-    """ return a open text file object that's a duplicate of f on the
-        FD-level if possible.
+    """return a open text file object that's a duplicate of f on the
+    FD-level if possible.
     """
     encoding = getattr(f, "encoding", None)
     try:
@@ -251,7 +260,7 @@ class EncodedFile(object):
         self.buffer.write(obj)
 
     def writelines(self, linelist):
-        data = ''.join(linelist)
+        data = "".join(linelist)
         self.write(data)
 
     @property
@@ -283,7 +292,7 @@ class MultiCapture(object):
             self.err.start()
 
     def pop_outerr_to_orig(self):
-        """ pop current snapshot out/err capture and flush to orig streams. """
+        """pop current snapshot out/err capture and flush to orig streams."""
         out, err = self.readouterr()
         if out:
             self.out.writeorg(out)
@@ -310,8 +319,8 @@ class MultiCapture(object):
             del self._in_suspended
 
     def stop_capturing(self):
-        """ stop capturing and reset capturing streams """
-        if hasattr(self, '_reset'):
+        """stop capturing and reset capturing streams"""
+        if hasattr(self, "_reset"):
             raise ValueError("was already stopped")
         self._reset = True
         if self.out:
@@ -322,9 +331,11 @@ class MultiCapture(object):
             self.in_.done()
 
     def readouterr(self):
-        """ return snapshot unicode value of stdout/stderr capturings. """
-        return (self.out.snap() if self.out is not None else "",
-                self.err.snap() if self.err is not None else "")
+        """return snapshot unicode value of stdout/stderr capturings."""
+        return (
+            self.out.snap() if self.out is not None else "",
+            self.err.snap() if self.err is not None else "",
+        )
 
 
 class NoCapture:
@@ -332,7 +343,7 @@ class NoCapture:
 
 
 class FDCapture:
-    """ Capture IO to/from a given os-level filedescriptor. """
+    """Capture IO to/from a given os-level filedescriptor."""
 
     def __init__(self, targetfd, tmpfile=None):
         self.targetfd = targetfd
@@ -362,7 +373,7 @@ class FDCapture:
         return "<FDCapture %s oldfd=%s>" % (self.targetfd, self.targetfd_save)
 
     def start(self):
-        """ Start capturing on targetfd using memorized tmpfile. """
+        """Start capturing on targetfd using memorized tmpfile."""
         try:
             os.fstat(self.targetfd_save)
         except (AttributeError, OSError):
@@ -381,11 +392,11 @@ class FDCapture:
             f.truncate(0)
             f.seek(0)
             return res
-        return ''
+        return ""
 
     def done(self):
-        """ stop capturing, restore streams, return original capture file,
-        seeked to position zero. """
+        """stop capturing, restore streams, return original capture file,
+        seeked to position zero."""
         targetfd_save = self.__dict__.pop("targetfd_save")
         os.dup2(targetfd_save, self.targetfd)
         os.close(targetfd_save)
@@ -401,7 +412,7 @@ class FDCapture:
         os.dup2(self.tmpfile_fd, self.targetfd)
 
     def writeorg(self, data):
-        """ write to original file descriptor. """
+        """write to original file descriptor."""
         if py.builtin._istext(data):
             data = data.encode("utf8")  # XXX use encoding of original stream
         os.write(self.targetfd_save, data)
@@ -457,13 +468,13 @@ class DontReadFromInput:
 
     def read(self, *args):
         raise IOError("reading from stdin while output is captured")
+
     readline = read
     readlines = read
     __iter__ = read
 
     def fileno(self):
-        raise UnsupportedOperation("redirected stdin is pseudofile, "
-                                   "has no fileno()")
+        raise UnsupportedOperation("redirected stdin is pseudofile, " "has no fileno()")
 
     def isatty(self):
         return False
@@ -476,7 +487,7 @@ class DontReadFromInput:
         if sys.version_info >= (3, 0):
             return self
         else:
-            raise AttributeError('redirected stdin has no attribute buffer')
+            raise AttributeError("redirected stdin has no attribute buffer")
 
 
 def _colorama_workaround():
@@ -489,7 +500,7 @@ def _colorama_workaround():
     fail in various ways.
     """
 
-    if not sys.platform.startswith('win32'):
+    if not sys.platform.startswith("win32"):
         return
     try:
         import colorama  # noqa
@@ -516,7 +527,7 @@ def _readline_workaround():
     See https://github.com/pytest-dev/pytest/pull/1281
     """
 
-    if not sys.platform.startswith('win32'):
+    if not sys.platform.startswith("win32"):
         return
     try:
         import readline  # noqa
@@ -546,21 +557,21 @@ def _py36_windowsconsoleio_workaround(stream):
 
     See https://github.com/pytest-dev/py/issues/103
     """
-    if not sys.platform.startswith('win32') or sys.version_info[:2] < (3, 6):
+    if not sys.platform.startswith("win32") or sys.version_info[:2] < (3, 6):
         return
 
     # bail out if ``stream`` doesn't seem like a proper ``io`` stream (#2666)
-    if not hasattr(stream, 'buffer'):
+    if not hasattr(stream, "buffer"):
         return
 
-    buffered = hasattr(stream.buffer, 'raw')
+    buffered = hasattr(stream.buffer, "raw")
     raw_stdout = stream.buffer.raw if buffered else stream.buffer
 
     if not isinstance(raw_stdout, io._WindowsConsoleIO):
         return
 
     def _reopen_stdio(f, mode):
-        if not buffered and mode[0] == 'w':
+        if not buffered and mode[0] == "w":
             buffering = 0
         else:
             buffering = -1
@@ -570,8 +581,9 @@ def _py36_windowsconsoleio_workaround(stream):
             f.encoding,
             f.errors,
             f.newlines,
-            f.line_buffering)
+            f.line_buffering,
+        )
 
-    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
-    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
-    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')
+    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, "rb")
+    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, "wb")
+    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, "wb")

@@ -12,6 +12,9 @@ class PyCurrent(PythonPackage):
     homepage = "https://github.com/xflr6/current"
     pypi = "current/current-0.3.1.zip"
 
-    version('0.3.1', sha256='207613dc19a6cc8e1a756f26e416733c8f82a70e4ae81103d22f483aae6492a8')
+    version(
+        "0.3.1",
+        sha256="207613dc19a6cc8e1a756f26e416733c8f82a70e4ae81103d22f483aae6492a8",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

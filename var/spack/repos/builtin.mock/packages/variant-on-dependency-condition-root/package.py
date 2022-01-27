@@ -10,11 +10,12 @@ class VariantOnDependencyConditionRoot(Package):
     depends_on('B', when='^A+x')
     """
 
-    homepage = 'https://www.example.org'
-    url = 'https://example.org/files/v3.4/cmake-3.4.3.tar.gz'
+    homepage = "https://www.example.org"
+    url = "https://example.org/files/v3.4/cmake-3.4.3.tar.gz"
 
-    version('1.0', '4cb3ff35b2472aae70f542116d616e63')
+    version("1.0", "4cb3ff35b2472aae70f542116d616e63")
 
-    depends_on('variant-on-dependency-condition-a')
-    depends_on('variant-on-dependency-condition-b',
-               when='^variant-on-dependency-condition-a+x')
+    depends_on("variant-on-dependency-condition-a")
+    depends_on(
+        "variant-on-dependency-condition-b", when="^variant-on-dependency-condition-a+x"
+    )

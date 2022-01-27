@@ -15,9 +15,7 @@ pytestmark = pytest.mark.usefixtures(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_fetch_in_env(
-    tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery
-):
+def test_fetch_in_env(tmpdir, mock_archive, mock_stage, mock_fetch, install_mockery):
     SpackCommand("env")("create", "test")
     with ev.read("test"):
         SpackCommand("add")("python")

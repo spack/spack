@@ -12,17 +12,23 @@ class Ermod(AutotoolsPackage):
     program allows users to calculate the solvation free energy to arbitrary
     solvents, including inhomogeneous systems, and can run in cooperation with
     state-of-art molecular simulation softwares, such as NAMD, GROMACS and/or
-    AMBER. """
+    AMBER."""
 
     homepage = "https://sourceforge.net/projects/ermod/"
-    url      = "https://sourceforge.net/projects/ermod/files/ermod-0.3%20%28stable%29/ermod-0.3.5.tar.gz"
+    url = "https://sourceforge.net/projects/ermod/files/ermod-0.3%20%28stable%29/ermod-0.3.5.tar.gz"
 
-    version('0.3.6', sha256='8fdd8e0844fcc34cda2bbbf8ad03168c1c2f1409e06967a96a0f2269bb5f1b6b')
-    version('0.3.5', sha256='42043ba7f53e9b74d0327b9982f33a4b79ed6964fbeb409e33178a6dcdf9e827')
+    version(
+        "0.3.6",
+        sha256="8fdd8e0844fcc34cda2bbbf8ad03168c1c2f1409e06967a96a0f2269bb5f1b6b",
+    )
+    version(
+        "0.3.5",
+        sha256="42043ba7f53e9b74d0327b9982f33a4b79ed6964fbeb409e33178a6dcdf9e827",
+    )
 
-    depends_on('fftw')
-    depends_on('blas')
+    depends_on("fftw")
+    depends_on("blas")
 
     def configure_args(self):
-        args = ['--with-blas=%s' % self.spec['blas'].libs.ld_flags]
+        args = ["--with-blas=%s" % self.spec["blas"].libs.ld_flags]
         return args

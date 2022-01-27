@@ -14,14 +14,17 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     homepage = "https://www.freedesktop.org/wiki/Software/XKeyboardConfig/"
     xorg_mirror_path = "data/xkeyboard-config/xkeyboard-config-2.18.tar.gz"
 
-    version('2.18', sha256='d5c511319a3bd89dc40622a33b51ba41a2c2caad33ee2bfe502363fcc4c3817d')
+    version(
+        "2.18",
+        sha256="d5c511319a3bd89dc40622a33b51ba41a2c2caad33ee2bfe502363fcc4c3817d",
+    )
 
-    depends_on('libx11@1.4.3:')
+    depends_on("libx11@1.4.3:")
 
-    depends_on('libxslt', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('intltool@0.30:', type='build')
-    depends_on('xproto@7.0.20:')
+    depends_on("libxslt", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("intltool@0.30:", type="build")
+    depends_on("xproto@7.0.20:")
 
     # TODO: missing dependencies
     # xgettext
@@ -32,7 +35,7 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     # perl XML::Parser
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
+        env.prepend_path("XKB_CONFIG_ROOT", self.prefix.share.X11.xkb)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
+        env.prepend_path("XKB_CONFIG_ROOT", self.prefix.share.X11.xkb)

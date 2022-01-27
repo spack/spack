@@ -17,14 +17,17 @@ class RLeafpop(RPackage):
     with 'htmlwidgets'."""
 
     homepage = "https://github.com/r-spatial/leafpop"
-    cran     = "leafpop"
+    cran = "leafpop"
 
-    version('0.0.6', sha256='3d9ca31d081ce8540a87790786840bde5f833543af608c53a26623c7874e722f')
+    version(
+        "0.0.6",
+        sha256="3d9ca31d081ce8540a87790786840bde5f833543af608c53a26623c7874e722f",
+    )
 
-    depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-brew', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-sf', type=('build', 'run'))
-    depends_on('r-svglite', type=('build', 'run'))
-    depends_on('r-uuid', type=('build', 'run'))
+    depends_on("r-base64enc", type=("build", "run"))
+    depends_on("r-brew", type=("build", "run"))
+    depends_on("r-htmltools", type=("build", "run"))
+    depends_on("r-htmlwidgets", type=("build", "run"))
+    depends_on("r-sf", type=("build", "run"))
+    depends_on("r-svglite", type=("build", "run"))
+    depends_on("r-uuid", type=("build", "run"))

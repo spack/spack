@@ -68,7 +68,7 @@ def test_output_filtering(capfd, install_mockery, mutable_config):
     padding_string = "[padded-to-%d-chars]" % len(long_path)
 
     # test filtering when padding is enabled
-    with spack.config.override('config:install_tree', {"padded_length": 256}):
+    with spack.config.override("config:install_tree", {"padded_length": 256}):
         # tty.msg with filtering on the first argument
         with sup.filter_padding():
             tty.msg("here is a long path: %s/with/a/suffix" % long_path)

@@ -8,9 +8,9 @@ from spack import *
 
 class OverrideModuleTemplates(Package):
     homepage = "http://www.fake-spack-example.org"
-    url      = "http://www.fake-spack-example.org/downloads/fake-1.0.tar.gz"
+    url = "http://www.fake-spack-example.org/downloads/fake-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    tcl_template = 'override.txt'
-    lmod_template = 'override.txt'
+    tcl_template = "override.txt"
+    lmod_template = "override.txt"

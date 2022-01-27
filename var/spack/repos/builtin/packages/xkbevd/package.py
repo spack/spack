@@ -12,11 +12,14 @@ class Xkbevd(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xkbevd"
     xorg_mirror_path = "app/xkbevd-1.1.4.tar.gz"
 
-    version('1.1.4', sha256='97dc2c19617da115c3d1183807338fa78c3fd074d8355d10a484f7b1c5b18459')
+    version(
+        "1.1.4",
+        sha256="97dc2c19617da115c3d1183807338fa78c3fd074d8355d10a484f7b1c5b18459",
+    )
 
-    depends_on('libxkbfile')
-    depends_on('libx11')
+    depends_on("libxkbfile")
+    depends_on("libx11")
 
-    depends_on('bison', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("bison", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

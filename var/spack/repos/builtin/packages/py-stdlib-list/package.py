@@ -11,7 +11,10 @@ class PyStdlibList(PythonPackage):
 
     pypi = "stdlib-list/stdlib-list-0.6.0.tar.gz"
 
-    version('0.6.0', sha256='133cc99104f5a4e1604dc88ebb393529bd4c2b99ae7e10d46c0b596f3c67c3f0')
+    version(
+        "0.6.0",
+        sha256="133cc99104f5a4e1604dc88ebb393529bd4c2b99ae7e10d46c0b596f3c67c3f0",
+    )
 
-    depends_on('py-functools32', when="^python@:3.1", type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("py-functools32", when="^python@:3.1", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

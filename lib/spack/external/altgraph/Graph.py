@@ -58,8 +58,10 @@ class Graph(object):
                     raise GraphError("Cannot create edge from %s" % (item,))
 
     def __repr__(self):
-        return '<Graph: %d nodes, %d edges>' % (
-            self.number_of_nodes(), self.number_of_edges())
+        return "<Graph: %d nodes, %d edges>" % (
+            self.number_of_nodes(),
+            self.number_of_edges(),
+        )
 
     def add_node(self, node, node_data=None):
         """
@@ -111,7 +113,7 @@ class Graph(object):
             self.nodes[tail_id][0].append(edge)
             self.nodes[head_id][1].append(edge)
         except KeyError:
-            raise GraphError('Invalid nodes %s -> %s' % (head_id, tail_id))
+            raise GraphError("Invalid nodes %s -> %s" % (head_id, tail_id))
 
         # store edge information
         self.edges[edge] = (head_id, tail_id, edge_data)
@@ -124,13 +126,12 @@ class Graph(object):
         time.
         """
         try:
-            head_id, tail_id, edge_data = \
-                self.hidden_edges[edge] = self.edges[edge]
+            head_id, tail_id, edge_data = self.hidden_edges[edge] = self.edges[edge]
             self.nodes[tail_id][0].remove(edge)
             self.nodes[head_id][1].remove(edge)
             del self.edges[edge]
         except KeyError:
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
     def hide_node(self, node):
         """
@@ -144,7 +145,7 @@ class Graph(object):
                 self.hide_edge(edge)
             del self.nodes[node]
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def restore_node(self, node):
         """
@@ -157,7 +158,7 @@ class Graph(object):
                 self.restore_edge(edge)
             del self.hidden_nodes[node]
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def restore_edge(self, edge):
         """
@@ -170,7 +171,7 @@ class Graph(object):
             self.edges[edge] = head_id, tail_id, data
             del self.hidden_edges[edge]
         except KeyError:
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
     def restore_all_edges(self):
         """
@@ -203,7 +204,7 @@ class Graph(object):
             head, tail, data = self.edges[edge]
         except KeyError:
             head, tail = None, None
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
         return (head, tail)
 
@@ -339,7 +340,7 @@ class Graph(object):
         try:
             return list(self.nodes[node][1])
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def inc_edges(self, node):
         """
@@ -348,7 +349,7 @@ class Graph(object):
         try:
             return list(self.nodes[node][0])
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def all_edges(self, node):
         """

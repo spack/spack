@@ -13,12 +13,12 @@ class Librttopo(AutotoolsPackage):
     """
 
     homepage = "https://git.osgeo.org/gitea/rttopo"
-    git      = "https://git.osgeo.org/gitea/rttopo/librttopo.git"
+    git = "https://git.osgeo.org/gitea/rttopo/librttopo.git"
 
-    version('1.1.0', tag='librttopo-1.1.0')
+    version("1.1.0", tag="librttopo-1.1.0")
 
-    depends_on('geos')
+    depends_on("geos")
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+        bash = which("bash")
+        bash("./autogen.sh")

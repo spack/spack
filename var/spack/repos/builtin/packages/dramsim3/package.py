@@ -16,26 +16,29 @@ class Dramsim3(Package):
     accurate, portable and parallel."""
 
     homepage = "https://github.com/umd-memsys/DRAMsim3"
-    url      = "https://github.com/umd-memsys/DRAMsim3/archive/refs/tags/1.0.0.tar.gz"
-    git      = "https://github.com/umd-memsys/DRAMsim3.git"
+    url = "https://github.com/umd-memsys/DRAMsim3/archive/refs/tags/1.0.0.tar.gz"
+    git = "https://github.com/umd-memsys/DRAMsim3.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    version('1.0.0', sha256='064b732256f3bec9b553e00bcbc9a1d82172ec194f2b69c8797f585200b12566')
+    version(
+        "1.0.0",
+        sha256="064b732256f3bec9b553e00bcbc9a1d82172ec194f2b69c8797f585200b12566",
+    )
 
-    depends_on('cmake', type='build')
+    depends_on("cmake", type="build")
 
     def install(self, spec, prefix):
-        cmake = which('cmake')
-        cmake('.')
+        cmake = which("cmake")
+        cmake(".")
 
         make()
 
-        include_path = prefix + '/include'
+        include_path = prefix + "/include"
         mkdir(prefix.bin)
         mkdir(prefix.lib)
         mkdir(include_path)
 
-        install('dramsim3main', prefix.bin)
-        install('libdramsim3.so', prefix.lib)
-        install('src/*.h', include_path)
+        install("dramsim3main", prefix.bin)
+        install("libdramsim3.so", prefix.lib)
+        install("src/*.h", include_path)

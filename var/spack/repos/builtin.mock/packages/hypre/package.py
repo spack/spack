@@ -8,11 +8,12 @@ from spack import *
 
 class Hypre(Package):
     """Hypre is included here as an example of a package that depends on
-       both LAPACK and BLAS."""
+    both LAPACK and BLAS."""
+
     homepage = "http://www.openblas.net"
-    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
+    url = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
-    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
+    version("0.2.15", "b1190f3d3471685f17cfd1ec1d252ac9")
 
-    depends_on('lapack')
-    depends_on('blas')
+    depends_on("lapack")
+    depends_on("blas")

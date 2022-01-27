@@ -7,16 +7,18 @@ from spack import *
 
 
 class C3d(CMakePackage):
-    """Image processing and conversion tool based on ITK.
-    """
+    """Image processing and conversion tool based on ITK."""
 
     homepage = "https://github.com/pyushkevich/c3d"
-    git      = "https://github.com/pyushkevich/c3d.git"
-    url      = "https://github.com/pyushkevich/c3d/archive/refs/tags/v1.3.0.tar.gz"
+    git = "https://github.com/pyushkevich/c3d.git"
+    url = "https://github.com/pyushkevich/c3d/archive/refs/tags/v1.3.0.tar.gz"
 
-    version('1.3.0', sha256="bd45482247fa4ac5ab98b3a775b5438390671e3e224a42f73967904b3895050d")
+    version(
+        "1.3.0",
+        sha256="bd45482247fa4ac5ab98b3a775b5438390671e3e224a42f73967904b3895050d",
+    )
 
-    depends_on('itk')
+    depends_on("itk")
 
     def cmake_args(self):
         return ["-DCONVERT3D_USE_ITK_REMOTE_MODULES=OFF"]

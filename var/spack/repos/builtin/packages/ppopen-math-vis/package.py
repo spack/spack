@@ -24,29 +24,32 @@ class PpopenMathVis(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('master', branch='MATH/VIS')
+    version("master", branch="MATH/VIS")
 
-    depends_on('mpi')
+    depends_on("mpi")
 
     def edit(self, spec, prefix):
-        makefile_in = FileFilter('Makefile.in')
-        makefile_in.filter('mpifccpx', spec['mpi'].mpicc)
-        makefile_in.filter('mpiFCCpx', spec['mpi'].mpicxx)
-        makefile_in.filter('mpifrtpx', spec['mpi'].mpifc)
-        makefile_in.filter('-Kfast', '-O3')
-        makefile_in.filter(r'~/ppOpen-HPC/.*', prefix)
-        mkdirp('include')
-        mkdirp('lib')
+        makefile_in = FileFilter("Makefile.in")
+        makefile_in.filter("mpifccpx", spec["mpi"].mpicc)
+        makefile_in.filter("mpiFCCpx", spec["mpi"].mpicxx)
+        makefile_in.filter("mpifrtpx", spec["mpi"].mpifc)
+        makefile_in.filter("-Kfast", "-O3")
+        makefile_in.filter(r"~/ppOpen-HPC/.*", prefix)
+        mkdirp("include")
+        mkdirp("lib")
 
     def install(self, spec, prefix):
-        make('install')
-        mkdir(join_path(prefix, 'examples'))
-        copy_tree('examples', join_path(prefix, 'examples'))
-        mkdir(join_path(prefix, 'doc'))
-        copy_tree('doc', join_path(prefix, 'doc'))
+        make("install")
+        mkdir(join_path(prefix, "examples"))
+        copy_tree("examples", join_path(prefix, "examples"))
+        mkdir(join_path(prefix, "doc"))
+        copy_tree("doc", join_path(prefix, "doc"))
 
     @property
     def libs(self):
         return find_libraries(
-            ['libfppohvisfdm3d', 'libppohvisfdm3d'],
-            root=self.prefix, shared=False, recursive=True)
+            ["libfppohvisfdm3d", "libppohvisfdm3d"],
+            root=self.prefix,
+            shared=False,
+            recursive=True,
+        )

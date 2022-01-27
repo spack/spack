@@ -12,12 +12,15 @@ class PacificaCli(PythonPackage):
     homepage = "https://github.com/pacifica/pacifica-cli/"
     pypi = "pacifica-cli/pacifica-cli-0.5.2.tar.gz"
 
-    version('0.5.2', sha256='fee5fa8ac38ffec2e9199bff23afbbae697c4f7554f13e340104f8b20a62843f')
+    version(
+        "0.5.2",
+        sha256="fee5fa8ac38ffec2e9199bff23afbbae697c4f7554f13e340104f8b20a62843f",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm', type='build')
-    depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-pacifica-uploader@0.3.1:', type=('build', 'run'))
-    depends_on('py-pacifica-downloader@0.4.1:', type=('build', 'run'))
-    depends_on('py-pacifica-namespace', type=('build', 'run'))
-    depends_on('py-pager', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools-scm", type="build")
+    depends_on("py-jsonschema", type=("build", "run"))
+    depends_on("py-pacifica-uploader@0.3.1:", type=("build", "run"))
+    depends_on("py-pacifica-downloader@0.4.1:", type=("build", "run"))
+    depends_on("py-pacifica-namespace", type=("build", "run"))
+    depends_on("py-pager", type=("build", "run"))

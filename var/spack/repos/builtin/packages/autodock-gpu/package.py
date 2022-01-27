@@ -14,28 +14,33 @@ class AutodockGpu(MakefilePackage):
     """
 
     homepage = "https://ccsb.scripps.edu/autodock"
-    git      = "https://github.com/ccsb-scripps/AutoDock-GPU.git"
+    git = "https://github.com/ccsb-scripps/AutoDock-GPU.git"
 
-    maintainers = ['RemiLacroix-IDRIS']
+    maintainers = ["RemiLacroix-IDRIS"]
 
-    version('develop', branch='develop')
+    version("develop", branch="develop")
 
-    variant('device', default='cuda', description='Acceletor runtime',
-            values=('cuda', 'oclgpu'), multi=False)
-    variant('overlap', default=False, description='Overlap CPU and GPU operations')
+    variant(
+        "device",
+        default="cuda",
+        description="Acceletor runtime",
+        values=("cuda", "oclgpu"),
+        multi=False,
+    )
+    variant("overlap", default=False, description="Overlap CPU and GPU operations")
 
-    depends_on('cuda')
+    depends_on("cuda")
 
     @property
     def build_targets(self):
         spec = self.spec
         return [
-            'DEVICE={0}'.format(spec.variants['device'].value.upper()),
-            'GPU_INCLUDE_PATH={0}'.format(spec['cuda'].prefix.include),
-            'GPU_LIBRARY_PATH={0}'.format(spec['cuda'].libs.directories[0]),
-            'OVERLAP={0}'.format('ON' if '+overlap' in spec else 'OFF'),
+            "DEVICE={0}".format(spec.variants["device"].value.upper()),
+            "GPU_INCLUDE_PATH={0}".format(spec["cuda"].prefix.include),
+            "GPU_LIBRARY_PATH={0}".format(spec["cuda"].libs.directories[0]),
+            "OVERLAP={0}".format("ON" if "+overlap" in spec else "OFF"),
         ]
 
     def install(self, spec, prefix):
-        ignore_gitkeep = lambda p: p.endswith('.gitkeep')
-        install_tree('bin', prefix.bin, ignore=ignore_gitkeep)
+        ignore_gitkeep = lambda p: p.endswith(".gitkeep")
+        install_tree("bin", prefix.bin, ignore=ignore_gitkeep)

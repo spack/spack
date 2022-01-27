@@ -15,6 +15,9 @@ class PyDbfread(PythonPackage):
     homepage = "https://dbfread.readthedocs.io/en/latest/"
     pypi = "dbfread/dbfread-2.0.7.tar.gz"
 
-    version('2.0.7', sha256='07c8a9af06ffad3f6f03e8fe91ad7d2733e31a26d2b72c4dd4cfbae07ee3b73d')
+    version(
+        "2.0.7",
+        sha256="07c8a9af06ffad3f6f03e8fe91ad7d2733e31a26d2b72c4dd4cfbae07ee3b73d",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

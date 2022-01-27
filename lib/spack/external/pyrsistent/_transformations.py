@@ -1,5 +1,6 @@
 import re
 import six
+
 try:
     from inspect import Parameter, signature
 except ImportError:
@@ -14,17 +15,17 @@ _EMPTY_SENTINEL = object()
 
 
 def inc(x):
-    """ Add one to the current value """
+    """Add one to the current value"""
     return x + 1
 
 
 def dec(x):
-    """ Subtract one from the current value """
+    """Subtract one from the current value"""
     return x - 1
 
 
 def discard(evolver, key):
-    """ Discard the element and returns a structure without the discarded elements """
+    """Discard the element and returns a structure without the discarded elements"""
     try:
         del evolver[key]
     except KeyError:
@@ -33,20 +34,20 @@ def discard(evolver, key):
 
 # Matchers
 def rex(expr):
-    """ Regular expression matcher to use together with transform functions """
+    """Regular expression matcher to use together with transform functions"""
     r = re.compile(expr)
     return lambda key: isinstance(key, six.string_types) and r.match(key)
 
 
 def ny(_):
-    """ Matcher that matches any value """
+    """Matcher that matches any value"""
     return True
 
 
 # Support functions
 def _chunks(l, n):
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
 
 
 def transform(structure, transformations):
@@ -74,7 +75,7 @@ def _items(structure):
 
 def _get(structure, key, default):
     try:
-        if hasattr(structure, '__getitem__'):
+        if hasattr(structure, "__getitem__"):
             return structure[key]
 
         return getattr(structure, key)
@@ -97,24 +98,24 @@ def _get_keys_and_values(structure, key_spec):
             return [(k, v) for k, v in _items(structure) if key_spec(k, v)]
         else:
             # Other arities are an error.
-            raise ValueError(
-                "callable in transform path must take 1 or 2 arguments"
-            )
+            raise ValueError("callable in transform path must take 1 or 2 arguments")
 
     # Non-callables are used as-is as a key.
     return [(key_spec, _get(structure, key_spec, _EMPTY_SENTINEL))]
 
 
 if signature is None:
+
     def _get_arity(f):
         argspec = getargspec(f)
         return len(argspec.args) - len(argspec.defaults or ())
+
 else:
+
     def _get_arity(f):
         return sum(
             1
-            for p
-            in signature(f).parameters.values()
+            for p in signature(f).parameters.values()
             if p.default is Parameter.empty
             and p.kind in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD)
         )
@@ -122,6 +123,7 @@ else:
 
 def _update_structure(structure, kvs, path, command):
     from pyrsistent._pmap import pmap
+
     e = structure.evolver()
     if not path and command is discard:
         # Do this in reverse to avoid index problems with vectors. See #92.

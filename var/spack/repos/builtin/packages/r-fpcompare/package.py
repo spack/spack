@@ -19,11 +19,14 @@ class RFpcompare(RPackage):
     floating point number comparisons with a set tolerance."""
 
     homepage = "https://github.com/PredictiveEcology/fpCompare"
-    url      = "https://cloud.r-project.org/src/contrib/fpCompare_0.2.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/fpCompare_0.2.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fpCompare"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.2.3', sha256='f89be3568544a3a44e4f01b5050ed03705805308ec1aa4add9a5e1b5b328dbdf')
+    version(
+        "0.2.3",
+        sha256="f89be3568544a3a44e4f01b5050ed03705805308ec1aa4add9a5e1b5b328dbdf",
+    )
 
-    depends_on('r@3.3:', type=('build', 'run'))
+    depends_on("r@3.3:", type=("build", "run"))

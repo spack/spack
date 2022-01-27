@@ -13,7 +13,7 @@ class Lsf(Package):
     homepage = "https://www.ibm.com/products/hpc-workload-management"
     has_code = False
 
-    version('10.1')
+    version("10.1")
 
     # LSF needs to be added as an external package to SPACK. For this, the
     # config file packages.yaml needs to be adjusted:
@@ -27,5 +27,8 @@ class Lsf(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )

@@ -20,20 +20,29 @@ class RNloptr(RPackage):
     compiled using the NLopt source included in the nloptr package."""
 
     homepage = "https://cloud.r-project.org/package=nloptr"
-    url      = "https://cloud.r-project.org/src/contrib/nloptr_1.0.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/nloptr_1.0.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/nloptr"
 
-    version('1.2.2.2', sha256='e80ea9619ac18f4bfe44812198b40b9ae5c0ddf3f9cc91778f9ccc82168d1372')
-    version('1.2.1', sha256='1f86e33ecde6c3b0d2098c47591a9cd0fa41fb973ebf5145859677492730df97')
-    version('1.0.4', sha256='84225b993cb1ef7854edda9629858662cc8592b0d1344baadea4177486ece1eb')
+    version(
+        "1.2.2.2",
+        sha256="e80ea9619ac18f4bfe44812198b40b9ae5c0ddf3f9cc91778f9ccc82168d1372",
+    )
+    version(
+        "1.2.1",
+        sha256="1f86e33ecde6c3b0d2098c47591a9cd0fa41fb973ebf5145859677492730df97",
+    )
+    version(
+        "1.0.4",
+        sha256="84225b993cb1ef7854edda9629858662cc8592b0d1344baadea4177486ece1eb",
+    )
 
-    depends_on('nlopt@2.4.0:')
+    depends_on("nlopt@2.4.0:")
 
     def configure_args(self):
-        include_flags = self.spec['nlopt'].headers.include_flags
-        libs = self.spec['nlopt'].libs.libraries[0]
+        include_flags = self.spec["nlopt"].headers.include_flags
+        libs = self.spec["nlopt"].libs.libraries[0]
         args = [
-            '--with-nlopt-cflags={0}'.format(include_flags),
-            '--with-nlopt-libs={0}'.format(libs)
+            "--with-nlopt-cflags={0}".format(include_flags),
+            "--with-nlopt-libs={0}".format(libs),
         ]
         return args

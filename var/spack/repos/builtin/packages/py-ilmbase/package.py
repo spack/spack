@@ -9,13 +9,18 @@ from spack import *
 class PyIlmbase(AutotoolsPackage):
     """The PyIlmBase libraries provides python bindings for the IlmBase libraries."""
 
-    homepage = "https://github.com/AcademySoftwareFoundation/openexr/tree/v2.3.0/PyIlmBase"
-    url      = "https://github.com/AcademySoftwareFoundation/openexr/releases/download/v2.3.0/pyilmbase-2.3.0.tar.gz"
+    homepage = (
+        "https://github.com/AcademySoftwareFoundation/openexr/tree/v2.3.0/PyIlmBase"
+    )
+    url = "https://github.com/AcademySoftwareFoundation/openexr/releases/download/v2.3.0/pyilmbase-2.3.0.tar.gz"
 
-    version('2.3.0', sha256='9c898bb16e7bc916c82bebdf32c343c0f2878fc3eacbafa49937e78f2079a425')
+    version(
+        "2.3.0",
+        sha256="9c898bb16e7bc916c82bebdf32c343c0f2878fc3eacbafa49937e78f2079a425",
+    )
 
-    depends_on('ilmbase')
-    depends_on('boost+python')
+    depends_on("ilmbase")
+    depends_on("boost+python")
 
     # https://github.com/AcademySoftwareFoundation/openexr/issues/336
     parallel = False
@@ -24,8 +29,9 @@ class PyIlmbase(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--with-boost-python-libname=boost_python{0}'.format(
-                spec['python'].version.up_to(2).joined)
+            "--with-boost-python-libname=boost_python{0}".format(
+                spec["python"].version.up_to(2).joined
+            )
         ]
 
         return args

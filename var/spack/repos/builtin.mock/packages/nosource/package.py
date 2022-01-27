@@ -12,6 +12,6 @@ class Nosource(BundlePackage):
 
     homepage = "http://www.example.com"
 
-    version('1.0')
+    version("1.0")
 
-    depends_on('dependency-install')
+    depends_on("dependency-install")

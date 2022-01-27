@@ -13,11 +13,14 @@ class Xgamma(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xgamma"
     xorg_mirror_path = "app/xgamma-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='66da1d67e84146518b69481c6283c5d8f1027ace9ff7e214d3f81954842e796a')
+    version(
+        "1.0.6",
+        sha256="66da1d67e84146518b69481c6283c5d8f1027ace9ff7e214d3f81954842e796a",
+    )
 
-    depends_on('libx11')
-    depends_on('libxxf86vm')
+    depends_on("libx11")
+    depends_on("libxxf86vm")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

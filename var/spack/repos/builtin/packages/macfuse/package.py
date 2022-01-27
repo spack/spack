@@ -10,14 +10,16 @@ class Macfuse(Package):
     """FUSE for macOS allows you to extend macOS via third party file systems."""
 
     homepage = "https://osxfuse.github.io/"
-    git      = "https://github.com/osxfuse/osxfuse.git"
+    git = "https://github.com/osxfuse/osxfuse.git"
     has_code = False  # only distributed in binary form
 
-    version('4.1.2')
+    version("4.1.2")
 
-    provides('fuse')
-    conflicts('platform=linux', msg='macfuse does not support linux, use libfuse instead')
-    conflicts('platform=cray', msg='macfuse does not support cray, use libfuse instead')
+    provides("fuse")
+    conflicts(
+        "platform=linux", msg="macfuse does not support linux, use libfuse instead"
+    )
+    conflicts("platform=cray", msg="macfuse does not support cray, use libfuse instead")
 
     def install(self, spec, prefix):
         msg = """
@@ -43,4 +45,4 @@ and add an entry like so:
         raise InstallError(msg)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        env.set('FUSE_LIBRARY_PATH', self.prefix.macFUSE)
+        env.set("FUSE_LIBRARY_PATH", self.prefix.macFUSE)

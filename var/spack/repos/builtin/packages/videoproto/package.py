@@ -15,7 +15,10 @@ class Videoproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/videoproto"
     xorg_mirror_path = "proto/videoproto-2.3.3.tar.gz"
 
-    version('2.3.3', sha256='df8dfeb158767f843054248d020e291a2c40f7f5e0ac6d8706966686fee7c5c0')
+    version(
+        "2.3.3",
+        sha256="df8dfeb158767f843054248d020e291a2c40f7f5e0ac6d8706966686fee7c5c0",
+    )
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

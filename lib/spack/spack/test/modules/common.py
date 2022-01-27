@@ -17,42 +17,28 @@ from spack.spec import Spec
 
 
 def test_update_dictionary_extending_list():
-    target = {
-        'foo': {
-            'a': 1,
-            'b': 2,
-            'd': 4
-        },
-        'bar': [1, 2, 4],
-        'baz': 'foobar'
-    }
+    target = {"foo": {"a": 1, "b": 2, "d": 4}, "bar": [1, 2, 4], "baz": "foobar"}
     update = {
-        'foo': {
-            'c': 3,
+        "foo": {
+            "c": 3,
         },
-        'bar': [3],
-        'baz': 'foobaz',
-        'newkey': {
-            'd': 4
-        }
+        "bar": [3],
+        "baz": "foobaz",
+        "newkey": {"d": 4},
     }
     spack.modules.common.update_dictionary_extending_lists(target, update)
     assert len(target) == 4
-    assert len(target['foo']) == 4
-    assert len(target['bar']) == 4
-    assert target['baz'] == 'foobaz'
+    assert len(target["foo"]) == 4
+    assert len(target["bar"]) == 4
+    assert target["baz"] == "foobaz"
 
 
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmpdir):
-    filename = str(tmpdir.join('module'))
+    filename = str(tmpdir.join("module"))
     # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
-                        'filename',
-                        filename)
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
-                        'filename',
-                        filename)
+    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", filename)
+    monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", filename)
 
     yield filename
 
@@ -61,9 +47,9 @@ def mock_module_filename(monkeypatch, tmpdir):
 def mock_module_defaults(monkeypatch):
     def impl(*args):
         # No need to patch both types because neither override base
-        monkeypatch.setattr(spack.modules.common.BaseConfiguration,
-                            'defaults',
-                            [arg for arg in args])
+        monkeypatch.setattr(
+            spack.modules.common.BaseConfiguration, "defaults", [arg for arg in args]
+        )
 
     return impl
 
@@ -71,39 +57,40 @@ def mock_module_defaults(monkeypatch):
 @pytest.fixture()
 def mock_package_perms(monkeypatch):
     perms = stat.S_IRGRP | stat.S_IWGRP
-    monkeypatch.setattr(spack.package_prefs,
-                        'get_package_permissions',
-                        lambda spec: perms)
+    monkeypatch.setattr(
+        spack.package_prefs, "get_package_permissions", lambda spec: perms
+    )
 
     yield perms
 
 
-def test_modules_written_with_proper_permissions(mock_module_filename,
-                                                 mock_package_perms,
-                                                 mock_packages, config):
-    spec = spack.spec.Spec('mpileaks').concretized()
+def test_modules_written_with_proper_permissions(
+    mock_module_filename, mock_package_perms, mock_packages, config
+):
+    spec = spack.spec.Spec("mpileaks").concretized()
 
     # The code tested is common to all module types, but has to be tested from
     # one. TCL picked at random
-    generator = spack.modules.tcl.TclModulefileWriter(spec, 'default')
+    generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
     generator.write()
 
-    assert mock_package_perms & os.stat(
-        mock_module_filename).st_mode == mock_package_perms
+    assert (
+        mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
+    )
 
 
-@pytest.mark.parametrize('module_type', ['tcl', 'lmod'])
+@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
 def test_modules_default_symlink(
-        module_type, mock_packages, mock_module_filename, mock_module_defaults, config
+    module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):
-    spec = spack.spec.Spec('mpileaks@2.3').concretized()
-    mock_module_defaults(spec.format('{name}{@version}'))
+    spec = spack.spec.Spec("mpileaks@2.3").concretized()
+    mock_module_defaults(spec.format("{name}{@version}"))
 
     generator_cls = spack.modules.module_types[module_type]
-    generator = generator_cls(spec, 'default')
+    generator = generator_cls(spec, "default")
     generator.write()
 
-    link_path = os.path.join(os.path.dirname(mock_module_filename), 'default')
+    link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
     assert os.path.islink(link_path)
     assert os.readlink(link_path) == mock_module_filename
 
@@ -126,101 +113,89 @@ class MockSpec(object):
 
 
 def test_upstream_module_index():
-    s1 = MockSpec('spec-1')
-    s2 = MockSpec('spec-2')
-    s3 = MockSpec('spec-3')
-    s4 = MockSpec('spec-4')
+    s1 = MockSpec("spec-1")
+    s2 = MockSpec("spec-2")
+    s3 = MockSpec("spec-3")
+    s4 = MockSpec("spec-4")
 
     tcl_module_index = """\
 module_index:
   {0}:
     path: /path/to/a
     use_name: a
-""".format(s1.dag_hash())
+""".format(
+        s1.dag_hash()
+    )
 
     module_indices = [
-        {
-            'tcl': spack.modules.common._read_module_index(tcl_module_index)
-        },
-        {}
+        {"tcl": spack.modules.common._read_module_index(tcl_module_index)},
+        {},
     ]
 
-    dbs = [
-        'd0',
-        'd1'
-    ]
+    dbs = ["d0", "d1"]
 
     mock_db = MockDb(
-        dbs,
-        {
-            s1.dag_hash(): 'd0',
-            s2.dag_hash(): 'd1',
-            s3.dag_hash(): 'd0'
-        }
+        dbs, {s1.dag_hash(): "d0", s2.dag_hash(): "d1", s3.dag_hash(): "d0"}
     )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    m1 = upstream_index.upstream_module(s1, 'tcl')
-    assert m1.path == '/path/to/a'
+    m1 = upstream_index.upstream_module(s1, "tcl")
+    assert m1.path == "/path/to/a"
 
     # No modules are defined for the DB associated with s2
-    assert not upstream_index.upstream_module(s2, 'tcl')
+    assert not upstream_index.upstream_module(s2, "tcl")
 
     # Modules are defined for the index associated with s1, but none are
     # defined for the requested type
-    assert not upstream_index.upstream_module(s1, 'lmod')
+    assert not upstream_index.upstream_module(s1, "lmod")
 
     # A module is registered with a DB and the associated module index has
     # modules of the specified type defined, but not for the requested spec
-    assert not upstream_index.upstream_module(s3, 'tcl')
+    assert not upstream_index.upstream_module(s3, "tcl")
 
     # The spec isn't recorded as installed in any of the DBs
     with pytest.raises(spack.error.SpackError):
-        upstream_index.upstream_module(s4, 'tcl')
+        upstream_index.upstream_module(s4, "tcl")
 
 
 def test_get_module_upstream():
-    s1 = MockSpec('spec-1')
+    s1 = MockSpec("spec-1")
 
     tcl_module_index = """\
 module_index:
   {0}:
     path: /path/to/a
     use_name: a
-""".format(s1.dag_hash())
+""".format(
+        s1.dag_hash()
+    )
 
     module_indices = [
         {},
-        {
-            'tcl': spack.modules.common._read_module_index(tcl_module_index)
-        }
+        {"tcl": spack.modules.common._read_module_index(tcl_module_index)},
     ]
 
-    dbs = ['d0', 'd1']
+    dbs = ["d0", "d1"]
 
-    mock_db = MockDb(
-        dbs,
-        {s1.dag_hash(): 'd1'}
-    )
+    mock_db = MockDb(dbs, {s1.dag_hash(): "d1"})
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
+    MockPackage = collections.namedtuple("MockPackage", ["installed_upstream"])
     setattr(s1, "package", MockPackage(True))
 
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index
 
-        m1_path = spack.modules.common.get_module('tcl', s1, True)
-        assert m1_path == '/path/to/a'
+        m1_path = spack.modules.common.get_module("tcl", s1, True)
+        assert m1_path == "/path/to/a"
     finally:
         spack.modules.common.upstream_module_index = old_index
 
 
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
-                                            monkeypatch):
+def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package')
+    spec = Spec("trivial-install-test-package")
     spec.concretize()
     assert spec.concrete
 
@@ -228,18 +203,17 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
     pkg = spec.package
 
     def find_nothing(*args):
-        raise spack.repo.UnknownPackageError(
-            'Repo package access is disabled for test')
+        raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
 
     try:
         pkg.do_install()
 
         spec._package = None
-        monkeypatch.setattr(spack.repo, 'get', find_nothing)
+        monkeypatch.setattr(spack.repo, "get", find_nothing)
         with pytest.raises(spack.repo.UnknownPackageError):
             spec.package
 
-        module_path = spack.modules.common.get_module('tcl', spec, True)
+        module_path = spack.modules.common.get_module("tcl", spec, True)
         assert module_path
         pkg.do_uninstall()
     except Exception:

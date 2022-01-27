@@ -9,31 +9,39 @@ from spack import *
 
 class Votca(CMakePackage):
     """VOTCA is a software package which focuses on the analysis of molecular
-       dynamics data, the development of systematic coarse-graining techniques
-       as well as methods used for simulating microscopic charge (and exciton)
-       transport in disordered semiconductors.
+    dynamics data, the development of systematic coarse-graining techniques
+    as well as methods used for simulating microscopic charge (and exciton)
+    transport in disordered semiconductors.
     """
+
     homepage = "https://www.votca.org"
-    url      = "https://github.com/votca/votca/tarball/v2022-rc.1"
-    git      = "https://github.com/votca/xtp.git"
-    maintainers = ['junghans']
+    url = "https://github.com/votca/votca/tarball/v2022-rc.1"
+    git = "https://github.com/votca/xtp.git"
+    maintainers = ["junghans"]
 
-    version('master', branch='master')
-    version('stable', branch='stable')
-    version('2022', sha256='7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83')
+    version("master", branch="master")
+    version("stable", branch="stable")
+    version(
+        "2022",
+        sha256="7991137098ff4511f4ca2c6f1b6c45f53d92d9f84e5c0d0e32fbc31768f73a83",
+    )
 
-    variant('mkl', default=False, description='Build with MKL support')
-    variant('new-gmx', default=False, description='Build against gromacs>2019 - no tabulated kernels')
-    conflicts('votca-tools')
-    conflicts('votca-csg')
-    conflicts('votca-xtp')
+    variant("mkl", default=False, description="Build with MKL support")
+    variant(
+        "new-gmx",
+        default=False,
+        description="Build against gromacs>2019 - no tabulated kernels",
+    )
+    conflicts("votca-tools")
+    conflicts("votca-csg")
+    conflicts("votca-xtp")
 
-    depends_on("cmake@3.13:", type='build')
+    depends_on("cmake@3.13:", type="build")
     depends_on("expat")
     depends_on("fftw-api@3")
     depends_on("eigen@3.3:")
     depends_on("boost")
-    depends_on('mkl', when='+mkl')
+    depends_on("mkl", when="+mkl")
     depends_on("libxc")
     depends_on("hdf5+cxx~mpi")
     depends_on("libint@2.6.0:")
@@ -42,22 +50,22 @@ class Votca(CMakePackage):
     depends_on("py-lxml")
     depends_on("gromacs~mpi@5.1:")
     depends_on("gromacs~mpi@5.1:2019", when="~new-gmx")
-    depends_on('lammps', type='test')
-    depends_on('py-espresso', type='test')
-    depends_on('py-pytest', type='test')
+    depends_on("lammps", type="test")
+    depends_on("py-espresso", type="test")
+    depends_on("py-pytest", type="test")
 
     def cmake_args(self):
         args = [
-            '-DINSTALL_RC_FILES=OFF',
-            '-DBUILD_XTP=ON',
-            '-DBUILD_CSGAPPS=ON',
+            "-DINSTALL_RC_FILES=OFF",
+            "-DBUILD_XTP=ON",
+            "-DBUILD_CSGAPPS=ON",
         ]
 
-        if '~mkl' in self.spec:
-            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_MKL=ON')
+        if "~mkl" in self.spec:
+            args.append("-DCMAKE_DISABLE_FIND_PACKAGE_MKL=ON")
 
         if self.run_tests:
-            args.append('-DENABLE_TESTING=ON')
-            args.append('-DENABLE_REGRESSION_TESTING=ON')
+            args.append("-DENABLE_TESTING=ON")
+            args.append("-DENABLE_REGRESSION_TESTING=ON")
 
         return args

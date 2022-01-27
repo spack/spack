@@ -9,8 +9,7 @@ import spack.monitor
 
 
 def on_install_start(spec):
-    """On start of an install, we want to ping the server if it exists
-    """
+    """On start of an install, we want to ping the server if it exists"""
     if not spack.monitor.cli:
         return
 
@@ -20,58 +19,53 @@ def on_install_start(spec):
 
 
 def on_install_success(spec):
-    """On the success of an install (after everything is complete)
-    """
+    """On the success of an install (after everything is complete)"""
     if not spack.monitor.cli:
         return
 
     tty.debug("Running on_install_success for %s" % spec)
     result = spack.monitor.cli.update_build(spec, status="SUCCESS")
-    tty.verbose(result.get('message'))
+    tty.verbose(result.get("message"))
 
 
 def on_install_failure(spec):
-    """Triggered on failure of an install
-    """
+    """Triggered on failure of an install"""
     if not spack.monitor.cli:
         return
 
     tty.debug("Running on_install_failure for %s" % spec)
     result = spack.monitor.cli.fail_task(spec)
-    tty.verbose(result.get('message'))
+    tty.verbose(result.get("message"))
 
 
 def on_install_cancel(spec):
-    """Triggered on cancel of an install
-    """
+    """Triggered on cancel of an install"""
     if not spack.monitor.cli:
         return
 
     tty.debug("Running on_install_cancel for %s" % spec)
     result = spack.monitor.cli.cancel_task(spec)
-    tty.verbose(result.get('message'))
+    tty.verbose(result.get("message"))
 
 
 def on_phase_success(pkg, phase_name, log_file):
-    """Triggered on a phase success
-    """
+    """Triggered on a phase success"""
     if not spack.monitor.cli:
         return
 
     tty.debug("Running on_phase_success %s, phase %s" % (pkg.name, phase_name))
     result = spack.monitor.cli.send_phase(pkg, phase_name, log_file, "SUCCESS")
-    tty.verbose(result.get('message'))
+    tty.verbose(result.get("message"))
 
 
 def on_phase_error(pkg, phase_name, log_file):
-    """Triggered on a phase error
-    """
+    """Triggered on a phase error"""
     if not spack.monitor.cli:
         return
 
     tty.debug("Running on_phase_error %s, phase %s" % (pkg.name, phase_name))
     result = spack.monitor.cli.send_phase(pkg, phase_name, log_file, "ERROR")
-    tty.verbose(result.get('message'))
+    tty.verbose(result.get("message"))
 
 
 def on_analyzer_save(pkg, result):

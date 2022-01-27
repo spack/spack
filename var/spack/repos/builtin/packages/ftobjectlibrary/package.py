@@ -8,12 +8,12 @@ from spack import *
 
 class Ftobjectlibrary(CMakePackage):
     """FTObjectLibrary provides a collection of reference counted Fortran 2003
-    classes to facilitate writing generic object oriented Fortran programs. """
+    classes to facilitate writing generic object oriented Fortran programs."""
 
     homepage = "https://github.com/trixi-framework/FTObjectLibrary"
-    url      = "https://github.com/trixi-framework/FTObjectLibrary"
-    git      = "https://github.com/trixi-framework/FTObjectLibrary.git"
+    url = "https://github.com/trixi-framework/FTObjectLibrary"
+    git = "https://github.com/trixi-framework/FTObjectLibrary.git"
 
-    maintainers = ['schoonovernumerics']
+    maintainers = ["schoonovernumerics"]
 
-    version('main', branch='main')
+    version("main", branch="main")

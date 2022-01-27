@@ -13,26 +13,39 @@ class Qwt(QMakePackage):
     thermometers, wheels and knobs to control or display values, arrays, or
     ranges of type double.
     """
+
     homepage = "http://qwt.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
+    url = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
-    version('6.1.6', sha256='99460d31c115ee4117b0175d885f47c2c590d784206f09815dc058fbe5ede1f6')
-    version('6.1.4', sha256='1529215329e51fc562e0009505a838f427919a18b362afff441f035b2d9b5bd9')
-    version('6.1.3', sha256='f3ecd34e72a9a2b08422fb6c8e909ca76f4ce5fa77acad7a2883b701f4309733')
-    version('5.2.2', sha256='36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b')
+    version(
+        "6.1.6",
+        sha256="99460d31c115ee4117b0175d885f47c2c590d784206f09815dc058fbe5ede1f6",
+    )
+    version(
+        "6.1.4",
+        sha256="1529215329e51fc562e0009505a838f427919a18b362afff441f035b2d9b5bd9",
+    )
+    version(
+        "6.1.3",
+        sha256="f3ecd34e72a9a2b08422fb6c8e909ca76f4ce5fa77acad7a2883b701f4309733",
+    )
+    version(
+        "5.2.2",
+        sha256="36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b",
+    )
 
-    variant('designer', default=False,
-            description="Build extensions to QT designer")
+    variant("designer", default=False, description="Build extensions to QT designer")
 
-    patch('no-designer.patch', when='~designer')
+    patch("no-designer.patch", when="~designer")
 
-    depends_on('qt@:5.14.2+opengl')
-    depends_on('qt+tools', when='+designer')
+    depends_on("qt@:5.14.2+opengl")
+    depends_on("qt+tools", when="+designer")
     # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
     # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
-    depends_on('qt@:5.3', when='@:6.1.1')
+    depends_on("qt@:5.3", when="@:6.1.1")
 
     def patch(self):
         # Subvert hardcoded prefix
-        filter_file(r'/usr/local/qwt-\$\$(QWT_)?VERSION.*',
-                    self.prefix, 'qwtconfig.pri')
+        filter_file(
+            r"/usr/local/qwt-\$\$(QWT_)?VERSION.*", self.prefix, "qwtconfig.pri"
+        )

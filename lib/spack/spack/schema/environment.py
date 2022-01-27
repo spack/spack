@@ -7,26 +7,29 @@ schemas.
 """
 
 array_of_strings_or_num = {
-    'type': 'array', 'default': [], 'items':
-        {'anyOf': [{'type': 'string'}, {'type': 'number'}]}
+    "type": "array",
+    "default": [],
+    "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
 }
 
 dictionary_of_strings_or_num = {
-    'type': 'object', 'patternProperties':
-        {r'\w[\w-]*': {'anyOf': [{'type': 'string'}, {'type': 'number'}]}}
+    "type": "object",
+    "patternProperties": {
+        r"\w[\w-]*": {"anyOf": [{"type": "string"}, {"type": "number"}]}
+    },
 }
 
 definition = {
-    'type': 'object',
-    'default': {},
-    'additionalProperties': False,
-    'properties': {
-        'set': dictionary_of_strings_or_num,
-        'unset': array_of_strings_or_num,
-        'prepend_path': dictionary_of_strings_or_num,
-        'append_path': dictionary_of_strings_or_num,
-        'remove_path': dictionary_of_strings_or_num
-    }
+    "type": "object",
+    "default": {},
+    "additionalProperties": False,
+    "properties": {
+        "set": dictionary_of_strings_or_num,
+        "unset": array_of_strings_or_num,
+        "prepend_path": dictionary_of_strings_or_num,
+        "append_path": dictionary_of_strings_or_num,
+        "remove_path": dictionary_of_strings_or_num,
+    },
 }
 
 

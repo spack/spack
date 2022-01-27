@@ -19,54 +19,62 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
 
     # Create
-    create_parser = sp.add_parser('create', help=repo_create.__doc__)
+    create_parser = sp.add_parser("create", help=repo_create.__doc__)
+    create_parser.add_argument("directory", help="directory to create the repo in")
     create_parser.add_argument(
-        'directory', help="directory to create the repo in")
-    create_parser.add_argument(
-        'namespace', help="namespace to identify packages in the repository. "
-        "defaults to the directory name", nargs='?')
+        "namespace",
+        help="namespace to identify packages in the repository. "
+        "defaults to the directory name",
+        nargs="?",
+    )
 
     # List
-    list_parser = sp.add_parser('list', help=repo_list.__doc__)
+    list_parser = sp.add_parser("list", help=repo_list.__doc__)
     list_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
         default=spack.config.default_list_scope(),
-        help="configuration scope to read from")
+        help="configuration scope to read from",
+    )
 
     # Add
-    add_parser = sp.add_parser('add', help=repo_add.__doc__)
+    add_parser = sp.add_parser("add", help=repo_add.__doc__)
+    add_parser.add_argument("path", help="path to a Spack package repository directory")
     add_parser.add_argument(
-        'path', help="path to a Spack package repository directory")
-    add_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
-        help="configuration scope to modify")
+        help="configuration scope to modify",
+    )
 
     # Remove
-    remove_parser = sp.add_parser(
-        'remove', help=repo_remove.__doc__, aliases=['rm'])
+    remove_parser = sp.add_parser("remove", help=repo_remove.__doc__, aliases=["rm"])
     remove_parser.add_argument(
-        'namespace_or_path',
-        help="namespace or path of a Spack package repository")
+        "namespace_or_path", help="namespace or path of a Spack package repository"
+    )
     remove_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
-        help="configuration scope to modify")
+        help="configuration scope to modify",
+    )
 
 
 def repo_create(args):
     """Create a new package repository."""
-    full_path, namespace = spack.repo.create_repo(
-        args.directory, args.namespace
-    )
+    full_path, namespace = spack.repo.create_repo(args.directory, args.namespace)
     tty.msg("Created repo with namespace '%s'." % namespace)
-    tty.msg("To register it with spack, run this command:",
-            'spack repo add %s' % full_path)
+    tty.msg(
+        "To register it with spack, run this command:", "spack repo add %s" % full_path
+    )
 
 
 def repo_add(args):
@@ -88,7 +96,7 @@ def repo_add(args):
     repo = spack.repo.Repo(canon_path)
 
     # If that succeeds, finally add it to the configuration.
-    repos = spack.config.get('repos', scope=args.scope)
+    repos = spack.config.get("repos", scope=args.scope)
     if not repos:
         repos = []
 
@@ -96,13 +104,13 @@ def repo_add(args):
         tty.die("Repository is already registered with Spack: %s" % path)
 
     repos.insert(0, canon_path)
-    spack.config.set('repos', repos, args.scope)
+    spack.config.set("repos", repos, args.scope)
     tty.msg("Added repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):
     """Remove a repository from Spack's configuration."""
-    repos = spack.config.get('repos', scope=args.scope)
+    repos = spack.config.get("repos", scope=args.scope)
     namespace_or_path = args.namespace_or_path
 
     # If the argument is a path, remove that repository from config.
@@ -111,7 +119,7 @@ def repo_remove(args):
         repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
             repos.remove(repo_path)
-            spack.config.set('repos', repos, args.scope)
+            spack.config.set("repos", repos, args.scope)
             tty.msg("Removed repository %s" % repo_path)
             return
 
@@ -121,20 +129,21 @@ def repo_remove(args):
             repo = spack.repo.Repo(path)
             if repo.namespace == namespace_or_path:
                 repos.remove(path)
-                spack.config.set('repos', repos, args.scope)
-                tty.msg("Removed repository %s with namespace '%s'."
-                        % (repo.root, repo.namespace))
+                spack.config.set("repos", repos, args.scope)
+                tty.msg(
+                    "Removed repository %s with namespace '%s'."
+                    % (repo.root, repo.namespace)
+                )
                 return
         except spack.repo.RepoError:
             continue
 
-    tty.die("No repository with path or namespace: %s"
-            % namespace_or_path)
+    tty.die("No repository with path or namespace: %s" % namespace_or_path)
 
 
 def repo_list(args):
     """Show registered repositories and their namespaces."""
-    roots = spack.config.get('repos', scope=args.scope)
+    roots = spack.config.get("repos", scope=args.scope)
     repos = []
     for r in roots:
         try:
@@ -156,9 +165,11 @@ def repo_list(args):
 
 
 def repo(parser, args):
-    action = {'create': repo_create,
-              'list': repo_list,
-              'add': repo_add,
-              'remove': repo_remove,
-              'rm': repo_remove}
+    action = {
+        "create": repo_create,
+        "list": repo_list,
+        "add": repo_add,
+        "remove": repo_remove,
+        "rm": repo_remove,
+    }
     action[args.repo_command](args)

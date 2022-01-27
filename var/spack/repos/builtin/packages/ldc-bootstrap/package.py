@@ -22,14 +22,17 @@ class LdcBootstrap(CMakePackage):
     url = "https://github.com/ldc-developers/ldc/releases/download/v0.17.4/ldc-0.17.4-src.tar.gz"
 
     # This is the last version that does not require a D compiler to bootstrap
-    version('0.17.4', sha256='48428afde380415640f3db4e38529345f3c8485b1913717995547f907534c1c3')
+    version(
+        "0.17.4",
+        sha256="48428afde380415640f3db4e38529345f3c8485b1913717995547f907534c1c3",
+    )
 
-    depends_on('llvm@3.7:')
-    depends_on('zlib')
-    depends_on('libconfig')
-    depends_on('curl')
-    depends_on('libedit')
-    depends_on('binutils')
+    depends_on("llvm@3.7:")
+    depends_on("zlib")
+    depends_on("libconfig")
+    depends_on("curl")
+    depends_on("libedit")
+    depends_on("binutils")
 
     def setup_dependent_build_environment(self, env, dep_spec):
 
@@ -38,9 +41,7 @@ class LdcBootstrap(CMakePackage):
         # the variables that get unset)
 
         # We need libphobos in LD_LIBRARY_PATH
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def cmake_args(self):
-        return [
-            '-DBUILD_SHARED_LIBS:BOOL=ON'
-        ]
+        return ["-DBUILD_SHARED_LIBS:BOOL=ON"]

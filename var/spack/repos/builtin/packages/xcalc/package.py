@@ -13,12 +13,15 @@ class Xcalc(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xcalc"
     xorg_mirror_path = "app/xcalc-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='7fd5cd9a35160925c41cbadfb1ea23599fa20fd26cd873dab20a650b24efe8d1')
+    version(
+        "1.0.6",
+        sha256="7fd5cd9a35160925c41cbadfb1ea23599fa20fd26cd873dab20a650b24efe8d1",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxt')
-    depends_on('libx11')
+    depends_on("libxaw")
+    depends_on("libxt")
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

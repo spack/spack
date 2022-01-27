@@ -12,7 +12,9 @@ class PyPycmd(PythonPackage):
 
     pypi = "pycmd/pycmd-1.2.tar.gz"
 
-    version('1.2', sha256='adc1976c0106919e9338db20102b91009256dcfec924a66928d7297026f72477')
+    version(
+        "1.2", sha256="adc1976c0106919e9338db20102b91009256dcfec924a66928d7297026f72477"
+    )
 
-    depends_on('py-py@1.4.9:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("py-py@1.4.9:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

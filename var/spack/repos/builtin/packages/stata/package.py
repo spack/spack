@@ -11,29 +11,29 @@ from spack import *
 
 class Stata(Package):
     """STATA is a general-purpose statistical software package developed
-       by StataCorp."""
+    by StataCorp."""
 
-# Known limitations of this installer:
-# * This really only installs the command line version of the program. To
-#   install GUI support there are extra packages needed that I can't easily
-#   test right now (should be installable via yum as a temp workaround):
-#   libgtk-x11-2.0.so libgdk-x11-2.0.so libatk-1.0.so libgdk_pixbuf-2.0.so
-#   Those libraries appear to be provided by: pango gdk-pixbuf2 gtk2
-#
-# * There are two popular environment variables that can be set, but vary from
-#   place to place, so future enhancement maybe to support STATATMP and TMPDIR.
-#
-# * I haven't tested any installer version but 15.
+    # Known limitations of this installer:
+    # * This really only installs the command line version of the program. To
+    #   install GUI support there are extra packages needed that I can't easily
+    #   test right now (should be installable via yum as a temp workaround):
+    #   libgtk-x11-2.0.so libgdk-x11-2.0.so libatk-1.0.so libgdk_pixbuf-2.0.so
+    #   Those libraries appear to be provided by: pango gdk-pixbuf2 gtk2
+    #
+    # * There are two popular environment variables that can be set, but vary from
+    #   place to place, so future enhancement maybe to support STATATMP and TMPDIR.
+    #
+    # * I haven't tested any installer version but 15.
 
     homepage = "https://www.stata.com/"
     manual_download = True
     # url      = "stata"
 
-    version('16', 'a13a6a92558eeb3c6cb3013c458a6777e54c21af43599df6b0a924f5f5c2d5d2')
-    version('15', '2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016')
+    version("16", "a13a6a92558eeb3c6cb3013c458a6777e54c21af43599df6b0a924f5f5c2d5d2")
+    version("15", "2486f4c7db1e7b453004c7bd3f8da40ba1e30be150613065c7b82b1915259016")
 
-    depends_on('libpng@1.2.57', when='@15', type='run')
-    depends_on('libpng@1.6.0:1.6', when='@16', type='run')
+    depends_on("libpng@1.2.57", when="@15", type="run")
+    depends_on("libpng@1.6.0:1.6", when="@16", type="run")
 
     # STATA is downloaded from user/pass protected ftp as Stata15Linux64.tar.gz
     def url_for_version(self, version):
@@ -41,8 +41,8 @@ class Stata(Package):
 
     # STATA is simple and needs really just the PATH set.
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix)
-        env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
+        env.prepend_path("PATH", self.prefix)
+        env.prepend_path("LD_LIBRARY_PATH", self.spec["libpng"].prefix.lib)
 
     # Extracting the file provides the following:
     # ./unix/
@@ -81,13 +81,13 @@ class Stata(Package):
     # $ stinit
 
     def install(self, spec, prefix):
-        bash = which('bash')
-        tar = which('tar')
+        bash = which("bash")
+        tar = which("tar")
 
-        res_dir = 'unix/linux64/'
+        res_dir = "unix/linux64/"
 
-        if self.spec.satisfies('@16:'):
-            res_dir = 'unix/linux64p/'
+        if self.spec.satisfies("@16:"):
+            res_dir = "unix/linux64p/"
 
         # Step 1.
         x = datetime.now()
@@ -95,13 +95,13 @@ class Stata(Package):
             fh.write(x.strftime("%a %b %d %H:%M:%S %Z %Y"))
 
         # Step 2.
-        instlist = ['ado.taz', 'base.taz', 'bins.taz', 'docs.taz']
+        instlist = ["ado.taz", "base.taz", "bins.taz", "docs.taz"]
         for instfile in instlist:
-            tar('-x', '-z', '-f', res_dir + instfile)
+            tar("-x", "-z", "-f", res_dir + instfile)
 
         # Step 3.
-        install(res_dir + 'setrwxp', 'setrwxp')
-        install(res_dir + 'inst2', 'inst2')
+        install(res_dir + "setrwxp", "setrwxp")
+        install(res_dir + "inst2", "inst2")
 
         # Step 4. Since the install script calls out specific permissions and
         # could change in the future (or old versions) I thought it best to
@@ -109,4 +109,4 @@ class Stata(Package):
         bash("./setrwxp", "now")
 
         # Install should now be good to copy into the installation directory.
-        install_tree('.', prefix)
+        install_tree(".", prefix)

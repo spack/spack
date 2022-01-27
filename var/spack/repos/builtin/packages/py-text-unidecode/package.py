@@ -13,6 +13,8 @@ class PyTextUnidecode(PythonPackage):
     homepage = "https://github.com/kmike/text-unidecode/"
     pypi = "text-unidecode/text-unidecode-1.3.tar.gz"
 
-    version('1.3', sha256='bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93')
+    version(
+        "1.3", sha256="bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

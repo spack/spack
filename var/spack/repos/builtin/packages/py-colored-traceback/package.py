@@ -11,9 +11,12 @@ class PyColoredTraceback(PythonPackage):
     """Automatically color Python's uncaught exception tracebacks."""
 
     homepage = "https://github.com/staticshock/colored-traceback.py"
-    pypi     = "colored-traceback/colored-traceback-0.3.0.tar.gz"
+    pypi = "colored-traceback/colored-traceback-0.3.0.tar.gz"
 
-    version('0.3.0', sha256='6da7ce2b1da869f6bb54c927b415b95727c4bb6d9a84c4615ea77d9872911b05')
+    version(
+        "0.3.0",
+        sha256="6da7ce2b1da869f6bb54c927b415b95727c4bb6d9a84c4615ea77d9872911b05",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pygments', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pygments", type=("build", "run"))

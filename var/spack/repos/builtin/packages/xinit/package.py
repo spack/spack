@@ -14,10 +14,13 @@ class Xinit(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xinit"
     xorg_mirror_path = "app/xinit-1.3.4.tar.gz"
 
-    version('1.3.4', sha256='754c284875defa588951c1d3d2b20897d3b84918d0a97cb5a4724b00c0da0746')
+    version(
+        "1.3.4",
+        sha256="754c284875defa588951c1d3d2b20897d3b84918d0a97cb5a4724b00c0da0746",
+    )
 
-    depends_on('libx11')
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

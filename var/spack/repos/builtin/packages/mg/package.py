@@ -14,19 +14,21 @@ class Mg(Package):
     types than emacs or vi."""
 
     homepage = "https://github.com/ibara/mg"
-    url      = "https://github.com/ibara/mg/archive/mg-6.6.tar.gz"
+    url = "https://github.com/ibara/mg/archive/mg-6.6.tar.gz"
 
-    version('6.6', sha256='e8440353da1a52ec7d40fb88d4f145da49c320b5ba31daf895b0b0db5ccd0632')
+    version(
+        "6.6", sha256="e8440353da1a52ec7d40fb88d4f145da49c320b5ba31daf895b0b0db5ccd0632"
+    )
 
-    depends_on('ncurses')
+    depends_on("ncurses")
 
-    phases = ['configure', 'build', 'install']
+    phases = ["configure", "build", "install"]
 
     def configure(self, spec, prefix):
-        configure = Executable('./configure')
+        configure = Executable("./configure")
         args = [
-            '--mandir={0}'.format(self.prefix.man),
-            '--prefix={0}'.format(self.prefix),
+            "--mandir={0}".format(self.prefix.man),
+            "--prefix={0}".format(self.prefix),
         ]
         configure(*args)
 
@@ -34,4 +36,4 @@ class Mg(Package):
         make()
 
     def install(self, spec, prefix):
-        make('install')
+        make("install")

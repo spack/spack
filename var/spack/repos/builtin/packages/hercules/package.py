@@ -9,14 +9,17 @@ class Hercules(MakefilePackage):
     repository analysis engine written in Go."""
 
     homepage = "https://github.com/src-d/hercules"
-    url      = "https://github.com/src-d/hercules/archive/v10.7.2.tar.gz"
+    url = "https://github.com/src-d/hercules/archive/v10.7.2.tar.gz"
 
-    version('10.7.2', sha256='4654dcfb1eee5af1610fd05677c6734c2ca1161535fcc14d3933d6debda4bc34')
+    version(
+        "10.7.2",
+        sha256="4654dcfb1eee5af1610fd05677c6734c2ca1161535fcc14d3933d6debda4bc34",
+    )
 
-    depends_on('protobuf', type='build')
-    depends_on('go@1.11:', type='build')
-    depends_on('py-labours', type='run')
+    depends_on("protobuf", type="build")
+    depends_on("go@1.11:", type="build")
+    depends_on("py-labours", type="run")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('hercules', prefix.bin)
+        install("hercules", prefix.bin)

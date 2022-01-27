@@ -10,19 +10,21 @@ class Flcl(CMakePackage):
     interoperability using Kokkos."""
 
     homepage = "https://github.com/kokkos/kokkos-fortran-interop"
-    git      = "https://github.com/kokkos/kokkos-fortran-interop.git"
-    url      = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.3/0.3.tar.gz"
+    git = "https://github.com/kokkos/kokkos-fortran-interop.git"
+    url = "https://github.com/kokkos/kokkos-fortran-interop/releases/download/0.3/0.3.tar.gz"
 
-    maintainers = ['womeld', 'agaspar']
+    maintainers = ["womeld", "agaspar"]
 
-    version('develop', branch='develop')
-    version('0.3', sha256='0586b981b976588d8059e5bf1bf71fb5a7153ea950c7e2b562a3d812fefee56e')
+    version("develop", branch="develop")
+    version(
+        "0.3", sha256="0586b981b976588d8059e5bf1bf71fb5a7153ea950c7e2b562a3d812fefee56e"
+    )
 
-    depends_on('kokkos')
-    depends_on('cmake@3.17:', type='build')
+    depends_on("kokkos")
+    depends_on("cmake@3.17:", type="build")
 
     def cmake_args(self):
         args = []
-        args.append(self.define('BUILD_TESTING', self.run_tests))
+        args.append(self.define("BUILD_TESTING", self.run_tests))
 
         return args

@@ -8,9 +8,9 @@ from spack import *
 
 class NetlibLapack(Package):
     homepage = "http://www.netlib.org/lapack/"
-    url      = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
+    url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
-    version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
+    version("3.5.0", "b1d3e3e425b2e44a06760ff173104bdf")
 
-    provides('lapack')
-    depends_on('blas')
+    provides("lapack")
+    depends_on("blas")

@@ -11,10 +11,12 @@ class PyWebkitServer(PythonPackage):
 
     homepage = "https://github.com/niklasb/webkit-server"
     pypi = "webkit-server/webkit-server-1.0.tar.gz"
-    git      = "https://github.com/niklasb/webkit-server.git"
+    git = "https://github.com/niklasb/webkit-server.git"
 
-    version('develop', branch='master')
-    version('1.0', sha256='836dac18c823bf7737461a2d938c66c7b3601c858897e6c92c7ba0e33574a2bc')
+    version("develop", branch="master")
+    version(
+        "1.0", sha256="836dac18c823bf7737461a2d938c66c7b3601c858897e6c92c7ba0e33574a2bc"
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

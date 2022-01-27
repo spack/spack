@@ -14,14 +14,17 @@ class Byacc(AutotoolsPackage):
     features of AT&T Yacc will probably be rejected."""
 
     homepage = "https://invisible-island.net/byacc/byacc.html"
-    url      = "ftp://ftp.invisible-island.net/pub/byacc/byacc-20210808.tgz"
+    url = "ftp://ftp.invisible-island.net/pub/byacc/byacc-20210808.tgz"
 
     # Check FTP directory ftp://ftp.invisible-island.net/byacc/ to find the latest version
-    version('20210808', sha256='f158529be9d0594263c7f11a87616a49ea23e55ac63691252a2304fbbc7d3a83')
+    version(
+        "20210808",
+        sha256="f158529be9d0594263c7f11a87616a49ea23e55ac63691252a2304fbbc7d3a83",
+    )
 
-    provides('yacc')
+    provides("yacc")
 
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    depends_on("m4", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")

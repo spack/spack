@@ -19,8 +19,8 @@ else:
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers',
-    'PackageMixinsMeta',
+    "filter_compiler_wrappers",
+    "PackageMixinsMeta",
 ]
 
 
@@ -67,16 +67,12 @@ class PackageMixinsMeta(type):
             attr_dict.update(PackageMixinsMeta._methods_to_be_added)
             PackageMixinsMeta._methods_to_be_added.clear()
 
-        attr_fmt = '_InstallPhase_{0}'
+        attr_fmt = "_InstallPhase_{0}"
 
         # Copy the phases that needs it to the most derived classes
         # in order not to interfere with other packages in the hierarchy
-        phases_to_be_copied = list(
-            PackageMixinsMeta._add_method_before.keys()
-        )
-        phases_to_be_copied += list(
-            PackageMixinsMeta._add_method_after.keys()
-        )
+        phases_to_be_copied = list(PackageMixinsMeta._add_method_before.keys())
+        phases_to_be_copied += list(PackageMixinsMeta._add_method_after.keys())
 
         for phase in phases_to_be_copied:
 
@@ -158,24 +154,22 @@ def filter_compiler_wrappers(*files, **kwargs):
                 ``find`` (see its documentation for more information on the
                 behavior)
     """
-    after = kwargs.get('after', 'install')
-    relative_root = kwargs.get('relative_root', None)
+    after = kwargs.get("after", "install")
+    relative_root = kwargs.get("relative_root", None)
 
     filter_kwargs = {
-        'ignore_absent': kwargs.get('ignore_absent', True),
-        'backup': kwargs.get('backup', False),
-        'string': True
+        "ignore_absent": kwargs.get("ignore_absent", True),
+        "backup": kwargs.get("backup", False),
+        "string": True,
     }
 
-    find_kwargs = {
-        'recursive': kwargs.get('recursive', False)
-    }
+    find_kwargs = {"recursive": kwargs.get("recursive", False)}
 
     def _filter_compiler_wrappers_impl(self):
         # Compute the absolute path of the search root
-        root = os.path.join(
-            self.prefix, relative_root
-        ) if relative_root else self.prefix
+        root = (
+            os.path.join(self.prefix, relative_root) if relative_root else self.prefix
+        )
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
@@ -185,10 +179,10 @@ def filter_compiler_wrappers(*files, **kwargs):
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
         replacements = [
-            ('CC', self.compiler.cc),
-            ('CXX', self.compiler.cxx),
-            ('F77', self.compiler.f77),
-            ('FC', self.compiler.fc)
+            ("CC", self.compiler.cc),
+            ("CXX", self.compiler.cxx),
+            ("F77", self.compiler.f77),
+            ("FC", self.compiler.fc),
         ]
         for env_var, compiler_path in replacements:
             if env_var in os.environ:
@@ -199,14 +193,15 @@ def filter_compiler_wrappers(*files, **kwargs):
                     x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
-                 **filter_kwargs)
+        x.filter(
+            "{0}--enable-new-dtags".format(self.compiler.linker_arg),
+            "",
+            **filter_kwargs
+        )
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
-        if self.compiler.name == 'nag':
-            x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)
+        if self.compiler.name == "nag":
+            x.filter("-Wl,--enable-new-dtags", "", **filter_kwargs)
 
-    PackageMixinsMeta.register_method_after(
-        _filter_compiler_wrappers_impl, after
-    )
+    PackageMixinsMeta.register_method_after(_filter_compiler_wrappers_impl, after)

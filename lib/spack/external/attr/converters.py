@@ -81,18 +81,14 @@ def default_if_none(default=NOTHING, factory=None):
         raise TypeError("Must pass either `default` or `factory`.")
 
     if default is not NOTHING and factory is not None:
-        raise TypeError(
-            "Must pass either `default` or `factory` but not both."
-        )
+        raise TypeError("Must pass either `default` or `factory` but not both.")
 
     if factory is not None:
         default = Factory(factory)
 
     if isinstance(default, Factory):
         if default.takes_self:
-            raise ValueError(
-                "`takes_self` is not supported by default_if_none."
-            )
+            raise ValueError("`takes_self` is not supported by default_if_none.")
 
         def default_if_none_converter(val):
             if val is not None:

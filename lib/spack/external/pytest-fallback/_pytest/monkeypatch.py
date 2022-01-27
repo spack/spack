@@ -37,12 +37,12 @@ def monkeypatch():
 
 def resolve(name):
     # simplified from zope.dottedname
-    parts = name.split('.')
+    parts = name.split(".")
 
     used = parts.pop(0)
     found = __import__(used)
     for part in parts:
-        used += '.' + part
+        used += "." + part
         try:
             found = getattr(found, part)
         except AttributeError:
@@ -59,9 +59,7 @@ def resolve(name):
             if expected == used:
                 raise
             else:
-                raise ImportError(
-                    'import error in %s: %s' % (used, ex)
-                )
+                raise ImportError("import error in %s: %s" % (used, ex))
         found = annotated_getattr(found, part, used)
     return found
 
@@ -71,18 +69,15 @@ def annotated_getattr(obj, name, ann):
         obj = getattr(obj, name)
     except AttributeError:
         raise AttributeError(
-            '%r object at %s has no attribute %r' % (
-                type(obj).__name__, ann, name
-            )
+            "%r object at %s has no attribute %r" % (type(obj).__name__, ann, name)
         )
     return obj
 
 
 def derive_importpath(import_path, raising):
     if not isinstance(import_path, _basestring) or "." not in import_path:
-        raise TypeError("must be absolute import path string, not %r" %
-                        (import_path,))
-    module, attr = import_path.rsplit('.', 1)
+        raise TypeError("must be absolute import path string, not %r" % (import_path,))
+    module, attr = import_path.rsplit(".", 1)
     target = resolve(module)
     if raising:
         annotated_getattr(target, attr, ann=module)
@@ -98,8 +93,7 @@ notset = Notset()
 
 
 class MonkeyPatch:
-    """ Object returned by the ``monkeypatch`` fixture keeping a record of setattr/item/env/syspath changes.
-    """
+    """Object returned by the ``monkeypatch`` fixture keeping a record of setattr/item/env/syspath changes."""
 
     def __init__(self):
         self._setattr = []
@@ -108,7 +102,7 @@ class MonkeyPatch:
         self._savesyspath = None
 
     def setattr(self, target, name, value=notset, raising=True):
-        """ Set attribute value on target, memorizing the old value.
+        """Set attribute value on target, memorizing the old value.
         By default raise AttributeError if the attribute did not exist.
 
         For convenience you can specify a string as ``target`` which
@@ -126,9 +120,11 @@ class MonkeyPatch:
 
         if value is notset:
             if not isinstance(target, _basestring):
-                raise TypeError("use setattr(target, name, value) or "
-                                "setattr(target, value) with target being a dotted "
-                                "import string")
+                raise TypeError(
+                    "use setattr(target, name, value) or "
+                    "setattr(target, value) with target being a dotted "
+                    "import string"
+                )
             value = name
             name, target = derive_importpath(target, raising)
 
@@ -143,7 +139,7 @@ class MonkeyPatch:
         setattr(target, name, value)
 
     def delattr(self, target, name=notset, raising=True):
-        """ Delete attribute ``name`` from ``target``, by default raise
+        """Delete attribute ``name`` from ``target``, by default raise
         AttributeError it the attribute did not previously exist.
 
         If no ``name`` is specified and ``target`` is a string
@@ -156,9 +152,11 @@ class MonkeyPatch:
         __tracebackhide__ = True
         if name is notset:
             if not isinstance(target, _basestring):
-                raise TypeError("use delattr(target, name) or "
-                                "delattr(target) with target being a dotted "
-                                "import string")
+                raise TypeError(
+                    "use delattr(target, name) or "
+                    "delattr(target) with target being a dotted "
+                    "import string"
+                )
             name, target = derive_importpath(target, raising)
 
         if not hasattr(target, name):
@@ -169,12 +167,12 @@ class MonkeyPatch:
             delattr(target, name)
 
     def setitem(self, dic, name, value):
-        """ Set dictionary entry ``name`` to value. """
+        """Set dictionary entry ``name`` to value."""
         self._setitem.append((dic, name, dic.get(name, notset)))
         dic[name] = value
 
     def delitem(self, dic, name, raising=True):
-        """ Delete ``name`` from dict. Raise KeyError if it doesn't exist.
+        """Delete ``name`` from dict. Raise KeyError if it doesn't exist.
 
         If ``raising`` is set to False, no exception will be raised if the
         key is missing.
@@ -187,7 +185,7 @@ class MonkeyPatch:
             del dic[name]
 
     def setenv(self, name, value, prepend=None):
-        """ Set environment variable ``name`` to ``value``.  If ``prepend``
+        """Set environment variable ``name`` to ``value``.  If ``prepend``
         is a character, read the current environment variable value
         and prepend the ``value`` adjoined with the ``prepend`` character."""
         value = str(value)
@@ -196,7 +194,7 @@ class MonkeyPatch:
         self.setitem(os.environ, name, value)
 
     def delenv(self, name, raising=True):
-        """ Delete ``name`` from the environment. Raise KeyError it does not
+        """Delete ``name`` from the environment. Raise KeyError it does not
         exist.
 
         If ``raising`` is set to False, no exception will be raised if the
@@ -205,13 +203,13 @@ class MonkeyPatch:
         self.delitem(os.environ, name, raising=raising)
 
     def syspath_prepend(self, path):
-        """ Prepend ``path`` to ``sys.path`` list of import locations. """
+        """Prepend ``path`` to ``sys.path`` list of import locations."""
         if self._savesyspath is None:
             self._savesyspath = sys.path[:]
         sys.path.insert(0, str(path))
 
     def chdir(self, path):
-        """ Change the current working directory to the specified path.
+        """Change the current working directory to the specified path.
         Path can be a string or a py.path.local object.
         """
         if self._cwd is None:
@@ -222,7 +220,7 @@ class MonkeyPatch:
             os.chdir(path)
 
     def undo(self):
-        """ Undo previous changes.  This call consumes the
+        """Undo previous changes.  This call consumes the
         undo stack. Calling it a second time has no effect unless
         you do more monkeypatching after the undo call.
 

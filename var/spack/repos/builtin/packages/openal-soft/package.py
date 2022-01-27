@@ -13,17 +13,18 @@ class OpenalSoft(CMakePackage):
     features handled by the API."""
 
     homepage = "https://openal-soft.org"
-    url      = "https://openal-soft.org/openal-releases/openal-soft-1.21.1.tar.bz2"
+    url = "https://openal-soft.org/openal-releases/openal-soft-1.21.1.tar.bz2"
 
-    version('1.21.1', sha256='c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8')
+    version(
+        "1.21.1",
+        sha256="c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8",
+    )
 
-    variant('alsa', default=False, description="ALSA support")
+    variant("alsa", default=False, description="ALSA support")
 
-    depends_on('alsa-lib', when="+alsa")
+    depends_on("alsa-lib", when="+alsa")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('ALSOFT_REQUIRE_ALSA', 'alsa')
-        ]
+        args = [self.define_from_variant("ALSOFT_REQUIRE_ALSA", "alsa")]
 
         return args

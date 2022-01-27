@@ -14,22 +14,27 @@ class Mysqlpp(AutotoolsPackage):
     own code, providing native C++ interfaces for these common tasks."""
 
     homepage = "https://tangentsoft.com/mysqlpp/home"
-    url      = "https://tangentsoft.com/mysqlpp/releases/mysql++-3.2.5.tar.gz"
+    url = "https://tangentsoft.com/mysqlpp/releases/mysql++-3.2.5.tar.gz"
 
-    version('3.2.5', sha256='839cfbf71d50a04057970b8c31f4609901f5d3936eaa86dab3ede4905c4db7a8')
+    version(
+        "3.2.5",
+        sha256="839cfbf71d50a04057970b8c31f4609901f5d3936eaa86dab3ede4905c4db7a8",
+    )
 
-    depends_on('mysql-client')
+    depends_on("mysql-client")
 
     def configure_args(self):
-        if '^mariadb-c-client' in self.spec:
+        if "^mariadb-c-client" in self.spec:
             args = [
-                '--with-mysql-include={0}'.format(
-                    self.spec['mysql-client'].prefix.include.mariadb),
-                '--with-mysql-lib={0}'.format(
-                    self.spec['mysql-client'].prefix.lib.mariadb),
+                "--with-mysql-include={0}".format(
+                    self.spec["mysql-client"].prefix.include.mariadb
+                ),
+                "--with-mysql-lib={0}".format(
+                    self.spec["mysql-client"].prefix.lib.mariadb
+                ),
             ]
         else:
             args = [
-                '--with-mysql={0}'.format(self.spec['mysql-client'].prefix),
+                "--with-mysql={0}".format(self.spec["mysql-client"].prefix),
             ]
         return args

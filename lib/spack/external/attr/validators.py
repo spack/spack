@@ -46,9 +46,7 @@ class _InstanceOfValidator(object):
             )
 
     def __repr__(self):
-        return "<instance_of validator for type {type!r}>".format(
-            type=self.type
-        )
+        return "<instance_of validator for type {type!r}>".format(type=self.type)
 
 
 def instance_of(type):
@@ -89,9 +87,7 @@ class _MatchesReValidator(object):
             )
 
     def __repr__(self):
-        return "<matches_re validator for pattern {regex!r}>".format(
-            regex=self.regex
-        )
+        return "<matches_re validator for pattern {regex!r}>".format(regex=self.regex)
 
 
 def matches_re(regex, flags=0, func=None):
@@ -115,13 +111,7 @@ def matches_re(regex, flags=0, func=None):
     if func not in valid_funcs:
         raise ValueError(
             "'func' must be one of %s."
-            % (
-                ", ".join(
-                    sorted(
-                        e and e.__name__ or "None" for e in set(valid_funcs)
-                    )
-                ),
-            )
+            % (", ".join(sorted(e and e.__name__ or "None" for e in set(valid_funcs))),)
         )
 
     pattern = re.compile(regex, flags)
@@ -233,9 +223,7 @@ class _InValidator(object):
             )
 
     def __repr__(self):
-        return "<in_ validator with options {options!r}>".format(
-            options=self.options
-        )
+        return "<in_ validator with options {options!r}>".format(options=self.options)
 
 
 def in_(options):
@@ -264,13 +252,10 @@ class _IsCallableValidator(object):
         """
         if not callable(value):
             message = (
-                "'{name}' must be callable "
-                "(got {value!r} that is a {actual!r})."
+                "'{name}' must be callable " "(got {value!r} that is a {actual!r})."
             )
             raise NotCallableError(
-                msg=message.format(
-                    name=attr.name, value=value, actual=value.__class__
-                ),
+                msg=message.format(name=attr.name, value=value, actual=value.__class__),
                 value=value,
             )
 
@@ -296,9 +281,7 @@ def is_callable():
 @attrs(repr=False, slots=True, hash=True)
 class _DeepIterable(object):
     member_validator = attrib(validator=is_callable())
-    iterable_validator = attrib(
-        default=None, validator=optional(is_callable())
-    )
+    iterable_validator = attrib(default=None, validator=optional(is_callable()))
 
     def __call__(self, inst, attr, value):
         """

@@ -11,14 +11,16 @@ class Bamaddrg(MakefilePackage):
     streams BAM output on stdout"""
 
     homepage = "https://github.com/ekg/bamaddrg"
-    url      = "https://github.com/ilbiondo/bamaddrg/archive/v0.1.tar.gz"
-    git      = "https://github.com/ilbiondo/bamaddrg.git"
+    url = "https://github.com/ilbiondo/bamaddrg/archive/v0.1.tar.gz"
+    git = "https://github.com/ilbiondo/bamaddrg.git"
 
-    version('0.1', sha256='725a689d8326d72f865837b231005a9211d6c70a25b7a3a754df4f90d2996355')
+    version(
+        "0.1", sha256="725a689d8326d72f865837b231005a9211d6c70a25b7a3a754df4f90d2996355"
+    )
 
     depends_on("bamtools", type="build")
 
     def setup_build_environment(self, env):
 
-        env.set('BAMTOOLS_ROOT', self.spec['bamtools'].prefix)
-        env.set('PREFIX', self.prefix)
+        env.set("BAMTOOLS_ROOT", self.spec["bamtools"].prefix)
+        env.set("PREFIX", self.prefix)

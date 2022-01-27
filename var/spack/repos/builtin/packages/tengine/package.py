@@ -10,13 +10,22 @@ class Tengine(AutotoolsPackage):
     """A distribution of Nginx with some advanced features."""
 
     homepage = "https://tengine.taobao.org/"
-    url      = "https://github.com/alibaba/tengine/archive/2.3.2.tar.gz"
+    url = "https://github.com/alibaba/tengine/archive/2.3.2.tar.gz"
 
-    version('2.3.2', sha256='a65998a35739a59f8a16ec4c6090a59e569ba5a1a3f68fecad952057c1a18fea')
-    version('2.3.1', sha256='3dd93f813b80ed7581a81079a2037df6e4777b7e760fd6635b4009d344a5ab1c')
-    version('2.3.0', sha256='17cf1380d4faefb70707970437b3f8b66f6ff4530b5e6e61970b35f59b2e2624')
+    version(
+        "2.3.2",
+        sha256="a65998a35739a59f8a16ec4c6090a59e569ba5a1a3f68fecad952057c1a18fea",
+    )
+    version(
+        "2.3.1",
+        sha256="3dd93f813b80ed7581a81079a2037df6e4777b7e760fd6635b4009d344a5ab1c",
+    )
+    version(
+        "2.3.0",
+        sha256="17cf1380d4faefb70707970437b3f8b66f6ff4530b5e6e61970b35f59b2e2624",
+    )
 
-    depends_on('pcre')
+    depends_on("pcre")
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path("PATH", self.prefix.sbin)

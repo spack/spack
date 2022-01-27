@@ -8,14 +8,15 @@ from spack import *
 
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
-    homepage = "http://www.openblas.net"
-    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
-    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-    version('0.2.14', 'b1190f3d3471685f17cfd1ec1d252ac9')
-    version('0.2.13', 'b1190f3d3471685f17cfd1ec1d252ac9')
+    homepage = "http://www.openblas.net"
+    url = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
+
+    version("0.2.15", "b1190f3d3471685f17cfd1ec1d252ac9")
+    version("0.2.14", "b1190f3d3471685f17cfd1ec1d252ac9")
+    version("0.2.13", "b1190f3d3471685f17cfd1ec1d252ac9")
 
     # See #20019 for this conflict
-    conflicts('%gcc@:4.4', when='@0.2.14:')
+    conflicts("%gcc@:4.4", when="@0.2.14:")
 
-    provides('blas')
+    provides("blas")

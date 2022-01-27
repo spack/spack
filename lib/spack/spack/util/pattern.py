@@ -15,8 +15,7 @@ class Delegate(object):
         self.container = container
 
     def __call__(self, *args, **kwargs):
-        return [getattr(item, self.name)(*args, **kwargs)
-                for item in self.container]
+        return [getattr(item, self.name)(*args, **kwargs) for item in self.container]
 
 
 class Composite(list):
@@ -24,7 +23,7 @@ class Composite(list):
         self.fns_to_delegate = fns_to_delegate
 
     def __getattr__(self, name):
-        if name != 'fns_to_delegate' and name in self.fns_to_delegate:
+        if name != "fns_to_delegate" and name in self.fns_to_delegate:
             return Delegate(name, self)
         else:
             return self.__getattribute__(name)
@@ -61,13 +60,14 @@ def composite(interface=None, method_list=None, container=list):
     if interface is None and method_list is None:
         raise TypeError(
             "Either 'interface' or 'method_list' must be defined on a call "
-            "to composite")
+            "to composite"
+        )
 
     def cls_decorator(cls):
         # Retrieve the base class of the composite. Inspect its methods and
         # decide which ones will be overridden
         def no_special_no_private(x):
-            return callable(x) and not x.__name__.startswith('_')
+            return callable(x) and not x.__name__.startswith("_")
 
         # Patch the behavior of each of the methods in the previous list.
         # This is done associating an instance of the descriptor below to
@@ -88,6 +88,7 @@ def composite(interface=None, method_list=None, container=list):
                 def getter(*args, **kwargs):
                     for item in instance:
                         getattr(item, self.name)(*args, **kwargs)
+
                 # If we are using this descriptor to wrap a method from an
                 # interface, then we must conditionally use the
                 # `functools.wraps` decorator to set the appropriate fields
@@ -100,25 +101,28 @@ def composite(interface=None, method_list=None, container=list):
         # Construct a dictionary with the methods explicitly passed as name
         if method_list is not None:
             dictionary_for_type_call.update(
-                (name, IterateOver(name)) for name in method_list)
+                (name, IterateOver(name)) for name in method_list
+            )
 
         # Construct a dictionary with the methods inspected from the interface
         if interface is not None:
             dictionary_for_type_call.update(
                 (name, IterateOver(name, method))
                 for name, method in inspect.getmembers(
-                    interface, predicate=no_special_no_private))
+                    interface, predicate=no_special_no_private
+                )
+            )
 
         # Get the methods that are defined in the scope of the composite
         # class and override any previous definition
         dictionary_for_type_call.update(
-            (name, method) for name, method in inspect.getmembers(
-                cls, predicate=inspect.ismethod))
+            (name, method)
+            for name, method in inspect.getmembers(cls, predicate=inspect.ismethod)
+        )
 
         # Generate the new class on the fly and return it
         # FIXME : inherit from interface if we start to use ABC classes?
-        wrapper_class = type(cls.__name__, (cls, container),
-                             dictionary_for_type_call)
+        wrapper_class = type(cls.__name__, (cls, container), dictionary_for_type_call)
         return wrapper_class
 
     return cls_decorator
@@ -133,5 +137,6 @@ class Bunch(object):
 
 class Args(Bunch):
     """Subclass of Bunch to write argparse args more naturally."""
+
     def __init__(self, *flags, **kwargs):
         super(Args, self).__init__(flags=tuple(flags), kwargs=kwargs)

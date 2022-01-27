@@ -15,35 +15,41 @@ class Libszip(AutotoolsPackage):
     """
 
     homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
+    url = (
+        "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
+    )
     list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
     list_depth = 3
 
-    provides('szip')
+    provides("szip")
 
-    version('2.1.1', sha256='21ee958b4f2d4be2c9cabfa5e1a94877043609ce86fde5f286f105f7ff84d412')
-    version('2.1',   sha256='a816d95d5662e8279625abdbea7d0e62157d7d1f028020b1075500bf483ed5ef')
+    version(
+        "2.1.1",
+        sha256="21ee958b4f2d4be2c9cabfa5e1a94877043609ce86fde5f286f105f7ff84d412",
+    )
+    version(
+        "2.1", sha256="a816d95d5662e8279625abdbea7d0e62157d7d1f028020b1075500bf483ed5ef"
+    )
 
     @property
     def libs(self):
-        shared = 'static' not in self.spec.last_query.extra_parameters
+        shared = "static" not in self.spec.last_query.extra_parameters
 
-        libs = find_libraries(
-            'libsz', root=self.prefix, shared=shared, recursive=True
-        )
+        libs = find_libraries("libsz", root=self.prefix, shared=shared, recursive=True)
 
         if not libs:
-            msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+            msg = "Unable to recursively locate {0} {1} libraries in {2}"
             raise spack.error.NoLibrariesError(
-                msg.format('shared' if shared else 'static',
-                           self.spec.name,
-                           self.spec.prefix))
+                msg.format(
+                    "shared" if shared else "static", self.spec.name, self.spec.prefix
+                )
+            )
         return libs
 
     def configure_args(self):
         return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
+            "--enable-production",
+            "--enable-shared",
+            "--enable-static",
+            "--enable-encoding",
         ]

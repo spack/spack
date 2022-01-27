@@ -14,17 +14,23 @@ class RPkgload(RPackage):
     while developing a package."""
 
     homepage = "https://cloud.r-project.org/package=pkgload"
-    url      = "https://cloud.r-project.org/src/contrib/pkgload_1.0.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/pkgload_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pkgload/"
 
-    version('1.1.0', sha256='189d460dbba2b35fa15dd59ce832df252dfa654a5acee0c9a8471b4d70477b0d')
-    version('1.0.2', sha256='3186564e690fb05eabe76e1ac0bfd4312562c3ac8794b29f8850399515dcf27c')
+    version(
+        "1.1.0",
+        sha256="189d460dbba2b35fa15dd59ce832df252dfa654a5acee0c9a8471b4d70477b0d",
+    )
+    version(
+        "1.0.2",
+        sha256="3186564e690fb05eabe76e1ac0bfd4312562c3ac8794b29f8850399515dcf27c",
+    )
 
-    depends_on('r-cli', when='@1.1.0:', type=('build', 'run'))
-    depends_on('r-crayon', when='@1.1.0:', type=('build', 'run'))
-    depends_on('r-desc', type=('build', 'run'))
-    depends_on('r-pkgbuild', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-rstudioapi', type=('build', 'run'))
-    depends_on('r-withr', type=('build', 'run'))
+    depends_on("r-cli", when="@1.1.0:", type=("build", "run"))
+    depends_on("r-crayon", when="@1.1.0:", type=("build", "run"))
+    depends_on("r-desc", type=("build", "run"))
+    depends_on("r-pkgbuild", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))
+    depends_on("r-rprojroot", type=("build", "run"))
+    depends_on("r-rstudioapi", type=("build", "run"))
+    depends_on("r-withr", type=("build", "run"))

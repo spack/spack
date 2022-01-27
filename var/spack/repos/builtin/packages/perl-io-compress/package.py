@@ -11,9 +11,12 @@ class PerlIoCompress(PerlPackage):
     or lzop file/buffer."""
 
     homepage = "https://metacpan.org/pod/IO::Uncompress::AnyUncompress"
-    url      = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.081.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/IO-Compress-2.081.tar.gz"
 
-    version('2.081', sha256='5211c775544dc8c511af08edfb1c0c22734daa2789149c2a88d68e17b43546d9')
+    version(
+        "2.081",
+        sha256="5211c775544dc8c511af08edfb1c0c22734daa2789149c2a88d68e17b43546d9",
+    )
 
-    depends_on('perl-compress-raw-zlib', type='run')
-    depends_on('perl-compress-raw-bzip2', type='run')
+    depends_on("perl-compress-raw-zlib", type="run")
+    depends_on("perl-compress-raw-bzip2", type="run")

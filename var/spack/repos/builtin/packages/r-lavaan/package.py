@@ -13,12 +13,15 @@ class RLavaan(RPackage):
     analysis, structural equation modeling and latent growth curve models."""
 
     homepage = "https://lavaan.ugent.be/"
-    cran     = "lavaan"
+    cran = "lavaan"
 
-    version('0.6-8', sha256='40e204909100b7338619ae23cd87e0a4058e581c286da2327f36dbb3834b84a2')
+    version(
+        "0.6-8",
+        sha256="40e204909100b7338619ae23cd87e0a4058e581c286da2327f36dbb3834b84a2",
+    )
 
-    depends_on('r@3.4:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-mnormt', type=('build', 'run'))
-    depends_on('r-pbivnorm', type=('build', 'run'))
-    depends_on('r-numderiv', type=('build', 'run'))
+    depends_on("r@3.4:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-mnormt", type=("build", "run"))
+    depends_on("r-pbivnorm", type=("build", "run"))
+    depends_on("r-numderiv", type=("build", "run"))

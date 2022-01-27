@@ -12,32 +12,30 @@ from spack.spec import Spec
 
 def test_global_activation(install_mockery, mock_fetch):
     """This test ensures that views which are maintained inside of an extendee
-       package's prefix are maintained as expected and are compatible with
-       global activations prior to #7152.
+    package's prefix are maintained as expected and are compatible with
+    global activations prior to #7152.
     """
-    spec = Spec('extension1').concretized()
+    spec = Spec("extension1").concretized()
     pkg = spec.package
     pkg.do_install()
     pkg.do_activate()
 
-    extendee_spec = spec['extendee']
-    extendee_pkg = spec['extendee'].package
+    extendee_spec = spec["extendee"]
+    extendee_pkg = spec["extendee"].package
     view = extendee_pkg.view()
     assert pkg.is_activated(view)
 
-    expected_path = os.path.join(
-        extendee_spec.prefix, '.spack', 'extensions.yaml')
-    assert (view.extensions_layout.extension_file_path(extendee_spec) ==
-            expected_path)
+    expected_path = os.path.join(extendee_spec.prefix, ".spack", "extensions.yaml")
+    assert view.extensions_layout.extension_file_path(extendee_spec) == expected_path
 
 
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
-    view_dir = str(tmpdir.join('view'))
+    view_dir = str(tmpdir.join("view"))
     layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)
-    e2 = Spec('extension2').concretized()
+    e2 = Spec("extension2").concretized()
     e2.package.do_install()
     view.add_specs(e2)
 
-    e1 = e2['extension1']
+    e1 = e2["extension1"]
     view.remove_specs(e1, e2)

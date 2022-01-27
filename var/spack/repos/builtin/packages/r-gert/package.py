@@ -18,14 +18,17 @@ class RGert(RPackage):
     versions."""
 
     homepage = "https://docs.ropensci.org/gert/"
-    url      = "https://cloud.r-project.org/src/contrib/gert_1.0.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/gert_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gert"
 
-    version('1.0.2', sha256='36687ab98291d50a35752fcb2e734a926a6b845345c18d36e3f48823f68304d3')
+    version(
+        "1.0.2",
+        sha256="36687ab98291d50a35752fcb2e734a926a6b845345c18d36e3f48823f68304d3",
+    )
 
-    depends_on('r-askpass', type=('build', 'run'))
-    depends_on('r-credentials@1.2.1:', type=('build', 'run'))
-    depends_on('r-openssl@1.4.1:', type=('build', 'run'))
-    depends_on('r-rstudioapi@0.11:', type=('build', 'run'))
-    depends_on('r-zip@2.1.0:', type=('build', 'run'))
-    depends_on('libgit2@0.26:')
+    depends_on("r-askpass", type=("build", "run"))
+    depends_on("r-credentials@1.2.1:", type=("build", "run"))
+    depends_on("r-openssl@1.4.1:", type=("build", "run"))
+    depends_on("r-rstudioapi@0.11:", type=("build", "run"))
+    depends_on("r-zip@2.1.0:", type=("build", "run"))
+    depends_on("libgit2@0.26:")

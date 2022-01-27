@@ -17,14 +17,17 @@ class PyUproot3(PythonPackage):
     file as Numpy arrays."""
 
     homepage = "https://github.com/scikit-hep/uproot3"
-    pypi     = "uproot3/uproot3-3.14.4.tar.gz"
+    pypi = "uproot3/uproot3-3.14.4.tar.gz"
 
-    version('3.14.4', sha256='4396746ba5ef9071bb0a9da53294e4613a7f4548218940f86496e79d682d20eb')
+    version(
+        "3.14.4",
+        sha256="4396746ba5ef9071bb0a9da53294e4613a7f4548218940f86496e79d682d20eb",
+    )
 
-    depends_on('python@2.7:2.9,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pytest-runner', type='build')
-    depends_on('py-numpy@1.13.1:', type=('build', 'run'))
-    depends_on('py-awkward0', type=('build', 'run'))
-    depends_on('py-uproot3-methods', type=('build', 'run'))
-    depends_on('py-cachetools', type=('build', 'run'))
+    depends_on("python@2.7:2.9,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pytest-runner", type="build")
+    depends_on("py-numpy@1.13.1:", type=("build", "run"))
+    depends_on("py-awkward0", type=("build", "run"))
+    depends_on("py-uproot3-methods", type=("build", "run"))
+    depends_on("py-cachetools", type=("build", "run"))

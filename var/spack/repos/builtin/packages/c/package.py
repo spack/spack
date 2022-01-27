@@ -8,7 +8,8 @@ import os
 
 class C(Package):
     """Virtual package for C compilers."""
-    homepage = 'http://open-std.org/JTC1/SC22/WG14/www/standards'
+
+    homepage = "http://open-std.org/JTC1/SC22/WG14/www/standards"
     virtual = True
 
     def test(self):
@@ -16,12 +17,12 @@ class C(Package):
 
         for test in os.listdir(test_source):
             filepath = test_source.join(test)
-            exe_name = '%s.exe' % test
+            exe_name = "%s.exe" % test
 
-            cc_exe = os.environ['CC']
-            cc_opts = ['-o', exe_name, filepath]
+            cc_exe = os.environ["CC"]
+            cc_opts = ["-o", exe_name, filepath]
             compiled = self.run_test(cc_exe, options=cc_opts, installed=True)
 
             if compiled:
-                expected = ['Hello world', 'YES!']
+                expected = ["Hello world", "YES!"]
                 self.run_test(exe_name, expected=expected)

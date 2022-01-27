@@ -14,9 +14,12 @@ class Hama(Package):
     """
 
     homepage = "https://www-eu.apache.org"
-    url      = "https://www-eu.apache.org/dist/hama/hama-0.7.1/hama-dist-0.7.1.tar.gz"
+    url = "https://www-eu.apache.org/dist/hama/hama-0.7.1/hama-dist-0.7.1.tar.gz"
 
-    version('0.7.1', sha256='c7466c2a70a949609a501e868f6a288b7142725c407e24649ea6f7121632bc89')
+    version(
+        "0.7.1",
+        sha256="c7466c2a70a949609a501e868f6a288b7142725c407e24649ea6f7121632bc89",
+    )
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

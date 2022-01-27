@@ -19,12 +19,14 @@ class CommonsLang3(Package):
     equals."""
 
     homepage = "https://commons.apache.org/proper/commons-lang/"
-    url      = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.7-bin.tar.gz"
+    url = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.7-bin.tar.gz"
 
-    version('3.7', sha256='94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2')
+    version(
+        "3.7", sha256="94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2"
+    )
 
-    extends('jdk')
-    depends_on('java@7:', type='run')
+    extends("jdk")
+    depends_on("java@7:", type="run")
 
     def install(self, spec, prefix):
-        install('commons-lang3-{0}.jar'.format(self.version), prefix)
+        install("commons-lang3-{0}.jar".format(self.version), prefix)

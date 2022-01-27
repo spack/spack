@@ -8,25 +8,32 @@ from spack import *
 
 class AtomDft(MakefilePackage):
     """ATOM is a program for DFT calculations in atoms and pseudopotential
-       generation."""
+    generation."""
 
     homepage = "https://departments.icmab.es/leem/siesta/Pseudopotentials/"
-    url      = "https://departments.icmab.es/leem/siesta/Pseudopotentials/Code/atom-4.2.6.tgz"
+    url = (
+        "https://departments.icmab.es/leem/siesta/Pseudopotentials/Code/atom-4.2.6.tgz"
+    )
 
-    version('4.2.6', sha256='489f0d883af35525647a8b8f691e7845c92fe6b5a25b13e1ed368edfd0391ed2')
+    version(
+        "4.2.6",
+        sha256="489f0d883af35525647a8b8f691e7845c92fe6b5a25b13e1ed368edfd0391ed2",
+    )
 
-    depends_on('libgridxc')
-    depends_on('xmlf90')
+    depends_on("libgridxc")
+    depends_on("xmlf90")
 
     def edit(self, spec, prefix):
-        copy('arch.make.sample', 'arch.make')
+        copy("arch.make.sample", "arch.make")
 
     @property
     def build_targets(self):
-        return ['XMLF90_ROOT=%s' % self.spec['xmlf90'].prefix,
-                'GRIDXC_ROOT=%s' % self.spec['libgridxc'].prefix,
-                'FC=fc']
+        return [
+            "XMLF90_ROOT=%s" % self.spec["xmlf90"].prefix,
+            "GRIDXC_ROOT=%s" % self.spec["libgridxc"].prefix,
+            "FC=fc",
+        ]
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('atm', prefix.bin)
+        install("atm", prefix.bin)

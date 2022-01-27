@@ -18,51 +18,52 @@ class Examinimd(MakefilePackage):
     derived class and drop it into the code without touching much of the
     rest of the application."""
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    tags = ["proxy-app", "ecp-proxy-app"]
 
     homepage = "https://github.com/ECP-copa/ExaMiniMD"
-    url      = "https://github.com/ECP-copa/ExaMiniMD/archive/1.0.zip"
-    git      = "https://github.com/ECP-copa/ExaMiniMD.git"
+    url = "https://github.com/ECP-copa/ExaMiniMD/archive/1.0.zip"
+    git = "https://github.com/ECP-copa/ExaMiniMD.git"
 
-    version('develop', branch='master')
-    version('1.0', sha256='d5f884ecc3a5f9723cc57a4c188da926b392605650606c1c8c34f2d1953f2534')
+    version("develop", branch="master")
+    version(
+        "1.0", sha256="d5f884ecc3a5f9723cc57a4c188da926b392605650606c1c8c34f2d1953f2534"
+    )
 
-    variant('mpi', default=True, description='Build with MPI support')
-    variant('openmp', default=False, description='Build with OpenMP support')
-    variant('pthreads', default=False, description='Build with POSIX Threads support')
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("pthreads", default=False, description="Build with POSIX Threads support")
     # TODO: Set up cuda variant when test machine available
 
-    conflicts('+openmp', when='+pthreads')
+    conflicts("+openmp", when="+pthreads")
 
-    depends_on('kokkos-legacy')
-    depends_on('mpi', when='+mpi')
+    depends_on("kokkos-legacy")
+    depends_on("mpi", when="+mpi")
 
     @property
     def build_targets(self):
         targets = []
         # Append Kokkos
-        targets.append('KOKKOS_PATH={0}'.format(
-            self.spec['kokkos-legacy'].prefix))
+        targets.append("KOKKOS_PATH={0}".format(self.spec["kokkos-legacy"].prefix))
         # Set kokkos device
-        if 'openmp' in self.spec:
-            targets.append('KOKKOS_DEVICES=OpenMP')
-        elif 'pthreads' in self.spec:
-            targets.append('KOKKOS_DEVICES=Pthread')
+        if "openmp" in self.spec:
+            targets.append("KOKKOS_DEVICES=OpenMP")
+        elif "pthreads" in self.spec:
+            targets.append("KOKKOS_DEVICES=Pthread")
         else:
-            targets.append('KOKKOS_DEVICES=Serial')
+            targets.append("KOKKOS_DEVICES=Serial")
         # Set MPI as needed
-        if '+mpi' in self.spec:
-            targets.append('MPI=1')
-            targets.append('CXX = {0}'.format(self.spec['mpi'].mpicxx))
+        if "+mpi" in self.spec:
+            targets.append("MPI=1")
+            targets.append("CXX = {0}".format(self.spec["mpi"].mpicxx))
         else:
-            targets.append('MPI=0')
-            targets.append('CXX = {0}'.format(spack_cxx))
+            targets.append("MPI=0")
+            targets.append("CXX = {0}".format(spack_cxx))
         return targets
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('src/ExaMiniMD', prefix.bin)
-        install_tree('input', prefix.input)
+        install("src/ExaMiniMD", prefix.bin)
+        install_tree("input", prefix.input)
         mkdirp(prefix.docs)
-        install('README.md', prefix.docs)
-        install('LICENSE', prefix.docs)
+        install("README.md", prefix.docs)
+        install("LICENSE", prefix.docs)

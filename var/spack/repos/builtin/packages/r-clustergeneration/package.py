@@ -19,12 +19,18 @@ class RClustergeneration(RPackage):
     noisy variables."""
 
     homepage = "https://cloud.r-project.org/package=clusterGeneration"
-    url      = "https://cloud.r-project.org/src/contrib/clusterGeneration_1.3.4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/clusterGeneration_1.3.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/clusterGeneration/"
 
-    version('1.3.7', sha256='534f29d8f7ed11e6e9a496f15845b588ec7133f3da5e6def8140b88500e52d5c')
-    version('1.3.4', sha256='7c591ad95a8a9d7fb0e4d5d80dfd78f7d6a63cf7d11eb53dd3c98fdfb5b868aa')
+    version(
+        "1.3.7",
+        sha256="534f29d8f7ed11e6e9a496f15845b588ec7133f3da5e6def8140b88500e52d5c",
+    )
+    version(
+        "1.3.4",
+        sha256="7c591ad95a8a9d7fb0e4d5d80dfd78f7d6a63cf7d11eb53dd3c98fdfb5b868aa",
+    )
 
-    depends_on('r@2.9.1:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@1.3.7:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
+    depends_on("r@2.9.1:", type=("build", "run"))
+    depends_on("r@3.5.0:", when="@1.3.7:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))

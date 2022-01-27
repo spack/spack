@@ -25,29 +25,44 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '--keep-stage', action='store_true', default=False,
-        help="don't clean up staging area when command completes")
+        "--keep-stage",
+        action="store_true",
+        default=False,
+        help="don't clean up staging area when command completes",
+    )
     sp = subparser.add_mutually_exclusive_group()
     sp.add_argument(
-        '-b', '--batch', action='store_true', default=False,
-        help="don't ask which versions to checksum")
+        "-b",
+        "--batch",
+        action="store_true",
+        default=False,
+        help="don't ask which versions to checksum",
+    )
     sp.add_argument(
-        '-l', '--latest', action='store_true', default=False,
-        help="checksum the latest available version only")
+        "-l",
+        "--latest",
+        action="store_true",
+        default=False,
+        help="checksum the latest available version only",
+    )
     sp.add_argument(
-        '-p', '--preferred', action='store_true', default=False,
-        help="checksum the preferred version only")
-    arguments.add_common_arguments(subparser, ['package'])
+        "-p",
+        "--preferred",
+        action="store_true",
+        default=False,
+        help="checksum the preferred version only",
+    )
+    arguments.add_common_arguments(subparser, ["package"])
     subparser.add_argument(
-        'versions', nargs=argparse.REMAINDER,
-        help='versions to generate checksums for')
+        "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
+    )
 
 
 def checksum(parser, args):
     # Did the user pass 'package@version' string?
-    if len(args.versions) == 0 and '@' in args.package:
-        args.versions = [args.package.split('@')[1]]
-        args.package = args.package.split('@')[0]
+    if len(args.versions) == 0 and "@" in args.package:
+        args.versions = [args.package.split("@")[1]]
+        args.package = args.package.split("@")[0]
 
     # Make sure the user provided a package and not a URL
     if not valid_fully_qualified_module_name(args.package):
@@ -62,8 +77,10 @@ def checksum(parser, args):
         for version in args.versions:
             version = ver(version)
             if not isinstance(version, Version):
-                tty.die("Cannot generate checksums for version lists or "
-                        "version ranges. Use unambiguous versions.")
+                tty.die(
+                    "Cannot generate checksums for version lists or "
+                    "version ranges. Use unambiguous versions."
+                )
             url_dict[version] = pkg.url_for_version(version)
     elif args.preferred:
         version = preferred_version(pkg)
@@ -85,9 +102,13 @@ def checksum(parser, args):
             pass
 
     version_lines = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, keep_stage=args.keep_stage,
+        url_dict,
+        pkg.name,
+        keep_stage=args.keep_stage,
         batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),
-        latest=args.latest, fetch_options=pkg.fetch_options)
+        latest=args.latest,
+        fetch_options=pkg.fetch_options,
+    )
 
     print()
     print(version_lines)

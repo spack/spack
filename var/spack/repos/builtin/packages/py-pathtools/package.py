@@ -10,10 +10,13 @@ class PyPathtools(PythonPackage):
     """Path utilities for Python"""
 
     homepage = "https://github.com/gorakhargosh/pathtools"
-    pypi     = "pathtools/pathtools-0.1.2.tar.gz"
+    pypi = "pathtools/pathtools-0.1.2.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.1.2', sha256='7c35c5421a39bb82e58018febd90e3b6e5db34c5443aaaf742b3f33d4655f1c0')
+    version(
+        "0.1.2",
+        sha256="7c35c5421a39bb82e58018febd90e3b6e5db34c5443aaaf742b3f33d4655f1c0",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -10,11 +10,14 @@ class PerlGdgraph(PerlPackage):
     """Graph Plotting Module for Perl 5"""
 
     homepage = "https://metacpan.org/pod/GD::Graph"
-    url      = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.4308.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.4308.tar.gz"
 
-    version('1.4308', sha256='75b3c7e280431404ed096c6e120d552cc39052a8610787149515e94b9ba237cb')
+    version(
+        "1.4308",
+        sha256="75b3c7e280431404ed096c6e120d552cc39052a8610787149515e94b9ba237cb",
+    )
 
-    depends_on('perl-capture-tiny', type=('build', 'run'))
-    depends_on('perl-test-exception', type=('build', 'run'))
-    depends_on('perl-gdtextutil', type=('build', 'run'))
-    depends_on('perl-gd', type=('build', 'run'))
+    depends_on("perl-capture-tiny", type=("build", "run"))
+    depends_on("perl-test-exception", type=("build", "run"))
+    depends_on("perl-gdtextutil", type=("build", "run"))
+    depends_on("perl-gd", type=("build", "run"))

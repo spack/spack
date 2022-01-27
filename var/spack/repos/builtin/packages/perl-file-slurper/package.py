@@ -10,6 +10,9 @@ class PerlFileSlurper(PerlPackage):
     """A simple, sane and efficient module to slurp a file"""
 
     homepage = "https://metacpan.org/pod/File::Slurper"
-    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/File-Slurper-0.011.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/File-Slurper-0.011.tar.gz"
 
-    version('0.011', sha256='f6494844b9759b3d1dd8fc4ffa790f8e6e493c4eb58e88831a51e085f2e76010')
+    version(
+        "0.011",
+        sha256="f6494844b9759b3d1dd8fc4ffa790f8e6e493c4eb58e88831a51e085f2e76010",
+    )

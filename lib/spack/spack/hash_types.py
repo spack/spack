@@ -31,32 +31,34 @@ class SpecHashDescriptor(object):
     @property
     def attr(self):
         """Private attribute stored on spec"""
-        return '_' + self.name
+        return "_" + self.name
 
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
-dag_hash = SpecHashDescriptor(
-    deptype=('link', 'run'), package_hash=False, name='hash')
+dag_hash = SpecHashDescriptor(deptype=("link", "run"), package_hash=False, name="hash")
 
 
 #: Hash descriptor that includes build dependencies.
 build_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')
+    deptype=("build", "link", "run"), package_hash=False, name="build_hash"
+)
 
 
 #: Hash descriptor used only to transfer a DAG, as is, across processes
 process_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run', 'test'),
-    package_hash=False,
-    name='process_hash'
+    deptype=("build", "link", "run", "test"), package_hash=False, name="process_hash"
 )
 
 #: Full hash used in build pipelines to determine when to rebuild packages.
 full_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
+    deptype=("build", "link", "run"), package_hash=True, name="full_hash"
+)
 
 
 #: Package hash used as part of full hash
 package_hash = SpecHashDescriptor(
-    deptype=(), package_hash=True, name='package_hash',
-    override=lambda s: s.package.content_hash())
+    deptype=(),
+    package_hash=True,
+    name="package_hash",
+    override=lambda s: s.package.content_hash(),
+)

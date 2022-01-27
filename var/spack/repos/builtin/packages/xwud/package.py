@@ -13,10 +13,13 @@ class Xwud(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xwud"
     xorg_mirror_path = "app/xwud-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='b7c124ccd87f529daedb7ef01c670ce6049fe141fd9ba7f444361de34510cd6c')
+    version(
+        "1.0.4",
+        sha256="b7c124ccd87f529daedb7ef01c670ce6049fe141fd9ba7f444361de34510cd6c",
+    )
 
-    depends_on('libx11')
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

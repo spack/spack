@@ -13,22 +13,25 @@ class Dropwatch(AutotoolsPackage):
     diagnose where packets are getting dropped."""
 
     homepage = "https://github.com/nhorman/dropwatch"
-    url      = "https://github.com/nhorman/dropwatch/archive/v1.5.3.tar.gz"
+    url = "https://github.com/nhorman/dropwatch/archive/v1.5.3.tar.gz"
 
-    version('1.5.3', sha256='b748b66a816c1f94531446c0451da5461a4a31b0949244bb867d741c6ac0148b')
+    version(
+        "1.5.3",
+        sha256="b748b66a816c1f94531446c0451da5461a4a31b0949244bb867d741c6ac0148b",
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('libnl')
-    depends_on('libpcap')
-    depends_on('binutils')
-    depends_on('readline')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("libnl")
+    depends_on("libpcap")
+    depends_on("binutils")
+    depends_on("readline")
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('./autogen.sh')
+        bash = which("bash")
+        bash("./autogen.sh")
 
     def check(self):
         """`make check` starts a daemon which does not terminate, blocking the builds"""

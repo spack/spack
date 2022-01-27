@@ -11,8 +11,11 @@ class PyWstool(PythonPackage):
     homepage = "https://wiki.ros.org/wstool"
     pypi = "wstool/wstool-0.1.17.tar.gz"
 
-    version('0.1.17', sha256='c79b4f110ef17004c24972d742d2c5f606b0f6b424295e7ed029a48e857de237')
+    version(
+        "0.1.17",
+        sha256="c79b4f110ef17004c24972d742d2c5f606b0f6b424295e7ed029a48e857de237",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-vcstools@0.1.38:', type=('build', 'run'))
-    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-vcstools@0.1.38:", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))

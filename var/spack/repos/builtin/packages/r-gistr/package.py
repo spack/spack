@@ -22,20 +22,32 @@ class RGistr(RPackage):
     'Gists' website:  <https://gist.github.com/>."""
 
     homepage = "https://github.com/ropensci/gistr"
-    url      = "https://cloud.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gistr"
 
-    version('0.9.0', sha256='170ae025151ee688e7d31b9e49112086a8ddf4fef10155e9ee289ad7f28c8929')
-    version('0.4.2', sha256='43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e')
-    version('0.4.0', sha256='51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0')
-    version('0.3.6', sha256='ab22523b79510ec03be336e1d4600ec8a3a65afe57c5843621a4cf8f966b52e5')
+    version(
+        "0.9.0",
+        sha256="170ae025151ee688e7d31b9e49112086a8ddf4fef10155e9ee289ad7f28c8929",
+    )
+    version(
+        "0.4.2",
+        sha256="43c00c7f565732125f45f6c067724771ba1b337d6dd3a6e301639fe16e11032e",
+    )
+    version(
+        "0.4.0",
+        sha256="51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0",
+    )
+    version(
+        "0.3.6",
+        sha256="ab22523b79510ec03be336e1d4600ec8a3a65afe57c5843621a4cf8f966b52e5",
+    )
 
-    depends_on('r+X', type=('build', 'run'))
-    depends_on('r-jsonlite@1.4:', type=('build', 'run'))
-    depends_on('r-crul', when='@0.9.0:', type=('build', 'run'))
-    depends_on('r-httr@1.2.0:', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-rmarkdown', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r-jsonlite@1.4:", type=("build", "run"))
+    depends_on("r-crul", when="@0.9.0:", type=("build", "run"))
+    depends_on("r-httr@1.2.0:", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-assertthat", type=("build", "run"))
+    depends_on("r-knitr", type=("build", "run"))
+    depends_on("r-rmarkdown", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))

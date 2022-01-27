@@ -12,11 +12,14 @@ class Nvtop(CMakePackage, CudaPackage):
     in a htop familiar way."""
 
     homepage = "https://github.com/Syllo/nvtop"
-    url      = "https://github.com/Syllo/nvtop/archive/1.1.0.tar.gz"
+    url = "https://github.com/Syllo/nvtop/archive/1.1.0.tar.gz"
 
-    version('1.1.0', sha256='00470cde8fc48d5a5ed7c96402607e474414d94b562b21189bdde1dbe6b1d1f3')
+    version(
+        "1.1.0",
+        sha256="00470cde8fc48d5a5ed7c96402607e474414d94b562b21189bdde1dbe6b1d1f3",
+    )
 
-    depends_on('ncurses')
+    depends_on("ncurses")
 
     def cmake_args(self):
-        return [self.define('NVML_RETRIEVE_HEADER_ONLINE', True)]
+        return [self.define("NVML_RETRIEVE_HEADER_ONLINE", True)]

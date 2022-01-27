@@ -16,15 +16,15 @@ def alias(name, warning=None):
         warnings.warn(warning, stacklevel=2)
         return getter(self)
 
-    return property(getter if warning is None else warned, doc='alias for ' + name)
+    return property(getter if warning is None else warned, doc="alias for " + name)
 
 
-class ParameterSet(namedtuple('ParameterSet', 'values, marks, id')):
+class ParameterSet(namedtuple("ParameterSet", "values, marks, id")):
     @classmethod
     def param(cls, *values, **kw):
-        marks = kw.pop('marks', ())
+        marks = kw.pop("marks", ())
         if isinstance(marks, MarkDecorator):
-            marks = marks,
+            marks = (marks,)
         else:
             assert isinstance(marks, (tuple, list, set))
 
@@ -55,12 +55,13 @@ class ParameterSet(namedtuple('ParameterSet', 'values, marks, id')):
         newmarks = []
         argval = parameterset
         while isinstance(argval, MarkDecorator):
-            newmarks.append(MarkDecorator(Mark(
-                argval.markname, argval.args[:-1], argval.kwargs)))
+            newmarks.append(
+                MarkDecorator(Mark(argval.markname, argval.args[:-1], argval.kwargs))
+            )
             argval = argval.args[-1]
         assert not isinstance(argval, ParameterSet)
         if legacy_force_tuple:
-            argval = argval,
+            argval = (argval,)
 
         if newmarks:
             warnings.warn(MARK_PARAMETERSET_UNPACKING)
@@ -84,37 +85,45 @@ def param(*values, **kw):
 def pytest_addoption(parser):
     group = parser.getgroup("general")
     group._addoption(
-        '-k',
-        action="store", dest="keyword", default='', metavar="EXPRESSION",
+        "-k",
+        action="store",
+        dest="keyword",
+        default="",
+        metavar="EXPRESSION",
         help="only run tests which match the given substring expression. "
-             "An expression is a python evaluatable expression "
-             "where all names are substring-matched against test names "
-             "and their parent classes. Example: -k 'test_method or test_"
-             "other' matches all test functions and classes whose name "
-             "contains 'test_method' or 'test_other', while -k 'not test_method' "
-             "matches those that don't contain 'test_method' in their names. "
-             "Additionally keywords are matched to classes and functions "
-             "containing extra names in their 'extra_keyword_matches' set, "
-             "as well as functions which have names assigned directly to them."
+        "An expression is a python evaluatable expression "
+        "where all names are substring-matched against test names "
+        "and their parent classes. Example: -k 'test_method or test_"
+        "other' matches all test functions and classes whose name "
+        "contains 'test_method' or 'test_other', while -k 'not test_method' "
+        "matches those that don't contain 'test_method' in their names. "
+        "Additionally keywords are matched to classes and functions "
+        "containing extra names in their 'extra_keyword_matches' set, "
+        "as well as functions which have names assigned directly to them.",
     )
 
     group._addoption(
         "-m",
-        action="store", dest="markexpr", default="", metavar="MARKEXPR",
+        action="store",
+        dest="markexpr",
+        default="",
+        metavar="MARKEXPR",
         help="only run tests matching given mark expression.  "
-             "example: -m 'mark1 and not mark2'."
+        "example: -m 'mark1 and not mark2'.",
     )
 
     group.addoption(
-        "--markers", action="store_true",
-        help="show markers (builtin, plugin and per-project ones)."
+        "--markers",
+        action="store_true",
+        help="show markers (builtin, plugin and per-project ones).",
     )
 
-    parser.addini("markers", "markers for test functions", 'linelist')
+    parser.addini("markers", "markers for test functions", "linelist")
 
 
 def pytest_cmdline_main(config):
     import _pytest.config
+
     if config.option.markers:
         config._do_configure()
         tw = _pytest.config.create_terminal_writer(config)
@@ -166,7 +175,7 @@ def pytest_collection_modifyitems(items, config):
 
 class MarkMapping:
     """Provides a local mapping for markers where item access
-    resolves to True if the marker is present. """
+    resolves to True if the marker is present."""
 
     def __init__(self, keywords):
         mymarks = set()
@@ -212,6 +221,7 @@ def matchkeyword(colitem, keywordexpr):
 
     # Add the names of the current item and any parent items
     import pytest
+
     for item in colitem.listchain():
         if not isinstance(item, pytest.Instance):
             mapped_names.add(item.name)
@@ -221,7 +231,7 @@ def matchkeyword(colitem, keywordexpr):
         mapped_names.add(name)
 
     # Add the names attached to the current function through direct assignment
-    if hasattr(colitem, 'function'):
+    if hasattr(colitem, "function"):
         for name in colitem.function.__dict__:
             mapped_names.add(name)
 
@@ -241,11 +251,11 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    MARK_GEN._config = getattr(config, '_old_mark_config', None)
+    MARK_GEN._config = getattr(config, "_old_mark_config", None)
 
 
 class MarkGenerator:
-    """ Factory for :class:`MarkDecorator` objects - exposed as
+    """Factory for :class:`MarkDecorator` objects - exposed as
     a ``pytest.mark`` singleton instance.  Example::
 
          import pytest
@@ -254,7 +264,8 @@ class MarkGenerator:
             pass
 
     will set a 'slowtest' :class:`MarkInfo` object
-    on the ``test_function`` object. """
+    on the ``test_function`` object."""
+
     _config = None
 
     def __getattr__(self, name):
@@ -281,12 +292,14 @@ class MarkGenerator:
 
 
 def istestfunc(func):
-    return hasattr(func, "__call__") and \
-        getattr(func, "__name__", "<lambda>") != "<lambda>"
+    return (
+        hasattr(func, "__call__")
+        and getattr(func, "__name__", "<lambda>") != "<lambda>"
+    )
 
 
 class MarkDecorator:
-    """ A decorator for test functions and test classes.  When applied
+    """A decorator for test functions and test classes.  When applied
     it will create :class:`MarkInfo` objects which may be
     :ref:`retrieved by hooks as item keywords <excontrolskip>`.
     MarkDecorator instances are often created like this::
@@ -323,9 +336,9 @@ class MarkDecorator:
         assert isinstance(mark, Mark), repr(mark)
         self.mark = mark
 
-    name = alias('mark.name')
-    args = alias('mark.args')
-    kwargs = alias('mark.kwargs')
+    name = alias("mark.name")
+    args = alias("mark.args")
+    kwargs = alias("mark.kwargs")
 
     @property
     def markname(self):
@@ -338,7 +351,7 @@ class MarkDecorator:
         return "<MarkDecorator %r>" % (self.mark,)
 
     def with_args(self, *args, **kwargs):
-        """ return a MarkDecorator with extra arguments added
+        """return a MarkDecorator with extra arguments added
 
         unlike call this can be used even if the sole argument is a callable/class
 
@@ -349,8 +362,8 @@ class MarkDecorator:
         return self.__class__(self.mark.combined_with(mark))
 
     def __call__(self, *args, **kwargs):
-        """ if passed a single callable argument: decorate it with mark info.
-            otherwise add *args/**kwargs in-place to mark information. """
+        """if passed a single callable argument: decorate it with mark info.
+        otherwise add *args/**kwargs in-place to mark information."""
         if args and not kwargs:
             func = args[0]
             is_class = inspect.isclass(func)
@@ -368,14 +381,11 @@ def get_unpacked_marks(obj):
     """
     obtain the unpacked marks that are stored on a object
     """
-    mark_list = getattr(obj, 'pytestmark', [])
+    mark_list = getattr(obj, "pytestmark", [])
 
     if not isinstance(mark_list, list):
         mark_list = [mark_list]
-    return [
-        getattr(mark, 'mark', mark)  # unpack MarkDecorator
-        for mark in mark_list
-    ]
+    return [getattr(mark, "mark", mark) for mark in mark_list]  # unpack MarkDecorator
 
 
 def store_mark(obj, mark):
@@ -389,8 +399,7 @@ def store_mark(obj, mark):
 
 
 def store_legacy_markinfo(func, mark):
-    """create the legacy MarkInfo objects and put them onto the function
-    """
+    """create the legacy MarkInfo objects and put them onto the function"""
     if not isinstance(mark, Mark):
         raise TypeError("got {mark!r} instead of a Mark".format(mark=mark))
     holder = getattr(func, mark.name, None)
@@ -401,37 +410,36 @@ def store_legacy_markinfo(func, mark):
         holder.add_mark(mark)
 
 
-class Mark(namedtuple('Mark', 'name, args, kwargs')):
-
+class Mark(namedtuple("Mark", "name, args, kwargs")):
     def combined_with(self, other):
         assert self.name == other.name
         return Mark(
-            self.name, self.args + other.args,
-            dict(self.kwargs, **other.kwargs))
+            self.name, self.args + other.args, dict(self.kwargs, **other.kwargs)
+        )
 
 
 class MarkInfo(object):
-    """ Marking object created by :class:`MarkDecorator` instances. """
+    """Marking object created by :class:`MarkDecorator` instances."""
 
     def __init__(self, mark):
         assert isinstance(mark, Mark), repr(mark)
         self.combined = mark
         self._marks = [mark]
 
-    name = alias('combined.name')
-    args = alias('combined.args')
-    kwargs = alias('combined.kwargs')
+    name = alias("combined.name")
+    args = alias("combined.args")
+    kwargs = alias("combined.kwargs")
 
     def __repr__(self):
         return "<MarkInfo {0!r}>".format(self.combined)
 
     def add_mark(self, mark):
-        """ add a MarkInfo with the given args and kwargs. """
+        """add a MarkInfo with the given args and kwargs."""
         self._marks.append(mark)
         self.combined = self.combined.combined_with(mark)
 
     def __iter__(self):
-        """ yield MarkInfo objects each relating to a marking-call. """
+        """yield MarkInfo objects each relating to a marking-call."""
         return imap(MarkInfo, self._marks)
 
 
@@ -439,7 +447,7 @@ MARK_GEN = MarkGenerator()
 
 
 def _marked(func, mark):
-    """ Returns True if :func: is already marked with :mark:, False otherwise.
+    """Returns True if :func: is already marked with :mark:, False otherwise.
     This can happen if marker is applied to class and the test file is
     invoked more than once.
     """

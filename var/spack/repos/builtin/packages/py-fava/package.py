@@ -8,36 +8,39 @@ from spack import *
 
 class PyFava(PythonPackage):
     """Fava is a web interface for the double-entry bookkeeping software
-       Beancount with a focus on features and usability."""
+    Beancount with a focus on features and usability."""
 
     homepage = "https://beancount.github.io/fava/"
-    pypi     = "fava/fava-1.18.tar.gz"
+    pypi = "fava/fava-1.18.tar.gz"
 
-    version('1.18',  sha256='21336b695708497e6f00cab77135b174c51feb2713b657e0e208282960885bf5')
+    version(
+        "1.18",
+        sha256="21336b695708497e6f00cab77135b174c51feb2713b657e0e208282960885bf5",
+    )
 
     # For some reason Fava adds a whole bunch of executables to
     # its bin directory, and this causes clashes when loading
     # the module.
-    extends('python', ignore='bin/^(?!fava).*')
+    extends("python", ignore="bin/^(?!fava).*")
 
     # Some of the dependencies are not listed as required at
     # build or run time, but actually are.
     # - py-setuptools
     # - py-importlib
     # - py-pytest
-    depends_on('python@3.6:',       type=('build', 'run'))
-    depends_on('py-setuptools',     type=('build', 'run'))
-    depends_on('py-setuptools-scm', type=('build'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm", type=("build"))
 
-    depends_on('py-babel@2.6.0:',        type=('build', 'run'))
-    depends_on('py-beancount@2.3.0:',    type=('build', 'run'))
-    depends_on('py-cheroot',             type=('build', 'run'))
-    depends_on('py-click',               type=('build', 'run'))
-    depends_on('py-flask@0.10.1:',       type=('build', 'run'))
-    depends_on('py-flask-babel@1.0.0:',  type=('build', 'run'))
-    depends_on('py-jinja2@2.10:',        type=('build', 'run'))
-    depends_on('py-markdown2@2.3.0:',    type=('build', 'run'))
-    depends_on('py-ply',                 type=('build', 'run'))
-    depends_on('py-pytest',              type=('build', 'run'))
-    depends_on('py-simplejson@3.2.0:',   type=('build', 'run'))
-    depends_on('py-werkzeug@0.15.0:',    type=('build', 'run'))
+    depends_on("py-babel@2.6.0:", type=("build", "run"))
+    depends_on("py-beancount@2.3.0:", type=("build", "run"))
+    depends_on("py-cheroot", type=("build", "run"))
+    depends_on("py-click", type=("build", "run"))
+    depends_on("py-flask@0.10.1:", type=("build", "run"))
+    depends_on("py-flask-babel@1.0.0:", type=("build", "run"))
+    depends_on("py-jinja2@2.10:", type=("build", "run"))
+    depends_on("py-markdown2@2.3.0:", type=("build", "run"))
+    depends_on("py-ply", type=("build", "run"))
+    depends_on("py-pytest", type=("build", "run"))
+    depends_on("py-simplejson@3.2.0:", type=("build", "run"))
+    depends_on("py-werkzeug@0.15.0:", type=("build", "run"))

@@ -11,35 +11,31 @@ class Flecsale(CMakePackage):
     """Flecsale is an ALE code based on FleCSI"""
 
     homepage = "https://github.com/laristra/flecsale"
-    git      = "https://github.com/laristra/flecsale.git"
+    git = "https://github.com/laristra/flecsale.git"
 
-    version('develop', branch='master', submodules=True)
+    version("develop", branch="master", submodules=True)
 
-    variant('mpi', default=True,
-            description='Build on top of mpi conduit for mpi inoperability')
+    variant(
+        "mpi",
+        default=True,
+        description="Build on top of mpi conduit for mpi inoperability",
+    )
 
-    depends_on("pkgconfig", type='build')
-    depends_on("cmake@3.1:", type='build')
-    depends_on("flecsi backend=serial", when='~mpi')
-    conflicts("^flecsi backend=serial", when='+mpi')
+    depends_on("pkgconfig", type="build")
+    depends_on("cmake@3.1:", type="build")
+    depends_on("flecsi backend=serial", when="~mpi")
+    conflicts("^flecsi backend=serial", when="+mpi")
     depends_on("python")
     depends_on("openssl")
-    depends_on("boost~mpi", when='~mpi')
-    depends_on("boost+mpi", when='+mpi')
-    depends_on("exodusii~mpi", when='~mpi')
-    depends_on("exodusii+mpi", when='+mpi')
+    depends_on("boost~mpi", when="~mpi")
+    depends_on("boost+mpi", when="+mpi")
+    depends_on("exodusii~mpi", when="~mpi")
+    depends_on("exodusii+mpi", when="+mpi")
 
     def cmake_args(self):
-        options = [
-            '-DENABLE_UNIT_TESTS=ON'
-            '-DENABLE_OPENSSL=ON'
-            '-DENABLE_PYTHON=ON'
-        ]
+        options = ["-DENABLE_UNIT_TESTS=ON" "-DENABLE_OPENSSL=ON" "-DENABLE_PYTHON=ON"]
 
-        if '+mpi' in self.spec:
-            options.extend([
-                '-DENABLE_MPI=ON',
-                '-DFLECSI_RUNTIME_MODEL=legion'
-            ])
+        if "+mpi" in self.spec:
+            options.extend(["-DENABLE_MPI=ON", "-DFLECSI_RUNTIME_MODEL=legion"])
 
         return options

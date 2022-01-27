@@ -14,12 +14,18 @@ class PyPerformance(PythonPackage):
     using whole applications when possible.
     """
 
-    homepage = 'http://pyperformance.readthedocs.io/'
-    url = 'https://github.com/python/performance/archive/0.6.1.tar.gz'
+    homepage = "http://pyperformance.readthedocs.io/"
+    url = "https://github.com/python/performance/archive/0.6.1.tar.gz"
 
-    version('0.6.1', sha256='cc48dd7579da2f4b0e4cff0c8220811f5ba7019493bb408819c1532acf53d13a')
-    version('0.6.0', sha256='4636e276445e96563f628e071cacd5df31dc587d83899e7d03fa8b31760f2cd2')
+    version(
+        "0.6.1",
+        sha256="cc48dd7579da2f4b0e4cff0c8220811f5ba7019493bb408819c1532acf53d13a",
+    )
+    version(
+        "0.6.0",
+        sha256="4636e276445e96563f628e071cacd5df31dc587d83899e7d03fa8b31760f2cd2",
+    )
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pyperf', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))
+    depends_on("py-pyperf", type=("build", "run"))

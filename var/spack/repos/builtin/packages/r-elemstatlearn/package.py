@@ -12,9 +12,12 @@ class RElemstatlearn(RPackage):
     Trevor Hastie, Robert Tibshirani and Jerome Friedman"""
 
     homepage = "https://cloud.r-project.org/package=ElemStatLearn"
-    url      = "https://cloud.r-project.org/src/contrib/Archive/ElemStatLearn/ElemStatLearn_2015.6.26.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/Archive/ElemStatLearn/ElemStatLearn_2015.6.26.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ElemStatLearn"
 
-    version('2015.6.26.2', sha256='a0f94a72f6188a0a5c855e3362b6b849bf7fd14efc2d824a8d2581f8bb1bd7fa')
+    version(
+        "2015.6.26.2",
+        sha256="a0f94a72f6188a0a5c855e3362b6b849bf7fd14efc2d824a8d2581f8bb1bd7fa",
+    )
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))

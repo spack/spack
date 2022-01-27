@@ -12,22 +12,25 @@ class Fyba(AutotoolsPackage):
     and write files in the National geodata standard format SOSI."""
 
     homepage = "https://github.com/kartverket/fyba"
-    url      = "https://github.com/kartverket/fyba/archive/4.1.1.tar.gz"
+    url = "https://github.com/kartverket/fyba/archive/4.1.1.tar.gz"
 
-    version('4.1.1', sha256='99f658d52e8fd8997118bb6207b9c121500700996d9481a736683474e2534179')
+    version(
+        "4.1.1",
+        sha256="99f658d52e8fd8997118bb6207b9c121500700996d9481a736683474e2534179",
+    )
 
     # configure: error: cannot find install-sh or install.sh
     force_autoreconf = True
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
     # error: macro "min" passed 3 arguments, but takes just 2
     # https://github.com/kartverket/fyba/issues/21
-    patch('gcc-6.patch')
+    patch("gcc-6.patch")
 
     # fatal error: 'sys/vfs.h' file not found
     # https://github.com/kartverket/fyba/issues/12
-    patch('vfs-mount-darwin.patch', when='platform=darwin')
+    patch("vfs-mount-darwin.patch", when="platform=darwin")

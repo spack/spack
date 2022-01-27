@@ -10,15 +10,17 @@ class Symlinks(MakefilePackage):
     """Scan or change symbolic links."""
 
     homepage = "https://ibiblio.org/pub/Linux/utils/file"
-    url      = "https://ibiblio.org/pub/Linux/utils/file/symlinks-1.4.tar.gz"
+    url = "https://ibiblio.org/pub/Linux/utils/file/symlinks-1.4.tar.gz"
 
-    version('1.4', sha256='b0bb689dd0a2c46d9a7dd111b053707aba7b9cf29c4f0bad32984b14bdbe0399')
+    version(
+        "1.4", sha256="b0bb689dd0a2c46d9a7dd111b053707aba7b9cf29c4f0bad32984b14bdbe0399"
+    )
 
     def edit(self, spec, prefix):
-        filter_file('/usr/local', prefix, 'Makefile', string=True)
-        filter_file('-o root -g root', '', 'Makefile')
+        filter_file("/usr/local", prefix, "Makefile", string=True)
+        filter_file("-o root -g root", "", "Makefile")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.man.man8)
-        make('install')
+        make("install")

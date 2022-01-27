@@ -26,68 +26,88 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='pkg_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="pkg_command")
 
-    add_parser = sp.add_parser('add', help=pkg_add.__doc__)
-    arguments.add_common_arguments(add_parser, ['packages'])
+    add_parser = sp.add_parser("add", help=pkg_add.__doc__)
+    arguments.add_common_arguments(add_parser, ["packages"])
 
-    list_parser = sp.add_parser('list', help=pkg_list.__doc__)
-    list_parser.add_argument('rev', default='HEAD', nargs='?',
-                             help="revision to list packages for")
+    list_parser = sp.add_parser("list", help=pkg_list.__doc__)
+    list_parser.add_argument(
+        "rev", default="HEAD", nargs="?", help="revision to list packages for"
+    )
 
-    diff_parser = sp.add_parser('diff', help=pkg_diff.__doc__)
+    diff_parser = sp.add_parser("diff", help=pkg_diff.__doc__)
     diff_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev1", nargs="?", default="HEAD^", help="revision to compare against"
+    )
     diff_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2",
+        nargs="?",
+        default="HEAD",
+        help="revision to compare to rev1 (default is HEAD)",
+    )
 
-    add_parser = sp.add_parser('added', help=pkg_added.__doc__)
+    add_parser = sp.add_parser("added", help=pkg_added.__doc__)
     add_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev1", nargs="?", default="HEAD^", help="revision to compare against"
+    )
     add_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2",
+        nargs="?",
+        default="HEAD",
+        help="revision to compare to rev1 (default is HEAD)",
+    )
 
-    add_parser = sp.add_parser('changed', help=pkg_changed.__doc__)
+    add_parser = sp.add_parser("changed", help=pkg_changed.__doc__)
     add_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev1", nargs="?", default="HEAD^", help="revision to compare against"
+    )
     add_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2",
+        nargs="?",
+        default="HEAD",
+        help="revision to compare to rev1 (default is HEAD)",
+    )
     add_parser.add_argument(
-        '-t', '--type', action='store', default='C',
+        "-t",
+        "--type",
+        action="store",
+        default="C",
         help="Types of changes to show (A: added, R: removed, "
-        "C: changed); default is 'C'")
+        "C: changed); default is 'C'",
+    )
 
-    rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
+    rm_parser = sp.add_parser("removed", help=pkg_removed.__doc__)
     rm_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev1", nargs="?", default="HEAD^", help="revision to compare against"
+    )
     rm_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2",
+        nargs="?",
+        default="HEAD",
+        help="revision to compare to rev1 (default is HEAD)",
+    )
 
-    source_parser = sp.add_parser('source', help=pkg_source.__doc__)
+    source_parser = sp.add_parser("source", help=pkg_source.__doc__)
     source_parser.add_argument(
-        '-c', '--canonical', action='store_true', default=False,
-        help="dump canonical source as used by package hash.")
-    arguments.add_common_arguments(source_parser, ['spec'])
+        "-c",
+        "--canonical",
+        action="store_true",
+        default=False,
+        help="dump canonical source as used by package hash.",
+    )
+    arguments.add_common_arguments(source_parser, ["spec"])
 
-    hash_parser = sp.add_parser('hash', help=pkg_hash.__doc__)
-    arguments.add_common_arguments(hash_parser, ['spec'])
+    hash_parser = sp.add_parser("hash", help=pkg_hash.__doc__)
+    arguments.add_common_arguments(hash_parser, ["spec"])
 
 
 def packages_path():
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return spack.repo.path.get_repo('builtin.mock').packages_path
+        return spack.repo.path.get_repo("builtin.mock").packages_path
     except spack.repo.UnknownNamespaceError:
-        return spack.repo.path.get_repo('builtin').packages_path
+        return spack.repo.path.get_repo("builtin").packages_path
 
 
 class GitExe:
@@ -96,7 +116,7 @@ class GitExe:
     #
     # Not using -C as that is not supported for git < 1.8.5.
     def __init__(self):
-        self._git_cmd = which('git', required=True)
+        self._git_cmd = which("git", required=True)
 
     def __call__(self, *args, **kwargs):
         with working_dir(packages_path()):
@@ -118,13 +138,14 @@ def list_packages(rev):
     git = get_git()
 
     # git ls-tree does not support ... merge-base syntax, so do it manually
-    if rev.endswith('...'):
-        ref = rev.replace('...', '')
-        rev = git('merge-base', ref, 'HEAD', output=str).strip()
+    if rev.endswith("..."):
+        ref = rev.replace("...", "")
+        rev = git("merge-base", ref, "HEAD", output=str).strip()
 
-    output = git('ls-tree', '--name-only', rev, output=str)
-    return sorted(line for line in output.split('\n')
-                  if line and not line.startswith('.'))
+    output = git("ls-tree", "--name-only", rev, output=str)
+    return sorted(
+        line for line in output.split("\n") if line and not line.startswith(".")
+    )
 
 
 def pkg_add(args):
@@ -134,10 +155,9 @@ def pkg_add(args):
     for pkg_name in args.packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
-            tty.die("No such package: %s.  Path does not exist:" %
-                    pkg_name, filename)
+            tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
-        git('add', filename)
+        git("add", filename)
 
 
 def pkg_list(args):
@@ -183,17 +203,20 @@ def pkg_added(args):
 def pkg_changed(args):
     """show packages changed since a commit"""
     lower_type = args.type.lower()
-    if not re.match('^[arc]*$', lower_type):
-        tty.die("Invald change type: '%s'." % args.type,
-                "Can contain only A (added), R (removed), or C (changed)")
+    if not re.match("^[arc]*$", lower_type):
+        tty.die(
+            "Invald change type: '%s'." % args.type,
+            "Can contain only A (added), R (removed), or C (changed)",
+        )
 
     removed, added = diff_packages(args.rev1, args.rev2)
 
     git = get_git()
-    out = git('diff', '--relative', '--name-only', args.rev1, args.rev2,
-              output=str).strip()
+    out = git(
+        "diff", "--relative", "--name-only", args.rev1, args.rev2, output=str
+    ).strip()
 
-    lines = [] if not out else re.split(r'\s+', out)
+    lines = [] if not out else re.split(r"\s+", out)
     changed = set()
     for path in lines:
         pkg_name, _, _ = path.partition(os.sep)
@@ -201,11 +224,11 @@ def pkg_changed(args):
             changed.add(pkg_name)
 
     packages = set()
-    if 'a' in lower_type:
+    if "a" in lower_type:
         packages |= added
-    if 'r' in lower_type:
+    if "r" in lower_type:
         packages |= removed
-    if 'c' in lower_type:
+    if "c" in lower_type:
         packages |= changed
 
     if packages:
@@ -248,13 +271,13 @@ def pkg(parser, args):
         tty.die("This spack is not a git clone. Can't use 'spack pkg'")
 
     action = {
-        'add': pkg_add,
-        'diff': pkg_diff,
-        'list': pkg_list,
-        'removed': pkg_removed,
-        'added': pkg_added,
-        'changed': pkg_changed,
-        'source': pkg_source,
-        'hash': pkg_hash,
+        "add": pkg_add,
+        "diff": pkg_diff,
+        "list": pkg_list,
+        "removed": pkg_removed,
+        "added": pkg_added,
+        "changed": pkg_changed,
+        "source": pkg_source,
+        "hash": pkg_hash,
     }
     action[args.pkg_command](args)

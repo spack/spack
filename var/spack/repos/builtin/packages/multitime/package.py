@@ -13,6 +13,8 @@ class Multitime(AutotoolsPackage):
     understanding of the command's performance."""
 
     homepage = "https://tratt.net/laurie/src/multitime/"
-    url      = "https://tratt.net/laurie/src/multitime/releases/multitime-1.4.tar.gz"
+    url = "https://tratt.net/laurie/src/multitime/releases/multitime-1.4.tar.gz"
 
-    version('1.4', sha256='dd85c431c022d0b992f3a8816a1a3dfb414454a229c0ec22514761bf72d3ce47')
+    version(
+        "1.4", sha256="dd85c431c022d0b992f3a8816a1a3dfb414454a229c0ec22514761bf72d3ce47"
+    )

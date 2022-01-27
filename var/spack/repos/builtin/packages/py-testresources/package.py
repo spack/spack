@@ -7,12 +7,14 @@ from spack import *
 
 
 class PyTestresources(PythonPackage):
-    """Testresources, a pyunit extension for managing expensive test resources.
-    """
+    """Testresources, a pyunit extension for managing expensive test resources."""
 
     homepage = "https://launchpad.net/testresources"
     pypi = "testresources/testresources-2.0.1.tar.gz"
 
-    version('2.0.1', sha256='ee9d1982154a1e212d4e4bac6b610800bfb558e4fb853572a827bc14a96e4417')
+    version(
+        "2.0.1",
+        sha256="ee9d1982154a1e212d4e4bac6b610800bfb558e4fb853572a827bc14a96e4417",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -16,7 +16,7 @@ level = "short"
 
 
 def setup_parser(subparser):
-    spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all"])
 
 
 def gc(parser, args):
@@ -31,8 +31,9 @@ def gc(parser, args):
         env.concretize()
         roots = [s for s in env.roots()]
         all_hashes = set([s.dag_hash() for r in roots for s in r.traverse()])
-        lr_hashes = set([s.dag_hash() for r in roots
-                         for s in r.traverse(deptype=('link', 'run'))])
+        lr_hashes = set(
+            [s.dag_hash() for r in roots for s in r.traverse(deptype=("link", "run"))]
+        )
         maybe_to_be_removed = all_hashes - lr_hashes
         specs = [s for s in specs if s.dag_hash() in maybe_to_be_removed]
 

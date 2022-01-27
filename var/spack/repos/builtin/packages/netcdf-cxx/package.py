@@ -13,33 +13,34 @@ class NetcdfCxx(AutotoolsPackage):
     NetCDF C++ bindings, in Spack package netcdf-cxx4."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
+    url = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
 
-    version('4.2', sha256='95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1')
+    version(
+        "4.2", sha256="95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1"
+    )
 
-    depends_on('netcdf-c')
+    depends_on("netcdf-c")
 
-    variant(
-        'netcdf4', default=True, description='Compile with netCDF4 support')
+    variant("netcdf4", default=True, description="Compile with netCDF4 support")
 
     @property
     def libs(self):
         shared = True
         return find_libraries(
-            'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
+            "libnetcdf_c++", root=self.prefix, shared=shared, recursive=True
         )
 
     def configure_args(self):
         args = []
-        if '+netcdf4' in self.spec:
+        if "+netcdf4" in self.spec:
             # There is no clear way to set this via configure, so set the flag
             # explicitly
-            args.append('CPPFLAGS=-DUSE_NETCDF4')
+            args.append("CPPFLAGS=-DUSE_NETCDF4")
         # Add these to LDFLAGS explicitly, so the linker doesn't accidentally
         # use system versions
         ldflags = [
-            self.spec['netcdf-c'].libs.search_flags,
-            self.spec['hdf5'].libs.search_flags,
+            self.spec["netcdf-c"].libs.search_flags,
+            self.spec["hdf5"].libs.search_flags,
         ]
-        args.append('LDFLAGS=' + ' '.join(ldflags))
+        args.append("LDFLAGS=" + " ".join(ldflags))
         return args

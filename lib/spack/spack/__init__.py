@@ -7,6 +7,6 @@
 spack_version_info = (0, 17, 1)
 
 #: String containing Spack version joined with .'s
-spack_version = '.'.join(str(v) for v in spack_version_info)
+spack_version = ".".join(str(v) for v in spack_version_info)
 
-__all__ = ['spack_version_info', 'spack_version']
+__all__ = ["spack_version_info", "spack_version"]

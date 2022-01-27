@@ -15,8 +15,10 @@ class PyStratify(PythonPackage):
     homepage = "https://github.com/SciTools-incubator/python-stratify"
     pypi = "stratify/stratify-0.1.tar.gz"
 
-    version('0.1', sha256='5426f3b66e45e1010952d426e5a7be42cd45fe65f1cd73a98fee1eb7c110c6ee')
+    version(
+        "0.1", sha256="5426f3b66e45e1010952d426e5a7be42cd45fe65f1cd73a98fee1eb7c110c6ee"
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy',      type=('build', 'run'))
-    depends_on('py-cython',     type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-cython", type=("build", "run"))

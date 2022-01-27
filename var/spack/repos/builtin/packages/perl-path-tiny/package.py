@@ -14,6 +14,9 @@ class PerlPathTiny(PerlPackage):
     many common things in consistent and less error-prone ways."""
 
     homepage = "https://metacpan.org/pod/Path::Tiny"
-    url      = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Path-Tiny-0.108.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Path-Tiny-0.108.tar.gz"
 
-    version('0.108', sha256='3c49482be2b3eb7ddd7e73a5b90cff648393f5d5de334ff126ce7a3632723ff5')
+    version(
+        "0.108",
+        sha256="3c49482be2b3eb7ddd7e73a5b90cff648393f5d5de334ff126ce7a3632723ff5",
+    )

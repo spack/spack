@@ -16,10 +16,13 @@ class RAssertiveModels(RPackage):
     to use assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.models"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.models_0.0-2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/assertive.models_0.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.models"
 
-    version('0.0-2', sha256='b9a6d8786f352d53371dbe8c5f2f2a62a7866e30313f268e69626d5c3691c42e')
+    version(
+        "0.0-2",
+        sha256="b9a6d8786f352d53371dbe8c5f2f2a62a7866e30313f268e69626d5c3691c42e",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-2:", type=("build", "run"))

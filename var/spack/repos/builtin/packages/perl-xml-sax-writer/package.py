@@ -13,10 +13,15 @@ class PerlXmlSaxWriter(PerlPackage):
     favourite writer in the SAX1 world."""
 
     homepage = "https://metacpan.org/pod/XML::SAX::Writer"
-    url      = "https://cpan.metacpan.org/authors/id/P/PE/PERIGRIN/XML-SAX-Writer-0.57.tar.gz"
+    url = (
+        "https://cpan.metacpan.org/authors/id/P/PE/PERIGRIN/XML-SAX-Writer-0.57.tar.gz"
+    )
 
-    version('0.57', sha256='3d61d07ef43b0126f5b4de4f415a256fa859fa88dc4fdabaad70b7be7c682cf0')
+    version(
+        "0.57",
+        sha256="3d61d07ef43b0126f5b4de4f415a256fa859fa88dc4fdabaad70b7be7c682cf0",
+    )
 
-    depends_on('perl-xml-filter-buffertext', type=('build', 'run'))
-    depends_on('perl-xml-namespacesupport', type=('build', 'run'))
-    depends_on('perl-xml-sax-base', type=('build', 'run'))
+    depends_on("perl-xml-filter-buffertext", type=("build", "run"))
+    depends_on("perl-xml-namespacesupport", type=("build", "run"))
+    depends_on("perl-xml-sax-base", type=("build", "run"))

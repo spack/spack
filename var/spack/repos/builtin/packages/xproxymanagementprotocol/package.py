@@ -14,4 +14,7 @@ class Xproxymanagementprotocol(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/pmproto"
     xorg_mirror_path = "proto/xproxymanagementprotocol-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='c1501045ec781f36b6f867611ab2b4e81be542f5c669b2fd0cc4ec1340c42bcf')
+    version(
+        "1.0.3",
+        sha256="c1501045ec781f36b6f867611ab2b4e81be542f5c669b2fd0cc4ec1340c42bcf",
+    )

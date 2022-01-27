@@ -18,6 +18,9 @@ class PerlFileChdir(PerlPackage):
     combine all the power of chdir(), File::Spec and Cwd."""
 
     homepage = "https://metacpan.org/pod/File::chdir"
-    url      = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/File-chdir-0.1011.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/File-chdir-0.1011.tar.gz"
 
-    version('0.1011', sha256='31ebf912df48d5d681def74b9880d78b1f3aca4351a0ed1fe3570b8e03af6c79')
+    version(
+        "0.1011",
+        sha256="31ebf912df48d5d681def74b9880d78b1f3aca4351a0ed1fe3570b8e03af6c79",
+    )

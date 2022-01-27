@@ -18,16 +18,25 @@ class RDorng(RPackage):
     and associated foreach backend."""
 
     homepage = "https://cloud.r-project.org/package=doRNG"
-    url      = "https://cloud.r-project.org/src/contrib/doRNG_1.6.6.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/doRNG_1.6.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/doRNG"
 
-    version('1.8.2', sha256='33e9d45b91b0fde2e35e911b9758d0c376049121a98a1e4c73a1edfcff11cec9')
-    version('1.7.1', sha256='27533d54464889d1c21301594137fc0f536574e3a413d61d7df9463ab12a67e9')
-    version('1.6.6', sha256='939c2282c72c0b89fc7510f4bff901a4e99007dc006f46762c8f594c0ecbd876')
+    version(
+        "1.8.2",
+        sha256="33e9d45b91b0fde2e35e911b9758d0c376049121a98a1e4c73a1edfcff11cec9",
+    )
+    version(
+        "1.7.1",
+        sha256="27533d54464889d1c21301594137fc0f536574e3a413d61d7df9463ab12a67e9",
+    )
+    version(
+        "1.6.6",
+        sha256="939c2282c72c0b89fc7510f4bff901a4e99007dc006f46762c8f594c0ecbd876",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-rngtools@1.3:', type=('build', 'run'))
-    depends_on('r-rngtools@1.5:', when='@1.8.2:', type=('build', 'run'))
-    depends_on('r-iterators', type=('build', 'run'))
-    depends_on('r-pkgmaker@0.20:', when='@:1.7.1', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-foreach", type=("build", "run"))
+    depends_on("r-rngtools@1.3:", type=("build", "run"))
+    depends_on("r-rngtools@1.5:", when="@1.8.2:", type=("build", "run"))
+    depends_on("r-iterators", type=("build", "run"))
+    depends_on("r-pkgmaker@0.20:", when="@:1.7.1", type=("build", "run"))

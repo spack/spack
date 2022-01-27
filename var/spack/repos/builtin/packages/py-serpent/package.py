@@ -12,10 +12,13 @@ class PySerpent(PythonPackage):
     """
 
     homepage = "https://github.com/irmen/Serpent"
-    pypi = 'serpent/serpent-1.40.tar.gz'
-    maintainers = ['liuyangzhuan']
+    pypi = "serpent/serpent-1.40.tar.gz"
+    maintainers = ["liuyangzhuan"]
 
-    version('1.40', sha256='10b34e7f8e3207ee6fb70dcdc9bce473851ee3daf0b47c58aec1b48032ac11ce')
+    version(
+        "1.40",
+        sha256="10b34e7f8e3207ee6fb70dcdc9bce473851ee3daf0b47c58aec1b48032ac11ce",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.2:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("python@3.2:", type=("build", "run"))

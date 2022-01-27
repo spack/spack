@@ -10,39 +10,39 @@ class Opennurbs(Package):
     """
 
     homepage = "https://github.com/OpenNURBS/OpenNURBS"
-    git      = "https://github.com/OpenNURBS/OpenNURBS.git"
+    git = "https://github.com/OpenNURBS/OpenNURBS.git"
 
-    maintainers = ['jrood-nrel']
+    maintainers = ["jrood-nrel"]
 
-    version('develop', branch='develop')
+    version("develop", branch="develop")
 
-    version('percept', sha256='d12a8f14f0b27d286fb7a75ab3c4e300f77d1fbb028326d1c8d28e4641605538',
-            url='https://github.com/PerceptTools/percept/raw/master/build-cmake/opennurbs-percept.tar.gz')
+    version(
+        "percept",
+        sha256="d12a8f14f0b27d286fb7a75ab3c4e300f77d1fbb028326d1c8d28e4641605538",
+        url="https://github.com/PerceptTools/percept/raw/master/build-cmake/opennurbs-percept.tar.gz",
+    )
 
-    variant('shared', default=True,
-            description="Build shared libraries")
+    variant("shared", default=True, description="Build shared libraries")
 
     # CMake installation method
     def install(self, spec, prefix):
-        cmake_args = [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
-        ]
+        cmake_args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
         cmake_args.extend(std_cmake_args)
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
+        with working_dir("spack-build", create=True):
+            cmake("..", *cmake_args)
             make()
-            make('install')
+            make("install")
 
     # Pre-cmake installation method
-    @when('@percept')
+    @when("@percept")
     def install(self, spec, prefix):
         make(parallel=False)
 
         # Install manually
         mkdir(prefix.lib)
         mkdir(prefix.include)
-        install('libopenNURBS.a', prefix.lib)
-        install_tree('zlib', join_path(prefix.include, 'zlib'))
-        install('*.h', prefix.include)
+        install("libopenNURBS.a", prefix.lib)
+        install_tree("zlib", join_path(prefix.include, "zlib"))
+        install("*.h", prefix.include)

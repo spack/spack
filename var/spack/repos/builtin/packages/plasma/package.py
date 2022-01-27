@@ -18,27 +18,55 @@ class Plasma(CMakePackage):
     homepage = "https://github.com/icl-utk-edu/plasma/"
     url = "https://github.com/icl-utk-edu/plasma/releases/download/21.8.29/plasma-21.8.29.tar.gz"
     git = "https://github.com/icl-utk-edu/plasma"
-    maintainers = ['luszczek']
+    maintainers = ["luszczek"]
 
-    tags = ['e4s']
+    tags = ["e4s"]
 
     version("develop", git=git)
-    version('21.8.29', sha256='e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10')
-    version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
-    version("19.8.1", sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17")
-    version("19.8.0", sha256="19a950ade8a7c8d082f372789c9f874274a63217ecff26e33f366402f060f071")
-    version("18.11.1", sha256="0581cc8b1188932fd9c29bd258ffe2dc8fb26b1530c5dc3d91f8de369e44edbc")
-    version("18.11.0", sha256="36501488be5b4b2b973524824e1afd27779d37addfeeb34c1871ba753b6c06bf")
-    version("18.10.0", sha256="93dceae93f57a2fbd79b85d2fbf7907d1d32e158b8d1d93892d9ff3df9963210")
-    version("18.9.0", sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774")
-    version("17.1",
-            sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
-            url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz")
+    version(
+        "21.8.29",
+        sha256="e0bb4d9143c8540f9f46cbccac9ed0cbea12500a864e6954fce2fe94ea057a10",
+    )
+    version(
+        "20.9.20",
+        sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970",
+    )
+    version(
+        "19.8.1",
+        sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17",
+    )
+    version(
+        "19.8.0",
+        sha256="19a950ade8a7c8d082f372789c9f874274a63217ecff26e33f366402f060f071",
+    )
+    version(
+        "18.11.1",
+        sha256="0581cc8b1188932fd9c29bd258ffe2dc8fb26b1530c5dc3d91f8de369e44edbc",
+    )
+    version(
+        "18.11.0",
+        sha256="36501488be5b4b2b973524824e1afd27779d37addfeeb34c1871ba753b6c06bf",
+    )
+    version(
+        "18.10.0",
+        sha256="93dceae93f57a2fbd79b85d2fbf7907d1d32e158b8d1d93892d9ff3df9963210",
+    )
+    version(
+        "18.9.0",
+        sha256="753eae28ea48986a2cc7b8204d6eef646584541e59d42c3c94fa9879116b0774",
+    )
+    version(
+        "17.1",
+        sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
+        url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz",
+    )
 
-    variant("shared", default=True,
-            description="Build shared library (disables static library)")
-    variant("lua", default=False,
-            description="Build Lua support for tuning tile sizes")
+    variant(
+        "shared",
+        default=True,
+        description="Build shared library (disables static library)",
+    )
+    variant("lua", default=False, description="Build Lua support for tuning tile sizes")
 
     depends_on("lua", when="+lua")
 
@@ -57,12 +85,12 @@ class Plasma(CMakePackage):
     conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.8", when='@:17.1')
+    conflicts("%gcc@:4.8", when="@:17.1")
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5", when='@17.2:')
+    conflicts("%gcc@:5", when="@17.2:")
 
     conflicts("%cce")
-    conflicts('%apple-clang')
+    conflicts("%apple-clang")
     conflicts("%clang")
     conflicts("%intel")
     conflicts("%nag")
@@ -78,14 +106,15 @@ class Plasma(CMakePackage):
     def cmake_args(self):
         options = list()
 
-        options.extend([
-            "-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs.joined(";"),
-            "-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs.joined(";")
-        ])
+        options.extend(
+            [
+                "-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs.joined(";"),
+                "-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs.joined(";"),
+            ]
+        )
 
         options += [
-            "-DBUILD_SHARED_LIBS=%s" %
-            ('ON' if ('+shared' in self.spec) else 'OFF')
+            "-DBUILD_SHARED_LIBS=%s" % ("ON" if ("+shared" in self.spec) else "OFF")
         ]
 
         for package, provider in (
@@ -128,8 +157,9 @@ class Plasma(CMakePackage):
 
         if not spec.satisfies("^intel-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
-            make_inc.filter("LIBS *= *.*", "LIBS = " +
-                            self.spec["blas"].libs.ld_flags + " -lm")
+            make_inc.filter(
+                "LIBS *= *.*", "LIBS = " + self.spec["blas"].libs.ld_flags + " -lm"
+            )
 
         header_flags = ""
         # accumulate CPP flags for headers: <cblas.h> and <lapacke.h>

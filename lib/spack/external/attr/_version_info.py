@@ -43,9 +43,7 @@ class VersionInfo(object):
         if len(v) == 3:
             v.append("final")
 
-        return cls(
-            year=int(v[0]), minor=int(v[1]), micro=int(v[2]), releaselevel=v[3]
-        )
+        return cls(year=int(v[0]), minor=int(v[1]), micro=int(v[2]), releaselevel=v[3])
 
     def _ensure_tuple(self, other):
         """

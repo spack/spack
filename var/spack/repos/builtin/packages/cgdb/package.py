@@ -9,36 +9,42 @@ from spack import *
 class Cgdb(AutotoolsPackage):
     """A curses front-end to GDB"""
 
-    maintainers = ['tuxfan']
-    homepage = 'https://cgdb.github.io'
-    url      = 'https://cgdb.me/files/cgdb-0.7.1.tar.gz'
-    git      = 'https://github.com/cgdb/cgdb.git'
+    maintainers = ["tuxfan"]
+    homepage = "https://cgdb.github.io"
+    url = "https://cgdb.me/files/cgdb-0.7.1.tar.gz"
+    git = "https://github.com/cgdb/cgdb.git"
 
-    version('master', branch='master', submodule=False, preferred=True)
-    version('0.7.1', sha256='bb723be58ec68cb59a598b8e24a31d10ef31e0e9c277a4de07b2f457fe7de198')
-    version('0.7.0', sha256='bf7a9264668db3f9342591b08b2cc3bbb08e235ba2372877b4650b70c6fb5423')
+    version("master", branch="master", submodule=False, preferred=True)
+    version(
+        "0.7.1",
+        sha256="bb723be58ec68cb59a598b8e24a31d10ef31e0e9c277a4de07b2f457fe7de198",
+    )
+    version(
+        "0.7.0",
+        sha256="bf7a9264668db3f9342591b08b2cc3bbb08e235ba2372877b4650b70c6fb5423",
+    )
 
     # Required dependency
-    depends_on('gdb', type='run')
-    depends_on('ncurses')
-    depends_on('readline')
-    depends_on('autoconf', type='build', when='@master')
-    depends_on('automake', type='build', when='@master')
-    depends_on('libtool', type='build', when='@master')
-    depends_on('m4', type='build', when='@master')
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('texinfo', type='build')
+    depends_on("gdb", type="run")
+    depends_on("ncurses")
+    depends_on("readline")
+    depends_on("autoconf", type="build", when="@master")
+    depends_on("automake", type="build", when="@master")
+    depends_on("libtool", type="build", when="@master")
+    depends_on("m4", type="build", when="@master")
+    depends_on("flex", type="build")
+    depends_on("bison", type="build")
+    depends_on("texinfo", type="build")
 
-    @when('@master')
+    @when("@master")
     def autoreconf(self, spec, prefix):
-        sh = which('sh')
-        sh('autogen.sh')
+        sh = which("sh")
+        sh("autogen.sh")
 
     def configure_args(self):
         spec = self.spec
 
         return [
-            '--with-ncurses={0}'.format(spec['ncurses'].prefix),
-            '--with-readline={0}'.format(spec['readline'].prefix)
+            "--with-ncurses={0}".format(spec["ncurses"].prefix),
+            "--with-readline={0}".format(spec["readline"].prefix),
         ]

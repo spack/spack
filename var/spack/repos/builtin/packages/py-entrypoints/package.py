@@ -11,9 +11,14 @@ class PyEntrypoints(PythonPackage):
 
     pypi = "entrypoints/entrypoints-0.2.3.tar.gz"
 
-    version('0.3', sha256='c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451')
-    version('0.2.3', sha256='d2d587dde06f99545fb13a383d2cd336a8ff1f359c5839ce3a64c917d10c029f')
+    version(
+        "0.3", sha256="c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"
+    )
+    version(
+        "0.2.3",
+        sha256="d2d587dde06f99545fb13a383d2cd336a8ff1f359c5839ce3a64c917d10c029f",
+    )
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-flit', type='build')
-    depends_on('py-configparser@3.5:', when='^python@2.7', type=('build', 'run'))
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-flit", type="build")
+    depends_on("py-configparser@3.5:", when="^python@2.7", type=("build", "run"))

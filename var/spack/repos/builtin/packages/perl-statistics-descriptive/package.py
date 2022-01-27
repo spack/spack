@@ -10,6 +10,9 @@ class PerlStatisticsDescriptive(PerlPackage):
     """Module of basic descriptive statistical functions."""
 
     homepage = "https://metacpan.org/pod/Statistics::Descriptive"
-    url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz"
 
-    version('3.0612', sha256='772413148e5e00efb32f277c4254aa78b9112490a896208dcd0025813afdbf7a')
+    version(
+        "3.0612",
+        sha256="772413148e5e00efb32f277c4254aa78b9112490a896208dcd0025813afdbf7a",
+    )

@@ -11,40 +11,42 @@ from spack import *
 
 class Tealeaf(MakefilePackage):
     """Proxy Application. TeaLeaf is a mini-app that solves
-       the linear heat conduction equation on a spatially decomposed
-       regularly grid using a 5 point stencil with implicit solvers.
+    the linear heat conduction equation on a spatially decomposed
+    regularly grid using a 5 point stencil with implicit solvers.
     """
 
     homepage = "https://uk-mac.github.io/TeaLeaf/"
-    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
+    url = "https://downloads.mantevo.org/releaseTarballs/miniapps/TeaLeaf/TeaLeaf-1.0.tar.gz"
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('1.0', sha256='e11799d1a3fbe76041333ba98858043b225c5d65221df8c600479bc55e7197ce')
+    version(
+        "1.0", sha256="e11799d1a3fbe76041333ba98858043b225c5d65221df8c600479bc55e7197ce"
+    )
 
-    depends_on('mpi')
+    depends_on("mpi")
 
     def edit(self, spec, prefix):
-        filter_file('-march=native', '', join_path('TeaLeaf_ref', 'Makefile'))
+        filter_file("-march=native", "", join_path("TeaLeaf_ref", "Makefile"))
 
     @property
     def build_targets(self):
         targets = [
-            '--directory=TeaLeaf_ref',
-            'MPI_COMPILER={0}'.format(self.spec['mpi'].mpifc),
-            'C_MPI_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            "--directory=TeaLeaf_ref",
+            "MPI_COMPILER={0}".format(self.spec["mpi"].mpifc),
+            "C_MPI_COMPILER={0}".format(self.spec["mpi"].mpicc),
         ]
 
-        if '%gcc' in self.spec:
-            targets.append('COMPILER=GNU')
-        elif '%cce' in self.spec:
-            targets.append('COMPILER=CRAY')
-        elif '%intel' in self.spec:
-            targets.append('COMPILER=INTEL')
-        elif '%pgi' in self.spec:
-            targets.append('COMPILER=PGI')
-        elif '%xl' in self.spec:
-            targets.append('COMPILER=XL')
+        if "%gcc" in self.spec:
+            targets.append("COMPILER=GNU")
+        elif "%cce" in self.spec:
+            targets.append("COMPILER=CRAY")
+        elif "%intel" in self.spec:
+            targets.append("COMPILER=INTEL")
+        elif "%pgi" in self.spec:
+            targets.append("COMPILER=PGI")
+        elif "%xl" in self.spec:
+            targets.append("COMPILER=XL")
 
         return targets
 
@@ -53,9 +55,9 @@ class Tealeaf(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.doc.tests)
 
-        install('README.md', prefix.doc)
-        install('TeaLeaf_ref/tea_leaf', prefix.bin)
-        install('TeaLeaf_ref/tea.in', prefix.bin)
+        install("README.md", prefix.doc)
+        install("TeaLeaf_ref/tea_leaf", prefix.bin)
+        install("TeaLeaf_ref/tea.in", prefix.bin)
 
-        for f in glob.glob('TeaLeaf_ref/*.in'):
+        for f in glob.glob("TeaLeaf_ref/*.in"):
             install(f, prefix.doc.tests)

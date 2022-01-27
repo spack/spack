@@ -190,20 +190,20 @@ def test_core_lib_files():
     """Roundtrip source files from the Python core libs."""
     test_directories = [
         os.path.join(
-            getattr(sys, 'real_prefix', sys.prefix),
-            'lib',
-            'python%s.%s' % sys.version_info[:2]
+            getattr(sys, "real_prefix", sys.prefix),
+            "lib",
+            "python%s.%s" % sys.version_info[:2],
         )
     ]
 
     names = []
     for test_dir in test_directories:
         for n in os.listdir(test_dir):
-            if n.endswith('.py') and not n.startswith('bad'):
+            if n.endswith(".py") and not n.startswith("bad"):
                 names.append(os.path.join(test_dir, n))
 
     for filename in names:
-        print('Testing %s' % filename)
+        print("Testing %s" % filename)
         source = read_pyfile(filename)
         check_ast_roundtrip(source)
 
@@ -234,15 +234,16 @@ def test_fstrings_complicated():
     check_ast_roundtrip("""f'''{"'"}'''""")
     check_ast_roundtrip('''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-\'\'\'''')
     check_ast_roundtrip(
-        '''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-'single quote\\'\'\'\'''')
-    check_ast_roundtrip('f"""{\'\'\'\n\'\'\'}"""')
-    check_ast_roundtrip('f"""{g(\'\'\'\n\'\'\')}"""')
+        '''f\'\'\'-{f"""*{f"+{f'.{x}.'}+"}*"""}-'single quote\\'\'\'\''''
+    )
+    check_ast_roundtrip("f\"\"\"{'''\n'''}\"\"\"")
+    check_ast_roundtrip("f\"\"\"{g('''\n''')}\"\"\"")
     check_ast_roundtrip('''f"a\\r\\nb"''')
     check_ast_roundtrip('''f"\\u2028{'x'}"''')
 
 
 def test_parser_modes():
-    for mode in ['exec', 'single', 'eval']:
+    for mode in ["exec", "single", "eval"]:
         check_ast_roundtrip(code_parseable_in_all_parser_modes, mode=mode)
 
 
@@ -291,8 +292,8 @@ def test_min_int27():
 
 @pytest.mark.skipif(not six.PY3, reason="Only works for Python 3")
 def test_min_int30():
-    check_ast_roundtrip(str(-2**31))
-    check_ast_roundtrip(str(-2**63))
+    check_ast_roundtrip(str(-(2 ** 31)))
+    check_ast_roundtrip(str(-(2 ** 63)))
 
 
 def test_imaginary_literals():
@@ -397,8 +398,7 @@ def test_repr():
 
 
 @pytest.mark.skipif(
-    sys.version_info[:2] < (3, 6),
-    reason="Only for Python 3.6 or greater"
+    sys.version_info[:2] < (3, 6), reason="Only for Python 3.6 or greater"
 )
 def test_complex_f_string():
     check_ast_roundtrip(complex_f_string)

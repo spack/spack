@@ -12,7 +12,9 @@ class RBmp(RPackage):
     dependencies."""
 
     homepage = "https://cloud.r-project.org/package=bmp"
-    url      = "https://cloud.r-project.org/src/contrib/bmp_0.3.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/bmp_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bmp"
 
-    version('0.3', sha256='bdf790249b932e80bc3a188a288fef079d218856cf64ffb88428d915423ea649')
+    version(
+        "0.3", sha256="bdf790249b932e80bc3a188a288fef079d218856cf64ffb88428d915423ea649"
+    )

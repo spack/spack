@@ -12,20 +12,33 @@ class _3proxy(MakefilePackage):
     """3proxy - tiny free proxy server"""
 
     homepage = "https://3proxy.org"
-    url      = "https://github.com/z3APA3A/3proxy/archive/0.8.13.tar.gz"
+    url = "https://github.com/z3APA3A/3proxy/archive/0.8.13.tar.gz"
 
-    version('0.8.13', sha256='a6d3cf9dd264315fa6ec848f6fe6c9057db005ce4ca8ed1deb00f6e1c3900f88')
-    version('0.8.12', sha256='c2ad3798b4f0df06cfcc7b49f658304e451d60e4834e2705ef83ddb85a03f849')
-    version('0.8.11', sha256='fc4295e1a462baa61977fcc21747db7861c4e3d0dcca86cbaa3e06017e5c66c9')
+    version(
+        "0.8.13",
+        sha256="a6d3cf9dd264315fa6ec848f6fe6c9057db005ce4ca8ed1deb00f6e1c3900f88",
+    )
+    version(
+        "0.8.12",
+        sha256="c2ad3798b4f0df06cfcc7b49f658304e451d60e4834e2705ef83ddb85a03f849",
+    )
+    version(
+        "0.8.11",
+        sha256="fc4295e1a462baa61977fcc21747db7861c4e3d0dcca86cbaa3e06017e5c66c9",
+    )
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
     def build(self, spec, prefix):
-        make('-f', 'Makefile.{0}'.format(platform.system()))
+        make("-f", "Makefile.{0}".format(platform.system()))
 
     def install(self, spec, prefix):
-        make('-f', 'Makefile.{0}'.format(platform.system()),
-             'prefix={0}'.format(prefix), 'install')
+        make(
+            "-f",
+            "Makefile.{0}".format(platform.system()),
+            "prefix={0}".format(prefix),
+            "install",
+        )

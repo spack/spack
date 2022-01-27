@@ -26,6 +26,7 @@ from spack.util.executable import which
 termios = None  # type: Optional[ModuleType]
 try:
     import termios as term_mod
+
     termios = term_mod
 except ImportError:
     pass
@@ -38,62 +39,62 @@ def nullcontext():
 
 def test_log_python_output_with_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt', echo=True):
-            print('logged')
+        with log_output("foo.txt", echo=True):
+            print("logged")
 
         # foo.txt has output
-        with open('foo.txt') as f:
-            assert f.read() == 'logged\n'
+        with open("foo.txt") as f:
+            assert f.read() == "logged\n"
 
         # output is also echoed.
-        assert capfd.readouterr()[0] == 'logged\n'
+        assert capfd.readouterr()[0] == "logged\n"
 
 
 def test_log_python_output_without_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt'):
-            print('logged')
+        with log_output("foo.txt"):
+            print("logged")
 
         # foo.txt has output
-        with open('foo.txt') as f:
-            assert f.read() == 'logged\n'
+        with open("foo.txt") as f:
+            assert f.read() == "logged\n"
 
         # nothing on stdout or stderr
-        assert capfd.readouterr()[0] == ''
+        assert capfd.readouterr()[0] == ""
 
 
 def test_log_python_output_with_invalid_utf8(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt'):
-            sys.stdout.buffer.write(b'\xc3\x28\n')
+        with log_output("foo.txt"):
+            sys.stdout.buffer.write(b"\xc3\x28\n")
 
         # python2 and 3 treat invalid UTF-8 differently
         if sys.version_info.major == 2:
-            expected = b'\xc3(\n'
+            expected = b"\xc3(\n"
         else:
-            expected = b'<line lost: output was not encoded as UTF-8>\n'
-        with open('foo.txt', 'rb') as f:
+            expected = b"<line lost: output was not encoded as UTF-8>\n"
+        with open("foo.txt", "rb") as f:
             written = f.read()
             assert written == expected
 
         # nothing on stdout or stderr
-        assert capfd.readouterr()[0] == ''
+        assert capfd.readouterr()[0] == ""
 
 
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
         # echo two lines
-        with log_output('foo.txt') as logger:
+        with log_output("foo.txt") as logger:
             with logger.force_echo():
-                print('force echo')
-            print('logged')
+                print("force echo")
+            print("logged")
 
         # log file contains everything
-        with open('foo.txt') as f:
-            assert f.read() == 'force echo\nlogged\n'
+        with open("foo.txt") as f:
+            assert f.read() == "force echo\nlogged\n"
 
         # only force-echo'd stuff is in output
-        assert capfd.readouterr()[0] == 'force echo\n'
+        assert capfd.readouterr()[0] == "force echo\n"
 
 
 def _log_filter_fn(string):
@@ -102,63 +103,63 @@ def _log_filter_fn(string):
 
 def test_log_output_with_filter(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with log_output('foo.txt', filter_fn=_log_filter_fn):
-            print('foo blah')
-            print('blah foo')
-            print('foo foo')
+        with log_output("foo.txt", filter_fn=_log_filter_fn):
+            print("foo blah")
+            print("blah foo")
+            print("foo foo")
 
         # foo.txt output is not filtered
-        with open('foo.txt') as f:
-            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+        with open("foo.txt") as f:
+            assert f.read() == "foo blah\nblah foo\nfoo foo\n"
 
     # output is not echoed
-    assert capfd.readouterr()[0] == ''
+    assert capfd.readouterr()[0] == ""
 
     # now try with echo
     with tmpdir.as_cwd():
-        with log_output('foo.txt', echo=True, filter_fn=_log_filter_fn):
-            print('foo blah')
-            print('blah foo')
-            print('foo foo')
+        with log_output("foo.txt", echo=True, filter_fn=_log_filter_fn):
+            print("foo blah")
+            print("blah foo")
+            print("foo foo")
 
         # foo.txt output is still not filtered
-        with open('foo.txt') as f:
-            assert f.read() == 'foo blah\nblah foo\nfoo foo\n'
+        with open("foo.txt") as f:
+            assert f.read() == "foo blah\nblah foo\nfoo foo\n"
 
     # echoed output is filtered.
-    assert capfd.readouterr()[0] == 'bar blah\nblah bar\nbar bar\n'
+    assert capfd.readouterr()[0] == "bar blah\nblah bar\nbar bar\n"
 
 
-@pytest.mark.skipif(not which('echo'), reason="needs echo command")
+@pytest.mark.skipif(not which("echo"), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
-    echo = which('echo')
+    echo = which("echo")
 
     # this is split into two tests because capfd interferes with the
     # output logged to file when using a subprocess.  We test the file
     # here, and echoing in test_log_subproc_and_echo_output_capfd below.
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with log_output('foo.txt') as logger:
+            with log_output("foo.txt") as logger:
                 with logger.force_echo():
-                    echo('echo')
-                print('logged')
+                    echo("echo")
+                print("logged")
 
-            with open('foo.txt') as f:
-                assert f.read() == 'echo\nlogged\n'
+            with open("foo.txt") as f:
+                assert f.read() == "echo\nlogged\n"
 
 
-@pytest.mark.skipif(not which('echo'), reason="needs echo command")
+@pytest.mark.skipif(not which("echo"), reason="needs echo command")
 def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
-    echo = which('echo')
+    echo = which("echo")
 
     # This tests *only* what is echoed when using a subprocess, as capfd
     # interferes with the logged data. See
     # test_log_subproc_and_echo_output_no_capfd for tests on the logfile.
     with tmpdir.as_cwd():
-        with log_output('foo.txt') as logger:
+        with log_output("foo.txt") as logger:
             with logger.force_echo():
-                echo('echo')
-            print('logged')
+                echo("echo")
+            print("logged")
 
         assert capfd.readouterr()[0] == "echo\n"
 
@@ -172,6 +173,7 @@ def simple_logger(**kwargs):
 
     def handler(signum, frame):
         running[0] = False
+
     signal.signal(signal.SIGUSR1, handler)
 
     log_path = kwargs["log_path"]
@@ -314,24 +316,27 @@ def no_termios():
 
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
 @pytest.mark.skipif(not termios, reason="requires termios support")
-@pytest.mark.parametrize('test_fn,termios_on_or_off', [
-    # tests with termios
-    (mock_shell_fg, nullcontext),
-    (mock_shell_bg, nullcontext),
-    (mock_shell_bg_fg, nullcontext),
-    (mock_shell_fg_bg, nullcontext),
-    (mock_shell_tstp_cont, nullcontext),
-    (mock_shell_tstp_tstp_cont, nullcontext),
-    (mock_shell_tstp_tstp_cont_cont, nullcontext),
-    # tests without termios
-    (mock_shell_fg_no_termios, no_termios),
-    (mock_shell_bg, no_termios),
-    (mock_shell_bg_fg_no_termios, no_termios),
-    (mock_shell_fg_bg_no_termios, no_termios),
-    (mock_shell_tstp_cont, no_termios),
-    (mock_shell_tstp_tstp_cont, no_termios),
-    (mock_shell_tstp_tstp_cont_cont, no_termios),
-])
+@pytest.mark.parametrize(
+    "test_fn,termios_on_or_off",
+    [
+        # tests with termios
+        (mock_shell_fg, nullcontext),
+        (mock_shell_bg, nullcontext),
+        (mock_shell_bg_fg, nullcontext),
+        (mock_shell_fg_bg, nullcontext),
+        (mock_shell_tstp_cont, nullcontext),
+        (mock_shell_tstp_tstp_cont, nullcontext),
+        (mock_shell_tstp_tstp_cont_cont, nullcontext),
+        # tests without termios
+        (mock_shell_fg_no_termios, no_termios),
+        (mock_shell_bg, no_termios),
+        (mock_shell_bg_fg_no_termios, no_termios),
+        (mock_shell_fg_bg_no_termios, no_termios),
+        (mock_shell_tstp_cont, no_termios),
+        (mock_shell_tstp_tstp_cont, no_termios),
+        (mock_shell_tstp_tstp_cont_cont, no_termios),
+    ],
+)
 def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     """Functional tests for foregrounding and backgrounding a logged process.
 
@@ -366,6 +371,7 @@ def synchronized_logger(**kwargs):
 
     def handler(signum, frame):
         running[0] = False
+
     signal.signal(signal.SIGUSR1, handler)
 
     log_path = kwargs["log_path"]
@@ -383,7 +389,7 @@ def synchronized_logger(**kwargs):
                     print("off")
                     v_lock.release()
                 else:
-                    print("on")       # lock held; v is toggled on
+                    print("on")  # lock held; v is toggled on
             time.sleep(1e-2)
 
 
@@ -394,22 +400,22 @@ def mock_shell_v_v(proc, ctl, **kwargs):
 
     ctl.fg()
     ctl.wait_enabled()
-    time.sleep(.1)
+    time.sleep(0.1)
 
     write_lock.acquire()  # suspend writing
-    v_lock.acquire()      # enable v lock
-    ctl.write(b'v')       # toggle v on stdin
-    time.sleep(.1)
+    v_lock.acquire()  # enable v lock
+    ctl.write(b"v")  # toggle v on stdin
+    time.sleep(0.1)
     write_lock.release()  # resume writing
 
-    time.sleep(.1)
+    time.sleep(0.1)
 
     write_lock.acquire()  # suspend writing
-    ctl.write(b'v')       # toggle v on stdin
-    time.sleep(.1)
-    v_lock.release()      # disable v lock
+    ctl.write(b"v")  # toggle v on stdin
+    time.sleep(0.1)
+    v_lock.release()  # disable v lock
     write_lock.release()  # resume writing
-    time.sleep(.1)
+    time.sleep(0.1)
 
     os.kill(proc.pid, signal.SIGUSR1)
 
@@ -421,37 +427,42 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 
     ctl.fg()
     ctl.wait_disabled_fg()
-    time.sleep(.1)
+    time.sleep(0.1)
 
     write_lock.acquire()  # suspend writing
-    v_lock.acquire()      # enable v lock
-    ctl.write(b'v\n')     # toggle v on stdin
-    time.sleep(.1)
+    v_lock.acquire()  # enable v lock
+    ctl.write(b"v\n")  # toggle v on stdin
+    time.sleep(0.1)
     write_lock.release()  # resume writing
 
-    time.sleep(.1)
+    time.sleep(0.1)
 
     write_lock.acquire()  # suspend writing
-    ctl.write(b'v\n')     # toggle v on stdin
-    time.sleep(.1)
-    v_lock.release()      # disable v lock
+    ctl.write(b"v\n")  # toggle v on stdin
+    time.sleep(0.1)
+    v_lock.release()  # disable v lock
     write_lock.release()  # resume writing
-    time.sleep(.1)
+    time.sleep(0.1)
 
     os.kill(proc.pid, signal.SIGUSR1)
 
 
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
 @pytest.mark.skipif(not termios, reason="requires termios support")
-@pytest.mark.parametrize('test_fn,termios_on_or_off', [
-    (mock_shell_v_v, nullcontext),
-    (mock_shell_v_v_no_termios, no_termios),
-])
-def test_foreground_background_output(
-        test_fn, capfd, termios_on_or_off, tmpdir):
+@pytest.mark.parametrize(
+    "test_fn,termios_on_or_off",
+    [
+        (mock_shell_v_v, nullcontext),
+        (mock_shell_v_v_no_termios, no_termios),
+    ],
+)
+def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
-    if (sys.version_info >= (3, 8) and sys.platform == 'darwin'
-        and termios_on_or_off == no_termios):
+    if (
+        sys.version_info >= (3, 8)
+        and sys.platform == "darwin"
+        and termios_on_or_off == no_termios
+    ):
 
         return
 
@@ -463,12 +474,7 @@ def test_foreground_background_output(
     v_lock = multiprocessing.Lock()  # held while controller is in v mode
 
     with termios_on_or_off():
-        shell.start(
-            write_lock=write_lock,
-            v_lock=v_lock,
-            debug=True,
-            log_path=log_path
-        )
+        shell.start(write_lock=write_lock, v_lock=v_lock, debug=True, log_path=log_path)
 
     exitcode = shell.join()
     out, err = capfd.readouterr()
@@ -491,13 +497,13 @@ def test_foreground_background_output(
     # output should contain mostly "on" lines, but may contain "off"
     # lines if the controller is slow. The important thing to observe
     # here is that we started seeing 'on' in the end.
-    assert (
-        ['forced output', 'on'] == uniq(output) or
-        ['forced output', 'off', 'on'] == uniq(output)
-    )
+    assert ["forced output", "on"] == uniq(output) or [
+        "forced output",
+        "off",
+        "on",
+    ] == uniq(output)
 
     # log should be off for a while, then on, then off
-    assert (
-        ['forced output', 'off', 'on', 'off'] == uniq(log) and
-        log.count("off") > 2  # ensure some "off" lines were omitted
-    )
+    assert ["forced output", "off", "on", "off"] == uniq(log) and log.count(
+        "off"
+    ) > 2  # ensure some "off" lines were omitted

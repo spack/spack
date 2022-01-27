@@ -14,7 +14,10 @@ class PyRetrying(PythonPackage):
     homepage = "https://github.com/rholder/retrying"
     pypi = "retrying/retrying-1.3.3.tar.gz"
 
-    version('1.3.3', sha256='08c039560a6da2fe4f2c426d0766e284d3b736e355f8dd24b37367b0bb41973b')
+    version(
+        "1.3.3",
+        sha256="08c039560a6da2fe4f2c426d0766e284d3b736e355f8dd24b37367b0bb41973b",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-six@1.7.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six@1.7.0:", type=("build", "run"))

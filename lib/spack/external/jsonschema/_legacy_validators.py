@@ -13,7 +13,9 @@ def dependencies_draft3(validator, dependencies, instance, schema):
 
         if validator.is_type(dependency, "object"):
             for error in validator.descend(
-                instance, dependency, schema_path=property,
+                instance,
+                dependency,
+                schema_path=property,
             ):
                 yield error
         elif validator.is_type(dependency, "string"):
@@ -31,9 +33,7 @@ def dependencies_draft3(validator, dependencies, instance, schema):
 def disallow_draft3(validator, disallow, instance, schema):
     for disallowed in _utils.ensure_list(disallow):
         if validator.is_valid(instance, {"type": [disallowed]}):
-            yield ValidationError(
-                "%r is disallowed for %r" % (disallowed, instance)
-            )
+            yield ValidationError("%r is disallowed for %r" % (disallowed, instance))
 
 
 def extends_draft3(validator, extends, instance, schema):
@@ -57,7 +57,10 @@ def items_draft3_draft4(validator, items, instance, schema):
     else:
         for (index, item), subschema in zip(enumerate(instance), items):
             for error in validator.descend(
-                item, subschema, path=index, schema_path=index,
+                item,
+                subschema,
+                path=index,
+                schema_path=index,
             ):
                 yield error
 
@@ -74,9 +77,7 @@ def minimum_draft3_draft4(validator, minimum, instance, schema):
         cmp = "less than"
 
     if failed:
-        yield ValidationError(
-            "%r is %s the minimum of %r" % (instance, cmp, minimum)
-        )
+        yield ValidationError("%r is %s the minimum of %r" % (instance, cmp, minimum))
 
 
 def maximum_draft3_draft4(validator, maximum, instance, schema):
@@ -91,9 +92,7 @@ def maximum_draft3_draft4(validator, maximum, instance, schema):
         cmp = "greater than"
 
     if failed:
-        yield ValidationError(
-            "%r is %s the maximum of %r" % (instance, cmp, maximum)
-        )
+        yield ValidationError("%r is %s the maximum of %r" % (instance, cmp, maximum))
 
 
 def properties_draft3(validator, properties, instance, schema):
@@ -137,5 +136,6 @@ def type_draft3(validator, types, instance, schema):
                 return
     else:
         yield ValidationError(
-            _utils.types_msg(instance, types), context=all_errors,
+            _utils.types_msg(instance, types),
+            context=all_errors,
         )

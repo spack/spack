@@ -13,9 +13,12 @@ class PyHttpcore(PythonPackage):
     homepage = "https://github.com/encode/httpcore"
     pypi = "httpcore/httpcore-0.11.0.tar.gz"
 
-    version('0.11.0', sha256='35ffc735d746b83f8fc6d36f82600e56117b9e8adc65d0c0423264b6ebfef7bf')
+    version(
+        "0.11.0",
+        sha256="35ffc735d746b83f8fc6d36f82600e56117b9e8adc65d0c0423264b6ebfef7bf",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-sniffio@1.0:')
-    depends_on('py-h11@0.8:0.9')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-sniffio@1.0:")
+    depends_on("py-h11@0.8:0.9")

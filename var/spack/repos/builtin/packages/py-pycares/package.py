@@ -12,10 +12,13 @@ class PyPycares(PythonPackage):
     asynchronously."""
 
     homepage = "https://github.com/saghul/pycares"
-    url      = "https://github.com/saghul/pycares/archive/pycares-3.0.0.tar.gz"
+    url = "https://github.com/saghul/pycares/archive/pycares-3.0.0.tar.gz"
 
-    version('3.0.0', sha256='28dc2bd59cf20399a6af4383cc8f57970cfca8b808ca05d6493812862ef0ca9c')
+    version(
+        "3.0.0",
+        sha256="28dc2bd59cf20399a6af4383cc8f57970cfca8b808ca05d6493812862ef0ca9c",
+    )
 
-    depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cffi', type=('build', 'run'))
+    depends_on("python@2.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cffi", type=("build", "run"))

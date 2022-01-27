@@ -33,16 +33,16 @@ def get_analyzer_dir(spec, analyzer_dir=None):
     # The top level directory is in the user home, or a custom location
     if not analyzer_dir:
         analyzer_dir = spack.util.path.canonicalize_path(
-            spack.config.get('config:analyzers_dir', '~/.spack/analyzers'))
+            spack.config.get("config:analyzers_dir", "~/.spack/analyzers")
+        )
 
     # We follow the same convention as the spec install (this could be better)
-    package_prefix = os.sep.join(spec.package.prefix.split('/')[-3:])
+    package_prefix = os.sep.join(spec.package.prefix.split("/")[-3:])
     meta_dir = os.path.join(analyzer_dir, package_prefix)
     return meta_dir
 
 
 class AnalyzerBase(object):
-
     def __init__(self, spec, dirname=None):
         """
         Verify that the analyzer has correct metadata.

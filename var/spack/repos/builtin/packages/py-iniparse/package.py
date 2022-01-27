@@ -11,12 +11,16 @@ class PyIniparse(PythonPackage):
 
     homepage = "https://github.com/candlepin/python-iniparse"
     pypi = "iniparse/iniparse-0.4.tar.gz"
-    git      = "https://github.com/candlepin/python-iniparse.git"
+    git = "https://github.com/candlepin/python-iniparse.git"
 
-    version('master', branch='master')
-    version('0.4', sha256='abc1ee12d2cfb2506109072d6c21e40b6c75a3fe90a9c924327d80bc0d99c054', deprecated=True)
+    version("master", branch="master")
+    version(
+        "0.4",
+        sha256="abc1ee12d2cfb2506109072d6c21e40b6c75a3fe90a9c924327d80bc0d99c054",
+        deprecated=True,
+    )
 
-    depends_on('python@2.4:2.8', when='@:0.4', type=('build', 'run'))
-    depends_on('python@2.6:2.8,3.3:', when='@master:', type=('build', 'run'))
+    depends_on("python@2.4:2.8", when="@:0.4", type=("build", "run"))
+    depends_on("python@2.6:2.8,3.3:", when="@master:", type=("build", "run"))
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -15,22 +15,25 @@ class PyDmTree(PythonPackage):
     homepage = "https://github.com/deepmind/tree"
     pypi = "dm-tree/dm-tree-0.1.5.tar.gz"
 
-    maintainers = ['aweits']
+    maintainers = ["aweits"]
 
-    version('0.1.5', sha256='a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa')
+    version(
+        "0.1.5",
+        sha256="a951d2239111dfcc468071bc8ff792c7b1e3192cab5a3c94d33a8b2bda3127fa",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('bazel', type='build')
-    depends_on('py-six@1.12.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("bazel", type="build")
+    depends_on("py-six@1.12.0:", type=("build", "run"))
 
-    @run_after('install')
+    @run_after("install")
     def clean(self):
         remove_linked_tree(self.tmp_path)
 
     def patch(self):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
-        env['TEST_TMPDIR'] = self.tmp_path
-        env['HOME'] = self.tmp_path
+        self.tmp_path = tempfile.mkdtemp(dir="/tmp", prefix="spack")
+        env["TEST_TMPDIR"] = self.tmp_path
+        env["HOME"] = self.tmp_path
         args = [
             # Don't allow user or system .bazelrc to override build settings
             "'--nohome_rc',\n",
@@ -52,8 +55,6 @@ class PyDmTree(PythonPackage):
             # Increase verbosity of explanation,
             "'--verbose_explanations',\n",
             # bazel uses system PYTHONPATH instead of spack paths
-            "'--action_env', 'PYTHONPATH={0}',\n".format(env['PYTHONPATH']),
+            "'--action_env', 'PYTHONPATH={0}',\n".format(env["PYTHONPATH"]),
         ]
-        filter_file("'build',",
-                    ' '.join(args),
-                    'setup.py')
+        filter_file("'build',", " ".join(args), "setup.py")

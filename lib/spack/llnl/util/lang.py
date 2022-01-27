@@ -17,7 +17,7 @@ from six import string_types
 from llnl.util.compat import Hashable, MutableMapping, zip_longest
 
 # Ignore emacs backups when listing modules
-ignore_modules = [r'^\.#', '~$']
+ignore_modules = [r"^\.#", "~$"]
 
 
 def index_by(objects, *funcs):
@@ -87,9 +87,9 @@ def index_by(objects, *funcs):
 
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
-       This allows a function to insert variables into its caller's
-       scope.  Yes, this is some black magic, and yes it's useful
-       for implementing things like depends_on and provides.
+    This allows a function to insert variables into its caller's
+    scope.  Yes, this is some black magic, and yes it's useful
+    for implementing things like depends_on and provides.
     """
     # Passing zero here skips line context for speed.
     stack = inspect.stack(0)
@@ -101,7 +101,7 @@ def caller_locals():
 
 def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
-       enclosing module's name.
+    enclosing module's name.
     """
     # Passing zero here skips line context for speed.
     stack = inspect.stack(0)
@@ -111,12 +111,13 @@ def get_calling_module_name():
     finally:
         del stack
 
-    if '__module__' not in caller_locals:
-        raise RuntimeError("Must invoke get_calling_module_name() "
-                           "from inside a class definition!")
+    if "__module__" not in caller_locals:
+        raise RuntimeError(
+            "Must invoke get_calling_module_name() " "from inside a class definition!"
+        )
 
-    module_name = caller_locals['__module__']
-    base_name = module_name.split('.')[-1]
+    module_name = caller_locals["__module__"]
+    base_name = module_name.split(".")[-1]
     return base_name
 
 
@@ -125,7 +126,8 @@ def attr_required(obj, attr_name):
     if not hasattr(obj, attr_name):
         raise RequiredAttributeError(
             "No required attribute '%s' in class '%s'"
-            % (attr_name, obj.__class__.__name__))
+            % (attr_name, obj.__class__.__name__)
+        )
 
 
 def attr_setdefault(obj, name, value):
@@ -186,23 +188,23 @@ def memoized(func):
 
 def list_modules(directory, **kwargs):
     """Lists all of the modules, excluding ``__init__.py``, in a
-       particular directory.  Listed packages have no particular
-       order."""
-    list_directories = kwargs.setdefault('directories', True)
+    particular directory.  Listed packages have no particular
+    order."""
+    list_directories = kwargs.setdefault("directories", True)
 
     for name in os.listdir(directory):
-        if name == '__init__.py':
+        if name == "__init__.py":
             continue
 
         path = os.path.join(directory, name)
         if list_directories and os.path.isdir(path):
-            init_py = os.path.join(path, '__init__.py')
+            init_py = os.path.join(path, "__init__.py")
             if os.path.isfile(init_py):
                 yield name
 
-        elif name.endswith('.py'):
+        elif name.endswith(".py"):
             if not any(re.search(pattern, name) for pattern in ignore_modules):
-                yield re.sub('.py$', '', name)
+                yield re.sub(".py$", "", name)
 
 
 def decorator_with_or_without_args(decorator):
@@ -232,41 +234,40 @@ def decorator_with_or_without_args(decorator):
 
 def key_ordering(cls):
     """Decorates a class with extra methods that implement rich comparison
-       operations and ``__hash__``.  The decorator assumes that the class
-       implements a function called ``_cmp_key()``.  The rich comparison
-       operations will compare objects using this key, and the ``__hash__``
-       function will return the hash of this key.
+    operations and ``__hash__``.  The decorator assumes that the class
+    implements a function called ``_cmp_key()``.  The rich comparison
+    operations will compare objects using this key, and the ``__hash__``
+    function will return the hash of this key.
 
-       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
-       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+    If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
+    ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
 
-       Raises:
-           TypeError: If the class does not have a ``_cmp_key`` method
+    Raises:
+        TypeError: If the class does not have a ``_cmp_key`` method
     """
+
     def setter(name, value):
         value.__name__ = name
         setattr(cls, name, value)
 
-    if not has_method(cls, '_cmp_key'):
+    if not has_method(cls, "_cmp_key"):
         raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
 
-    setter('__eq__',
-           lambda s, o:
-           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
-    setter('__lt__',
-           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
-    setter('__le__',
-           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
+    setter(
+        "__eq__",
+        lambda s, o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()),
+    )
+    setter("__lt__", lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
+    setter("__le__", lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__',
-           lambda s, o:
-           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
-    setter('__gt__',
-           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
-    setter('__ge__',
-           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
+    setter(
+        "__ne__",
+        lambda s, o: (s is not o) and (o is None or s._cmp_key() != o._cmp_key()),
+    )
+    setter("__gt__", lambda s, o: o is None or s._cmp_key() > o._cmp_key())
+    setter("__ge__", lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
 
-    setter('__hash__', lambda self: hash(self._cmp_key()))
+    setter("__hash__", lambda self: hash(self._cmp_key()))
 
     return cls
 
@@ -433,8 +434,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     def le(self, other):
         if self is other:
             return True
-        return (other is not None) and not lazy_lt(other._cmp_iter,
-                                                   self._cmp_iter)
+        return (other is not None) and not lazy_lt(other._cmp_iter, self._cmp_iter)
 
     def ge(self, other):
         if self is other:
@@ -464,7 +464,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 @lazy_lexicographic_ordering
 class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
-       a tuple of the values in the dictionary."""
+    a tuple of the values in the dictionary."""
 
     def __init__(self):
         self.dict = {}
@@ -502,7 +502,7 @@ class HashableMap(MutableMapping):
 
 def in_function(function_name):
     """True if the caller was called from some function with
-       the supplied Name, False otherwise."""
+    the supplied Name, False otherwise."""
     stack = inspect.stack()
     try:
         for elt in stack[2:]:
@@ -515,24 +515,25 @@ def in_function(function_name):
 
 def check_kwargs(kwargs, fun):
     """Helper for making functions with kwargs.  Checks whether the kwargs
-       are empty after all of them have been popped off.  If they're
-       not, raises an error describing which kwargs are invalid.
+    are empty after all of them have been popped off.  If they're
+    not, raises an error describing which kwargs are invalid.
 
-       Example::
+    Example::
 
-          def foo(self, **kwargs):
-              x = kwargs.pop('x', None)
-              y = kwargs.pop('y', None)
-              z = kwargs.pop('z', None)
-              check_kwargs(kwargs, self.foo)
+       def foo(self, **kwargs):
+           x = kwargs.pop('x', None)
+           y = kwargs.pop('y', None)
+           z = kwargs.pop('z', None)
+           check_kwargs(kwargs, self.foo)
 
-          # This raises a TypeError:
-          foo(w='bad kwarg')
+       # This raises a TypeError:
+       foo(w='bad kwarg')
     """
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(iter(kwargs)), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__)
+        )
 
 
 def match_predicate(*args):
@@ -548,6 +549,7 @@ def match_predicate(*args):
     * any regex in a list or tuple of regexes matches.
     * any predicate in args matches.
     """
+
     def match(string):
         for arg in args:
             if isinstance(arg, string_types):
@@ -560,9 +562,12 @@ def match_predicate(*args):
                 if arg(string):
                     return True
             else:
-                raise ValueError("args to match_predicate must be regex, "
-                                 "list of regexes, or callable.")
+                raise ValueError(
+                    "args to match_predicate must be regex, "
+                    "list of regexes, or callable."
+                )
         return False
+
     return match
 
 
@@ -611,7 +616,7 @@ def pretty_date(time, now=None):
     day_diff = diff.days
 
     if day_diff < 0:
-        return ''
+        return ""
 
     if day_diff == 0:
         if second_diff < 10:
@@ -669,43 +674,44 @@ def pretty_string_to_date(date_str, now=None):
     now = now or datetime.now()
 
     # datetime formats
-    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
-    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
-        x, '%Y-%m'
+    pattern[re.compile(r"^\d{4}$")] = lambda x: datetime.strptime(x, "%Y")
+    pattern[re.compile(r"^\d{4}-\d{2}$")] = lambda x: datetime.strptime(x, "%Y-%m")
+    pattern[re.compile(r"^\d{4}-\d{2}-\d{2}$")] = lambda x: datetime.strptime(
+        x, "%Y-%m-%d"
     )
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
-        x, '%Y-%m-%d'
-    )
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
-        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
-        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    pattern[
+        re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
+    ] = lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M")
+    pattern[
+        re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
+    ] = lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S")
 
     pretty_regex = re.compile(
-        r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
+        r"(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago"
+    )
 
     def _n_xxx_ago(x):
         how_many, time_period = pretty_regex.search(x).groups()
 
-        how_many = 1 if how_many == 'a' else int(how_many)
+        how_many = 1 if how_many == "a" else int(how_many)
 
         # timedelta natively supports time periods up to 'weeks'.
         # To apply month or year we convert to 30 and 365 days
-        if time_period == 'month':
+        if time_period == "month":
             how_many *= 30
-            time_period = 'day'
-        elif time_period == 'year':
+            time_period = "day"
+        elif time_period == "year":
             how_many *= 365
-            time_period = 'day'
+            time_period = "day"
 
-        kwargs = {(time_period + 's'): how_many}
+        kwargs = {(time_period + "s"): how_many}
         return now - timedelta(**kwargs)
 
     pattern[pretty_regex] = _n_xxx_ago
 
     # yesterday
     callback = lambda x: now - timedelta(days=1)
-    pattern[re.compile('^yesterday$')] = callback
+    pattern[re.compile("^yesterday$")] = callback
 
     for regexp, parser in pattern.items():
         if bool(regexp.match(date_str)):
@@ -716,7 +722,6 @@ def pretty_string_to_date(date_str, now=None):
 
 
 class RequiredAttributeError(ValueError):
-
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
 
@@ -728,6 +733,7 @@ class ObjectWrapper(object):
     This class is modeled after the stackoverflow answer:
     * http://stackoverflow.com/a/1445289/771663
     """
+
     def __init__(self, wrapped_object):
         wrapped_cls = type(wrapped_object)
         wrapped_name = wrapped_cls.__name__
@@ -771,7 +777,7 @@ class Singleton(object):
         # requested but not yet set. The final 'getattr' line here requires
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
-        if name in ['_instance', 'instance']:
+        if name in ["_instance", "instance"]:
             raise AttributeError()
         return getattr(self.instance, name)
 
@@ -801,7 +807,7 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
-        if name == 'ref_function':
+        if name == "ref_function":
             raise AttributeError()
         return getattr(self.ref_function(), name)
 
@@ -839,8 +845,8 @@ def load_module_from_file(module_name, module_path):
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
     if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
         import importlib.util
-        spec = importlib.util.spec_from_file_location(  # novm
-            module_name, module_path)
+
+        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
         module = importlib.util.module_from_spec(spec)  # novm
         # The module object needs to exist in sys.modules before the
         # loader executes the module code.
@@ -857,11 +863,12 @@ def load_module_from_file(module_name, module_path):
             raise
     elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
         import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(  # novm
-            module_name, module_path)
+
+        loader = importlib.machinery.SourceFileLoader(module_name, module_path)  # novm
         module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp
+
         module = imp.load_source(module_name, module_path)
     return module
 
@@ -893,8 +900,10 @@ def uniq(sequence):
 
 def star(func):
     """Unpacks arguments for use with Multiprocessing mapping functions"""
+
     def _wrapper(args):
         return func(*args)
+
     return _wrapper
 
 
@@ -903,21 +912,22 @@ class Devnull(object):
 
     See https://stackoverflow.com/a/2929954.
     """
+
     def write(self, *_):
         pass
 
 
 def elide_list(line_list, max_num=10):
     """Takes a long list and limits it to a smaller number of elements,
-       replacing intervening elements with '...'.  For example::
+    replacing intervening elements with '...'.  For example::
 
-           elide_list([1,2,3,4,5,6], 4)
+        elide_list([1,2,3,4,5,6], 4)
 
-       gives::
+    gives::
 
-           [1, 2, 3, '...', 6]
+        [1, 2, 3, '...', 6]
     """
     if len(line_list) > max_num:
-        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
+        return line_list[: max_num - 1] + ["..."] + line_list[-1:]
     else:
         return line_list

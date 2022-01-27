@@ -18,25 +18,28 @@ class RShinystan(RPackage):
     using the 'rstan' and 'rstanarm' packages)."""
 
     homepage = "https://mc-stan.org/"
-    cran     = "shinystan"
+    cran = "shinystan"
 
-    version('2.5.0', sha256='45f9c552a31035c5de8658bb9e5d72da7ec1f88fbddb520d15fe701c677154a1')
+    version(
+        "2.5.0",
+        sha256="45f9c552a31035c5de8658bb9e5d72da7ec1f88fbddb520d15fe701c677154a1",
+    )
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
-    depends_on('r-shiny@1.0.3:', type=('build', 'run'))
-    depends_on('r-bayesplot@1.5.0:', type=('build', 'run'))
-    depends_on('r-colourpicker', type=('build', 'run'))
-    depends_on('r-dt@0.2:', type=('build', 'run'))
-    depends_on('r-dygraphs@1.1.1.2:', type=('build', 'run'))
-    depends_on('r-ggplot2@2.1.1:', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
-    depends_on('r-gtools', type=('build', 'run'))
-    depends_on('r-markdown@0.7.4:', type=('build', 'run'))
-    depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-rsconnect@0.4.2:', type=('build', 'run'))
-    depends_on('r-rstan@2.17.1:', type=('build', 'run'))
-    depends_on('r-shinyjs@0.6.0:', type=('build', 'run'))
-    depends_on('r-shinythemes@1.0.1:', type=('build', 'run'))
-    depends_on('r-threejs@0.2.1:', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-xts@0.9-7:', type=('build', 'run'))
+    depends_on("r@3.1.0:", type=("build", "run"))
+    depends_on("r-shiny@1.0.3:", type=("build", "run"))
+    depends_on("r-bayesplot@1.5.0:", type=("build", "run"))
+    depends_on("r-colourpicker", type=("build", "run"))
+    depends_on("r-dt@0.2:", type=("build", "run"))
+    depends_on("r-dygraphs@1.1.1.2:", type=("build", "run"))
+    depends_on("r-ggplot2@2.1.1:", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))
+    depends_on("r-gtools", type=("build", "run"))
+    depends_on("r-markdown@0.7.4:", type=("build", "run"))
+    depends_on("r-reshape2", type=("build", "run"))
+    depends_on("r-rsconnect@0.4.2:", type=("build", "run"))
+    depends_on("r-rstan@2.17.1:", type=("build", "run"))
+    depends_on("r-shinyjs@0.6.0:", type=("build", "run"))
+    depends_on("r-shinythemes@1.0.1:", type=("build", "run"))
+    depends_on("r-threejs@0.2.1:", type=("build", "run"))
+    depends_on("r-xtable", type=("build", "run"))
+    depends_on("r-xts@0.9-7:", type=("build", "run"))

@@ -14,19 +14,22 @@ class XcursorThemes(Package, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/data/cursors"
     xorg_mirror_path = "data/xcursor-themes-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='8ed23bab13a4010fe4e95b37eefb634e31ac7cb8240b8b3b7d919c3a2db09503')
+    version(
+        "1.0.4",
+        sha256="8ed23bab13a4010fe4e95b37eefb634e31ac7cb8240b8b3b7d919c3a2db09503",
+    )
 
-    depends_on('libxcursor')
+    depends_on("libxcursor")
 
-    depends_on('xcursorgen', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xcursorgen", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        configure("--prefix={0}".format(prefix))
 
         make()
-        make('install')
+        make("install")
 
         # `make install` copies the files to the libxcursor installation.
         # Create a fake directory to convince Spack that we actually

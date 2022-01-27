@@ -14,8 +14,11 @@ class PyNanotime(PythonPackage):
     """
 
     homepage = "https://github.com/jbenet/nanotime"
-    pypi     = "nanotime/nanotime-0.5.2.tar.gz"
+    pypi = "nanotime/nanotime-0.5.2.tar.gz"
 
-    version('0.5.2', sha256='c7cc231fc5f6db401b448d7ab51c96d0a4733f4b69fabe569a576f89ffdf966b')
+    version(
+        "0.5.2",
+        sha256="c7cc231fc5f6db401b448d7ab51c96d0a4733f4b69fabe569a576f89ffdf966b",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

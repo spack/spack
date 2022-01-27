@@ -12,7 +12,10 @@ class RIni(RPackage):
     structured list can be used to write back to file after modifications."""
 
     homepage = "https://github.com/dvdscripter/ini"
-    url      = "https://cloud.r-project.org/src/contrib/ini_0.3.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/ini_0.3.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ini"
 
-    version('0.3.1', sha256='7b191a54019c8c52d6c2211c14878c95564154ec4865f57007953742868cd813')
+    version(
+        "0.3.1",
+        sha256="7b191a54019c8c52d6c2211c14878c95564154ec4865f57007953742868cd813",
+    )

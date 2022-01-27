@@ -8,41 +8,53 @@ from spack import *
 
 class Mrbayes(AutotoolsPackage):
     """MrBayes is a program for Bayesian inference and model choice across a
-       wide range of phylogenetic and evolutionary models. MrBayes uses Markov
-       chain Monte Carlo (MCMC) methods to estimate the posterior distribution
-       of model parameters."""
+    wide range of phylogenetic and evolutionary models. MrBayes uses Markov
+    chain Monte Carlo (MCMC) methods to estimate the posterior distribution
+    of model parameters."""
 
     homepage = "http://mrbayes.sourceforge.net"
-    url      = "https://github.com/NBISweden/MrBayes/releases/download/v3.2.7a/mrbayes-3.2.7a.tar.gz"
+    url = "https://github.com/NBISweden/MrBayes/releases/download/v3.2.7a/mrbayes-3.2.7a.tar.gz"
 
-    version('3.2.7a', sha256='1a4670be84e6b968d59382328294db4c8ceb73e0c19c702265deec6f2177815c')
-    version('3.2.7',  sha256='39d9eb269969b501268d5c27f77687c6eaa2c71ccf15c724e6f330fc405f24b9')
+    version(
+        "3.2.7a",
+        sha256="1a4670be84e6b968d59382328294db4c8ceb73e0c19c702265deec6f2177815c",
+    )
+    version(
+        "3.2.7",
+        sha256="39d9eb269969b501268d5c27f77687c6eaa2c71ccf15c724e6f330fc405f24b9",
+    )
 
-    variant('mpi', default=True, description='Enable MPI parallel support')
-    variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')
-    variant('readline', default=False, description='Enable readline library, not recommended with MPI')
+    variant("mpi", default=True, description="Enable MPI parallel support")
+    variant(
+        "beagle", default=True, description="Enable BEAGLE library for speed benefits"
+    )
+    variant(
+        "readline",
+        default=False,
+        description="Enable readline library, not recommended with MPI",
+    )
 
-    depends_on('libbeagle', when='+beagle')
-    depends_on('mpi', when='+mpi')
-    depends_on('readline', when='+readline')
+    depends_on("libbeagle", when="+beagle")
+    depends_on("mpi", when="+mpi")
+    depends_on("readline", when="+readline")
 
     def configure_args(self):
         args = []
-        if '~beagle' in self.spec:
-            args.append('--with-beagle=no')
+        if "~beagle" in self.spec:
+            args.append("--with-beagle=no")
         else:
-            args.append('--with-beagle=%s' % self.spec['libbeagle'].prefix)
-        if '+readline' in self.spec:
-            args.append('--with-readline=yes')
+            args.append("--with-beagle=%s" % self.spec["libbeagle"].prefix)
+        if "+readline" in self.spec:
+            args.append("--with-readline=yes")
         else:
-            args.append('--with-readline=no')
-        if '~mpi' in self.spec:
-            args.append('--with-mpi=no')
+            args.append("--with-readline=no")
+        if "~mpi" in self.spec:
+            args.append("--with-mpi=no")
         else:
-            args.append('--with-mpi=yes')
+            args.append("--with-mpi=yes")
         return args
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir('src'):
-            install('mb', prefix.bin)
+        with working_dir("src"):
+            install("mb", prefix.bin)

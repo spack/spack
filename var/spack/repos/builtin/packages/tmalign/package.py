@@ -8,13 +8,16 @@ from spack import *
 
 class Tmalign(Package):
     """TM-align is an algorithm for sequence-order independent protein
-       structure comparisons."""
+    structure comparisons."""
 
     homepage = "https://zhanglab.ccmb.med.umich.edu/TM-align"
-    url      = "http://zhanglab.ccmb.med.umich.edu/TM-align/TM-align-C/TMalignc.tar.gz"
+    url = "http://zhanglab.ccmb.med.umich.edu/TM-align/TM-align-C/TMalignc.tar.gz"
 
-    version('2016-05-25', sha256='ce7f68289f3766d525afb0a58e3acfc28ae05f538d152bd33d57f8708c60e2af')
+    version(
+        "2016-05-25",
+        sha256="ce7f68289f3766d525afb0a58e3acfc28ae05f538d152bd33d57f8708c60e2af",
+    )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('TMalign', prefix.bin)
+        install("TMalign", prefix.bin)

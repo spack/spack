@@ -17,8 +17,11 @@ class RWk(RPackage):
     high-performance functions are provided here."""
 
     homepage = "https://paleolimbot.github.io/wk/"
-    cran     = "wk"
+    cran = "wk"
 
-    version('0.4.1', sha256='daa7351af0bd657740972016906c686f335b8fa922ba10250e5000ddc2bb8950')
+    version(
+        "0.4.1",
+        sha256="daa7351af0bd657740972016906c686f335b8fa922ba10250e5000ddc2bb8950",
+    )
 
-    depends_on('r-cpp11', type=('build', 'run'))
+    depends_on("r-cpp11", type=("build", "run"))

@@ -12,7 +12,10 @@ class PyCertipy(PythonPackage):
 
     pypi = "certipy/certipy-0.1.3.tar.gz"
 
-    version('0.1.3', sha256='695704b7716b033375c9a1324d0d30f27110a28895c40151a90ec07ff1032859')
+    version(
+        "0.1.3",
+        sha256="695704b7716b033375c9a1324d0d30f27110a28895c40151a90ec07ff1032859",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pyopenssl', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pyopenssl", type=("build", "run"))

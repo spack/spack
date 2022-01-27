@@ -13,8 +13,8 @@ class Dtbuild1(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dtbuild1-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('dtbuild2', type='build')
-    depends_on('dtlink2')
-    depends_on('dtrun2', type='run')
+    depends_on("dtbuild2", type="build")
+    depends_on("dtlink2")
+    depends_on("dtrun2", type="run")

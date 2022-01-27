@@ -15,15 +15,21 @@ class RLatticeextra(RPackage):
     functions."""
 
     homepage = "https://latticeextra.r-forge.r-project.org/"
-    url      = "https://cloud.r-project.org/src/contrib/latticeExtra_0.6-28.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/latticeExtra_0.6-28.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/latticeExtra"
 
-    version('0.6-29', sha256='6cadc31d56f73d926e2e8d72e43ae17ac03607a4d1a374719999a4a231e3df11')
-    version('0.6-28', sha256='780695323dfadac108fb27000011c734e2927b1e0f069f247d65d27994c67ec2')
+    version(
+        "0.6-29",
+        sha256="6cadc31d56f73d926e2e8d72e43ae17ac03607a4d1a374719999a4a231e3df11",
+    )
+    version(
+        "0.6-28",
+        sha256="780695323dfadac108fb27000011c734e2927b1e0f069f247d65d27994c67ec2",
+    )
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r@3.6.0:', when='@0.6-29:', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-png', when='@0.6-29:', type=('build', 'run'))
-    depends_on('r-jpeg', when='@0.6-29:', type=('build', 'run'))
-    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r@3.6.0:", when="@0.6-29:", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))
+    depends_on("r-png", when="@0.6-29:", type=("build", "run"))
+    depends_on("r-jpeg", when="@0.6-29:", type=("build", "run"))
+    depends_on("r-rcolorbrewer", type=("build", "run"))

@@ -14,63 +14,71 @@ class Nss(MakefilePackage):
     security standards."""
 
     homepage = "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
-    url      = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_67_RTM/src/nss-3.67.tar.gz"
+    url = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_67_RTM/src/nss-3.67.tar.gz"
 
-    version('3.73', sha256='566d3a68da9b10d7da9ef84eb4fe182f8f04e20d85c55d1bf360bb2c0096d8e5')
+    version(
+        "3.73",
+        sha256="566d3a68da9b10d7da9ef84eb4fe182f8f04e20d85c55d1bf360bb2c0096d8e5",
+    )
     # Everything before 3.73 is vulnerable (CVE-2021-43527)
-    version('3.67', sha256='f6549a9148cd27b394b40c77fa73111d5ea23cdb51d796665de1b7458f88ce7f', deprecated=True)
+    version(
+        "3.67",
+        sha256="f6549a9148cd27b394b40c77fa73111d5ea23cdb51d796665de1b7458f88ce7f",
+        deprecated=True,
+    )
 
-    depends_on('nspr@4.24:')
-    depends_on('sqlite')
-    depends_on('zlib')
+    depends_on("nspr@4.24:")
+    depends_on("sqlite")
+    depends_on("zlib")
 
     parallel = False
 
-    build_directory = 'nss'
+    build_directory = "nss"
 
     def url_for_version(self, version):
-        url = 'https://ftp.mozilla.org/pub/security/nss/releases/NSS_{0}_RTM/src/nss-{1}.tar.gz'
+        url = "https://ftp.mozilla.org/pub/security/nss/releases/NSS_{0}_RTM/src/nss-{1}.tar.gz"
 
         return url.format(version.underscored, version)
 
     @property
     def build_targets(self):
         # We cannot use nss_build_all because this will try to build nspr.
-        targets = ['all', 'latest']
+        targets = ["all", "latest"]
 
-        targets.append('USE_64=1')
-        targets.append('BUILD_OPT=1')
+        targets.append("USE_64=1")
+        targets.append("BUILD_OPT=1")
 
-        for var in ('DIST', 'SOURCE_PREFIX', 'SOURCE_MD_DIR'):
-            targets.append('{0}={1}'.format(
-                var, join_path(self.stage.source_path, 'dist')))
+        for var in ("DIST", "SOURCE_PREFIX", "SOURCE_MD_DIR"):
+            targets.append(
+                "{0}={1}".format(var, join_path(self.stage.source_path, "dist"))
+            )
 
-        targets.append('NSS_USE_SYSTEM_SQLITE=1')
+        targets.append("NSS_USE_SYSTEM_SQLITE=1")
 
-        if self.spec.satisfies('%gcc@10:'):
-            targets.append('NSS_ENABLE_WERROR=0')
+        if self.spec.satisfies("%gcc@10:"):
+            targets.append("NSS_ENABLE_WERROR=0")
 
         return targets
 
     def install(self, spec, prefix):
-        install_tree('dist/bin', prefix.bin, symlinks=False)
-        install_tree('dist/public/nss', prefix.include.nss, symlinks=False)
-        install_tree('dist/lib', prefix.lib, symlinks=False)
+        install_tree("dist/bin", prefix.bin, symlinks=False)
+        install_tree("dist/public/nss", prefix.include.nss, symlinks=False)
+        install_tree("dist/lib", prefix.lib, symlinks=False)
 
-    @run_after('install')
+    @run_after("install")
     def install_pkgconfig(self):
-        pkg_path = join_path(self.prefix.lib, 'pkgconfig')
+        pkg_path = join_path(self.prefix.lib, "pkgconfig")
         mkdirp(pkg_path)
 
-        with open(join_path(pkg_path, 'nss.pc'), 'w') as f:
-            f.write('prefix={0}\n'.format(self.prefix))
-            f.write('exec_prefix=${prefix}\n')
-            f.write('libdir={0}\n'.format(self.prefix.lib))
-            f.write('includedir={0}\n'.format(self.prefix.include.nss))
-            f.write('\n')
-            f.write('Name: NSS\n')
-            f.write('Description: Network Security Services\n')
-            f.write('Version: {0}\n'.format(self.spec.version))
-            f.write('Requires: nspr\n')
-            f.write('Cflags: -I${includedir}\n')
-            f.write('Libs: -L${libdir} -lssl3 -lsmime3 -lnss3 -lnssutil3\n')
+        with open(join_path(pkg_path, "nss.pc"), "w") as f:
+            f.write("prefix={0}\n".format(self.prefix))
+            f.write("exec_prefix=${prefix}\n")
+            f.write("libdir={0}\n".format(self.prefix.lib))
+            f.write("includedir={0}\n".format(self.prefix.include.nss))
+            f.write("\n")
+            f.write("Name: NSS\n")
+            f.write("Description: Network Security Services\n")
+            f.write("Version: {0}\n".format(self.spec.version))
+            f.write("Requires: nspr\n")
+            f.write("Cflags: -I${includedir}\n")
+            f.write("Libs: -L${libdir} -lssl3 -lsmime3 -lnss3 -lnssutil3\n")

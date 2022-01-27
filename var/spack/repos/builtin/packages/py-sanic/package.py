@@ -13,20 +13,23 @@ class PySanic(PythonPackage):
     homepage = "https://github.com/huge-success/sanic"
     pypi = "sanic/sanic-20.6.3.tar.gz"
 
-    version('20.6.3', sha256='30e83d9f677b609d6b8ccab7c9551ca7e9a5f19ac0579f5aa10199ab6d4138ed')
+    version(
+        "20.6.3",
+        sha256="30e83d9f677b609d6b8ccab7c9551ca7e9a5f19ac0579f5aa10199ab6d4138ed",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-ujson')
-    depends_on('py-multidict@4.0:4')
-    depends_on('py-aiofiles@0.3.0:')
-    depends_on('py-httptools@0.0.10:')
-    depends_on('py-websockets@8.1:8')
-    depends_on('py-httpx@0.11.1')
-    depends_on('py-websockets@8.1:8')
-    depends_on('py-uvloop')
-    depends_on('py-chardet')
-    depends_on('py-hstspreload')
-    depends_on('py-h2')
-    depends_on('py-urllib3')
-    depends_on('py-brotlipy')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-ujson")
+    depends_on("py-multidict@4.0:4")
+    depends_on("py-aiofiles@0.3.0:")
+    depends_on("py-httptools@0.0.10:")
+    depends_on("py-websockets@8.1:8")
+    depends_on("py-httpx@0.11.1")
+    depends_on("py-websockets@8.1:8")
+    depends_on("py-uvloop")
+    depends_on("py-chardet")
+    depends_on("py-hstspreload")
+    depends_on("py-h2")
+    depends_on("py-urllib3")
+    depends_on("py-brotlipy")

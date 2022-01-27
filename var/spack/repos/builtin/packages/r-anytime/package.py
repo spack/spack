@@ -15,11 +15,14 @@ class RAnytime(RPackage):
     Boost facilities for date and time parsing."""
 
     homepage = "https://dirk.eddelbuettel.com/code/anytime.html"
-    url      = "https://cloud.r-project.org/src/contrib/anytime_0.3.9.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/anytime_0.3.9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/anytime"
 
-    version('0.3.9', sha256='1096c15249ac70997a8a41c37eeb2a6d38530621abeae05d3dcd96a8acc7574a')
+    version(
+        "0.3.9",
+        sha256="1096c15249ac70997a8a41c37eeb2a6d38530621abeae05d3dcd96a8acc7574a",
+    )
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.9:', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.9:", type=("build", "run"))
+    depends_on("r-bh", type=("build", "run"))

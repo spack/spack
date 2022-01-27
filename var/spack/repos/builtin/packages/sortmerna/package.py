@@ -8,21 +8,21 @@ from spack import *
 
 class Sortmerna(CMakePackage):
     """SortMeRNA is a program tool for filtering, mapping and OTU-picking NGS
-       reads in metatranscriptomic and metagenomic data"""
+    reads in metatranscriptomic and metagenomic data"""
 
     homepage = "https://github.com/biocore/sortmerna"
-    git      = "https://github.com/biocore/sortmerna.git"
+    git = "https://github.com/biocore/sortmerna.git"
 
-    version('2017-07-13', commit='8bde6fa113a5d99a23ae81b48eeea6760e966094')
+    version("2017-07-13", commit="8bde6fa113a5d99a23ae81b48eeea6760e966094")
 
-    depends_on('zlib')
-    depends_on('sse2neon', when='target=aarch64:')
+    depends_on("zlib")
+    depends_on("sse2neon", when="target=aarch64:")
 
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch("for_aarch64.patch", when="target=aarch64:")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(join_path(self.build_directory, 'src', 'indexdb')):
-            install('indexdb', prefix.bin)
-        with working_dir(join_path(self.build_directory, 'src', 'sortmerna')):
-            install('sortmerna', prefix.bin)
+        with working_dir(join_path(self.build_directory, "src", "indexdb")):
+            install("indexdb", prefix.bin)
+        with working_dir(join_path(self.build_directory, "src", "sortmerna")):
+            install("sortmerna", prefix.bin)

@@ -11,11 +11,14 @@ class RKknn(RPackage):
     Clustering."""
 
     homepage = "https://cloud.r-project.org/package=kknn"
-    url      = "https://cloud.r-project.org/src/contrib/kknn_1.3.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/kknn_1.3.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/kknn"
 
-    version('1.3.1', sha256='22840e70ec2afa40371e274b583634c8f6d27149a87253ee411747d5db78f3db')
+    version(
+        "1.3.1",
+        sha256="22840e70ec2afa40371e274b583634c8f6d27149a87253ee411747d5db78f3db",
+    )
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-igraph@1.0:', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-igraph@1.0:", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))

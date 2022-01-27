@@ -19,16 +19,28 @@ class RPbdzmq(RPackage):
     functions compatible with 'rzmq' are also provided."""
 
     homepage = "http://r-pbd.org/"
-    url      = "https://cloud.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pbdZMQ"
 
-    version('0.3-4', sha256='07794bd6858e093f8b6b879ddd5ab0195449b47a41b70cab2f60603f0a53b129')
-    version('0.3-3', sha256='ae26c13400e2acfb6463ff9b67156847a22ec79f3b53baf65119efaba1636eca')
-    version('0.3-2', sha256='ece2a2881c662f77126e4801ba4e01c991331842b0d636ce5a2b591b9de3fc37')
-    version('0.2-4', sha256='bfacac88b0d4156c70cf63fc4cb9969a950693996901a4fa3dcd59949ec065f6')
+    version(
+        "0.3-4",
+        sha256="07794bd6858e093f8b6b879ddd5ab0195449b47a41b70cab2f60603f0a53b129",
+    )
+    version(
+        "0.3-3",
+        sha256="ae26c13400e2acfb6463ff9b67156847a22ec79f3b53baf65119efaba1636eca",
+    )
+    version(
+        "0.3-2",
+        sha256="ece2a2881c662f77126e4801ba4e01c991331842b0d636ce5a2b591b9de3fc37",
+    )
+    version(
+        "0.2-4",
+        sha256="bfacac88b0d4156c70cf63fc4cb9969a950693996901a4fa3dcd59949ec065f6",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.2.0:', when='@0.2-6:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@0.3-4:', type=('build', 'run'))
-    depends_on('r-r6', when='@:0.2-6', type=('build', 'run'))
-    depends_on('libzmq@4.0.4:')
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r@3.2.0:", when="@0.2-6:", type=("build", "run"))
+    depends_on("r@3.5.0:", when="@0.3-4:", type=("build", "run"))
+    depends_on("r-r6", when="@:0.2-6", type=("build", "run"))
+    depends_on("libzmq@4.0.4:")

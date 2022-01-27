@@ -11,42 +11,44 @@ class Simulationio(CMakePackage):
     """SimulationIO: Efficient and convenient I/O for large PDE simulations"""
 
     homepage = "https://github.com/eschnett/SimulationIO"
-    url      = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
-    git      = "https://github.com/eschnett/SimulationIO.git"
+    url = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
+    git = "https://github.com/eschnett/SimulationIO.git"
 
-    maintainers = ['eschnett']
+    maintainers = ["eschnett"]
 
-    version('master', branch='master')
-    version('9.0.1', sha256='c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8')
+    version("master", branch="master")
+    version(
+        "9.0.1",
+        sha256="c2f6c99417165f6eb8cbb9c44822d119586675abb34eabd553eb80f44b53e0c8",
+    )
 
-    variant('asdf', default=True, description="Enable ASDF bindings")
-    variant('julia', default=False, description="Enable Julia bindings")
-    variant('python', default=True, description="Enable Python bindings")
-    variant('hdf5', default=True, description="Enable HDF5 bindings")
-    variant('rnpl', default=False, description="Enable RNPL bindings")
-    variant('silo', default=False, description="Enable Silo bindings")
+    variant("asdf", default=True, description="Enable ASDF bindings")
+    variant("julia", default=False, description="Enable Julia bindings")
+    variant("python", default=True, description="Enable Python bindings")
+    variant("hdf5", default=True, description="Enable HDF5 bindings")
+    variant("rnpl", default=False, description="Enable RNPL bindings")
+    variant("silo", default=False, description="Enable Silo bindings")
 
-    variant('pic', default=True,
-            description="Produce position-independent code")
+    variant("pic", default=True, description="Produce position-independent code")
 
-    depends_on("asdf-cxx ~python", when='+asdf ~python')
-    depends_on("asdf-cxx +python", when='+asdf +python')
-    depends_on('hdf5 +cxx @1.10.1:', when='+hdf5')
-    depends_on('julia', when='+julia', type=('build', 'run'))
-    depends_on('py-h5py', when='+python', type=('build', 'run'))
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('python@3:', when='@9: +python', type=('build', 'run'))
-    depends_on('python@2.7:2.8', when='@:8 +python', type=('build', 'run'))
-    depends_on('rnpletal', when='+rnpl')
-    depends_on('silo', when='+silo')
-    depends_on('swig', type='build')
+    depends_on("asdf-cxx ~python", when="+asdf ~python")
+    depends_on("asdf-cxx +python", when="+asdf +python")
+    depends_on("hdf5 +cxx @1.10.1:", when="+hdf5")
+    depends_on("julia", when="+julia", type=("build", "run"))
+    depends_on("py-h5py", when="+python", type=("build", "run"))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("python@3:", when="@9: +python", type=("build", "run"))
+    depends_on("python@2.7:2.8", when="@:8 +python", type=("build", "run"))
+    depends_on("rnpletal", when="+rnpl")
+    depends_on("silo", when="+silo")
+    depends_on("swig", type="build")
 
-    extends('python')
+    extends("python")
 
     def cmake_args(self):
         spec = self.spec
         options = []
-        if '+pic' in spec:
+        if "+pic" in spec:
             options.append("-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true")
         return options
 

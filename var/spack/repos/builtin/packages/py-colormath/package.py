@@ -11,10 +11,16 @@ class PyColormath(PythonPackage):
 
     pypi = "colormath/colormath-2.1.1.tar.gz"
 
-    version('3.0.0', sha256='3d4605af344527da0e4f9f504fad7ddbebda35322c566a6c72e28edb1ff31217')
-    version('2.1.1', sha256='003a2b2d9c1f43aa7d90addf1863fb2d822463c839b1166ae3092950792f9707')
+    version(
+        "3.0.0",
+        sha256="3d4605af344527da0e4f9f504fad7ddbebda35322c566a6c72e28edb1ff31217",
+    )
+    version(
+        "2.1.1",
+        sha256="003a2b2d9c1f43aa7d90addf1863fb2d822463c839b1166ae3092950792f9707",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-networkx', type=('build', 'run'))
-    depends_on('py-networkx@2.0:', type=('build', 'run'), when='@3.0.0:')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-networkx", type=("build", "run"))
+    depends_on("py-networkx@2.0:", type=("build", "run"), when="@3.0.0:")

@@ -11,9 +11,12 @@ class Hoppet(AutotoolsPackage):
     common manipulations of parton distribution functions (PDFs)."""
 
     homepage = "https://hoppet.hepforge.org/"
-    url      = "https://github.com/gavinsalam/hoppet/archive/refs/tags/hoppet-1.2.0.tar.gz"
+    url = "https://github.com/gavinsalam/hoppet/archive/refs/tags/hoppet-1.2.0.tar.gz"
 
-    tags = ['heps']
-    maintainers = ['haralmha']
+    tags = ["heps"]
+    maintainers = ["haralmha"]
 
-    version('1.2.0', sha256='6e00eb56a4f922d03dfceba7b389a3aaf51f277afa46d7b634d661e0797e8898')
+    version(
+        "1.2.0",
+        sha256="6e00eb56a4f922d03dfceba7b389a3aaf51f277afa46d7b634d661e0797e8898",
+    )

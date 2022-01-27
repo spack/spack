@@ -21,6 +21,9 @@ class PerlIoStringy(PerlPackage):
     globref, or a FileHandle."""
 
     homepage = "https://metacpan.org/pod/IO::Stringy"
-    url      = "https://cpan.metacpan.org/authors/id/D/DS/DSKOLL/IO-stringy-2.111.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/D/DS/DSKOLL/IO-stringy-2.111.tar.gz"
 
-    version('2.111', sha256='8c67fd6608c3c4e74f7324f1404a856c331dbf48d9deda6aaa8296ea41bf199d')
+    version(
+        "2.111",
+        sha256="8c67fd6608c3c4e74f7324f1404a856c331dbf48d9deda6aaa8296ea41bf199d",
+    )

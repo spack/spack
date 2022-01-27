@@ -14,8 +14,11 @@ class PyFastdtw(PythonPackage):
     homepage = "https://github.com/slaypni/fastdtw"
     pypi = "fastdtw/fastdtw-0.3.4.tar.gz"
 
-    version('0.3.4', sha256='2350fa6ec36bcad186eaf81f46eff35181baf04e324f522de8aeb43d0243f64f')
+    version(
+        "0.3.4",
+        sha256="2350fa6ec36bcad186eaf81f46eff35181baf04e324f522de8aeb43d0243f64f",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-cython', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-cython", type="build")

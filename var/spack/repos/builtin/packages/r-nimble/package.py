@@ -25,15 +25,24 @@ class RNimble(RPackage):
     well. A full User Manual is available at <https://r-nimble.org>."""
 
     homepage = "https://cloud.r-project.org/package=nimble"
-    url      = "https://cloud.r-project.org/src/contrib/nimble_0.9.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/nimble_0.9.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/nimble"
 
-    version('0.10.1', sha256='11e248fda442f233c3590640efd9381c9b4b2e6fb66dce45a3391db03b70e702')
-    version('0.9.1', sha256='ad5e8a171193cb0172e68bf61c4f94432c45c131a150101ad1c5c7318c335757')
-    version('0.9.0', sha256='ebc28fadf933143eea73900cacaf96ff81cb3c2d607405016062b7e93afa5611')
+    version(
+        "0.10.1",
+        sha256="11e248fda442f233c3590640efd9381c9b4b2e6fb66dce45a3391db03b70e702",
+    )
+    version(
+        "0.9.1",
+        sha256="ad5e8a171193cb0172e68bf61c4f94432c45c131a150101ad1c5c7318c335757",
+    )
+    version(
+        "0.9.0",
+        sha256="ebc28fadf933143eea73900cacaf96ff81cb3c2d607405016062b7e93afa5611",
+    )
 
-    depends_on('r@3.1.2:', type=('build', 'run'))
-    depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-coda', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('gmake', type='build')
+    depends_on("r@3.1.2:", type=("build", "run"))
+    depends_on("r-igraph", type=("build", "run"))
+    depends_on("r-coda", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"))
+    depends_on("gmake", type="build")

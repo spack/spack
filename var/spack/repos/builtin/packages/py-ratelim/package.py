@@ -12,7 +12,10 @@ class PyRatelim(PythonPackage):
     homepage = "https://github.com/themiurgo/ratelim"
     pypi = "ratelim/ratelim-0.1.6.tar.gz"
 
-    version('0.1.6', sha256='826d32177e11f9a12831901c9fda6679fd5bbea3605910820167088f5acbb11d')
+    version(
+        "0.1.6",
+        sha256="826d32177e11f9a12831901c9fda6679fd5bbea3605910820167088f5acbb11d",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-decorator', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-decorator", type=("build", "run"))

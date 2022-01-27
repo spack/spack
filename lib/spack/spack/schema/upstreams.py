@@ -6,34 +6,34 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'upstreams': {
-        'type': 'object',
-        'default': {},
-        'patternProperties': {
-            r'\w[\w-]*': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'properties': {
-                    'install_tree': {'type': 'string'},
-                    'modules': {
-                        'type': 'object',
-                        'properties': {
-                            'tcl': {'type': 'string'},
-                            'lmod': {'type': 'string'}
-                        }
-                    }
-                }
+    "upstreams": {
+        "type": "object",
+        "default": {},
+        "patternProperties": {
+            r"\w[\w-]*": {
+                "type": "object",
+                "default": {},
+                "additionalProperties": False,
+                "properties": {
+                    "install_tree": {"type": "string"},
+                    "modules": {
+                        "type": "object",
+                        "properties": {
+                            "tcl": {"type": "string"},
+                            "lmod": {"type": "string"},
+                        },
+                    },
+                },
             }
-        }
+        },
     }
 }
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack core configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack core configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

@@ -12,6 +12,9 @@ class PyPygmentsPytest(PythonPackage):
     homepage = "https://github.com/asottile/pygments-pytest"
     pypi = "pygments-pytest/pygments_pytest-1.2.0.tar.gz"
 
-    version('1.2.0', sha256='fc48e2fffd6d3c047a61c1db8b88ab069983f50e733fe70a7846098eb28bc955')
+    version(
+        "1.2.0",
+        sha256="fc48e2fffd6d3c047a61c1db8b88ab069983f50e733fe70a7846098eb28bc955",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

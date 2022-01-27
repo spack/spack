@@ -11,22 +11,22 @@ class ScorecCore(CMakePackage):
     simulations on supercomputers.
     """
 
-    homepage = 'https://www.scorec.rpi.edu/'
-    git      = 'https://github.com/SCOREC/core.git'
+    homepage = "https://www.scorec.rpi.edu/"
+    git = "https://github.com/SCOREC/core.git"
 
-    version('develop')
+    version("develop")
 
-    depends_on('mpi')
-    depends_on('zoltan')
-    depends_on('cmake@3.0:', type='build')
+    depends_on("mpi")
+    depends_on("zoltan")
+    depends_on("cmake@3.0:", type="build")
 
     def cmake_args(self):
         options = []
-        options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
-        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
-        options.append('-DENABLE_ZOLTAN=ON')
+        options.append("-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc)
+        options.append("-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx)
+        options.append("-DENABLE_ZOLTAN=ON")
 
-        if self.compiler.name == 'xl':
-            options.append('-DSCOREC_EXTRA_CXX_FLAGS=%s' % '-qminimaltoc')
+        if self.compiler.name == "xl":
+            options.append("-DSCOREC_EXTRA_CXX_FLAGS=%s" % "-qminimaltoc")
 
         return options

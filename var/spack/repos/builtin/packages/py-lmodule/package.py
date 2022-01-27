@@ -14,12 +14,15 @@ class PyLmodule(PythonPackage):
 
     homepage = "https://lmodule.readthedocs.io/en/latest/"
     pypi = "lmodule/lmodule-0.1.0.tar.gz"
-    git      = "https://github.com/buildtesters/lmodule"
+    git = "https://github.com/buildtesters/lmodule"
 
-    maintainers = ['shahzebsiddiqui']
+    maintainers = ["shahzebsiddiqui"]
 
-    version('0.1.0', sha256='cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29')
+    version(
+        "0.1.0",
+        sha256="cac8f3dad2df27b10e051b2c56ccbde1fcdd7044af594d13fd2e4144d3d46a29",
+    )
 
-    depends_on('python@3.6.0:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('lmod@7.0:', type='run')
+    depends_on("python@3.6.0:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("lmod@7.0:", type="run")

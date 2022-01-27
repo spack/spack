@@ -15,15 +15,15 @@ class Ramulator(MakefilePackage):
     homepage = "https://github.com/CMU-SAFARI/ramulator"
     git = "https://github.com/CMU-SAFARI/ramulator"
 
-    maintainers = ['jjwilke']
+    maintainers = ["jjwilke"]
 
-    version('sst', commit="7d2e72306c6079768e11a1867eb67b60cee34a1c")
+    version("sst", commit="7d2e72306c6079768e11a1867eb67b60cee34a1c")
 
-    patch('ramulator_sha_7d2e723_gcc48Patch.patch', when="@sst")
-    patch('ramulator_sha_7d2e723_libPatch.patch', when="@sst")
+    patch("ramulator_sha_7d2e723_gcc48Patch.patch", when="@sst")
+    patch("ramulator_sha_7d2e723_libPatch.patch", when="@sst")
 
     def patch(self):
-        filter_file('-fpic', self.compiler.cxx_pic_flag, "Makefile")
+        filter_file("-fpic", self.compiler.cxx_pic_flag, "Makefile")
 
     def build(self, spec, prefix):
         if spec.satisfies("platform=darwin"):

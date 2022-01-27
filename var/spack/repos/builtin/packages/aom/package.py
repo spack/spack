@@ -16,12 +16,13 @@ from spack import *
 
 class Aom(CMakePackage):
     """Alliance for Open Media AOM AV1 Codec Library"""
+
     homepage = "https://aomedia.googlesource.com/aom"
-    git      = "https://aomedia.googlesource.com/aom"
-    version('v1.0.0-errata1', commit='29d8ce4836630df5cc7ab58f1afc4836765fc212')
-    depends_on('yasm')
+    git = "https://aomedia.googlesource.com/aom"
+    version("v1.0.0-errata1", commit="29d8ce4836630df5cc7ab58f1afc4836765fc212")
+    depends_on("yasm")
 
     def cmake_args(self):
         args = []
-        args.append('-DBUILD_SHARED_LIBS=ON')
+        args.append("-DBUILD_SHARED_LIBS=ON")
         return args

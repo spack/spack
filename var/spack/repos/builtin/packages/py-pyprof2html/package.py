@@ -11,9 +11,12 @@ class PyPyprof2html(PythonPackage):
 
     pypi = "pyprof2html/pyprof2html-0.3.1.tar.gz"
 
-    version('0.3.1', sha256='db2d37e21d8c76f2fd25fb1ba9273c9b3ff4a98a327e37d943fed1ea225a6720')
+    version(
+        "0.3.1",
+        sha256="db2d37e21d8c76f2fd25fb1ba9273c9b3ff4a98a327e37d943fed1ea225a6720",
+    )
 
-    patch('version_0.3.1.patch', when="@0.3.1")
+    patch("version_0.3.1.patch", when="@0.3.1")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-jinja2", type=("build", "run"))

@@ -13,16 +13,22 @@ class Trident(Package):
     applications."""
 
     homepage = "https://netapp-trident.readthedocs.io"
-    url      = "https://github.com/NetApp/trident/archive/v20.01.1.tar.gz"
+    url = "https://github.com/NetApp/trident/archive/v20.01.1.tar.gz"
 
-    version('20.01.1', sha256='02ba92e569916b98fb1b563c5ef03a94fd7981c3ac1ecb47e69ebb45471dc976')
-    version('20.01.0', sha256='5de190579acf62f5e9945dfd45aeb21989272c4972e85cb10256b7ec605c29c7')
+    version(
+        "20.01.1",
+        sha256="02ba92e569916b98fb1b563c5ef03a94fd7981c3ac1ecb47e69ebb45471dc976",
+    )
+    version(
+        "20.01.0",
+        sha256="5de190579acf62f5e9945dfd45aeb21989272c4972e85cb10256b7ec605c29c7",
+    )
 
-    depends_on('go', type='build')
+    depends_on("go", type="build")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        go = which('go')
-        go('build', '-o', prefix.bin)
-        with working_dir('cli'):
-            go('build', '-o', prefix.bin.tridentctl)
+        go = which("go")
+        go("build", "-o", prefix.bin)
+        with working_dir("cli"):
+            go("build", "-o", prefix.bin.tridentctl)

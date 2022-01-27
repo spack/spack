@@ -17,7 +17,12 @@ class Gperf(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gperf/"
     gnu_mirror_path = "gperf/gperf-3.0.4.tar.gz"
 
-    version('3.1',   sha256='588546b945bba4b70b6a3a616e80b4ab466e3f33024a352fc2198112cdbb3ae2')
-    version('3.0.4', sha256='767112a204407e62dbc3106647cf839ed544f3cf5d0f0523aaa2508623aad63e')
+    version(
+        "3.1", sha256="588546b945bba4b70b6a3a616e80b4ab466e3f33024a352fc2198112cdbb3ae2"
+    )
+    version(
+        "3.0.4",
+        sha256="767112a204407e62dbc3106647cf839ed544f3cf5d0f0523aaa2508623aad63e",
+    )
 
     # NOTE: `make check` is known to fail tests

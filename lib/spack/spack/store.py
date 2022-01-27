@@ -34,7 +34,7 @@ import spack.paths
 import spack.util.path
 
 #: default installation root, relative to the Spack install path
-default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
+default_install_tree_root = os.path.join(spack.paths.opt_path, "spack")
 
 
 def parse_install_tree(config_dict):
@@ -66,7 +66,7 @@ def parse_install_tree(config_dict):
     #     projections:
     #       all: '{name}-{version}'
 
-    install_tree = config_dict.get('install_tree', {})
+    install_tree = config_dict.get("install_tree", {})
 
     padded_length = False
     if isinstance(install_tree, six.string_types):
@@ -75,38 +75,41 @@ def parse_install_tree(config_dict):
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
-            'install_path_scheme',
-            spack.directory_layout.default_projections['all'])
+            "install_path_scheme", spack.directory_layout.default_projections["all"]
+        )
 
-        projections = {'all': all_projection}
+        projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get('root', default_install_tree_root)
+        unpadded_root = install_tree.get("root", default_install_tree_root)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
-        padded_length = install_tree.get('padded_length', False)
+        padded_length = install_tree.get("padded_length", False)
         if padded_length is True:
             padded_length = spack.util.path.get_system_path_max()
             padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
         projections = install_tree.get(
-            'projections', spack.directory_layout.default_projections)
+            "projections", spack.directory_layout.default_projections
+        )
 
-        path_scheme = config_dict.get('install_path_scheme', None)
+        path_scheme = config_dict.get("install_path_scheme", None)
         if path_scheme:
-            tty.warn("Deprecated config value 'install_path_scheme' ignored"
-                     " when using new install_tree syntax")
+            tty.warn(
+                "Deprecated config value 'install_path_scheme' ignored"
+                " when using new install_tree syntax"
+            )
 
     # Handle backwards compatibility for padding
-    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', unpadded_root)
+    old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", unpadded_root)
     if old_pad:
         if padded_length:
             msg = "Ignoring deprecated padding option in install_tree root "
             msg += "because new syntax padding is present."
             tty.warn(msg)
         else:
-            unpadded_root = unpadded_root.replace(old_pad.group(0), '')
+            unpadded_root = unpadded_root.replace(old_pad.group(0), "")
             if old_pad.group(1) or old_pad.group(2):
-                length_group = 2 if '{' in old_pad.group(0) else 1
+                length_group = 2 if "{" in old_pad.group(0) else 1
                 padded_length = int(old_pad.group(length_group)[1:])
             else:
                 padded_length = spack.util.path.get_system_path_max()
@@ -148,17 +151,16 @@ class Store(object):
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(
-            self, root, unpadded_root=None, projections=None, hash_length=None
-    ):
+
+    def __init__(self, root, unpadded_root=None, projections=None, hash_length=None):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
-        self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+        self.db = spack.database.Database(root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = spack.directory_layout.DirectoryLayout(
-            root, projections=projections, hash_length=hash_length)
+            root, projections=projections, hash_length=hash_length
+        )
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
@@ -168,9 +170,7 @@ class Store(object):
         """Return a pickle-able object that can be used to reconstruct
         a store.
         """
-        return (
-            self.root, self.unpadded_root, self.projections, self.hash_length
-        )
+        return (self.root, self.unpadded_root, self.projections, self.hash_length)
 
     @staticmethod
     def deserialize(token):
@@ -189,24 +189,29 @@ class Store(object):
 def _store():
     """Get the singleton store instance."""
     import spack.bootstrap
-    config_dict = spack.config.get('config')
+
+    config_dict = spack.config.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = spack.config.get('config:install_hash_length')
+    hash_length = spack.config.get("config:install_hash_length")
 
     # Check that the user is not trying to install software into the store
     # reserved by Spack to bootstrap its own dependencies, since this would
     # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
     # user installed software)
-    enable_bootstrap = spack.config.get('bootstrap:enable', True)
+    enable_bootstrap = spack.config.get("bootstrap:enable", True)
     if enable_bootstrap and spack.bootstrap.store_path() == root:
-        msg = ('please change the install tree root "{0}" in your '
-               'configuration [path reserved for Spack internal use]')
+        msg = (
+            'please change the install tree root "{0}" in your '
+            "configuration [path reserved for Spack internal use]"
+        )
         raise ValueError(msg.format(root))
 
-    return Store(root=root,
-                 unpadded_root=unpadded_root,
-                 projections=projections,
-                 hash_length=hash_length)
+    return Store(
+        root=root,
+        unpadded_root=unpadded_root,
+        projections=projections,
+        hash_length=hash_length,
+    )
 
 
 #: Singleton store instance
@@ -262,22 +267,22 @@ def restore(token):
 
 
 def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get('upstreams', {})
+    other_spack_instances = spack.config.get("upstreams", {})
 
     install_roots = []
     for install_properties in other_spack_instances.values():
-        install_roots.append(install_properties['install_tree'])
+        install_roots.append(install_properties["install_tree"])
 
     return _construct_upstream_dbs_from_install_roots(install_roots)
 
 
-def _construct_upstream_dbs_from_install_roots(
-        install_roots, _test=False):
+def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
     accumulated_upstream_dbs = []
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs)
+            install_root, is_upstream=True, upstream_dbs=upstream_dbs
+        )
         next_db._fail_when_missing_deps = _test
         next_db._read()
         accumulated_upstream_dbs.insert(0, next_db)
@@ -321,7 +326,7 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
         if not multiple and len(current_matches) > 1:
             msg_fmt = '"{0}" matches multiple packages: [{1}]'
             errors.append(
-                msg_fmt.format(spec, ', '.join([m.format() for m in current_matches]))
+                msg_fmt.format(spec, ", ".join([m.format() for m in current_matches]))
             )
 
         # No installed package matches the query
@@ -334,7 +339,7 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
     if errors:
         raise MatchError(
             message="errors occurred when looking for specs in the store",
-            long_message='\n'.join(errors)
+            long_message="\n".join(errors),
         )
 
     return matching_specs

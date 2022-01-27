@@ -8,7 +8,8 @@ import os
 
 class Cxx(Package):
     """Virtual package for the C++ language."""
-    homepage = 'https://isocpp.org/std/the-standard'
+
+    homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
     def test(self):
@@ -16,23 +17,23 @@ class Cxx(Package):
 
         for test in os.listdir(test_source):
             filepath = os.path.join(test_source, test)
-            exe_name = '%s.exe' % test
+            exe_name = "%s.exe" % test
 
-            cxx_exe = os.environ['CXX']
+            cxx_exe = os.environ["CXX"]
 
             # standard options
             # Hack to get compiler attributes
             # TODO: remove this when compilers are dependencies
-            c_name = clang if self.spec.satisfies('llvm+clang') else self.name
+            c_name = clang if self.spec.satisfies("llvm+clang") else self.name
             c_spec = spack.spec.CompilerSpec(c_name, self.spec.version)
             c_cls = spack.compilers.class_for_compiler_name(c_name)
-            compiler = c_cls(c_spec, None, None, ['fakecc', 'fakecxx'])
+            compiler = c_cls(c_spec, None, None, ["fakecc", "fakecxx"])
 
-            cxx_opts = [compiler.cxx11_flag] if 'c++11' in test else []
+            cxx_opts = [compiler.cxx11_flag] if "c++11" in test else []
 
-            cxx_opts += ['-o', exe_name, filepath]
+            cxx_opts += ["-o", exe_name, filepath]
             compiled = self.run_test(cxx_exe, options=cxx_opts, installed=True)
 
             if compiled:
-                expected = ['Hello world', 'YES!']
+                expected = ["Hello world", "YES!"]
                 self.run_test(exe_name, expected=expected)

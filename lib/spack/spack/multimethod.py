@@ -54,33 +54,33 @@ class MultiMethodMeta(type):
 
 class SpecMultiMethod(object):
     """This implements a multi-method for Spack specs.  Packages are
-       instantiated with a particular spec, and you may want to
-       execute different versions of methods based on what the spec
-       looks like.  For example, you might want to call a different
-       version of install() for one platform than you call on another.
+    instantiated with a particular spec, and you may want to
+    execute different versions of methods based on what the spec
+    looks like.  For example, you might want to call a different
+    version of install() for one platform than you call on another.
 
-       The SpecMultiMethod class implements a callable object that
-       handles method dispatch.  When it is called, it looks through
-       registered methods and their associated specs, and it tries
-       to find one that matches the package's spec.  If it finds one
-       (and only one), it will call that method.
+    The SpecMultiMethod class implements a callable object that
+    handles method dispatch.  When it is called, it looks through
+    registered methods and their associated specs, and it tries
+    to find one that matches the package's spec.  If it finds one
+    (and only one), it will call that method.
 
-       This is intended for use with decorators (see below).  The
-       decorator (see docs below) creates SpecMultiMethods and
-       registers method versions with them.
+    This is intended for use with decorators (see below).  The
+    decorator (see docs below) creates SpecMultiMethods and
+    registers method versions with them.
 
-       To register a method, you can do something like this:
-           mm = SpecMultiMethod()
-           mm.register("^chaos_5_x86_64_ib", some_method)
+    To register a method, you can do something like this:
+        mm = SpecMultiMethod()
+        mm.register("^chaos_5_x86_64_ib", some_method)
 
-       The object registered needs to be a Spec or some string that
-       will parse to be a valid spec.
+    The object registered needs to be a Spec or some string that
+    will parse to be a valid spec.
 
-       When the mm is actually called, it selects a version of the
-       method to call based on the sys_type of the object it is
-       called on.
+    When the mm is actually called, it selects a version of the
+    method to call based on the sys_type of the object it is
+    called on.
 
-       See the docs for decorators below for more details.
+    See the docs for decorators below for more details.
     """
 
     def __init__(self, default=None):
@@ -93,10 +93,10 @@ class SpecMultiMethod(object):
         """Register a version of a method for a particular spec."""
         self.method_list.append((spec, method))
 
-        if not hasattr(self, '__name__'):
+        if not hasattr(self, "__name__"):
             functools.update_wrapper(self, method)
         else:
-            assert(self.__name__ == method.__name__)
+            assert self.__name__ == method.__name__
 
     def __get__(self, obj, objtype):
         """This makes __call__ support instance methods."""
@@ -108,14 +108,12 @@ class SpecMultiMethod(object):
 
         # Call functools.wraps manually to get all the attributes
         # we need to be disguised as the wrapped_method
-        func = functools.wraps(wrapped_method)(
-            functools.partial(self.__call__, obj)
-        )
+        func = functools.wraps(wrapped_method)(functools.partial(self.__call__, obj))
         return func
 
     def _get_method_by_spec(self, spec):
         """Find the method of this SpecMultiMethod object that satisfies the
-           given spec, if one exists
+        given spec, if one exists
         """
         for condition, method in self.method_list:
             if spec.satisfies(condition):
@@ -124,8 +122,8 @@ class SpecMultiMethod(object):
 
     def __call__(self, package_self, *args, **kwargs):
         """Find the first method with a spec that matches the
-           package's spec.  If none is found, call the default
-           or if there is none, then raise a NoSuchMethodError.
+        package's spec.  If none is found, call the default
+        or if there is none, then raise a NoSuchMethodError.
         """
         spec_method = self._get_method_by_spec(package_self.spec)
         if spec_method:
@@ -140,17 +138,17 @@ class SpecMultiMethod(object):
             superself = cls.__dict__.get(self.__name__, None)
             if isinstance(superself, SpecMultiMethod):
                 # Check parent multimethod for method for spec.
-                superself_method = superself._get_method_by_spec(
-                    package_self.spec
-                )
+                superself_method = superself._get_method_by_spec(package_self.spec)
                 if superself_method:
                     return superself_method(package_self, *args, **kwargs)
             elif superself:
                 return superself(package_self, *args, **kwargs)
 
         raise NoSuchMethodError(
-            type(package_self), self.__name__, package_self.spec,
-            [m[0] for m in self.method_list]
+            type(package_self),
+            self.__name__,
+            package_self.spec,
+            [m[0] for m in self.method_list],
         )
 
 
@@ -285,5 +283,10 @@ class NoSuchMethodError(spack.error.SpackError):
     def __init__(self, cls, method_name, spec, possible_specs):
         super(NoSuchMethodError, self).__init__(
             "Package %s does not support %s called with %s.  Options are: %s"
-            % (cls.__name__, method_name, spec,
-               ", ".join(str(s) for s in possible_specs)))
+            % (
+                cls.__name__,
+                method_name,
+                spec,
+                ", ".join(str(s) for s in possible_specs),
+            )
+        )

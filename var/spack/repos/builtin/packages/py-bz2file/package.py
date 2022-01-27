@@ -12,7 +12,10 @@ class PyBz2file(PythonPackage):
     homepage = "https://github.com/nvawda/bz2file"
     pypi = "bz2file/bz2file-0.98.tar.gz"
 
-    version('0.98', sha256='64c1f811e31556ba9931953c8ec7b397488726c63e09a4c67004f43bdd28da88')
+    version(
+        "0.98",
+        sha256="64c1f811e31556ba9931953c8ec7b397488726c63e09a4c67004f43bdd28da88",
+    )
 
     # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

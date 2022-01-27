@@ -17,7 +17,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
+    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
     subparser.add_argument(
         "-m",
         "--missing",
@@ -65,7 +65,7 @@ def fetch(parser, args):
         spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
-        spack.config.set('config:deprecated', True, scope='command_line')
+        spack.config.set("config:deprecated", True, scope="command_line")
 
     for spec in specs:
         if args.missing or args.dependencies:

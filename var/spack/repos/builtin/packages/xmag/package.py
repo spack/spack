@@ -12,12 +12,15 @@ class Xmag(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmag"
     xorg_mirror_path = "app/xmag-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='07c5ec9114376dcd9a3303a38779e79b949d486f3b832d4a438550357d797aa5')
+    version(
+        "1.0.6",
+        sha256="07c5ec9114376dcd9a3303a38779e79b949d486f3b832d4a438550357d797aa5",
+    )
 
-    depends_on('libxaw')
-    depends_on('libxmu')
-    depends_on('libxt')
-    depends_on('libx11')
+    depends_on("libxaw")
+    depends_on("libxmu")
+    depends_on("libxt")
+    depends_on("libx11")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

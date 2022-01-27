@@ -13,17 +13,22 @@ class Igvtools(Package):
     files"""
 
     homepage = "https://software.broadinstitute.org/software/igv/home"
-    url      = "https://data.broadinstitute.org/igv/projects/downloads/2.3/igvtools_2.3.98.zip"
+    url = (
+        "https://data.broadinstitute.org/igv/projects/downloads/2.3/igvtools_2.3.98.zip"
+    )
 
-    version('2.3.98', sha256='07027c179f25960bab9919f255c0f8e08f0861861ac6dc02d92be8313e0316a4')
+    version(
+        "2.3.98",
+        sha256="07027c179f25960bab9919f255c0f8e08f0861861ac6dc02d92be8313e0316a4",
+    )
 
-    depends_on('java@8:')
+    depends_on("java@8:")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'igvtools.jar'
+        jar_file = "igvtools.jar"
         install(jar_file, prefix.bin)
-        install_tree('genomes', prefix.genomes)
+        install_tree("genomes", prefix.genomes)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
@@ -34,8 +39,7 @@ class Igvtools(Package):
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = spec['java'].prefix.bin.java
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-        filter_file('^java', java, script, **kwargs)
-        filter_file(jar_file, join_path(prefix.bin, jar_file),
-                    script, **kwargs)
+        java = spec["java"].prefix.bin.java
+        kwargs = {"ignore_absent": False, "backup": False, "string": False}
+        filter_file("^java", java, script, **kwargs)
+        filter_file(jar_file, join_path(prefix.bin, jar_file), script, **kwargs)

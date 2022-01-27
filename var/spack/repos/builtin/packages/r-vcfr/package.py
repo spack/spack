@@ -19,21 +19,24 @@ class RVcfr(RPackage):
     provides a link between VCF data and familiar R software."""
 
     homepage = "https://github.com/knausb/vcfR"
-    cran     = "vcfR"
+    cran = "vcfR"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('1.12.0', sha256='dd87ff010365de363864a44ca49887c0fdad0dd18d0d9c66e44e39c2d4581d52')
+    version(
+        "1.12.0",
+        sha256="dd87ff010365de363864a44ca49887c0fdad0dd18d0d9c66e44e39c2d4581d52",
+    )
 
-    depends_on('r@3.0.1:', type=('build', 'run'))
-    depends_on('r-ape', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-memuse', type=('build', 'run'))
-    depends_on('r-pinfsc50', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-vegan', type=('build', 'run'))
-    depends_on('r-viridislite', type=('build', 'run'))
-    depends_on('zlib')
+    depends_on("r@3.0.1:", type=("build", "run"))
+    depends_on("r-ape", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-memuse", type=("build", "run"))
+    depends_on("r-pinfsc50", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-tibble", type=("build", "run"))
+    depends_on("r-vegan", type=("build", "run"))
+    depends_on("r-viridislite", type=("build", "run"))
+    depends_on("zlib")

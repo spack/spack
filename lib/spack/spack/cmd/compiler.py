@@ -25,53 +25,67 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='compiler_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="compiler_command")
 
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
 
     # Find
     find_parser = sp.add_parser(
-        'find', aliases=['add'],
-        help='search the system for compilers to add to Spack configuration')
-    find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
+        "find",
+        aliases=["add"],
+        help="search the system for compilers to add to Spack configuration",
+    )
+    find_parser.add_argument("add_paths", nargs=argparse.REMAINDER)
     find_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.config.default_modify_scope('compilers'),
-        help="configuration scope to modify")
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("compilers"),
+        help="configuration scope to modify",
+    )
 
     # Remove
     remove_parser = sp.add_parser(
-        'remove', aliases=['rm'], help='remove compiler by spec')
+        "remove", aliases=["rm"], help="remove compiler by spec"
+    )
     remove_parser.add_argument(
-        '-a', '--all', action='store_true',
-        help='remove ALL compilers that match spec')
-    remove_parser.add_argument('compiler_spec')
+        "-a", "--all", action="store_true", help="remove ALL compilers that match spec"
+    )
+    remove_parser.add_argument("compiler_spec")
     remove_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.config.default_modify_scope('compilers'),
-        help="configuration scope to modify")
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("compilers"),
+        help="configuration scope to modify",
+    )
 
     # List
-    list_parser = sp.add_parser('list', help='list available compilers')
+    list_parser = sp.add_parser("list", help="list available compilers")
     list_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
         default=spack.config.default_list_scope(),
-        help="configuration scope to read from")
+        help="configuration scope to read from",
+    )
 
     # Info
-    info_parser = sp.add_parser('info', help='show compiler paths')
-    info_parser.add_argument('compiler_spec')
+    info_parser = sp.add_parser("info", help="show compiler paths")
+    info_parser.add_argument("compiler_spec")
     info_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
         default=spack.config.default_list_scope(),
-        help="configuration scope to read from")
+        help="configuration scope to read from",
+    )
 
 
 def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and
-       add them to Spack's configuration.
+    add them to Spack's configuration.
 
     """
     # None signals spack.compiler.find_compilers to use its default logic
@@ -85,10 +99,10 @@ def compiler_find(args):
             new_compilers, scope=args.scope, init_config=False
         )
         n = len(new_compilers)
-        s = 's' if n > 1 else ''
+        s = "s" if n > 1 else ""
 
         config = spack.config.config
-        filename = config.get_config_filename(args.scope, 'compilers')
+        filename = config.get_config_filename(args.scope, "compilers")
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
         colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
@@ -109,8 +123,7 @@ def compiler_remove(args):
         sys.exit(1)
 
     for compiler in compilers:
-        spack.compilers.remove_compiler_from_config(
-            compiler.spec, scope=args.scope)
+        spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
         tty.msg("Removed compiler %s" % compiler.spec)
 
 
@@ -125,17 +138,17 @@ def compiler_info(args):
         for c in compilers:
             print(str(c.spec) + ":")
             print("\tpaths:")
-            for cpath in ['cc', 'cxx', 'f77', 'fc']:
+            for cpath in ["cc", "cxx", "f77", "fc"]:
                 print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
             if c.flags:
                 print("\tflags:")
                 for flag, flag_value in iteritems(c.flags):
                     print("\t\t%s = %s" % (flag, flag_value))
             if len(c.environment) != 0:
-                if len(c.environment.get('set', {})) != 0:
+                if len(c.environment.get("set", {})) != 0:
                     print("\tenvironment:")
                     print("\t    set:")
-                    for key, value in iteritems(c.environment['set']):
+                    for key, value in iteritems(c.environment["set"]):
                         print("\t        %s = %s" % (key, value))
             if c.extra_rpaths:
                 print("\tExtra rpaths:")
@@ -168,12 +181,11 @@ def compiler_list(args):
     # convert them to '' (in which case it still evaluates to False but is a
     # string type). Tuples produced by this are guaranteed to be comparable in
     # Python 3
-    convert_str = (
-        lambda tuple_container:
-        tuple(str(x) if x else '' for x in tuple_container))
+    convert_str = lambda tuple_container: tuple(
+        str(x) if x else "" for x in tuple_container
+    )
 
-    index_str_keys = list(
-        (convert_str(x), y) for x, y in index.items())
+    index_str_keys = list((convert_str(x), y) for x, y in index.items())
     ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
@@ -183,15 +195,17 @@ def compiler_list(args):
         if target:
             os_str += "-%s" % target
         cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
-        tty.hline(colorize(cname), char='-')
+        tty.hline(colorize(cname), char="-")
         colify(reversed(sorted(c.spec for c in compilers)))
 
 
 def compiler(parser, args):
-    action = {'add': compiler_find,
-              'find': compiler_find,
-              'remove': compiler_remove,
-              'rm': compiler_remove,
-              'info': compiler_info,
-              'list': compiler_list}
+    action = {
+        "add": compiler_find,
+        "find": compiler_find,
+        "remove": compiler_remove,
+        "rm": compiler_remove,
+        "info": compiler_info,
+        "list": compiler_list,
+    }
     action[args.compiler_command](args)

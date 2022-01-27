@@ -19,11 +19,14 @@ class PyFastcore(PythonPackage):
     NumPy over to Python's list type."""
 
     homepage = "https://github.com/fastai/fastcore/tree/master/"
-    pypi     = "fastcore/fastcore-1.3.27.tar.gz"
+    pypi = "fastcore/fastcore-1.3.27.tar.gz"
 
-    version('1.3.27', sha256='0161f538d5b913932869a46bb90e98193eee79b8798b566272a394f7ef957243')
+    version(
+        "1.3.27",
+        sha256="0161f538d5b913932869a46bb90e98193eee79b8798b566272a394f7ef957243",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pip', type='build')
-    depends_on('py-packaging', type='build')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pip", type="build")
+    depends_on("py-packaging", type="build")

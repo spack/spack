@@ -12,10 +12,13 @@ class PyH5netcdf(PythonPackage):
     library."""
 
     homepage = "https://github.com/h5netcdf/h5netcdf"
-    pypi     = "h5netcdf/h5netcdf-0.10.0.tar.gz"
+    pypi = "h5netcdf/h5netcdf-0.10.0.tar.gz"
 
-    version('0.10.0', sha256='fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60')
+    version(
+        "0.10.0",
+        sha256="fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-h5py', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-h5py", type=("build", "run"))

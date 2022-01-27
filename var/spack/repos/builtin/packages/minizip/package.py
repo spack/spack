@@ -10,28 +10,31 @@ class Minizip(AutotoolsPackage):
     """C library for zip/unzip via zLib."""
 
     homepage = "https://www.winimage.com/zLibDll/minizip.html"
-    url      = "https://zlib.net/fossils/zlib-1.2.11.tar.gz"
+    url = "https://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
-    version('1.2.11', sha256='c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1')
+    version(
+        "1.2.11",
+        sha256="c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    )
 
-    configure_directory = 'contrib/minizip'
+    configure_directory = "contrib/minizip"
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
-    depends_on('zlib')
+    depends_on("automake", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("zlib")
 
     # error: implicit declaration of function 'mkdir' is invalid in C99
-    patch('implicit.patch', when='%apple-clang@12:')
-    patch('implicit.patch', when='%gcc@7.3.0:')
+    patch("implicit.patch", when="%apple-clang@12:")
+    patch("implicit.patch", when="%gcc@7.3.0:")
 
     # statically link to libz.a
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/minizip.rb
-    patch('static.patch', when='%apple-clang@12:')
+    patch("static.patch", when="%apple-clang@12:")
 
     # build minizip and miniunz
-    @run_before('autoreconf')
+    @run_before("autoreconf")
     def build_minizip_binary(self):
         configure()
         make()
@@ -39,9 +42,9 @@ class Minizip(AutotoolsPackage):
             make()
 
     # install minizip and miniunz
-    @run_after('install')
+    @run_after("install")
     def install_minizip_binary(self):
         mkdirp(self.prefix.bin)
         with working_dir(self.configure_directory):
-            install('minizip', self.prefix.bin)
-            install('miniunz', self.prefix.bin)
+            install("minizip", self.prefix.bin)
+            install("miniunz", self.prefix.bin)

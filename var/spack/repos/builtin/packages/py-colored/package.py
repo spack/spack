@@ -15,8 +15,11 @@ class PyColored(PythonPackage):
     of the displayed color, Xterm Name, Xterm Number and HEX."""
 
     homepage = "https://gitlab.com/dslackw/colored"
-    pypi     = "colored/colored-1.4.2.tar.gz"
+    pypi = "colored/colored-1.4.2.tar.gz"
 
-    version('1.4.2', sha256='056fac09d9e39b34296e7618897ed1b8c274f98423770c2980d829fd670955ed')
+    version(
+        "1.4.2",
+        sha256="056fac09d9e39b34296e7618897ed1b8c274f98423770c2980d829fd670955ed",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -8,6 +8,6 @@ class WrongVariantInConflicts(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/b-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    conflicts('+foo', when='@1.0')
+    conflicts("+foo", when="@1.0")

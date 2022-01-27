@@ -42,20 +42,21 @@ class WrapStream(BufferedReader):
 
 def _s3_open(url):
     parsed = url_util.parse(url)
-    s3 = s3_util.create_s3_session(parsed,
-                                   connection=s3_util.get_mirror_connection(parsed))  # noqa: E501
+    s3 = s3_util.create_s3_session(
+        parsed, connection=s3_util.get_mirror_connection(parsed)
+    )  # noqa: E501
 
     bucket = parsed.netloc
     key = parsed.path
 
-    if key.startswith('/'):
+    if key.startswith("/"):
         key = key[1:]
 
     obj = s3.get_object(Bucket=bucket, Key=key)
 
     # NOTE(opadron): Apply workaround here (see above)
-    stream = WrapStream(obj['Body'])
-    headers = obj['ResponseMetadata']['HTTPHeaders']
+    stream = WrapStream(obj["Body"])
+    headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
     return url, headers, stream
 
@@ -64,21 +65,20 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
         from botocore.exceptions import ClientError  # type: ignore[import]
+
         try:
             url, headers, stream = _s3_open(orig_url)
             return urllib_response.addinfourl(stream, headers, url)
         except ClientError as err:
             # if no such [KEY], but [KEY]/index.html exists,
             # return that, instead.
-            if err.response['Error']['Code'] == 'NoSuchKey':
+            if err.response["Error"]["Code"] == "NoSuchKey":
                 try:
-                    _, headers, stream = _s3_open(
-                        url_util.join(orig_url, 'index.html'))
-                    return urllib_response.addinfourl(
-                        stream, headers, orig_url)
+                    _, headers, stream = _s3_open(url_util.join(orig_url, "index.html"))
+                    return urllib_response.addinfourl(stream, headers, orig_url)
 
                 except ClientError as err2:
-                    if err.response['Error']['Code'] == 'NoSuchKey':
+                    if err.response["Error"]["Code"] == "NoSuchKey":
                         # raise original error
                         raise six.raise_from(urllib_error.URLError(err), err)
 

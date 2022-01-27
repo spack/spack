@@ -10,22 +10,25 @@ class PyPy2cairo(WafPackage):
     """Pycairo is a set of Python bindings for the cairo graphics library."""
 
     homepage = "https://www.cairographics.org/pycairo/"
-    url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
+    url = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
 
-    version('1.10.0', sha256='d30439f06c2ec1a39e27464c6c828b6eface3b22ee17b2de05dc409e429a7431')
+    version(
+        "1.10.0",
+        sha256="d30439f06c2ec1a39e27464c6c828b6eface3b22ee17b2de05dc409e429a7431",
+    )
 
-    extends('python')
+    extends("python")
 
-    depends_on('python', type=('build', 'run'))
-    depends_on('cairo@1.10.0:')
-    depends_on('pixman')
-    depends_on('pkgconfig', type='build')
+    depends_on("python", type=("build", "run"))
+    depends_on("cairo@1.10.0:")
+    depends_on("pixman")
+    depends_on("pkgconfig", type="build")
 
-    depends_on('py-pytest', type='test')
+    depends_on("py-pytest", type="test")
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        with working_dir('test'):
-            pytest = which('py.test')
+        with working_dir("test"):
+            pytest = which("py.test")
             pytest()

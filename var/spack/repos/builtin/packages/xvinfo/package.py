@@ -13,11 +13,14 @@ class Xvinfo(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xvinfo"
     xorg_mirror_path = "app/xvinfo-1.1.3.tar.gz"
 
-    version('1.1.3', sha256='1c1c2f97abfe114389e94399cc7bf3dfd802ed30ad41ba23921d005bd8a6c39f')
+    version(
+        "1.1.3",
+        sha256="1c1c2f97abfe114389e94399cc7bf3dfd802ed30ad41ba23921d005bd8a6c39f",
+    )
 
-    depends_on('libxv')
-    depends_on('libx11')
+    depends_on("libxv")
+    depends_on("libx11")
 
-    depends_on('xproto@7.0.25:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.25:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

@@ -11,11 +11,14 @@ class PyVersioneer(PythonPackage):
     asking your version-control system about the current tree."""
 
     homepage = "https://github.com/warner/python-versioneer"
-    url      = "https://github.com/warner/python-versioneer/archive/0.18.tar.gz"
-    git      = "https://github.com/warner/python-versioneer.git"
+    url = "https://github.com/warner/python-versioneer/archive/0.18.tar.gz"
+    git = "https://github.com/warner/python-versioneer.git"
 
-    maintainers = ['scemama']
+    maintainers = ["scemama"]
 
-    version('0.18', sha256='cf895b67f5bc62d61c4837458069ded8f66b4e5764c19f7253c51ee27e8b3a99')
+    version(
+        "0.18",
+        sha256="cf895b67f5bc62d61c4837458069ded8f66b4e5764c19f7253c51ee27e8b3a99",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

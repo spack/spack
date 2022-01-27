@@ -10,20 +10,27 @@ class Lynx(AutotoolsPackage):
     """Lynx is the text web browser."""
 
     homepage = "https://lynx.invisible-island.net/"
-    url      = "https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz"
+    url = "https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz"
 
-    version('2.8.9.1', sha256='a46e4167b8f02c066d2fe2eafcc5603367be0e3fe2e59e9fc4eb016f306afc8e')
+    version(
+        "2.8.9.1",
+        sha256="a46e4167b8f02c066d2fe2eafcc5603367be0e3fe2e59e9fc4eb016f306afc8e",
+    )
 
-    depends_on('ncurses')
+    depends_on("ncurses")
 
     def url_for_version(self, version):
         version_str = version.string
-        index = version_str.rfind('.')
+        index = version_str.rfind(".")
         tmp = list(version_str)
         if index >= 0:
-            tmp.insert(index, 'rel')
-            version_str = ''.join(tmp)
+            tmp.insert(index, "rel")
+            version_str = "".join(tmp)
         else:
             version_str = version
-        url = "https://invisible-mirror.net/archives/lynx/tarballs/lynx{0}.tar.gz".format(version_str)
+        url = (
+            "https://invisible-mirror.net/archives/lynx/tarballs/lynx{0}.tar.gz".format(
+                version_str
+            )
+        )
         return url

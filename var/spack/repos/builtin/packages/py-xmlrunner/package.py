@@ -12,7 +12,10 @@ class PyXmlrunner(PythonPackage):
     homepage = "https://github.com/pycontribs/xmlrunner"
     pypi = "xmlrunner/xmlrunner-1.7.7.tar.gz"
 
-    version('1.7.7', sha256='5a6113d049eca7646111ee657266966e5bbfb0b5ceb2e83ee0772e16d7110f39')
+    version(
+        "1.7.7",
+        sha256="5a6113d049eca7646111ee657266966e5bbfb0b5ceb2e83ee0772e16d7110f39",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-unittest2', type=('build', 'run'), when='^python@:2.8')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-unittest2", type=("build", "run"), when="^python@:2.8")

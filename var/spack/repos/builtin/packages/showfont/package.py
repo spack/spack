@@ -14,9 +14,12 @@ class Showfont(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/showfont"
     xorg_mirror_path = "app/showfont-1.0.5.tar.gz"
 
-    version('1.0.5', sha256='566e34a145ea73397724d46e84f6a9b3691cf55d0fcb96ec7f917b2b39265ebb')
+    version(
+        "1.0.5",
+        sha256="566e34a145ea73397724d46e84f6a9b3691cf55d0fcb96ec7f917b2b39265ebb",
+    )
 
-    depends_on('libfs')
+    depends_on("libfs")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

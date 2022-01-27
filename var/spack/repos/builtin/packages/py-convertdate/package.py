@@ -14,8 +14,11 @@ class PyConvertdate(PythonPackage):
     homepage = "https://github.com/fitnr/convertdate/"
     pypi = "convertdate/convertdate-2.2.0.tar.gz"
 
-    version('2.2.0', sha256='9d2b0cd8d5382d2458d4cfa59665abba398a9e9bfd3a01c6f61b7b47768d28bf')
+    version(
+        "2.2.0",
+        sha256="9d2b0cd8d5382d2458d4cfa59665abba398a9e9bfd3a01c6f61b7b47768d28bf",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pytz@2014.10:2019.13', type=('build', 'run'))
-    depends_on('py-pymeeus@0.3.6:1', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-pytz@2014.10:2019.13", type=("build", "run"))
+    depends_on("py-pymeeus@0.3.6:1", type=("build", "run"))

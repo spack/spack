@@ -16,8 +16,14 @@ class RGridgraphics(RPackage):
     revisit viewports)."""
 
     homepage = "https://github.com/pmur002/gridgraphics"
-    url      = "https://cloud.r-project.org/src/contrib/gridGraphics_0.4-1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/gridGraphics_0.4-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gridGraphics"
 
-    version('0.5-1', sha256='29086e94e63891884c933b186b35511aac2a2f9c56967a72e4050e2980e7da8b')
-    version('0.4-1', sha256='b770127b71664bbf67f8853a2666c071f2b9920743eddc9f3a58ecb948b923cf')
+    version(
+        "0.5-1",
+        sha256="29086e94e63891884c933b186b35511aac2a2f9c56967a72e4050e2980e7da8b",
+    )
+    version(
+        "0.4-1",
+        sha256="b770127b71664bbf67f8853a2666c071f2b9920743eddc9f3a58ecb948b923cf",
+    )

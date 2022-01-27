@@ -10,8 +10,11 @@ class PyUnshare(PythonPackage):
     homepage = "https://github.com/shubham1172/unshare"
     pypi = "unshare/unshare-0.22.tar.gz"
 
-    version('0.22', sha256='d521d72cca6e876f22cbd5ff5eb51f1beef75e8f9c53b599b55fa05fba1dd3a6')
+    version(
+        "0.22",
+        sha256="d521d72cca6e876f22cbd5ff5eb51f1beef75e8f9c53b599b55fa05fba1dd3a6",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    conflicts('platform=darwin', msg='unshare is linux-only')
+    conflicts("platform=darwin", msg="unshare is linux-only")

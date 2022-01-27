@@ -35,7 +35,7 @@ import spack.util.string
 python_list = list
 
 # Patterns to ignore in the commands directory when looking for commands.
-ignore_files = r'^\.|^__init__.py$|^#'
+ignore_files = r"^\.|^__init__.py$|^#"
 
 SETUP_PARSER = "setup_parser"
 DESCRIPTION = "description"
@@ -56,7 +56,7 @@ def require_python_name(pname):
 
 def cmd_name(python_name):
     """Convert module name (with ``_``) to command name (with ``-``)."""
-    return python_name.replace('_', '-')
+    return python_name.replace("_", "-")
 
 
 def require_cmd_name(cname):
@@ -87,7 +87,7 @@ def all_commands():
         for path in command_paths:
             for file in os.listdir(path):
                 if file.endswith(".py") and not re.search(ignore_files, file):
-                    cmd = re.sub(r'.py$', '', file)
+                    cmd = re.sub(r".py$", "", file)
                     _all_commands.append(cmd_name(cmd))
 
         _all_commands.sort()
@@ -99,7 +99,7 @@ def remove_options(parser, *options):
     """Remove some options from a parser."""
     for option in options:
         for action in parser._actions:
-            if vars(action)['option_strings'][0] == option:
+            if vars(action)["option_strings"][0] == option:
                 parser._handle_conflict_resolve(None, [(option, action)])
                 break
 
@@ -117,10 +117,10 @@ def get_module(cmd_name):
     try:
         # Try to import the command from the built-in directory
         module_name = "%s.%s" % (__name__, pname)
-        module = __import__(module_name,
-                            fromlist=[pname, SETUP_PARSER, DESCRIPTION],
-                            level=0)
-        tty.debug('Imported {0} from built-in commands'.format(pname))
+        module = __import__(
+            module_name, fromlist=[pname, SETUP_PARSER, DESCRIPTION], level=0
+        )
+        tty.debug("Imported {0} from built-in commands".format(pname))
     except ImportError:
         module = spack.extensions.get_module(cmd_name)
 
@@ -128,8 +128,10 @@ def get_module(cmd_name):
     attr_setdefault(module, DESCRIPTION, "")
 
     if not hasattr(module, pname):
-        tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, pname))
+        tty.die(
+            "Command module %s (%s) must define function '%s'."
+            % (module.__name__, module.__file__, pname)
+        )
 
     return module
 
@@ -149,17 +151,17 @@ def get_command(cmd_name):
 
 def parse_specs(args, **kwargs):
     """Convenience function for parsing arguments from specs.  Handles common
-       exceptions and dies if there are errors.
+    exceptions and dies if there are errors.
     """
-    concretize = kwargs.get('concretize', False)
-    normalize = kwargs.get('normalize', False)
-    tests = kwargs.get('tests', False)
-    reuse = kwargs.get('reuse', False)
+    concretize = kwargs.get("concretize", False)
+    normalize = kwargs.get("normalize", False)
+    tests = kwargs.get("tests", False)
+    reuse = kwargs.get("reuse", False)
 
     try:
         sargs = args
         if not isinstance(args, six.string_types):
-            sargs = ' '.join(spack.util.string.quote(args))
+            sargs = " ".join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
@@ -212,8 +214,9 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False):
     return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
 
 
-def disambiguate_spec_from_hashes(spec, hashes, local=False,
-                                  installed=True, first=False):
+def disambiguate_spec_from_hashes(
+    spec, hashes, local=False, installed=True, first=False
+):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
@@ -225,11 +228,11 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False,
             See ``spack.database.Database._query`` for details.
     """
     if local:
-        matching_specs = spack.store.db.query_local(spec, hashes=hashes,
-                                                    installed=installed)
+        matching_specs = spack.store.db.query_local(
+            spec, hashes=hashes, installed=installed
+        )
     else:
-        matching_specs = spack.store.db.query(spec, hashes=hashes,
-                                              installed=installed)
+        matching_specs = spack.store.db.query(spec, hashes=hashes, installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -237,11 +240,12 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False,
         return matching_specs[0]
 
     elif len(matching_specs) > 1:
-        format_string = '{name}{@version}{%compiler}{arch=architecture}'
-        args = ["%s matches multiple packages." % spec,
-                "Matching packages:"]
-        args += [colorize("  @K{%s} " % s.dag_hash(7)) +
-                 s.cformat(format_string) for s in matching_specs]
+        format_string = "{name}{@version}{%compiler}{arch=architecture}"
+        args = ["%s matches multiple packages." % spec, "Matching packages:"]
+        args += [
+            colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string)
+            for s in matching_specs
+        ]
         args += ["Use a more specific spec."]
         tty.die(*args)
 
@@ -252,8 +256,8 @@ def gray_hash(spec, length):
     if not length:
         # default to maximum hash length
         length = 32
-    h = spec.dag_hash(length) if spec.concrete else '-' * length
-    return colorize('@K{%s}' % h)
+    h = spec.dag_hash(length) if spec.concrete else "-" * length
+    return colorize("@K{%s}" % h)
 
 
 def display_specs_as_json(specs, deps=False):
@@ -281,8 +285,8 @@ def display_specs_as_json(specs, deps=False):
 def iter_groups(specs, indent, all_headers):
     """Break a list of specs into groups indexed by arch/compiler."""
     # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ('architecture', 'compiler'))
-    ispace = indent * ' '
+    index = index_by(specs, ("architecture", "compiler"))
+    ispace = indent * " "
 
     # Traverse the index and print out each package
     for i, (architecture, compiler) in enumerate(sorted(index)):
@@ -291,16 +295,17 @@ def iter_groups(specs, indent, all_headers):
 
         header = "%s{%s} / %s{%s}" % (
             spack.spec.architecture_color,
-            architecture if architecture else 'no arch',
+            architecture if architecture else "no arch",
             spack.spec.compiler_color,
-            compiler if compiler else 'no compiler')
+            compiler if compiler else "no compiler",
+        )
 
         # Sometimes we want to display specs that are not yet concretized.
         # If they don't have a compiler / architecture attached to them,
         # then skip the header
         if all_headers or (architecture is not None or compiler is not None):
             sys.stdout.write(ispace)
-            tty.hline(colorize(header), char='-')
+            tty.hline(colorize(header), char="-")
 
         specs = index[(architecture, compiler)]
         specs.sort()
@@ -341,6 +346,7 @@ def display_specs(specs, args=None, **kwargs):
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
 
     """
+
     def get_arg(name, default=None):
         """Prefer kwargs, then args, then default."""
         if name in kwargs:
@@ -350,47 +356,47 @@ def display_specs(specs, args=None, **kwargs):
         else:
             return default
 
-    paths         = get_arg('paths', False)
-    deps          = get_arg('deps', False)
-    hashes        = get_arg('long', False)
-    namespace     = get_arg('namespace', False)
-    flags         = get_arg('show_flags', False)
-    full_compiler = get_arg('show_full_compiler', False)
-    variants      = get_arg('variants', False)
-    groups        = get_arg('groups', True)
-    all_headers   = get_arg('all_headers', False)
-    output        = get_arg('output', sys.stdout)
+    paths = get_arg("paths", False)
+    deps = get_arg("deps", False)
+    hashes = get_arg("long", False)
+    namespace = get_arg("namespace", False)
+    flags = get_arg("show_flags", False)
+    full_compiler = get_arg("show_full_compiler", False)
+    variants = get_arg("variants", False)
+    groups = get_arg("groups", True)
+    all_headers = get_arg("all_headers", False)
+    output = get_arg("output", sys.stdout)
 
-    decorator     = get_arg('decorator', None)
+    decorator = get_arg("decorator", None)
     if decorator is None:
         decorator = lambda s, f: f
 
-    indent = get_arg('indent', 0)
+    indent = get_arg("indent", 0)
 
     hlen = 7
-    if get_arg('very_long', False):
+    if get_arg("very_long", False):
         hashes = True
         hlen = None
 
-    format_string = get_arg('format', None)
+    format_string = get_arg("format", None)
     if format_string is None:
-        nfmt = '{fullname}' if namespace else '{name}'
-        ffmt = ''
+        nfmt = "{fullname}" if namespace else "{name}"
+        ffmt = ""
         if full_compiler or flags:
-            ffmt += '{%compiler.name}'
+            ffmt += "{%compiler.name}"
             if full_compiler:
-                ffmt += '{@compiler.version}'
-            ffmt += ' {compiler_flags}'
-        vfmt = '{variants}' if variants else ''
-        format_string = nfmt + '{@version}' + ffmt + vfmt
+                ffmt += "{@compiler.version}"
+            ffmt += " {compiler_flags}"
+        vfmt = "{variants}" if variants else ""
+        format_string = nfmt + "{@version}" + ffmt + vfmt
 
-    transform = {'package': decorator, 'fullpackage': decorator}
+    transform = {"package": decorator, "fullpackage": decorator}
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
         string = ""
         if hashes:
-            string += gray_hash(s, hlen) + ' '
+            string += gray_hash(s, hlen) + " "
         string += depth * "    "
         string += s.cformat(format_string, transform=transform)
         return string
@@ -404,35 +410,35 @@ def display_specs(specs, args=None, **kwargs):
             if deps:
                 for depth, dep in spec.traverse(root=False, depth=True):
                     formatted.append((fmt(dep, depth), dep))
-                formatted.append(('', None))  # mark newlines
+                formatted.append(("", None))  # mark newlines
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):
             colify((f[0] for f in formatted), indent=indent, output=output)
-            return ''
+            return ""
 
         # otherwise, we'll print specs one by one
         max_width = max(len(f[0]) for f in formatted)
         path_fmt = "%%-%ds%%s" % (max_width + 2)
 
-        out = ''
+        out = ""
         # getting lots of prefixes requires DB lookups. Ensure
         # all spec.prefix calls are in one transaction.
         with spack.store.db.read_transaction():
             for string, spec in formatted:
                 if not string:
                     # print newline from above
-                    out += '\n'
+                    out += "\n"
                     continue
 
                 if paths:
-                    out += path_fmt % (string, spec.prefix) + '\n'
+                    out += path_fmt % (string, spec.prefix) + "\n"
                 else:
-                    out += string + '\n'
+                    out += string + "\n"
 
         return out
 
-    out = ''
+    out = ""
     if groups:
         for specs in iter_groups(specs, indent, all_headers):
             output.write(format_list(specs))
@@ -446,7 +452,7 @@ def display_specs(specs, args=None, **kwargs):
 def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""
-    hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(":")
     return [x for x in specs if x.dag_hash() in hashes]
 
 
@@ -461,8 +467,7 @@ def print_how_many_pkgs(specs, pkg_type=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.util.string.plural(
-            len(specs), pkg_type + " package"))
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package"))
 
 
 def spack_is_git_repo():
@@ -471,7 +476,7 @@ def spack_is_git_repo():
 
 
 def is_git_repo(path):
-    dotgit_path = join_path(path, '.git')
+    dotgit_path = join_path(path, ".git")
     if os.path.isdir(dotgit_path):
         # we are in a regular git repo
         return True
@@ -488,18 +493,22 @@ def is_git_repo(path):
 
 class PythonNameError(spack.error.SpackError):
     """Exception class thrown for impermissible python names"""
+
     def __init__(self, name):
         self.name = name
         super(PythonNameError, self).__init__(
-            '{0} is not a permissible Python name.'.format(name))
+            "{0} is not a permissible Python name.".format(name)
+        )
 
 
 class CommandNameError(spack.error.SpackError):
     """Exception class thrown for impermissible command names"""
+
     def __init__(self, name):
         self.name = name
         super(CommandNameError, self).__init__(
-            '{0} is not a permissible Spack command name.'.format(name))
+            "{0} is not a permissible Spack command name.".format(name)
+        )
 
 
 ########################################
@@ -510,7 +519,7 @@ def extant_file(f):
     Argparse type for files that exist.
     """
     if not os.path.isfile(f):
-        raise argparse.ArgumentTypeError('%s does not exist' % f)
+        raise argparse.ArgumentTypeError("%s does not exist" % f)
     return f
 
 
@@ -532,11 +541,12 @@ def require_active_env(cmd_name):
         return env
     else:
         tty.die(
-            '`spack %s` requires an environment' % cmd_name,
-            'activate an environment first:',
-            '    spack env activate ENV',
-            'or use:',
-            '    spack -e ENV %s ...' % cmd_name)
+            "`spack %s` requires an environment" % cmd_name,
+            "activate an environment first:",
+            "    spack env activate ENV",
+            "or use:",
+            "    spack -e ENV %s ..." % cmd_name,
+        )
 
 
 def find_environment(args):
@@ -579,4 +589,4 @@ def find_environment(args):
     if ev.is_env_dir(env):
         return ev.Environment(env)
 
-    raise ev.SpackEnvironmentError('no environment in %s' % env)
+    raise ev.SpackEnvironmentError("no environment in %s" % env)

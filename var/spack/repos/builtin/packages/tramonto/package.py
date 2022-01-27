@@ -10,15 +10,16 @@ class Tramonto(CMakePackage):
     """Tramonto: Software for Nanostructured Fluids in Materials and Biology"""
 
     homepage = "https://software.sandia.gov/tramonto/"
-    git      = "https://github.com/Tramonto/Tramonto.git"
+    git = "https://github.com/Tramonto/Tramonto.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('trilinos@:12+nox')
+    depends_on("trilinos@:12+nox")
 
     def cmake_args(self):
         spec = self.spec
         args = []
-        args.extend(['-DTRILINOS_PATH:PATH=%s/lib/cmake/Trilinos' %
-                     spec['trilinos'].prefix])
+        args.extend(
+            ["-DTRILINOS_PATH:PATH=%s/lib/cmake/Trilinos" % spec["trilinos"].prefix]
+        )
         return args

@@ -1,7 +1,7 @@
-'''
+"""
 altgraph.GraphUtil - Utility classes and functions
 ==================================================
-'''
+"""
 
 import random
 from collections import deque
@@ -9,23 +9,21 @@ from altgraph import Graph
 from altgraph import GraphError
 
 
-def generate_random_graph(
-        node_num, edge_num, self_loops=False, multi_edges=False):
-    '''
+def generate_random_graph(node_num, edge_num, self_loops=False, multi_edges=False):
+    """
     Generates and returns a :py:class:`~altgraph.Graph.Graph` instance with
     *node_num* nodes randomly connected by *edge_num* edges.
-    '''
+    """
     g = Graph.Graph()
 
     if not multi_edges:
         if self_loops:
             max_edges = node_num * node_num
         else:
-            max_edges = node_num * (node_num-1)
+            max_edges = node_num * (node_num - 1)
 
         if edge_num > max_edges:
-            raise GraphError(
-                "inconsistent arguments to 'generate_random_graph'")
+            raise GraphError("inconsistent arguments to 'generate_random_graph'")
 
     nodes = range(node_num)
 
@@ -52,16 +50,15 @@ def generate_random_graph(
     return g
 
 
-def generate_scale_free_graph(
-        steps, growth_num, self_loops=False, multi_edges=False):
-    '''
+def generate_scale_free_graph(steps, growth_num, self_loops=False, multi_edges=False):
+    """
     Generates and returns a :py:class:`~altgraph.Graph.Graph` instance that
     will have *steps* \* *growth_num* nodes and a scale free (powerlaw)
     connectivity. Starting with a fully connected graph with *growth_num*
     nodes at every step *growth_num* nodes are added to the graph and are
     connected to existing nodes with a probability proportional to the degree
     of these existing nodes.
-    '''
+    """
     # FIXME: The code doesn't seem to do what the documentation claims.
     graph = Graph.Graph()
 
@@ -137,8 +134,6 @@ def filter_stack(graph, head, filters):
                 visited.add(tail)
                 stack.append((last_good, tail))
 
-    orphans = [
-        (lg, tl)
-        for (lg, tl) in orphans if tl not in removes]
+    orphans = [(lg, tl) for (lg, tl) in orphans if tl not in removes]
 
     return visited, removes, orphans

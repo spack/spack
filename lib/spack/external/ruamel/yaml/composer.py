@@ -12,14 +12,22 @@ except (ImportError, ValueError):  # for Jython
     from ruamel.yaml.compat import utf8
 
 from ruamel.yaml.events import (
-    StreamStartEvent, StreamEndEvent, MappingStartEvent, MappingEndEvent,
-    SequenceStartEvent, SequenceEndEvent, AliasEvent, ScalarEvent,
+    StreamStartEvent,
+    StreamEndEvent,
+    MappingStartEvent,
+    MappingEndEvent,
+    SequenceStartEvent,
+    SequenceEndEvent,
+    AliasEvent,
+    ScalarEvent,
 )
 from ruamel.yaml.nodes import (
-    MappingNode, ScalarNode, SequenceNode,
+    MappingNode,
+    ScalarNode,
+    SequenceNode,
 )
 
-__all__ = ['Composer', 'ComposerError']
+__all__ = ["Composer", "ComposerError"]
 
 
 class ComposerError(MarkedYAMLError):
@@ -57,8 +65,10 @@ class Composer(object):
             event = self.get_event()
             raise ComposerError(
                 "expected a single document in the stream",
-                document.start_mark, "but found another document",
-                event.start_mark)
+                document.start_mark,
+                "but found another document",
+                event.start_mark,
+            )
 
         # Drop the STREAM-END event.
         self.get_event()
@@ -84,17 +94,22 @@ class Composer(object):
             alias = event.anchor
             if alias not in self.anchors:
                 raise ComposerError(
-                    None, None, "found undefined alias %r"
-                    % utf8(alias), event.start_mark)
+                    None,
+                    None,
+                    "found undefined alias %r" % utf8(alias),
+                    event.start_mark,
+                )
             return self.anchors[alias]
         event = self.peek_event()
         anchor = event.anchor
         if anchor is not None:  # have an anchor
             if anchor in self.anchors:
                 raise ComposerError(
-                    "found duplicate anchor %r; first occurence"
-                    % utf8(anchor), self.anchors[anchor].start_mark,
-                    "second occurence", event.start_mark)
+                    "found duplicate anchor %r; first occurence" % utf8(anchor),
+                    self.anchors[anchor].start_mark,
+                    "second occurence",
+                    event.start_mark,
+                )
         self.descend_resolver(parent, index)
         if self.check_event(ScalarEvent):
             node = self.compose_scalar_node(anchor)
@@ -108,11 +123,16 @@ class Composer(object):
     def compose_scalar_node(self, anchor):
         event = self.get_event()
         tag = event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == u"!":
             tag = self.resolve(ScalarNode, event.value, event.implicit)
-        node = ScalarNode(tag, event.value,
-                          event.start_mark, event.end_mark, style=event.style,
-                          comment=event.comment)
+        node = ScalarNode(
+            tag,
+            event.value,
+            event.start_mark,
+            event.end_mark,
+            style=event.style,
+            comment=event.comment,
+        )
         if anchor is not None:
             self.anchors[anchor] = node
         return node
@@ -120,12 +140,17 @@ class Composer(object):
     def compose_sequence_node(self, anchor):
         start_event = self.get_event()
         tag = start_event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == u"!":
             tag = self.resolve(SequenceNode, None, start_event.implicit)
-        node = SequenceNode(tag, [],
-                            start_event.start_mark, None,
-                            flow_style=start_event.flow_style,
-                            comment=start_event.comment, anchor=anchor)
+        node = SequenceNode(
+            tag,
+            [],
+            start_event.start_mark,
+            None,
+            flow_style=start_event.flow_style,
+            comment=start_event.comment,
+            anchor=anchor,
+        )
         if anchor is not None:
             self.anchors[anchor] = node
         index = 0
@@ -135,8 +160,10 @@ class Composer(object):
         end_event = self.get_event()
         if node.flow_style is True and end_event.comment is not None:
             if node.comment is not None:
-                print('Warning: unexpected end_event commment in sequence '
-                      'node {0}'.format(node.flow_style))
+                print(
+                    "Warning: unexpected end_event commment in sequence "
+                    "node {0}".format(node.flow_style)
+                )
             node.comment = end_event.comment
         node.end_mark = end_event.end_mark
         self.check_end_doc_comment(end_event, node)
@@ -145,12 +172,17 @@ class Composer(object):
     def compose_mapping_node(self, anchor):
         start_event = self.get_event()
         tag = start_event.tag
-        if tag is None or tag == u'!':
+        if tag is None or tag == u"!":
             tag = self.resolve(MappingNode, None, start_event.implicit)
-        node = MappingNode(tag, [],
-                           start_event.start_mark, None,
-                           flow_style=start_event.flow_style,
-                           comment=start_event.comment, anchor=anchor)
+        node = MappingNode(
+            tag,
+            [],
+            start_event.start_mark,
+            None,
+            flow_style=start_event.flow_style,
+            comment=start_event.comment,
+            anchor=anchor,
+        )
         if anchor is not None:
             self.anchors[anchor] = node
         while not self.check_event(MappingEndEvent):

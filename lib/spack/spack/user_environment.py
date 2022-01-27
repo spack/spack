@@ -11,7 +11,7 @@ import spack.util.environment as environment
 import spack.util.prefix as prefix
 
 #: Environment variable name Spack uses to track individually loaded packages
-spack_loaded_hashes_var = 'SPACK_LOADED_HASHES'
+spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
 
 
 def prefix_inspections(platform):
@@ -26,27 +26,27 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
-    inspections = spack.config.get('modules:prefix_inspections', {})
+    inspections = spack.config.get("modules:prefix_inspections", {})
     if inspections:
         return inspections
 
     inspections = {
-        'bin': ['PATH'],
-        'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
-        'lib64': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
-        'man': ['MANPATH'],
-        'share/man': ['MANPATH'],
-        'share/aclocal': ['ACLOCAL_PATH'],
-        'include': ['CPATH'],
-        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
-        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
-        'share/pkgconfig': ['PKG_CONFIG_PATH'],
-        '': ['CMAKE_PREFIX_PATH']
+        "bin": ["PATH"],
+        "lib": ["LD_LIBRARY_PATH", "LIBRARY_PATH"],
+        "lib64": ["LD_LIBRARY_PATH", "LIBRARY_PATH"],
+        "man": ["MANPATH"],
+        "share/man": ["MANPATH"],
+        "share/aclocal": ["ACLOCAL_PATH"],
+        "include": ["CPATH"],
+        "lib/pkgconfig": ["PKG_CONFIG_PATH"],
+        "lib64/pkgconfig": ["PKG_CONFIG_PATH"],
+        "share/pkgconfig": ["PKG_CONFIG_PATH"],
+        "": ["CMAKE_PREFIX_PATH"],
     }
 
-    if platform == 'darwin':
-        for subdir in ('lib', 'lib64'):
-            inspections[subdir].append('DYLD_FALLBACK_LIBRARY_PATH')
+    if platform == "darwin":
+        for subdir in ("lib", "lib64"):
+            inspections[subdir].append("DYLD_FALLBACK_LIBRARY_PATH")
 
     return inspections
 
@@ -87,14 +87,14 @@ def environment_modifications_for_spec(spec, view=None, set_package_py_globals=T
     env = environment.inspect_path(
         spec.prefix,
         prefix_inspections(spec.platform),
-        exclude=environment.is_system_path
+        exclude=environment.is_system_path,
     )
 
     # Let the extendee/dependency modify their extensions/dependents
     # before asking for package-specific modifications
     env.extend(
         spack.build_environment.modifications_from_dependencies(
-            spec, context='run', set_package_py_globals=set_package_py_globals
+            spec, context="run", set_package_py_globals=set_package_py_globals
         )
     )
 

@@ -13,11 +13,14 @@ class PyFastdownload(PythonPackage):
     fastdownload can help."""
 
     homepage = "https://github.com/fastai/fastdownload/tree/master/"
-    pypi     = "fastdownload/fastdownload-0.0.5.tar.gz"
+    pypi = "fastdownload/fastdownload-0.0.5.tar.gz"
 
-    version('0.0.5', sha256='64e67af30690fa98ae1c8a1b52495769842f723565239a5430208ad05585af18')
+    version(
+        "0.0.5",
+        sha256="64e67af30690fa98ae1c8a1b52495769842f723565239a5430208ad05585af18",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-fastprogress', type=('build', 'run'))
-    depends_on('py-fastcore@1.3.26:', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-fastprogress", type=("build", "run"))
+    depends_on("py-fastcore@1.3.26:", type=("build", "run"))

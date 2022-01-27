@@ -15,10 +15,13 @@ class Ico(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/ico"
     xorg_mirror_path = "app/ico-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='eb8609c3b43dc2e575272f2702590525fe13229e022c4aff8b9a0cc2a3f3205d')
+    version(
+        "1.0.4",
+        sha256="eb8609c3b43dc2e575272f2702590525fe13229e022c4aff8b9a0cc2a3f3205d",
+    )
 
-    depends_on('libx11@0.99.1:')
+    depends_on("libx11@0.99.1:")
 
-    depends_on('xproto@7.0.22:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.22:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

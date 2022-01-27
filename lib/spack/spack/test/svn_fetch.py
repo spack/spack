@@ -18,19 +18,14 @@ from spack.util.executable import which
 from spack.version import ver
 
 pytestmark = pytest.mark.skipif(
-    not which('svn') or not which('svnadmin'),
-    reason='requires subversion to be installed')
+    not which("svn") or not which("svnadmin"),
+    reason="requires subversion to be installed",
+)
 
 
-@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
+@pytest.mark.parametrize("type_of_test", ["default", "rev0"])
 @pytest.mark.parametrize("secure", [True, False])
-def test_fetch(
-        type_of_test,
-        secure,
-        mock_svn_repository,
-        config,
-        mutable_mock_repo
-):
+def test_fetch(type_of_test, secure, mock_svn_repository, config, mutable_mock_repo):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -45,14 +40,14 @@ def test_fetch(
     h = mock_svn_repository.hash
 
     # Construct the package under test
-    spec = Spec('svn-test')
+    spec = Spec("svn-test")
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('svn')] = t.args
+    pkg.versions[ver("svn")] = t.args
 
     # Enter the stage directory and check some properties
     with pkg.stage:
-        with spack.config.override('config:verify_ssl', secure):
+        with spack.config.override("config:verify_ssl", secure):
             pkg.do_stage()
 
         with working_dir(pkg.stage.source_path):
@@ -65,7 +60,7 @@ def test_fetch(
             os.unlink(file_path)
             assert not os.path.isfile(file_path)
 
-            untracked_file = 'foobarbaz'
+            untracked_file = "foobarbaz"
             touch(untracked_file)
             assert os.path.isfile(untracked_file)
             pkg.do_restage()
@@ -81,7 +76,7 @@ def test_svn_extra_fetch(tmpdir):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmpdir)
 
-    fetcher = SvnFetchStrategy(svn='file:///not-a-real-svn-repo')
+    fetcher = SvnFetchStrategy(svn="file:///not-a-real-svn-repo")
     assert fetcher is not None
 
     with Stage(fetcher, path=testpath) as stage:

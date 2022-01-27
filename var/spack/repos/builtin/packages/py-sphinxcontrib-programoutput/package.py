@@ -13,9 +13,15 @@ class PySphinxcontribProgramoutput(PythonPackage):
     homepage = "https://sphinxcontrib-programoutput.readthedocs.org/"
     pypi = "sphinxcontrib-programoutput/sphinxcontrib-programoutput-0.15.tar.gz"
 
-    version('0.15', sha256='80dd5b4eab780a13ff2c23500cac3dbf0e04ef9976b409ef25a47c263ef8ab94')
-    version('0.10', sha256='fdee94fcebb0d8fddfccac5c4fa560f6177d5340c4349ee447c890bea8857094')
+    version(
+        "0.15",
+        sha256="80dd5b4eab780a13ff2c23500cac3dbf0e04ef9976b409ef25a47c263ef8ab94",
+    )
+    version(
+        "0.10",
+        sha256="fdee94fcebb0d8fddfccac5c4fa560f6177d5340c4349ee447c890bea8857094",
+    )
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-sphinx@1.7.0:', type=('build', 'run'))
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-sphinx@1.7.0:", type=("build", "run"))

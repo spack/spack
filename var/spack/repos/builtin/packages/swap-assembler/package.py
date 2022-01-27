@@ -10,15 +10,17 @@ class SwapAssembler(MakefilePackage):
     """A scalable and fully parallelized genome assembler."""
 
     homepage = "https://sourceforge.net/projects/swapassembler/"
-    url      = "https://sourceforge.net/projects/swapassembler/files/SWAP_Assembler-0.4.tar.bz2/download"
+    url = "https://sourceforge.net/projects/swapassembler/files/SWAP_Assembler-0.4.tar.bz2/download"
 
-    version('0.4', sha256='45632e25578aacfbacd76df9697cbc798e09ac92284d9c9c07be15e0eb348e0d')
+    version(
+        "0.4", sha256="45632e25578aacfbacd76df9697cbc798e09ac92284d9c9c07be15e0eb348e0d"
+    )
 
-    depends_on('mpich')
+    depends_on("mpich")
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('$(CC) -O2', '$(CC) -pthread -O2', string=True)
+        makefile = FileFilter("Makefile")
+        makefile.filter("$(CC) -O2", "$(CC) -pthread -O2", string=True)
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin)
+        install_tree(".", prefix.bin)

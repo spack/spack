@@ -34,38 +34,77 @@ class Conduit(CMakePackage):
     coupling between packages in-core, serialization, and I/O tasks."""
 
     homepage = "https://software.llnl.gov/conduit"
-    url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
-    git      = "https://github.com/LLNL/conduit.git"
-    tags     = ['radiuss', 'e4s']
+    url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
+    git = "https://github.com/LLNL/conduit.git"
+    tags = ["radiuss", "e4s"]
 
-    version('develop', branch='develop', submodules=True)
+    version("develop", branch="develop", submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
-    version('master', branch='develop', submodules=True)
+    version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
-    version('0.8.1', sha256='488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee')
-    version('0.8.0', sha256='0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119')
-    version('0.7.2', sha256='359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a')
-    version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
-    version('0.7.0', sha256='ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c')
-    version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')
-    version('0.5.1', sha256='68a3696d1ec6d3a4402b44a464d723e6529ec41016f9b44c053676affe516d44')
-    version('0.5.0', sha256='7efac668763d02bd0a2c0c1b134d9f5ee27e99008183905bb0512e5502b8b4fe')
-    version('0.4.0', sha256='c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52')
-    version('0.3.1', sha256='7b358ca03bb179876291d4a55d6a1c944b7407a80a588795b9e47940b1990521')
-    version('0.3.0', sha256='52e9cf5720560e5f7492876c39ef2ea20ae73187338361d2744bdf67567da155')
+    version(
+        "0.8.1",
+        sha256="488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee",
+    )
+    version(
+        "0.8.0",
+        sha256="0607dcf9ced44f95e0b9549f5bbf7a332afd84597c52e293d7ca8d83117b5119",
+    )
+    version(
+        "0.7.2",
+        sha256="359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a",
+    )
+    version(
+        "0.7.1",
+        sha256="460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d",
+    )
+    version(
+        "0.7.0",
+        sha256="ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c",
+    )
+    version(
+        "0.6.0",
+        sha256="078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d",
+    )
+    version(
+        "0.5.1",
+        sha256="68a3696d1ec6d3a4402b44a464d723e6529ec41016f9b44c053676affe516d44",
+    )
+    version(
+        "0.5.0",
+        sha256="7efac668763d02bd0a2c0c1b134d9f5ee27e99008183905bb0512e5502b8b4fe",
+    )
+    version(
+        "0.4.0",
+        sha256="c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52",
+    )
+    version(
+        "0.3.1",
+        sha256="7b358ca03bb179876291d4a55d6a1c944b7407a80a588795b9e47940b1990521",
+    )
+    version(
+        "0.3.0",
+        sha256="52e9cf5720560e5f7492876c39ef2ea20ae73187338361d2744bdf67567da155",
+    )
     # note: checksums on github automatic release source tars changed ~9/17
-    version('0.2.1', sha256='796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4')
-    version('0.2.0', sha256='31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061')
+    version(
+        "0.2.1",
+        sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4",
+    )
+    version(
+        "0.2.0",
+        sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061",
+    )
 
-    maintainers = ['cyrush']
+    maintainers = ["cyrush"]
 
     ###########################################################################
     # package variants
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-    variant("test", default=True, description='Enable Conduit unit tests')
+    variant("test", default=True, description="Enable Conduit unit tests")
 
     # variants for python support
     variant("python", default=False, description="Build Conduit Python support")
@@ -74,8 +113,11 @@ class Conduit(CMakePackage):
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
-    variant("hdf5_compat", default=True,
-            description="Build Conduit with HDF5 1.8.x (compatibility mode)")
+    variant(
+        "hdf5_compat",
+        default=True,
+        description="Build Conduit with HDF5 1.8.x (compatibility mode)",
+    )
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
     variant("parmetis", default=True, description="Build Conduit Parmetis support")
@@ -87,7 +129,9 @@ class Conduit(CMakePackage):
     variant("doc", default=False, description="Build Conduit's documentation")
     # doxygen support is wip, since doxygen has several dependencies
     # we want folks to explicitly opt in to building doxygen
-    variant("doxygen", default=False, description="Build Conduit's Doxygen documentation")
+    variant(
+        "doxygen", default=False, description="Build Conduit's Doxygen documentation"
+    )
 
     ###########################################################################
     # package dependencies
@@ -97,15 +141,15 @@ class Conduit(CMakePackage):
     # CMake
     #######################
     # cmake 3.14.1 or newer
-    depends_on("cmake@3.14.1:", type='build')
+    depends_on("cmake@3.14.1:", type="build")
 
     #######################
     # Python
     #######################
     depends_on("python", when="+python")
     extends("python", when="+python")
-    depends_on("py-numpy", when="+python", type=('build', 'run'))
-    depends_on("py-mpi4py", when="+python+mpi", type=('build', 'run'))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    depends_on("py-mpi4py", when="+python+mpi", type=("build", "run"))
 
     #######################
     # I/O Packages
@@ -142,9 +186,9 @@ class Conduit(CMakePackage):
     ###############
     # ADIOS
     ###############
-    depends_on("adios+mpi~hdf5+shared",       when="+adios+mpi+shared")
+    depends_on("adios+mpi~hdf5+shared", when="+adios+mpi+shared")
     depends_on("adios+mpi~hdf5~shared~blosc", when="+adios+mpi~shared")
-    depends_on("adios~mpi~hdf5+shared",       when="+adios~mpi+shared")
+    depends_on("adios~mpi~hdf5+shared", when="+adios~mpi+shared")
     depends_on("adios~mpi~hdf5~shared~blosc", when="+adios~mpi~shared")
 
     #######################
@@ -169,27 +213,30 @@ class Conduit(CMakePackage):
     #######################
     # Documentation related
     #######################
-    depends_on("py-sphinx", when="+python+doc", type='build')
-    depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
+    depends_on("py-sphinx", when="+python+doc", type="build")
+    depends_on("py-sphinx-rtd-theme", when="+python+doc", type="build")
     depends_on("doxygen", when="+doc+doxygen")
 
     # Tentative patch for fj compiler
     # Cmake will support fj compiler and this patch will be removed
-    patch('fj_flags.patch', when='%fj')
-    patch('bpparametis.patch', when='@0.8.1')
+    patch("fj_flags.patch", when="%fj")
+    patch("bpparametis.patch", when="@0.8.1")
 
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
-    patch('https://github.com/LLNL/conduit/pull/773.patch', when='@:0.7.2',
-          sha256='89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7')
+    patch(
+        "https://github.com/LLNL/conduit/pull/773.patch",
+        when="@:0.7.2",
+        sha256="89d1829ad52f503f6179e43efddf998c239a95c14ca1f248463a3f61ad7d5cf7",
+    )
 
     ###################################
     # build phases used by this package
     ###################################
-    phases = ['hostconfig', 'cmake', 'build', 'install']
+    phases = ["hostconfig", "cmake", "build", "install"]
 
     def setup_build_environment(self, env):
-        env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+        env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
     def url_for_version(self, version):
         """
@@ -205,7 +252,9 @@ class Conduit(CMakePackage):
             # (https://github.com/llnl/blt) as a submodule, since github does
             # not automatically package source from submodules, conduit
             # provides a custom src tarball
-            return "https://github.com/LLNL/conduit/releases/download/v{0}/conduit-v{1}-src-with-blt.tar.gz".format(v, v)
+            return "https://github.com/LLNL/conduit/releases/download/v{0}/conduit-v{1}-src-with-blt.tar.gz".format(
+                v, v
+            )
         return url
 
     ####################################################################
@@ -216,17 +265,17 @@ class Conduit(CMakePackage):
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
         options = []
-        options.extend(['-C', host_config, "../spack-src/src/"])
+        options.extend(["-C", host_config, "../spack-src/src/"])
         return options
 
-    @run_after('build')
+    @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        with working_dir('spack-build'):
+        with working_dir("spack-build"):
             print("Running Conduit Unit Tests...")
             make("test")
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
         """
@@ -236,31 +285,26 @@ class Conduit(CMakePackage):
         print("Checking Conduit installation...")
         spec = self.spec
         install_prefix = spec.prefix
-        example_src_dir = join_path(install_prefix,
-                                    "examples",
-                                    "conduit",
-                                    "using-with-cmake")
+        example_src_dir = join_path(
+            install_prefix, "examples", "conduit", "using-with-cmake"
+        )
         print("Checking using-with-cmake example...")
-        with working_dir("check-conduit-using-with-cmake-example",
-                         create=True):
-            cmake_args = ["-DCONDUIT_DIR={0}".format(install_prefix),
-                          example_src_dir]
+        with working_dir("check-conduit-using-with-cmake-example", create=True):
+            cmake_args = ["-DCONDUIT_DIR={0}".format(install_prefix), example_src_dir]
             cmake(*cmake_args)
             make()
-            example = Executable('./conduit_example')
+            example = Executable("./conduit_example")
             example()
         print("Checking using-with-make example...")
-        example_src_dir = join_path(install_prefix,
-                                    "examples",
-                                    "conduit",
-                                    "using-with-make")
+        example_src_dir = join_path(
+            install_prefix, "examples", "conduit", "using-with-make"
+        )
         example_files = glob.glob(join_path(example_src_dir, "*"))
-        with working_dir("check-conduit-using-with-make-example",
-                         create=True):
+        with working_dir("check-conduit-using-with-make-example", create=True):
             for example_file in example_files:
                 shutil.copy(example_file, ".")
             make("CONDUIT_DIR={0}".format(install_prefix))
-            example = Executable('./conduit_example')
+            example = Executable("./conduit_example")
             example()
 
     def _get_host_config_path(self, spec):
@@ -268,13 +312,11 @@ class Conduit(CMakePackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-conduit-{3}.cmake".format(socket.gethostname(),
-                                                                  sys_type,
-                                                                  spec.compiler,
-                                                                  spec.dag_hash())
+        host_config_path = "{0}-{1}-{2}-conduit-{3}.cmake".format(
+            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        )
         dest_dir = spec.prefix
-        host_config_path = os.path.abspath(join_path(dest_dir,
-                                                     host_config_path))
+        host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
         return host_config_path
 
     def hostconfig(self, spec, prefix):
@@ -299,7 +341,7 @@ class Conduit(CMakePackage):
             # even if this is set, it may not exist
             # do one more sanity check
             if os.path.isfile(env["SPACK_FC"]):
-                f_compiler  = env["SPACK_FC"]
+                f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # Directly fetch the names of the actual compilers to create a
@@ -312,13 +354,13 @@ class Conduit(CMakePackage):
             sys_type = env["SYS_TYPE"]
 
         # are we on a specific machine
-        on_blueos = 'blueos' in sys_type
+        on_blueos = "blueos" in sys_type
 
         ##############################################
         # Find and record what CMake is used
         ##############################################
 
-        cmake_exe = spec['cmake'].command.path
+        cmake_exe = spec["cmake"].command.path
 
         # get hostconfig name
         host_cfg_fname = self._get_host_config_path(spec)
@@ -349,8 +391,7 @@ class Conduit(CMakePackage):
         cfg.write("# fortran compiler used by spack\n")
         if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
-            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
-                                        f_compiler))
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
         else:
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
@@ -361,35 +402,35 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
         # use global spack compiler flags
-        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        cppflags = " ".join(spec.compiler_flags["cppflags"])
         if cppflags:
             # avoid always ending up with ' ' with no flags defined
-            cppflags += ' '
-        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+            cppflags += " "
+        cflags = cppflags + " ".join(spec.compiler_flags["cflags"])
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
-        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
-        fflags = ' '.join(spec.compiler_flags['fflags'])
-        if self.spec.satisfies('%cce'):
+        fflags = " ".join(spec.compiler_flags["fflags"])
+        if self.spec.satisfies("%cce"):
             fflags += " -ef"
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
-        if ((f_compiler is not None)
-           and ("gfortran" in f_compiler)
-           and ("clang" in cpp_compiler)):
-            libdir = os.path.join(os.path.dirname(
-                                  os.path.dirname(f_compiler)), "lib")
+        if (
+            (f_compiler is not None)
+            and ("gfortran" in f_compiler)
+            and ("clang" in cpp_compiler)
+        ):
+            libdir = os.path.join(os.path.dirname(os.path.dirname(f_compiler)), "lib")
             flags = ""
             for _libpath in [libdir, libdir + "64"]:
                 if os.path.exists(_libpath):
                     flags += " -Wl,-rpath,{0}".format(_libpath)
-            description = ("Adds a missing libstdc++ rpath")
+            description = "Adds a missing libstdc++ rpath"
             if flags:
-                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                            description))
+                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags, description))
 
         #######################
         # Unit Tests
@@ -410,26 +451,23 @@ class Conduit(CMakePackage):
 
             if "+fortran" in spec:
                 if "xlf" in f_compiler:
-                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID",
-                                                "XL"))
+                    cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL"))
 
                 if (f_compiler is not None) and ("xlf" in f_compiler):
                     # Fix missing std linker flag in xlc compiler
                     flags = "-WF,-C! -qxlf2003=polymorphic"
-                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS",
-                                                flags))
+                    cfg.write(cmake_cache_entry("BLT_FORTRAN_FLAGS", flags))
                     # Grab lib directory for the current fortran compiler
-                    libdir = os.path.join(os.path.dirname(
-                                          os.path.dirname(f_compiler)), "lib")
+                    libdir = os.path.join(
+                        os.path.dirname(os.path.dirname(f_compiler)), "lib"
+                    )
                     rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
 
-                    flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
-                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
-                                                flags))
+                    flags = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
+                    cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags))
                     if "+shared" in spec:
                         flags = "${CMAKE_SHARED_LINKER_FLAGS} " + rpaths
-                        cfg.write(cmake_cache_entry(
-                                  "CMAKE_SHARED_LINKER_FLAGS", flags))
+                        cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", flags))
 
         #######################
         # Python
@@ -441,12 +479,14 @@ class Conduit(CMakePackage):
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
-                      spec['python'].command.path))
+            cfg.write(
+                cmake_cache_entry("PYTHON_EXECUTABLE", spec["python"].command.path)
+            )
             try:
                 cfg.write("# python module install dir\n")
-                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                          python_platlib))
+                cfg.write(
+                    cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX", python_platlib)
+                )
             except NameError:
                 # spack's  won't exist in a subclass
                 pass
@@ -458,13 +498,13 @@ class Conduit(CMakePackage):
                 cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
                 cfg.write("# sphinx from spack \n")
-                sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
-                                             "sphinx-build")
-                cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE",
-                                            sphinx_build_exe))
+                sphinx_build_exe = join_path(
+                    spec["py-sphinx"].prefix.bin, "sphinx-build"
+                )
+                cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
             if "+doxygen" in spec:
                 cfg.write("# doxygen from uberenv\n")
-                doxygen_exe = spec['doxygen'].command.path
+                doxygen_exe = spec["doxygen"].command.path
                 cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
@@ -476,14 +516,14 @@ class Conduit(CMakePackage):
         cfg.write("# MPI Support\n")
 
         if "+mpi" in spec:
-            mpicc_path = spec['mpi'].mpicc
-            mpicxx_path = spec['mpi'].mpicxx
-            mpifc_path = spec['mpi'].mpifc
+            mpicc_path = spec["mpi"].mpicc
+            mpicxx_path = spec["mpi"].mpicxx
+            mpifc_path = spec["mpi"].mpifc
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if spec['mpi'].mpicc == spack_cc:
+            if spec["mpi"].mpicc == spack_cc:
                 mpicc_path = c_compiler
                 mpicxx_path = cpp_compiler
                 mpifc_path = f_compiler
@@ -491,19 +531,16 @@ class Conduit(CMakePackage):
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
             if "+fortran" in spec:
-                cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                            mpifc_path))
+                cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
 
-            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
-                if self.spec["cmake"].satisfies('@3.10:'):
-                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
-                                                mpiexe_bin))
+                if self.spec["cmake"].satisfies("@3.10:"):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexe_bin))
                 else:
-                    cfg.write(cmake_cache_entry("MPIEXEC",
-                                                mpiexe_bin))
+                    cfg.write(cmake_cache_entry("MPIEXEC", mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
@@ -512,7 +549,7 @@ class Conduit(CMakePackage):
         #######################
         cfg.write("# zfp from spack \n")
         if "+zfp" in spec:
-            cfg.write(cmake_cache_entry("ZFP_DIR", spec['zfp'].prefix))
+            cfg.write(cmake_cache_entry("ZFP_DIR", spec["zfp"].prefix))
         else:
             cfg.write("# zfp not built by spack \n")
 
@@ -529,8 +566,8 @@ class Conduit(CMakePackage):
         cfg.write("# hdf5 from spack \n")
 
         if "+hdf5" in spec:
-            cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
-            cfg.write(cmake_cache_entry("ZLIB_DIR", spec['zlib'].prefix))
+            cfg.write(cmake_cache_entry("HDF5_DIR", spec["hdf5"].prefix))
+            cfg.write(cmake_cache_entry("ZLIB_DIR", spec["zlib"].prefix))
         else:
             cfg.write("# hdf5 not built by spack \n")
 
@@ -541,7 +578,7 @@ class Conduit(CMakePackage):
         cfg.write("# h5z-zfp from spack \n")
 
         if "+hdf5+zfp" in spec:
-            cfg.write(cmake_cache_entry("H5ZZFP_DIR", spec['h5z-zfp'].prefix))
+            cfg.write(cmake_cache_entry("H5ZZFP_DIR", spec["h5z-zfp"].prefix))
         else:
             cfg.write("# h5z-zfp not built by spack \n")
 
@@ -552,7 +589,7 @@ class Conduit(CMakePackage):
         cfg.write("# silo from spack \n")
 
         if "+silo" in spec:
-            cfg.write(cmake_cache_entry("SILO_DIR", spec['silo'].prefix))
+            cfg.write(cmake_cache_entry("SILO_DIR", spec["silo"].prefix))
         else:
             cfg.write("# silo not built by spack \n")
 
@@ -563,7 +600,7 @@ class Conduit(CMakePackage):
         cfg.write("# ADIOS from spack \n")
 
         if "+adios" in spec:
-            cfg.write(cmake_cache_entry("ADIOS_DIR", spec['adios'].prefix))
+            cfg.write(cmake_cache_entry("ADIOS_DIR", spec["adios"].prefix))
         else:
             cfg.write("# adios not built by spack \n")
 
@@ -574,8 +611,8 @@ class Conduit(CMakePackage):
         cfg.write("# parmetis from spack \n")
 
         if "+parmetis" in spec:
-            cfg.write(cmake_cache_entry("METIS_DIR", spec['metis'].prefix))
-            cfg.write(cmake_cache_entry("PARMETIS_DIR", spec['parmetis'].prefix))
+            cfg.write(cmake_cache_entry("METIS_DIR", spec["metis"].prefix))
+            cfg.write(cmake_cache_entry("PARMETIS_DIR", spec["parmetis"].prefix))
         else:
             cfg.write("# parmetis not built by spack \n")
 

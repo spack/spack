@@ -12,10 +12,13 @@ class RPng(RPackage):
     and in-memory raw vectors."""
 
     homepage = "https://www.rforge.net/png/"
-    url      = "https://cloud.r-project.org/src/contrib/png_0.1-7.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/png_0.1-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/png"
 
-    version('0.1-7', sha256='e269ff968f04384fc9421d17cfc7c10cf7756b11c2d6d126e9776f5aca65553c')
+    version(
+        "0.1-7",
+        sha256="e269ff968f04384fc9421d17cfc7c10cf7756b11c2d6d126e9776f5aca65553c",
+    )
 
-    depends_on('r@2.9.0:', type=('build', 'run'))
-    depends_on('libpng')
+    depends_on("r@2.9.0:", type=("build", "run"))
+    depends_on("libpng")

@@ -3,14 +3,14 @@
 from __future__ import absolute_import
 
 
-from ruamel.yaml.error import *                                # NOQA
+from ruamel.yaml.error import *  # NOQA
 
-from ruamel.yaml.tokens import *                               # NOQA
-from ruamel.yaml.events import *                               # NOQA
-from ruamel.yaml.nodes import *                                # NOQA
+from ruamel.yaml.tokens import *  # NOQA
+from ruamel.yaml.events import *  # NOQA
+from ruamel.yaml.nodes import *  # NOQA
 
-from ruamel.yaml.loader import *                               # NOQA
-from ruamel.yaml.dumper import *                               # NOQA
+from ruamel.yaml.loader import *  # NOQA
+from ruamel.yaml.dumper import *  # NOQA
 from ruamel.yaml.compat import StringIO, BytesIO, with_metaclass, PY3
 
 # import io
@@ -126,9 +126,16 @@ def round_trip_load_all(stream, version=None, preserve_quotes=None):
     return load_all(stream, RoundTripLoader, version, preserve_quotes=preserve_quotes)
 
 
-def emit(events, stream=None, Dumper=Dumper,
-         canonical=None, indent=None, width=None,
-         allow_unicode=None, line_break=None):
+def emit(
+    events,
+    stream=None,
+    Dumper=Dumper,
+    canonical=None,
+    indent=None,
+    width=None,
+    allow_unicode=None,
+    line_break=None,
+):
     """
     Emit YAML parsing events into a stream.
     If stream is None, return the produced string instead.
@@ -137,8 +144,14 @@ def emit(events, stream=None, Dumper=Dumper,
     if stream is None:
         stream = StringIO()
         getvalue = stream.getvalue
-    dumper = Dumper(stream, canonical=canonical, indent=indent, width=width,
-                    allow_unicode=allow_unicode, line_break=line_break)
+    dumper = Dumper(
+        stream,
+        canonical=canonical,
+        indent=indent,
+        width=width,
+        allow_unicode=allow_unicode,
+        line_break=line_break,
+    )
     try:
         for event in events:
             dumper.emit(event)
@@ -147,14 +160,25 @@ def emit(events, stream=None, Dumper=Dumper,
     if getvalue:
         return getvalue()
 
-enc = None if PY3 else 'utf-8'
+
+enc = None if PY3 else "utf-8"
 
 
-def serialize_all(nodes, stream=None, Dumper=Dumper,
-                  canonical=None, indent=None, width=None,
-                  allow_unicode=None, line_break=None,
-                  encoding=enc, explicit_start=None, explicit_end=None,
-                  version=None, tags=None):
+def serialize_all(
+    nodes,
+    stream=None,
+    Dumper=Dumper,
+    canonical=None,
+    indent=None,
+    width=None,
+    allow_unicode=None,
+    line_break=None,
+    encoding=enc,
+    explicit_start=None,
+    explicit_end=None,
+    version=None,
+    tags=None,
+):
     """
     Serialize a sequence of representation trees into a YAML stream.
     If stream is None, return the produced string instead.
@@ -166,10 +190,19 @@ def serialize_all(nodes, stream=None, Dumper=Dumper,
         else:
             stream = BytesIO()
         getvalue = stream.getvalue
-    dumper = Dumper(stream, canonical=canonical, indent=indent, width=width,
-                    allow_unicode=allow_unicode, line_break=line_break,
-                    encoding=encoding, version=version, tags=tags,
-                    explicit_start=explicit_start, explicit_end=explicit_end)
+    dumper = Dumper(
+        stream,
+        canonical=canonical,
+        indent=indent,
+        width=width,
+        allow_unicode=allow_unicode,
+        line_break=line_break,
+        encoding=encoding,
+        version=version,
+        tags=tags,
+        explicit_start=explicit_start,
+        explicit_end=explicit_end,
+    )
     try:
         dumper.open()
         for node in nodes:
@@ -189,13 +222,26 @@ def serialize(node, stream=None, Dumper=Dumper, **kwds):
     return serialize_all([node], stream, Dumper=Dumper, **kwds)
 
 
-def dump_all(documents, stream=None, Dumper=Dumper,
-             default_style=None, default_flow_style=None,
-             canonical=None, indent=None, width=None,
-             allow_unicode=None, line_break=None,
-             encoding=enc, explicit_start=None, explicit_end=None,
-             version=None, tags=None, block_seq_indent=None,
-             top_level_colon_align=None, prefix_colon=None):
+def dump_all(
+    documents,
+    stream=None,
+    Dumper=Dumper,
+    default_style=None,
+    default_flow_style=None,
+    canonical=None,
+    indent=None,
+    width=None,
+    allow_unicode=None,
+    line_break=None,
+    encoding=enc,
+    explicit_start=None,
+    explicit_end=None,
+    version=None,
+    tags=None,
+    block_seq_indent=None,
+    top_level_colon_align=None,
+    prefix_colon=None,
+):
     """
     Serialize a sequence of Python objects into a YAML stream.
     If stream is None, return the produced string instead.
@@ -209,15 +255,24 @@ def dump_all(documents, stream=None, Dumper=Dumper,
         else:
             stream = BytesIO()
         getvalue = stream.getvalue
-    dumper = Dumper(stream, default_style=default_style,
-                    default_flow_style=default_flow_style,
-                    canonical=canonical, indent=indent, width=width,
-                    allow_unicode=allow_unicode, line_break=line_break,
-                    encoding=encoding, explicit_start=explicit_start,
-                    explicit_end=explicit_end, version=version,
-                    tags=tags, block_seq_indent=block_seq_indent,
-                    top_level_colon_align=top_level_colon_align, prefix_colon=prefix_colon,
-                    )
+    dumper = Dumper(
+        stream,
+        default_style=default_style,
+        default_flow_style=default_flow_style,
+        canonical=canonical,
+        indent=indent,
+        width=width,
+        allow_unicode=allow_unicode,
+        line_break=line_break,
+        encoding=encoding,
+        explicit_start=explicit_start,
+        explicit_end=explicit_end,
+        version=version,
+        tags=tags,
+        block_seq_indent=block_seq_indent,
+        top_level_colon_align=top_level_colon_align,
+        prefix_colon=prefix_colon,
+    )
     try:
         dumper.open()
         for data in documents:
@@ -229,12 +284,24 @@ def dump_all(documents, stream=None, Dumper=Dumper,
         return getvalue()
 
 
-def dump(data, stream=None, Dumper=Dumper,
-         default_style=None, default_flow_style=None,
-         canonical=None, indent=None, width=None,
-         allow_unicode=None, line_break=None,
-         encoding=enc, explicit_start=None, explicit_end=None,
-         version=None, tags=None, block_seq_indent=None):
+def dump(
+    data,
+    stream=None,
+    Dumper=Dumper,
+    default_style=None,
+    default_flow_style=None,
+    canonical=None,
+    indent=None,
+    width=None,
+    allow_unicode=None,
+    line_break=None,
+    encoding=enc,
+    explicit_start=None,
+    explicit_end=None,
+    version=None,
+    tags=None,
+    block_seq_indent=None,
+):
     """
     Serialize a Python object into a YAML stream.
     If stream is None, return the produced string instead.
@@ -242,16 +309,24 @@ def dump(data, stream=None, Dumper=Dumper,
     default_style ∈ None, '', '"', "'", '|', '>'
 
     """
-    return dump_all([data], stream, Dumper=Dumper,
-                    default_style=default_style,
-                    default_flow_style=default_flow_style,
-                    canonical=canonical,
-                    indent=indent, width=width,
-                    allow_unicode=allow_unicode,
-                    line_break=line_break,
-                    encoding=encoding, explicit_start=explicit_start,
-                    explicit_end=explicit_end,
-                    version=version, tags=tags, block_seq_indent=block_seq_indent)
+    return dump_all(
+        [data],
+        stream,
+        Dumper=Dumper,
+        default_style=default_style,
+        default_flow_style=default_flow_style,
+        canonical=canonical,
+        indent=indent,
+        width=width,
+        allow_unicode=allow_unicode,
+        line_break=line_break,
+        encoding=encoding,
+        explicit_start=explicit_start,
+        explicit_end=explicit_end,
+        version=version,
+        tags=tags,
+        block_seq_indent=block_seq_indent,
+    )
 
 
 def safe_dump_all(documents, stream=None, **kwds):
@@ -272,29 +347,50 @@ def safe_dump(data, stream=None, **kwds):
     return dump_all([data], stream, Dumper=SafeDumper, **kwds)
 
 
-def round_trip_dump(data, stream=None, Dumper=RoundTripDumper,
-                    default_style=None, default_flow_style=None,
-                    canonical=None, indent=None, width=None,
-                    allow_unicode=None, line_break=None,
-                    encoding=enc, explicit_start=None, explicit_end=None,
-                    version=None, tags=None, block_seq_indent=None,
-                    top_level_colon_align=None, prefix_colon=None):
+def round_trip_dump(
+    data,
+    stream=None,
+    Dumper=RoundTripDumper,
+    default_style=None,
+    default_flow_style=None,
+    canonical=None,
+    indent=None,
+    width=None,
+    allow_unicode=None,
+    line_break=None,
+    encoding=enc,
+    explicit_start=None,
+    explicit_end=None,
+    version=None,
+    tags=None,
+    block_seq_indent=None,
+    top_level_colon_align=None,
+    prefix_colon=None,
+):
     allow_unicode = True if allow_unicode is None else allow_unicode
-    return dump_all([data], stream, Dumper=Dumper,
-                    default_style=default_style,
-                    default_flow_style=default_flow_style,
-                    canonical=canonical,
-                    indent=indent, width=width,
-                    allow_unicode=allow_unicode,
-                    line_break=line_break,
-                    encoding=encoding, explicit_start=explicit_start,
-                    explicit_end=explicit_end,
-                    version=version, tags=tags, block_seq_indent=block_seq_indent,
-                    top_level_colon_align=top_level_colon_align, prefix_colon=prefix_colon)
+    return dump_all(
+        [data],
+        stream,
+        Dumper=Dumper,
+        default_style=default_style,
+        default_flow_style=default_flow_style,
+        canonical=canonical,
+        indent=indent,
+        width=width,
+        allow_unicode=allow_unicode,
+        line_break=line_break,
+        encoding=encoding,
+        explicit_start=explicit_start,
+        explicit_end=explicit_end,
+        version=version,
+        tags=tags,
+        block_seq_indent=block_seq_indent,
+        top_level_colon_align=top_level_colon_align,
+        prefix_colon=prefix_colon,
+    )
 
 
-def add_implicit_resolver(tag, regexp, first=None,
-                          Loader=Loader, Dumper=Dumper):
+def add_implicit_resolver(tag, regexp, first=None, Loader=Loader, Dumper=Dumper):
     """
     Add an implicit scalar detector.
     If an implicit scalar value matches the given regexp,
@@ -359,9 +455,10 @@ class YAMLObjectMetaclass(type):
     """
     The metaclass for YAMLObject.
     """
+
     def __init__(cls, name, bases, kwds):
         super(YAMLObjectMetaclass, cls).__init__(name, bases, kwds)
-        if 'yaml_tag' in kwds and kwds['yaml_tag'] is not None:
+        if "yaml_tag" in kwds and kwds["yaml_tag"] is not None:
             cls.yaml_loader.add_constructor(cls.yaml_tag, cls.from_yaml)
             cls.yaml_dumper.add_representer(cls, cls.to_yaml)
 
@@ -371,6 +468,7 @@ class YAMLObject(with_metaclass(YAMLObjectMetaclass)):
     An object that can dump itself to a YAML stream
     and load itself from a YAML stream.
     """
+
     __slots__ = ()  # no direct instantiation, so allow immutable subclasses
 
     yaml_loader = Loader
@@ -391,5 +489,6 @@ class YAMLObject(with_metaclass(YAMLObjectMetaclass)):
         """
         Convert a Python object to a representation node.
         """
-        return dumper.represent_yaml_object(cls.yaml_tag, data, cls,
-                                            flow_style=cls.yaml_flow_style)
+        return dumper.represent_yaml_object(
+            cls.yaml_tag, data, cls, flow_style=cls.yaml_flow_style
+        )

@@ -15,9 +15,12 @@ class RGitcreds(RPackage):
     repositories."""
 
     homepage = "https://github.com/r-lib/gitcreds"
-    url      = "https://cloud.r-project.org/src/contrib/gitcreds_0.1.1.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/gitcreds_0.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gitcreds"
 
-    version('0.1.1', sha256='b14aaf4e910a9d2d6c65c93e645f0b0159c00898e669f917f83c03dfedb1dfea')
+    version(
+        "0.1.1",
+        sha256="b14aaf4e910a9d2d6c65c93e645f0b0159c00898e669f917f83c03dfedb1dfea",
+    )
 
-    depends_on('git', type='run')
+    depends_on("git", type="run")

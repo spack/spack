@@ -10,44 +10,51 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
-    git      = "https://github.com/pism/pism.git"
+    url = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
+    git = "https://github.com/pism/pism.git"
 
-    maintainers = ['citibeth']
+    maintainers = ["citibeth"]
 
-    version('develop', branch='dev')
-    version('1.1.4', sha256='8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44')
-    version('0.7.x', branch='stable0.7')
-    version('icebin', branch='efischer/dev')
+    version("develop", branch="dev")
+    version(
+        "1.1.4",
+        sha256="8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44",
+    )
+    version("0.7.x", branch="stable0.7")
+    version("icebin", branch="efischer/dev")
 
-    variant('extra', default=False,
-            description='Build extra executables (testing/verification)')
-    variant('shared', default=True,
-            description='Build shared Pism libraries')
-    variant('python', default=False,
-            description='Build python bindings')
-    variant('icebin', default=False,
-            description='Build classes needed by IceBin')
-    variant('proj', default=True,
-            description='Use Proj.4 to compute cell areas, '
-            'longitudes, and latitudes.')
-    variant('parallel-netcdf4', default=False,
-            description='Enables parallel NetCDF-4 I/O.')
-    variant('parallel-netcdf3', default=False,
-            description='Enables parallel NetCDF-3 I/O using PnetCDF.')
-    variant('parallel-hdf5', default=False,
-            description='Enables parallel HDF5 I/O.')
+    variant(
+        "extra",
+        default=False,
+        description="Build extra executables (testing/verification)",
+    )
+    variant("shared", default=True, description="Build shared Pism libraries")
+    variant("python", default=False, description="Build python bindings")
+    variant("icebin", default=False, description="Build classes needed by IceBin")
+    variant(
+        "proj",
+        default=True,
+        description="Use Proj.4 to compute cell areas, " "longitudes, and latitudes.",
+    )
+    variant(
+        "parallel-netcdf4", default=False, description="Enables parallel NetCDF-4 I/O."
+    )
+    variant(
+        "parallel-netcdf3",
+        default=False,
+        description="Enables parallel NetCDF-3 I/O using PnetCDF.",
+    )
+    variant("parallel-hdf5", default=False, description="Enables parallel HDF5 I/O.")
     # variant('tao', default=False,
     #         description='Use TAO in inverse solvers.')
 
-    description = 'Build PISM documentation (requires LaTeX and Doxygen)'
-    variant('doc', default=False, description=description)
+    description = "Build PISM documentation (requires LaTeX and Doxygen)"
+    variant("doc", default=False, description=description)
 
-    variant('examples', default=False,
-            description='Install examples directory')
+    variant("examples", default=False, description="Install examples directory")
 
-    description = 'Report errors through Everytrace (requires Everytrace)'
-    variant('everytrace', default=False, description=description)
+    description = "Report errors through Everytrace (requires Everytrace)"
+    variant("everytrace", default=False, description=description)
 
     # CMake build options not transferred to Spack variants
     # (except from CMakeLists.txt)
@@ -70,44 +77,45 @@ class Pism(CMakePackage):
     #        namespace (might be needed with some compilers)." ON)
     # option (Pism_USE_TAO "Use TAO in inverse solvers." OFF)
 
-    depends_on('fftw')
-    depends_on('gsl')
-    depends_on('mpi')
-    depends_on('netcdf-c')    # Only the C interface is used, no netcdf-cxx4
-    depends_on('petsc')
-    depends_on('udunits')
-    depends_on('proj@:4')
-    depends_on('everytrace', when='+everytrace')
+    depends_on("fftw")
+    depends_on("gsl")
+    depends_on("mpi")
+    depends_on("netcdf-c")  # Only the C interface is used, no netcdf-cxx4
+    depends_on("petsc")
+    depends_on("udunits")
+    depends_on("proj@:4")
+    depends_on("everytrace", when="+everytrace")
 
-    extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.3:', when='@1.1: +python')
-    depends_on('python@2.7:2.8', when='@:1.0 +python')
-    depends_on('py-matplotlib', when='+python')
-    depends_on('py-numpy', when='+python')
+    extends("python", when="+python")
+    depends_on("python@2.7:2.8,3.3:", when="@1.1: +python")
+    depends_on("python@2.7:2.8", when="@:1.0 +python")
+    depends_on("py-matplotlib", when="+python")
+    depends_on("py-numpy", when="+python")
 
     def cmake_args(self):
         spec = self.spec
 
         return [
-            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            "-DCMAKE_C_COMPILER=%s" % spec["mpi"].mpicc,
+            "-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx,
             # Fortran not needed for PISM...
             # '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
-            self.define_from_variant('Pism_BUILD_EXTRA_EXECS', 'extra'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('Pism_BUILD_PYTHON_BINDINGS', 'python'),
-            self.define_from_variant('Pism_BUILD_ICEBIN', 'icebin'),
-            self.define_from_variant('Pism_USE_PROJ4', 'proj'),
-            self.define_from_variant('Pism_USE_PARALLEL_NETCDF4', 'parallel-netcdf4'),
-            self.define_from_variant('Pism_USE_PNETCDF', 'parallel-netcdf3'),
-            self.define_from_variant('Pism_USE_PARALLEL_HDF5', 'parallel-hdf5'),
-            self.define_from_variant('Pism_BUILD_PDFS', 'doc'),
-            self.define_from_variant('Pism_INSTALL_EXAMPLES', 'examples'),
-            self.define_from_variant('Pism_USE_EVERYTRACE', 'everytrace')]
+            self.define_from_variant("Pism_BUILD_EXTRA_EXECS", "extra"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("Pism_BUILD_PYTHON_BINDINGS", "python"),
+            self.define_from_variant("Pism_BUILD_ICEBIN", "icebin"),
+            self.define_from_variant("Pism_USE_PROJ4", "proj"),
+            self.define_from_variant("Pism_USE_PARALLEL_NETCDF4", "parallel-netcdf4"),
+            self.define_from_variant("Pism_USE_PNETCDF", "parallel-netcdf3"),
+            self.define_from_variant("Pism_USE_PARALLEL_HDF5", "parallel-hdf5"),
+            self.define_from_variant("Pism_BUILD_PDFS", "doc"),
+            self.define_from_variant("Pism_INSTALL_EXAMPLES", "examples"),
+            self.define_from_variant("Pism_USE_EVERYTRACE", "everytrace"),
+        ]
 
     def setup_run_environment(self, env):
-        env.set('PISM_PREFIX', self.prefix)
-        env.set('PISM_BIN', self.prefix.bin)
+        env.set("PISM_PREFIX", self.prefix)
+        env.set("PISM_BIN", self.prefix.bin)
 
 
 # From email correspondence with Constantine Khroulev:

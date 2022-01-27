@@ -27,9 +27,10 @@ class OperatingSystem(object):
 
     For platforms such as linux and darwin, the operating system is autodetected.
     """
+
     def __init__(self, name, version):
-        self.name = name.replace('-', '_')
-        self.version = str(version).replace('-', '_')
+        self.name = name.replace("-", "_")
+        self.version = str(version).replace("-", "_")
 
     def __str__(self):
         return "%s%s" % (self.name, self.version)
@@ -42,7 +43,4 @@ class OperatingSystem(object):
         yield self.version
 
     def to_dict(self):
-        return syaml.syaml_dict([
-            ('name', self.name),
-            ('version', self.version)
-        ])
+        return syaml.syaml_dict([("name", self.name), ("version", self.version)])

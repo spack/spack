@@ -10,9 +10,12 @@ class PerlSubExporter(PerlPackage):
     """A sophisticated exporter for custom-built routines"""
 
     homepage = "https://metacpan.org/pod/Sub::Exporter"
-    url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Sub-Exporter-0.987.tar.gz"
+    url = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Sub-Exporter-0.987.tar.gz"
 
-    version('0.987', sha256='543cb2e803ab913d44272c7da6a70bb62c19e467f3b12aaac4c9523259b083d6')
+    version(
+        "0.987",
+        sha256="543cb2e803ab913d44272c7da6a70bb62c19e467f3b12aaac4c9523259b083d6",
+    )
 
-    depends_on('perl-params-util', type=('build', 'run'))
-    depends_on('perl-data-optlist', type=('build', 'run'))
+    depends_on("perl-params-util", type=("build", "run"))
+    depends_on("perl-data-optlist", type=("build", "run"))

@@ -14,6 +14,9 @@ class PerlXmlFilterBuffertext(PerlPackage):
     single event."""
 
     homepage = "https://metacpan.org/pod/XML::Filter::BufferText"
-    url      = "https://cpan.metacpan.org/authors/id/R/RB/RBERJON/XML-Filter-BufferText-1.01.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/R/RB/RBERJON/XML-Filter-BufferText-1.01.tar.gz"
 
-    version('1.01', sha256='8fd2126d3beec554df852919f4739e689202cbba6a17506e9b66ea165841a75c')
+    version(
+        "1.01",
+        sha256="8fd2126d3beec554df852919f4739e689202cbba6a17506e9b66ea165841a75c",
+    )

@@ -11,8 +11,11 @@ class Libzip(AutotoolsPackage):
     and modifying zip archives."""
 
     homepage = "https://nih.at/libzip/index.html"
-    url      = "https://nih.at/libzip/libzip-1.2.0.tar.gz"
+    url = "https://nih.at/libzip/libzip-1.2.0.tar.gz"
 
-    version('1.2.0', sha256='6cf9840e427db96ebf3936665430bab204c9ebbd0120c326459077ed9c907d9f')
+    version(
+        "1.2.0",
+        sha256="6cf9840e427db96ebf3936665430bab204c9ebbd0120c326459077ed9c907d9f",
+    )
 
-    depends_on('zlib@1.1.2:')
+    depends_on("zlib@1.1.2:")

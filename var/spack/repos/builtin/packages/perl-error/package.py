@@ -13,8 +13,11 @@ class PerlError(PerlPackage):
     can simply be recorded."""
 
     homepage = "https://metacpan.org/pod/Error"
-    url      = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/Error-0.17028.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/S/SH/SHLOMIF/Error-0.17028.tar.gz"
 
-    version('0.17028', sha256='3ad85c5e58b31c8903006298424a51bba39f1840e324f5ae612eabc8b935e960')
+    version(
+        "0.17028",
+        sha256="3ad85c5e58b31c8903006298424a51bba39f1840e324f5ae612eabc8b935e960",
+    )
 
-    depends_on('perl-module-build', type='build')
+    depends_on("perl-module-build", type="build")

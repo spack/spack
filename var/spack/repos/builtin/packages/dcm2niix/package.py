@@ -11,6 +11,9 @@ class Dcm2niix(CMakePackage):
     """DICOM to NIfTI converter"""
 
     homepage = "https://github.com/rordenlab/dcm2niix"
-    url      = "https://github.com/rordenlab/dcm2niix/archive/refs/tags/v1.0.20210317.tar.gz"
+    url = "https://github.com/rordenlab/dcm2niix/archive/refs/tags/v1.0.20210317.tar.gz"
 
-    version('1.0.20210317', sha256='42fb22458ebfe44036c3d6145dacc6c1dc577ebbb067bedc190ed06f546ee05a')
+    version(
+        "1.0.20210317",
+        sha256="42fb22458ebfe44036c3d6145dacc6c1dc577ebbb067bedc190ed06f546ee05a",
+    )

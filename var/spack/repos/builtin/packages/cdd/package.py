@@ -13,10 +13,14 @@ class Cdd(Package):
     generating all vertices (i.e. extreme points) and extreme rays of
     a general convex polyhedron given by a system of linear
     inequalities"""
-    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
-    url      = "https://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
 
-    version('0.61a', sha256='637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b')
+    homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
+    url = "https://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz"
+
+    version(
+        "0.61a",
+        sha256="637a1909bbd8aa4d32667da08f9e9ac687bf7d3ef1b8af5bd227e91a3cd4019b",
+    )
 
     depends_on("libtool", type="build")
 

@@ -13,18 +13,20 @@ class Smof(Package):
     """Explore and analyze biological sequence data"""
 
     homepage = "https://github.com/incertae-sedis/smof"
-    url      = "https://github.com/incertae-sedis/smof/archive/2.13.1.tar.gz"
+    url = "https://github.com/incertae-sedis/smof/archive/2.13.1.tar.gz"
 
-    version('2.13.1', sha256='bae75703728c62398f2af58b142ab2555f9be2224e13ff108913607777ea2a2e')
+    version(
+        "2.13.1",
+        sha256="bae75703728c62398f2af58b142ab2555f9be2224e13ff108913607777ea2a2e",
+    )
 
-    depends_on('python@3:', type='run')
+    depends_on("python@3:", type="run")
 
     def install(self, spec, prefix):
         # install sources
-        install_tree('.', prefix)
+        install_tree(".", prefix)
 
         # add command
         mkdirp(prefix.bin)
 
-        symlink(join_path(prefix, 'smof.py'),
-                join_path(prefix.bin, 'smof'))
+        symlink(join_path(prefix, "smof.py"), join_path(prefix.bin, "smof"))

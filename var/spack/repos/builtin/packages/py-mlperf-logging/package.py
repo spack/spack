@@ -10,8 +10,11 @@ class PyMlperfLogging(PythonPackage):
     """MLPerf Compliance Logging Utilities and Helper Functions."""
 
     homepage = "https://github.com/mlperf/logging"
-    url      = "https://github.com/mlperf/logging/archive/0.7.1.tar.gz"
+    url = "https://github.com/mlperf/logging/archive/0.7.1.tar.gz"
 
-    version('0.7.1', sha256='32fb6885d8bbf20e1225dc7ec57dc964649df696278cdd2d575aeef8e891f7bb')
+    version(
+        "0.7.1",
+        sha256="32fb6885d8bbf20e1225dc7ec57dc964649df696278cdd2d575aeef8e891f7bb",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

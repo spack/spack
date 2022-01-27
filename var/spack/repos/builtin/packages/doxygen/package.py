@@ -15,100 +15,108 @@ class Doxygen(CMakePackage):
     Microsoft, and UNO/OpenOffice flavors), Fortran, VHDL, Tcl, and to some
     extent D.."""
 
-    homepage  = "https://github.com/doxygen/doxygen/"
-    git       = "https://github.com/doxygen/doxygen.git"
+    homepage = "https://github.com/doxygen/doxygen/"
+    git = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
-    version('1.9.3',  commit='6518ff3d24ad187b7072bee854d69e285cd366ea')
-    version('1.9.2',  commit='caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8')
-    version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
-    version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
-    version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
-    version('1.8.18', commit='a1b07ad0e92e4526c9ba1711d39f06b58c2a7459')
-    version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
-    version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
-    version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')
-    version('1.8.14', commit='2f4139de014bf03898320a45fe52c92872c1e0f4')
-    version('1.8.12', commit='4951df8d0d0acf843b4147136f945504b96536e7')
-    version('1.8.11', commit='a6d4f4df45febe588c38de37641513fd576b998f')
-    version('1.8.10', commit='fdae7519a2e29f94e65c0e718513343f07302ddb')
+    version("1.9.3", commit="6518ff3d24ad187b7072bee854d69e285cd366ea")
+    version("1.9.2", commit="caa4e3de211fbbef2c3adf58a6bd4c86d0eb7cb8")
+    version("1.9.1", commit="ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b")
+    version("1.9.0", commit="71777ff3973331bd9453870593a762e184ba9f78")
+    version("1.8.20", commit="f246dd2f1c58eea39ea3f50c108019e4d4137bd5")
+    version("1.8.18", commit="a1b07ad0e92e4526c9ba1711d39f06b58c2a7459")
+    version("1.8.17", commit="b5fa3cd1c6e6240e20d3b80a70e3f04040b32021")
+    version("1.8.16", commit="cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255")
+    version("1.8.15", commit="dc89ac01407c24142698c1374610f2cee1fbf200")
+    version("1.8.14", commit="2f4139de014bf03898320a45fe52c92872c1e0f4")
+    version("1.8.12", commit="4951df8d0d0acf843b4147136f945504b96536e7")
+    version("1.8.11", commit="a6d4f4df45febe588c38de37641513fd576b998f")
+    version("1.8.10", commit="fdae7519a2e29f94e65c0e718513343f07302ddb")
 
     # graphviz appears to be a run-time optional dependency
-    variant('graphviz', default=False,
-            description='Build with dot command support from Graphviz.')
+    variant(
+        "graphviz",
+        default=False,
+        description="Build with dot command support from Graphviz.",
+    )
 
-    variant('mscgen', default=False,
-            description='Build with support for code graphs from mscgen.')
+    variant(
+        "mscgen",
+        default=False,
+        description="Build with support for code graphs from mscgen.",
+    )
 
-    executables = ['doxygen']
+    executables = ["doxygen"]
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('-v', output=str, error=str)
+        output = Executable(exe)("-v", output=str, error=str)
         match = re.search(r"^([\d\.]+)$", output)
         return match.group(1) if match else None
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        variants = ''
-        if which('dot'):
+        variants = ""
+        if which("dot"):
             variants += "+graphviz"
         else:
             variants += "~graphviz"
 
-        if which('mscgen'):
+        if which("mscgen"):
             variants += "+mscgen"
         else:
             variants += "~mscgen"
 
         return variants
 
-    depends_on("cmake@2.8.12:", type='build')
-    depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on("python", type="build")  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
-    depends_on("flex", type='build')
-    depends_on("bison", type='build')
+    depends_on("flex", type="build")
+    depends_on("bison", type="build")
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
-    depends_on("flex@2.5.39", type='build', when='@1.8.10')
-    depends_on("bison@2.7:", type='build', when='@1.8.10:')
+    depends_on("flex@2.5.39", type="build", when="@1.8.10")
+    depends_on("bison@2.7:", type="build", when="@1.8.10:")
 
     # optional dependencies
-    depends_on("graphviz", when="+graphviz", type='run')
-    depends_on("mscgen", when="+mscgen", type='run')
+    depends_on("graphviz", when="+graphviz", type="run")
+    depends_on("mscgen", when="+mscgen", type="run")
 
     # Support C++14's std::shared_ptr. For details about this patch, see
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
-    patch('shared_ptr.patch', when='@1.8.14')
+    patch("shared_ptr.patch", when="@1.8.14")
 
     # Support C++17's nested namespaces a::b::c. For details about this patch, see
     # https://github.com/doxygen/doxygen/pull/6977/commits/788440279e0f0fdc7dce27ec266d7d5c11bcda1c
-    patch('cpp17_namespaces.patch', when='@1.8.15')
+    patch("cpp17_namespaces.patch", when="@1.8.15")
 
     # Workaround for gcc getting stuck in an infinite loop
-    patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
+    patch("gcc-partial-inlining-bug.patch", when="@1.8.20: %gcc@7")
 
     # Some GCC 7.x get stuck in an infinite loop
-    conflicts('%gcc@7.0:7.9', when='@1.9:')
+    conflicts("%gcc@7.0:7.9", when="@1.9:")
 
     def patch(self):
-        if self.spec['iconv'].name == 'libc':
+        if self.spec["iconv"].name == "libc":
             return
         # On Linux systems, iconv is provided by libc. Since CMake finds the
         # symbol in libc, it does not look for libiconv, which leads to linker
         # errors. This makes sure that CMake always looks for the external
         # libconv instead.
-        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
-                    'set(ICONV_IN_GLIBC FALSE)',
-                    join_path('cmake', 'FindIconv.cmake'),
-                    string=True)
+        filter_file(
+            "check_function_exists(iconv_open ICONV_IN_GLIBC)",
+            "set(ICONV_IN_GLIBC FALSE)",
+            join_path("cmake", "FindIconv.cmake"),
+            string=True,
+        )
 
     def cmake_args(self):
         args = [
             # Doxygen's build system uses CMake's deprecated `FindPythonInterp`,
             # which can get confused by other `python` executables in the PATH.
             # See issue: https://github.com/spack/spack/issues/28215
-            self.define('PYTHON_EXECUTABLE', self.spec['python'].command.path)
+            self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path)
         ]
         return args

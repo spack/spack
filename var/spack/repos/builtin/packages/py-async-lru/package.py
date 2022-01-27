@@ -10,11 +10,14 @@ class PyAsyncLru(PythonPackage):
     """Simple lru_cache for asyncio"""
 
     homepage = "https://github.com/wikibusiness/async_lru"
-    pypi     = "async_lru/async_lru-1.0.2.tar.gz"
+    pypi = "async_lru/async_lru-1.0.2.tar.gz"
 
-    maintainers = ['iarspider']
+    maintainers = ["iarspider"]
 
-    version('1.0.2', sha256='baa898027619f5cc31b7966f96f00e4fc0df43ba206a8940a5d1af5336a477cb')
+    version(
+        "1.0.2",
+        sha256="baa898027619f5cc31b7966f96f00e4fc0df43ba206a8940a5d1af5336a477cb",
+    )
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

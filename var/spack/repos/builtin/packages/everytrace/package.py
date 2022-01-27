@@ -10,23 +10,26 @@ class Everytrace(CMakePackage):
     """Get stack trace EVERY time a program exits."""
 
     homepage = "https://github.com/citibeth/everytrace"
-    url      = "https://github.com/citibeth/everytrace/archive/0.2.2.tar.gz"
-    git      = "https://github.com/citibeth/everytrace.git"
+    url = "https://github.com/citibeth/everytrace/archive/0.2.2.tar.gz"
+    git = "https://github.com/citibeth/everytrace.git"
 
-    maintainers = ['citibeth']
+    maintainers = ["citibeth"]
 
-    version('develop', branch='develop')
-    version('0.2.2', sha256='0487276bb24e648388862d8e1d8cfe56b529f7e3d840df3fcb5b3a3dad4016e1')
+    version("develop", branch="develop")
+    version(
+        "0.2.2",
+        sha256="0487276bb24e648388862d8e1d8cfe56b529f7e3d840df3fcb5b3a3dad4016e1",
+    )
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=True,
-            description='Enable use with Fortran programs')
-    variant('cxx', default=True, description='Enable C++ Exception-based features')
+    variant("mpi", default=True, description="Enables MPI parallelism")
+    variant("fortran", default=True, description="Enable use with Fortran programs")
+    variant("cxx", default=True, description="Enable C++ Exception-based features")
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
     def cmake_args(self):
         return [
-            self.define_from_variant('USE_MPI', 'mpi'),
-            self.define_from_variant('USE_FORTRAN', 'fortran'),
-            self.define_from_variant('USE_CXX', 'cxx')]
+            self.define_from_variant("USE_MPI", "mpi"),
+            self.define_from_variant("USE_FORTRAN", "fortran"),
+            self.define_from_variant("USE_CXX", "cxx"),
+        ]

@@ -8,42 +8,46 @@ from spack import *
 
 class Hpccg(MakefilePackage):
     """Proxy Application. Intended to be the 'best approximation
-       to an unstructured implicit finite element or finite volume
-       application in 800 lines or fewer.'
+    to an unstructured implicit finite element or finite volume
+    application in 800 lines or fewer.'
     """
 
     homepage = "https://mantevo.org/about/applications/"
-    url      = "https://downloads.mantevo.org/releaseTarballs/miniapps/HPCCG/HPCCG-1.0.tar.gz"
+    url = (
+        "https://downloads.mantevo.org/releaseTarballs/miniapps/HPCCG/HPCCG-1.0.tar.gz"
+    )
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('1.0', sha256='5be1b8cc3246811bfc9d6d7072be29455777d61b585675512ae52043ea64cefc')
+    version(
+        "1.0", sha256="5be1b8cc3246811bfc9d6d7072be29455777d61b585675512ae52043ea64cefc"
+    )
 
-    variant('mpi', default=True, description='Build with MPI support')
-    variant('openmp', default=True, description='Build with OpenMP support')
+    variant("mpi", default=True, description="Build with MPI support")
+    variant("openmp", default=True, description="Build with OpenMP support")
 
     # Optional dependencies
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
     @property
     def build_targets(self):
         targets = []
 
-        if '+mpi' in self.spec:
-            targets.append('CXX={0}'.format(self.spec['mpi'].mpicxx))
-            targets.append('LINKER={0}'.format(self.spec['mpi'].mpicxx))
-            targets.append('USE_MPI=-DUSING_MPI')
+        if "+mpi" in self.spec:
+            targets.append("CXX={0}".format(self.spec["mpi"].mpicxx))
+            targets.append("LINKER={0}".format(self.spec["mpi"].mpicxx))
+            targets.append("USE_MPI=-DUSING_MPI")
         else:
-            targets.append('CXX=c++')
-            targets.append('LINKER=c++')
+            targets.append("CXX=c++")
+            targets.append("LINKER=c++")
 
-        if '+openmp' in self.spec:
-            targets.append('USE_OMP=-DUSING_OMP')
-            targets.append('OMP_FLAGS={0}'.format(self.compiler.openmp_flag))
+        if "+openmp" in self.spec:
+            targets.append("USE_OMP=-DUSING_OMP")
+            targets.append("OMP_FLAGS={0}".format(self.compiler.openmp_flag))
 
         # Remove Compiler Specific Optimization Flags
-        if '%gcc' not in self.spec:
-            targets.append('CPP_OPT_FLAGS=')
+        if "%gcc" not in self.spec:
+            targets.append("CPP_OPT_FLAGS=")
 
         return targets
 
@@ -52,7 +56,7 @@ class Hpccg(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.doc)
 
-        install('test_HPCCG', prefix.bin)
-        install('README', prefix.doc)
-        install('weakScalingRunScript', prefix.bin)
-        install('strongScalingRunScript', prefix.bin)
+        install("test_HPCCG", prefix.bin)
+        install("README", prefix.doc)
+        install("weakScalingRunScript", prefix.bin)
+        install("strongScalingRunScript", prefix.bin)

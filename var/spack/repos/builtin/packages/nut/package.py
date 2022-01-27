@@ -13,34 +13,37 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
-    url      = "https://github.com/lanl/NuT/archive/0.1.1.tar.gz"
-    git      = "https://github.com/lanl/NuT.git"
+    url = "https://github.com/lanl/NuT/archive/0.1.1.tar.gz"
+    git = "https://github.com/lanl/NuT.git"
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('master', branch='master')
-    version('0.1.1', sha256='9f1dca4a9d7003b170fd57d6720228ff25471616cf884e033652e90c49c089bb')
+    version("master", branch="master")
+    version(
+        "0.1.1",
+        sha256="9f1dca4a9d7003b170fd57d6720228ff25471616cf884e033652e90c49c089bb",
+    )
 
-    depends_on('cmake@3.0:', type='build')
-    depends_on('random123')
+    depends_on("cmake@3.0:", type="build")
+    depends_on("random123")
 
     # The conflict with %nvhpc is inherited from random123,
     # which is a C++ template library
-    conflicts('%nvhpc')
-    conflicts('%intel', when='@serial')
-    conflicts('%pgi', when='@serial')
-    conflicts('%xl', when='@serial')
-    conflicts('%nag', when='@serial')
-    build_targets = ['VERBOSE=on']
+    conflicts("%nvhpc")
+    conflicts("%intel", when="@serial")
+    conflicts("%pgi", when="@serial")
+    conflicts("%xl", when="@serial")
+    conflicts("%nag", when="@serial")
+    build_targets = ["VERBOSE=on"]
 
     def setup_build_environment(self, env):
-        env.set('RANDOM123_DIR', self.spec['random123'].prefix)
+        env.set("RANDOM123_DIR", self.spec["random123"].prefix)
 
     def install(self, spec, prefix):
-        install('README.md', prefix)
+        install("README.md", prefix)
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
-        install(join_path(self.build_directory, 'apps/bh-3'), prefix.bin)
-        install(join_path(self.build_directory, 'lib/libnut.a'), prefix.lib)
-        install_tree('test/data', prefix.data)
-        install_tree('lib', prefix.include)
+        install(join_path(self.build_directory, "apps/bh-3"), prefix.bin)
+        install(join_path(self.build_directory, "lib/libnut.a"), prefix.lib)
+        install_tree("test/data", prefix.data)
+        install_tree("lib", prefix.include)

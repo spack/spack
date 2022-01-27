@@ -29,40 +29,46 @@ class Amdlibflame(LibflameBase):
     high performing LAPACK functionalities on AMD platform.
     """
 
-    _name = 'amdlibflame'
+    _name = "amdlibflame"
     homepage = "https://developer.amd.com/amd-cpu-libraries/blas-library/#libflame"
     url = "https://github.com/amd/libflame/archive/3.0.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
-    maintainers = ['amd-toolchain-support']
+    maintainers = ["amd-toolchain-support"]
 
-    version('3.1', sha256='97c74086306fa6dea9233a3730407c400c196b55f4461d4861364b1ac131ca42')
-    version('3.0.1', sha256='5859e7b39ffbe73115dd598b035f212d36310462cf3a45e555a5087301710776')
-    version('3.0', sha256='d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced')
-    version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
+    version(
+        "3.1", sha256="97c74086306fa6dea9233a3730407c400c196b55f4461d4861364b1ac131ca42"
+    )
+    version(
+        "3.0.1",
+        sha256="5859e7b39ffbe73115dd598b035f212d36310462cf3a45e555a5087301710776",
+    )
+    version(
+        "3.0", sha256="d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced"
+    )
+    version(
+        "2.2", sha256="12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc"
+    )
 
-    variant('ilp64', default=False, description='Build with ILP64 support')
+    variant("ilp64", default=False, description="Build with ILP64 support")
 
-    conflicts('+ilp64', when="@:3.0.0",
-              msg="ILP64 is supported from 3.0.1 onwards")
-    conflicts('threads=pthreads',
-              msg='pthread is not supported')
-    conflicts('threads=openmp',
-              msg='openmp is not supported')
+    conflicts("+ilp64", when="@:3.0.0", msg="ILP64 is supported from 3.0.1 onwards")
+    conflicts("threads=pthreads", msg="pthread is not supported")
+    conflicts("threads=openmp", msg="openmp is not supported")
 
-    patch('aocc-2.2.0.patch', when="@:2", level=1)
-    patch('cray-compiler-wrapper.patch', when="@:3.0.0", level=1)
+    patch("aocc-2.2.0.patch", when="@:2", level=1)
+    patch("cray-compiler-wrapper.patch", when="@:3.0.0", level=1)
 
-    provides('flame@5.2', when='@2:')
+    provides("flame@5.2", when="@2:")
 
-    depends_on('python+pythoncmd', type='build')
+    depends_on("python+pythoncmd", type="build")
 
     @property
     def lapack_libs(self):
         """find lapack_libs function"""
-        shared = True if '+shared' in self.spec else False
+        shared = True if "+shared" in self.spec else False
         return find_libraries(
-            'libflame', root=self.prefix, shared=shared, recursive=True
+            "libflame", root=self.prefix, shared=shared, recursive=True
         )
 
     def configure_args(self):
@@ -86,17 +92,15 @@ class Amdlibflame(LibflameBase):
 
         return args
 
-    @run_after('build')
+    @run_after("build")
     @on_package_attributes(run_tests=True)
     def check(self):
         """make check for single and multithread"""
-        blas_flags = self.spec['blas'].libs.ld_flags
-        if self.spec.variants['threads'].value != 'none':
-            make('check',
-                 'LIBBLAS = -fopenmp {0}'.format(blas_flags), parallel=False)
+        blas_flags = self.spec["blas"].libs.ld_flags
+        if self.spec.variants["threads"].value != "none":
+            make("check", "LIBBLAS = -fopenmp {0}".format(blas_flags), parallel=False)
         else:
-            make('check',
-                 'LIBBLAS = {0}'.format(blas_flags), parallel=False)
+            make("check", "LIBBLAS = {0}".format(blas_flags), parallel=False)
 
     def install(self, spec, prefix):
         """make install function"""

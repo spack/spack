@@ -10,22 +10,24 @@ import spack.compiler
 
 class Arm(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['armclang']
+    cc_names = ["armclang"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['armclang++']
+    cxx_names = ["armclang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['armflang']
+    f77_names = ["armflang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['armflang']
+    fc_names = ["armflang"]
 
     # Named wrapper links within lib/spack/env
-    link_paths = {'cc': 'arm/armclang',
-                  'cxx': 'arm/armclang++',
-                  'f77': 'arm/armflang',
-                  'fc': 'arm/armflang'}
+    link_paths = {
+        "cc": "arm/armclang",
+        "cxx": "arm/armclang++",
+        "f77": "arm/armflang",
+        "fc": "arm/armflang",
+    }
 
     # The ``--version`` option seems to be the most consistent one for
     # arm compilers. Output looks like this:
@@ -36,17 +38,18 @@ class Arm(spack.compiler.Compiler):
     # Thread model: posix
     # InstalledDir:
     # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
-    version_argument = '--version'
-    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) '\
-                    r'\(build number (\d+)\) '
+    version_argument = "--version"
+    version_regex = (
+        r"Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) " r"\(build number (\d+)\) "
+    )
 
     @classmethod
     def extract_version_from_output(cls, output):
         """Extracts the version from compiler's output."""
         match = re.search(cls.version_regex, output)
-        temp = 'unknown'
+        temp = "unknown"
         if match:
-            if match.group(1).count('.') == 1:
+            if match.group(1).count(".") == 1:
                 temp = match.group(1) + ".0." + match.group(2)
             else:
                 temp = match.group(1) + "." + match.group(2)
@@ -58,7 +61,7 @@ class Arm(spack.compiler.Compiler):
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast']
+        return ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast"]
 
     @property
     def openmp_flag(self):
@@ -100,7 +103,7 @@ class Arm(spack.compiler.Compiler):
     def fc_pic_flag(self):
         return "-fPIC"
 
-    required_libs = ['libclang', 'libflang']
+    required_libs = ["libclang", "libflang"]
 
     @classmethod
     def fc_version(cls, fc):

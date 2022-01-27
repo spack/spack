@@ -8,8 +8,8 @@ class Bowtie(Package):
     homepage = "http://www.example.org"
     url = "http://bowtie-1.2.2.tar.bz2"
 
-    version('1.3.0', '1c837ecd990bb022d07e7aab32b09847')
-    version('1.2.2', '1c837ecd990bb022d07e7aab32b09847')
-    version('1.2.0', '1c837ecd990bb022d07e7aab32b09847')
+    version("1.3.0", "1c837ecd990bb022d07e7aab32b09847")
+    version("1.2.2", "1c837ecd990bb022d07e7aab32b09847")
+    version("1.2.0", "1c837ecd990bb022d07e7aab32b09847")
 
-    conflicts('%gcc@:4.5.0', when='@1.2.2')
+    conflicts("%gcc@:4.5.0", when="@1.2.2")

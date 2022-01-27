@@ -60,13 +60,14 @@ class FileCache(object):
         keyfile = os.path.basename(key)
         keydir = os.path.dirname(key)
 
-        return os.path.join(self.root, keydir, '.' + keyfile + '.lock')
+        return os.path.join(self.root, keydir, "." + keyfile + ".lock")
 
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""
         if key not in self._locks:
-            self._locks[key] = Lock(self._lock_path(key),
-                                    default_timeout=self.lock_timeout)
+            self._locks[key] = Lock(
+                self._lock_path(key), default_timeout=self.lock_timeout
+            )
         return self._locks[key]
 
     def init_entry(self, key):
@@ -123,15 +124,14 @@ class FileCache(object):
         # TODO: point we should just replace it with functions and simplify
         # TODO: the locking code.
         class WriteContextManager(object):
-
             def __enter__(cm):  # noqa
                 cm.orig_filename = self.cache_path(key)
                 cm.orig_file = None
                 if os.path.exists(cm.orig_filename):
-                    cm.orig_file = open(cm.orig_filename, 'r')
+                    cm.orig_file = open(cm.orig_filename, "r")
 
-                cm.tmp_filename = self.cache_path(key) + '.tmp'
-                cm.tmp_file = open(cm.tmp_filename, 'w')
+                cm.tmp_filename = self.cache_path(key) + ".tmp"
+                cm.tmp_file = open(cm.tmp_filename, "w")
 
                 return cm.orig_file, cm.tmp_file
 
@@ -147,8 +147,7 @@ class FileCache(object):
                 else:
                     os.rename(cm.tmp_filename, cm.orig_filename)
 
-        return WriteTransaction(
-            self._get_lock(key), acquire=WriteContextManager)
+        return WriteTransaction(self._get_lock(key), acquire=WriteContextManager)
 
     def mtime(self, key):
         """Return modification time of cache file, or 0 if it does not exist.

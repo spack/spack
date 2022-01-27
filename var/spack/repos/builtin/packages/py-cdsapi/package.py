@@ -12,8 +12,11 @@ class PyCdsapi(PythonPackage):
     homepage = "https://cds.climate.copernicus.eu"
     pypi = "cdsapi/cdsapi-0.2.3.tar.gz"
 
-    version('0.2.3', sha256='333b31ec263224399635db9b21a2e1a50cd73451f5179f8d967437e7c9161d9b')
+    version(
+        "0.2.3",
+        sha256="333b31ec263224399635db9b21a2e1a50cd73451f5179f8d967437e7c9161d9b",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-requests@2.5.0:', type=('build', 'run'))
-    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-requests@2.5.0:", type=("build", "run"))
+    depends_on("py-tqdm", type=("build", "run"))

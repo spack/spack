@@ -17,10 +17,13 @@ class RAssertiveReflection(RPackage):
     to use assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.reflection"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.reflection_0.0-5.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/assertive.reflection_0.0-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.reflection"
 
-    version('0.0-5',   sha256='c2ca9b27cdddb9b9876351afd2ebfaf0fbe72c636cd12aa2af5d64e33fbf34bd')
+    version(
+        "0.0-5",
+        sha256="c2ca9b27cdddb9b9876351afd2ebfaf0fbe72c636cd12aa2af5d64e33fbf34bd",
+    )
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-7:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-7:", type=("build", "run"))

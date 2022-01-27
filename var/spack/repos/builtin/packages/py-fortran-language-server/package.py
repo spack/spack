@@ -11,14 +11,20 @@ class PyFortranLanguageServer(PythonPackage):
     (2.7+ or 3.0+)."""
 
     homepage = "https://github.com/hansec/fortran-language-server"
-    url      = "https://github.com/hansec/fortran-language-server/archive/v1.11.1.tar.gz"
+    url = "https://github.com/hansec/fortran-language-server/archive/v1.11.1.tar.gz"
 
-    maintainers = ['AndrewGaspar']
+    maintainers = ["AndrewGaspar"]
 
-    version('1.12.0', sha256='5cda6341b1d2365cce3d80ba40043346c5dcbd0b35f636bfa57cb34df789ff17')
-    version('1.11.1', sha256='8f03782dd992d6652a3f2d349115fdad3aa3464fee3fafbbc4f8ecf780166e3c')
+    version(
+        "1.12.0",
+        sha256="5cda6341b1d2365cce3d80ba40043346c5dcbd0b35f636bfa57cb34df789ff17",
+    )
+    version(
+        "1.11.1",
+        sha256="8f03782dd992d6652a3f2d349115fdad3aa3464fee3fafbbc4f8ecf780166e3c",
+    )
 
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-future', type=('build', 'run'), when='^python@:2')
-    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7:", type=("build", "run"))
+    depends_on("py-future", type=("build", "run"), when="^python@:2")
+    depends_on("py-argparse", type=("build", "run"), when="^python@:2.6,3.0:3.1")
+    depends_on("py-setuptools", type="build")

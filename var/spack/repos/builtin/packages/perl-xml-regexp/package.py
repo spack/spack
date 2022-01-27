@@ -8,11 +8,14 @@ from spack import *
 
 class PerlXmlRegexp(PerlPackage):
     """This package contains regular expressions for the following XML tokens:
-        BaseChar, Ideographic, Letter, Digit, Extender, CombiningChar,
-        NameChar, EntityRef, CharRef, Reference, Name, NmToken, and
-        AttValue."""
+    BaseChar, Ideographic, Letter, Digit, Extender, CombiningChar,
+    NameChar, EntityRef, CharRef, Reference, Name, NmToken, and
+    AttValue."""
 
     homepage = "https://metacpan.org/pod/XML::RegExp"
-    url      = "https://cpan.metacpan.org/authors/id/T/TJ/TJMATHER/XML-RegExp-0.04.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/T/TJ/TJMATHER/XML-RegExp-0.04.tar.gz"
 
-    version('0.04', sha256='df1990096036085c8e2d45904fe180f82bfed40f1a7e05243f334ea10090fc54')
+    version(
+        "0.04",
+        sha256="df1990096036085c8e2d45904fe180f82bfed40f1a7e05243f334ea10090fc54",
+    )

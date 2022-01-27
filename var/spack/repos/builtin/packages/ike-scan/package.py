@@ -10,6 +10,10 @@ class IkeScan(AutotoolsPackage):
     """Discover and fingerprint IKE hosts (IPsec VPN Servers)."""
 
     homepage = "https://github.com/royhills/ike-scan"
-    url      = "https://github.com/royhills/ike-scan/releases/download/1.9/ike-scan-1.9.tar.gz"
+    url = (
+        "https://github.com/royhills/ike-scan/releases/download/1.9/ike-scan-1.9.tar.gz"
+    )
 
-    version('1.9', sha256='05d15c7172034935d1e46b01dacf1101a293ae0d06c0e14025a4507656f1a7b6')
+    version(
+        "1.9", sha256="05d15c7172034935d1e46b01dacf1101a293ae0d06c0e14025a4507656f1a7b6"
+    )

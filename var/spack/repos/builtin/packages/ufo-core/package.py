@@ -13,9 +13,12 @@ class UfoCore(CMakePackage):
     development files."""
 
     homepage = "https://ufo.kit.edu"
-    url      = "https://github.com/ufo-kit/ufo-core/archive/v0.14.0.tar.gz"
+    url = "https://github.com/ufo-kit/ufo-core/archive/v0.14.0.tar.gz"
 
-    version('0.14.0', sha256='3bf0d1924d6ae3f51673cc8b0b31b17873e79f1a0129a9af54b4062b1b2b3ad7')
+    version(
+        "0.14.0",
+        sha256="3bf0d1924d6ae3f51673cc8b0b31b17873e79f1a0129a9af54b4062b1b2b3ad7",
+    )
 
-    depends_on('glib')
-    depends_on('json-glib')
+    depends_on("glib")
+    depends_on("json-glib")

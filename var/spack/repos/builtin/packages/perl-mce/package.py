@@ -17,6 +17,9 @@ class PerlMce(PerlPackage):
     input stream to the next available worker."""
 
     homepage = "https://github.com/marioroy/mce-perl"
-    url      = "https://cpan.metacpan.org/authors/id/M/MA/MARIOROY/MCE-1.874.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/M/MA/MARIOROY/MCE-1.874.tar.gz"
 
-    version('1.874', sha256='d809e3018475115ad7eccb8bef49bde3bf3e75abbbcd80564728bbcfab86d3d0')
+    version(
+        "1.874",
+        sha256="d809e3018475115ad7eccb8bef49bde3bf3e75abbbcd80564728bbcfab86d3d0",
+    )

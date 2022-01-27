@@ -14,9 +14,12 @@ class EsShell(AutotoolsPackage):
     implementation of rc."""
 
     homepage = "https://wryun.github.io/es-shell/"
-    url      = "https://github.com/wryun/es-shell/releases/download/v0.9.1/es-0.9.1.tar.gz"
+    url = "https://github.com/wryun/es-shell/releases/download/v0.9.1/es-0.9.1.tar.gz"
 
-    version('0.9.1', sha256='b0b41fce99b122a173a06b899a4d92e5bd3cc48b227b2736159f596a58fff4ba')
+    version(
+        "0.9.1",
+        sha256="b0b41fce99b122a173a06b899a4d92e5bd3cc48b227b2736159f596a58fff4ba",
+    )
 
-    depends_on('readline')
-    depends_on('yacc')
+    depends_on("readline")
+    depends_on("yacc")

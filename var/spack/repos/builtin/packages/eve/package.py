@@ -10,9 +10,12 @@ class Eve(CMakePackage):
     """Expressive Velocity Engine - SIMD in C++ Goes Brrrr"""
 
     homepage = "https://jfalcou.github.io/eve/"
-    url      = "https://github.com/jfalcou/eve/archive/refs/tags/v2021.10.0.tar.gz"
-    maintainers = ['jfalcou']
-    git = 'https://github.com/jfalcou/eve.git'
+    url = "https://github.com/jfalcou/eve/archive/refs/tags/v2021.10.0.tar.gz"
+    maintainers = ["jfalcou"]
+    git = "https://github.com/jfalcou/eve.git"
 
-    version('develop', branch='develop')
-    version('2021.10.0', sha256='580c40a8244039a700b93ea49fb0affc1c8d3c100eb6dc66368e101753f51e5c')
+    version("develop", branch="develop")
+    version(
+        "2021.10.0",
+        sha256="580c40a8244039a700b93ea49fb0affc1c8d3c100eb6dc66368e101753f51e5c",
+    )

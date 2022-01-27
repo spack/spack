@@ -14,26 +14,29 @@ class Antlr(AutotoolsPackage):
     walk parse trees."""
 
     homepage = "https://www.antlr2.org/"
-    url      = "http://www.antlr2.org/download/antlr-2.7.7.tar.gz"
+    url = "http://www.antlr2.org/download/antlr-2.7.7.tar.gz"
 
-    version('2.7.7', sha256='853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9')
+    version(
+        "2.7.7",
+        sha256="853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9",
+    )
 
     # Fixes build with recent versions of GCC
-    patch('gcc.patch')
+    patch("gcc.patch")
 
-    variant('cxx',    default=True,  description='Enable ANTLR for C++')
-    variant('java',   default=False, description='Enable ANTLR for Java')
-    variant('python', default=False, description='Enable ANTLR for Python')
+    variant("cxx", default=True, description="Enable ANTLR for C++")
+    variant("java", default=False, description="Enable ANTLR for Java")
+    variant("python", default=False, description="Enable ANTLR for Python")
 
-    extends('python', when='+python')
-    depends_on('java', type=('build', 'run'), when='+java')
+    extends("python", when="+python")
+    depends_on("java", type=("build", "run"), when="+java")
 
     def configure_args(self):
         spec = self.spec
 
         return [
-            '--disable-csharp',
-            '--{0}-cxx'.format('enable' if '+cxx' in spec else 'disable'),
-            '--{0}-java'.format('enable' if '+java' in spec else 'disable'),
-            '--{0}-python'.format('enable' if '+python' in spec else 'disable')
+            "--disable-csharp",
+            "--{0}-cxx".format("enable" if "+cxx" in spec else "disable"),
+            "--{0}-java".format("enable" if "+java" in spec else "disable"),
+            "--{0}-python".format("enable" if "+python" in spec else "disable"),
         ]

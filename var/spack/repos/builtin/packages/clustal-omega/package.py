@@ -10,8 +10,11 @@ class ClustalOmega(AutotoolsPackage):
     """Clustal Omega: the last alignment program you'll ever need."""
 
     homepage = "http://www.clustal.org/omega/"
-    url      = "http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz"
+    url = "http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz"
 
-    version('1.2.4', sha256='8683d2286d663a46412c12a0c789e755e7fd77088fb3bc0342bb71667f05a3ee')
+    version(
+        "1.2.4",
+        sha256="8683d2286d663a46412c12a0c789e755e7fd77088fb3bc0342bb71667f05a3ee",
+    )
 
-    depends_on('argtable')
+    depends_on("argtable")

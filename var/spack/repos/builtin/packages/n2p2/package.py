@@ -8,8 +8,8 @@ from spack import *
 
 class N2p2(MakefilePackage):
     """N2p2 (The neural network potential package) provides ready-to-use
-       software for high-dimensional neural network potentials
-       in computational physics and chemistry."""
+    software for high-dimensional neural network potentials
+    in computational physics and chemistry."""
 
     homepage = "https://github.com/CompPhysVienna/n2p2"
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"

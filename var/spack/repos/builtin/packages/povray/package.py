@@ -29,24 +29,26 @@ class Povray(AutotoolsPackage):
 
     # maintainers = ['payerle' ]
 
-    version('3.7.0.8', sha256='53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4')
+    version(
+        "3.7.0.8",
+        sha256="53d11ebd2972fc452af168a00eb83aefb61387662c10784e81b63e44aa575de4",
+    )
 
-    variant('boost', default=True, description='Build with boost support')
-    variant('debug', default=False,
-            description='Enable compiler debugging mode')
-    variant('io-restrictions', default=True,
-            description='Enable POV-Rays mechanism for control of I/O '
-            'operations')
-    variant('jpeg', default=True, description='Build with jpeg support')
-    variant('libpng', default=True, description='Build with libpng support')
-    variant('libtiff', default=True, description='Build with libtiff support')
-    variant('mkl', default=True, description='Build with Intel MKL support')
-    variant('openexr', default=True, description='Build with OpenEXR support')
-    variant('profile', default=False,
-            description='Enable program execution profiling')
-    variant('static', default=False,
-            description='Build static instead shared binaries')
-    variant('zlib', default=True, description='Build with zlib support')
+    variant("boost", default=True, description="Build with boost support")
+    variant("debug", default=False, description="Enable compiler debugging mode")
+    variant(
+        "io-restrictions",
+        default=True,
+        description="Enable POV-Rays mechanism for control of I/O " "operations",
+    )
+    variant("jpeg", default=True, description="Build with jpeg support")
+    variant("libpng", default=True, description="Build with libpng support")
+    variant("libtiff", default=True, description="Build with libtiff support")
+    variant("mkl", default=True, description="Build with Intel MKL support")
+    variant("openexr", default=True, description="Build with OpenEXR support")
+    variant("profile", default=False, description="Enable program execution profiling")
+    variant("static", default=False, description="Build static instead shared binaries")
+    variant("zlib", default=True, description="Build with zlib support")
     # SDL support is limited to sdl version 1, not sdl2, and spack currently
     # only supports sdl2
     # variant('sdl', default=True,
@@ -56,38 +58,35 @@ class Povray(AutotoolsPackage):
     # variant('x11', default=True, description='Build with X11 support')
 
     # Build dependencies
-    depends_on('autoconf@2.59:', type='build')
-    depends_on('automake@1.9:', type='build')
-    depends_on('perl', type='build')
-    depends_on('m4', type='build')
-    depends_on('boost@1.37:', when='+boost')
-    depends_on('zlib@1.2.1:', when='+zlib')
-    depends_on('libpng@1.2.5:', when='+libpng')
-    depends_on('jpeg', when='+jpeg')
-    depends_on('libtiff@3.6.1:', when='+libtiff')
-    depends_on('mkl', when='+mkl')
-    depends_on('openexr@1.2:', when='+openexr')
+    depends_on("autoconf@2.59:", type="build")
+    depends_on("automake@1.9:", type="build")
+    depends_on("perl", type="build")
+    depends_on("m4", type="build")
+    depends_on("boost@1.37:", when="+boost")
+    depends_on("zlib@1.2.1:", when="+zlib")
+    depends_on("libpng@1.2.5:", when="+libpng")
+    depends_on("jpeg", when="+jpeg")
+    depends_on("libtiff@3.6.1:", when="+libtiff")
+    depends_on("mkl", when="+mkl")
+    depends_on("openexr@1.2:", when="+openexr")
 
     # MKL conflicts
-    conflicts('+mkl', when='target=aarch64:',
-              msg='Intel MKL only runs on x86')
-    conflicts('+mkl', when='target=ppc64:',
-              msg='Intel MKL only runs on x86')
-    conflicts('+mkl', when='target=ppc64le:',
-              msg='Intel MKL only runs on x86')
+    conflicts("+mkl", when="target=aarch64:", msg="Intel MKL only runs on x86")
+    conflicts("+mkl", when="target=ppc64:", msg="Intel MKL only runs on x86")
+    conflicts("+mkl", when="target=ppc64le:", msg="Intel MKL only runs on x86")
 
     # This patch enables prebuild.sh to be invoked from any directory
     # (it immediately cds to the directory containing prebuild.sh)
     # This is better than a broken check that it was called from the
     # containing directory
-    patch('fix_prebuild.sh.patch')
+    patch("fix_prebuild.sh.patch")
 
-    @run_before('autoreconf')
+    @run_before("autoreconf")
     def run_prebuild_script(self):
         # We need to run <build_dir>/unix/prebuild.sh
         # and it must be run from within the directory containing it
-        unix_dir = join_path(self.build_directory, 'unix')
-        prebuild_path = join_path(unix_dir, 'prebuild.sh')
+        unix_dir = join_path(self.build_directory, "unix")
+        prebuild_path = join_path(unix_dir, "prebuild.sh")
         prebuild_script = which(prebuild_path)
         prebuild_script()
 
@@ -98,62 +97,58 @@ class Povray(AutotoolsPackage):
         # We generate a generic using process owner and fqdn of build host.
         fqdn = socket.getfqdn()
         uname = getpass.getuser()
-        compiled_by = 'Installed by spack <{0}@{1}>'.format(uname, fqdn)
-        extra_args.append('COMPILED_BY={0}'.format(compiled_by))
+        compiled_by = "Installed by spack <{0}@{1}>".format(uname, fqdn)
+        extra_args.append("COMPILED_BY={0}".format(compiled_by))
 
-        extra_args.append('--disable-silent-rules')  # Verbose make output
-        extra_args += self.enable_or_disable('debug')
-        extra_args += self.enable_or_disable('io-restrictions')
-        extra_args += self.enable_or_disable('profile')
-        extra_args += self.enable_or_disable('static')
+        extra_args.append("--disable-silent-rules")  # Verbose make output
+        extra_args += self.enable_or_disable("debug")
+        extra_args += self.enable_or_disable("io-restrictions")
+        extra_args += self.enable_or_disable("profile")
+        extra_args += self.enable_or_disable("static")
 
-        if '+boost' in self.spec:
-            extra_args.append('--with-boost={0}'.format(
-                self.spec['boost'].prefix))
+        if "+boost" in self.spec:
+            extra_args.append("--with-boost={0}".format(self.spec["boost"].prefix))
         else:
-            extra_args.append('--without-boost')
+            extra_args.append("--without-boost")
 
-        if '+jpeg' in self.spec:
-            extra_args.append('--with-libjpeg={0}'.format(
-                self.spec['jpeg'].prefix))
+        if "+jpeg" in self.spec:
+            extra_args.append("--with-libjpeg={0}".format(self.spec["jpeg"].prefix))
         else:
-            extra_args.append('--without-libjpeg')
+            extra_args.append("--without-libjpeg")
 
-        if '+libpng' in self.spec:
-            extra_args.append('--with-libpng={0}'.format(
-                self.spec['libpng'].prefix))
+        if "+libpng" in self.spec:
+            extra_args.append("--with-libpng={0}".format(self.spec["libpng"].prefix))
         else:
-            extra_args.append('--without-libpng')
+            extra_args.append("--without-libpng")
 
-        if '+libtiff' in self.spec:
-            extra_args.append('--with-libtiff={0}'.format(
-                self.spec['libtiff'].prefix))
+        if "+libtiff" in self.spec:
+            extra_args.append("--with-libtiff={0}".format(self.spec["libtiff"].prefix))
         else:
-            extra_args.append('--without-libtiff')
+            extra_args.append("--without-libtiff")
 
-        if '+mkl' in self.spec:
-            extra_args.append('--with-libmkl={0}'.format(
-                self.spec['mkl'].prefix))
+        if "+mkl" in self.spec:
+            extra_args.append("--with-libmkl={0}".format(self.spec["mkl"].prefix))
         else:
-            extra_args.append('--without-libmkl')
+            extra_args.append("--without-libmkl")
 
-        if '+openexr' in self.spec:
-            extra_args.append('--with-openexr={0}'.format(
-                self.spec['openexr'].prefix))
+        if "+openexr" in self.spec:
+            extra_args.append("--with-openexr={0}".format(self.spec["openexr"].prefix))
         else:
-            extra_args.append('--without-openexr')
+            extra_args.append("--without-openexr")
 
         # POV-Ray only supports sdl v1, spack only supports sdl2 at this time
         # and X11 support requires sdl
-        extra_args.append('--without-libsdl')
-        extra_args.append('--without-x')
+        extra_args.append("--without-libsdl")
+        extra_args.append("--without-x")
 
         return extra_args
 
     def test(self):
-        povs = find(self.prefix.share, 'biscuit.pov')[0]
-        copy(povs, '.')
-        self.run_test('povray', options=['biscuit.pov'],
-                      purpose="test: render sample file",
-                      expected=['POV-Ray finished']
-                      )
+        povs = find(self.prefix.share, "biscuit.pov")[0]
+        copy(povs, ".")
+        self.run_test(
+            "povray",
+            options=["biscuit.pov"],
+            purpose="test: render sample file",
+            expected=["POV-Ray finished"],
+        )

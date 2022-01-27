@@ -19,56 +19,58 @@ class Exasp2(MakefilePackage):
     of new architectures, programming models, etc."""
 
     homepage = "https://github.com/ECP-copa/ExaSP2"
-    url      = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
-    git      = "https://github.com/ECP-copa/ExaSP2.git"
+    url = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
+    git = "https://github.com/ECP-copa/ExaSP2.git"
 
     maintainers = ["junghans"]
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    tags = ["proxy-app", "ecp-proxy-app"]
 
-    version('develop', branch='master')
-    version('1.0', sha256='59986ea70391a1b382d2ed22d5cf013f46c0c15e44ed95dcd875a917adfc6211')
+    version("develop", branch="master")
+    version(
+        "1.0", sha256="59986ea70391a1b382d2ed22d5cf013f46c0c15e44ed95dcd875a917adfc6211"
+    )
 
-    variant('mpi', default=True, description='Build With MPI Support')
+    variant("mpi", default=True, description="Build With MPI Support")
 
-    depends_on('bml')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('mpi', when='+mpi')
-    depends_on('bml@1.2.3:+mpi', when='+mpi')
+    depends_on("bml")
+    depends_on("blas")
+    depends_on("lapack")
+    depends_on("mpi", when="+mpi")
+    depends_on("bml@1.2.3:+mpi", when="+mpi")
 
-    build_directory = 'src'
+    build_directory = "src"
 
     @property
     def build_targets(self):
         targets = []
         spec = self.spec
-        if '+mpi' in spec:
-            targets.append('PARALLEL=MPI')
-            targets.append('MPICC={0}'.format(spec['mpi'].mpicc))
-            targets.append('MPI_LIB=-L' + spec['mpi'].prefix.lib + ' -lmpi')
-            targets.append('MPI_INCLUDE=-I' + spec['mpi'].prefix.include)
+        if "+mpi" in spec:
+            targets.append("PARALLEL=MPI")
+            targets.append("MPICC={0}".format(spec["mpi"].mpicc))
+            targets.append("MPI_LIB=-L" + spec["mpi"].prefix.lib + " -lmpi")
+            targets.append("MPI_INCLUDE=-I" + spec["mpi"].prefix.include)
         else:
-            targets.append('PARALLEL=NONE')
+            targets.append("PARALLEL=NONE")
         # NOTE: no blas except for mkl has been properly tested. OpenBlas was
         #   briefly but not rigoruously tested. Using generic blas approach to
         #   meet Spack requirements
-        targets.append('BLAS=GENERIC_SPACKBLAS')
-        math_libs = str(spec['lapack'].libs)
-        math_libs += ' ' + str(spec['lapack'].libs)
-        targets.append('SPACKBLASLIBFLAGS=' + math_libs)
-        math_includes = spec['lapack'].prefix.include
-        math_includes += " -I" + spec['blas'].prefix.include
-        targets.append('SPACKBLASINCLUDES=' + math_includes)
+        targets.append("BLAS=GENERIC_SPACKBLAS")
+        math_libs = str(spec["lapack"].libs)
+        math_libs += " " + str(spec["lapack"].libs)
+        targets.append("SPACKBLASLIBFLAGS=" + math_libs)
+        math_includes = spec["lapack"].prefix.include
+        math_includes += " -I" + spec["blas"].prefix.include
+        targets.append("SPACKBLASINCLUDES=" + math_includes)
         # And BML
-        bml_lib_dirs = spec['bml'].libs.directories[0]
-        targets.append('BML_PATH=' + bml_lib_dirs)
-        targets.append('--file=Makefile.vanilla')
+        bml_lib_dirs = spec["bml"].libs.directories[0]
+        targets.append("BML_PATH=" + bml_lib_dirs)
+        targets.append("--file=Makefile.vanilla")
         return targets
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
-        install('bin/ExaSP2-*', prefix.bin)
-        install('LICENSE.md', prefix.doc)
-        install('README.md', prefix.doc)
+        install("bin/ExaSP2-*", prefix.bin)
+        install("LICENSE.md", prefix.doc)
+        install("README.md", prefix.doc)

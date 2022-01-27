@@ -27,14 +27,16 @@ def load_yaml_guess_indent(stream, **kw):
     # load a yaml file guess the indentation, if you use TABs ...
     def leading_spaces(l):
         idx = 0
-        while idx < len(l) and l[idx] == ' ':
+        while idx < len(l) and l[idx] == " ":
             idx += 1
         return idx
 
     if isinstance(stream, text_type):
         yaml_str = stream
     elif isinstance(stream, binary_type):
-        yaml_str = stream.decode('utf-8')  # most likely, but the Reader checks BOM for this
+        yaml_str = stream.decode(
+            "utf-8"
+        )  # most likely, but the Reader checks BOM for this
     else:
         yaml_str = stream.read()
     map_indent = None
@@ -45,26 +47,26 @@ def load_yaml_guess_indent(stream, **kw):
     for line in yaml_str.splitlines():
         rline = line.rstrip()
         lline = rline.lstrip()
-        if lline.startswith('- '):
+        if lline.startswith("- "):
             l_s = leading_spaces(line)
             block_seq_indent = l_s - key_indent
             idx = l_s + 1
-            while line[idx] == ' ':  # this will end as we rstripped
+            while line[idx] == " ":  # this will end as we rstripped
                 idx += 1
-            if line[idx] == '#':     # comment after -
+            if line[idx] == "#":  # comment after -
                 continue
             indent = idx - key_indent
             break
         if map_indent is None and prev_line_key_only is not None and rline:
             idx = 0
-            while line[idx] in ' -':
+            while line[idx] in " -":
                 idx += 1
             if idx > prev_line_key_only:
                 map_indent = idx - prev_line_key_only
-        if rline.endswith(':'):
+        if rline.endswith(":"):
             key_indent = leading_spaces(line)
             idx = 0
-            while line[idx] == ' ':  # this will end on ':'
+            while line[idx] == " ":  # this will end on ':'
                 idx += 1
             prev_line_key_only = idx
             continue
@@ -80,6 +82,7 @@ def configobj_walker(cfg):
     corresponding YAML output (including comments
     """
     from configobj import ConfigObj
+
     assert isinstance(cfg, ConfigObj)
     for c in cfg.initial_comment:
         if c.strip():
@@ -94,32 +97,34 @@ def configobj_walker(cfg):
 
 def _walk_section(s, level=0):
     from configobj import Section
+
     assert isinstance(s, Section)
-    indent = u'  ' * level
+    indent = u"  " * level
     for name in s.scalars:
         for c in s.comments[name]:
             yield indent + c.strip()
         x = s[name]
-        if u'\n' in x:
-            i = indent + u'  '
-            x = u'|\n' + i + x.strip().replace(u'\n', u'\n' + i)
-        elif ':' in x:
+        if u"\n" in x:
+            i = indent + u"  "
+            x = u"|\n" + i + x.strip().replace(u"\n", u"\n" + i)
+        elif ":" in x:
             x = u"'" + x.replace(u"'", u"''") + u"'"
-        line = u'{0}{1}: {2}'.format(indent, name, x)
+        line = u"{0}{1}: {2}".format(indent, name, x)
         c = s.inline_comments[name]
         if c:
-            line += u' ' + c
+            line += u" " + c
         yield line
     for name in s.sections:
         for c in s.comments[name]:
             yield indent + c.strip()
-        line = u'{0}{1}:'.format(indent, name)
+        line = u"{0}{1}:".format(indent, name)
         c = s.inline_comments[name]
         if c:
-            line += u' ' + c
+            line += u" " + c
         yield line
-        for val in _walk_section(s[name], level=level+1):
+        for val in _walk_section(s[name], level=level + 1):
             yield val
+
 
 # def config_obj_2_rt_yaml(cfg):
 #     from .comments import CommentedMap, CommentedSeq

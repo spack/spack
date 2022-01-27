@@ -14,15 +14,19 @@ class Netgauge(AutotoolsPackage):
     and communication patterns. The main focus lies on accuracy,
     statistical analysis and easy extensibility.
     """
-    homepage = "http://unixer.de/research/netgauge/"
-    url      = "http://unixer.de/research/netgauge/netgauge-2.4.6.tar.gz"
 
-    version('2.4.6', sha256='dc9398e4e042efec70881f2c7074ff18cc5b74bc5ffc4b8a4aaf813b39f83444')
+    homepage = "http://unixer.de/research/netgauge/"
+    url = "http://unixer.de/research/netgauge/netgauge-2.4.6.tar.gz"
+
+    version(
+        "2.4.6",
+        sha256="dc9398e4e042efec70881f2c7074ff18cc5b74bc5ffc4b8a4aaf813b39f83444",
+    )
 
     depends_on("mpi")
 
     def configure_args(self):
         args = []
-        args.append('MPICC=%s' % os.path.basename(self.spec['mpi'].mpicc))
-        args.append('MPICXX=%s' % os.path.basename(self.spec['mpi'].mpicxx))
+        args.append("MPICC=%s" % os.path.basename(self.spec["mpi"].mpicc))
+        args.append("MPICXX=%s" % os.path.basename(self.spec["mpi"].mpicxx))
         return args

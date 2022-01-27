@@ -13,8 +13,8 @@ class RIllumina450probevariantsDb(RPackage):
     Includes details on variants for each probe on the 450k bead chip for each
     of the four populations (Asian, American, African and European)."""
 
-    bioc     = "Illumina450ProbeVariants.db"
+    bioc = "Illumina450ProbeVariants.db"
 
-    version('1.26.0', commit='fffe6033cc8d87354078c14de1e29976eaedd611')
+    version("1.26.0", commit="fffe6033cc8d87354078c14de1e29976eaedd611")
 
-    depends_on('r@3.0.1:', type=('build', 'run'))
+    depends_on("r@3.0.1:", type=("build", "run"))

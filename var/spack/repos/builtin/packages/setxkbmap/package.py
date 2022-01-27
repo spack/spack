@@ -14,10 +14,13 @@ class Setxkbmap(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/setxkbmap"
     xorg_mirror_path = "app/setxkbmap-1.3.1.tar.gz"
 
-    version('1.3.1', sha256='e24a73669007fa3b280eba4bdc7f75715aeb2e394bf2d63f5cc872502ddde264')
+    version(
+        "1.3.1",
+        sha256="e24a73669007fa3b280eba4bdc7f75715aeb2e394bf2d63f5cc872502ddde264",
+    )
 
-    depends_on('libxkbfile')
-    depends_on('libx11')
+    depends_on("libxkbfile")
+    depends_on("libx11")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

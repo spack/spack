@@ -15,11 +15,14 @@ class RNeuralnet(RPackage):
     generalized weights (Intrator O & Intrator N, 1993) is implemented."""
 
     homepage = "https://cloud.r-project.org/package=neuralnet"
-    url      = "https://cloud.r-project.org/src/contrib/neuralnet_1.44.2.tar.gz"
+    url = "https://cloud.r-project.org/src/contrib/neuralnet_1.44.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/neuralnet"
 
-    version('1.44.2', sha256='5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826')
+    version(
+        "1.44.2",
+        sha256="5f66cd255db633322c0bd158b9320cac5ceff2d56f93e4864a0540f936028826",
+    )
 
-    depends_on('r@2.9.0:', type=('build', 'run'))
-    depends_on('r-mass',   type=('build', 'run'))
-    depends_on('r-deriv',  type=('build', 'run'))
+    depends_on("r@2.9.0:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-deriv", type=("build", "run"))

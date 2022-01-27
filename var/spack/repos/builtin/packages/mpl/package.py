@@ -9,12 +9,12 @@ from spack import *
 class Mpl(CMakePackage):
     """A C++17 message passing library based on MPI."""
 
-    homepage    = "https://rabauke.github.io/mpl/html/"
-    git         = "https://github.com/rabauke/mpl.git"
-    url         = "https://github.com/rabauke/mpl/archive/refs/tags/v0.1.tar.gz"
-    maintainers = ['rabauke']
+    homepage = "https://rabauke.github.io/mpl/html/"
+    git = "https://github.com/rabauke/mpl.git"
+    url = "https://github.com/rabauke/mpl/archive/refs/tags/v0.1.tar.gz"
+    maintainers = ["rabauke"]
 
-    version('develop', branch='master')
-    version('0.1', tag='v0.1')
+    version("develop", branch="master")
+    version("0.1", tag="v0.1")
 
-    depends_on('mpi')
+    depends_on("mpi")

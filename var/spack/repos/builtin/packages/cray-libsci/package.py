@@ -10,7 +10,7 @@ class CrayLibsci(Package):
     numerical routines optimized for best performance on Cray systems."""
 
     homepage = "https://docs.nersc.gov/development/libraries/libsci/"
-    has_code = False    # Skip attempts to fetch source that is not available
+    has_code = False  # Skip attempts to fetch source that is not available
 
     version("21.08.1.2")
     version("20.06.1")
@@ -20,7 +20,7 @@ class CrayLibsci(Package):
     version("18.11.1.2")
     version("16.11.1")
     version("16.09.1")
-    version('16.07.1')
+    version("16.07.1")
     version("16.06.1")
     version("16.03.1")
 
@@ -33,11 +33,11 @@ class CrayLibsci(Package):
     provides("scalapack")
 
     canonical_names = {
-        'gcc': 'GNU',
-        'cce': 'CRAY',
-        'intel': 'INTEL',
-        'clang': 'ALLINEA',
-        'aocc': 'AOCC'
+        "gcc": "GNU",
+        "cce": "CRAY",
+        "intel": "INTEL",
+        "clang": "ALLINEA",
+        "aocc": "AOCC",
     }
 
     @property
@@ -72,10 +72,8 @@ class CrayLibsci(Package):
             libname.append(lib_fmt.format(self.canonical_names[compiler].lower()))
 
         return find_libraries(
-            libname,
-            root=self.prefix.lib,
-            shared=shared,
-            recursive=False)
+            libname, root=self.prefix.lib, shared=shared, recursive=False
+        )
 
     @property
     def lapack_libs(self):
@@ -91,5 +89,8 @@ class CrayLibsci(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )

@@ -34,17 +34,18 @@ class PerlPackage(PackageBase):
     :py:meth:`~.PerlPackage.configure`.
     Arguments should not include the installation base directory.
     """
+
     #: Phases of a Perl package
-    phases = ['configure', 'build', 'install']
+    phases = ["configure", "build", "install"]
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'PerlPackage'
+    build_system_class = "PerlPackage"
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['check']
+    build_time_test_callbacks = ["check"]
 
-    extends('perl')
+    extends("perl")
 
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to
@@ -62,20 +63,21 @@ class PerlPackage(PackageBase):
 
         :raise RuntimeError: if neither Makefile.PL or Build.PL exist
         """
-        if os.path.isfile('Makefile.PL'):
-            self.build_method = 'Makefile.PL'
+        if os.path.isfile("Makefile.PL"):
+            self.build_method = "Makefile.PL"
             self.build_executable = inspect.getmodule(self).make
-        elif os.path.isfile('Build.PL'):
-            self.build_method = 'Build.PL'
+        elif os.path.isfile("Build.PL"):
+            self.build_method = "Build.PL"
             self.build_executable = Executable(
-                os.path.join(self.stage.source_path, 'Build'))
+                os.path.join(self.stage.source_path, "Build")
+            )
         else:
-            raise RuntimeError('Unknown build_method for perl package')
+            raise RuntimeError("Unknown build_method for perl package")
 
-        if self.build_method == 'Makefile.PL':
-            options = ['Makefile.PL', 'INSTALL_BASE={0}'.format(prefix)]
-        elif self.build_method == 'Build.PL':
-            options = ['Build.PL', '--install_base', prefix]
+        if self.build_method == "Makefile.PL":
+            options = ["Makefile.PL", "INSTALL_BASE={0}".format(prefix)]
+        elif self.build_method == "Build.PL":
+            options = ["Build.PL", "--install_base", prefix]
         options += self.configure_args()
 
         inspect.getmodule(self).perl(*options)
@@ -84,27 +86,27 @@ class PerlPackage(PackageBase):
     # Build.PL may be too long causing the build to fail. Patching the shebang
     # does not happen until after install so set '/usr/bin/env perl' here in
     # the Build script.
-    @run_after('configure')
+    @run_after("configure")
     def fix_shebang(self):
-        if self.build_method == 'Build.PL':
-            pattern = '#!{0}'.format(self.spec['perl'].command.path)
-            repl = '#!/usr/bin/env perl'
-            filter_file(pattern, repl, 'Build', backup=False)
+        if self.build_method == "Build.PL":
+            pattern = "#!{0}".format(self.spec["perl"].command.path)
+            repl = "#!/usr/bin/env perl"
+            filter_file(pattern, repl, "Build", backup=False)
 
     def build(self, spec, prefix):
         """Builds a Perl package."""
         self.build_executable()
 
     # Ensure that tests run after build (if requested):
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
         """Runs built-in tests of a Perl package."""
-        self.build_executable('test')
+        self.build_executable("test")
 
     def install(self, spec, prefix):
         """Installs a Perl package."""
-        self.build_executable('install')
+        self.build_executable("install")
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

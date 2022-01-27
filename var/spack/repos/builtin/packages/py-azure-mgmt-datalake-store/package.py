@@ -10,8 +10,11 @@ class PyAzureMgmtDatalakeStore(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-datalake-store/azure-mgmt-datalake-store-0.5.0.zip"
 
-    version('0.5.0', sha256='9376d35495661d19f8acc5604f67b0bc59493b1835bbc480f9a1952f90017a4c')
+    version(
+        "0.5.0",
+        sha256="9376d35495661d19f8acc5604f67b0bc59493b1835bbc480f9a1952f90017a4c",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-msrestazure@0.4.27:1', type=('build', 'run'))
-    depends_on('py-azure-common@1.1:1', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-msrestazure@0.4.27:1", type=("build", "run"))
+    depends_on("py-azure-common@1.1:1", type=("build", "run"))

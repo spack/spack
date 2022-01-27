@@ -20,10 +20,10 @@ class MockPackageBase(object):
     Use ``MockPackageMultiRepo.add_package()`` to create new instances.
 
     """
+
     virtual = False
 
-    def __init__(self, dependencies, dependency_types,
-                 conditions=None, versions=None):
+    def __init__(self, dependencies, dependency_types, conditions=None, versions=None):
         """Instantiate a new MockPackageBase.
 
         This is not for general use; it needs to be constructed by a
@@ -43,7 +43,8 @@ class MockPackageBase(object):
 
     @classmethod
     def possible_dependencies(
-            cls, transitive=True, deptype='all', visited=None, virtuals=None):
+        cls, transitive=True, deptype="all", visited=None, virtuals=None
+    ):
         visited = {} if visited is None else visited
 
         for name, conditions in cls.dependencies.items():
@@ -64,7 +65,8 @@ class MockPackageBase(object):
                 continue
 
             cls._repo.get(dep_name).possible_dependencies(
-                transitive, deptype, visited, virtuals)
+                transitive, deptype, visited, virtuals
+            )
 
         return visited
 
@@ -79,8 +81,8 @@ class MockPackageMultiRepo(object):
 
     def __init__(self):
         self.spec_to_pkg = {}
-        self.namespace = 'mock'                 # repo namespace
-        self.full_namespace = 'spack.pkg.mock'  # python import namespace
+        self.namespace = "mock"  # repo namespace
+        self.full_namespace = "spack.pkg.mock"  # python import namespace
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -92,8 +94,7 @@ class MockPackageMultiRepo(object):
     def get_pkg_class(self, name):
         namespace, _, name = name.rpartition(".")
         if namespace and namespace != self.namespace:
-            raise spack.repo.InvalidNamespaceError(
-                "bad namespace: %s" % self.namespace)
+            raise spack.repo.InvalidNamespaceError("bad namespace: %s" % self.namespace)
         return self.spec_to_pkg[name]
 
     def exists(self, name):
@@ -103,14 +104,15 @@ class MockPackageMultiRepo(object):
         return False
 
     def repo_for_pkg(self, name):
-        Repo = collections.namedtuple('Repo', ['namespace'])
-        return Repo('mockrepo')
+        Repo = collections.namedtuple("Repo", ["namespace"])
+        return Repo("mockrepo")
 
     def __contains__(self, item):
         return item in self.spec_to_pkg
 
-    def add_package(self, name, dependencies=None, dependency_types=None,
-                    conditions=None):
+    def add_package(
+        self, name, dependencies=None, dependency_types=None, conditions=None
+    ):
         """Factory method for creating mock packages.
 
         This creates a new subclass of ``MockPackageBase``, ensures that its
@@ -133,14 +135,14 @@ class MockPackageMultiRepo(object):
             dependencies = []
 
         if not dependency_types:
-            dependency_types = [
-                spack.dependency.default_deptype] * len(dependencies)
+            dependency_types = [spack.dependency.default_deptype] * len(dependencies)
 
         assert len(dependencies) == len(dependency_types)
 
         # new class for the mock package
         class MockPackage(MockPackageBase):
             pass
+
         MockPackage.__name__ = spack.util.naming.mod_to_class(name)
         MockPackage.name = name
         MockPackage._repo = self
@@ -155,22 +157,20 @@ class MockPackageMultiRepo(object):
                 dep_conditions = conditions[dep.name]
                 dep_conditions = dict(
                     (Spec(x), Dependency(MockPackage, Spec(y), type=dtype))
-                    for x, y in dep_conditions.items())
+                    for x, y in dep_conditions.items()
+                )
                 MockPackage.dependencies[dep.name] = dep_conditions
 
         # each package has some fake versions
         versions = list(Version(x) for x in [1, 2, 3])
-        MockPackage.versions = dict(
-            (x, {'preferred': False}) for x in versions
-        )
+        MockPackage.versions = dict((x, {"preferred": False}) for x in versions)
 
         MockPackage.variants = {}
         MockPackage.provided = {}
         MockPackage.conflicts = {}
         MockPackage.patches = {}
 
-        mock_package = MockPackage(
-            dependencies, dependency_types, conditions, versions)
+        mock_package = MockPackage(dependencies, dependency_types, conditions, versions)
         self.spec_to_pkg[name] = mock_package
         self.spec_to_pkg["mockrepo." + name] = mock_package
 

@@ -12,8 +12,11 @@ class PyPytoml(PythonPackage):
     Deprecated: use py-toml instead."""
 
     homepage = "https://github.com/avakar/pytoml"
-    pypi     = "pytoml/pytoml-0.1.21.tar.gz"
+    pypi = "pytoml/pytoml-0.1.21.tar.gz"
 
-    version('0.1.21', sha256='8eecf7c8d0adcff3b375b09fe403407aa9b645c499e5ab8cac670ac4a35f61e7')
+    version(
+        "0.1.21",
+        sha256="8eecf7c8d0adcff3b375b09fe403407aa9b645c499e5ab8cac670ac4a35f61e7",
+    )
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

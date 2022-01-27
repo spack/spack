@@ -26,10 +26,18 @@ class RMulticool(RPackage):
     Python code are distributed without conditions."""
 
     homepage = "https://cloud.r-project.org/package=multicool"
-    url      = "https://cloud.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/multicool/Archive/multicool"
+    url = "https://cloud.r-project.org/src/contrib/Archive/multicool/multicool_0.1-9.tar.gz"
+    list_url = (
+        "https://cloud.r-project.org/src/contrib/Archive/multicool/Archive/multicool"
+    )
 
-    version('0.1-10', sha256='5bb0cb0d9eb64420c862877247a79bb0afadacfe23262ec8c3fa26e5e34d6ff9')
-    version('0.1-9', sha256='bdf92571cef1b649952d155395a92b8683099ee13114f73a9d41fc5d7d49d329')
+    version(
+        "0.1-10",
+        sha256="5bb0cb0d9eb64420c862877247a79bb0afadacfe23262ec8c3fa26e5e34d6ff9",
+    )
+    version(
+        "0.1-9",
+        sha256="bdf92571cef1b649952d155395a92b8683099ee13114f73a9d41fc5d7d49d329",
+    )
 
-    depends_on('r-rcpp@0.11.2:', type=('build', 'run'))
+    depends_on("r-rcpp@0.11.2:", type=("build", "run"))

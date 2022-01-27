@@ -11,11 +11,10 @@ import spack.cmd.install
 import spack.tag
 from spack.main import SpackCommand
 
-install = SpackCommand('install')
+install = SpackCommand("install")
 
 # Alternate representation
-tags_json = \
-    """
+tags_json = """
     {
       "tags": {
         "no-version": [
@@ -29,8 +28,7 @@ tags_json = \
     }
     """
 
-more_tags_json = \
-    """
+more_tags_json = """
     {
       "tags": {
         "merge": [
@@ -51,9 +49,9 @@ def test_tag_copy(mock_packages):
 def test_tag_get_all_available(mock_packages):
     for skip in [False, True]:
         all_pkgs = spack.tag.packages_with_tags(None, False, skip)
-        assert sorted(all_pkgs['tag1']) == ['mpich', 'mpich2']
-        assert all_pkgs['tag2'] == ['mpich']
-        assert all_pkgs['tag3'] == ['mpich2']
+        assert sorted(all_pkgs["tag1"]) == ["mpich", "mpich2"]
+        assert all_pkgs["tag2"] == ["mpich"]
+        assert all_pkgs["tag3"] == ["mpich2"]
 
 
 def ensure_tags_results_equal(results, expected):
@@ -65,12 +63,15 @@ def ensure_tags_results_equal(results, expected):
         assert results == expected
 
 
-@pytest.mark.parametrize('tags,expected', [
-    (['tag1'], {'tag1': ['mpich', 'mpich2']}),
-    (['tag2'], {'tag2': ['mpich']}),
-    (['tag3'], {'tag3': ['mpich2']}),
-    (['nosuchpackage'], {'nosuchpackage': {}}),
-])
+@pytest.mark.parametrize(
+    "tags,expected",
+    [
+        (["tag1"], {"tag1": ["mpich", "mpich2"]}),
+        (["tag2"], {"tag2": ["mpich"]}),
+        (["tag3"], {"tag3": ["mpich2"]}),
+        (["nosuchpackage"], {"nosuchpackage": {}}),
+    ],
+)
 def test_tag_get_available(tags, expected, mock_packages):
     # Ensure results for all tags
     all_tag_pkgs = spack.tag.packages_with_tags(tags, False, False)
@@ -85,14 +86,15 @@ def test_tag_get_available(tags, expected, mock_packages):
 
 
 def test_tag_get_installed_packages(
-        mock_packages, mock_archive, mock_fetch, install_mockery):
-    install('mpich')
+    mock_packages, mock_archive, mock_fetch, install_mockery
+):
+    install("mpich")
 
     for skip in [False, True]:
         all_pkgs = spack.tag.packages_with_tags(None, True, skip)
-        assert sorted(all_pkgs['tag1']) == ['mpich']
-        assert all_pkgs['tag2'] == ['mpich']
-        assert skip or all_pkgs['tag3'] == []
+        assert sorted(all_pkgs["tag1"]) == ["mpich"]
+        assert all_pkgs["tag2"] == ["mpich"]
+        assert skip or all_pkgs["tag3"] == []
 
 
 def test_tag_index_round_trip(mock_packages):
@@ -144,7 +146,7 @@ def test_tag_not_dict():
 
 
 def test_tag_no_tags():
-    pkg_json = "{\"packages\": []}"
+    pkg_json = '{"packages": []}'
     with pytest.raises(spack.tag.TagIndexError) as e:
         spack.tag.TagIndex.from_json(StringIO(pkg_json))
         assert "does not start with" in str(e)

@@ -8,19 +8,22 @@ from spack import *
 
 class Phylip(Package):
     """PHYLIP (the PHYLogeny Inference Package) is a package of programs for
-       inferring phylogenies (evolutionary trees)."""
+    inferring phylogenies (evolutionary trees)."""
 
     homepage = "https://evolution.genetics.washington.edu/phylip/"
-    url      = "https://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
+    url = "https://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz"
 
-    version('3.697', sha256='9a26d8b08b8afea7f708509ef41df484003101eaf4beceb5cf7851eb940510c1')
+    version(
+        "3.697",
+        sha256="9a26d8b08b8afea7f708509ef41df484003101eaf4beceb5cf7851eb940510c1",
+    )
 
     def install(self, spec, prefix):
-        with working_dir('src'):
-            if self.spec.satisfies('platform=darwin'):
-                make('all', '-f', 'Makefile.osx')
-                make('put', '-f', 'Makefile.osx')
+        with working_dir("src"):
+            if self.spec.satisfies("platform=darwin"):
+                make("all", "-f", "Makefile.osx")
+                make("put", "-f", "Makefile.osx")
             else:
-                make('all', '-f', 'Makefile.unx')
-                make('put', '-f', 'Makefile.unx')
-        install_tree('exe', prefix.bin)
+                make("all", "-f", "Makefile.unx")
+                make("put", "-f", "Makefile.unx")
+        install_tree("exe", prefix.bin)

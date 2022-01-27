@@ -10,8 +10,11 @@ class PyFabric(PythonPackage):
     homepage = "http://fabfile.org/"
     pypi = "fabric/fabric-2.5.0.tar.gz"
 
-    version('2.5.0', sha256='24842d7d51556adcabd885ac3cf5e1df73fc622a1708bf3667bf5927576cdfa6')
+    version(
+        "2.5.0",
+        sha256="24842d7d51556adcabd885ac3cf5e1df73fc622a1708bf3667bf5927576cdfa6",
+    )
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-invoke@1.3:1', type=('build', 'run'))
-    depends_on('py-paramiko@2.4:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-invoke@1.3:1", type=("build", "run"))
+    depends_on("py-paramiko@2.4:", type=("build", "run"))
