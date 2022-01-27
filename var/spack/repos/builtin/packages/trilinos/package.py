@@ -280,6 +280,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
 
+    # See discussion on the PR adding cuda@11.6 for details.
+    #
+    #     https://github.com/spack/spack/pull/28439
+    #
+    conflicts('+cuda', when='^cuda@11.6.0:')
+
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
@@ -517,6 +523,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('EpetraExt_BUILD_GRAPH_REORDERINGS',
                                 'epetraextgraphreorderings'),
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
+            define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
 
         if '+dtk' in spec:

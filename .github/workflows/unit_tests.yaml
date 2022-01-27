@@ -121,7 +121,7 @@ jobs:
               patchelf cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov "coverage[toml]<=6.2"
           # ensure style checks are not skipped in unit tests for python >= 3.6
           # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
@@ -180,7 +180,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -248,7 +248,7 @@ jobs:
               patchelf kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml] clingo
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2 clingo
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -291,7 +291,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade pytest codecov coverage[toml]
+          pip install --upgrade pytest codecov coverage[toml]==6.2
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -333,7 +333,7 @@ jobs:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+        pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
     - name: Package audits (with coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       run: |

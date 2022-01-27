@@ -37,6 +37,7 @@ class Cabana(CMakePackage):
     variant('hypre', default=False, description='Build with HYPRE support')
 
     depends_on("cmake@3.9:", type='build')
+    depends_on("googletest", type='build')
     _versions = {
         ":0.2.0": "-legacy",
         "0.3.0": "@3.1:",
@@ -54,8 +55,14 @@ class Cabana(CMakePackage):
                 _kk_spec = 'kokkos{0}+{1}'.format(_kk_version, _backend)
             depends_on(_kk_spec, when='@{0}+{1}'.format(_version, _backend))
     depends_on("arborx", when="@0.3.0:+arborx")
-    depends_on("heffte@2.0:", when="@0.4.0:+heffte")
     depends_on("hypre-cmake@2.22.0:", when="@0.4.0:+hypre")
+    depends_on("hypre-cmake@2.22.1:", when="@master+hypre")
+    # Heffte pinned at 2.0.0 for now because its cmakefiles can't roll forward
+    # compatibilty from 2.0.0 to later minor versions and cabana cmakefiles are
+    # currently requesting version 2.0.0. Will be fixed for later cabana versions
+    # as cabana requested version number and heffte version compatibility changes
+    depends_on("heffte@2.0.0", when="@0.4.0+heffte")
+    depends_on("heffte@2.1.0", when="@master+heffte")
     depends_on('mpi', when='+mpi')
 
     conflicts("+rocm", when="@:0.2.0")
@@ -67,6 +74,13 @@ class Cabana(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % (
                 'On' if '+shared'  in self.spec else 'Off')
         ]
+
+        # Enable Cabana submodules based on flags above
+        if '+hypre' in self.spec:
+            options.append('-DCabana_REQUIRE_HYPRE=ON')
+        if '+heffte' in self.spec:
+            options.append('-DCabana_REQUIRE_HEFFTE=ON')
+
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
         if self.spec.satisfies('@:0.2.0'):

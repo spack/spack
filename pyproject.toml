@@ -10,6 +10,7 @@ sections = [
 known_first_party = "spack"
 known_archspec = "archspec"
 known_llnl = "llnl"
+known_third_party = ["ruamel", "six"]
 src_paths = "lib"
 honor_noqa = true
 

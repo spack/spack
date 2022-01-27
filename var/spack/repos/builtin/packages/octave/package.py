@@ -23,10 +23,11 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
-    maintainers = ['mtmiller']
+    maintainers = ['mtmiller', 'siko1056']
 
     extendable = True
 
+    version('6.4.0', sha256='b48f33d4fceaf394cfbea73a8c850000936d83a41739a24f7568b5b0a7b39acd')
     version('6.3.0', sha256='232065f3a72fc3013fe9f17f429a3df69d672c1f6b6077029a31c8f3cd58a66e')
     version('6.2.0', sha256='457d1fda8634a839e2fd7cfc55b98bd56f36b6ae73d31bb9df43dde3012caa7c')
     version('6.1.0', sha256='6ff34e401658622c44094ecb67e497672e4337ca2d36c0702d0403ecc60b0a57')

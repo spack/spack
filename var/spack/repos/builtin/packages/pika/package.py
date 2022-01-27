@@ -9,14 +9,14 @@ import sys
 from spack import *
 
 
-class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
-    """C++ runtime system for parallel and distributed applications (on-node)."""
+class Pika(CMakePackage, CudaPackage, ROCmPackage):
+    """C++ runtime system for parallellism and concurrency."""
 
-    homepage = "https://hpx.stellar-group.org/"
-    url = "https://github.com/STEllAR-GROUP/hpx-local/archive/0.0.0.tar.gz"
+    homepage = "https://github.com/pika-org/pika/"
+    url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     maintainers = ['msimberg', 'albestro', 'teonnik']
 
-    version('master', git='https://github.com/STEllAR-GROUP/hpx-local.git', branch='master')
+    version('main', git='https://github.com/pika-org/pika.git', branch='main')
 
     generator = 'Ninja'
 
@@ -25,7 +25,7 @@ class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
     variant('cxxstd',
             default='17',
             values=cxxstds,
-            description='Use the specified C++ standard when building.')
+            description='Use the specified C++ standard when building')
 
     variant(
         'malloc', default='tcmalloc',
@@ -39,9 +39,9 @@ class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "generic_coroutines", default=default_generic_coroutines,
         description='Use Boost.Context as the underlying coroutines'
-                    ' context switch implementation.')
+                    ' context switch implementation')
 
-    variant('examples', default=False, description='Build examples')
+    variant('examples', default=False, description='Build and install examples')
     variant('mpi', default=False, description='Enable MPI support')
 
     # Build dependencies
@@ -55,7 +55,6 @@ class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
     # Other dependecies
     depends_on('hwloc@1.11.5:')
     depends_on('boost@1.71:')
-    depends_on('asio@1.12:')
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
@@ -68,11 +67,6 @@ class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
         depends_on(
             "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
             when="cxxstd={0}".format(cxxstd)
-        )
-    for cxxstd in cxxstds:
-        depends_on(
-            "asio cxxstd={0}".format(map_cxxstd(cxxstd)),
-            when="cxxstd={0} ^asio".format(cxxstd),
         )
 
     # COROUTINES
@@ -88,23 +82,18 @@ class HpxLocal(CMakePackage, CudaPackage, ROCmPackage):
         spec, args = self.spec, []
 
         args += [
-            self.define('HPXLocal_WITH_CXX_STANDARD', spec.variants['cxxstd'].value),
-            self.define_from_variant('HPXLocal_WITH_EXAMPLES', 'examples'),
-            self.define_from_variant('HPXLocal_WITH_MALLOC', 'malloc'),
-            self.define_from_variant('HPXLocal_WITH_CUDA', 'cuda'),
-            self.define_from_variant('HPXLocal_WITH_HIP', 'rocm'),
-            self.define_from_variant('HPXLocal_WITH_ASYNC_MPI', 'mpi'),
-            self.define('HPXLocal_WITH_TESTS', self.run_tests),
+            self.define('PIKA_WITH_CXX_STANDARD', spec.variants['cxxstd'].value),
+            self.define_from_variant('PIKA_WITH_EXAMPLES', 'examples'),
+            self.define_from_variant('PIKA_WITH_MALLOC', 'malloc'),
+            self.define_from_variant('PIKA_WITH_CUDA', 'cuda'),
+            self.define_from_variant('PIKA_WITH_HIP', 'rocm'),
+            self.define_from_variant('PIKA_WITH_MPI', 'mpi'),
+            self.define('PIKA_WITH_TESTS', self.run_tests),
             self.define_from_variant(
-                'HPXLocal_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines'),
+                'PIKA_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines'),
 
-            self.define('ASIO_ROOT', spec['asio'].prefix),
             self.define('BOOST_ROOT', spec['boost'].prefix),
             self.define('HWLOC_ROOT', spec['hwloc'].prefix),
-
-            self.define('HPXLocal_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE', False),
-            self.define('HPXLocal_WITH_UNITY_BUILD', True),
-            self.define('HPXLocal_WITH_PRECOMPILED_HEADERS', True),
         ]
 
         # HIP support requires compiling with hipcc
