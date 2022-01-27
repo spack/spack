@@ -402,6 +402,14 @@ variant(Package, Variant) :- variant_condition(ID, Package, Variant),
    build(Package),
    error("Unsatisfied conditional variants cannot take on a variant value").
 
+% if a variant is sticky and not set its value is the default value
+variant_value(Package, Variant, Value) :-
+  variant(Package, Variant),
+  not variant_set(Package, Variant),
+  variant_sticky(Package, Variant),
+  variant_default_value(Package, Variant, Value),
+  build(Package).
+
 % one variant value for single-valued variants.
 1 {
   variant_value(Package, Variant, Value)

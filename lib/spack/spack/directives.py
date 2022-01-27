@@ -562,7 +562,9 @@ def variant(
         values=None,
         multi=None,
         validator=None,
-        when=None):
+        when=None,
+        sticky=False
+):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -583,7 +585,8 @@ def variant(
             doesn't meet the additional constraints
         when (spack.spec.Spec, bool): optional condition on which the
             variant applies
-
+        sticky (bool): if true the variant is considered set to the default value(s)
+            if no other preferences have been expressed by the user
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
     """
@@ -657,7 +660,7 @@ def variant(
             when_specs += orig_when
 
         pkg.variants[name] = (spack.variant.Variant(
-            name, default, description, values, multi, validator
+            name, default, description, values, multi, validator, sticky
         ), when_specs)
     return _execute_variant
 
