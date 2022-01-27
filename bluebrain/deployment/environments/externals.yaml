@@ -8,6 +8,7 @@ spack:
         - bison
         - blender
         - ccache
+        - clang-tools
         - cli-tools
         - cmake
         - cuda
@@ -72,6 +73,7 @@ spack:
     - bzip2
     - ccache
     - cgal
+    - clang-tools
     - cli-tools
     - cmake
     - cuda@11.0.2
