@@ -156,7 +156,6 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:2.1')
     depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
     depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
-    depends_on('py-clang@5.0', type=('build', 'run'), when='@2.6')
     depends_on('py-libclang@9.0.1:', type=('build', 'run'), when='@2.7:')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
@@ -731,6 +730,12 @@ def protobuf_deps():
             filter_file(
                 r"(^\s*)'keras (>=|~=)",
                 r"\1#'keras \2",
+                'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.6'):
+            filter_file(
+                r"(^\s*)'clang (>=|~=)",
+                r"\1#'clang \2",
                 'tensorflow/tools/pip_package/setup.py')
 
         # TODO: add support for tensorflow-io-gcs-filesystem
