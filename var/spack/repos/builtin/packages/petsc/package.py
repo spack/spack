@@ -490,13 +490,19 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                     )
 
         if '+cuda' in spec:
+            # petsc makefile returns an error code if there are warnings in compiler
+            # output, and petsc uses deprecated cuda functions that trigger warnings:
+            #cudaflags = ['-Wno-deprecated-declarations']
+            cudaflags = ['-w']
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
                 if spec.satisfies('@3.14:'):
                     options.append('--with-cuda-gencodearch={0}'.format(cuda_arch[0]))
                 else:
-                    options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
-                                   .format(cuda_arch[0]))
+                    cudaflags.append('-gencode arch=compute_{0},code=sm_{0}'
+                                     .format(cuda_arch[0]))
+            options.append('--CUDAFLAGS={0}'.format(' '.join(cudaflags)))
+
         if '+rocm' in spec:
             if not spec.satisfies('amdgpu_target=none'):
                 hip_arch = spec.variants['amdgpu_target'].value
