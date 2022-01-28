@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,7 @@ class Libxml2(AutotoolsPackage):
         if '+python' in spec:
             args.extend([
                 '--with-python={0}'.format(spec['python'].home),
-                '--with-python-install-dir={0}'.format(site_packages_dir)
+                '--with-python-install-dir={0}'.format(python_platlib)
             ])
         else:
             args.append('--without-python')

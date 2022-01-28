@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,8 @@ class Paraview(CMakePackage, CudaPackage):
     tags = ['e4s']
 
     version('master', branch='master', submodules=True)
-    version('5.10.0-RC2', sha256='6523577d4f8d0be6182e53c6b59e176c44a051c5f7d743bbda612cc095b18ff6')
-    version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d', preferred=True)
+    version('5.10.0', sha256='86d85fcbec395cdbc8e1301208d7c76d8f48b15dc6b967ffbbaeee31242343a5', preferred=True)
+    version('5.9.1', sha256='0d486cb6fbf55e428845c9650486f87466efcb3155e40489182a7ea85dfd4c8d')
     version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
@@ -60,7 +60,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('adios2', default=False, description='Enable ADIOS2 support')
+    variant('adios2', default=False,
+            description='Enable ADIOS2 support',
+            when='@5.8:')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
     variant('build_edition', default='canonical', multi=False,
@@ -69,6 +71,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Build editions include only certain modules. '
             'Editions are listed in decreasing order of size.')
 
+    conflicts('+adios2', when='@:5.10 ~mpi')
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
     conflicts('+python', when='@5.9:')
@@ -95,6 +98,9 @@ class Paraview(CMakePackage, CudaPackage):
         conflicts('cuda_arch=%d' % _arch, when="+cuda", msg='ParaView requires cuda_arch >= 20')
 
     depends_on('cmake@3.3:', type='build')
+
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -144,7 +150,8 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
-    depends_on('adios2', when='+adios2')
+    depends_on('adios2+mpi', when='+adios2+mpi')
+    depends_on('adios2~mpi', when='+adios2~mpi')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libogg')
@@ -200,6 +207,10 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Include limits header wherever needed to fix compilation with GCC 11
     patch('paraview-gcc11-limits.patch', when='@5.9.1 %gcc@11.1.0:')
+
+    # Fix IOADIOS2 module to work with kits
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
+    patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,10 +32,10 @@ class OpenspeedshopUtils(CMakePackage):
     homepage = "http://www.openspeedshop.org"
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    version('develop', branch='master')
-    version('2.4.2.1', branch='2.4.2.1')
-    version('2.4.2', branch='2.4.2')
-    version('2.4.1', branch='2.4.1')
+    version('develop', branch='master', deprecated=True)
+    version('2.4.2.1', branch='2.4.2.1', deprecated=True)
+    version('2.4.2', branch='2.4.2', deprecated=True)
+    version('2.4.1', branch='2.4.1', deprecated=True)
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
@@ -59,14 +59,8 @@ class OpenspeedshopUtils(CMakePackage):
     variant('mvapich2', default=False,
             description="Build mpi collector for mvapich2\
                          MPI when variant is enabled.")
-    variant('mvapich', default=False,
-            description="Build mpi collector for mvapich\
-                         MPI when variant is enabled.")
     variant('mpich2', default=False,
             description="Build mpi collector for mpich2\
-                         MPI when variant is enabled.")
-    variant('mpich', default=False,
-            description="Build mpi collector for mpich\
                          MPI when variant is enabled.")
 
     depends_on("cmake@3.0.2:", type='build')
@@ -88,7 +82,7 @@ class OpenspeedshopUtils(CMakePackage):
     # For boost
     depends_on("boost@1.66.0:1.69.0")
 
-    depends_on("dyninst@develop", when='@develop')
+    depends_on("dyninst@master", when='@develop')
     depends_on("dyninst@10:", when='@2.4.0:9999')
 
     depends_on("python@2.7.14:2.7", type=('build', 'run'))
@@ -105,17 +99,11 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
-
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpich2', when='@2.4.0:9999+mpich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mpt', when='@2.4.0:9999+mpt', type=('build', 'link', 'run'))
-
-    depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.3:9999+mvapich', when='@2.4.0:9999+mvapich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
     depends_on('cbtf-krell@1.9.3:9999+mvapich2', when='@2.4.0:9999+mvapich2', type=('build', 'link', 'run'))

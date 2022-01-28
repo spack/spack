@@ -1,18 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import json
 import os
 import platform
 import re
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -25,18 +28,23 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ['adamjstewart', 'skosukhin']
+    maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
 
+    version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
+    version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
+    version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
     version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
     version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
     version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
+    version('3.9.3',  sha256='3afeb61a45b5a2e6f1c0f621bd8cf925a4ff406099fdb3d8c97b993a5f43d048')
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a', preferred=True)
+    version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a')
     version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
     version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
     version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
@@ -62,49 +70,49 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
-    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043')
-    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5')
-    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
-    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
-    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
-    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
-    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
-    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
-    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
-    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
-    version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6')
-    version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486')
-    version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91')
-    version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
-    version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
-    version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
-    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a')
-    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1')
-    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
-    version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
-    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8')
-    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5')
-    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44')
-    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a')
-    version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
-    version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
-    version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
-    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d')
-    version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
-    version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
-    version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
-    version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
-    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
-    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
-    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
-    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
-    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
-    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1')
-    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6')
-    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6')
-    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a')
-    version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b')
-    version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
+    version('3.6.15', sha256='54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043', deprecated=True)
+    version('3.6.14', sha256='70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5', deprecated=True)
+    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669', deprecated=True)
+    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693', deprecated=True)
+    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c', deprecated=True)
+    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d', deprecated=True)
+    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa', deprecated=True)
+    version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0', deprecated=True)
+    version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239', deprecated=True)
+    version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58', deprecated=True)
+    version('3.6.5',  sha256='53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6', deprecated=True)
+    version('3.6.4',  sha256='7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486', deprecated=True)
+    version('3.6.3',  sha256='ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91', deprecated=True)
+    version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82', deprecated=True)
+    version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828', deprecated=True)
+    version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b', deprecated=True)
+    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a', deprecated=True)
+    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1', deprecated=True)
+    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a', deprecated=True)
+    version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b', deprecated=True)
+    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8', deprecated=True)
+    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5', deprecated=True)
+    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44', deprecated=True)
+    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a', deprecated=True)
+    version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0', deprecated=True)
+    version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7', deprecated=True)
+    version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0', deprecated=True)
+    version('3.4.10', sha256='217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d', deprecated=True)
+    version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147', deprecated=True)
+    version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034', deprecated=True)
+    version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e', deprecated=True)
+    version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103', deprecated=True)
+    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814', deprecated=True)
+    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde', deprecated=True)
+    version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5', deprecated=True)
+    version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db', deprecated=True)
+    version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8', deprecated=True)
+    version('2.7.13', sha256='a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1', deprecated=True)
+    version('2.7.12', sha256='3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6', deprecated=True)
+    version('2.7.11', sha256='82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6', deprecated=True)
+    version('2.7.10', sha256='eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a', deprecated=True)
+    version('2.7.9',  sha256='c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b', deprecated=True)
+    version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557', deprecated=True)
 
     extendable = True
 
@@ -151,12 +159,13 @@ class Python(AutotoolsPackage):
     variant('nis',      default=False, description='Build nis module')
     variant('zlib',     default=True,  description='Build zlib module')
     variant('bz2',      default=True,  description='Build bz2 module')
-    variant('lzma',     default=True,  description='Build lzma module')
+    variant('lzma',     default=True,  description='Build lzma module', when='@3.3:')
     variant('pyexpat',  default=True,  description='Build pyexpat module')
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
+    variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('gettext +libxml2', when='+libxml2')
@@ -207,7 +216,8 @@ class Python(AutotoolsPackage):
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
-    patch('tkinter-3.8.patch', when='@3.8: ~tkinter')
+    patch('tkinter-3.8.patch', when='@3.8:3.9 ~tkinter')
+    patch('tkinter-3.10.patch', when='@3.10: ~tkinter')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
@@ -267,8 +277,15 @@ class Python(AutotoolsPackage):
         python = Executable(exes[0])
 
         variants = ''
+        for exe in exes:
+            if os.path.basename(exe) == 'python':
+                variants += '+pythoncmd'
+                break
+        else:
+            variants += '~pythoncmd'
+
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
-                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+                       'zlib', 'bz2', 'ctypes', 'uuid']:
             try:
                 python('-c', 'import ' + module, error=os.devnull)
                 variants += '+' + module
@@ -290,7 +307,23 @@ class Python(AutotoolsPackage):
         except ProcessError:
             variants += '~pyexpat'
 
-        # Some modules changed names in Python 3
+        # Some modules are version-dependent
+        if Version(version_str) >= Version('3.3'):
+            try:
+                python('-c', 'import lzma', error=os.devnull)
+                variants += '+lzma'
+            except ProcessError:
+                variants += '~lzma'
+
+        if Version(version_str) in ver('2.7.9:2,3.4:'):
+            # The ensurepip module is always available, but won't work if built with
+            # --without-ensurepip. A more reliable check to see if the package was built
+            # with --with-ensurepip is to check for the presence of a pip executable.
+            if glob.glob(os.path.join(os.path.dirname(exes[0]), 'pip*')):
+                variants += '+ensurepip'
+            else:
+                variants += '~ensurepip'
+
         if Version(version_str) >= Version('3'):
             try:
                 python('-c', 'import tkinter', error=os.devnull)
@@ -459,8 +492,11 @@ class Python(AutotoolsPackage):
                 raise ValueError(
                     '+ucs4 variant not compatible with Python 3.3 and beyond')
 
-        if spec.satisfies('@3:'):
-            config_args.append('--without-ensurepip')
+        if spec.satisfies('@2.7.9:2,3.4:'):
+            if '+ensurepip' in spec:
+                config_args.append('--with-ensurepip=install')
+            else:
+                config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -495,7 +531,7 @@ class Python(AutotoolsPackage):
             ])
 
         # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies('@3.2: +sqlite3'):
+        if spec.satisfies('@3.2: +sqlite3 ^sqlite+dynamic_extensions'):
             config_args.append('--enable-loadable-sqlite-extensions')
 
         if spec.satisfies('%oneapi'):
@@ -637,6 +673,10 @@ class Python(AutotoolsPackage):
                 else:
                     self.command('-c', 'import Tix')
 
+            # Ensure that ensurepip module works
+            if '+ensurepip' in spec:
+                self.command('-c', 'import ensurepip')
+
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -702,50 +742,80 @@ class Python(AutotoolsPackage):
     def config_vars(self):
         """Return a set of variable definitions associated with a Python installation.
 
-        Wrapper around various ``distutils.sysconfig`` functions.
+        Wrapper around various ``sysconfig`` functions. To see these variables on the
+        command line, run:
+
+        .. code-block:: console
+
+           $ python -m sysconfig
 
         Returns:
             dict: variable definitions
         """
-        # TODO: distutils is deprecated in Python 3.10 and will be removed in
-        # Python 3.12, find a different way to access this information.
-        # Also, calling the python executable disallows us from cross-compiling,
-        # so we want to try to avoid that if possible.
         cmd = """
 import json
-from distutils.sysconfig import (
+from sysconfig import (
     get_config_vars,
     get_config_h_filename,
     get_makefile_filename,
-    get_python_inc,
-    get_python_lib,
+    get_paths,
 )
 
 config = get_config_vars()
 config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
-config['python_inc'] = {}
-config['python_lib'] = {}
-
-for plat_specific in [True, False]:
-    plat_key = str(plat_specific).lower()
-    config['python_inc'][plat_key] = get_python_inc(plat_specific, prefix='')
-    config['python_lib'][plat_key] = {}
-    for standard_lib in [True, False]:
-        lib_key = str(standard_lib).lower()
-        config['python_lib'][plat_key][lib_key] = get_python_lib(
-            plat_specific, standard_lib, prefix=''
-        )
+config.update(get_paths())
 
 %s
 """ % self.print_string("json.dumps(config)")
 
         dag_hash = self.spec.dag_hash()
+
         if dag_hash not in self._config_vars:
+            # Default config vars
+            version = self.version.up_to(2)
+            config = {
+                # get_config_vars
+                'CC': 'cc',
+                'CXX': 'c++',
+                'INCLUDEPY': self.prefix.include.join('python{}').format(version),
+                'LIBDEST': self.prefix.lib.join('python{}').format(version),
+                'LIBDIR': self.prefix.lib,
+                'LIBPL': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').format(version, sys.platform),
+                'LDLIBRARY': 'libpython{}.{}'.format(version, dso_suffix),
+                'LIBRARY': 'libpython{}.a'.format(version),
+                'LDSHARED': 'cc',
+                'LDCXXSHARED': 'c++',
+                'PYTHONFRAMEWORKPREFIX': '/System/Library/Frameworks',
+                'base': self.prefix,
+                'installed_base': self.prefix,
+                'installed_platbase': self.prefix,
+                'platbase': self.prefix,
+                'prefix': self.prefix,
+                # get_config_h_filename
+                'config_h_filename': self.prefix.include.join('python{}').join(
+                    'pyconfig.h').format(version),
+                # get_makefile_filename
+                'makefile_filename': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').Makefile.format(version, sys.platform),
+                # get_paths
+                'data': self.prefix,
+                'include': self.prefix.include.join('python{}'.format(version)),
+                'platinclude': self.prefix.include64.join('python{}'.format(version)),
+                'platlib': self.prefix.lib64.join(
+                    'python{}'.format(version)).join('site-packages'),
+                'platstdlib': self.prefix.lib64.join('python{}'.format(version)),
+                'purelib': self.prefix.lib.join(
+                    'python{}'.format(version)).join('site-packages'),
+                'scripts': self.prefix.bin,
+                'stdlib': self.prefix.lib.join('python{}'.format(version)),
+            }
+
             try:
-                config = json.loads(self.command('-c', cmd, output=str))
+                config.update(json.loads(self.command('-c', cmd, output=str)))
             except (ProcessError, RuntimeError):
-                config = {}
+                pass
             self._config_vars[dag_hash] = config
         return self._config_vars[dag_hash]
 
@@ -773,14 +843,9 @@ for plat_specific in [True, False]:
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed. Fall back on
-        ``spec['python'].prefix`` if that doesn't work."""
-
-        if 'prefix' in self.config_vars:
-            prefix = self.config_vars['prefix']
-        else:
-            prefix = self.prefix
-        return Prefix(prefix)
+        determine exactly where it is installed.
+        """
+        return Prefix(self.config_vars['prefix'])
 
     @property
     def libs(self):
@@ -835,14 +900,9 @@ for plat_specific in [True, False]:
 
     @property
     def headers(self):
-        if 'config_h_filename' in self.config_vars:
-            config_h = self.config_vars['config_h_filename']
+        config_h = self.config_vars['config_h_filename']
 
-            if not os.path.exists(config_h):
-                includepy = self.config_vars['INCLUDEPY']
-                msg = 'Unable to locate {0} headers in {1}'
-                raise RuntimeError(msg.format(self.name, includepy))
-
+        if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
             headers = find_headers(
@@ -852,80 +912,68 @@ for plat_specific in [True, False]:
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
+    # https://docs.python.org/3/library/sysconfig.html#installation-paths
+
     @property
-    def python_include_dir(self):
-        """Directory for the include files.
+    def platlib(self):
+        """Directory for site-specific, platform-specific files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/OS/Python version. Examples include:
 
-            ``include/pythonX.Y``
-
-        However, some systems append a ``m`` to the end of this path.
+        * ``lib/pythonX.Y/site-packages`` on most POSIX systems
+        * ``lib64/pythonX.Y/site-packages`` on RHEL/CentOS/Fedora with system Python
+        * ``lib/pythonX/dist-packages`` on Debian/Ubuntu with system Python
+        * ``lib/python/site-packages`` on macOS with framework Python
+        * ``Lib/site-packages`` on Windows
 
         Returns:
-            str: include files directory
+            str: platform-specific site-packages directory
         """
-        try:
-            return self.config_vars['python_inc']['false']
-        except KeyError:
-            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['platlib'].replace(
+            self.config_vars['platbase'] + os.sep, ''
+        )
 
     @property
-    def python_lib_dir(self):
-        """Directory for the standard library.
+    def purelib(self):
+        """Directory for site-specific, non-platform-specific files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/OS/Python version. Examples include:
 
-            ``lib/pythonX.Y``
-
-        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
-
-            ``lib64/pythonX.Y``
-
-        On Debian/Ubuntu, when using the system Python, this will look like:
-
-            ``lib/pythonX``
+        * ``lib/pythonX.Y/site-packages`` on most POSIX systems
+        * ``lib/pythonX/dist-packages`` on Debian/Ubuntu with system Python
+        * ``lib/python/site-packages`` on macOS with framework Python
+        * ``Lib/site-packages`` on Windows
 
         Returns:
-            str: standard library directory
+            str: platform-independent site-packages directory
         """
-        try:
-            return self.config_vars['python_lib']['false']['true']
-        except KeyError:
-            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['purelib'].replace(
+            self.config_vars['base'] + os.sep, ''
+        )
 
     @property
-    def site_packages_dir(self):
-        """Directory where third-party extensions should be installed.
+    def include(self):
+        """Directory for non-platform-specific header files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/Python version/ABI flags. Examples include:
 
-            ``lib/pythonX.Y/site-packages``
-
-        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
-
-            ``lib64/pythonX.Y/site-packages``
-
-        On Debian/Ubuntu, when using the system Python, this will look like:
-
-            ``lib/pythonX/dist-packages``
+        * ``include/pythonX.Y`` on most POSIX systems
+        * ``include/pythonX.Yd`` for debug builds
+        * ``include/pythonX.Ym`` for malloc builds
+        * ``include/pythonX.Yu`` for wide unicode builds
+        * ``include`` on macOS with framework Python
+        * ``Include`` on Windows
 
         Returns:
-            str: site-packages directory
+            str: platform-independent header file directory
         """
-        try:
-            return self.config_vars['python_lib']['true']['false']
-        except KeyError:
-            return self.default_site_packages_dir
-
-    @property
-    def default_site_packages_dir(self):
-        python_dir = 'python{0}'.format(self.version.up_to(2))
-        return os.path.join('lib', python_dir, 'site-packages')
+        return self.config_vars['include'].replace(
+            self.config_vars['installed_base'] + os.sep, ''
+        )
 
     @property
     def easy_install_file(self):
-        return join_path(self.site_packages_dir, "easy-install.pth")
+        return join_path(self.purelib, "easy-install.pth")
 
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', os.pathsep.join(
@@ -945,10 +993,28 @@ for plat_specific in [True, False]:
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
-        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
-            if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, self.site_packages_dir))
+        # Add installation prefix to PYTHONPATH, needed to run import tests
+        prefixes = set()
+        if dependent_spec.package.extends(self.spec):
+            prefixes.add(dependent_spec.prefix)
+
+        # Add direct build/run/test dependencies to PYTHONPATH,
+        # needed to build the package and to run import tests
+        for direct_dep in dependent_spec.dependencies(deptype=('build', 'run', 'test')):
+            if direct_dep.package.extends(self.spec):
+                prefixes.add(direct_dep.prefix)
+
+                # Add recursive run dependencies of all direct dependencies,
+                # needed by direct dependencies at run-time
+                for indirect_dep in direct_dep.traverse(deptype='run'):
+                    if indirect_dep.package.extends(self.spec):
+                        prefixes.add(indirect_dep.prefix)
+
+        for prefix in prefixes:
+            # Packages may be installed in platform-specific or platform-independent
+            # site-packages directories
+            for directory in {self.platlib, self.purelib}:
+                env.prepend_path('PYTHONPATH', os.path.join(prefix, directory))
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -1011,29 +1077,27 @@ for plat_specific in [True, False]:
         """
         for d in dependent_spec.traverse(deptype=('run'), root=True):
             if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, self.site_packages_dir))
+                # Packages may be installed in platform-specific or platform-independent
+                # site-packages directories
+                for directory in {self.platlib, self.purelib}:
+                    env.prepend_path(
+                        'PYTHONPATH', os.path.join(d.prefix, directory)
+                    )
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
 
         module.python = self.command
-        module.setup_py = Executable(
-            self.command.path + ' setup.py --no-user-cfg')
 
-        # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = join_path(dependent_spec.prefix,
-                                          self.python_lib_dir)
-        module.python_include_dir = join_path(dependent_spec.prefix,
-                                              self.python_include_dir)
-        module.site_packages_dir = join_path(dependent_spec.prefix,
-                                             self.site_packages_dir)
+        module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
+        module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
         self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
-            mkdirp(module.site_packages_dir)
+            mkdirp(module.python_platlib)
+            mkdirp(module.python_purelib)
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.

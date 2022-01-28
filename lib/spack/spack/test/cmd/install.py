@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1099,3 +1099,15 @@ def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
         add('depb')
         install('--test', 'root')
         assert not os.path.exists(test_dep.prefix)
+
+
+def test_install_empty_env(tmpdir, mock_packages, mock_fetch,
+                           install_mockery, mutable_mock_env_path):
+    env_name = 'empty'
+    env('create', env_name)
+    with ev.read(env_name):
+        out = install(fail_on_error=False)
+
+    assert env_name in out
+    assert 'environment' in out
+    assert 'no specs to install' in out

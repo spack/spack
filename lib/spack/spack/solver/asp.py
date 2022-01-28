@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,15 @@ from six import string_types
 
 import archspec.cpu
 
+from llnl.util.compat import Sequence
+
 try:
-    import clingo
+    import clingo  # type: ignore[import]
 
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
-    clingo = None  # type: ignore
+    clingo = None
     clingo_cffi = False
 
 import llnl.util.lang
@@ -49,14 +51,17 @@ import spack.util.timer
 import spack.variant
 import spack.version
 
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
 # these are from clingo.ast and bootstrapped later
 ASTType = None
 parse_files = None
+
+
+#: whether we should write ASP unsat cores quickly in debug mode when the cores
+#: may be very large or take the time (sometimes hours) to minimize them
+minimize_cores = True
+
+#: whether we should include all facts in the unsat cores or only error messages
+full_cores = False
 
 
 # backward compatibility functions for clingo ASTs
@@ -393,10 +398,12 @@ class Result(object):
         if len(constraints) == 1:
             constraints = constraints[0]
 
-        debug = spack.config.get('config:debug', False)
-        conflicts = self.format_cores() if debug else self.format_minimal_cores()
+        if minimize_cores:
+            conflicts = self.format_minimal_cores()
+        else:
+            conflicts = self.format_cores()
 
-        raise spack.error.UnsatisfiableSpecError(constraints, conflicts=conflicts)
+        raise UnsatisfiableSpecError(constraints, conflicts=conflicts)
 
     @property
     def specs(self):
@@ -512,10 +519,9 @@ class PyclingoDriver(object):
 
         atom = self.backend.add_atom(symbol)
 
-        # in debug mode, make all facts choices/assumptions
-        # otherwise, only if we're generating cores and assumption=True
-        debug = spack.config.get('config:debug', False)
-        choice = debug or (self.cores and assumption)
+        # with `--show-cores=full or --show-cores=minimized, make all facts
+        # choices/assumptions, otherwise only if assumption=True
+        choice = self.cores and (full_cores or assumption)
 
         self.backend.add_rule([atom], [], choice=choice)
         if choice:
@@ -2044,3 +2050,33 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
     return driver.solve(
         setup, specs, dump, models, timers, stats, tests, reuse
     )
+
+
+class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
+    """
+    Subclass for new constructor signature for new concretizer
+    """
+    def __init__(self, provided, conflicts):
+        indented = ['  %s\n' % conflict for conflict in conflicts]
+        conflict_msg = ''.join(indented)
+        issue = 'conflicts' if full_cores else 'errors'
+        msg = '%s is unsatisfiable, %s are:\n%s' % (provided, issue, conflict_msg)
+
+        newline_indent = '\n    '
+        if not full_cores:
+            msg += newline_indent + 'To see full clingo unsat cores, '
+            msg += 're-run with `spack --show-cores=full`'
+        if not minimize_cores or not full_cores:
+            # not solver.minimalize_cores and not solver.full_cores impossible
+            msg += newline_indent + 'For full, subset-minimal unsat cores, '
+            msg += 're-run with `spack --show-cores=minimized'
+            msg += newline_indent
+            msg += 'Warning: This may take (up to) hours for some specs'
+
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+
+        self.provided = provided
+
+        # Add attribute expected of the superclass interface
+        self.required = None
+        self.constraint_type = None

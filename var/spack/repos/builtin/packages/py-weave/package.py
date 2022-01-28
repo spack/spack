@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class PyWeave(PythonPackage):
     homepage = "https://www.github.com/scipy/weave"
     pypi = "weave/weave-0.17.0.tar.gz"
 
-    version('0.17.0', sha256='2703f3ae6d23ad47b5f09b6bcb7affd0fb587120a0c973e7be40ef24de709998')
+    version('0.17.0', sha256='2703f3ae6d23ad47b5f09b6bcb7affd0fb587120a0c973e7be40ef24de709998', deprecated=True)
 
     depends_on('python@2.6:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

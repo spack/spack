@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,9 @@ class PyHatchet(PythonPackage):
     version('1.0.1', sha256='e5a4b455ab6bfbccbce3260673d9af8d1e4b21e19a2b6d0b6c1e1d7727613b7a')
     version('1.0.0', sha256='efd218bc9152abde0a8006489a2c432742f00283a114c1eeb6d25abc10f5862d')
 
-    depends_on('python@2.7,3:', type=('build', 'run'))
+    # https://github.com/hatchet/hatchet/issues/428
+    depends_on('python@2.7:3.8', when='@:1.3.0', type=('build', 'run'))
+    depends_on('python@2.7:', when='@1.3.1:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
     depends_on('py-matplotlib', type=('build', 'run'))

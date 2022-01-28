@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2943,7 +2943,7 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-+-------------------------=--------------------------------+----------------------------------+
++----------------------------------------------------------+----------------------------------+
 |     **Base Class**                                       |           **Purpose**            |
 +==========================================================+==================================+
 | :class:`~spack.package.Package`                          | General base class not           |

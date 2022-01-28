@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Alps(CMakePackage):
     homepage = "https://alps.comp-phys.org"
     url      = "https://alps.comp-phys.org/static/software/releases/alps-2.3.0-src.tar.gz"
 
-    version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
+    version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2', deprecated=True)
 
     # Refs for building from source and recipes
     # https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source

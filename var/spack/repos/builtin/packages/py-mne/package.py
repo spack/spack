@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,8 +25,6 @@ class PyMne(PythonPackage):
     depends_on('py-numpy@1.11.3:', type=('build', 'run'))
     depends_on('py-scipy@1.1.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-scipy@0.17.1:', type=('build', 'run'))
-
-    depends_on('py-tqdm', type='test')
 
     with when('+full'):
         # requirements.txt with versions specified in README.rst (marked with *)

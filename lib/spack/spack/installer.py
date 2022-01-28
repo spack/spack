@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -648,6 +648,49 @@ class TermTitle(object):
         sys.stdout.flush()
 
 
+class TermStatusLine(object):
+    """
+    This class is used in distributed builds to inform the user that other packages are
+    being installed by another process.
+    """
+    def __init__(self, enabled):
+        self.enabled = enabled
+        self.pkg_set = set()
+        self.pkg_list = []
+
+    def add(self, pkg_id):
+        """
+        Add a package to the waiting list, and if it is new, update the status line.
+        """
+        if not self.enabled or pkg_id in self.pkg_set:
+            return
+
+        self.pkg_set.add(pkg_id)
+        self.pkg_list.append(pkg_id)
+        tty.msg(colorize('@*{Waiting for} @*g{%s}' % pkg_id))
+        sys.stdout.flush()
+
+    def clear(self):
+        """
+        Clear the status line.
+        """
+        if not self.enabled:
+            return
+
+        lines = len(self.pkg_list)
+
+        if lines == 0:
+            return
+
+        self.pkg_set.clear()
+        self.pkg_list.clear()
+
+        # Move the cursor to the beginning of the first "Waiting for" message and clear
+        # everything after it.
+        sys.stdout.write('\x1b[%sF\x1b[J' % lines)
+        sys.stdout.flush()
+
+
 class PackageInstaller(object):
     '''
     Class for managing the install process for a Spack instance based on a
@@ -794,10 +837,10 @@ class PackageInstaller(object):
                     .format(dep_id, action)
                 raise InstallError(err.format(request.pkg_id, msg))
 
-            # Attempt to get a write lock to ensure another process does not
+            # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
             # installed
-            ltype, lock = self._ensure_locked('write', dep_pkg)
+            ltype, lock = self._ensure_locked('read', dep_pkg)
             if lock is None:
                 msg = '{0} is write locked by another process'.format(dep_id)
                 raise InstallError(err.format(request.pkg_id, msg))
@@ -816,6 +859,8 @@ class PackageInstaller(object):
                 tty.debug('Flagging {0} as installed per the database'
                           .format(dep_id))
                 self._flag_installed(dep_pkg)
+            else:
+                lock.release_read()
 
     def _prepare_for_install(self, task):
         """
@@ -1027,7 +1072,7 @@ class PackageInstaller(object):
         except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
             tty.debug(err.format(op, desc, pkg_id, exc.__class__.__name__,
                                  str(exc)))
-            lock = None
+            return (lock_type, None)
 
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             tty.error(err.format(op, desc, pkg_id, exc.__class__.__name__,
@@ -1198,6 +1243,7 @@ class PackageInstaller(object):
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
+            spack.hooks.on_install_failure(task.request.pkg.spec)
             pid = '{0}: '.format(self.pid) if tty.show_pid() else ''
             tty.debug('{0}{1}'.format(pid, str(e)))
             tty.debug('Package stage directory: {0}' .format(pkg.stage.source_path))
@@ -1497,6 +1543,10 @@ class PackageInstaller(object):
 
         term_title = TermTitle(len(self.build_pq))
 
+        # Only enable the terminal status line when we're in a tty without debug info
+        # enabled, so that the output does not get cluttered.
+        term_status = TermStatusLine(enabled=sys.stdout.isatty() and not tty.is_debug())
+
         while self.build_pq:
             term_title.next_pkg()
 
@@ -1520,6 +1570,7 @@ class PackageInstaller(object):
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
             if task.priority != 0:
+                term_status.clear()
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
                 left = [dep_id for dep_id in task.uninstalled_deps if
@@ -1542,12 +1593,14 @@ class PackageInstaller(object):
             # some package likely depends on it.
             if not task.explicit:
                 if _handle_external_and_upstream(pkg, False):
+                    term_status.clear()
                     self._flag_installed(pkg, task.dependents)
                     continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
+                term_status.clear()
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
 
@@ -1566,6 +1619,7 @@ class PackageInstaller(object):
             # determined the spec has already been installed (though the
             # other process may be hung).
             term_title.set('Acquiring lock for {0}'.format(pkg.name))
+            term_status.add(pkg_id)
             ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
@@ -1579,6 +1633,8 @@ class PackageInstaller(object):
             if lock is None:
                 self._requeue_task(task)
                 continue
+
+            term_status.clear()
 
             # Take a timestamp with the overwrite argument to allow checking
             # whether another process has already overridden the package.
@@ -1626,6 +1682,7 @@ class PackageInstaller(object):
             # established by the other process -- failed, installed, or
             # uninstalled -- on the next pass.
             if ltype == 'read':
+                lock.release_read()
                 self._requeue_task(task)
                 continue
 
@@ -1654,7 +1711,7 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
-                spack.hooks.on_install_failure(task.request.pkg.spec)
+                spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
@@ -1918,6 +1975,9 @@ class BuildProcessInstaller(object):
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
                     spack.hooks.on_phase_error(pkg, phase_name, log_file)
+
+                    # phase error indicates install error
+                    spack.hooks.on_install_failure(pkg.spec)
                     raise
 
                 # We assume loggers share echo True/False

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class PyCython(PythonPackage):
     version('0.25.2',  sha256='f141d1f9c27a07b5a93f7dc5339472067e2d7140d1c5a9e20112a5665ca60306')
     version('0.23.5',  sha256='0ae5a5451a190e03ee36922c4189ca2c88d1df40a89b4f224bc842d388a0d1b6')
     version('0.23.4',  sha256='fec42fecee35d6cc02887f1eef4e4952c97402ed2800bfe41bbd9ed1a0730d8e')
-    version('0.21.2',  sha256='b01af23102143515e6138a4d5e185c2cfa588e0df61c0827de4257bac3393679')
+    version('0.21.2',  sha256='b01af23102143515e6138a4d5e185c2cfa588e0df61c0827de4257bac3393679', deprecated=True)
 
     depends_on('python@2.7:2,3.4:', when='@3:', type=('build', 'link', 'run'))
     depends_on('python@2.6:2,3.3:', when='@0.23:', type=('build', 'link', 'run'))
@@ -45,7 +45,7 @@ class PyCython(PythonPackage):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         # Warning: full suite of unit tests takes a very long time

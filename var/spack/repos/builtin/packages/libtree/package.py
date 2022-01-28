@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,8 @@ class Libtree(MakefilePackage):
     maintainers = ['haampie']
 
     version('master', branch='master')
-    version('3.0.0-rc9', sha256='6956c51d58a4f43a23fea0fe7fc5141034829058bfc434e089c9ef1d1848229a')
+    version('3.0.1', sha256='20d3cd66f5c74058de9dd594af8ffd639c795d27ab435c588a3cd43911c1604f')
+    version('3.0.0', sha256='6f7b069a8e5d86741e18a4c8a7e835ac530ae012dfc9509e00ffa694aa6818b1')
     version('2.0.0', sha256='099e85d8ba3c3d849ce05b8ba2791dd25cd042a813be947fb321b0676ef71883')
     version('1.2.3', sha256='4a912cf97109219fe931942a30579336b6ab9865395447bd157bbfa74bf4e8cf')
     version('1.2.2', sha256='4ccf09227609869b85a170550b636defcf0b0674ecb0785063b81785b1c29bdd')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PySpyder(PythonPackage):
     version('3.1.3', sha256='4978872cc5a006803bc8742d0a8fb43c49aef9524f0a9fcb8bd6dfcfdc2d2d6a')
 
     depends_on('python@2.7.0:2.8.0,3.3.0:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-rope@0.9.4:',      type=('build', 'run'), when='^python@:3')
     # depends_on('py-rope_py3k',    type=('build', 'run'), when='^python@3:')
     depends_on('py-jedi@0.9.0',       type=('build', 'run'))

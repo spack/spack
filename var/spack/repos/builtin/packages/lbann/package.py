@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,7 +106,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@0.103:')
+    depends_on('cmake@3.17.0:', type='build', when='@:0.102')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')

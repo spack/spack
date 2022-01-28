@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import tempfile
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -344,13 +345,13 @@ class DirectoryLayout(object):
                     os.unlink(path)
                     os.remove(metapath)
                 except OSError as e:
-                    raise RemoveFailedError(spec, path, e)
+                    raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
             except OSError as e:
-                raise RemoveFailedError(spec, path, e)
+                raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
         path = os.path.dirname(path)
         while path != self.root:

@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -669,6 +669,13 @@ This hook is run given an install failure that happens outside of the build
 subprocess, but somewhere in ``installer.py`` when something else goes wrong.
 If you need to write a hook that is relevant to a failure within a build
 process, you would want to instead use ``on_phase_failure``.
+
+
+"""""""""""""""""""""""""""
+``on_install_cancel(spec)``
+"""""""""""""""""""""""""""
+
+The same, but triggered if a spec install is cancelled for any reason.
 
 
 """""""""""""""""""""""""""""""""""""""""""""""
