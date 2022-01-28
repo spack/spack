@@ -159,7 +159,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         test_dir = self.test_suite.current_test_data_dir
 
         if not os.path.isfile(join_path(test_dir, 'hello.c')):
-            tty.msg('Skipping slepc test: failed to find hello.c')
+            tty.warn('Skipping slepc test: failed to find hello.c')
             return
 
         exe = 'hello'
