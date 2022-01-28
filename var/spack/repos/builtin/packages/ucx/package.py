@@ -81,6 +81,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description="Compile with Device Memory support")
     variant('cm', default=False,
             description="Compile with IB Connection Manager support")
+    variant('backtrace-detail', default=False,
+            description="Enable using BFD support for detailed backtrace")
 
     depends_on('numactl')
     depends_on('rdma-core')
@@ -96,6 +98,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
     depends_on('binutils+ld', when='%aocc', type='build')
+    depends_on('binutils+ld', when='+backtrace-detail')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -132,6 +135,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
+        config_args.extend(self.enable_or_disable('backtrace-detail'))
         config_args.extend(self.with_or_without('pic'))
         config_args.extend(self.with_or_without('rc'))
         config_args.extend(self.with_or_without('ud'))
