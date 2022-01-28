@@ -463,7 +463,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('ALL_OPTIONAL_PACKAGES', False),
             define_trilinos_enable('ALL_PACKAGES', False),
             define_trilinos_enable('CXX11', True),
-            define('Trilinos_CXX11_FLAGS', ' '),
             define_trilinos_enable('DEBUG', 'debug'),
             define_trilinos_enable('EXAMPLES', False),
             define_trilinos_enable('SECONDARY_TESTED_CODE', True),
@@ -527,6 +526,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
             define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
+
+        if spec.version < Version('13'):
+            # Suppress TriBITS flags in favor of CMake's built-in flags
+            options.append(define('Trilinos_CXX11_FLAGS', ' '))
 
         if '+dtk' in spec:
             options.extend([
