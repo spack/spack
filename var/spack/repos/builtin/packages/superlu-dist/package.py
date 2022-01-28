@@ -20,6 +20,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='master')
     version('amd', branch='amd')
+    version('7.2.0', sha256='20b60bd8a3d88031c9ce6511ae9700b7a8dcf12e2fd704e74b1af762b3468b8c')
     version('7.1.1', sha256='558053b3d4a56eb661c4f04d4fcab6604018ce5db97115394c161b56c9c278ff')
     version('7.1.0', sha256='edbea877562be95fb22c7de1ff484f18685bec4baa8e4f703c414d3c035d4a66')
     version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
@@ -58,6 +59,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
     patch('superlu-cray-ftn-case.patch', when='@7.1.1 %cce')
+    patch('CMAKE_INSTALL_LIBDIR.patch', when='@7.0.0:7.2.0')
 
     def cmake_args(self):
         spec = self.spec
