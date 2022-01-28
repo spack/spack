@@ -37,8 +37,6 @@ Here is an example ``config.yaml`` file:
 
    config:
      install_tree: $spack/opt/spack
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
@@ -253,8 +251,6 @@ your configurations look like this:
 
    config:
      install_tree: $spack/opt/spack
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
@@ -278,8 +274,6 @@ command:
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - $tempdir/$user/spack-stage
        - ~/.spack/stage
@@ -350,8 +344,6 @@ get config`` shows the result:
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage
@@ -380,8 +372,6 @@ The merged configuration would look like this:
    $ spack config get config
    config:
      install_tree: /some/other/directory
-     module_roots:
-       lmod: $spack/share/spack/lmod
      build_stage:
        - /lustre-scratch/$user/spack
        - ~/mystage
@@ -502,9 +492,6 @@ account all scopes. For example, to see the fully merged
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
-     module_roots:
-       tcl: $spack/share/spack/modules
-       lmod: $spack/share/spack/lmod
      build_stage:
      - $tempdir/$user/spack-stage
      - ~/.spack/stage
@@ -552,9 +539,6 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
    /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
-   /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
-   /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
-   /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
