@@ -260,7 +260,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=11', when='@13:')
     conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
@@ -456,7 +456,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options.extend([
             define('Trilinos_VERBOSE_CONFIGURE', False),
             define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             define_trilinos_enable('ALL_OPTIONAL_PACKAGES', False),
             define_trilinos_enable('ALL_PACKAGES', False),
             define_trilinos_enable('CXX11', True),
@@ -469,6 +468,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('EXPLICIT_INSTANTIATION',
                                    'explicit_template_instantiation')
         ])
+
+        if spec.version >= Version('13'):
+            options.append(define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            # Prior to version 13, Trilinos would erroneously inject
+            # '-std=c++11' regardless of CMAKE_CXX_STANDARD value
+            options.append(define(
+                'Trilinos_CXX11_FLAGS',
+                self.compiler.cxx14_flag
+                if spec.variants['cxxstd'].value == '14'
+                else self.compiler.cxx11_flag
+            ))
 
         # ################## Trilinos Packages #####################
 
@@ -523,10 +534,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
             define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
-
-        if spec.version < Version('13'):
-            # Suppress TriBITS flags in favor of CMake's built-in flags
-            options.append(define('Trilinos_CXX11_FLAGS', ' '))
 
         if '+dtk' in spec:
             options.extend([
