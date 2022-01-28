@@ -52,8 +52,8 @@ for further documentation regarding the spec syntax, see:
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
     subparser.add_argument(
-        '--hash-type', default="build_hash",
-        choices=['build_hash', 'full_hash', 'dag_hash'],
+        '--hash-type', default="dag_hash",
+        choices=['runtime_hash', 'dag_hash'],
         help='generate spec with a particular hash type.')
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,

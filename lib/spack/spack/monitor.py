@@ -132,7 +132,7 @@ class SpackMonitorClient:
         self.tags = tags
         self.save_local = save_local
 
-        # We keey lookup of build_id by full_hash
+        # We keey lookup of build_id by dag_hash
         self.build_ids = {}
         self.setup_save()
 
@@ -412,7 +412,7 @@ class SpackMonitorClient:
                 spec.concretize()
 
             # Remove extra level of nesting
-            as_dict = {"spec": spec.to_dict(hash=ht.full_hash)['spec'],
+            as_dict = {"spec": spec.to_dict(hash=ht.dag_hash)['spec'],
                        "spack_version": self.spack_version}
 
             if self.save_local:
@@ -437,7 +437,7 @@ class SpackMonitorClient:
             meta = spec.to_dict()['spec']
             nodes = []
             for node in meta.get("nodes", []):
-                for hashtype in ["build_hash", "full_hash"]:
+                for hashtype in ["hash", "runtime_hash"]:
                     node[hashtype] = "FAILED_CONCRETIZATION"
                 nodes.append(node)
             meta['nodes'] = nodes
@@ -470,13 +470,13 @@ class SpackMonitorClient:
         """
         Retrieve a build id, either in the local cache, or query the server.
         """
-        full_hash = spec.full_hash()
-        if full_hash in self.build_ids:
-            return self.build_ids[full_hash]
+        dag_hash = spec.dag_hash()
+        if dag_hash in self.build_ids:
+            return self.build_ids[dag_hash]
 
         # Prepare build environment data (including spack version)
         data = self.build_environment.copy()
-        data['full_hash'] = full_hash
+        data['hash'] = dag_hash
 
         # If the build should be tagged, add it
         if self.tags:
@@ -494,10 +494,10 @@ class SpackMonitorClient:
                 data['spec'] = syaml.load(read_file(spec_file))
 
         if self.save_local:
-            return self.get_local_build_id(data, full_hash, return_response)
-        return self.get_server_build_id(data, full_hash, return_response)
+            return self.get_local_build_id(data, dag_hash, return_response)
+        return self.get_server_build_id(data, dag_hash, return_response)
 
-    def get_local_build_id(self, data, full_hash, return_response):
+    def get_local_build_id(self, data, dag_hash, return_response):
         """
         Generate a local build id based on hashing the expected data
         """
@@ -510,15 +510,15 @@ class SpackMonitorClient:
             return response
         return bid
 
-    def get_server_build_id(self, data, full_hash, return_response=False):
+    def get_server_build_id(self, data, dag_hash, return_response=False):
         """
         Retrieve a build id from the spack monitor server
         """
         response = self.do_request("builds/new/", data=sjson.dump(data))
 
         # Add the build id to the lookup
-        bid = self.build_ids[full_hash] = response['data']['build']['build_id']
-        self.build_ids[full_hash] = bid
+        bid = self.build_ids[dag_hash] = response['data']['build']['build_id']
+        self.build_ids[dag_hash] = bid
 
         # If the function is called directly, the user might want output
         if return_response:

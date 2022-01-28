@@ -982,7 +982,7 @@ def create_v1_lockfile_dict(roots, all_specs):
         # Version one lockfiles use the dag hash without build deps as keys,
         # but they write out the full node dict (including build deps)
         "concrete_specs": dict(
-            (s.runtime_hash(), s.to_node_dict(hash=ht.build_hash))
+            (s.runtime_hash(), s.to_node_dict(hash=ht.dag_hash))
             for s in all_specs
         )
     }
@@ -2469,19 +2469,19 @@ spack:
     abspath = tmpdir.join('spack.yaml')
     abspath.write(spack_yaml)
 
-    def extract_build_hash(environment):
+    def extract_dag_hash(environment):
         _, dyninst = next(iter(environment.specs_by_hash.items()))
-        return dyninst['libelf'].build_hash()
+        return dyninst['libelf'].dag_hash()
 
     # Concretize a first time and create a lockfile
     with ev.Environment(str(tmpdir)) as e:
         concretize()
-        libelf_first_hash = extract_build_hash(e)
+        libelf_first_hash = extract_dag_hash(e)
 
     # Check that a second run won't error
     with ev.Environment(str(tmpdir)) as e:
         concretize()
-        libelf_second_hash = extract_build_hash(e)
+        libelf_second_hash = extract_dag_hash(e)
 
     assert libelf_first_hash == libelf_second_hash
 

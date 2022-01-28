@@ -399,7 +399,7 @@ def compute_spec_deps(spec_list, check_index_only=False):
                 continue
 
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, full_hash_match=True, index_only=check_index_only)
+                spec=s, index_only=check_index_only)
 
             skey = spec_deps_key(s)
             spec_labels[skey] = {
@@ -801,7 +801,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     max_needs_job = ''
 
     # If this is configured, spack will fail "spack ci generate" if it
-    # generates any full hash which exists under the broken specs url.
+    # generates any hash which exists under the broken specs url.
     broken_spec_urls = None
     if broken_specs_url:
         if broken_specs_url.startswith('http'):
@@ -829,9 +829,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 root_spec = spec_record['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
-                release_spec_full_hash = release_spec.full_hash()
                 release_spec_dag_hash = release_spec.dag_hash()
-                release_spec_build_hash = release_spec.build_hash()
+                release_spec_runtime_hash = release_spec.runtime_hash()
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
@@ -901,8 +900,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     'SPACK_ROOT_SPEC': format_root_spec(
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_DAG_HASH': release_spec_dag_hash,
-                    'SPACK_JOB_SPEC_BUILD_HASH': release_spec_build_hash,
-                    'SPACK_JOB_SPEC_FULL_HASH': release_spec_full_hash,
+                    'SPACK_JOB_SPEC_RUNTIME_HASH': release_spec_runtime_hash,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action
                 }
@@ -1006,9 +1004,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     continue
 
                 if (broken_spec_urls is not None and
-                        release_spec_full_hash in broken_spec_urls):
+                        release_spec_dag_hash in broken_spec_urls):
                     known_broken_specs_encountered.append('{0} ({1})'.format(
-                        release_spec, release_spec_full_hash))
+                        release_spec, release_spec_dag_hash))
 
                 if artifacts_root:
                     job_dependencies.append({
