@@ -458,6 +458,9 @@ class Paraview(CMakePackage, CudaPackage):
                     raise InstallError("Incompatible cuda_arch=" + requested_arch[0])
 
             cmake_args.append(self.define('VTKm_CUDA_Architecture', cuda_arch_value))
+            if '@3.18:' in spec['cmake']:
+                cmake_args.append(
+                    self.define('CMAKE_CUDA_ARCHITECTURES', requested_arch[0]))
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([

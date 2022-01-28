@@ -186,11 +186,16 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                         vtkm_cuda_arch = gpu_name_table[cuda_arch]
                         options.append('-DVTKm_CUDA_Architecture={0}'.format(
                                        vtkm_cuda_arch))
+                        if spec['cmake'].satisfies('@3.18:'):
+                            options.append(
+                                self.define('CMAKE_CUDA_ARCHITECTURES', cuda_arch))
                 else:
                     # this fix is necessary if compiling platform has cuda, but
                     # no devices (this is common for front end nodes on hpc
                     # clusters). We choose volta as a lowest common denominator
                     options.append("-DVTKm_CUDA_Architecture=volta")
+                    if spec['cmake'].satisfies('@3.18:'):
+                        options.append(self.define('CMAKE_CUDA_ARCHITECTURES', 70))
             else:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
 
