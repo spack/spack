@@ -113,21 +113,23 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         options = []
         if '+arpack' in spec:
-            options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
-            ])
-            if spec.satisfies('@:3.12'):
-                arpackopt = '--with-arpack-flags'
-            else:
-                arpackopt = '--with-arpack-lib'
-
-            if 'arpack-ng~mpi' in spec:
+            if spec.satisfies('@3.15:'):
                 options.extend([
-                    arpackopt + '=-larpack'
+                    '--with-arpack-include=%s' % spec['arpack-ng'].prefix.include,
+                    '--with-arpack-lib=%s' % spec['arpack-ng'].libs.joined()
                 ])
             else:
+                if spec.satisfies('@:3.12'):
+                    arpackopt = '--with-arpack-flags'
+                else:
+                    arpackopt = '--with-arpack-lib'
+                if 'arpack-ng~mpi' in spec:
+                    arpacklib = '-larpack'
+                else:
+                    arpacklib = '-lparpack,-larpack'
                 options.extend([
-                    arpackopt + '=-lparpack,-larpack'
+                    '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
+                    '%s=%s' % (arpackopt, arpacklib)
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
@@ -151,6 +153,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Set up SLEPC_DIR for dependent packages built with SLEPc
         env.set('SLEPC_DIR', self.prefix)
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     def run_hello_test(self):
         """Run stand alone test: hello"""
