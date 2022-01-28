@@ -92,7 +92,7 @@ class Gptune(CMakePackage):
         self.cache_extra_test_sources([self.examples_src_dir])
 
     def setup_run_environment(self, env):
-        env.set('GPTUNE_INSTALL_PATH', site_packages_dir)
+        env.set('GPTUNE_INSTALL_PATH', python_platlib)
 
     def test(self):
         spec = self.spec
@@ -142,7 +142,7 @@ class Gptune(CMakePackage):
             envfile.write('export MPIRUN={0}\n'.format
                           (which(spec['mpi'].prefix.bin + '/mpirun')))
             envfile.write('export PYTHONPATH={0}:$PYTHONPATH\n'.format
-                          (site_packages_dir + '/gptune'))
+                          (python_platlib + '/gptune'))
             envfile.write('export proc=$(spack arch)\n')
             envfile.write('export mpi={0}\n'.format(spec['mpi'].name))
             envfile.write('export compiler={0}\n'.format(comp_name))
@@ -183,7 +183,7 @@ class Gptune(CMakePackage):
                           '{\\\"nodes\\\":$nodes,\\\"cores\\\":$cores}}}") \n')
 
         # copy the environment configuration files to non-cache directories
-        op = ['run_env.sh', site_packages_dir + '/gptune/.']
+        op = ['run_env.sh', python_platlib + '/gptune/.']
         self.run_test('cp', options=op, work_dir=wd)
         op = ['run_env.sh', self.install_test_root + '/.']
         self.run_test('cp', options=op, work_dir=wd)
