@@ -261,6 +261,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts('+adios2', when='@:12.14.1')
     conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -522,6 +523,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
             define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
+
+        if spec.version < Version('13'):
+            # Suppress TriBITS flags in favor of CMake's built-in flags
+            options.append(define('Trilinos_CXX11_FLAGS', ' '))
 
         if '+dtk' in spec:
             options.extend([
