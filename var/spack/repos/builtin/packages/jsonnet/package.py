@@ -23,7 +23,7 @@ class Jsonnet(MakefilePackage):
     conflicts("%gcc@:5.4.99", when="@0.18.0:")
 
     variant("python", default=False, description="Provide Python bindings for jsonnet")
-    depends_on("python", type=("build", "run"), when="+python")
+    extends("python", when="+python")
     depends_on("py-setuptools", type=("build",), when="+python")
     depends_on("py-pip", type=("build",), when="+python")
     depends_on("py-wheel", type=("build",), when="+python")
