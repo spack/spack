@@ -48,6 +48,7 @@ class Brayns(CMakePackage):
     depends_on('opengl', when='+viewer')
     depends_on('ospray', when='+ospray')
     depends_on('spdlog')
+    depends_on('poco', when='@2.0.0:')
 
     depends_on('deflect ~deflect-qt', when='@:1.1.0 +deflect')
     depends_on('assimp@4.1.0', when='@:1.1.0 +assimp')
