@@ -26,8 +26,11 @@ class PyRadicalPilot(PythonPackage):
     version('1.6.8',   sha256='fa8fd3f348a68b54ee8338d5c5cf1a3d99c10c0b6da804424a839239ee0d313d')
     version('1.6.7',   sha256='6ca0a3bd3cda65034fa756f37fa05681d5a43441c1605408a58364f89c627970')
 
-    depends_on('py-radical-utils@1.8.4:', type=('build', 'run'))
-    depends_on('py-radical-saga@1.8.0:',  type=('build', 'run'))
+    depends_on('py-radical-utils',        type=('build', 'run'))
+    depends_on('py-radical-saga',         type=('build', 'run'))
+
+    depends_on('py-radical-utils@1.8.4:', type=('build', 'run'), when='@1.11:')
+    depends_on('py-radical-saga@1.8.0:',  type=('build', 'run'), when='@1.11:')
 
     depends_on('python@3.6:',             type=('build', 'run'))
     depends_on('py-pymongo@:3',           type=('build', 'run'))
