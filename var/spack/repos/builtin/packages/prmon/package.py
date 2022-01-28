@@ -17,7 +17,7 @@ class Prmon(CMakePackage):
     maintainers = ['graeme-a-stewart', 'amete', 'vvolkl']
 
     version("main", branch="main")
-    version('3.0.1', sha256='9b713517bbf7fe8475d216c36085b7d342bc72c7d692bea0baad4456b397c85c')
+    version('3.0.1', sha256='c4eea2849e52e501d42f8e3f837e3f250691f7e7912b7503d6ca0a0e417ea474')
     version('3.0.0', sha256='bf6b27caa61d1fd9d1948b2a0595fa820ffbc58c1a423a7608f267392683f60f')
     version('2.2.1', sha256='d3ff37d5b3d246bd263cb538ad409d026a69742a029eea2f9fe1decebb3e7e78')
     version('2.2.0', sha256='7b3b887c679279f0e666e8c8c58ca1a22a328b8b94ecff09e61795a6a83e8ce5')
