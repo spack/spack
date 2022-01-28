@@ -57,11 +57,7 @@ import spack.util.spack_yaml as syaml
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
-    config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
-        # return old format for backward compatibility
-        return spack.config.get('modules', {})
-    return config
+    return spack.config.get(config_path, {})
 
 
 #: Valid tokens for naming scheme and env variable names
@@ -232,11 +228,6 @@ def root_path(name, module_set_name):
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
-
-    # For backwards compatibility, read the old module roots for default set
-    if module_set_name == 'default':
-        roots = spack.config.merge_yaml(
-            spack.config.get('config:module_roots', {}), roots)
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
@@ -939,7 +930,9 @@ def disable_modules():
     """Disable the generation of modulefiles within the context manager."""
     data = {
         'modules:': {
-            'enable': []
+            'default': {
+                'enable': []
+            }
         }
     }
     disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)

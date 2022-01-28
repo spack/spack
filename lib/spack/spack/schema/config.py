@@ -63,14 +63,7 @@ properties = {
                     'tcl': {'type': 'string'},
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
-                },
-                'deprecatedProperties': {
-                    'properties': ['dotkit'],
-                    'message': 'specifying a "dotkit" module root has no '
-                               'effect [support for "dotkit" has been '
-                               'dropped in v0.13.0]',
-                    'error': False
-                },
+                }
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
