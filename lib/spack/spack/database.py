@@ -433,7 +433,7 @@ class Database(object):
                              .format(spec.name))
 
         return os.path.join(self._failure_dir,
-                            '{0}-{1}'.format(spec.name, spec.full_hash()))
+                            '{0}-{1}'.format(spec.name, spec.dag_hash()))
 
     def clear_all_failures(self):
         """Force remove install failure tracking files."""
@@ -645,8 +645,12 @@ class Database(object):
         # TODO: fix this before we support multiple install locations.
         database = {
             'database': {
+                # TODO: move this to a top-level _meta section if we ever
+                # TODO: bump the DB version to 7
+                'version': str(_db_version),
+
+                # dictionary of installation records, keyed by DAG hash
                 'installs': installs,
-                'version': str(_db_version)
             }
         }
 
@@ -1092,6 +1096,8 @@ class Database(object):
                 "Specs added to DB must be concrete.")
 
         key = spec.dag_hash()
+        spec_run_hash = spec._runtime_hash
+        spec_pkg_hash = spec._package_hash
         upstream, record = self.query_by_spec_hash(key)
         if upstream:
             return
@@ -1153,10 +1159,11 @@ class Database(object):
                     record.ref_count += 1
 
             # Mark concrete once everything is built, and preserve
-            # the original hash of concrete specs.
+            # the original hashes of concrete specs.
             new_spec._mark_concrete()
             new_spec._hash = key
-            new_spec._full_hash = spec._full_hash
+            new_spec._runtime_hash = spec_run_hash
+            new_spec._package_hash = spec_pkg_hash
 
         else:
             # It is already in the database

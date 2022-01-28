@@ -39,16 +39,6 @@ dag_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run'), package_hash=True, name='hash')
 
 
-#: Same as dag_hash; old name.
-full_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
-
-
-#: Hash descriptor that includes build dependencies.
-build_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')
-
-
 #: Hash descriptor used only to transfer a DAG, as is, across processes
 process_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run', 'test'),
@@ -57,7 +47,18 @@ process_hash = SpecHashDescriptor(
 )
 
 
-#: Package hash used as part of full hash
+#: Package hash used as part of dag hash
 package_hash = SpecHashDescriptor(
     deptype=(), package_hash=True, name='package_hash',
     override=lambda s: s.package.content_hash())
+
+
+# Deprecated hash types, no longer used, but needed to understand old serialized
+# spec formats
+
+full_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
+
+
+build_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')

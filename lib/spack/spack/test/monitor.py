@@ -49,7 +49,7 @@ def mock_monitor_request(monkeypatch):
     def mock_do_request(self, endpoint, *args, **kwargs):
 
         build = {"build_id": 1,
-                 "spec_full_hash": "bpfvysmqndtmods4rmy6d6cfquwblngp",
+                 "spec_hash": "bpfvysmqndtmods4rmy6d6cfquwblngp",
                  "spec_name": "dttop"}
 
         # Service Info
@@ -111,7 +111,7 @@ def mock_monitor_request(monkeypatch):
         elif endpoint == "specs/new/":
             return {"message": "success",
                     "data": {
-                        "full_hash": "bpfvysmqndtmods4rmy6d6cfquwblngp",
+                        "hash": "bpfvysmqndtmods4rmy6d6cfquwblngp",
                         "name": "dttop",
                         "version": "1.0",
                         "spack_version": "0.16.0-1379-7a5351d495",
@@ -264,12 +264,12 @@ def test_install_monitor_save_local(install_mockery_mutable_config,
     # Get the spec name
     spec = spack.spec.Spec("dttop")
     spec.concretize()
-    full_hash = spec.full_hash()
+    dag_hash = spec.dag_hash()
 
     # Ensure we have monitor results saved
     for dirname in os.listdir(str(reports_dir)):
         dated_dir = os.path.join(str(reports_dir), dirname)
-        build_metadata = "build-metadata-%s.json" % full_hash
+        build_metadata = "build-metadata-%s.json" % dag_hash
         assert build_metadata in os.listdir(dated_dir)
         spec_file = "spec-dttop-%s-config.json" % spec.version
         assert spec_file in os.listdir(dated_dir)

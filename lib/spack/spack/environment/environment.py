@@ -1819,6 +1819,9 @@ class Environment(object):
         json_specs_by_hash = d['concrete_specs']
         root_hashes = set(self.concretized_order)
 
+        import pdb
+        pdb.set_trace()
+
         specs_by_hash = {}
         for dag_hash, node_dict in json_specs_by_hash.items():
             spec = Spec.from_node_dict(node_dict)
@@ -1856,12 +1859,20 @@ class Environment(object):
             #   trees and binary mirrors, and as such, must be considered the
             #   permanent id of the spec.
             dag_hash = spec.dag_hash()          # == full_hash()
-            build_hash = spec.build_hash()
             runtime_hash = spec.runtime_hash()  # == old dag_hash()
 
-            if runtime_hash in root_hashes:
+            if dag_hash in root_hashes:
+                # This spec's dag hash (now computed with build deps and pkg
+                # hash) is in the keys found in the file, so we're looking at
+                # the current format
+                pass
+            elif runtime_hash in root_hashes:
+                # This spec's runtime hash (the old dag hash w/out build deps,
+                # etc) is a key in this lockfile, so this is the oldest format
                 old_hash_to_new[runtime_hash] = dag_hash
-            elif build_hash in root_hashes:
+            else:
+                # Neither of this spec's hashes appeared as a key in the lock
+                # file, so
                 old_hash_to_new[build_hash] = dag_hash
 
             if (runtime_hash in root_hashes or

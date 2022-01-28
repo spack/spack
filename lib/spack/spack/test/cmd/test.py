@@ -256,11 +256,11 @@ def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     outfile = os.path.join(testdir, 'test_suite.lock')
     with open(outfile, 'r') as f:
         output = f.read()
-        val_replace = '"full_hash": "{0}"'.format(
-            spack.store.db.query('printing-package')[0].full_hash())
+        val_replace = '"hash": "{0}"'.format(
+            spack.store.db.query('printing-package')[0].dag_hash())
         changed_hash = output.replace(
             val_replace,
-            '"full_hash": "fakehash492ucwhwvzhxfbmcc45x49ha"')
+            '"hash": "fakehash492ucwhwvzhxfbmcc45x49ha"')
     with open(outfile, 'w') as f:
         f.write(changed_hash)
 
@@ -270,6 +270,8 @@ def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     # The results should be obtainable
     results_output = spack_test('results')
     assert 'PASSED' in results_output
+
+    assert(False)
 
 
 def test_test_results_none(mock_packages, mock_test_stage):
