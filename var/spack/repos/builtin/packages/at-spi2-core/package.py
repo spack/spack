@@ -35,6 +35,10 @@ class AtSpi2Core(MesonPackage):
     depends_on('python', type='build')
     depends_on('gobject-introspection')
 
+    @when('@2.40.1:')
+    def patch(self):
+        filter_file(r'dbus_broker.found\(\)', 'false', 'bus/meson.build')
+
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
