@@ -68,9 +68,10 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     # https://sourceforge.net/p/saga-gis/bugs/271/
     depends_on('proj@:5', when='@:7.2')
 
-    depends_on('opencv+jpeg+video+objdetect+ml+openmp', when='+opencv')
+    # Saga-Gis depends on legacy opencv API removed in opencv 4.x
+    depends_on('opencv@:3', when='+opencv')
     # Set jpeg provider (similar to #8133)
-    depends_on('jpeg', when='+opencv')
+    depends_on('libjpeg', when='+opencv')
     # Set hl variant due to similar issue #7145
     depends_on('hdf5+hl')
 
