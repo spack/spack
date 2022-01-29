@@ -31,3 +31,9 @@ class Prmon(CMakePackage):
     depends_on('cmake@3.3:', type="build")
     depends_on('py-matplotlib', type="run", when="+plot")
     depends_on('spdlog', when='@3.0.0:')
+
+    def check(self):
+        # some tests expect to run on an otherwise idle machine
+        # so we need to make sure that they are not running in parallel
+        with working_dir(self.build_directory):
+            ctest(parallel=False)
