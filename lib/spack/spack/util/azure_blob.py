@@ -116,7 +116,7 @@ class AzureBlob:
         from azure.storage.blob import (
             AccountSasPermissions,
             ResourceTypes,
-            generate_account_sas
+            generate_account_sas,
         )
         try:
             sas_token = generate_account_sas(
