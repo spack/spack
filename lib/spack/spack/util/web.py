@@ -27,10 +27,10 @@ from llnl.util.filesystem import mkdirp
 import spack.config
 import spack.error
 import spack.url
+import spack.util.azure_blob as azure_blob_util
 import spack.util.crypto
 import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
-import spack.util.azure_blob as azure_blob_util
 import spack.util.url as url_util
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
