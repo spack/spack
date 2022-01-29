@@ -27,7 +27,7 @@ class ObjectGraph(object):
         graph.add_node(self, None)
 
     def __repr__(self):
-        return '<%s>' % (type(self).__name__,)
+        return "<%s>" % (type(self).__name__,)
 
     def flatten(self, condition=None, start=None):
         """
@@ -58,6 +58,7 @@ class ObjectGraph(object):
                 if ident not in seen:
                     yield self.findNode(ident)
                     seen.add(ident)
+
         return iter_edges(outraw, 3), iter_edges(incraw, 2)
 
     def edgeData(self, fromNode, toNode):
@@ -87,12 +88,12 @@ class ObjectGraph(object):
         visited, removes, orphans = filter_stack(self.graph, self, filters)
 
         for last_good, tail in orphans:
-            self.graph.add_edge(last_good, tail, edge_data='orphan')
+            self.graph.add_edge(last_good, tail, edge_data="orphan")
 
         for node in removes:
             self.graph.hide_node(node)
 
-        return len(visited)-1, len(removes), len(orphans)
+        return len(visited) - 1, len(removes), len(orphans)
 
     def removeNode(self, node):
         """
@@ -135,7 +136,7 @@ class ObjectGraph(object):
         """
         if node is self:
             return node
-        ident = getattr(node, 'graphident', None)
+        ident = getattr(node, "graphident", None)
         return ident
 
     def __contains__(self, node):
@@ -192,8 +193,7 @@ class ObjectGraph(object):
         Print a debug message with the given level
         """
         if s and level <= self.debug:
-            print("%s%s %s" % (
-                "  " * self.indent, s, ' '.join(map(repr, args))))
+            print("%s%s %s" % ("  " * self.indent, s, " ".join(map(repr, args))))
 
     def msgin(self, level, s, *args):
         """

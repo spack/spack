@@ -174,7 +174,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Conflicts ##########################
 
-    # Epetra packages
+    # Epetra stack
     with when('~epetra'):
         conflicts('+amesos')
         conflicts('+aztec')
@@ -188,8 +188,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+epetraextbtf')
         conflicts('+epetraextexperimental')
         conflicts('+epetraextgraphreorderings')
+    with when('+teko'):
+        conflicts('~stratimikos')
+        conflicts('@:12 gotype=long')
 
-    # Tpetra packages
+    # Tpetra stack
     with when('~kokkos'):
         conflicts('+cuda')
         conflicts('+rocm')
@@ -204,31 +207,29 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+teko')
         conflicts('+zoltan2')
 
-    with when('+teko'):
-        conflicts('~amesos')
-        conflicts('~anasazi')
-        conflicts('~aztec')
-        conflicts('~ifpack')
-        conflicts('~ml')
-        conflicts('~stratimikos')
-        conflicts('@:12 gotype=long')
+    with when('~zoltan'):
+        conflicts('+isorropia')
+        conflicts('+scorec')
+        conflicts('+shylu')
+        conflicts('+zoltan2')
+    with when('~shards'):
+        conflicts('+intrepid')
+        conflicts('+intrepid2')
+        conflicts('+scorec')
+        conflicts('+stk')
+    with when('+scorec'):
+        conflicts('~mpi')
+        conflicts('~stk')
 
     # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
-    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
-    conflicts('+intrepid', when='~shards')
-    conflicts('+intrepid2', when='~shards')
-    conflicts('+isorropia', when='~zoltan')
+    conflicts('+minitensor', when='~boost')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
+    conflicts('+stokhos', when='~kokkos')
     conflicts('+tempus', when='~nox')
-    conflicts('+zoltan2', when='~zoltan')
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts('+dtk', when='~boost')
@@ -260,6 +261,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts('+adios2', when='@:12.14.1')
     conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -279,6 +281,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
+    # Build hangs with CUDA 11.6 (see #28439)
+    conflicts('+cuda +stokhos', when='^cuda@11.6:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -517,7 +521,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('EpetraExt_BUILD_GRAPH_REORDERINGS',
                                 'epetraextgraphreorderings'),
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
+            define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
+
+        if spec.version < Version('13'):
+            # Suppress TriBITS flags in favor of CMake's built-in flags
+            options.append(define('Trilinos_CXX11_FLAGS', ' '))
 
         if '+dtk' in spec:
             options.extend([

@@ -142,6 +142,8 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
 
+    depends_on('eigen@3.4.0:', when='@7.4: +tests')
+
     # TODO:
     # add support for CRAY_LIBSCI, testing
 

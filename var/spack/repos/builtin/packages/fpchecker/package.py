@@ -17,6 +17,7 @@ class Fpchecker(CMakePackage):
 
     maintainers = ['ilagunap']
 
+    version('0.3.5', sha256='ed7277318af8e0a22b05c5655c9acc99e1d3036af41095ec2f1b1ada4d6e90f6')
     version('0.3.4', sha256='ecea778dcddc8347da86b02069e12d574a3ba27a4f7c6224bf492fbff6cd162a')
 
     depends_on('llvm@12.0.1')

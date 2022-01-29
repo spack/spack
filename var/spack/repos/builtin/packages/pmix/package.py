@@ -35,6 +35,7 @@ class Pmix(AutotoolsPackage):
     maintainers = ['rhc54']
 
     version('master', branch='master')
+    version('4.1.0',    sha256='145f05a6c621bfb3fc434776b615d7e6d53260cc9ba340a01f55b383e07c842e')
     version('3.2.1',    sha256='7e5db8ada5828cf85c12f70db6bfcf777d13e5c4c73b2206bb5e394d47066a2b')
     version('3.1.5',    sha256='88934195174455df478b996313095df25b51d0caf5a5cce01b22f0ccdc6c5cf7')
     version('3.1.3',    sha256='118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d')
