@@ -7,8 +7,8 @@
    integrate Azure Blob storage with spack buildcache.
 """
 
-import os
 import datetime
+import os
 
 import llnl.util.tty as tty
 
