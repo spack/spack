@@ -531,6 +531,7 @@ variant_single_value(Package, "dev_path")
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
+#defined variant_sticky/2.
 #defined variant_set/3.
 #defined variant_condition/3.
 #defined variant_single_value/2.
