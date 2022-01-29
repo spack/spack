@@ -1458,7 +1458,7 @@ to either:
 #. An explicit value appearing in a spec literal or
 #. Its default value
 
-The concretizer thus is not free to pick an arbitrary value to work
+The concretizer thus is not free to pick an alternate value to work
 around conflicts, but will error out instead.
 Setting this property on a variant is useful in cases where the
 variant allows some dangerous or controversial options (e.g. using unsupported versions

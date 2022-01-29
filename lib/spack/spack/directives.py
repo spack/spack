@@ -585,8 +585,8 @@ def variant(
             doesn't meet the additional constraints
         when (spack.spec.Spec, bool): optional condition on which the
             variant applies
-        sticky (bool): if true the variant is considered set to the default value(s)
-            if no other preferences have been expressed by the user
+        sticky (bool): the variant should not be changed by the concretizer to
+            find a valid concrete spec.
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
     """
