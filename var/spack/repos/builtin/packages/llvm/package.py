@@ -713,7 +713,7 @@ class Llvm(CMakePackage, CudaPackage):
     def llvm_config(self, *args, **kwargs):
         lc = Executable(self.prefix.bin.join('llvm-config'))
         if not kwargs.get('output'):
-            kwargs['output']=str
+            kwargs['output'] = str
         ret = lc(*args, **kwargs)
         if kwargs.get('output') == "list":
             return ret.split()
@@ -723,6 +723,7 @@ class Llvm(CMakePackage, CudaPackage):
         if not args:
             args = ["all"]
         return self.llvm_config("--libs", *args, output="list")
+
 
 def get_llvm_targets_to_build(spec):
     targets = spec.variants['targets'].value
