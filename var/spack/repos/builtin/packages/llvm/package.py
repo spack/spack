@@ -11,12 +11,6 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.util.executable
-from llnl.util.filesystem import install_tree, working_dir, join_path, copy, ancestor, mkdirp
-from spack.build_systems.cmake import CMakePackage
-from spack.build_systems.cuda import CudaPackage
-from spack.directives import *
-from spack.package import run_before, run_after
-from spack.util.executable import Executable, which, ProcessError
 
 
 class Llvm(CMakePackage, CudaPackage):
@@ -716,9 +710,8 @@ class Llvm(CMakePackage, CudaPackage):
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
 
-    @classmethod
-    def llvm_config(*args, **kwargs):
-        lc = which("llvm-config")
+    def llvm_config(self, *args, **kwargs):
+        lc = Executable(self.prefix.bin.join('llvm-config'))
         if not kwargs.get('output'):
             kwargs['output']=str
         ret = lc(*args, **kwargs)
@@ -726,11 +719,10 @@ class Llvm(CMakePackage, CudaPackage):
             return ret.split()
         return ret
 
-    @classmethod
-    def llvm_libs(*args):
+    def llvm_libs(self, *args):
         if not args:
             args = ["all"]
-        return Llvm.llvm_config("--libs", *args, output="list")
+        return self.llvm_config("--libs", *args, output="list")
 
 def get_llvm_targets_to_build(spec):
     targets = spec.variants['targets'].value
