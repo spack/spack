@@ -26,6 +26,7 @@ class PyPip(Package):
     version('9.0.1',  sha256='690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0', expand=False)
 
     extends('python')
+    depends_on('python +distutils', type=('build', 'run'))
     depends_on('python@3.6:', when='@21:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@19.2:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@18:', type=('build', 'run'))

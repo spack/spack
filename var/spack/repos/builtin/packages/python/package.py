@@ -167,6 +167,12 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
     variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
+    # We always build with distutils; this variant only exists to make life easier when
+    # using an external Python on e.g. Ubuntu which does not have python3-distutils
+    # installed.
+    variant('distutils', default=True, description='Build distutils module')
+    conflicts('~distutils')
+
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('gettext +libxml2', when='+libxml2')
     depends_on('gettext ~libxml2', when='~libxml2')
@@ -306,6 +312,13 @@ class Python(AutotoolsPackage):
             variants += '+pyexpat'
         except ProcessError:
             variants += '~pyexpat'
+
+        # On some systems distutils provides nothing but a version, so be more precise.
+        try:
+            python('-c', 'import distutils.spawn', error=os.devnull)
+            variants += '+distutils'
+        except ProcessError:
+            variants += '~distutils'
 
         # Some modules are version-dependent
         if Version(version_str) >= Version('3.3'):

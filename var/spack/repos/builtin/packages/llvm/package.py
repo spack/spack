@@ -211,6 +211,9 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libedit", when="+lldb")
     depends_on("py-six", when="@5.0.0: +lldb +python")
 
+    # libcxx dependencies (merge_archives.py)
+    depends_on("python +distutils", when="+libcxx", type='build')
+
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
