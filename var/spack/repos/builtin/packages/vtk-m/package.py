@@ -61,7 +61,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     # Device variants
     # CudaPackage provides cuda variant
     # ROCmPackage provides rocm variant
-    variant("kokkos", default=False, description="build using Kokkos backend")
+    variant("kokkos", default=False, when='@1.6:', description="build using Kokkos backend")
     variant("cuda_native", default=True, description="build using native cuda backend", when="+cuda")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
@@ -94,6 +94,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocm-cmake@3.7:", when="+rocm")
     depends_on("hip@3.7:", when="+rocm")
 
+    # The rocm variant is only valid options for >= 1.7. It would be better if
+    # this could be expressed as a when clause to disable the rocm variant,
+    # but that is not currently possible since when clauses are stacked,
+    # not overwritten.
+    conflicts('+rocm', when='@:1.6')
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
 
