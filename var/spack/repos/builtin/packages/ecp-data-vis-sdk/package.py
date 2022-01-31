@@ -30,7 +30,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('veloc', default=False, description="Enable VeloC")
 
     # Vis
-    variant('sensei', default=False, description="Enable Sensei")
     variant('ascent', default=False, description="Enable Ascent")
     variant('paraview', default=False, description="Enable ParaView")
     variant('sz', default=False, description="Enable SZ")
@@ -41,6 +40,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     variant('cinema', default=False, description="Enable Cinema")
 
     # Outstanding build issues
+    variant('sensei', default=False, description="Enable Sensei")
+    conflicts('+sensei')
     variant('visit', default=False, description="Enable VisIt")
     conflicts('+visit')
 
@@ -100,7 +101,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
                        when='+faodel',
                        propagate=['hdf5'])
 
-    dav_sdk_depends_on('hdf5 +shared+mpi+fortran', when='+hdf5')
+    dav_sdk_depends_on('hdf5@1.12: +shared+mpi+fortran', when='+hdf5')
 
     dav_sdk_depends_on('parallel-netcdf+shared+fortran', when='+pnetcdf')
 
@@ -114,8 +115,11 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     dav_sdk_depends_on('sensei@develop +vtkio +python ~miniapps', when='+sensei',
                        propagate=dict(propagate_to_sensei))
 
+    # Need to explicitly turn off conduit hdf5_compat in order to build
+    # hdf5@1.12 which is required for SDK
     dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
                        when='+ascent')
+    dav_sdk_depends_on('ascent ^conduit ~hdf5_compat', when='+acsent +hdf5')
 
     depends_on('py-cinemasci', when='+cinema')
 

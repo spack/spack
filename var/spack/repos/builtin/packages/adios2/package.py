@@ -95,7 +95,7 @@ class Adios2(CMakePackage):
     depends_on('libzmq', when='+dataman')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
 
     depends_on('c-blosc', when='@2.4: +blosc')
