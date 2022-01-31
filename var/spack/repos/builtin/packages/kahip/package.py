@@ -33,7 +33,7 @@ class Kahip(CMakePackage):
     version('3.12', sha256='df923b94b552772d58b4c1f359b3f2e4a05f7f26ab4ebd00a0ab7d2579f4c257')
     version('3.11', sha256='347575d48c306b92ab6e47c13fa570e1af1e210255f470e6aa12c2509a8c13e3')
     version('2.00', sha256='1cc9e5b12fea559288d377e8b8b701af1b2b707de8e550d0bda18b36be29d21d', url='https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz', deprecated=True)
-    
+
     variant('deterministic', default=False, description='Compile with the deterministic seed')
 
     depends_on('scons', type='build', when='@2:2.10')
@@ -71,9 +71,7 @@ class Kahip(CMakePackage):
 
     @when("@3.13:")
     def cmake_args(self):
-        return [
-                self.define_from_variant('DETERMINISTIC_PARHIP', 'deterministic')
-            ]
+        return [self.define_from_variant('DETERMINISTIC_PARHIP', 'deterministic')]
 
     @when("@:2.10")
     def cmake(self, spac, prefix):
