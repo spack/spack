@@ -50,6 +50,16 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
         # Do the basic depends_on
         depends_on(spec, when=when)
 
+        # Strip spec string to just the base spec name
+        # ie. A +c ~b -> A
+        spec = Spec(spec).name
+
+        if '+' in when and len(when.split()) == 1:
+            when_not = when.replace('+', '~')
+            # If the package is in the spec tree then it must
+            # be enabled in the SDK.
+            conflicts(when_not, '^' + spec)
+
         # Skip if there is nothing to propagate
         if not propagate:
             return
@@ -57,10 +67,6 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
         # Map the propagated variants to the dependency variant
         if not type(propagate) is dict:
             propagate = dict([(v, v) for v in propagate])
-
-        # Strip spec string to just the base spec name
-        # ie. A +c ~b -> A
-        spec = Spec(spec).name
 
         # Determine the base variant
         base_variant = ''
@@ -119,7 +125,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     # hdf5@1.12 which is required for SDK
     dav_sdk_depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray',
                        when='+ascent')
-    dav_sdk_depends_on('ascent ^conduit ~hdf5_compat', when='+acsent +hdf5')
+    depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
 
     depends_on('py-cinemasci', when='+cinema')
 
@@ -127,8 +133,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
                        when='+paraview',
                        propagate=['hdf5', 'adios2'] + cuda_arch_variants)
     # Want +shared when not using cuda
-    dav_sdk_depends_on('paraview ~shared +cuda', when='+paraview +cuda')
-    dav_sdk_depends_on('paraview +shared ~cuda', when='+paraview ~cuda')
+    depends_on('paraview ~shared +cuda', when='+paraview +cuda')
+    depends_on('paraview +shared ~cuda', when='+paraview ~cuda')
 
     dav_sdk_depends_on('visit', when='+visit')
 
