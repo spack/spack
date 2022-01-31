@@ -7,6 +7,7 @@ from llnl.util.filesystem import install, mkdirp
 from spack.directives import depends_on, version
 from spack.package import Package
 from spack.pkg.patches.llvm import Llvm as LLVM
+from spack.version import Version
 
 
 class ClangTools(Package):
@@ -18,14 +19,22 @@ class ClangTools(Package):
 
     # Add a clang-format version for every LLVM version
     for llvm_ver in LLVM.versions:
-        version(llvm_ver)
+        clang_tools_ver = Version(str(llvm_ver) + "p1")
+        version(clang_tools_ver)
         depends_on(
-            "llvm@{}".format(llvm_ver), when="@{}".format(llvm_ver), type="build"
+            "llvm@{}".format(llvm_ver), when="@{}".format(clang_tools_ver), type="build"
         )
 
     def install(self, spec, prefix):
-        mkdirp(spec.prefix.bin)
-        for utility in ("clang-format", "clang-tidy"):
-            install(
-                spec["llvm"].prefix.bin.join(utility), spec.prefix.bin.join(utility)
-            )
+        for utility in (
+            ("bin", "clang-format"),
+            ("bin", "clang-tidy"),
+            ("share", "clang", "clang-format-diff.py"),
+        ):
+            source_dir = spec["llvm"].prefix
+            destination_dir = spec.prefix
+            for component in utility[:-1]:
+                source_dir = source_dir.join(component)
+                destination_dir = destination_dir.join(component)
+            mkdirp(destination_dir)
+            install(source_dir.join(utility[-1]), destination_dir.join(utility[-1]))
