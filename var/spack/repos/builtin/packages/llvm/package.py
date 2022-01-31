@@ -719,11 +719,6 @@ class Llvm(CMakePackage, CudaPackage):
             return ret.split()
         return ret
 
-    def llvm_libs(self, *args):
-        if not args:
-            args = ["all"]
-        return self.llvm_config("--libs", *args, output="list")
-
 
 def get_llvm_targets_to_build(spec):
     targets = spec.variants['targets'].value
