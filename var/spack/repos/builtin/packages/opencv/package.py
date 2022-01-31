@@ -817,7 +817,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on("qt@5:", when="+qt")
     depends_on("qt@5:+opengl", when="+qt+opengl")
     depends_on("tbb", when="+tbb")
-    depends_on("libtiff+jpeg+libdeflate+lzma+zip", when="+tiff")
+    depends_on("libtiff+jpeg+libdeflate+lzma+zlib", when="+tiff")
     depends_on("vtk", when="+vtk")
     depends_on("libwebp", when="+webp")
     depends_on("tesseract", when="+tesseract")
