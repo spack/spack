@@ -1,45 +1,64 @@
 # Debugging pull requests on BlueBrain5
 
-If a pull request against the current state of the deployment fails, e.g.,
+## Build failures
+
+Build failures should be found under the tab "Tests" in the GitLab pipeline
+interface that is linked from the GitHub pull request.
+
+Future changes to the deployment may list build failures directly and/or
+include build logs.
+
+## Concretization failures
+
+If a pull request against the current state of the deployment fails
 during concretization, the following steps may help debug issues.
 
-1. Check out the pull request in your local Spack setup and set some
-   references to the failed stage of the deployment and the pull request
-   number:
+1. Check out the pull request in your local Spack setup,
+   and make sure that you sourced your local Spack clone.
+
+   Then unset or reset any variables that may interfere with the PR building:
    ```console
-   export PR_NUMBER=1234
-   export PR_STAGE=applications
-   export PR_BASE=$(readlink -f /gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/pulls/${PR_NUMBER}/deploy/${PR_STAGE}/latest)
+   unset SPACK_SYSTEM_CONFIG_PATH
+   export SPACK_USER_CACHE_PATH=/tmp/debug_spack_pr_$(whoami)_cache
    ```
-2. Move your own configuration files out of the way. If the official
-   instructions are following, one can use:
+2. Note the job that is failing, i.e., `libraries` in the `applications`
+   stage, with id `140355`.
+
+   Copy its configuration to different location and use it:
    ```console
-   for fn in ${SPACK_ROOT}/etc/spack/*.yaml; do mv ${fn}{,.old}; done
+   export SPACK_USER_CONFIG_PATH=/tmp/debug_spack_pr_$(whoami)_config
+
+   export FAILED_JOB=140355
+   export STUB=/gpfs/bbp.cscs.ch/ssd/gitlab_map_jobs/bbpcihpcdeploy
+   cp -r ${STUB}/J${FAILED_JOB}/hpc/spack/spack_config ${SPACK_USER_CONFIG_PATH}
    ```
-3. Copy the environment that the CI is attempting to build somewhere under
-   your control:
+   Then set the installation directory to a temporary writable one:
    ```console
-   cp -R ${PR_BASE}/data/build_environment .
+   spack config add config:install_tree:root:/tmp/debug_spack_pr_$(whoami)_software
+   spack config add config:module_roots:tcl:/tmp/debug_spack_pr_$(whoami)_modules
    ```
-   If the concretization of the build environment fails, it is easier to
-   re-use the installation directory of the CI for packages that have been
-   built already:
+3. Recreate the environment used to build in the CI and activate it.
+   Recall that `applications` was failing in `libraries`:
    ```console
-   export SPACK_INSTALL_PREFIX=${PR_BASE}
+   spack env create pr_debug ${SPACK_ROOT}/bluebrain/deployment/environments/applications_libraries.yaml
+   spack env activate pr_debug
    ```
-   Otherwise, for build issues, the above will not work due to the required
-   write permissions.
-   Create a new installation directory instead:
+4. Trigger the concretization:
    ```console
-   export SPACK_INSTALL_PREFIX=${PWD}/build_environment/install
+   spack concretize -f
    ```
-4. Run the concretization, using the configuration of the CI:
+5. If debugging a build is desired, install the environment:
    ```console
-   spack -C ${PR_BASE}/data/.spack -D build_environment concretize -f
+   spack install
    ```
-5. Fix any issue arising, re-iterate starting from 4.
-6. Clean everything up:
+6. Fix any issue arising, re-iterate starting from 4.
+   [The FAQ may help](FAQ.md#concretization-issues) with debugging certain
+   issues.
+8. Clean everything up:
    ```console
-   rm -rf build_environment
-   for fn in ${SPACK_ROOT}/etc/spack/*.yaml.old; do mv ${fn} ${fn%%.old}; done
+   rm -r /tmp/debug_spack_pr_$(whoami)_cache
+   rm -r /tmp/debug_spack_pr_$(whoami)_config
+   rm -r /tmp/debug_spack_pr_$(whoami)_modules
+   rm -r /tmp/debug_spack_pr_$(whoami)_software
    ```
+   Finally, to ensure a clean reset of your shell environment, close your SSH connection to BlueBrain5.

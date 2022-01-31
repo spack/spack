@@ -50,16 +50,4 @@ To generate or update the module.
 
 ### Automatically Generate Modules for all Installed Software
 
-Similarly, the module configuration can be overwritten to provide modules
-for **all** manually installed software, including new dependencies, by
-creating the file `${HOME}/.spack/modules.yaml` with the following
-contents:
-```yaml
-modules:
-  tcl:
-    whitelist:
-      - '@:'
-    projections:
-      all: '{name}/{version}-{hash:6}'
-```
 **Note that this may have unintended consequences and is not a supported configuration**.

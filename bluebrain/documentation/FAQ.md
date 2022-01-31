@@ -30,8 +30,10 @@
   If you are on the BlueBrain5, you shouldn't need to.
 
   As [described here](setup_bb5.md),
-  one can use the system packages available with an appropriate
-  `packages.yaml` and `upstreams.yaml` in `${SPACK_ROOT}/etc/spack`.
+  one can use the system packages available with appropriate configuration
+  options.
+  If those instructions don't help, please use the [#spack](https://bluebrainproject.slack.com/archives/C023KQ47GHL)
+  channel on Slack.
 </details>
 
 #### Q: Why is it so slow to interact with the Spack repository on GPFS
@@ -50,14 +52,9 @@
 <details>
   <summary>Expand answer</summary>
 
-  We currently have a binary cache for central deployment only. As
-  universally relocatable binaries are very fragile, we do not support
-  binary caches for end-users.
-
-  Please make sure you have setup the correct configurations in:
-  * `~/.spack/packages.yaml`
-  * `~/.spack/upstreams.yaml`
-  to avoid rebuilding packages that have already been build centrally.
+  No.
+  Possibilities are being explored to provide a binary cache configuration
+  for our desktops.
 </details>
 
 ## Modules
@@ -72,133 +69,81 @@
 
       $ spack config blame modules
 
-  Examples from our deployment workflow can be found in:
-  * `spack/deploy/configs/applications/modules.yaml`
-  * `spack/deploy/configs/libraries/modules.yaml`
+  This blacklist is overruled by a corresponding whitelist.
+  If your software is not listed in the latter, no modules will be
+  generated for it.
 
-  Run `spack --debug module tcl refresh` and search for the module you
-  expect to be built.
-  Modify the whitelist to have the module built.
+  Use
 
-  [See also the general instructions](setup_bb5.md#automatically-generate-modules-for-all-installed-software).
+      $ spack config add modules:tcl:whitelist:my_package
+      $ spack module tcl refresh my_package
+
+  To produce an up-to-date module for `my_package` (adjust as needed).
 </details>
 
-#### Q: Why are my local modules broken after installing software manually?
+## Concretization Issues
+
+#### Q: Why does Spack fail with cryptic error messages
 
 <details>
   <summary>Expand answer</summary>
 
-  When installing CMake-based software with
+  When determining what to build (to concretize a spec in "Spack lingo"),
+  sometimes Spack will not be able to satisfy the requirements of all
+  software needing to be built.
+  It may then display a somewhat cryptic error message:
 
-      $ spack setup package@version
-      $ mkdir build
-      $ cd build
-      $ ../spconfig.py ..
-      $ make
-      $ make install
+      ❯ spack spec -I py-morphology-repair-workflow\^py-pandas@1.3:
+      Input spec
+      --------------------------------
+       -   py-morphology-repair-workflow
+       -       ^py-pandas@1.3:
 
-  Spack will create a skeleton installation with bogus files to directly
-  generate a module for the package to be installed.
-  This may result in a "fake" library to be picked up when installing
-  subsequent packages.
-  Please use
+      Concretized
+      --------------------------------
+      ==> Error: py-morphology-repair-workflow ^py-pandas@1.3: is unsatisfiable, errors are:
+        no version satisfies the given constraints
 
-      $ spack dev-build package@version
+          To see full clingo unsat cores, re-run with `spack --show-cores=full`
+          For full, subset-minimal unsat cores, re-run with `spack --show-cores=minimized
+          Warning: This may take (up to) hours for some specs
 
-  to install packages locally, and use `spack setup` only for local
-  development/testing that other packages do not depend on.
-</details>
+  By running the recommendation, one may produce more cryptic output:
 
-## Deployment
+      ❯ spack --show-cores=full spec -I py-morphology-repair-workflow\^py-pandas@1.3:
+      Input spec
+      --------------------------------
+       -   py-morphology-repair-workflow
+       -       ^py-pandas@1.3:
 
-#### Q: How do I add/update my package/module versions?
+      Concretized
+      --------------------------------
+      ==> Error: py-morphology-repair-workflow ^py-pandas@1.3: is unsatisfiable, conflicts are:
+        condition(5258)
+        condition(5275)
+        condition(5281)
+        dependency_condition(5258,"py-morph-validator","py-pandas")
+        dependency_condition(5275,"py-morphology-repair-workflow","py-morph-validator")
+        dependency_condition(5281,"py-morphology-repair-workflow","py-pandas")
+        dependency_type(5258,"build")
+        dependency_type(5275,"run")
+        dependency_type(5281,"run")
+        imposed_constraint(5258,"version_satisfies","py-pandas","0.25:1.2.99")
+        no version satisfies the given constraints
+        root("py-morphology-repair-workflow")
+        version_satisfies("py-pandas","1.3:")
 
-<details>
-  <summary>Expand answer</summary>
+          For full, subset-minimal unsat cores, re-run with `spack --show-cores=minimized
+          Warning: This may take (up to) hours for some specs
 
-  We want to add a new version 2.0.0 to `mypackage`.
-
-  Make sure you're setup as per
-  [the instructions linked on the README](https://github.com/BlueBrain/spack),
-  then change your package recipe to add or update the version specifying
-  the corresponding tag or commit.
-
-      $ spack edit mypackage
-      …
-      version('2.0.0', tag='v2.0.0')
-      …
-
-  If the package is not yet deployed, then you can edit the environment
-  depending on the type of package (`applications.yaml`,
-  `libraries.yaml`…).
-
-  Assuming `mypackage` is a library:
-
-      $ nvim deploy/environments/libraries.yaml
-
-  Under the `specs` section, make sure that the package is mentioned:
-
-      - mypackage
-
-  Only specify a version if future updates to the package should be
-  ignored.
-
-  After that you should edit the module file that will be at
-  `deploy/config/libraries/`
-
-      $ nvim deploy/config/libraries/modules.yaml
-
-  Under the whitelist section, ensure that your software is mentioned:
-
-      - mypackage
-
-  Now you are ready to create a new branch and a PR with the changes.
-  You can check the Jenkins build of your PR [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
-</details>
-
-## Pull Requests
-
-#### Q: How do I test modules generated by a Pull Request?
-
-<details>
-  <summary>Expand answer</summary>
-
-  If you followed the previous point you should be able to see if your 
-  PR was successfully built [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
-
-  Then you can log into `BB5` and run the following commands:
-
-      $ module purge
-      $ unset MODULEPATH
-      $ source /gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/xxx/config/modules.sh
-
-  Where `xxx` is the number of your PR.
-
-  At this point you should have the environment ready, so if your module 
-  was built correctly you should be able to load it.
-
-      $ module load mypackage
-
-  Now you are ready to test `mypackage`.
-</details>
-
-#### Q: How do I debug my Pull Request?
-
-<details>
-  <summary>Expand answer</summary>
-
-  To re-create the environment a Pull Request was built in, let's say #666,
-  and debug failures, it is recommended to create a throw-away shell
-  environment and execute the following commands.  Note that the parameters
-  in the first line correspond to the pull request and the stage you wish
-  to debug (as labelled in Jenkins, but lowercase):
-  ```
-  $ eval $(${SPACK_ROOT}/deploy/pull_env.sh pulls/666 applications)
-  $ spacktivate
-  $ spack install $(grep <my_failed_piece_of_software> ${HOME}/specs.txt)
-  ```
-  Evaluating the first line will override local environment variables such
-  as the current `$HOME` directory.  *After leaving the shell, this will
-  leave a temporary directory behind*, following the pattern `spack_*`.
-  Please make sure to delete this directory when not needed any longer.
+  By analyzing the output, it can be seen that
+  `py-morphology-repair-workflow` depends on `py-morph-validator`,
+  which in turn depends on `py-pandas` between versions `0.25` and
+  `1.2.99` (using the numerical references together with the package names
+  / versions).
+  This in turn conflicts with the user requirement of a `py-pandas` newer
+  than `1.3`.
+  Removing said user requirement will make the software install.
+  In other instances, loosening dependency requirements in packages may be
+  the appropriate solution.
 </details>
