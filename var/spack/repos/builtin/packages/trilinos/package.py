@@ -260,7 +260,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('cxxstd=11', when='@13:')
+    conflicts('cxxstd=11', when='@13.2:')
     conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
