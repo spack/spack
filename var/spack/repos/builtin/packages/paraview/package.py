@@ -147,6 +147,7 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5@1.10:', when='+hdf5 @5.10:')
     depends_on('adios2+mpi', when='+adios2+mpi')
     depends_on('adios2~mpi', when='+adios2~mpi')
     depends_on('jpeg')
