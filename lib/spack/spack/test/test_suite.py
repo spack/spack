@@ -87,6 +87,27 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     assert os.path.exists(data_filename)
 
 
+def test_test_external(mock_packages, install_mockery, mock_test_stage):
+    def ensure_results_skipped(filename):
+        assert os.path.exists(filename)
+        have = False
+        with open(filename, 'r') as fd:
+            for line in fd:
+                if 'Skipped' in line or 'SKIPPED' in line:
+                    have = True
+                    break
+        assert have
+
+    spec = spack.spec.Spec('trivial-smoke-test', ).concretized()
+    spec.external_path = '/path/to/external/trivial-smoke-test'
+    test_suite = spack.install_test.TestSuite([spec])
+
+    test_suite()
+
+    ensure_results_skipped(test_suite.log_file_for_spec(spec))
+    ensure_results_skipped(test_suite.results_file)
+
+
 def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
     def ensure_current_cache_fail(test_suite):
         with pytest.raises(spack.install_test.TestSuiteSpecError):
