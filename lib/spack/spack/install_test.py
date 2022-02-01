@@ -94,6 +94,16 @@ def write_test_suite_file(suite):
         sjson.dump(suite.to_dict(), stream=f)
 
 
+def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
+    failed = "{0} failed, ".format(num_failed) if num_failed else ''
+    skipped = "{0} skipped, ".format(num_skipped) if num_skipped else ''
+    no_tests = "{0} no-tests, ".format(num_untested) if num_untested else ''
+    num_passed = num_specs - num_failed - num_untested - num_skipped
+
+    print("{:=^80}".format(" {0}{1}{2}{3} passed of {4} specs "
+          .format(failed, no_tests, skipped, num_passed, num_specs)))
+
+
 class TestSuite(object):
     def __init__(self, specs, alias=None):
         # copy so that different test suites have different package objects
@@ -192,7 +202,7 @@ class TestSuite(object):
                 self.current_test_spec = None
                 self.current_base_spec = None
 
-        self.write_test_summary(skipped, untested)
+        write_test_summary(self.fails, skipped, untested, len(self.specs))
 
         if self.fails:
             raise TestSuiteFailure(self.fails)
@@ -270,16 +280,6 @@ class TestSuite(object):
     def write_test_result(self, spec, result):
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
         _add_msg_to_file(self.results_file, msg)
-
-    def write_test_summary(self, skipped, untested):
-        num_specs = len(self.specs)
-        failed = "{0} failed, ".format(self.fails) if self.fails else ''
-        no_tests = "{0} no-tests, ".format(untested) if untested else ''
-        skipped = "{0} skipped, ".format(skipped) if skipped else ''
-        passed = num_specs - self.fails - untested - skipped
-
-        print("{:=^80}".format("{0}{1}{2}{3} passed of {4} specs"
-              .format(failed, no_tests, skipped, passed, num_specs)))
 
     def write_reproducibility_data(self):
         for spec in self.specs:
