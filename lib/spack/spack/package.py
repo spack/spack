@@ -1808,6 +1808,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
+        if self.spec.external:
+            with open(self.test_log_file, 'w') as ofd:
+                ofd.write('Testing package {0}\n'
+                          .format(self.test_suite.test_pkg_id(self.spec)))
+            return
+
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)
 

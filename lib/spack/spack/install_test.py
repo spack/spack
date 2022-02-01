@@ -160,7 +160,18 @@ class TestSuite(object):
                 # Log test status based on whether any non-pass-only test
                 # functions were called
                 tested = os.path.exists(self.tested_file_for_spec(spec))
-                status = 'PASSED' if tested else 'NO-TESTS'
+                if tested:
+                    status = 'PASSED'
+                else:
+                    self.ensure_stage()
+                    if spec.external:
+                        status = 'SKIPPED'
+                        msg = 'Skipped external package'
+                    else:
+                        status = 'NO-TESTS'
+                        msg = 'No tests to run'
+                    _add_msg_to_file(self.log_file_for_spec(spec), msg)
+
                 self.write_test_result(spec, status)
             except BaseException as exc:
                 self.fails += 1

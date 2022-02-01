@@ -171,8 +171,14 @@ class InfoCollector(object):
                 value = None
                 try:
                     value = do_fn(instance, *args, **kwargs)
-                    package['result'] = 'success'
-                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
+
+                    if do_fn.__name__ == 'do_test' and pkg.spec.external:
+                        package['result'] = 'skipped'
+                        package['stdout'] = 'Skipped external package'
+                    else:
+                        package['result'] = 'success'
+                        package['stdout'] = fetch_log(pkg, do_fn, self.dir)
+
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
                     if do_fn.__name__ == '_install_task' and installed_already:
