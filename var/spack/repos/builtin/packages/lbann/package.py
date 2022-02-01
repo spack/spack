@@ -214,7 +214,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
