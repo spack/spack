@@ -1820,6 +1820,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
+        if tty.is_verbose():
+            kwargs['verbose'] = True
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
@@ -2641,7 +2643,8 @@ def has_test_method(pkg):
 
 
 def test_process(pkg, kwargs):
-    with tty.log.log_output(pkg.test_log_file) as logger:
+    verbose = kwargs.get('verbose', False)
+    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
         with logger.force_echo():
             tty.msg('Testing package {0}'
                     .format(pkg.test_suite.test_pkg_id(pkg.spec)))

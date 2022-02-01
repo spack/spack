@@ -130,6 +130,7 @@ class TestSuite(object):
         fail_first = kwargs.get('fail_first', False)
         externals = kwargs.get('externals', False)
 
+        skipped, untested = 0, 0
         for spec in self.specs:
             try:
                 if spec.package.test_suite:
@@ -165,9 +166,11 @@ class TestSuite(object):
                     self.ensure_stage()
                     if spec.external and not externals:
                         status = 'SKIPPED'
+                        skipped += 1
                         msg = 'Skipped external package'
                     else:
                         status = 'NO-TESTS'
+                        untested += 1
                         msg = 'No tests to run'
                     _add_msg_to_file(self.log_file_for_spec(spec), msg)
 
@@ -188,6 +191,8 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        self.write_test_summary(skipped, untested)
 
         if self.fails:
             raise TestSuiteFailure(self.fails)
@@ -265,6 +270,16 @@ class TestSuite(object):
     def write_test_result(self, spec, result):
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
         _add_msg_to_file(self.results_file, msg)
+
+    def write_test_summary(self, skipped, untested):
+        num_specs = len(self.specs)
+        failed = "{0} failed, ".format(self.fails) if self.fails else ''
+        no_tests = "{0} no-tests, ".format(untested) if untested else ''
+        skipped = "{0} skipped, ".format(skipped) if skipped else ''
+        passed = num_specs - self.fails - untested - skipped
+
+        print("{:=^80}".format("{0}{1}{2}{3} passed of {4} specs"
+              .format(failed, no_tests, skipped, passed, num_specs)))
 
     def write_reproducibility_data(self):
         for spec in self.specs:
