@@ -79,7 +79,7 @@ class Sarus(CMakePackage):
 
                 https://sarus.readthedocs.io/en/stable/config/basic_configuration.html
 
-                For production runs it is strongly recommended to run spack with escalated privileges (sudo/root)!
+                For production it is strongly recommended to install with escalated privileges (sudo/root)!
             """.format(
                 script_sh
             )
