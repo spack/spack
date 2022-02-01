@@ -381,7 +381,11 @@ def _remove(args):
 def _mirror(args):
     mirror_dir = os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
 
-    for spec_str in spack.bootstrap.all_root_specs(development=args.dev):
+    # TODO: Here we are adding gnuconfig manually, but this can be fixed
+    # TODO: as soon as we have an option to add to a mirror all the possible
+    # TODO: dependencies of a spec
+    root_specs = spack.bootstrap.all_root_specs(development=args.dev) + ['gnuconfig']
+    for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
         llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
         # Suppress tty from the call below for terser messages
@@ -404,24 +408,28 @@ def _mirror(args):
         llnl.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):
+        metadata_rel_dir = os.path.join('metadata', subdir)
         metadata_yaml = os.path.join(
-            args.root_dir, 'metadata', subdir, 'metadata.yaml'
+            args.root_dir, metadata_rel_dir, 'metadata.yaml'
         )
         llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
         with open(metadata_yaml, mode='w') as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
-        return os.path.dirname(metadata_yaml)
+        return os.path.dirname(metadata_yaml), metadata_rel_dir
 
-    instructions = ("\nTo register the mirror on the platform where it's supposed "
-                    "to be used run the following command(s):\n")
-    cmd = '  % spack bootstrap add --trust {0} {1}\n'
-    directory = write_metadata(subdir='sources', metadata=SOURCE_METADATA)
-    instructions += cmd.format('local-sources', directory)
+    instructions = ('\nTo register the mirror on the platform where it\'s supposed '
+                    'to be used, move "{0}" to its final location and run the '
+                    'following command(s):\n\n').format(args.root_dir)
+    cmd = '  % spack bootstrap add --trust {0} <final-path>/{1}\n'
+    _, rel_directory = write_metadata(subdir='sources', metadata=SOURCE_METADATA)
+    instructions += cmd.format('local-sources', rel_directory)
     if args.binary_packages:
-        directory = write_metadata(subdir='binaries', metadata=BINARY_METADATA)
-        shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), directory)
-        shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), directory)
-        instructions += cmd.format('local-binaries', directory)
+        abs_directory, rel_directory = write_metadata(
+            subdir='binaries', metadata=BINARY_METADATA
+        )
+        shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
+        shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
+        instructions += cmd.format('local-binaries', rel_directory)
     print(instructions)
 
 

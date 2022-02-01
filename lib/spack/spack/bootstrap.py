@@ -437,6 +437,8 @@ class _SourceBootstrapper(object):
             self.last_search = info
             return True
 
+        tty.info("Bootstrapping {0} from sources".format(abstract_spec_str))
+
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
