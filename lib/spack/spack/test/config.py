@@ -21,6 +21,7 @@ import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
+import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
@@ -1241,3 +1242,17 @@ def test_user_cache_path_is_overridable(working_env):
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ['SPACK_USER_CACHE_PATH'] = ''
     assert os.path.expanduser("~/.spack") == spack.paths._get_user_cache_path()
+
+
+def test_modules_config_update_toplevel_to_default_module_set():
+    data = {'enable': ['tcl', 'lmod']}
+    assert spack.schema.modules.update(data)
+    assert data == {'default': {'enable': ['tcl', 'lmod']}}
+
+
+def test_modules_config_update_toplevel_to_default_already_exists():
+    # We don't merge top-level keywords with those under default:, since
+    # that's something the user can better manage.
+    data = {'enable': ['tcl', 'lmod'], 'default': {'enable': ['tcl']}}
+    assert not spack.schema.modules.update(data)
+    assert data == {'enable': ['tcl', 'lmod'], 'default': {'enable': ['tcl']}}

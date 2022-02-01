@@ -8,6 +8,8 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import warnings
+
 import spack.schema.environment
 import spack.schema.projections
 
@@ -225,3 +227,39 @@ schema = {
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+def update(data):
+    """Update the data in place to update deprecations.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    changed = False
+
+    deprecated_top_level_keys = ('arch_folder', 'lmod', 'roots', 'enable',
+                                 'tcl', 'use_view')
+
+    # Don't update when we already have a default module set
+    if 'default' in data:
+        if any(key in data for key in deprecated_top_level_keys):
+            warnings.warn('Did not move top-level module properties into "default" '
+                          'module set, because the "default" module set is already '
+                          'defined')
+        return changed
+
+    default = {}
+
+    # Move deprecated top-level keys under "default" module set.
+    for key in deprecated_top_level_keys:
+        if key in data:
+            default[key] = data.pop(key)
+
+    if default:
+        changed = True
+        data['default'] = default
+
+    return changed
