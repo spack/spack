@@ -494,7 +494,10 @@ class Python(AutotoolsPackage):
 
         if spec.satisfies('@2.7.9:2,3.4:'):
             if '+ensurepip' in spec:
-                config_args.append('--with-ensurepip=install')
+                if '%aocc@3.2.0:' in spec:
+                    config_args.append('--without-ensurepip')
+                else:
+                    config_args.append('--with-ensurepip=install')
             else:
                 config_args.append('--without-ensurepip')
 
