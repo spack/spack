@@ -35,9 +35,8 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
-    version("8.0.0", tag="8.0.0", preferred=True)
-    version("8.0b",  commit="eb8d038")
-    version("8.0a",  tag="8.0a")
+    version("8.0.1", tag="8.0.1")
+    version("8.0.0", tag="8.0.0")
     version("7.9.0b",  commit="94147e5")
     version("7.9.0a",  commit="fc74b85")
     version("7.8.1",   tag="7.8.1")
@@ -65,8 +64,8 @@ class Neuron(CMakePackage):
     )
 
     variant("cmake",      default=True, description="Build NEURON using cmake")
-    variant("binary",     default=True, description="Create special as a binary instead of shell script (until 8.0.0)")
-    conflicts("~binary", when='@8.0.1:')
+    variant("binary",     default=True, description="Create special as a binary instead of shell script (8.0.x and earlier)")
+    conflicts("~binary", when='@8.0.999:')
     variant("coreneuron", default=False, description="Enable CoreNEURON support")
     variant("mod-compatibility",  default=True, description="Enable CoreNEURON compatibility for MOD files")
     variant("cross-compile",  default=False, description="Build for cross-compile environment")
@@ -123,7 +122,7 @@ class Neuron(CMakePackage):
     depends_on("tau",         when="+profile")
     depends_on("coreneuron+legacy-unit", when="+coreneuron+legacy-unit")
     depends_on("coreneuron~legacy-unit", when="+coreneuron~legacy-unit")
-    depends_on("py-pytest-cov", when="+tests@8.0b:")
+    depends_on("py-pytest-cov", when="+tests@8:")
 
     conflicts("+cmake",   when="@0:7.8.0b,2018-10")
     conflicts("~shared",  when="+python")
@@ -165,7 +164,7 @@ class Neuron(CMakePackage):
             args.append("-DCMAKE_BUILD_TYPE=Custom")
         if "+mod-compatibility" in self.spec:
             args.append("-DNRN_ENABLE_MOD_COMPATIBILITY:BOOL=ON")
-        if "+binary" in self.spec and '@:8.0.0' in self.spec:
+        if "+binary" in self.spec and '@:8.0.999' in self.spec:
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
         if "+legacy-unit" in self.spec:
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
@@ -174,7 +173,7 @@ class Neuron(CMakePackage):
         # NVHPC 21.11 and newer detect ABM support and define __ABM__, which
         # breaks Random123 compilation. NEURON inserts a workaround for this in
         # https://github.com/neuronsimulator/nrn/pull/1587.
-        if self.spec.satisfies('@:8.0.0%nvhpc@21.11:'):
+        if self.spec.satisfies('@:8.0.999%nvhpc@21.11:'):
             compilation_flags.append('-DR123_USE_INTRIN_H=0')
         # Added in https://github.com/neuronsimulator/nrn/pull/1574, this
         # improves ccache performance in CI builds.
