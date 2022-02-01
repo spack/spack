@@ -59,6 +59,10 @@ class Sarus(CMakePackage):
             "-DCMAKE_TOOLCHAIN_FILE=./cmake/toolchain_files/gcc.cmake",
             "-DENABLE_SSH=%s" % ("+ssh" in spec),
         ]
+
+        if "@1.4.1:" in spec:
+            args.append(self.define("ENABLE_UNIT_TESTS", self.run_tests))
+
         return args
 
     def install(self, spec, prefix):
