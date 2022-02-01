@@ -92,7 +92,7 @@ class Samrai(AutotoolsPackage):
 
         if '+silo' in self.spec:
             options.append('--with-silo=%s' % self.spec['silo'].prefix)
-            
+
         if '+shared' in self.spec:
             options.append('--enable-shared')
 
