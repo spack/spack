@@ -80,7 +80,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('single_precision', default=False, description="Use single precision arithmetics")
     variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', when='+python', type=('build', 'run'))
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
