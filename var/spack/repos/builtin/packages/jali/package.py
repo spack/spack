@@ -32,8 +32,7 @@ class Jali(CMakePackage):
 
     depends_on('mpi')
 
-    if version < Version('1.1.6'):
-        depends_on('boost')
+    depends_on('boost', when='@:1.1.5')
 
     depends_on('mstk@3.3.5: +exodusii+parallel~use_markers partitioner=all', when='+mstk')
 
