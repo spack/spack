@@ -110,6 +110,9 @@ def _group_by_prefix(paths):
     return groups.items()
 
 
+# TODO consolidate this with by_executable
+# Packages should be able to define both .libraries and .executables in the future
+# determine_spec_details should get all relevant libraries and executables in one call
 def by_library(packages_to_check, path_hints=None):
     # Techniques for finding libraries is determined on a per recipe basis in
     # the determine_version class method. Some packages will extract the
