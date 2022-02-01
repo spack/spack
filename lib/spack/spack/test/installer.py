@@ -1274,7 +1274,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     assert fake_db.called
 
 
-def test_TermStatusLine():
+def test_term_status_line():
     # Smoke test for TermStatusLine; to actually test output it would be great
     # to pass a StringIO instance, but we use tty.msg() internally which does not
     # accept that. `with log_output(buf)` doesn't really work because it trims output
