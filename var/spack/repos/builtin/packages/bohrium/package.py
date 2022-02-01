@@ -68,8 +68,6 @@ class Bohrium(CMakePackage, CudaPackage):
     conflicts('~node~proxy')
     conflicts('~openmp~opencl~cuda')
 
-    conflicts('+cbridge', when='~python')
-
     #
     # Dependencies
     #
@@ -86,10 +84,9 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv+imgproc', when="+opencv")
-    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
-    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
-    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv@:3+imgproc', when="+opencv")
+    depends_on('opencv+cudev', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', type=("build", "link", "test"), when="+python")

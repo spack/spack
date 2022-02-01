@@ -189,7 +189,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 

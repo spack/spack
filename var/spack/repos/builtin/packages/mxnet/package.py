@@ -63,7 +63,7 @@ class Mxnet(CMakePackage, CudaPackage):
     depends_on('cuda@:11.3', when='@2.0.0: +cuda')
     depends_on('cudnn', when='+cudnn')
     depends_on('nccl', when='+nccl')
-    depends_on('opencv+core+highgui+imgproc+imgcodecs', when='+opencv')
+    depends_on('opencv+highgui+imgproc+imgcodecs', when='+opencv')
     depends_on('lapack', when='+lapack')
     depends_on('onednn', when='+mkldnn')
 
