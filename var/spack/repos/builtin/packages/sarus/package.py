@@ -18,6 +18,7 @@ class Sarus(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("1.4.1", commit="a73f6ca9cafb768f3132cfcef8c826af34eeff94")
     version("1.4.0", commit="c6190faf45d5e0ff5348c70c2d4b1e49b2e01039")
     version("1.3.3", commit="f2c000caf3d6a89ea019c70e2703da46799b0e9c")
     version("1.3.2", commit="ac6a1b8708ec402bbe810812d8af41d1b7bf1860")
@@ -72,14 +73,23 @@ class Sarus(CMakePackage):
             """
                 To complete Sarus's configuration:
 
-                1. Make sure sarus and its dependencies (tini, squashfs) are in PATH, for example do `spack load sarus`.
+                1. Make sure sarus and its dependencies (tini, squashfs) are in
+                   PATH, for example do `spack load sarus`.
+
                 2. Execute the script {} with root privileges.
 
-                The script generates a basic working configuration. For more details:
+                The script generates a basic working configuration. For more
+                details:
 
                 https://sarus.readthedocs.io/en/stable/config/basic_configuration.html
 
-                For production it is strongly recommended to install with escalated privileges (sudo/root)!
+                For production it is strongly recommended to install with
+                escalated privileges (sudo/root) in order to comply with Sarus'
+                internal security checks. For more information on these checks,
+                see :
+
+                https://sarus.readthedocs.io/en/stable/install/post-installation.html#security-related
+
             """.format(
                 script_sh
             )
