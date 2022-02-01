@@ -39,6 +39,7 @@ import spack.util.environment
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
+import spack.util.url
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = 'metadata.yaml'
@@ -314,9 +315,24 @@ class _BuildcacheBootstrapper(object):
         return False
 
     @property
+    def mirror_url(self):
+        # Absolute paths
+        if os.path.isabs(self.url):
+            return spack.util.url.format(self.url)
+
+        # Relative paths
+        if self.url.startswith('.'):
+            return spack.util.url.format(
+                os.path.join(self.metadata_dir, self.url)
+            )
+
+        # By default assume it's already a url
+        return self.url
+
+    @property
     def mirror_scope(self):
         return spack.config.InternalConfigScope(
-            'bootstrap_buildcache', {'mirrors:': {self.name: self.url}}
+            'bootstrap_buildcache', {'mirrors:': {self.name: self.mirror_url}}
         )
 
     def try_import(self, module, abstract_spec_str):
@@ -353,13 +369,29 @@ class _SourceBootstrapper(object):
     def __init__(self, conf):
         self.name = conf['name']
         self.url = conf['info']['url']
+        self.metadata_dir = spack.util.path.canonicalize_path(conf['metadata'])
         self.conf = conf
         self.last_search = None
 
     @property
+    def mirror_url(self):
+        # Absolute paths
+        if os.path.isabs(self.url):
+            return spack.util.url.format(self.url)
+
+        # Relative paths
+        if self.url.startswith('.'):
+            return spack.util.url.format(
+                os.path.join(self.metadata_dir, self.url)
+            )
+
+        # By default assume it's already a url
+        return self.url
+
+    @property
     def mirror_scope(self):
         return spack.config.InternalConfigScope(
-            'bootstrap_source', {'mirrors:': {self.name: self.url}}
+            'bootstrap_source', {'mirrors:': {self.name: self.mirror_url}}
         )
 
     def try_import(self, module, abstract_spec_str):

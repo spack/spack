@@ -30,13 +30,16 @@ level = "long"
 # Tarball to be downloaded if binary packages are requested in a local mirror
 BINARY_TARBALL = 'https://github.com/alalazo/spack-bootstrap-mirrors/releases/download/v0.1-rc.2/bootstrap-buildcache.tar.gz'
 
+#: Subdirectory where to create the mirror
+LOCAL_MIRROR_DIR = 'local-mirror'
+
 # Metadata for a generated binary mirror
 BINARY_METADATA = {
     'type': 'buildcache',
     'description': ('Buildcache copied from a public tarball available on Github.'
                     'The sha256 checksum of binaries is checked before installation.'),
     'info': {
-        'url': None,
+        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR),
         'homepage': 'https://github.com/alalazo/spack-bootstrap-mirrors',
         'releases': 'https://github.com/alalazo/spack-bootstrap-mirrors/releases',
         'tarball': BINARY_TARBALL
@@ -51,7 +54,7 @@ SOURCE_METADATA = {
     'type': 'install',
     'description': 'Mirror with software needed to bootstrap Spack',
     'info': {
-        'url': None
+        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR)
     }
 }
 
@@ -376,7 +379,7 @@ def _remove(args):
 
 
 def _mirror(args):
-    mirror_dir = os.path.join(args.root_dir, 'local-mirror')
+    mirror_dir = os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
 
     for spec_str in spack.bootstrap.all_root_specs(development=args.dev):
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
@@ -404,7 +407,6 @@ def _mirror(args):
         metadata_yaml = os.path.join(
             args.root_dir, 'metadata', subdir, 'metadata.yaml'
         )
-        metadata['info']['url'] = 'file://' + os.path.abspath(mirror_dir)
         llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
         with open(metadata_yaml, mode='w') as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
