@@ -20,6 +20,7 @@ class PyRst2pdf(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-docutils', type=('build', 'run'))
     depends_on('py-importlib-metadata', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
