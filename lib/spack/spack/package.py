@@ -178,7 +178,7 @@ class DetectablePackageMeta(object):
     """
     def __init__(cls, name, bases, attr_dict):
         if hasattr(cls, 'executables') and hasattr(cls, 'libraries'):
-            msg = "a package can have either an 'executables' or a 'libraries' attribute"
+            msg = "a package can have either an 'executables' or 'libraries' attribute"
             msg += " [package '{0.name}' defines both]"
             raise ValueError(msg.format(cls))
 
