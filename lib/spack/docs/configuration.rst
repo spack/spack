@@ -339,7 +339,7 @@ higher-precedence scope is *prepended* to the defaults. ``spack config
 get config`` shows the result:
 
 .. code-block:: console
-   :emphasize-lines: 7-10
+   :emphasize-lines: 5-8
 
    $ spack config get config
    config:
@@ -367,7 +367,7 @@ user config looked like this:
 The merged configuration would look like this:
 
 .. code-block:: console
-   :emphasize-lines: 7-8
+   :emphasize-lines: 5-6
 
    $ spack config get config
    config:
