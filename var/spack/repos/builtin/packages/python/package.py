@@ -251,7 +251,6 @@ class Python(AutotoolsPackage):
     )
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
-
     conflicts('%nvhpc')
     conflicts('+ensurepip', when='%aocc')
 
