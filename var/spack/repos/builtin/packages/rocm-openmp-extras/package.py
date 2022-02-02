@@ -252,7 +252,8 @@ class RocmOpenmpExtras(Package):
                 aomp_extras.format(src) + '/libm/CMakeLists.txt')
 
         # Openmp adjustments
-        if self.spec.version >= Version('4.5.0') or self.spec.version == Version('master'):
+        if (self.spec.version >= Version('4.5.0') or
+            self.spec.version == Version('master')):
             filter_file(
                 '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
                 libomptarget.format(src) + '/deviceRTLs/libm/CMakeLists.txt')
