@@ -72,28 +72,62 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
 
-    examples_src_dir = 'examples'
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
+    def dep_prefix(self, depname, set=True):
+        """(Hack) Set/get dependency prefix."""
+        filestore = join_path(self.install_test_root, depname+'_prefix.txt')
+        if set:
+            with open(filestore, 'w') as out_file:
+                path = self.spec[depname].prefix
+                out_file.write('{0}\n'.format(path))
+        else:
+            with open(filestore, 'r') as in_file:
+                return in_file.read().strip()
 
     @run_after('install')
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies('@master'):
-            self.cache_extra_test_sources([self.examples_src_dir])
+        self.cache_extra_test_sources(['examples'])
+        self.cmake_bin(set=True)
+        self.dep_prefix('mpi', set=True)
+        self.dep_prefix('blaspp', set=True)
+        self.dep_prefix('lapackpp', set=True)
 
     def test(self):
         if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
             print('Skipping: stand-alone tests only run on master with +mpi')
             return
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        test_bld_dir = join_path(test_dir, 'build')
-        with working_dir(test_bld_dir, create=True):
-            cmake('..')
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'build')
+        with working_dir(test_dir, create=True):
+            cmake_bin = self.cmake_bin(set=False)
+            prefixes = (
+                       self.dep_prefix('blaspp', set=False),
+                       self.dep_prefix('lapackpp', set=False),
+                       self.dep_prefix('mpi', set=False),
+                       )
+            self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH='+';'.join(prefixes), '..'])
+            #cmake('..')
             make()
             test_args = ['-n', '4', './ex05_blas']
-            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
-            if mpiexe_f:
-                self.run_test(mpiexe_f.command, test_args,
+            mpi_path = self.dep_prefix('mpi', set=False) + '/bin/'
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec', path=mpi_path)
+            self.run_test(mpiexe_f.command, test_args,
                               purpose='SLATE smoke test')
             make('clean')
+
+
