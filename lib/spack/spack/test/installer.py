@@ -1272,3 +1272,14 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     # Make sure that `remove` was called on the database after an unsuccessful
     # attempt to restore the backup.
     assert fake_db.called
+
+
+def test_term_status_line():
+    # Smoke test for TermStatusLine; to actually test output it would be great
+    # to pass a StringIO instance, but we use tty.msg() internally which does not
+    # accept that. `with log_output(buf)` doesn't really work because it trims output
+    # and we actually want to test for escape sequences etc.
+    x = inst.TermStatusLine(enabled=True)
+    x.add("a")
+    x.add("b")
+    x.clear()

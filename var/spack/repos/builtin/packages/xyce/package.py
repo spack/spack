@@ -38,11 +38,16 @@ class Xyce(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
     depends_on('mpi', when='+mpi')
 
+    variant('plugin', default=False, description='Enable plug-in support for Xyce')
+    depends_on('adms', type=('build', 'run'), when='+plugin')
+
+    variant('shared', default=False, description='Enable shared libraries for Xyce')
+    conflicts('~shared', when='+plugin', msg='Disabling shared libraries is incompatible with the activation of plug-in support')
+
     # any option other than cxxstd=11 would be ignored in Xyce
     # this defaults to 11, consistent with what will be used,
     # and produces an error if any other value is attempted
     cxxstd_choices = ['11']
-    variant('shared', default=False, description='Enable shared libraries for Xyce')
     variant('cxxstd', default='11', values=cxxstd_choices, multi=False)
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
@@ -90,6 +95,7 @@ class Xyce(CMakePackage):
         else:
             options.append('-DCMAKE_CXX_COMPILER:STRING={0}'.format(self.compiler.cxx))
 
+        options.append(self.define_from_variant('Xyce_PLUGIN_SUPPORT', 'plugin'))
         options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
         options.append(self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
 

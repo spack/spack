@@ -17,9 +17,9 @@ class Libxcb(AutotoolsPackage):
 
     version('1.14',   sha256='a55ed6db98d43469801262d81dc2572ed124edc3db31059d4e9916eb9f844c34')
     version('1.13',   sha256='0bb3cfd46dbd90066bf4d7de3cad73ec1024c7325a4a0cbf5f4a0d4fa91155fb')
-    version('1.12',   sha256='092f147149d8a6410647a848378aaae749304d5b73e028ccb8306aa8a9e26f06', deprecated=True)
-    version('1.11.1', sha256='660312d5e64d0a5800262488042c1707a0261fa01a759bad265b1b75dd4844dd', deprecated=True)
-    version('1.11',   sha256='4b351e1dc95eb0a1c25fa63611a6f4cf033cb63e20997c4874c80bbd1876d0b4', deprecated=True)
+    version('1.12',   sha256='092f147149d8a6410647a848378aaae749304d5b73e028ccb8306aa8a9e26f06')
+    version('1.11.1', sha256='660312d5e64d0a5800262488042c1707a0261fa01a759bad265b1b75dd4844dd')
+    version('1.11',   sha256='4b351e1dc95eb0a1c25fa63611a6f4cf033cb63e20997c4874c80bbd1876d0b4')
 
     depends_on('libpthread-stubs')
     depends_on('libxau@0.99.2:')

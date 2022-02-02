@@ -683,7 +683,7 @@ class TermStatusLine(object):
             return
 
         self.pkg_set.clear()
-        self.pkg_list.clear()
+        self.pkg_list = []
 
         # Move the cursor to the beginning of the first "Waiting for" message and clear
         # everything after it.

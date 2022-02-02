@@ -16,6 +16,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/pika-org/pika/archive/0.0.0.tar.gz"
     maintainers = ['msimberg', 'albestro', 'teonnik']
 
+    version('0.1.0', sha256='aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327')
     version('main', git='https://github.com/pika-org/pika.git', branch='main')
 
     generator = 'Ninja'

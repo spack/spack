@@ -12,6 +12,7 @@ class PyAsgiref(PythonPackage):
     homepage = "https://asgi.readthedocs.io/en/latest/"
     url      = "https://github.com/django/asgiref/archive/3.2.7.tar.gz"
 
+    version('3.5.0', sha256='2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0')
     version('3.2.7', sha256='8a0b556b9e936418475f6670d59e14592c41d15d00b5ea4ad26f2b46f9f4fb9a')
     version('3.2.6', sha256='29788163bdad8d494475a0137eba39b111fd86fbe825534a9376f9f2ab44251a')
     version('3.2.5', sha256='eeb01ba02e86859746ee2a7bc8a75c484a006dc9575723563f24642a12b2bba8')
@@ -23,5 +24,7 @@ class PyAsgiref(PythonPackage):
     version('3.1.4', sha256='bf01c52111ef7af2adc1e6d90282d2a32c5ebe09e84ae448389ceff7cef53fa9')
     version('3.1.3', sha256='5b8bb7b3719b8c12a6c2363784a4d8c0eb5e980d8b4fdb6f38eccb52071dfab5')
 
-    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('python@3.7:', type=('build', 'run'), when='@3.5.0:')
+    depends_on('py-typing-extensions', type=('build', 'run'), when='@3.5: ^python@:3.7')
