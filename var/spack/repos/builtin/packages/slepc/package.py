@@ -154,15 +154,14 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # Set up SLEPC_DIR for dependent packages built with SLEPc
         env.set('SLEPC_DIR', self.prefix)
 
-    def run_hello_test(self):
-        """Run stand alone test: hello"""
-        test_dir = self.test_suite.current_test_data_dir
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([join_path('src', 'eps', 'tests')])
 
-        if not os.path.isfile(join_path(test_dir, 'hello.c')):
-            tty.warn('Skipping slepc test: failed to find hello.c')
-            return
-
-        exe = 'hello'
+    def run_test1_example(self, test_dir):
+        exe = 'test1'
         cc_exe = os.environ['CC']
 
         self.run_test(exe=cc_exe,
@@ -170,16 +169,18 @@ class Slepc(Package, CudaPackage, ROCmPackage):
                                '-L{0}'.format(self.prefix.lib),
                                '-L{0}'.format(self.spec['petsc'].prefix.lib),
                                '-L{0}'.format(self.spec['mpi'].prefix.lib),
-                               join_path(test_dir, 'hello.c'), '-o', exe,
-                               '-lslepc', '-lpetsc', '-lmpi'],
+                               join_path(test_dir, 'test1.c'), '-o', exe,
+                               '-lslepc', '-lpetsc', '-lmpi', '-lm'],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
-        self.run_test(exe=exe,
-                      options=[],
-                      expected=['Hello world'],
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
-
     def test(self):
-        self.run_hello_test()
+        """Run stand alone test"""
+
+        test_dir = join_path(self.test_suite.current_test_cache_dir, 'src', 'eps', 'tests')
+
+        if not os.path.isfile(join_path(test_dir, 'test1.c')):
+            tty.warn('Skipping slepc test: failed to find test1.c')
+            return
+
+        self.run_test1_example(test_dir)
