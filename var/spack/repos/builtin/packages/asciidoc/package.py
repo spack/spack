@@ -22,7 +22,7 @@ class Asciidoc(AutotoolsPackage):
     version('9.0.3',  sha256='b6ef4accd7959f51b532ab4d3aaa211e15f18fd544c4c3cc3ed712f5590a50de')
     version('9.0.2',  sha256='93fbe32d56380afee2f26389d8ebfdf33de72536449d53308120d3c20d2c1e17')
     version('8.6.10', sha256='22d6793d4f48cefb4a6963853212a214591a591ece1bcbc56af3c67c642003ea')
-    version('8.6.9',  sha256='45e95bed1e341980f7de0a66fdc467090956fe55d4625bdad8057cd926e0c6c6', deprecated=True)
+    version('8.6.9',  sha256='45e95bed1e341980f7de0a66fdc467090956fe55d4625bdad8057cd926e0c6c6')
 
     depends_on('libxml2',     type=('build', 'run'))
     depends_on('libxslt',     type=('build', 'run'))

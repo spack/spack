@@ -26,8 +26,8 @@ class Gaudi(CMakePackage):
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
     version('32.2', sha256='e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e')
-    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e', deprecated=True)
-    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230', deprecated=True)
+    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
+    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
 
     maintainers = ['drbenmorgan', "vvolkl"]
 
