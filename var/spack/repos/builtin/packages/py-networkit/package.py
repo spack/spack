@@ -47,4 +47,4 @@ class PyNetworkit(PythonPackage):
 
     def install_options(self, spec, prefix):
         # Enable ext. core-library + parallel build
-        return ['--networkit-external-core', '-j{0}'.format(make_jobs)]
+        return ['-j{0}'.format(make_jobs)]

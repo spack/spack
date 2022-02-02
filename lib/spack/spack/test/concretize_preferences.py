@@ -416,3 +416,13 @@ mpi:
         ):
             s = Spec('somevirtual').concretized()
             assert s.name == 'some-virtual-preferred'
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_accounts_for_packages_yaml(self):
+        with spack.config.override(
+                'packages:sticky-variant', {
+                    'variants': '+allow-gcc'
+                }
+        ):
+            s = Spec('sticky-variant %gcc').concretized()
+            assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')

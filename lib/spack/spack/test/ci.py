@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections
 import itertools as it
 import json
 import os
@@ -23,12 +22,6 @@ import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-
-try:
-    # dynamically import to keep vermin from complaining
-    collections_abc = __import__('collections.abc')
-except ImportError:
-    collections_abc = collections
 
 
 @pytest.fixture
@@ -363,6 +356,31 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits,
 
     assert(not ret)
     assert('Unable to merge {0}'.format(c1) in err)
+
+
+@pytest.mark.parametrize(
+    "obj, proto",
+    [
+        ({}, []),
+    ],
+)
+def test_ci_opt_argument_checking(obj, proto):
+    """Check that matches() and subkeys() return False when `proto` is not a dict."""
+    assert not ci_opt.matches(obj, proto)
+    assert not ci_opt.subkeys(obj, proto)
+
+
+@pytest.mark.parametrize(
+    "yaml",
+    [
+        {'extends': 1},
+    ],
+)
+def test_ci_opt_add_extends_non_sequence(yaml):
+    """Check that add_extends() exits if 'extends' is not a sequence."""
+    yaml_copy = yaml.copy()
+    ci_opt.add_extends(yaml, None)
+    assert yaml == yaml_copy
 
 
 def test_ci_workarounds():

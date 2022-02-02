@@ -1,0 +1,20 @@
+--- a/config/cmake/HDF5UseFortran.cmake
++++ a/config/cmake/HDF5UseFortran.cmake
+@@ -181,6 +181,7 @@
+          WRITE(8,'(I0)') max_decimal_prec
+          WRITE(8,'(I0)') num_ikinds
+          WRITE(8,'(I0)') num_rkinds
++         CLOSE(8)
+       END PROGRAM FC_AVAIL_KINDS
+   "
+ )
+--- a/m4/aclocal_fc.f90
++++ b/m4/aclocal_fc.f90
+@@ -151,6 +151,7 @@
+      WRITE(8,'(I0)') max_decimal_prec
+      WRITE(8,'(I0)') num_ikinds
+      WRITE(8,'(I0)') num_rkinds
++     CLOSE(8)
+ END PROGRAM FC_AVAIL_KINDS
+ !---- END ----- Determine the available KINDs for REALs and INTEGERs
+ 

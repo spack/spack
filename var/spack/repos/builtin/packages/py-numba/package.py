@@ -17,7 +17,7 @@ class PyNumba(PythonPackage):
     version('0.50.1', sha256='89e81b51b880f9b18c82b7095beaccc6856fcf84ba29c4f0ced42e4e5748a3a7')
     version('0.48.0', sha256='9d21bc77e67006b5723052840c88cc59248e079a907cc68f1a1a264e1eaba017')
     version('0.40.1', sha256='52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33')
-    version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3', deprecated=True)
+    version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3')
 
     depends_on('python@3.7:3.9', type=('build', 'run'), when='@0.54.0:')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.48.0:')
@@ -39,7 +39,7 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.25.0:',         type=('build', 'run'), when='@0.40.1')
     depends_on('py-llvmlite@0.20:0.25',       type=('build', 'run'), when='@0.35.1')
 
-    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
     depends_on('py-funcsigs', type=('build', 'run'), when='@:0.47 ^python@:3.2')
     depends_on('py-enum34', type=('build', 'run'), when='@:0.47 ^python@:3.3')
     depends_on('py-singledispatch', type=('build', 'run'), when='@:0.47 ^python@:3.3')

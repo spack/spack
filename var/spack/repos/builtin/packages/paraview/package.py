@@ -99,6 +99,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.3:', type='build')
 
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     # Workaround for
     # adding the following to your packages.yaml
     # packages:
@@ -147,6 +150,7 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5@1.10:', when='+hdf5 @5.10:')
     depends_on('adios2+mpi', when='+adios2+mpi')
     depends_on('adios2~mpi', when='+adios2~mpi')
     depends_on('jpeg')

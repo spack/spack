@@ -11,17 +11,12 @@ import functools
 import inspect
 import itertools
 import re
-import sys
 
 from six import StringIO
 
-if sys.version_info >= (3, 5):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
 import llnl.util.lang as lang
 import llnl.util.tty.color
+from llnl.util.compat import Sequence
 
 import spack.directives
 import spack.error as error
@@ -42,7 +37,9 @@ class Variant(object):
             description,
             values=(True, False),
             multi=False,
-            validator=None):
+            validator=None,
+            sticky=False
+    ):
         """Initialize a package variant.
 
         Args:
@@ -56,6 +53,8 @@ class Variant(object):
             multi (bool): whether multiple CSV are allowed
             validator (callable): optional callable used to enforce
                 additional logic on the set of values being validated
+            sticky (bool): if true the variant is set to the default value at
+                concretization time
         """
         self.name = name
         self.default = default
@@ -88,6 +87,7 @@ class Variant(object):
 
         self.multi = multi
         self.group_validator = validator
+        self.sticky = sticky
 
     def validate_or_raise(self, vspec, pkg=None):
         """Validate a variant spec against this package variant. Raises an

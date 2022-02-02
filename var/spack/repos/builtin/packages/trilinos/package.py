@@ -174,7 +174,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Conflicts ##########################
 
-    # Epetra packages
+    # Epetra stack
     with when('~epetra'):
         conflicts('+amesos')
         conflicts('+aztec')
@@ -188,8 +188,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+epetraextbtf')
         conflicts('+epetraextexperimental')
         conflicts('+epetraextgraphreorderings')
+    with when('+teko'):
+        conflicts('~stratimikos')
+        conflicts('@:12 gotype=long')
 
-    # Tpetra packages
+    # Tpetra stack
     with when('~kokkos'):
         conflicts('+cuda')
         conflicts('+rocm')
@@ -204,31 +207,29 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('+teko')
         conflicts('+zoltan2')
 
-    with when('+teko'):
-        conflicts('~amesos')
-        conflicts('~anasazi')
-        conflicts('~aztec')
-        conflicts('~ifpack')
-        conflicts('~ml')
-        conflicts('~stratimikos')
-        conflicts('@:12 gotype=long')
+    with when('~zoltan'):
+        conflicts('+isorropia')
+        conflicts('+scorec')
+        conflicts('+shylu')
+        conflicts('+zoltan2')
+    with when('~shards'):
+        conflicts('+intrepid')
+        conflicts('+intrepid2')
+        conflicts('+scorec')
+        conflicts('+stk')
+    with when('+scorec'):
+        conflicts('~mpi')
+        conflicts('~stk')
 
     # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
-    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
-    conflicts('+intrepid', when='~shards')
-    conflicts('+intrepid2', when='~shards')
-    conflicts('+isorropia', when='~zoltan')
+    conflicts('+minitensor', when='~boost')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
+    conflicts('+stokhos', when='~kokkos')
     conflicts('+tempus', when='~nox')
-    conflicts('+zoltan2', when='~zoltan')
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts('+dtk', when='~boost')
@@ -259,7 +260,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=11', when='@13.2:')
+    conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -279,6 +281,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
+    # Build hangs with CUDA 11.6 (see #28439)
+    conflicts('+cuda +stokhos', when='^cuda@11.6:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -452,7 +456,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options.extend([
             define('Trilinos_VERBOSE_CONFIGURE', False),
             define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             define_trilinos_enable('ALL_OPTIONAL_PACKAGES', False),
             define_trilinos_enable('ALL_PACKAGES', False),
             define_trilinos_enable('CXX11', True),
@@ -465,6 +468,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('EXPLICIT_INSTANTIATION',
                                    'explicit_template_instantiation')
         ])
+
+        if spec.version >= Version('13'):
+            options.append(define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            # Prior to version 13, Trilinos would erroneously inject
+            # '-std=c++11' regardless of CMAKE_CXX_STANDARD value
+            options.append(define(
+                'Trilinos_CXX11_FLAGS',
+                self.compiler.cxx14_flag
+                if spec.variants['cxxstd'].value == '14'
+                else self.compiler.cxx11_flag
+            ))
 
         # ################## Trilinos Packages #####################
 
@@ -517,6 +532,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('EpetraExt_BUILD_GRAPH_REORDERINGS',
                                 'epetraextgraphreorderings'),
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
+            define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
 
         if '+dtk' in spec:
