@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -150,3 +150,20 @@ def test_nested_use_of_context_manager(mutable_config):
         with spack.bootstrap.ensure_bootstrap_configuration():
             assert spack.config.config != user_config
     assert spack.config.config == user_config
+
+
+@pytest.mark.parametrize('expected_missing', [False, True])
+def test_status_function_find_files(
+        mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
+):
+    if not expected_missing:
+        mock_executable('foo', 'echo Hello WWorld!')
+
+    monkeypatch.setattr(
+        spack.bootstrap, '_optional_requirements',
+        lambda: [spack.bootstrap._required_system_executable('foo', 'NOT FOUND')]
+    )
+    monkeypatch.setenv('PATH', str(tmpdir.join('bin')))
+
+    _, missing = spack.bootstrap.status_message('optional')
+    assert missing is expected_missing

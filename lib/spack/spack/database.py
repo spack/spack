@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -734,7 +734,10 @@ class Database(object):
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise CorruptDatabaseError("error parsing database:", str(e))
+            raise six.raise_from(
+                CorruptDatabaseError("error parsing database:", str(e)),
+                e,
+            )
 
         if fdata is None:
             return

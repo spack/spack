@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,6 @@ class Silo(AutotoolsPackage):
     depends_on('automake', type='build', when='+shared')
     depends_on('libtool', type='build', when='+shared')
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5@:1.10', when='@:4.10.2+hdf5')
     depends_on('hdf5', when='+hdf5')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
@@ -55,7 +54,12 @@ class Silo(AutotoolsPackage):
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
     patch('H5FD_class_t-terminate.patch', when='@:4.10.2 ^hdf5@1.10.0:')
+    # H5EPR_SEMI_COLON.patch should be applied only to silo@4.11 when building
+    # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later 1.12
+    patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:1.12')
 
+    conflicts('hdf5@1.10.8:', when="@:4.10.2")
+    conflicts('hdf5@1.13.0:', when="@:4.11")
     conflicts('+hzip', when="@4.11-bsd")
     conflicts('+fpzip', when="@4.11-bsd")
     conflicts('+hzip', when="@4.10.2-bsd")

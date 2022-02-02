@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,9 +43,6 @@ class PyNetcdf4(PythonPackage):
     # Older versions of the package get a false negative result when checking
     # the version of HDF5.
     patch('check_hdf5version.patch', when='@:1.2.9 ^hdf5@1.10:')
-
-    # We can skip the 'build' phase to avoid recompilation of the library.
-    phases = ['install']
 
     def setup_build_environment(self, env):
         """Ensure installed netcdf and hdf5 libraries are used"""

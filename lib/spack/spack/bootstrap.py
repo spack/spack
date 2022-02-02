@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import functools
 import json
 import os
 import os.path
+import platform
 import re
 import sys
 import sysconfig
@@ -76,18 +77,11 @@ def _try_import_from_store(module, query_spec, query_info=None):
     installed_specs = spack.store.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        python_spec = candidate_spec['python']
-        lib_spd = python_spec.package.default_site_packages_dir
-        lib64_spd = lib_spd.replace('lib/', 'lib64/')
-        lib_debian_derivative = os.path.join(
-            'lib', 'python{0}'.format(python_spec.version.up_to(1)), 'dist-packages'
-        )
-
-        module_paths = [
-            os.path.join(candidate_spec.prefix, lib_debian_derivative),
-            os.path.join(candidate_spec.prefix, lib_spd),
-            os.path.join(candidate_spec.prefix, lib64_spd)
-        ]
+        pkg = candidate_spec['python'].package
+        module_paths = {
+            os.path.join(candidate_spec.prefix, pkg.purelib),
+            os.path.join(candidate_spec.prefix, pkg.platlib),
+        }
         sys.path.extend(module_paths)
 
         try:
@@ -578,7 +572,9 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                         root=True, order='post', deptype=('link', 'run')
                 ):
                     env_mods.extend(
-                        spack.user_environment.environment_modifications_for_spec(dep)
+                        spack.user_environment.environment_modifications_for_spec(
+                            dep, set_package_py_globals=False
+                        )
                     )
                 cmd.add_default_envmod(env_mods)
                 return cmd
@@ -837,3 +833,142 @@ def ensure_flake8_in_path_or_raise():
     """Ensure that flake8 is in the PATH or raise."""
     executable, root_spec = 'flake8', flake8_root_spec()
     return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+
+
+def _missing(name, purpose, system_only=True):
+    """Message to be printed if an executable is not found"""
+    msg = '[{2}] MISSING "{0}": {1}'
+    if not system_only:
+        return msg.format(name, purpose, '@*y{{B}}')
+    return msg.format(name, purpose, '@*y{{-}}')
+
+
+def _required_system_executable(exes, msg):
+    """Search for an executable is the system path only."""
+    if isinstance(exes, six.string_types):
+        exes = (exes,)
+    if spack.util.executable.which_string(*exes):
+        return True, None
+    return False, msg
+
+
+def _required_python_module(module, query_spec, msg):
+    """Check if a Python module is available in the current interpreter or
+    if it can be loaded from the bootstrap store
+    """
+    if _python_import(module) or _try_import_from_store(module, query_spec):
+        return True, None
+    return False, msg
+
+
+def _required_executable(exes, query_spec, msg):
+    """Search for an executable in the system path or in the bootstrap store."""
+    if isinstance(exes, six.string_types):
+        exes = (exes,)
+    if (spack.util.executable.which_string(*exes) or
+            _executables_in_store(exes, query_spec)):
+        return True, None
+    return False, msg
+
+
+def _core_requirements():
+    _core_system_exes = {
+        'make': _missing('make', 'required to build software from sources'),
+        'patch': _missing('patch', 'required to patch source code before building'),
+        'bash': _missing('bash', 'required for Spack compiler wrapper'),
+        'tar': _missing('tar', 'required to manage code archives'),
+        'gzip': _missing('gzip', 'required to compress/decompress code archives'),
+        'unzip': _missing('unzip', 'required to compress/decompress code archives'),
+        'bzip2': _missing('bzip2', 'required to compress/decompress code archives'),
+        'git': _missing('git', 'required to fetch/manage git repositories')
+    }
+    if platform.system().lower() == 'linux':
+        _core_system_exes['xz'] = _missing(
+            'xz', 'required to compress/decompress code archives'
+        )
+
+    # Executables that are not bootstrapped yet
+    result = [_required_system_executable(exe, msg)
+              for exe, msg in _core_system_exes.items()]
+    # Python modules
+    result.append(_required_python_module(
+        'clingo', clingo_root_spec(),
+        _missing('clingo', 'required to concretize specs', False)
+    ))
+    return result
+
+
+def _buildcache_requirements():
+    _buildcache_exes = {
+        'file': _missing('file', 'required to analyze files for buildcaches'),
+        ('gpg2', 'gpg'): _missing('gpg2', 'required to sign/verify buildcaches', False)
+    }
+    if platform.system().lower() == 'darwin':
+        _buildcache_exes['otool'] = _missing('otool', 'required to relocate binaries')
+
+    # Executables that are not bootstrapped yet
+    result = [_required_system_executable(exe, msg)
+              for exe, msg in _buildcache_exes.items()]
+
+    if platform.system().lower() == 'linux':
+        result.append(_required_executable(
+            'patchelf', patchelf_root_spec(),
+            _missing('patchelf', 'required to relocate binaries', False)
+        ))
+
+    return result
+
+
+def _optional_requirements():
+    _optional_exes = {
+        'zstd': _missing('zstd', 'required to compress/decompress code archives'),
+        'svn': _missing('svn', 'required to manage subversion repositories'),
+        'hg': _missing('hg', 'required to manage mercurial repositories')
+    }
+    # Executables that are not bootstrapped yet
+    result = [_required_system_executable(exe, msg)
+              for exe, msg in _optional_exes.items()]
+    return result
+
+
+def _development_requirements():
+    return [
+        _required_executable('isort', isort_root_spec(),
+                             _missing('isort', 'required for style checks', False)),
+        _required_executable('mypy', mypy_root_spec(),
+                             _missing('mypy', 'required for style checks', False)),
+        _required_executable('flake8', flake8_root_spec(),
+                             _missing('flake8', 'required for style checks', False)),
+        _required_executable('black', black_root_spec(),
+                             _missing('black', 'required for code formatting', False))
+    ]
+
+
+def status_message(section):
+    """Return a status message to be printed to screen that refers to the
+    section passed as argument and a bool which is True if there are missing
+    dependencies.
+
+    Args:
+        section (str): either 'core' or 'buildcache' or 'optional' or 'develop'
+    """
+    pass_token, fail_token = '@*g{[PASS]}', '@*r{[FAIL]}'
+
+    # Contain the header of the section and a list of requirements
+    spack_sections = {
+        'core': ("{0} @*{{Core Functionalities}}", _core_requirements),
+        'buildcache': ("{0} @*{{Binary packages}}", _buildcache_requirements),
+        'optional': ("{0} @*{{Optional Features}}", _optional_requirements),
+        'develop': ("{0} @*{{Development Dependencies}}", _development_requirements)
+    }
+    msg, required_software = spack_sections[section]
+
+    with ensure_bootstrap_configuration():
+        missing_software = False
+        for found, err_msg in required_software():
+            if not found:
+                missing_software = True
+                msg += "\n  " + err_msg
+        msg += '\n'
+        msg = msg.format(pass_token if not missing_software else fail_token)
+    return msg, missing_software

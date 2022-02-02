@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class PyRich(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('python@3.6.2:3', type=('build', 'run'), when='@10.14.0:')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-poetry-core@1:', type='build')
     depends_on('py-typing-extensions@3.7.4:4', type=('build', 'run'), when='@10.14.0: ^python@:3.7')
     depends_on('py-typing-extensions@3.7.4:3', type=('build', 'run'), when='@:10.13.0')
     depends_on('py-dataclasses@0.7:0.8', when='^python@:3.6', type=('build', 'run'))

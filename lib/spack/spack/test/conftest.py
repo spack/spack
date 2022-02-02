@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
+from typing import Dict  # novm
 
 import py
 import pytest
@@ -50,8 +51,8 @@ from spack.util.pattern import Bunch
 #
 # Return list of shas for latest two git commits in local spack repo
 #
-@pytest.fixture
-def last_two_git_commits(scope='session'):
+@pytest.fixture(scope='session')
+def last_two_git_commits():
     git = spack.util.executable.which('git', required=True)
     spack_git_path = spack.paths.prefix
     with working_dir(spack_git_path):
@@ -1488,7 +1489,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}  # type: ignore
+    versions = {}  # type: Dict
 
 
 @pytest.fixture

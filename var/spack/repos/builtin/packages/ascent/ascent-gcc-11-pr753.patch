@@ -1,0 +1,21 @@
+From 627b2eb21a0885f5ac2133aac00c1da3ecbfc083 Mon Sep 17 00:00:00 2001
+From: Charles Gueunet <charles.gueunet@gmail.com>
+Date: Mon, 7 Jun 2021 11:55:31 +0200
+Subject: [PATCH] Fix: missing include for G++11
+
+---
+ src/utilities/holo_compare/holo_compare.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/utilities/holo_compare/holo_compare.cpp b/src/utilities/holo_compare/holo_compare.cpp
+index 4b2f66eaf..c3b5c934e 100644
+--- a/src/utilities/holo_compare/holo_compare.cpp
++++ b/src/utilities/holo_compare/holo_compare.cpp
+@@ -55,6 +55,7 @@
+ #include <vector>
+ #include <algorithm>
+ #include <cmath>
++#include <limits>
+ 
+ void usage()
+ {

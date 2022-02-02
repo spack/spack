@@ -12,6 +12,7 @@ on:
       - develop
     paths:
       - '.github/workflows/build-containers.yml'
+      - 'share/spack/docker/*'
   # Let's also build & tag Spack containers on releases.
   release:
     types: [published]
@@ -66,20 +67,21 @@ jobs:
         uses: docker/setup-buildx-action@94ab11c41e45d028884a99163086648e898eed25 # @v1
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9 # @v1
+        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7 # @v1
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to DockerHub
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9 # @v1
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7 # @v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[1] }}
-        uses: docker/build-push-action@a66e35b9cbcf4ad0ea91ffcaf7bbad63ad9e0229 # @v2
+        uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b # @v2
         with:
           file: share/spack/docker/${{matrix.dockerfile[1]}}
           platforms: ${{ matrix.dockerfile[2] }}

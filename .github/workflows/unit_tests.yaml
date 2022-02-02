@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: 3.9
     - name: Install Python Packages
@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -97,12 +97,19 @@ jobs:
     strategy:
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
-        concretizer: ['original', 'clingo']
+        concretizer: ['clingo']
+        include:
+        - python-version: 2.7
+          concretizer: original
+        - python-version: 3.6
+          concretizer: original
+        - python-version: 3.9
+          concretizer: original
     steps:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -114,7 +121,7 @@ jobs:
               patchelf cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov "coverage[toml]<=6.2"
           # ensure style checks are not skipped in unit tests for python >= 3.6
           # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
@@ -163,7 +170,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -173,7 +180,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -229,7 +236,7 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: 3.9
     - name: Install System packages
@@ -241,7 +248,7 @@ jobs:
               patchelf kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml] clingo
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2 clingo
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -278,13 +285,13 @@ jobs:
     - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade pytest codecov coverage[toml]
+          pip install --upgrade pytest codecov coverage[toml]==6.2
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -314,3 +321,32 @@ jobs:
       with:
         files: ./coverage.xml
         flags: unittests,macos
+
+  # Run audits on all the packages in the built-in repository
+  package-audits:
+    needs: [ validate, style, changes ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
+    - name: Package audits (with coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      run: |
+          . share/spack/setup-env.sh
+          coverage run $(which spack) audit packages
+          coverage combine
+          coverage xml
+    - name: Package audits (wwithout coverage)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      run: |
+          . share/spack/setup-env.sh
+          $(which spack) audit packages
+    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
+      with:
+        flags: unittests,linux,audits

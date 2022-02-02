@@ -3,4 +3,4 @@ enable:
 tcl:
   blacklist_implicits: true
   all:
-    autoload: 'direct'
+    autoload: direct

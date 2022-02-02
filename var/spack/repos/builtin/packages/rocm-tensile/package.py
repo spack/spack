@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,20 +12,22 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git      = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.3.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('4.5.2', sha256='da20256224749c0a8b44aaede25fbcd66cfeac483081af5d22f1d1fcf49dffc1')
+    version('4.5.0', sha256='26a27659c864b5372ca4407671c6e8d4be3bbc05c64fc18762ad570cd3b3af1f')
     version('4.3.1', sha256='6fce0ac22051a454fe984283766eb473dc50752cd30bad05acb3dbde6ef4f8b1')
     version('4.3.0', sha256='911c0cdb0146d43a2a59170e6a803f414a2b68df7d9ff369ab784d11a08d7264')
     version('4.2.0', sha256='198e357a14a79366b27b1097856d4821996bc36163be0cd2668910b253721060')
-    version('4.1.0', sha256='92b8ee13dfc11a67d5136227ee985622685790fd3f0f0e1ec6db411d4e9a3419')
-    version('4.0.0', sha256='cf105ce8c3e352d19713b3bf8bda77f25c1a692c4f2ca82d631ba15523ecc1cd')
-    version('3.10.0', sha256='8d5b50aadfa56a9195e4c387b8eb351c9b9b7671b136b624e07fe28db24bd330')
-    version('3.9.0', sha256='17a011f8c3433d4f8c2dddabd5854cf96c406d24592b3942deb51672c570882e')
-    version('3.8.0', sha256='c78a11db85fdf54bfd26533ee6fa98f6a6e789fa423537993061497ac5f22ed6')
-    version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d')
-    version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257')
+    version('4.1.0', sha256='92b8ee13dfc11a67d5136227ee985622685790fd3f0f0e1ec6db411d4e9a3419', deprecated=True)
+    version('4.0.0', sha256='cf105ce8c3e352d19713b3bf8bda77f25c1a692c4f2ca82d631ba15523ecc1cd', deprecated=True)
+    version('3.10.0', sha256='8d5b50aadfa56a9195e4c387b8eb351c9b9b7671b136b624e07fe28db24bd330', deprecated=True)
+    version('3.9.0', sha256='17a011f8c3433d4f8c2dddabd5854cf96c406d24592b3942deb51672c570882e', deprecated=True)
+    version('3.8.0', sha256='c78a11db85fdf54bfd26533ee6fa98f6a6e789fa423537993061497ac5f22ed6', deprecated=True)
+    version('3.7.0', sha256='488a7f76ea42a7601d0557f53068ec4832a2c7c06bb1b511470a4e35599a5a4d', deprecated=True)
+    version('3.5.0', sha256='71eb3eed6625b08a4cedb539dd9b596e3d4cc82a1a8063d37d94c0765b6f8257', deprecated=True)
 
     tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx000', 'gfx900',
                             'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack-',
@@ -42,7 +44,7 @@ class RocmTensile(CMakePackage):
     depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-cmake@' + ver, type='build',  when='@' + ver)
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('comgr@' + ver,                     when='@' + ver)
@@ -53,7 +55,7 @@ class RocmTensile(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'

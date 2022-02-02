@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class PyCheckmGenome(PythonPackage):
     version('1.0.13', sha256='ffb7e4966c0fac07c7e6e7db6f6eb5b48587fa83987f8a68efbaff2afb7da82e')
     version('1.0.11', sha256='e475d9817d12fa771dbccc80f47758b742fc67c25261dc8ca0c0dc898c2a5190')
 
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('hmmer@3.1b1:', type=('build', 'run'))
     depends_on('pplacer', type=('build', 'run'))
     depends_on('prodigal@2.6.1:', type=('build', 'run'))

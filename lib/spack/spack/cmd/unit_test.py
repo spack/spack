@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ import llnl.util.filesystem
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
+import spack.bootstrap
 import spack.paths
 
 description = "run spack's unit tests (wrapper around pytest)"
@@ -175,6 +176,12 @@ def add_back_pytest_args(args, unknown_args):
 
 def unit_test(parser, args, unknown_args):
     global pytest
+
+    # Ensure clingo is available before switching to the
+    # mock configuration used by unit tests
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_clingo_importable_or_raise()
+
     if pytest is None:
         vendored_pytest_dir = os.path.join(
             spack.paths.external_path, 'pytest-fallback'

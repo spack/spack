@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -138,10 +138,14 @@ class Llvm(CMakePackage, CudaPackage):
         description="Link LLVM tools against the LLVM shared library",
     )
     variant(
-        "all_targets",
-        default=False,
-        description="Build all supported targets, default targets "
-        "<current arch>,NVPTX,AMDGPU,CppBackend",
+        "targets",
+        default="none",
+        description=("What targets to build. Spack's target family is always added "
+                     "(e.g. X86 is automatically enabled when targeting znver2)."),
+        values=("all", "none", "aarch64", "amdgpu", "arm", "avr", "bpf", "cppbackend",
+                "hexagon", "lanai", "mips", "msp430", "nvptx", "powerpc", "riscv",
+                "sparc", "systemz", "webassembly", "x86", "xcore"),
+        multi=True
     )
     variant(
         "build_type",
@@ -165,6 +169,18 @@ class Llvm(CMakePackage, CudaPackage):
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
+
+    provides('libllvm@13', when='@13.0.0:13')
+    provides('libllvm@12', when='@12.0.0:12')
+    provides('libllvm@11', when='@11.0.0:11')
+    provides('libllvm@10', when='@10.0.0:10')
+    provides('libllvm@9', when='@9.0.0:9')
+    provides('libllvm@8', when='@8.0.0:8')
+    provides('libllvm@7', when='@7.0.0:7')
+    provides('libllvm@6', when='@6.0.0:6')
+    provides('libllvm@5', when='@5.0.0:5')
+    provides('libllvm@4', when='@4.0.0:4')
+    provides('libllvm@3', when='@3.0.0:3')
 
     extends("python", when="+python")
 
@@ -271,6 +287,11 @@ class Llvm(CMakePackage, CudaPackage):
     # Fixed in upstream versions of both
     conflicts('^cmake@3.19.0', when='@6.0.0:11.0.0')
 
+    # Starting in 3.9.0 CppBackend is no longer a target (see
+    # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
+    # the complete list of targets)
+    conflicts("targets=cppbackend", when='@3.9.0:')
+
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
 
@@ -288,8 +309,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch('sanitizer-ipc_perm_mode.patch', when="@5:7+compiler-rt%clang@11:")
     patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
 
-    # github.com/spack/spack/issues/24270 and MicrosoftDemangle: %gcc@10: and %clang@13:
-    patch('missing-includes.patch', when='@8:11')
+    # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
+    patch('missing-includes.patch', when='@8')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
@@ -320,6 +341,12 @@ class Llvm(CMakePackage, CudaPackage):
     # https://reviews.llvm.org/D102059
     patch('no_cyclades.patch', when='@10:12.0.0')
     patch('no_cyclades9.patch', when='@6:9')
+
+    patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
+
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:13.0.0')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -618,27 +645,9 @@ class Llvm(CMakePackage, CudaPackage):
             define('LIBCXX_ENABLE_STATIC_ABI_LIBRARY', True)
         ])
 
-        if "+all_targets" not in spec:  # all is default on cmake
-
-            targets = ["NVPTX", "AMDGPU"]
-            if spec.version < Version("3.9.0"):
-                # Starting in 3.9.0 CppBackend is no longer a target (see
-                # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
-                # the complete list of targets)
-                targets.append("CppBackend")
-
-            if spec.target.family in ("x86", "x86_64"):
-                targets.append("X86")
-            elif spec.target.family == "arm":
-                targets.append("ARM")
-            elif spec.target.family == "aarch64":
-                targets.append("AArch64")
-            elif spec.target.family in ("sparc", "sparc64"):
-                targets.append("Sparc")
-            elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
-                targets.append("PowerPC")
-
-            cmake_args.append(define("LLVM_TARGETS_TO_BUILD", targets))
+        cmake_args.append(define(
+            "LLVM_TARGETS_TO_BUILD",
+            get_llvm_targets_to_build(spec)))
 
         cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
 
@@ -699,10 +708,67 @@ class Llvm(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", site_packages_dir)
+            install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
-                install_tree("clang/bindings/python", site_packages_dir)
+                install_tree("clang/bindings/python", python_platlib)
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+
+    def llvm_config(self, *args, **kwargs):
+        lc = Executable(self.prefix.bin.join('llvm-config'))
+        if not kwargs.get('output'):
+            kwargs['output'] = str
+        ret = lc(*args, **kwargs)
+        if kwargs.get('output') == "list":
+            return ret.split()
+        return ret
+
+
+def get_llvm_targets_to_build(spec):
+    targets = spec.variants['targets'].value
+
+    # Build everything?
+    if 'all' in targets:
+        return 'all'
+
+    # Convert targets variant values to CMake LLVM_TARGETS_TO_BUILD array.
+    spack_to_cmake = {
+        "aarch64": "AArch64",
+        "amdgpu": "AMDGPU",
+        "arm": "ARM",
+        "avr": "AVR",
+        "bpf": "BPF",
+        "cppbackend": "CppBackend",
+        "hexagon": "Hexagon",
+        "lanai": "Lanai",
+        "mips": "Mips",
+        "msp430": "MSP430",
+        "nvptx": "NVPTX",
+        "powerpc": "PowerPC",
+        "riscv": "RISCV",
+        "sparc": "Sparc",
+        "systemz": "SystemZ",
+        "webassembly": "WebAssembly",
+        "x86": "X86",
+        "xcore": "XCore"
+    }
+
+    if 'none' in targets:
+        llvm_targets = set()
+    else:
+        llvm_targets = set(spack_to_cmake[target] for target in targets)
+
+    if spec.target.family in ("x86", "x86_64"):
+        llvm_targets.add("X86")
+    elif spec.target.family == "arm":
+        llvm_targets.add("ARM")
+    elif spec.target.family == "aarch64":
+        llvm_targets.add("AArch64")
+    elif spec.target.family in ("sparc", "sparc64"):
+        llvm_targets.add("Sparc")
+    elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
+        llvm_targets.add("PowerPC")
+
+    return list(llvm_targets)

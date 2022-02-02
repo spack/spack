@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,13 +37,13 @@ class Caffe(CMakePackage, CudaPackage):
     depends_on('boost +python', when='+python')
     depends_on('cuda', when='+cuda')
     depends_on('blas')
-    depends_on('protobuf')
+    depends_on('protobuf@:3.17')
     depends_on('glog')
     depends_on('gflags')
     depends_on('hdf5 +hl +cxx')
 
     # Optional dependencies
-    depends_on('opencv@3.2.0:3.4.12+core+highgui+imgproc+imgcodecs', when='+opencv')
+    depends_on('opencv@:3+highgui+imgproc+imgcodecs', when='+opencv')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')

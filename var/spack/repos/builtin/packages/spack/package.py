@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,6 +57,12 @@ class Spack(Package):
     depends_on('git', type='run')
     depends_on('mercurial', type='run')
     depends_on('subversion', type='run')
+
+    # Modules
+    depends_on('tcl', type='run')
+    depends_on('lmod', type='run')
+    # Spack 0.18 uses lmod's depends_on function, which was introduced in v7.5.12
+    depends_on('lmod@7.5.12:', type='run', when='@0.18:')
 
     # Buildcache
     # We just need the 'strings' executable, we don't want to install

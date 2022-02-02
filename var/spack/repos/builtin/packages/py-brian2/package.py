@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyBrian2(PythonPackage):
     homepage = "https://www.briansimulator.org"
     pypi = "Brian2/Brian2-2.2.2.1.tar.gz"
 
+    version('2.5.0.2', sha256='70e6f88fb26f04ccafb91e0a29999774e45899771357aff7043951c853919a0f')
     version('2.5.0.1', sha256='1f719b563ae38658c4c59bac5aeb06b41970c6eedc52021ddf6d9254913733d3')
     version('2.4.2',   sha256='7a711af40145d8c62b0bc0861d352dc64f341c3a738174d87ef9d71e50e959f2')
     version('2.2.2.1', sha256='02075f66d42fd243fc5e28e1add8862709ae9fdabaffb69858e6d7f684a91525')
@@ -32,5 +33,5 @@ class PyBrian2(PythonPackage):
     depends_on('py-setuptools@21:', type=('build', 'run'))
     depends_on('py-setuptools@24.2:', type=('build', 'run'), when='@2.4:')
 
-    def build_args(self, spec, prefix):
+    def install_options(self, spec, prefix):
         return ['--with-cython']

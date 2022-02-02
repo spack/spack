@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,9 +55,8 @@ class PyIpykernel(PythonPackage):
     depends_on('py-matplotlib-inline@0.1.0:0.1', when='@6:', type=('build', 'run'))
     depends_on('py-appnope', when='platform=darwin', type=('build', 'run'))
 
-    phases = ['build', 'install', 'install_data']
-
-    def install_data(self, spec, prefix):
+    @run_after('install')
+    def install_data(self):
         """ install the Jupyter kernel spec """
         self.spec['python'].command(
-            '-m', 'ipykernel', 'install', '--prefix=' + prefix)
+            '-m', 'ipykernel', 'install', '--prefix=' + self.prefix)

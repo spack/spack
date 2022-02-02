@@ -1,10 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import sys
+
+from llnl.util import tty
 
 from spack import *
 
@@ -154,16 +156,21 @@ class Caliper(CMakePackage, CudaPackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
 
-        if not os.path.exists(test_dir):
-            print('Skipping caliper test')
+        if not os.path.isfile(join_path(test_dir, 'cxx-example.cpp')):
+            tty.msg('Skipping caliper test: file does not exist')
             return
 
         exe = 'cxx-example'
 
+        if os.path.exists(self.prefix.lib):
+            lib_dir = self.prefix.lib
+        else:
+            lib_dir = self.prefix.lib64
+
         self.run_test(exe='gcc',
                       options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
-                               '-L{0}'.format(join_path(self.prefix, 'lib64')),
-                               '-I{0}'.format(join_path(self.prefix, 'include')),
+                               '-L{0}'.format(lib_dir),
+                               '-I{0}'.format(self.prefix.include),
                                '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)

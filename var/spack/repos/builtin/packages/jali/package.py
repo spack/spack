@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,12 @@ class Jali(CMakePackage):
 
     homepage = "https://github.com/lanl/jali"
     git      = "https://github.com/lanl/jali"
-    url      = "https://github.com/lanl/jali/archive/1.1.5.tar.gz"
+    url      = "https://github.com/lanl/jali/archive/1.1.6.tar.gz"
 
     maintainers = ['raovgarimella']
 
     version('master', branch='master')
+
     version('1.1.6', sha256='a2f4e4f238c60ea78486e0c9ea5b3e2cdd9d91c2ae5ea006a1d33a12e9eafa3a')
     version('1.1.5', sha256='4f18f3e8b50f20a89918e99596a7226c215944d84df642bc1fb2d6c31464b95b')
     version('1.1.1', sha256='c96c000b3893ea7f15bbc886524476dd466ae145e77deedc27e412fcc3541207')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1271,6 +1271,7 @@ def get_concrete_specs(env, root_spec, job_name, related_builds,
 def register_cdash_build(build_name, base_url, project, site, track):
     url = base_url + '/api/v1/addBuild.php'
     time_stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
+    build_id = None
     build_stamp = '{0}-{1}'.format(time_stamp, track)
     payload = {
         "project": project,
@@ -1292,17 +1293,20 @@ def register_cdash_build(build_name, base_url, project, site, track):
 
     request = Request(url, data=enc_data, headers=headers)
 
-    response = opener.open(request)
-    response_code = response.getcode()
+    try:
+        response = opener.open(request)
+        response_code = response.getcode()
 
-    if response_code != 200 and response_code != 201:
-        msg = 'Adding build failed (response code = {0}'.format(response_code)
-        tty.warn(msg)
-        return (None, None)
+        if response_code != 200 and response_code != 201:
+            msg = 'Adding build failed (response code = {0}'.format(response_code)
+            tty.warn(msg)
+            return (None, None)
 
-    response_text = response.read()
-    response_json = json.loads(response_text)
-    build_id = response_json['buildid']
+        response_text = response.read()
+        response_json = json.loads(response_text)
+        build_id = response_json['buildid']
+    except Exception as e:
+        print("Registering build in CDash failed: {0}".format(e))
 
     return (build_id, build_stamp)
 

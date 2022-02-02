@@ -1,0 +1,21 @@
+diff --git a/setup.py b/setup.py
+index 293c1c4..122cd04 100644
+--- a/setup.py
++++ b/setup.py
+@@ -2,6 +2,7 @@
+ import sys
+ import os
+ import os.path
++from io import open
+ # appdirs is a dependency of setuptools, so allow installing without it.
+ try:
+     from setuptools import setup
+@@ -15,7 +16,7 @@ if sys.version_info < (2, 7):
+ 
+ 
+ def read(fname):
+-    inf = open(os.path.join(os.path.dirname(__file__), fname))
++    inf = open(os.path.join(os.path.dirname(__file__), fname), encoding='utf8')
+     out = "\n" + inf.read().replace("\r\n", "\n")
+     inf.close()
+     return out

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,6 +66,7 @@ class HypreCmake(CMakePackage, CudaPackage):
             from_variant('HYPRE_WITH_MIXEDINT', 'mixedint'),
             from_variant('HYPRE_WITH_COMPLEX', 'complex'),
             from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('HYPRE_ENABLE_SHARED', 'shared'),
             from_variant('HYPRE_WITH_DSUPERLU', 'superlu_dist'),
             from_variant('HYPRE_WITH_CUDA', 'cuda'),
             from_variant('HYPRE_ENABLE_UNIFIED_MEMORY', 'unified_memory'),

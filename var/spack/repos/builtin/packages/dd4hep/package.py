@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,6 @@ class Dd4hep(CMakePackage):
 
     # variants for subpackages
     variant('ddcad', default=True, description="Enable CAD interface based on Assimp")
-    variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
     variant('ddg4', default=True, description="Enable the simulation part based on Geant4")
     variant('ddrec', default=True, description="Build DDRec subpackage.")
     variant('dddetectors', default=True, description="Build DDDetectors subpackage.")

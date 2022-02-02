@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,3 +17,4 @@ class PyTestpath(PythonPackage):
     version('0.4.2', sha256='b694b3d9288dbd81685c5d2e7140b81365d46c29f5db4bc659de5aa6b98780f8')
 
     depends_on('python@3.5:', type=('build', 'run'), when='@0.5.0:')
+    depends_on('py-flit-core@3.2.0:3.2', type='build')

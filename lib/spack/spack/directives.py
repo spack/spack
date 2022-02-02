@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,13 +30,13 @@ The available directives are:
 import functools
 import os.path
 import re
-import sys
 from typing import List, Set  # novm
 
 import six
 
 import llnl.util.lang
 import llnl.util.tty.color
+from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -48,16 +48,14 @@ from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
 
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
-
 __all__ = ['DirectiveError', 'DirectiveMeta']
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
+
+#: Names of possible directives. This list is populated elsewhere in the file and then
+#: added to `__all__` at the bottom.
+directive_names = []
 
 _patch_order_index = 0
 
@@ -113,7 +111,7 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()  # type: Set[str]
+    _directive_dict_names = set()  # type: Set[str]
     _directives_to_be_executed = []  # type: List[str]
     _when_constraints_from_context = []  # type: List[str]
 
@@ -156,7 +154,7 @@ class DirectiveMeta(type):
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
             # with the directives
-            for d in DirectiveMeta._directive_names:
+            for d in DirectiveMeta._directive_dict_names:
                 setattr(cls, d, {})
 
             # Lazily execute directives
@@ -222,7 +220,7 @@ class DirectiveMeta(type):
         Package class, and it's how Spack gets information from the
         packages to the core.
         """
-        global __all__
+        global directive_names
 
         if isinstance(dicts, six.string_types):
             dicts = (dicts, )
@@ -232,11 +230,11 @@ class DirectiveMeta(type):
             raise TypeError(message.format(type(dicts)))
 
         # Add the dictionary names if not already there
-        DirectiveMeta._directive_names |= set(dicts)
+        DirectiveMeta._directive_dict_names |= set(dicts)
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
-            __all__.append(decorated_function.__name__)
+            directive_names.append(decorated_function.__name__)
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
@@ -564,7 +562,9 @@ def variant(
         values=None,
         multi=None,
         validator=None,
-        when=None):
+        when=None,
+        sticky=False
+):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -585,7 +585,8 @@ def variant(
             doesn't meet the additional constraints
         when (spack.spec.Spec, bool): optional condition on which the
             variant applies
-
+        sticky (bool): the variant should not be changed by the concretizer to
+            find a valid concrete spec.
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
     """
@@ -659,7 +660,7 @@ def variant(
             when_specs += orig_when
 
         pkg.variants[name] = (spack.variant.Variant(
-            name, default, description, values, multi, validator
+            name, default, description, values, multi, validator, sticky
         ), when_specs)
     return _execute_variant
 
@@ -730,3 +731,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+#: add all directive names to __all__
+__all__.extend(directive_names)

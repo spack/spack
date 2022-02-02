@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,18 +26,39 @@ class PyPyzmq(PythonPackage):
     version('16.0.2', sha256='0322543fff5ab6f87d11a8a099c4c07dd8a1719040084b6ce9162bcdf5c45c9d')
     version('14.7.0', sha256='77994f80360488e7153e64e5959dc5471531d1648e3a4bff14a714d074a38cc2')
 
-    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'), when='@18:')
-    depends_on('python@3.6:', type=('build', 'run'), when='@22.3.0:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@22:')
+    depends_on('python@2.7,3.3:', type=('build', 'run'), when='@18.1')
+    # Python 3.9 build issues
+    depends_on('python@2.7,3.3:3.8', type=('build', 'run'), when='@16:18.0')
+    depends_on('python@2.6:2.7,3.2:3.8', type=('build', 'run'), when='@:14')
     depends_on('py-cython@0.16:', type='build')
     depends_on('py-cython@0.20:', type='build', when='@18:')
     depends_on('py-cython@0.29:', type='build', when='@22.3.0:')
     depends_on('py-gevent', type=('build', 'run'))
-    depends_on('libzmq', type=('build', 'run'))
-    depends_on('libzmq@3.2:', type=('build', 'run'), when='@22.3.0:')
+    depends_on('libzmq', type=('build', 'link'))
+    depends_on('libzmq@3.2:', type=('build', 'link'), when='@22.3.0:')
     depends_on('py-setuptools', type='build', when='@22.3.0:')
     # Only when python is provided by 'pypy'
     depends_on('py-py', type=('build', 'run'), when='@:22')
     depends_on('py-cffi', type=('build', 'run'), when='@:22')
+
+    @run_before('install')
+    def setup(self):
+        """Create config file listing dependency information."""
+
+        with open('setup.cfg', 'w') as config:
+            config.write("""\
+[global]
+zmq_prefix = {0}
+
+[build_ext]
+library_dirs = {1}
+include_dirs = {2}
+""".format(
+                self.spec['libzmq'].prefix,
+                self.spec['libzmq'].libs.directories[0],
+                self.spec['libzmq'].headers.directories[0],
+            ))
 
     def setup_build_environment(self, env):
         # Needed for `spack install --test=root py-pyzmq`

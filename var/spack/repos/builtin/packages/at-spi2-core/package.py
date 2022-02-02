@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,10 @@ class AtSpi2Core(MesonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python', type='build')
     depends_on('gobject-introspection')
+
+    @when('@2.40.1:')
+    def patch(self):
+        filter_file(r'dbus_broker.found\(\)', 'false', 'bus/meson.build')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""

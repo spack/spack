@@ -1,5 +1,7 @@
 enable:
   - lmod
 lmod:
+  all:
+    autoload: none
   core_compilers:
     - 'clang@3.3'

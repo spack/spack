@@ -24,7 +24,7 @@ spack:
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
-      - axom ^umpire@5.0.1 ^raja@0.13.0
+      - axom
       - blt
       - caliper
       #- care  ## ~benchmarks ~examples ~tests

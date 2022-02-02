@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -486,7 +486,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             # Currently AOCC support only static libraries of ELPA
             if '%aocc' in spec:
-                libs.append(join_path(elpa.libs.directories[0],
+                libs.append(join_path(elpa.prefix.lib,
                             ('libelpa{elpa_suffix}.a'
                                 .format(elpa_suffix=elpa_suffix))))
             else:
