@@ -81,9 +81,6 @@ class PyAstropy(PythonPackage):
             '--use-system-expat'
         ]
 
-        if spec.satisfies('^python@3:'):
-            args.extend(['-j', str(make_jobs)])
-
         return args
 
     @run_after('install')

@@ -60,7 +60,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
-    variant('adios2', default=False, description='Enable ADIOS2 support')
+    variant('adios2', default=False,
+            description='Enable ADIOS2 support',
+            when='@5.8:')
 
     variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
     variant('build_edition', default='canonical', multi=False,
@@ -96,6 +98,9 @@ class Paraview(CMakePackage, CudaPackage):
         conflicts('cuda_arch=%d' % _arch, when="+cuda", msg='ParaView requires cuda_arch >= 20')
 
     depends_on('cmake@3.3:', type='build')
+
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -145,6 +150,7 @@ class Paraview(CMakePackage, CudaPackage):
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
+    depends_on('hdf5@1.10:', when='+hdf5 @5.10:')
     depends_on('adios2+mpi', when='+adios2+mpi')
     depends_on('adios2~mpi', when='+adios2~mpi')
     depends_on('jpeg')
@@ -205,7 +211,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch('vtk-adios2-module-no-kit.patch', when='@:5.10')
+    patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'

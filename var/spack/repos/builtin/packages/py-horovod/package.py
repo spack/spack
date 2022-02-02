@@ -63,6 +63,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Framework dependencies
     depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
     depends_on('py-tensorflow@1.15:',   type=('build', 'link', 'run'), when='frameworks=tensorflow @0.20:')
+    depends_on('py-tensorflow-estimator', type=('build', 'run'), when='frameworks=tensorflow')
     depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
     depends_on('py-torch@1.2:',         type=('build', 'link', 'run'), when='frameworks=pytorch @0.20:')
     depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch @:0.19.1')

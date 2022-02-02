@@ -37,10 +37,15 @@ class LlvmAmdgpu(CMakePackage):
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
     variant('openmp', default=True, description='Enable OpenMP')
     variant(
-        "llvm_dylib",
+        'llvm_dylib',
         default=False,
-        description="Build LLVM shared library, containing all "
-        "components in a single shared library",
+        description='Build LLVM shared library, containing all '
+        'components in a single shared library',
+    )
+    variant(
+        'link_llvm_dylib',
+        default=False,
+        description='Link LLVM tools against the LLVM shared library',
     )
 
     provides('libllvm@11', when='@3.5:3.8')
@@ -65,6 +70,10 @@ class LlvmAmdgpu(CMakePackage):
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
+
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
 
     conflicts('^cmake@3.19.0')
 
@@ -144,7 +153,10 @@ class LlvmAmdgpu(CMakePackage):
             ])
 
         if '+llvm_dylib' in self.spec:
-            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
+            args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
+
+        if '+link_llvm_dylib' in self.spec:
+            args.append("-DLLVM_LINK_LLVM_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":

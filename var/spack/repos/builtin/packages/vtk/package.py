@@ -79,7 +79,7 @@ class Vtk(CMakePackage):
 
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
-    patch('vtk-adios2-module-no-kit.patch', when='@:9.0.3')
+    patch('vtk-adios2-module-no-kit.patch', when='@8.2.0:9.0.3')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
@@ -110,6 +110,7 @@ class Vtk(CMakePackage):
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
     depends_on('hdf5+hl')
+    depends_on('hdf5@1.10:', when='@9.1:')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')

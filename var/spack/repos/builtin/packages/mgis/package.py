@@ -62,7 +62,10 @@ class Mgis(CMakePackage):
     depends_on('tfel@rliv-3.3', when="@rliv-1.1")
     depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
-    depends_on('boost+python+numpy', when='+python')
+    depends_on('boost+python+numpy', when='+python',
+               type=('build', 'link', 'run'))
+    depends_on('py-numpy', when='+python',
+               type=('build', 'link', 'run'))
     extends('python', when='+python')
 
     def patch(self):

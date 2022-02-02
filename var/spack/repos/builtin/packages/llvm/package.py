@@ -342,6 +342,10 @@ class Llvm(CMakePackage, CudaPackage):
     patch('no_cyclades.patch', when='@10:12.0.0')
     patch('no_cyclades9.patch', when='@6:9')
 
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:13.0.0')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -709,6 +713,15 @@ class Llvm(CMakePackage, CudaPackage):
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+
+    def llvm_config(self, *args, **kwargs):
+        lc = Executable(self.prefix.bin.join('llvm-config'))
+        if not kwargs.get('output'):
+            kwargs['output'] = str
+        ret = lc(*args, **kwargs)
+        if kwargs.get('output') == "list":
+            return ret.split()
+        return ret
 
 
 def get_llvm_targets_to_build(spec):

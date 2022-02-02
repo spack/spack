@@ -35,6 +35,6 @@ class PyFiona(PythonPackage):
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-munch', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
     depends_on('py-ordereddict', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')

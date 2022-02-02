@@ -22,20 +22,13 @@ class PyPygpu(PythonPackage):
     version('0.6.1', sha256='b2466311e0e3bacdf7a586bba0263f6d232bf9f8d785e91ddb447653741e6ea5')
     version('0.6.0', sha256='a58a0624e894475a4955aaea25e82261c69b4d22c8f15ec07041a4ba176d35af')
 
+    depends_on('python', type=('build', 'link', 'run'))
     depends_on('libgpuarray@0.7.6', when='@0.7.6')
     depends_on('libgpuarray@0.7.5', when='@0.7.5')
-    depends_on('libgpuarray')                        # default
+    depends_on('libgpuarray')
     # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython@0.25:', type=('build', 'run'))
-    depends_on('py-nose', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-mako', type=('build', 'run'))
-    depends_on('check')
-
-    def install_options(self, spec, prefix):
-        _ = self.spec['libgpuarray'].prefix
-        include_flags = '-I{0}'.format(os.path.join(_, 'include'))
-        library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
-
-        return [include_flags, library_flags]
+    depends_on('py-numpy', type=('build', 'link', 'run'))
+    depends_on('py-mako@0.7:', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
