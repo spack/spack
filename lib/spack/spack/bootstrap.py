@@ -650,9 +650,7 @@ def _ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
-        # Disable detecting CRAY as a valid platform during bootstrap. This
-        # is based on the implementation of the detection method in platforms/cray.py
-        with spack.util.environment.set_env(MODULEPATH=''):
+        with spack.platforms.prevent_cray_detection():
             with spack.platforms.use_platform(spack.platforms.real_host()):
                 with spack.repo.use_repositories(spack.paths.packages_path):
                     with spack.store.use_store(bootstrap_store_path):
