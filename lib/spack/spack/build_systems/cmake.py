@@ -88,7 +88,8 @@ class CMakePackage(PackageBase):
     #:
     #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
     #: for more information.
-    generator = 'Unix Makefiles'
+    generator = 'Ninja'
+    depends_on('ninja')
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
@@ -138,7 +139,7 @@ class CMakePackage(PackageBase):
         try:
             generator = pkg.generator
         except AttributeError:
-            generator = 'Unix Makefiles'
+            generator = 'Ninja'
 
         # Make sure a valid generator was chosen
         valid_primary_generators = ['Unix Makefiles', 'Ninja']

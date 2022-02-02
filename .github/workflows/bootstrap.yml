@@ -116,7 +116,7 @@ jobs:
           zypper update -y || zypper update -y
           zypper install -y \
               bzip2 curl file gcc-c++ gcc gcc-fortran tar git gpg2 gzip \
-              make patch unzip which xz python3 python3-devel tree \
+              make ninja patch unzip which xz python3 python3-devel tree \
               cmake bison
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       - name: Setup repo and non-root user
@@ -137,7 +137,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          brew install cmake bison@2.7 tree
+          brew install cmake bison@2.7 ninja tree
       - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
       - name: Bootstrap clingo
         run: |
