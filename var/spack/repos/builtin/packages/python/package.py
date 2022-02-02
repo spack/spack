@@ -1,3 +1,4 @@
+
 # Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -252,6 +253,7 @@ class Python(AutotoolsPackage):
               msg='python+tix requires python+tix+tkinter')
 
     conflicts('%nvhpc')
+    conflicts('+ensurepip', when='%aocc')
 
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
@@ -494,10 +496,7 @@ class Python(AutotoolsPackage):
 
         if spec.satisfies('@2.7.9:2,3.4:'):
             if '+ensurepip' in spec:
-                if '%aocc@3.2.0:' in spec:
-                    config_args.append('--without-ensurepip')
-                else:
-                    config_args.append('--with-ensurepip=install')
+                config_args.append('--with-ensurepip=install')
             else:
                 config_args.append('--without-ensurepip')
 
