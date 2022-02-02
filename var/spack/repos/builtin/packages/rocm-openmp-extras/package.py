@@ -87,7 +87,7 @@ class RocmOpenmpExtras(Package):
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-4.5.0.tar.gz"
     git = "https://github.com/ROCm-Developer-Tools/aomp.git"
-    
+
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
     version('master', branch='master')
     version('4.5.0', sha256=versions_dict['4.5.0']['aomp'])
