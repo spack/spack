@@ -72,62 +72,48 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
 
-    # TODO: Replace this method and its 'get' use for cmake path with
-    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
-    #   tests can access build dependencies through self.spec['cmake'].
-    def cmake_bin(self, set=True):
-        """(Hack) Set/get cmake dependency path."""
-        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
-        if set:
-            with open(filepath, 'w') as out_file:
-                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
-                out_file.write('{0}\n'.format(cmake_bin))
-        else:
-            with open(filepath, 'r') as in_file:
-                return in_file.read().strip()
-
-    def dep_prefix(self, depname, set=True):
-        """(Hack) Set/get dependency prefix."""
-        filestore = join_path(self.install_test_root, depname+'_prefix.txt')
-        if set:
-            with open(filestore, 'w') as out_file:
-                path = self.spec[depname].prefix
-                out_file.write('{0}\n'.format(path))
-        else:
+    def keystore(self, key, value=None):
+        """Set and get key/value pairs"""
+        filestore = join_path(self.install_test_root, key + '_keystore.txt')
+        if value is None:
             with open(filestore, 'r') as in_file:
                 return in_file.read().strip()
+        else:
+            with open(filestore, 'w') as out_file:
+                out_file.write('{0}\n'.format(value))
 
     @run_after('install')
     def cache_test_sources(self):
+        if self.spec.satisfies('@2020.10.00'):
+            return
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['examples'])
-        self.cmake_bin(set=True)
-        self.dep_prefix('mpi', set=True)
-        self.dep_prefix('blaspp', set=True)
-        self.dep_prefix('lapackpp', set=True)
+        """The keystore() hack will be unnecessary once specs are properly
+        exposed to the stand-alone test framework."""
+        self.keystore('cmake', join_path(self.spec['cmake'].prefix.bin, 'cmake'))
+        self.keystore('mpi', self.spec['mpi'].prefix)
+        self.keystore('blaspp', self.spec['blaspp'].prefix)
+        self.keystore('lapackpp', self.spec['lapackpp'].prefix)
 
     def test(self):
-        if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
-            print('Skipping: stand-alone tests only run on master with +mpi')
+        if self.spec.satisfies('@2020.10.00') or '+mpi' not in self.spec:
+            print('Skipping: stand-alone tests')
             return
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'build')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'build')
         with working_dir(test_dir, create=True):
-            cmake_bin = self.cmake_bin(set=False)
-            prefixes = (
-                       self.dep_prefix('blaspp', set=False),
-                       self.dep_prefix('lapackpp', set=False),
-                       self.dep_prefix('mpi', set=False),
-                       )
-            self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH='+';'.join(prefixes), '..'])
-            #cmake('..')
+            cmake_bin = self.keystore('cmake')
+            prefixes = ';'.join([self.keystore('blaspp'),
+                                 self.keystore('lapackpp'),
+                                 self.keystore('mpi'),
+                                 ])
+            self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH=' + prefixes, '..'])
             make()
             test_args = ['-n', '4', './ex05_blas']
-            mpi_path = self.dep_prefix('mpi', set=False) + '/bin/'
+            mpi_path = join_path(self.keystore('mpi'), 'bin')
             mpiexe_f = which('srun', 'mpirun', 'mpiexec', path=mpi_path)
             self.run_test(mpiexe_f.command, test_args,
-                              purpose='SLATE smoke test')
+                          purpose='SLATE smoke test')
             make('clean')
-
-
