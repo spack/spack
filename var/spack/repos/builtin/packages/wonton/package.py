@@ -53,11 +53,9 @@ class Wonton(CMakePackage):
     depends_on('jali@1.1.6 +mstk', when='+jali')
     depends_on('mpi', when='+jali')
 
-    if(depends_on('thrust@1.8.3', when='+thrust')):
-        depends_on('thrust@1.8.3', when='+thrust')
+    depends_on('thrust@1.8.3', when='+thrust')
 
-    else:
-        depends_on('boost', when='wonton@:1.2.10')
+    depends_on('boost', when='wonton@:1.2.10~thrust')
 
     # CUDA library
     depends_on('cuda', when='+cuda')
