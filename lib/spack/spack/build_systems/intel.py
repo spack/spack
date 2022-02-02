@@ -8,6 +8,7 @@ import glob
 import inspect
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ElementTree
@@ -1331,6 +1332,36 @@ class IntelPackage(PackageBase):
 
         debug_print(os.getcwd())
         return
+
+    @property
+    def base_lib_dir(self):
+        """Provide the library directory located in the base of Intel installation.
+        """
+        d = self.normalize_path('')
+        d = os.path.join(d, 'lib')
+
+        debug_print(d)
+        return d
+
+    @run_after('install')
+    def modify_LLVMgold_rpath(self):
+        """Add libimf.so and other required libraries to the RUNPATH of LLVMgold.so.
+
+        These are needed explicitly at dependent link time when
+        `ld -plugin LLVMgold.so` is called by the compiler.
+        """
+        if self._has_compilers:
+            LLVMgold_libs = find_libraries('LLVMgold', self.base_lib_dir,
+                                           shared=True, recursive=True)
+            # Ignore ia32 entries as they mostly ignore throughout the rest
+            # of the file.
+            # The first entry in rpath preserves the original, the seconds entry
+            # is the location of libimf.so. If this relative location is changed
+            # in compiler releases, then we need to search for libimf.so instead
+            # of this static path.
+            rpath = "$ORIGIN/../lib:$ORIGIN/../compiler/lib/intel64_lin"
+            for lib in LLVMgold_libs:
+                subprocess.call(['patchelf', '--set-rpath', rpath, lib])
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
