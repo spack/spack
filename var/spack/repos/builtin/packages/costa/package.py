@@ -51,10 +51,9 @@ class Costa(CMakePackage):
 
     def cmake_args(self):
         return [
-            self.define('COSMA_WITH_TESTS', 'OFF'),
-            self.define('COSMA_WITH_APPS', 'OFF'),
-            self.define('COSMA_WITH_PROFILING', 'OFF'),
-            self.define('COSMA_WITH_BENCHMARKS', 'OFF'),
-            self.define('COSMA_BLAS', self.cosma_blas_cmake_arg()),
-            self.define('COSMA_SCALAPACK', self.cosma_scalapack_cmake_arg())
+            self.define('COSTA_WITH_BENCHMARKS', 'OFF'),
+            self.define('COSTA_WITH_APPS', 'OFF'),
+            self.define('COSTA_WITH_TESTS', 'OFF'),
+            self.define('COSTA_WITH_PROFILING', 'OFF'),
+            self.define('COSTA_SCALAPACK', self.costa_scalapack_cmake_arg())
         ]
