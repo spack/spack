@@ -15,7 +15,8 @@ class RocmSmi(MakefilePackage):
 
        Note: According to its README, after ROCm 3.9, this project
              moved to
-             https://github.com/RadeonOpenCompute/rocm_smi_lib/tree/master/python_smi_tools"""
+             https://github.com/RadeonOpenCompute/rocm_smi_lib/tree/master/python_smi_tools
+             The spack package is called: rocm-smi-lib"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
     url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-4.1.0.tar.gz"
