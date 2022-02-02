@@ -39,7 +39,7 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.25.0:',         type=('build', 'run'), when='@0.40.1')
     depends_on('py-llvmlite@0.20:0.25',       type=('build', 'run'), when='@0.35.1')
 
-    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6,3.0:3.1')
     depends_on('py-funcsigs', type=('build', 'run'), when='@:0.47 ^python@:3.2')
     depends_on('py-enum34', type=('build', 'run'), when='@:0.47 ^python@:3.3')
     depends_on('py-singledispatch', type=('build', 'run'), when='@:0.47 ^python@:3.3')
