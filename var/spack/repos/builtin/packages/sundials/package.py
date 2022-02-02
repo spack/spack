@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     version('develop', branch='develop')
     version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
-    version('5.7.0', sha256='8d6dd094feccbb8d6ecc41340ec16a65fabac82ed4415023f6d7c1c2390ea2f3')
+    version('5.7.0', sha256='48da7baa8152ddb22aed1b02d82d1dbb4fbfea22acf67634011aa0303a100a43')
     version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
     version('5.6.0', sha256='95e4201912e150f29c6f6f7625de763385e2073dae7f929c4a544561ea29915d')
     version('5.5.0', sha256='2a755e89aab96d2ff096a4e30bf00bb162e80be20e9e99f424dccfb249098237')
@@ -262,9 +262,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # language standard
         cstd = spec.variants['cstd'].value
-        args.append('CMAKE_C_STANDARD=%s' % cstd)
+        args.append('-DCMAKE_C_STANDARD=%s' % cstd)
         cxxstd = spec.variants['cxxstd'].value
-        args.append('CMAKE_CXX_STANDARD=%s' % cxxstd)
+        args.append('-DCMAKE_CXX_STANDARD=%s' % cxxstd)
 
         # precision
         args.extend([
