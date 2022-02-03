@@ -18,10 +18,8 @@ class Cntk(Package):
     git      = "https://github.com/Microsoft/CNTK.git"
 
     # CNTK is not an active project since April 2019.
-    version('master', branch='master', deprecated=True)
-    version('2.0',
-            sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c',
-            deprecated=True)
+    version('master', branch='master')
+    version('2.0', sha256='3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c')
 
     variant('opencv', default=False, description="Enable OpenCV support.")
     variant('kaldi', default=False, description="Enable Kaldi support.")
@@ -59,16 +57,12 @@ class Cntk(Package):
     conflicts('%gcc@5:')
 
     def patch(self):
-        if 'protobuf+shared' in self.spec:
-            library_suffix = 'so'
-        else:
-            library_suffix = 'a'
-
-        protobuf_libdir = os.path.basename(self.spec['protobuf'].libs.directories[0])
+        protobuf_path = os.path.split(self.spec['protobuf'].libs[0])
         protobuf_ld_flags = self.spec['protobuf'].libs.ld_flags
 
-        filter_file(r'(protobuf_check=)lib/(libprotobuf\.)a',
-                    r'\1{0}/\2{1}'.format(protobuf_libdir, library_suffix),
+        filter_file(r'(protobuf_check=)lib/libprotobuf\.a',
+                    r'\1{0}/{1}'.format(os.path.basename(protobuf_path[0]),
+                                                         protobuf_path[1]),
                     'configure')
         filter_file(r'\$\(PROTOBUF_PATH\)/lib/libprotobuf.a',
                     protobuf_ld_flags,
