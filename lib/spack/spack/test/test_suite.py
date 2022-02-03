@@ -87,25 +87,32 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     assert os.path.exists(data_filename)
 
 
-def test_test_external(mock_packages, install_mockery, mock_test_stage):
-    def ensure_results_skipped(filename):
+@pytest.mark.parametrize('arguments,status,msg', [
+    ({}, 'SKIPPED', 'Skipped'),
+    ({'test_externals': True}, 'NO-TESTS', 'No tests'),
+])
+def test_test_external(mock_packages, install_mockery, mock_test_stage,
+                       arguments, status, msg):
+    def ensure_results(filename, expected):
         assert os.path.exists(filename)
-        have = False
         with open(filename, 'r') as fd:
-            for line in fd:
-                if 'Skipped' in line or 'SKIPPED' in line:
+            lines = fd.readlines()
+            have = False
+            for line in lines:
+                if expected in line:
                     have = True
                     break
-        assert have
+            assert have
 
-    spec = spack.spec.Spec('trivial-smoke-test', ).concretized()
-    spec.external_path = '/path/to/external/trivial-smoke-test'
+    name = 'trivial-smoke-test'
+    spec = spack.spec.Spec(name).concretized()
+    spec.external_path = '/path/to/external/{0}'.format(name)
+
     test_suite = spack.install_test.TestSuite([spec])
+    test_suite(**arguments)
 
-    test_suite()
-
-    ensure_results_skipped(test_suite.log_file_for_spec(spec))
-    ensure_results_skipped(test_suite.results_file)
+    ensure_results(test_suite.results_file, status)
+    ensure_results(test_suite.log_file_for_spec(spec), msg)
 
 
 def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):

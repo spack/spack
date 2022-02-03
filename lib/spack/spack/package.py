@@ -1791,7 +1791,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
-    def do_test(self, dirty=False):
+    def do_test(self, dirty=False, test_externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1808,7 +1808,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
-        if self.spec.external:
+        if self.spec.external and not test_externals:
             with open(self.test_log_file, 'w') as ofd:
                 ofd.write('Testing package {0}\n'
                           .format(self.test_suite.test_pkg_id(self.spec)))
