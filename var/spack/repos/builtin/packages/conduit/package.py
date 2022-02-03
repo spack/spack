@@ -123,13 +123,9 @@ class Conduit(CMakePackage):
     #
     # Use HDF5 1.8, for wider output compatibly
     # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5@1.8.19:1.8~cxx", when="+hdf5+hdf5_compat+shared")
-    depends_on("hdf5@1.8.19:1.8~shared~cxx", when="+hdf5+hdf5_compat~shared")
-    depends_on("hdf5~cxx", when="+hdf5~hdf5_compat+shared")
-    depends_on("hdf5~shared~cxx", when="+hdf5~hdf5_compat~shared")
-
-    # conduit uses a <=1.10 api version.
-    depends_on("hdf5@:1.10", when="@:0.7 +hdf5")
+    depends_on("hdf5~cxx", when="+hdf5")
+    depends_on("hdf5~shared", when="+hdf5~shared")
+    depends_on("hdf5@1.8.19:1.8", when="+hdf5+hdf5_compat")
 
     # we need to hand this to conduit so it can properly
     # handle downstream linking of zlib reqed by hdf5
@@ -193,6 +189,10 @@ class Conduit(CMakePackage):
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+        # conduit uses a <=1.10 api version before 0.8
+        if '@:0.7 +hdf5' in self.spec and '@1.10:' in self.spec['hdf5']:
+            env.append_flags('CFLAGS', '-DH5_USE_110_API')
+            env.append_flags('CXXFLAGS', '-DH5_USE_110_API')
 
     def url_for_version(self, version):
         """
