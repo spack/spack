@@ -75,7 +75,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
     depends_on('butterflypack@1.1.0', when='@3.3.0:3.9 +butterflypack+mpi')
     depends_on('butterflypack@1.2.0:', when='@4.0.0: +butterflypack+mpi')
-    depends_on('butterflypack@2.1.:', when='@6.3.0: +butterflypack+mpi')
+    depends_on('butterflypack@2.1.0:', when='@6.3.0: +butterflypack+mpi')
     depends_on('cuda', when='@4.0.0: +cuda')
     depends_on('zfp', when='+zfp')
     depends_on('hipblas', when='+rocm')
