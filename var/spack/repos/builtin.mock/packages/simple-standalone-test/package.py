@@ -15,7 +15,6 @@ class SimpleStandaloneTest(Package):
 
     def test(self):
         msg = 'simple stand-alone test'
-        self.run_test('python',
-                      ['-c', 'print("{0}")'.format(msg)],
+        self.run_test('echo', [msg],
                       expected=[msg],
                       purpose='test: running {0}'.format(msg))
