@@ -95,6 +95,11 @@ class Warpx(CMakePackage):
         depends_on('rocfft', when='+psatd')
         depends_on('rocprim')
         depends_on('rocrand')
+    with when('compute=noacc'):
+        with when('+psatd'):
+            depends_on('fftw@3: ~mpi', when='~mpi')
+            depends_on('fftw@3: +mpi', when='+mpi')
+            depends_on('pkgconfig', type='build')
     with when('compute=omp'):
         depends_on('llvm-openmp', when='%apple-clang')
         with when('+psatd'):
