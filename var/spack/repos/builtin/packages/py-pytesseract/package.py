@@ -17,12 +17,5 @@ class PyPytesseract(PythonPackage):
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-packaging', type=('build', 'run'))
     depends_on('py-pillow', type=('build', 'run'))
-    # depends_on('py-pip@X.Y:', type='build')
     depends_on('py-wheel', type='build')
-
     depends_on('py-setuptools', type='build')
-    # depends_on('py-flit-core', type='build')
-    # depends_on('py-poetry-core', type='build')
-
-    # depends_on('py-foo', type=('build', 'run'))
-
