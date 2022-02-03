@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from os import unlink
+from spack import *
+
 
 class Cctools(AutotoolsPackage):
     """The Cooperative Computing Tools (cctools) enable large scale
@@ -59,12 +60,14 @@ class Cctools(AutotoolsPackage):
                 filter_file('-fstack-protector-all', '', m)
 
         # Remove two troublesome test cases:
-        # TR_parrot_dir.sh fails b/c of variations in how Linux kernels deal with open() on directories.
+
+        # TR_parrot_dir.sh fails b/c of variations in how Linux kernels
+        # deal with open() on directories.
         unlink("parrot/test/TR_parrot_dir.sh")
-        # TR_parrot_execve.sh fails b/c of the complexities of moving a python interpreter around.
+
+        # TR_parrot_execve.sh fails b/c of the complexities of moving
+        #a python interpreter around.
         unlink("parrot/test/TR_parrot_execve.sh")
-
-
 
     def configure_args(self):
         args = []
