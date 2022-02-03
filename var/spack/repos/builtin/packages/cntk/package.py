@@ -62,7 +62,7 @@ class Cntk(Package):
 
         filter_file(r'(protobuf_check=)lib/libprotobuf\.a',
                     r'\1{0}/{1}'.format(os.path.basename(protobuf_path[0]),
-                                                         protobuf_path[1]),
+                                        protobuf_path[1]),
                     'configure')
         filter_file(r'\$\(PROTOBUF_PATH\)/lib/libprotobuf.a',
                     protobuf_ld_flags,
