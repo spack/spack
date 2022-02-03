@@ -17,7 +17,8 @@ class Coreneuron(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/CoreNeuron"
     url      = "https://github.com/BlueBrain/CoreNeuron"
-    git      = "https://github.com/BlueBrain/CoreNeuron"
+    # This simplifies testing the gitlab-pipelines repository:
+    git      = "git@bbpgitlab.epfl.ch:hpc/coreneuron.git"
 
     version('develop', branch='master')
     # 1.0.1 > 1.0.0.20210519 > 1.0 as far as Spack is concerned
