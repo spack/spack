@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from os import unlink
+import os
+
 from spack import *
 
 
@@ -63,11 +64,11 @@ class Cctools(AutotoolsPackage):
 
         # TR_parrot_dir.sh fails b/c of variations in how Linux kernels
         # deal with open() on directories.
-        unlink("parrot/test/TR_parrot_dir.sh")
+        os.unlink("parrot/test/TR_parrot_dir.sh")
 
         # TR_parrot_execve.sh fails b/c of the complexities of moving
         # a python interpreter around.
-        unlink("parrot/test/TR_parrot_execve.sh")
+        os.unlink("parrot/test/TR_parrot_execve.sh")
 
     def configure_args(self):
         args = []
