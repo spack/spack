@@ -225,7 +225,8 @@ class Python(AutotoolsPackage):
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3.9.7,3.10.0  %fj')
+    patch('fj-rpath-3.9.patch', when='@3.9.8:3.9,3.10.1:  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -421,6 +422,11 @@ class Python(AutotoolsPackage):
 
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+        # avoid build error on fugaku
+        if spec.satisfies('@3.10.0 arch=linux-rhel8-a64fx'):
+            if spec.satisfies('%gcc') or spec.satisfies('%fj'):
+                env.unset('LC_ALL')
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
