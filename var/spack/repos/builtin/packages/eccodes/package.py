@@ -164,6 +164,51 @@ class Eccodes(CMakePackage):
                     '\\1; use f90_unix_env; use f90_unix_proc\\2',
                     *patch_unix_ext_files, **kwargs)
 
+    @property
+    def libs(self):
+        libraries = []
+
+        query_parameters = self.spec.last_query.extra_parameters
+
+        if 'shared' in query_parameters:
+            shared = True
+        elif 'static' in query_parameters:
+            shared = False
+        else:
+            shared = '+shared' in self.spec
+
+        # Return Fortran library if requested:
+        return_fortran = 'fortran' in query_parameters
+        # Return C library if either requested or the Fortran library is not
+        # requested (to avoid overlinking) or the static libraries are
+        # requested:
+        return_c = 'c' in query_parameters or not (return_fortran and shared)
+        # Return MEMFS library only if enabled and the static libraries are
+        # requested:
+        return_memfs = '+memfs' in self.spec and not shared
+
+        if return_fortran:
+            libraries.append('libeccodes_f90')
+
+        if return_c:
+            libraries.append('libeccodes')
+
+        if return_memfs:
+            libraries.append('libeccodes_memfs')
+
+        libs = find_libraries(
+            libraries, root=self.prefix, shared=shared, recursive=True
+        )
+
+        if libs and len(libs) == len(libraries):
+            return libs
+
+        msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+        raise spack.error.NoLibrariesError(
+            msg.format('shared' if shared else 'static',
+                       self.spec.name,
+                       self.spec.prefix))
+
     @run_before('cmake')
     def check_fortran(self):
         if '+fortran' in self.spec and self.compiler.fc is None:
