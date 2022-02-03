@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#
-from spack import *
-
 
 class Eccodes(CMakePackage):
     """ecCodes is a package developed by ECMWF for processing meteorological
@@ -83,66 +80,52 @@ class Eccodes(CMakePackage):
                 'Fortran interface requires a Fortran compiler!')
 
     def cmake_args(self):
-        var_opt_list = [
-            ('+pthreads', 'ECCODES_THREADS'),
-            ('+openmp', 'ECCODES_OMP_THREADS'),
-            ('+memfs', 'MEMFS'),
-            ('+python',
-             'PYTHON2' if self.spec.satisfies('@2.20.0:') else 'PYTHON'),
-            ('+fortran', 'FORTRAN')]
+        jp2k = self.spec.variants['jp2k'].value
 
-        args = ['-DENABLE_%s=%s' % (opt, 'ON' if var in self.spec else 'OFF')
-                for var, opt in var_opt_list]
-
-        args.extend(
-            ['-DENABLE_%s=%s' % (opt, 'ON' if self.run_tests else 'OFF')
-             for opt in ['TESTS',
-                         # Examples are not installed and are
-                         # just part of the test suite.
-                         'EXAMPLES']])
-
-        # Unconditionally disable the extended regression testing,
-        # which requires data downloads.
-        args.append('-DENABLE_EXTRA_TESTS=OFF')
+        args = [
+            self.define_from_variant('ENABLE_NETCDF', 'netcdf'),
+            self.define('ENABLE_JPG', jp2k != 'none'),
+            self.define('ENABLE_JPG_LIBJASPER', jp2k == 'jasper'),
+            self.define('ENABLE_JPG_LIBOPENJPEG', jp2k == 'openjpeg'),
+            self.define_from_variant('ENABLE_PNG', 'png'),
+            self.define_from_variant('ENABLE_AEC', 'aec'),
+            self.define_from_variant('ENABLE_ECCODES_THREADS', 'pthreads'),
+            self.define_from_variant('ENABLE_ECCODES_OMP_THREADS', 'openmp'),
+            self.define_from_variant('ENABLE_MEMFS', 'memfs'),
+            self.define_from_variant(
+                'ENABLE_PYTHON{0}'.format(
+                    '2' if self.spec.satisfies('@2.20.0:') else ''),
+                'python'),
+            self.define_from_variant('ENABLE_FORTRAN', 'fortran'),
+            self.define('ENABLE_TESTS', self.run_tests),
+            # Examples are not installed and are just part of the test suite:
+            self.define('ENABLE_EXAMPLES', self.run_tests),
+            # Unconditionally disable the extended regression tests, since they
+            # download additional data (~134MB):
+            self.define('ENABLE_EXTRA_TESTS', False)
+        ]
 
         if '+netcdf' in self.spec:
-            args.extend(['-DENABLE_NETCDF=ON',
-                         # Prevent overriding by environment variable
-                         # HDF5_ROOT.
-                         '-DHDF5_ROOT=' + self.spec['hdf5'].prefix,
-                         # Prevent possible overriding by environment variables
-                         # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH.
-                         '-DNETCDF_PATH=' + self.spec['netcdf-c'].prefix])
-        else:
-            args.append('-DENABLE_NETCDF=OFF')
-
-        jp2k = self.spec.variants['jp2k'].value
-        args.append('-DENABLE_JPG=' +
-                    ('OFF' if jp2k == 'none' else 'ON'))
-        args.append('-DENABLE_JPG_LIBJASPER=' +
-                    ('ON' if jp2k == 'jasper' else 'OFF'))
-        args.append('-DENABLE_JPG_LIBOPENJPEG=' +
-                    ('ON' if jp2k == 'openjpeg' else 'OFF'))
+            args.extend([
+                # Prevent possible overriding by environment variables
+                # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
+                self.define('NETCDF_PATH', self.spec['netcdf-c'].prefix),
+                # Prevent overriding by environment variable HDF5_ROOT:
+                self.define('HDF5_ROOT', self.spec['hdf5'].prefix)])
 
         if jp2k == 'openjpeg':
-            args.append('-DOPENJPEG_PATH=' + self.spec['openjpeg'].prefix)
+            args.append(self.define('OPENJPEG_PATH',
+                                    self.spec['openjpeg'].prefix))
 
         if '+png' in self.spec:
-            args.extend(['-DENABLE_PNG=ON',
-                         '-DZLIB_ROOT=' + self.spec['zlib'].prefix])
-        else:
-            args.append('-DENABLE_PNG=OFF')
+            args.append(self.define('ZLIB_ROOT', self.spec['zlib'].prefix))
 
         if '+aec' in self.spec:
-            args.extend(['-DENABLE_AEC=ON',
-                         # Prevent overriding by environment variables
-                         # AEC_DIR and AEC_PATH.
-                         '-DAEC_DIR=' + self.spec['libaec'].prefix])
-        else:
-            args.append('-DENABLE_AEC=OFF')
+            # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
+            args.append(self.define('AEC_DIR', self.spec['libaec'].prefix))
 
         if '^python' in self.spec:
-            args.append('-DPYTHON_EXECUTABLE:FILEPATH=' + python.path)
+            args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
         return args
 
