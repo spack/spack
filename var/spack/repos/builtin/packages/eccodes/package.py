@@ -42,6 +42,8 @@ class Eccodes(CMakePackage):
     variant('python', default=False,
             description='Enable the Python 2 interface')
     variant('fortran', default=False, description='Enable the Fortran support')
+    variant('shared', default=True,
+            description='Build shared versions of the libraries')
 
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
@@ -102,6 +104,8 @@ class Eccodes(CMakePackage):
                     '2' if self.spec.satisfies('@2.20.0:') else ''),
                 'python'),
             self.define_from_variant('ENABLE_FORTRAN', 'fortran'),
+            self.define('BUILD_SHARED_LIBS',
+                        'BOTH' if '+shared' in self.spec else 'OFF'),
             self.define('ENABLE_TESTS', self.run_tests),
             # Examples are not installed and are just part of the test suite:
             self.define('ENABLE_EXAMPLES', self.run_tests),
