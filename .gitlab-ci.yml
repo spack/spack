@@ -140,3 +140,24 @@ forward_tests:
       - spack_tests
     reports:
       junit: spack_tests/*/*.xml
+
+# Incrementally sync deployment builds over to TDS
+#
+# This enables us to work on TDS while the production system is undergoing
+# maintenance.
+#
+# No explicit dependency to avoid sync errors impacting the regular
+# deployment. The sync job uses an internal resource group to avoid
+# overlapping execution.
+sync_to_tds:
+  needs: [atomic_build]
+  variables:
+    DEPLOYMENT_BASE: $DEPLOYMENT_BASE
+  # Really only want to run this when builds are active: exclude running
+  # on PRs, just merges and schedules.
+  rules:
+    - if: $CI_EXTERNAL_PULL_REQUEST_IID
+      when: never
+    - when: always
+  trigger:
+    project: hpc/spack-sync
