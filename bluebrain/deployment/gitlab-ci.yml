@@ -30,7 +30,6 @@ default:
   - export GIT_SSH_COMMAND="ssh -i $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY -o ProxyCommand='/usr/bin/socat - PROXY:bbpproxy.epfl.ch:%h:%p'"
 
 .spack_basic_job:
-  interruptible: true
   variables:
     # Max out duration to install stuff
     bb5_duration: "24:00:00"
