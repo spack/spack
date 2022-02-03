@@ -16,7 +16,7 @@ class Hipsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='81ca24491fbf2bc8e5aa477a6c38776877579ac9f4241ddadeca76a579a7ebb5')
     version('4.5.0', sha256='1049c490fc2008d701a16d14e11004e3bc5b4da993aa48b117e3c44be5677e3c')
     version('4.3.1', sha256='e5757b5213b880237ae0f24616088f79c449c2955cf2133642dbbc9c655f4691')

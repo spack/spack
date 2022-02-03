@@ -19,7 +19,7 @@ class Rocrand(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='1523997a21437c3b74d47a319d81f8cc44b8e96ec5174004944f2fb4629900db')
     version('4.5.0', sha256='fd391f81b9ea0b57808d93e8b72d86eec1b4c3529180dfb99ed6d3e2aa1285c2')
     version('4.3.1', sha256='b3d6ae0cdbbdfb56a73035690f8cb9e173fec1ccaaf9a4c5fdbe5e562e50c901')

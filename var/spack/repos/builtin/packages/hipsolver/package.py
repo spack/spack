@@ -20,7 +20,7 @@ class Hipsolver(CMakePackage):
 
     maintainers = ['srekolam']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='9807bf1da0da25940b546cf5d5d6064d46d837907e354e10c6eeb2ef7c296a93')
     version('4.5.0', sha256='ee1176e977736a6e6fcba507fe6f56fcb3cefd6ba741cceb28464ea8bc476cd8')
 

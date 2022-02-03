@@ -21,7 +21,7 @@ class Rocsparse(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='e37af2cd097e239a55a278df534183b5591ef4d985fe1a268a229bd11ada6599')
     version('4.5.0', sha256='b120e9e17e7e141caee4c8c4288c9d1902bad0cec2ea76458d3ba11343376938')
     version('4.3.1', sha256='fa5ea64f71e1cfbebe41618cc183f501b387824a6dc58486ab1214d7af5cbef2')

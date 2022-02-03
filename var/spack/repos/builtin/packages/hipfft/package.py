@@ -20,7 +20,7 @@ class Hipfft(CMakePackage):
 
     maintainers = ['arjun-raj-kuppala', 'srekolam']
 
-    version('master', branch='master')
+    version('master', branch='develop')
 
     version('4.5.2', sha256='32ba6a5f50cfede3777a43794371ffb1363302131d8a0382d96df90ed7bc911a')
     version('4.5.0', sha256='96636713bc6cdafbd5a9c1e98e816895448960c86b380fc0c3c9ffa28f670844')

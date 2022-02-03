@@ -15,7 +15,7 @@ class Migraphx(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='ecfd9a8e7967076f056d5b6a90b22f8919b82226443769b181193f16ebf58b83')
     version('4.5.0', sha256='8d243a48406af7f960c03bc28a16fad931de8e008ae848799adae504cc5f1355')
     version('4.3.1', sha256='e0b04da37aed937a2b2218059c189559a15460c191b5e9b00c7366c81c90b06e')

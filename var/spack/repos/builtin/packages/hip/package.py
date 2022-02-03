@@ -19,7 +19,7 @@ class Hip(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='c2113dc3c421b8084cd507d91b6fbc0170765a464b71fb0d96bb875df368f160')
     version('4.5.0', sha256='4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2')
     version('4.3.1', sha256='955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f')
@@ -100,7 +100,7 @@ class Hip(CMakePackage):
         name='rocclr',
         placement='rocclr',
         git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
-        branch='master',
+        branch='develop',
         when='@master'
     )
 
@@ -108,7 +108,7 @@ class Hip(CMakePackage):
         name='opencl',
         placement='opencl',
         git='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git',
-        branch='master',
+        branch='develop',
         when='@master'
     )
 
@@ -116,7 +116,7 @@ class Hip(CMakePackage):
         name='hipamd',
         placement='hipamd',
         git='https://github.com/ROCm-Developer-Tools/hipamd.git',
-        branch='master',
+        branch='develop',
         when='@master'
     )
 

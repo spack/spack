@@ -16,7 +16,7 @@ class RocmGdb(AutotoolsPackage):
     git      = "https://github.com/ROCm-Developer-Tools/ROCgdb.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    version('master', branch='master')
+    version('master', branch='amd-master')
     version('4.5.2', sha256='e278abf50f1758ce396b26a6719d0af09a6053c195516a44ec9b2be925d79203')
     version('4.5.0', sha256='dd37c8b1ea6bb41b1263183637575d7bf4746cabc573dbff888e23b0379877b0')
     version('4.3.1', sha256='995756a24b1e1510647dac1476a3a9a8e3af8e9fd9f4af1d00dd2db28e7a4ef2')

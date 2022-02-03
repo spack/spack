@@ -17,7 +17,7 @@ class Rccl(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rccl/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='36de0d3f3ffad491758d89c208ef72c5be5e0db766053a9c766e9c5c6a33a487')
     version('4.5.0', sha256='f806f9f65c490abddc562cb4812e12701582bbb449e41cc4797d00e0dedf084e')
     version('4.3.1', sha256='c5db71423dc654e8d2c3111e142e65c89436bc636827d95d41a09a87f44fe246')

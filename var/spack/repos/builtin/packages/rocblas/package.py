@@ -15,7 +15,7 @@ class Rocblas(CMakePackage):
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='15d725e38f91d1ff7772c4204b97c1515af58fa7b8ec2a2014b99b6d337909c4')
     version('4.5.0', sha256='22d15a1389a10f1324f5e0ceac1a6ec0758a2801a18419a55e37e2bc63793eaf')
     version('4.3.1', sha256='ad3c09573cb2bcfdb12bfb5a05e85f9c95073993fd610981df24dda792727b4b')

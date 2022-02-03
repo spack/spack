@@ -15,7 +15,7 @@ class RocprofilerDev(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/rocprofiler/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
-    version('master', branch='master')
+    version('master', branch='amd-master')
     version('4.5.2', sha256='baa59826f8fb984993c03d05e2e3cdf0b830b08f8056b18ba206dfbaa367aca9')
     version('4.5.0', sha256='9b47b086d28fc831dbe0f83ec7e4640057b97edc961f2f050a0968633f32a06b')
     version('4.3.1', sha256='c6f5fa192c9cdb32553d24ed5c847107d312042e39fa3dd17c83e237c9542a2d')

@@ -16,7 +16,7 @@ class Hipblas(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978')
     version('4.5.0', sha256='187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e')
     version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')

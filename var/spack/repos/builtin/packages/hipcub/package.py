@@ -15,7 +15,7 @@ class Hipcub(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='bec9ba1a6aa0475475ee292e54807accc839ed001338275f48da13e3bfb77514')
     version('4.5.0', sha256='5902fae0485789f1d1cc6b8e81d9f1b39338170d3139844d5edf0d324f9694c9')
     version('4.3.1', sha256='20fcd34323c541c182655b7ff6dc6ff268c0127596f0d9993884621c2b14b67a')

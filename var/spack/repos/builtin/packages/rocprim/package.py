@@ -15,7 +15,7 @@ class Rocprim(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='0dc673847e67db672f2e239f299206fe16c324005ddd2e92c7cb7725bb6f4fa6')
     version('4.5.0', sha256='6f0ca1da9a93064af662d6c61fbdb56bb313f8edca85615ead0dd284eb481089')
     version('4.3.1', sha256='d29ffcb5dd1c6155c586b9952fa4c11b717d90073feb083db6b03ea74746194b')

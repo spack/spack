@@ -18,7 +18,7 @@ class Rocthrust(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='9171a05dd7438aebd4f6a939b1b33b7e87be1a0bd52d90a171b74539885cf591')
     version('4.5.0', sha256='86cf897b01a6f5df668d978ce42d44a6ae9df9f8adc92d0a1a49a7c3bbead259')
     version('4.3.1', sha256='86fcd3bc275efe9a485aed48afdc6d3351804c076caee43e3fb8bd69752865e9')

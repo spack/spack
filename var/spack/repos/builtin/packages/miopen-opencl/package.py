@@ -16,7 +16,7 @@ class MiopenOpencl(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='cb49bdf215ed9881755239b6312d72f829c1a0edf510e6d1fbb206c41f5406fc')
     version('4.5.0', sha256='be2f5ce962e15e62d427978422498c0ddf821b91fd40777a1ba915a2794d6fda')
     version('4.3.1', sha256='1fb2fd8b24f984174ec5338a58b7964e128b74dafb101373a41c8ed33955251a')

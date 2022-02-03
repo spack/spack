@@ -20,7 +20,7 @@ class RocmValidationSuite(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8')
     version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
     version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
