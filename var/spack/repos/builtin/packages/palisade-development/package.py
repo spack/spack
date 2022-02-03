@@ -30,6 +30,8 @@ class PalisadeDevelopment(CMakePackage):
 
     version('feature-fixed-point-encoding',
             branch='feature-fixed-point-encoding')
+    version('fppe-logreg',
+            branch='fppe-logreg')
     version('master', branch='master', preferred=True)
 
     variant('shared', default=True, description='Build shared library.')

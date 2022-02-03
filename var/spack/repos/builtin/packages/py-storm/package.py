@@ -14,7 +14,7 @@ class PyStorm(PythonPackage):
     version('0.25', sha256='ec7cc8897638f94f6b75c6a2af74aa9b31f5492d7a2f9482c08a8dd7b46adb14')
     version('0.23', sha256='01c59f1c898fb9891333abd65519ba2dd5f68623ac8e67b54932e99ce52593d3',
             url='https://files.pythonhosted.org/packages/source/s/storm/storm-0.23.tar.bz2')
-    version('0.20', sha256='35f5883e93a262002ca59dbb39645c67434a182d758543c4a2467ff690ac23a5', deprecated=True)
+    version('0.20', sha256='35f5883e93a262002ca59dbb39645c67434a182d758543c4a2467ff690ac23a5')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six',               type=('build', 'run'),  when='@0.23:')

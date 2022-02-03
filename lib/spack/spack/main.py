@@ -819,12 +819,12 @@ def _main(argv=None):
     # scopes, then environment configuration here.
     # ------------------------------------------------------------------------
 
-    # ensure options on spack command come before everything
-    setup_main_options(args)
-
     # make spack.config aware of any command line configuration scopes
     if args.config_scopes:
         spack.config.command_line_scopes = args.config_scopes
+
+    # ensure options on spack command come before everything
+    setup_main_options(args)
 
     # activate an environment if one was specified on the command line
     env_format_error = None

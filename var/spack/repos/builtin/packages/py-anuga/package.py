@@ -17,7 +17,7 @@ class PyAnuga(PythonPackage):
 
     # The git main branch of the repo is now python3-only
     version('main', branch='main')
-    version('2.1', sha256='0e56c4a7d55570d7b2c36fa9b53ee4e7b85f62be0b4c03ad8ab5f51464321d2f', deprecated=True)
+    version('2.1', sha256='0e56c4a7d55570d7b2c36fa9b53ee4e7b85f62be0b4c03ad8ab5f51464321d2f')
 
     # Non-versioned dependencies for Anuga main and future versions based on python@3.5:
     depends_on('python@3.5:',            type=('build', 'run'), when='@2.2:')

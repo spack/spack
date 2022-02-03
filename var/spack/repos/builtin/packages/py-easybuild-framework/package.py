@@ -16,7 +16,7 @@ class PyEasybuildFramework(PythonPackage):
     maintainers = ['boegel']
 
     version('4.0.0', sha256='f5c40345cc8b9b5750f53263ade6c9c3a8cd3dfab488d58f76ac61a8ca7c5a77')
-    version('3.1.2', sha256='a03598478574e2982587796afdb792d78b598f4c09ebf4bec1a690c06470c00d', deprecated=True)
+    version('3.1.2', sha256='a03598478574e2982587796afdb792d78b598f4c09ebf4bec1a690c06470c00d')
 
     depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))

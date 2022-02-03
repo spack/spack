@@ -5,12 +5,8 @@
 
 import functools
 import inspect
-import sys
 
-if sys.version_info >= (3, 3):
-    from collections.abc import MutableSequence  # novm
-else:
-    from collections import MutableSequence
+from llnl.util.compat import MutableSequence
 
 
 class Delegate(object):

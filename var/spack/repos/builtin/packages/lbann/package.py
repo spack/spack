@@ -106,7 +106,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@0.103:')
+    depends_on('cmake@3.17.0:', type='build', when='@:0.102')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -188,7 +189,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
@@ -213,7 +214,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')

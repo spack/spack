@@ -734,7 +734,10 @@ class Database(object):
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise CorruptDatabaseError("error parsing database:", str(e))
+            raise six.raise_from(
+                CorruptDatabaseError("error parsing database:", str(e)),
+                e,
+            )
 
         if fdata is None:
             return
