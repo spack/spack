@@ -940,22 +940,15 @@ class Database(object):
                 tty.debug(
                     'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                 try:
-                    layout = spack.store.layout
-                    if entry.spec.external:
-                        layout = None
-                        install_check = True
-                    else:
-                        install_check = layout.check_installed(entry.spec)
-
-                    if install_check:
-                        kwargs = {
-                            'spec': entry.spec,
-                            'directory_layout': layout,
-                            'explicit': entry.explicit,
-                            'installation_time': entry.installation_time  # noqa: E501
-                        }
-                        self._add(**kwargs)
-                        processed_specs.add(entry.spec)
+                    layout = None if entry.spec.external else spack.store.layout
+                    kwargs = {
+                        'spec': entry.spec,
+                        'directory_layout': layout,
+                        'explicit': entry.explicit,
+                        'installation_time': entry.installation_time  # noqa: E501
+                    }
+                    self._add(**kwargs)
+                    processed_specs.add(entry.spec)
                 except Exception as e:
                     # Something went wrong, so the spec was not restored
                     # from old data
@@ -1099,24 +1092,28 @@ class Database(object):
                 }
                 self._add(dep, directory_layout, **extra_args)
 
-        if key not in self._data:
-            installed = bool(spec.external)
-            path = None
-            if not spec.external and directory_layout:
-                path = directory_layout.path_for_spec(spec)
-                if path in self._installed_prefixes:
-                    raise Exception("Install prefix collision.")
-                try:
-                    directory_layout.check_installed(spec)
-                    installed = True
-                except DirectoryLayoutError as e:
+        # Make sure the directory layout agrees whether the spec is installed
+        installed = bool(spec.external)
+        path = None
+        if not spec.external and directory_layout:
+            path = directory_layout.path_for_spec(spec)
+            try:
+                directory_layout.ensure_installed(spec)
+                installed = True
+            except DirectoryLayoutError as e:
+                if key not in self._data:
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
-                self._installed_prefixes.add(path)
-            elif spec.external_path:
-                path = spec.external_path
+        elif spec.external_path:
+            path = spec.external_path
 
+        if key not in self._data:
+            # Create a new install record
+            if path in self._installed_prefixes:
+                raise Exception("Install prefix collision.")
+            if installed:
+                self._installed_prefixes.add(path)
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
             extra_args = {
@@ -1146,8 +1143,8 @@ class Database(object):
         else:
             # If it is already there, mark it as installed and update
             # installation time
-            self._data[key].installed = True
-            self._data[key].installation_time = _now()
+            self._data[key].installed = installed
+            self._data[key].installation_time = installation_time
 
         self._data[key].explicit = explicit
 

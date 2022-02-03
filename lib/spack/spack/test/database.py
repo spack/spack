@@ -11,6 +11,7 @@ import datetime
 import functools
 import json
 import os
+import shutil
 
 import pytest
 
@@ -924,3 +925,23 @@ def test_store_find_failures(database, query_arg, exc_type, msg_str):
 def test_store_find_accept_string(database):
     result = spack.store.find('callpath', multiple=True)
     assert len(result) == 3
+
+
+def test_reindex_when_prefix_removed_means_not_installed(mutable_database, capfd):
+    """When a prefix of a dependency is removed and the database is reindexed,
+    the spec should still be added through the dependent, but should be listed as
+    not installed."""
+
+    # Remove libelf from the filesystem
+    shutil.rmtree(mutable_database.query_one('libelf').prefix)
+
+    # Reindex should pick up libelf as a dependency of libdwarf
+    spack.store.store.reindex()
+
+    # Reindexing should warn about libelf not being found on the filesystem
+    err = capfd.readouterr()[1]
+    assert 'Dependency missing' in err
+
+    # And we should still have libelf in the database, but not installed.
+    assert not mutable_database.query_one('libelf', installed=True)
+    assert mutable_database.query_one('libelf', installed=False)

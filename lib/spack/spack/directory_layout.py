@@ -234,13 +234,19 @@ class DirectoryLayout(object):
 
         self.write_spec(spec, self.spec_file_path(spec))
 
-    def check_installed(self, spec):
+    def ensure_installed(self, spec):
+        """
+        Throws DirectoryLayoutError if:
+        1. spec prefix does not exist
+        2. spec prefix does not contain a spec file
+        3. the spec file does not correspond to the spec
+        """
         _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
-            return None
+            raise InconsistentInstallDirectoryError("Install prefix does not exist")
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
