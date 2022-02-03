@@ -94,9 +94,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('x11',          default=False, description='Compile with X11 when +exodus')
 
     # Package options (alphabet order)
+    variant('adelus',       default=False, description='Compile with Adelus')
     variant('amesos',       default=True, description='Compile with Amesos')
     variant('amesos2',      default=True, description='Compile with Amesos2')
     variant('anasazi',      default=True, description='Compile with Anasazi')
+    variant('aprepro',      default=False, description='Compile with Aprepro from SEACAS')
     variant('aztec',        default=True, description='Compile with Aztec')
     variant('belos',        default=True, description='Compile with Belos')
     variant('chaco',        default=False, description='Compile with Chaco from SEACAS')
@@ -128,8 +130,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
     variant('thyra',        default=False, description='Compile with Thyra')
+    variant('teuchos',      default=False, description='Compile with Teuchos')
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
+    variant('triutils',     default=False, description='Compile with Triutils')
     variant('zoltan',       default=False, description='Compile with Zoltan')
     variant('zoltan2',      default=False, description='Compile with Zoltan2')
 
@@ -527,6 +531,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # ################## Trilinos Packages #####################
 
         options.extend([
+            define_trilinos_enable('Adelus'),
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
@@ -565,8 +570,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Thyra'),
+            define_trilinos_enable('Teuchos'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
+            define_trilinos_enable('Triutils'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
@@ -582,6 +589,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.extend([
                 define('Trilinos_EXTRA_REPOSITORIES', 'DataTransferKit'),
                 define_trilinos_enable('DataTransferKit', True),
+            ])
+
+        if '+aprepro' in spec:
+            options.extend([
+                define_trilinos_enable('SEACAS', True),
+                define_trilinos_enable('SEACASAprepro', True),
+            ])
+        else:
+            options.extend([
+                define_trilinos_enable('SEACASAprepro', False),
             ])
 
         if '+exodus' in spec:
