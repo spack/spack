@@ -166,7 +166,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources([join_path('src', 'eps', 'tests')])   
+        self.cache_extra_test_sources([join_path('src', 'eps', 'tests')])
 
     def run_test1_example(self, test_dir):
         exe = 'test1'
@@ -185,7 +185,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     def test(self):
         """Run stand alone test"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'src', 'eps', 'tests')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'src', 'eps', 'tests')
 
         if not os.path.isfile(join_path(test_dir, 'test1.c')):
             tty.warn('Skipping slepc test: failed to find test1.c')
