@@ -201,7 +201,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0 +conduit')
     depends_on('conduit@0.5.0:0.6 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    depends_on('conduit@0.6.0: +hdf5~hdf5_compat~fortran~parmetis', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -219,10 +219,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +numpy')
     depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
+#    depends_on('py-pytest', type=('test', 'run'), when='@:0.90,0.99: +pfe')
+    depends_on('py-scipy', type='test', when='@:0.90,0.99: +pfe')
+#    depends_on('py-scipy', type=('test', 'run'), when='@:0.90,0.99: +pfe')
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
@@ -324,6 +328,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
