@@ -80,6 +80,90 @@ class Eccodes(CMakePackage):
           sha256='857454528b666c52eb36ef3aa5d40ae018981b44e129bb8df3c2d3d560e3fa03',
           when='@:2.4.0+netcdf')
 
+    @when('%nag+fortran')
+    def patch(self):
+        # A number of Fortran source files assume that the kinds of integer and
+        # real variables are specified in bytes. However, the NAG compiler
+        # accepts such code only with an additional compiler flag -kind=byte.
+        # We do not simply add the flag because all user applications would
+        # have to be compiled with this flag too, which goes against one of the
+        # purposes of using the NAG compiler: make sure the code does not
+        # contradict the Fortran standards. The following logic could have been
+        # implemented as regular patch files, which would, however, be quite
+        # large. We would also have to introduce several versions of each patch
+        # file to support different versions of the package.
+
+        patch_kind_files = ['fortran/eccodes_f90_head.f90',
+                            'fortran/eccodes_f90_tail.f90',
+                            'fortran/grib_f90_head.f90',
+                            'fortran/grib_f90_tail.f90',
+                            'fortran/grib_types.f90']
+
+        patch_unix_ext_files = []
+
+        if self.run_tests:
+            patch_kind_files.extend([
+                'examples/F90/grib_print_data.f90',
+                'examples/F90/grib_print_data_static.f90',
+                # Files that need patching only when the extended regression
+                # tests are enabled, which we disable unconditionally:
+                # 'examples/F90/bufr_attributes.f90',
+                # 'examples/F90/bufr_expanded.f90',
+                # 'examples/F90/bufr_get_keys.f90',
+                # 'examples/F90/bufr_read_scatterometer.f90',
+                # 'examples/F90/bufr_read_synop.f90',
+                # 'examples/F90/bufr_read_temp.f90',
+                # 'examples/F90/bufr_read_tempf.f90',
+                # 'examples/F90/bufr_read_tropical_cyclone.f90',
+                # 'examples/F90/grib_clone.f90',
+                # 'examples/F90/grib_get_data.f90',
+                # 'examples/F90/grib_nearest.f90',
+                # 'examples/F90/grib_precision.f90',
+                # 'examples/F90/grib_read_from_file.f90',
+                # 'examples/F90/grib_samples.f90',
+                # 'examples/F90/grib_set_keys.f90'
+            ])
+
+            patch_unix_ext_files.extend([
+                'examples/F90/bufr_ecc-1284.f90',
+                'examples/F90/grib_set_data.f90',
+                'examples/F90/grib_set_packing.f90',
+                # Files that need patching only when the extended regression
+                # tests are enabled, which we disable unconditionally:
+                # 'examples/F90/bufr_copy_data.f90',
+                # 'examples/F90/bufr_get_string_array.f90',
+                # 'examples/F90/bufr_keys_iterator.f90',
+                # 'examples/F90/get_product_kind.f90',
+                # 'examples/F90/grib_count_messages_multi.f90'
+            ])
+
+        kwargs = {'string': False, 'backup': False, 'ignore_absent': True}
+
+        # Return the kind and not the size:
+        filter_file(r'(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)',
+                    '\\1kind(real\\2)\\3',
+                    'fortran/grib_types.f90', **kwargs)
+        filter_file(r'(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)',
+                    '\\1kind(x\\2)\\3',
+                    'fortran/grib_types.f90', **kwargs)
+
+        # Replace integer kinds:
+        for size, r in [(2, 4), (4, 9), (8, 18)]:
+            filter_file(r'(^\s*integer\((?:kind=)?){0}(\).*)'.format(size),
+                        '\\1selected_int_kind({0})\\2'.format(r),
+                        *patch_kind_files, **kwargs)
+
+        # Replace real kinds:
+        for size, p, r in [(4, 6, 37), (8, 15, 307)]:
+            filter_file(r'(^\s*real\((?:kind=)?){0}(\).*)'.format(size),
+                        '\\1selected_real_kind({0}, {1})\\2'.format(p, r),
+                        *patch_kind_files, **kwargs)
+
+        # Enable getarg and exit subroutines:
+        filter_file(r'(^\s*program\s+\w+)(\s*$)',
+                    '\\1; use f90_unix_env; use f90_unix_proc\\2',
+                    *patch_unix_ext_files, **kwargs)
+
     @run_before('cmake')
     def check_fortran(self):
         if '+fortran' in self.spec and self.compiler.fc is None:
