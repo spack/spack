@@ -273,22 +273,13 @@ externals:
   needs: [externals]
   stage: applications
 
-dke:
-  extends: .spack_stage_applications
-
 hpc:
   extends: .spack_stage_applications
 
 libraries:
   extends: .spack_stage_applications
 
-ml:
-  extends: .spack_stage_applications
-
 nse:
-  extends: .spack_stage_applications
-
-nse_circuits:
   extends: .spack_stage_applications
 
 science:
@@ -299,12 +290,9 @@ viz:
 
 .spack_check:
   needs:
-    - dke
     - hpc
     - libraries
-    - ml
     - nse
-    - nse_circuits
     - science
     - viz
   extends: .spack_basic_job

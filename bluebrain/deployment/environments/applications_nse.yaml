@@ -4,10 +4,13 @@ spack:
   modules:
     tcl:
       whitelist:
+        - brainbuilder
         - circuit-analysis
+        - circuit-build
         - connectome-tools
         - emsim
         - gene-expression-volume
+        - placement-algorithm
         - psp-validation
         - py-atlas-building-tools
         - py-bbp-analysis-framework
@@ -19,6 +22,7 @@ spack:
         - py-minis-validation
         - py-morphio
         - py-morphology-repair-workflow
+        - py-region-grower
         - py-sonata-network-reduction
         - regiodesics
   packages:
@@ -39,9 +43,12 @@ spack:
     vtk:
       variants: ~mpi~ffmpeg~opengl2
   specs:
+    - brainbuilder
+    - circuit-build
     - connectome-tools
     - emsim
     - gene-expression-volume
+    - placement-algorithm
     - psp-validation%gcc ^neuron%intel
     - py-atlas-building-tools
     - py-bbp-analysis-framework
@@ -54,5 +61,6 @@ spack:
     - py-morphio
     - py-morphology-repair-workflow
     - py-morph-tool%gcc ^neuron%intel
+    - py-region-grower
     - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
     - regiodesics

@@ -4,13 +4,23 @@ spack:
   modules:
     tcl:
       whitelist:
+        - py-atlalign
+        - py-atlannot
+        - py-atldld
+        - py-atlinter
+        - py-bba-datafetch
+        - py-bba-webexporter
         - py-bglibpy
         - py-bluepyefe
+        - py-bluepyemodel
         - py-bluepymm
         - py-bluepyopt
-        - py-bluepyemodel
         - py-bluepyparallel
+        - py-data-integrity-check
         - py-efel
+        - py-nexusforge
+        - py-nexus-sdk
+        - py-token-fetch
   packages:
     hdf5:
       variants: ~mpi+hl
@@ -29,10 +39,20 @@ spack:
     vtk:
       variants: ~mpi~ffmpeg~opengl2
   specs:
+    - py-atlalign
+    - py-atlannot
+    - py-atldld
+    - py-atlinter
+    - py-bba-datafetch
+    - py-bba-webexporter
     - py-bglibpy%gcc ^py-bluepy%gcc ^neuron%intel
     - py-bluepyefe
+    - py-bluepyemodel
     - py-bluepymm%gcc ^neuron%intel
     - py-bluepyopt%gcc ^neuron%intel
-    - py-bluepyemodel
     - py-bluepyparallel
+    - py-data-integrity-check
     - py-efel
+    - py-nexusforge
+    - py-nexus-sdk
+    - py-token-fetch
