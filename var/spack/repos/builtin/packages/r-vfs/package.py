@@ -7,11 +7,16 @@ from spack import *
 
 
 class RVfs(RPackage):
-    """VFS: Vegetated Filter Strip and Erosion Model"""
+    """Vegetated Filter Strip and Erosion Model.
 
-    homepage = "https://cloud.r-project.org/package=VFS"
-    url      = "https://cloud.r-project.org/src/contrib/VFS_1.0.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/VFS"
+    Empirical models for runoff, erosion, and phosphorus loss across a
+    vegetated filter strip, given slope, soils, climate, and vegetation (Gall
+    et al., 2018) <doi:10.1007/s00477-017-1505-x>. It also includes functions
+    for deriving climate parameters from measured daily weather data, and for
+    simulating rainfall. Models implemented include MUSLE (Williams, 1975) and
+    APLE (Vadas et al., 2009 <doi:10.2134/jeq2008.0337>)."""
+
+    cran = "VFS"
 
     version('1.0.2', sha256='8ff7e7e13919ff21f10c7c693ef596a2c7b57c7ca37d79278e443ed122a21aad')
 

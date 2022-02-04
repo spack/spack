@@ -7,15 +7,13 @@ from spack import *
 
 
 class RAssertive(RPackage):
-    """assertive: Readable Check Functions to Ensure Code Integrity
+    """Readable Check Functions to Ensure Code Integrity.
 
-    Lots of predicates (is_* functions) to check the state of your
-    variables, and assertions (assert_* functions) to throw errors if
-    they aren't in the right form."""
+    Lots of predicates (is_* functions) to check the state of your variables,
+    and assertions (assert_* functions) to throw errors if they aren't in the
+    right form."""
 
-    homepage = "https://bitbucket.org/richierocks/assertive"
-    url      = "https://cloud.r-project.org/src/contrib/assertive_0.3-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive"
+    cran = "assertive"
 
     version('0.3-6',   sha256='c403169e83c433b65e911f7fd640b378e2a4a4765a36063584b8458168a4ea0a')
 

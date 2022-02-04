@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMgcv(RPackage):
-    """Mixed GAM Computation Vehicle with Automatic Smoothness Estimation
+    """Mixed GAM Computation Vehicle with Automatic Smoothness Estimation.
 
     Generalized additive (mixed) models, some of their extensions and  other
     generalized ridge regression with multiple smoothing  parameter estimation
@@ -17,7 +17,6 @@ class RMgcv(RPackage):
     Includes a gam() function, a wide variety of smoothers, 'JAGS'  support and
     distributions beyond the exponential family."""
 
-    homepage = "https://cloud.r-project.org/package=mgcv"
     cran = "mgcv"
 
     version('1.8-38', sha256='cd12ed5787d6fdcead34e782e48b62b3f9efd523616c906e2da77bd9c142ddbb')
@@ -34,6 +33,6 @@ class RMgcv(RPackage):
     version('1.8-13', sha256='74bc819708ef59da94b777a446ef00d7f14b428eec843533e824017c29cc524b')
 
     depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r@3.6.0:', when='@1.8.34:', type=('build', 'run'))
+    depends_on('r@3.6.0:', type=('build', 'run'), when='@1.8.34:')
     depends_on('r-nlme@3.1-64:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSatellite(RPackage):
-    """Handling and Manipulating Remote Sensing Data
+    """Handling and Manipulating Remote Sensing Data.
 
     Herein, we provide a broad variety of functions which are useful for
     handling, manipulating, and visualizing satellite-based remote sensing
@@ -21,11 +21,13 @@ class RSatellite(RPackage):
     (OLI/TIRS Combined), and additional compatibility is ensured for the
     Landsat Global Land Survey data set."""
 
-    cran     = "satellite"
+    cran = "satellite"
 
+    version('1.0.4', sha256='99e79577a70489930c32da46ac26453af53e21c2d3a99f51fbf1f55f2d80dc7c')
     version('1.0.2', sha256='6447476bd31216e5abe504221e465677954d07419b4174ab4f4e4f7a197969c5')
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-raster', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-rcpp@0.10.3:', type=('build', 'run'))
+    depends_on('r-terra', type=('build', 'run'), when='@1.0.4:')

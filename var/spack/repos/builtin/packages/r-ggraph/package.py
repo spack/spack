@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGgraph(RPackage):
-    """An Implementation of Grammar of Graphics for Graphs and Networks
+    """An Implementation of Grammar of Graphics for Graphs and Networks.
 
     The grammar of graphics as implemented in ggplot2 is a poor fit for graph
     and network visualizations due to its reliance on tabular data input.
@@ -15,10 +15,9 @@ class RGgraph(RPackage):
     and provides the same flexible approach to building up plots layer by
     layer."""
 
-    homepage = "https://github.com/thomasp85/ggraph"
-    url      = "https://cloud.r-project.org/src/contrib/ggraph_2.0.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggraph"
+    cran = "ggraph"
 
+    version('2.0.5', sha256='e36ad49dba92ee8652e18b1fb197be0ceb9f0a2f8faee2194453a62578449654')
     version('2.0.4', sha256='9c6092d9a98b7b116f9c765ba44de7a34ceff2f584e776ef7a2082ad1d717dc8')
     version('2.0.0', sha256='4307efe85bfc6a0496797f6b86d6b174ba196538c51b1a6b6af55de0d4e04762')
 
@@ -37,4 +36,4 @@ class RGgraph(RPackage):
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-tidygraph', type=('build', 'run'))
     depends_on('r-graphlayouts@0.5.0:', type=('build', 'run'))
-    depends_on('r-withr', when='@2.0.4:', type=('build', 'run'))
+    depends_on('r-withr', type=('build', 'run'), when='@2.0.4:')

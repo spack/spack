@@ -12,7 +12,6 @@ class RDesc(RPackage):
     Tools to read, write, create, and manipulate DESCRIPTION files. It is
     intended for packages that create or manipulate other packages."""
 
-    homepage = "https://github.com/r-lib/desc"
     cran = "desc"
 
     version('1.4.0', sha256='8220e4c706449b8121b822e70b1414f391ef419aed574836a234c63b83e5d649')
@@ -22,4 +21,5 @@ class RDesc(RPackage):
     depends_on('r-r6', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))
     depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-assertthat', when='@:1.2', type=('build', 'run'))
+
+    depends_on('r-assertthat', type=('build', 'run'), when='@:1.2')

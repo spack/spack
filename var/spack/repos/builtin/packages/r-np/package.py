@@ -7,7 +7,7 @@ from spack import *
 
 
 class RNp(RPackage):
-    """Nonparametric Kernel Smoothing Methods for Mixed Data Types
+    """Nonparametric Kernel Smoothing Methods for Mixed Data Types.
 
     This package provides a variety of nonparametric (and semiparametric)
     kernel methods that seamlessly handle a mix of continuous, unordered, and
@@ -17,10 +17,9 @@ class RNp(RPackage):
     of Canada (SSHRC:www.sshrc.ca), and the Shared Hierarchical Academic
     Research Computing Network (SHARCNET:www.sharcnet.ca)."""
 
-    homepage = "https://github.com/JeffreyRacine/R-Package-np/"
-    url      = "https://cloud.r-project.org/src/contrib/np_0.60-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/np"
+    cran = "np"
 
+    version('0.60-11', sha256='a3b31b8ad70c42826076786b2b1b63b79cdbadfa55fe126773bc357686fd33a9')
     version('0.60-10', sha256='a27b4bbca8b83a289c98920c1c8f5e9979ba9772086893252a4297dd2698081a')
     version('0.60-9', sha256='fe31a8985f0b1a576a7775022b7131093b1c9a8337734136d5fcad85fa6592fc')
     version('0.60-8', sha256='924c342feb2a862fa3871a45db5f8434dbbfb900cfc40c001a0872108a3a069e')
@@ -28,5 +27,5 @@ class RNp(RPackage):
 
     depends_on('r-boot', type=('build', 'run'))
     depends_on('r-cubature', type=('build', 'run'))
-    depends_on('r-quadprog', when='@0.60-8:', type=('build', 'run'))
-    depends_on('r-quantreg', when='@0.60-8:', type=('build', 'run'))
+    depends_on('r-quadprog', type=('build', 'run'), when='@0.60-8:')
+    depends_on('r-quantreg', type=('build', 'run'), when='@0.60-8:')

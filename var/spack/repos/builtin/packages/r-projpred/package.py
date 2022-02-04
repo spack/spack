@@ -7,7 +7,7 @@ from spack import *
 
 
 class RProjpred(RPackage):
-    """Projection Predictive Feature Selection:
+    """Projection Predictive Feature Selection.
 
     Performs projection predictive feature selection for generalized linear
     models and generalized linear and additive multilevel models (see,
@@ -17,8 +17,7 @@ class RProjpred(RPackage):
     'rstanarm' and 'brms' packages, but other reference models can also be
     used. See the package vignette for more information and examples."""
 
-    homepage = "https://mc-stan.org/projpred/"
-    cran     = "projpred"
+    cran = "projpred"
 
     version('2.0.2', sha256='af0a9fb53f706090fe81b6381b27b0b6bd3f7ae1e1e44b0ada6f40972b09a55b')
 

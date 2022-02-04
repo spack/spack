@@ -9,7 +9,7 @@ from spack import *
 class RCairo(RPackage):
     """R graphics device using cairo graphics library for creating high-quality
     bitmap (PNG, JPEG, TIFF), vector (PDF, SVG, PostScript) and display (X11
-    and Win32) output
+    and Win32) output.
 
     R graphics device using cairographics library that can be used to create
     high-quality vector (PDF, PostScript and SVG) and bitmap output
@@ -23,10 +23,9 @@ class RCairo(RPackage):
     support or anti-aliasing. Backends are modular such that any subset of
     backends is supported."""
 
-    homepage = "https://cloud.r-project.org/package=Cairo"
-    url      = "https://cloud.r-project.org/src/contrib/Cairo_1.5-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Cairo"
+    cran = "Cairo"
 
+    version('1.5-14', sha256='067751face3b5771e72f9fb49bfeefb3a7bbecc060b672ab4393cb5935204c7b')
     version('1.5-12.2', sha256='dd524105c83b82b5c3b3ee2583ef90d4cafa54b0c29817dac48b425b79f90f92')
     version('1.5-10', sha256='7837f0c384cd49bb3342cb39a916d7a80b02fffbf123913a58014e597f69b5d5')
     version('1.5-9', sha256='2a867b6cae96671d6bc3acf9334d6615dc01f6ecf1953a27cde8a43c724a38f4')
