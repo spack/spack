@@ -16,4 +16,3 @@ class RCa(RPackage):
     cran = "ca"
 
     version('0.71.1', sha256='040c2fc94c356075f116cc7cd880530b3c9e02206c0035182c03a525ee99b424')
-

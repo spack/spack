@@ -15,4 +15,3 @@ class RHwriter(RPackage):
     cran = "hwriter"
 
     version('1.3.2', sha256='6b3531d2e7a239be9d6e3a1aa3256b2745eb68aa0bdffd2076d36552d0d7322b')
-

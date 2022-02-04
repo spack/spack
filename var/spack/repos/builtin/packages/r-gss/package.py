@@ -18,4 +18,3 @@ class RGss(RPackage):
     version('2.2-2', sha256='1da4da894378ee730cff9628e8b4d2a0d7dfa344b94e5bce6953e66723c21fe4')
     version('2.1-10', sha256='26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2')
     version('2.1-7', sha256='0405bb5e4c4d60b466335e5da07be4f9570045a24aed09e7bc0640e1a00f3adb')
-

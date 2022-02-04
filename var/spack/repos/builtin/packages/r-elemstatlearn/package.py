@@ -14,4 +14,3 @@ class RElemstatlearn(RPackage):
     cran = "ElemStatLearn"
 
     version('2015.6.26.2', sha256='a0f94a72f6188a0a5c855e3362b6b849bf7fd14efc2d824a8d2581f8bb1bd7fa')
-

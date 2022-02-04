@@ -15,4 +15,3 @@ class RGensa(RPackage):
     cran = "GenSA"
 
     version('1.1.7', sha256='9d99d3d0a4b7770c3c3a6de44206811272d78ab94481713a8c369f7d6ae7b80f')
-

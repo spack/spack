@@ -22,4 +22,3 @@ class RPermute(RPackage):
     version('0.9-7', sha256='eff88ffb579aaeb994e9f8609b776b2d9d9d56bc2879ddf180e3a2ad19f48dc0')
     version('0.9-5', sha256='d2885384a07497e8df273689d6713fc7c57a7c161f6935f3572015e16ab94865')
     version('0.9-4', sha256='a541a5f5636ddd67fd856d3e11224f15bc068e96e23aabe3e607a7e7c2fc1cf1')
-

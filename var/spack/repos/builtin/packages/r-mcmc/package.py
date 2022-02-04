@@ -20,4 +20,3 @@ class RMcmc(RPackage):
     cran = "mcmc"
 
     version('0.9-7', sha256='b7c4d3d5f9364c67a4a3cd49296a61c315ad9bd49324a22deccbacb314aa8260')
-

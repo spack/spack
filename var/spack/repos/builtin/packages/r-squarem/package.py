@@ -22,4 +22,3 @@ class RSquarem(RPackage):
 
     version('2021.1', sha256='66e5e18ca29903e4950750bbd810f0f9df85811ee4195ce0a86d939ba8183a58')
     version('2017.10-1', sha256='9b89905b436f1cf3faa9e3dabc585a76299e729e85ca659bfddb4b7cba11b283')
-

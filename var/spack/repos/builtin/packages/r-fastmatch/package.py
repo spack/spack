@@ -18,4 +18,3 @@ class RFastmatch(RPackage):
 
     version('1.1-3', sha256='1defa0b08bc3f48e4c3e4ba8df4f1b9e8299932fd8c747c67d32de44f90b9861')
     version('1.1-0', sha256='20b51aa4838dbe829e11e951444a9c77257dcaf85130807508f6d7e76797007d')
-

@@ -22,4 +22,3 @@ class RMultitaper(RPackage):
 
     version('1.0-15', sha256='837d71f3b46fbce2bea210449cf75e609f5363ff23b7808f5f115fdc51e6a3be')
     version('1.0-14', sha256='c84c122541dc2874131446e23b212259b3b00590d701efee49e6740fd74a8d13')
-

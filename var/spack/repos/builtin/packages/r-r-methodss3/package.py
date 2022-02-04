@@ -22,4 +22,3 @@ class RRMethodss3(RPackage):
 
     version('1.8.1', sha256='8a98fb81bcfa78193450f855f614f6f64e6c65daf115f301d97d1f474f5e619b')
     version('1.7.1', sha256='44b840399266cd27f8f9157777b4d9d85ab7bd31bfdc143b3fc45079a2d8e687')
-

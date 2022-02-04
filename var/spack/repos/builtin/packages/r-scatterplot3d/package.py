@@ -15,4 +15,3 @@ class RScatterplot3d(RPackage):
 
     version('0.3-41', sha256='4c8326b70a3b2d37126ca806771d71e5e9fe1201cfbe5b0d5a0a83c3d2c75d94')
     version('0.3-40', sha256='8249118aa29199017a6686d8245fed5343dabcf049b1588141a7cf83245b6a29')
-

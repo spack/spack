@@ -19,4 +19,3 @@ class RGtable(RPackage):
 
     version('0.3.0', sha256='fd386cc4610b1cc7627dac34dba8367f7efe114b968503027fb2e1265c67d6d3')
     version('0.2.0', sha256='801e4869830ff3da1d38e41f5a2296a54fc10a7419c6ffb108582850c701e76f')
-

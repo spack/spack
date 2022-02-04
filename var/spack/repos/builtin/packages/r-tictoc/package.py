@@ -22,4 +22,3 @@ class RTictoc(RPackage):
 
     version('1.0.1', sha256='a09a1535c417ddf6637bbbda5fca6edab6c7f7b252a64e57e99d4d0748712705')
     version('1.0', sha256='47da097c1822caa2d8e262381987cfa556ad901131eb96109752742526b2e2fe')
-

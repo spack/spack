@@ -19,4 +19,3 @@ class RRrblup(RPackage):
 
     version('4.6.1', sha256='e9230e74cc430a83ac5567071cb1c7f00b35c368f7d79bcc1cfde7225446c4db')
     version('4.6', sha256='28b475a1466fcdc1780caace75cf34155338fda496cebd5799315598a4bc84af')
-

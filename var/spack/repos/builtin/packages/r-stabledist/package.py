@@ -15,4 +15,3 @@ class RStabledist(RPackage):
     cran = "stabledist"
 
     version('0.7-1', sha256='06c5704d3a3c179fa389675c537c39a006867bc6e4f23dd7e406476ed2c88a69')
-

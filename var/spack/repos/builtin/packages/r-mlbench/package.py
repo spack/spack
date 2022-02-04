@@ -16,4 +16,3 @@ class RMlbench(RPackage):
 
     version('2.1-3', sha256='b1f92be633243185ab86e880a1e1ac5a4dd3c535d01ebd187a4872d0a8c6f194')
     version('2.1-1', sha256='748141d56531a39dc4d37cf0a5165a40b653a04c507e916854053ed77119e0e6')
-

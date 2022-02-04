@@ -20,4 +20,3 @@ class RPolyclip(RPackage):
     cran = "polyclip"
 
     version('1.10-0', sha256='74dabc0dfe5a527114f0bb8f3d22f5d1ae694e6ea9345912909bae885525d34b')
-
