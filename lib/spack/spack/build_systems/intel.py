@@ -1360,7 +1360,8 @@ class IntelPackage(PackageBase):
             # in compiler releases, then we need to search for libimf.so instead
             # of this static path.
             for lib in LLVMgold_libs:
-                p = subprocess.Popen(['patchelf', '--print-rpath', lib], stdout=subprocess.PIPE)
+                p = subprocess.Popen(['patchelf', '--print-rpath', lib],
+                                     stdout=subprocess.PIPE)
                 rpath = ':'.join([str(p.communicate()[0].decode()).strip(),
                                   '$ORIGIN/../compiler/lib/intel64_lin'])
                 subprocess.call(['patchelf', '--set-rpath', rpath, lib])
