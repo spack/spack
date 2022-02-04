@@ -1143,7 +1143,7 @@ class Database(object):
         else:
             # It is already in the database
             self._data[key].installed = installed
-            self._data[key].installation_time = installation_time
+            self._data[key].installation_time = _now()
 
         self._data[key].explicit = explicit
 
