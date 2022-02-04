@@ -213,7 +213,6 @@ def _expand_matrix_constraints(matrix_config):
         # Add to list of constraints
         results.append(flat_combo)
 
-    print(results)
     return results
 
 
