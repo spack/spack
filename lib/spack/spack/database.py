@@ -1093,10 +1093,9 @@ class Database(object):
                 self._add(dep, directory_layout, **extra_args)
 
         # Make sure the directory layout agrees whether the spec is installed
-        installed = bool(spec.external)
-        path = None
         if not spec.external and directory_layout:
             path = directory_layout.path_for_spec(spec)
+            installed = False
             try:
                 directory_layout.ensure_installed(spec)
                 installed = True
@@ -1105,15 +1104,15 @@ class Database(object):
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
+            self._installed_prefixes.add(path)
         elif spec.external_path:
             path = spec.external_path
+            installed = True
+        else:
+            path = None
+            installed = True
 
         if key not in self._data:
-            # Create a new install record
-            if path in self._installed_prefixes:
-                raise Exception("Install prefix collision.")
-            if installed:
-                self._installed_prefixes.add(path)
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
             extra_args = {
