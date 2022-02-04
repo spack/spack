@@ -1141,8 +1141,7 @@ class Database(object):
             new_spec._full_hash = spec._full_hash
 
         else:
-            # If it is already there, mark it as installed and update
-            # installation time
+            # It is already in the database
             self._data[key].installed = installed
             self._data[key].installation_time = installation_time
 
