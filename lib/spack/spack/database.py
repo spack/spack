@@ -1099,13 +1099,13 @@ class Database(object):
             try:
                 directory_layout.ensure_installed(spec)
                 installed = True
-            except DirectoryLayoutError as e:
-                if key not in self._data:
-                    tty.warn(
-                        'Dependency missing: may be deprecated or corrupted:',
-                        path, str(e))
-            if installed:
                 self._installed_prefixes.add(path)
+            except DirectoryLayoutError as e:
+                msg = ("{0} is being {1} in the database with prefix {2}, "
+                       "but this directory does not contain an installation of "
+                       "the spec, due to: {3}")
+                action = "updated" if key in self._data else "registered"
+                tty.warn(msg.format(spec.short_spec, action, path, str(e)))
         elif spec.external_path:
             path = spec.external_path
             installed = True

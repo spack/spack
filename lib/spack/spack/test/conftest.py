@@ -884,7 +884,7 @@ class MockLayout(object):
         return '/'.join([self.root, spec.name + '-' + spec.dag_hash()])
 
     def ensure_installed(self, spec):
-        return True
+        pass
 
 
 @pytest.fixture()

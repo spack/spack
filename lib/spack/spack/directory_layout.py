@@ -246,7 +246,8 @@ class DirectoryLayout(object):
         spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
-            raise InconsistentInstallDirectoryError("Install prefix does not exist")
+            raise InconsistentInstallDirectoryError(
+                "Install prefix {0} does not exist.".format(path))
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
@@ -255,7 +256,7 @@ class DirectoryLayout(object):
 
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec == spec:
-            return path
+            return
 
         # DAG hashes currently do not include build dependencies.
         #
@@ -268,7 +269,7 @@ class DirectoryLayout(object):
             # may be installed. This means for example that for two instances
             # that differ only in CMake version used to build, only one will
             # be installed.
-            return path
+            return
 
         if spec.dag_hash() == installed_spec.dag_hash():
             raise SpecHashCollisionError(spec, installed_spec)

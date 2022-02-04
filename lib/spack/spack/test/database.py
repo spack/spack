@@ -940,7 +940,7 @@ def test_reindex_when_prefix_removed_means_not_installed(mutable_database, capfd
 
     # Reindexing should warn about libelf not being found on the filesystem
     err = capfd.readouterr()[1]
-    assert 'Dependency missing' in err
+    assert 'this directory does not contain an installation of the spec' in err
 
     # And we should still have libelf in the database, but not installed.
     assert not mutable_database.query_one('libelf', installed=True)
