@@ -13,6 +13,11 @@ import spack.main
 _bootstrap = spack.main.SpackCommand('bootstrap')
 
 
+def test_dependencies(no_compilers_yaml):
+    output = _bootstrap('dependencies')
+    assert 'clingo-bootstrap@spack' in output
+
+
 @pytest.mark.parametrize('scope', [
     None, 'site', 'system', 'user'
 ])

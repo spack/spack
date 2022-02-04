@@ -50,6 +50,10 @@ def setup_parser(subparser):
     disable = sp.add_parser('disable', help='disable bootstrapping')
     _add_scope_option(disable)
 
+    sp.add_parser(
+        'dependencies', help='print bootstrapping dependencies'
+    )
+
     reset = sp.add_parser(
         'reset', help='reset bootstrapping configuration to Spack defaults'
     )
@@ -86,6 +90,23 @@ def setup_parser(subparser):
     untrust.add_argument(
         'name', help='name of the method to be untrusted'
     )
+
+
+def _dependencies(args):
+    with spack.bootstrap.spack_python_interpreter():
+        # Add hint to use frontend operating system on Cray
+        abstract_spec_str = spack.bootstrap.clingo_root_spec()
+        if str(spack.platforms.host()) == 'cray':
+            abstract_spec_str += ' os=fe'
+
+        concrete_spec = spack.spec.Spec(
+            abstract_spec_str + ' ^' + spack.bootstrap.spec_for_current_python()
+        )
+        concrete_spec._old_concretize(deprecation_warning=False)
+
+    for s in concrete_spec.package.spec.traverse():
+        if not s.external:
+            print(s.format('{name}@{version}'))
 
 
 def _enable_or_disable(args):
@@ -252,6 +273,7 @@ def _status(args):
 def bootstrap(parser, args):
     callbacks = {
         'status': _status,
+        'dependencies': _dependencies,
         'enable': _enable_or_disable,
         'disable': _enable_or_disable,
         'reset': _reset,
