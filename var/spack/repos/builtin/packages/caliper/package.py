@@ -155,12 +155,11 @@ class Caliper(CMakePackage, CudaPackage):
         """Run stand alone test: cxx_example"""
 
         test_dir = self.test_suite.current_test_cache_dir.examples.apps
-
-        if not os.path.isfile(join_path(test_dir, 'cxx-example.cpp')):
-            tty.warn('Skipping caliper test: cxx-example.cpp does not exist')
-            return
-
         exe = 'cxx-example'
+
+        if not os.path.isfile(join_path(test_dir, exe)):
+            tty.warn('Skipping caliper test: {0} does not exist'.format(exe))
+            return
 
         if os.path.exists(self.prefix.lib):
             lib_dir = self.prefix.lib
