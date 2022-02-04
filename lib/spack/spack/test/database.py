@@ -927,13 +927,15 @@ def test_store_find_accept_string(database):
     assert len(result) == 3
 
 
-def test_reindex_when_prefix_removed_means_not_installed(mutable_database, capfd):
+def test_reindex_removed_prefix_is_not_installed(mutable_database, mock_store, capfd):
     """When a prefix of a dependency is removed and the database is reindexed,
     the spec should still be added through the dependent, but should be listed as
     not installed."""
 
     # Remove libelf from the filesystem
-    shutil.rmtree(mutable_database.query_one('libelf').prefix)
+    prefix = mutable_database.query_one('libelf').prefix
+    assert prefix.startswith(str(mock_store))
+    shutil.rmtree(prefix)
 
     # Reindex should pick up libelf as a dependency of libdwarf
     spack.store.store.reindex()
@@ -945,3 +947,29 @@ def test_reindex_when_prefix_removed_means_not_installed(mutable_database, capfd
     # And we should still have libelf in the database, but not installed.
     assert not mutable_database.query_one('libelf', installed=True)
     assert mutable_database.query_one('libelf', installed=False)
+
+
+def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
+    # Remove all non-external installations from the filesystem
+    for spec in spack.store.db.query_local():
+        if not spec.external:
+            assert spec.prefix.startswith(str(mock_store))
+            shutil.rmtree(spec.prefix)
+
+    # Make sure we have some explicitly installed specs
+    num = len(mutable_database.query_local(installed=True, explicit=True))
+    assert num > 0
+
+    # Reindex uses the current index to repopulate itself
+    spack.store.store.reindex()
+
+    # Make sure all explicit specs are still there, but are now uninstalled.
+    specs = mutable_database.query_local(installed=False, explicit=True)
+    assert len(specs) == num
+
+    # And make sure they can be removed from the database (covers the case where
+    # `ref_count == 0 and not installed`, which hits some obscure branches.
+    for s in specs:
+        mutable_database.remove(s)
+
+    assert len(mutable_database.query_local(installed=False, explicit=True)) == 0
