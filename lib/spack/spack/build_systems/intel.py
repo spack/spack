@@ -1359,8 +1359,10 @@ class IntelPackage(PackageBase):
             # is the location of libimf.so. If this relative location is changed
             # in compiler releases, then we need to search for libimf.so instead
             # of this static path.
-            rpath = "$ORIGIN/../lib:$ORIGIN/../compiler/lib/intel64_lin"
             for lib in LLVMgold_libs:
+                p = subprocess.Popen(['patchelf', '--print-rpath', lib], stdout=subprocess.PIPE)
+                rpath = ':'.join([str(p.communicate()[0].decode()).strip(),
+                                  '$ORIGIN/../compiler/lib/intel64_lin'])
                 subprocess.call(['patchelf', '--set-rpath', rpath, lib])
 
     # Check that self.prefix is there after installation
