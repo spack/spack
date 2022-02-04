@@ -3150,12 +3150,6 @@ class Spec(object):
         if not self.versions.overlaps(other.versions):
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
-        if not self.name and other.name:
-            self.name = other.name
-
-        if not self.namespace and other.namespace:
-            self.namespace = other.namespace
-
         for v in [x for x in other.variants if x in self.variants]:
             if not self.variants[v].compatible(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(
@@ -3176,6 +3170,15 @@ class Spec(object):
                     raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
         changed = False
+
+        if not self.name and other.name:
+            self.name = other.name
+            changed = True
+
+        if not self.namespace and other.namespace:
+            self.namespace = other.namespace
+            changed = True
+
         if self.compiler is not None and other.compiler is not None:
             changed |= self.compiler.constrain(other.compiler)
         elif self.compiler is None:
