@@ -28,6 +28,7 @@ class PyKubernetes(PythonPackage):
     version('10.0.1',    sha256='3770a496663396ad1def665eeadb947b3f45217a08b64b10c01a57e981ac8592')
     version('9.0.0',     sha256='a8b0aed55ba946faea660712595a52ae53a8854df773d96f47a63fa0c9d4e3bf')
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-certifi@14.05.14:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.5.3:', type=('build', 'run'))
