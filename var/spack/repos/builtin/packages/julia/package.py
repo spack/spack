@@ -117,6 +117,9 @@ class Julia(MakefilePackage):
     patch('julia-1.6-system-libwhich-and-p7zip-symlink.patch', when='@1.6.0:1.6')
     patch('use-add-rpath.patch')
 
+    # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
+    patch('fix-gfortran.patch', when='@1.7.0:1.7.1')
+
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.

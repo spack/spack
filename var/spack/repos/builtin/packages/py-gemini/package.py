@@ -17,16 +17,16 @@ class PyGemini(PythonPackage):
 
     maintainers = ['robqiao']
 
-    version('0.30.2', sha256='c7af06a4cc475a846aeeb3cd7fcfb39d6cdd0b76e3b07abab2e5e6e68a3fe431', deprecated=True)
-    version('0.30.1', sha256='af835ca33bc6d7865def2467c34cb1d539ec542f9514044435bd2252b25a046d', deprecated=True)
-    version('0.30.0', sha256='a55d0c77342bf650f7e1300cb6ba485407ea3b42f4137a5197248d397a026030', deprecated=True)
-    version('0.20.1', sha256='cd84aa45ace7a9ffb13ba4176122eab5b9fcc0445b1c0944ecec017f88f2b7f1', deprecated=True)
-    version('0.20.0', sha256='640b40186fa00f54c1a0cdfab3fc3076b1d3bdf5c6327fcb2a0c51aa1b05878b', deprecated=True)
-    version('0.19.1', sha256='1154bcb48b1bc78819c5a5e710f5cb0747b01fa0f3113e6081a5a2747c8703e5', deprecated=True)
-    version('0.19.0', sha256='5146d1b5ed52139c50473aa3625d8df29f2db6d198cfd2c966469e7d585cccf2', deprecated=True)
-    version('0.18.3', sha256='7c2f99069385547c656021fbb43e0bae4f9fb8a56ad3f6a61235b44fbc1ba6eb', deprecated=True)
-    version('0.18.2', sha256='cf8a83d48d966a800aa2569076d52c307f4d8264a6ae804c176d61e705c0017e', deprecated=True)
-    version('0.18.1', sha256='1d3d3b9d47555e1f62c1a870d8fd2ecbfc0bed25910cab31af5b585db3144a68', deprecated=True)
+    version('0.30.2', sha256='c7af06a4cc475a846aeeb3cd7fcfb39d6cdd0b76e3b07abab2e5e6e68a3fe431')
+    version('0.30.1', sha256='af835ca33bc6d7865def2467c34cb1d539ec542f9514044435bd2252b25a046d')
+    version('0.30.0', sha256='a55d0c77342bf650f7e1300cb6ba485407ea3b42f4137a5197248d397a026030')
+    version('0.20.1', sha256='cd84aa45ace7a9ffb13ba4176122eab5b9fcc0445b1c0944ecec017f88f2b7f1')
+    version('0.20.0', sha256='640b40186fa00f54c1a0cdfab3fc3076b1d3bdf5c6327fcb2a0c51aa1b05878b')
+    version('0.19.1', sha256='1154bcb48b1bc78819c5a5e710f5cb0747b01fa0f3113e6081a5a2747c8703e5')
+    version('0.19.0', sha256='5146d1b5ed52139c50473aa3625d8df29f2db6d198cfd2c966469e7d585cccf2')
+    version('0.18.3', sha256='7c2f99069385547c656021fbb43e0bae4f9fb8a56ad3f6a61235b44fbc1ba6eb')
+    version('0.18.2', sha256='cf8a83d48d966a800aa2569076d52c307f4d8264a6ae804c176d61e705c0017e')
+    version('0.18.1', sha256='1d3d3b9d47555e1f62c1a870d8fd2ecbfc0bed25910cab31af5b585db3144a68')
 
     depends_on('python@2.5:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
