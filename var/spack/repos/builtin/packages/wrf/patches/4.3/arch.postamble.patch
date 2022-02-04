@@ -1,0 +1,34 @@
+--- a/arch/postamble	2021-11-01 16:51:50.000000000 +0900
++++ b/arch/postamble	2021-11-01 16:54:34.000000000 +0900
+@@ -53,6 +53,7 @@
+                       -I$(WRF_SRC_ROOT_DIR)/wrftladj \
+                       -I$(WRF_SRC_ROOT_DIR)/chem -I$(WRF_SRC_ROOT_DIR)/inc \
+                       -I$(NETCDFPATH)/include \
++                      -I$(NETCDFFPATH)/include \
+                       CONFIGURE_RTTOV_INC CONFIGURE_CTSM_INC
+ REGISTRY        =    Registry
+ CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
+@@ -62,6 +63,7 @@
+ ENVCOMPDEFS     =    CONFIGURE_COMPILEFLAGS
+ CPPFLAGS        =    $(ARCHFLAGS) $(ENVCOMPDEFS) -I$(LIBINCLUDE) $(TRADFLAG) CONFIGURE_COMMS_INCLUDE
+ NETCDFPATH      =    CONFIGURE_NETCDF_PATH
++NETCDFFPATH     =    CONFIGURE_NETCDFF_PATH
+ HDF5PATH        =    CONFIGURE_HDF5_PATH
+ WRFPLUSPATH     =    CONFIGURE_WRFPLUS_PATH
+ RTTOVPATH       =    CONFIGURE_RTTOV_PATH
+@@ -93,13 +95,13 @@
+ 
+ wrfio_nf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \
+-          make $(J) NETCDFPATH="$(NETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
++          make $(J) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+           CC="$(SCC)" CFLAGS="$(CFLAGS)" \
+           FC="$(SFC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_pnf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_pnetcdf ; \
+-          make $(J) NETCDFPATH="$(PNETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
++          make $(J) NETCDFPATH="$(PNETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
+           FC="$(FC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_grib_share :
