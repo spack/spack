@@ -11,19 +11,6 @@ from spack.error import SpackError
 from spack.spec import Spec
 
 
-def spec_ordering_key(s):
-    if s.startswith('^'):
-        return 5
-    elif s.startswith('/'):
-        return 4
-    elif s.startswith('%'):
-        return 3
-    elif any(s.startswith(c) for c in '~-+@') or '=' in s:
-        return 2
-    else:
-        return 1
-
-
 class SpecList(object):
 
     def __init__(self, name='specs', yaml_list=None, reference=None):
