@@ -11,19 +11,6 @@ from spack.error import SpackError
 from spack.spec import Spec
 
 
-def spec_ordering_key(s):
-    if s.startswith('^'):
-        return 5
-    elif s.startswith('/'):
-        return 4
-    elif s.startswith('%'):
-        return 3
-    elif any(s.startswith(c) for c in '~-+@') or '=' in s:
-        return 2
-    else:
-        return 1
-
-
 class SpecList(object):
 
     def __init__(self, name='specs', yaml_list=None, reference=None):
@@ -177,30 +164,36 @@ class SpecList(object):
         return self.specs[key]
 
 
-def _expand_matrix_constraints(object, specify=True):
-    # recurse so we can handle nexted matrices
+def _expand_matrix_constraints(matrix_config):
+    # recurse so we can handle nested matrices
     expanded_rows = []
-    for row in object['matrix']:
+    for row in matrix_config['matrix']:
         new_row = []
         for r in row:
             if isinstance(r, dict):
+                # Flatten the nested matrix into a single row of constraints
                 new_row.extend(
-                    [[' '.join(c)]
-                     for c in _expand_matrix_constraints(r, specify=False)])
+                    [[' '.join([str(c) for c in expanded_constraint_list])]
+                     for expanded_constraint_list in _expand_matrix_constraints(r)]
+                )
             else:
                 new_row.append([r])
         expanded_rows.append(new_row)
 
-    excludes = object.get('exclude', [])  # only compute once
-    sigil = object.get('sigil', '')
+    excludes = matrix_config.get('exclude', [])  # only compute once
+    sigil = matrix_config.get('sigil', '')
 
     results = []
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
-        flat_combo = [constraint for list in combo for constraint in list]
-        ordered_combo = sorted(flat_combo, key=spec_ordering_key)
+        flat_combo = [constraint for constraint_list in combo
+                      for constraint in constraint_list]
+        flat_combo = [Spec(x) for x in flat_combo]
 
-        test_spec = Spec(' '.join(ordered_combo))
+        test_spec = flat_combo[0].copy()
+        for constraint in flat_combo[1:]:
+            test_spec.constrain(constraint)
+
         # Abstract variants don't have normal satisfaction semantics
         # Convert all variants to concrete types.
         # This method is best effort, so all existing variants will be
@@ -214,14 +207,12 @@ def _expand_matrix_constraints(object, specify=True):
         if any(test_spec.satisfies(x) for x in excludes):
             continue
 
-        if sigil:  # add sigil if necessary
-            ordered_combo[0] = sigil + ordered_combo[0]
+        if sigil:
+            flat_combo[0] = Spec(sigil + str(flat_combo[0]))
 
         # Add to list of constraints
-        if specify:
-            results.append([Spec(x) for x in ordered_combo])
-        else:
-            results.append(ordered_combo)
+        results.append(flat_combo)
+
     return results
 
 
