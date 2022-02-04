@@ -24,4 +24,4 @@ class PyJupytext(PythonPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
     depends_on('py-mdit-py-plugins', type=('build', 'run'))
-    depends_on('py-markdown-it-py@1.0:2', type=('build', 'run'))
+    depends_on('py-markdown-it-py@1.0:1', type=('build', 'run'))
