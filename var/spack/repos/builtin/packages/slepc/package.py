@@ -182,6 +182,10 @@ class Slepc(Package, CudaPackage, ROCmPackage):
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
     def test(self):
         """Run stand alone test"""
 
