@@ -82,6 +82,12 @@ class Eccodes(CMakePackage):
             ).with_default('auto'),
             description="List of definitions to install")
 
+    variant('samples',
+            values=disjoint_sets(
+                ('auto',), ('default',),
+            ).with_default('auto'),
+            description="List of samples to install")
+
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
     depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
@@ -316,6 +322,12 @@ class Eccodes(CMakePackage):
         if 'auto' not in definitions:
             args.append(self.define('ENABLE_INSTALL_ECCODES_DEFINITIONS',
                                     'default' in definitions))
+
+        samples = self.spec.variants['samples'].value
+
+        if 'auto' not in samples:
+            args.append(self.define('ENABLE_INSTALL_ECCODES_SAMPLES',
+                                    'default' in samples))
 
         return args
 
