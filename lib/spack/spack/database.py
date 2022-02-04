@@ -1104,7 +1104,8 @@ class Database(object):
                     tty.warn(
                         'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
-            self._installed_prefixes.add(path)
+            if installed:
+                self._installed_prefixes.add(path)
         elif spec.external_path:
             path = spec.external_path
             installed = True
@@ -1209,7 +1210,7 @@ class Database(object):
 
         # This install prefix is now free for other specs to use, even if the
         # spec is only marked uninstalled.
-        if not rec.spec.external:
+        if not rec.spec.external and rec.installed:
             self._installed_prefixes.remove(rec.path)
 
         if rec.ref_count > 0:
