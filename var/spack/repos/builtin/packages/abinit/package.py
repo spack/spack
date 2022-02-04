@@ -100,10 +100,11 @@ class Abinit(AutotoolsPackage):
     # need openmp threading for abinit+openmp
     # TODO: The logic here can be reversed with the new concretizer. Instead of
     # using `conflicts`, `depends_on` could be used instead.
-    mkl_message = 'Need to set dependent variant to threads=openmp'
     for fftw in ['amdfftw', 'cray-fftw', 'fujitsu-fftw', 'fftw']:
         conflicts('+openmp', when='^{0}~openmp'.format(fftw),
-                  msg='Need to request fftw +openmp')
+                  msg='Need to request {0} +openmp'.format(fftw))
+
+    mkl_message = 'Need to set dependent variant to threads=openmp'
     conflicts('+openmp',
               when='^intel-mkl threads=none',
               msg=mkl_message)
@@ -113,6 +114,14 @@ class Abinit(AutotoolsPackage):
     conflicts('+openmp',
               when='^intel-parallel-studio +mkl threads=none',
               msg=mkl_message)
+
+    conflicts('+openmp',
+              when='^fujitsu-ssl2 ~parallel',
+              msg='Need to request fujitsu-ssl2 +parallel')
+
+    conflicts('~openmp',
+              when='^fujitsu-ssl2 +parallel',
+              msg='Need to request fujitsu-ssl2 ~parallel')
 
     patch('rm_march_settings.patch', when='@:8')
     patch('rm_march_settings_v9.patch', when='@9:')
