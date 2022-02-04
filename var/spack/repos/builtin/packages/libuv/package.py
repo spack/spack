@@ -2,6 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
+
+
 class Libuv(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "https://libuv.org"
@@ -29,6 +33,10 @@ class Libuv(AutotoolsPackage):
                   'See: https://github.com/libuv/libuv/issues/2805')
 
     def autoreconf(self, spec, prefix):
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+
         # This is needed because autogen.sh generates on-the-fly
         # an m4 macro needed during configuration
         bash = which("bash")

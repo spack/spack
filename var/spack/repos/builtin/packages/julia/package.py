@@ -85,8 +85,8 @@ class Julia(MakefilePackage):
         'https://raw.githubusercontent.com/spack/patches/b59ca193423c4c388254f528afabb906b5373162/julia/libuv-1.39.0.patch',
         sha256='f7c1e7341e89dc35dfd85435ba35833beaef575b997c3f978c27d0dbf805149b'))
     depends_on('libuv', when='^libuv@1.42.0', patches=patch(
-        'https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch',
-        sha256='d9252fbe67ac8f15e15653f0f6b00dffa07ae1a42f013d4329d17d8b492b7cdb'))
+        'https://raw.githubusercontent.com/spack/patches/b106c034796ff5fc8e07e15722e5a369f68d4bc9/julia/libuv-1.42.0-1.patch',
+        sha256='35e5613ae0e56bffcad9d0c59f74389c19385fde18fe3b923fa31d66a9519128'))
 
     # patchelf 0.13 is required because the rpath patch uses --add-rpath
     depends_on('patchelf@0.13:', type='build')
