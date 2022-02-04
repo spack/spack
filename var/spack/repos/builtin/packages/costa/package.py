@@ -21,14 +21,14 @@ class Costa(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version('master', branch='master', submodules=True)
-    version('2.0', sha256='085b7787597374244bbb1eb89bc69bf58c35f6c85be805e881e1c0b25166c3ce')
+    version('2.0', sha256='ef283b904b1b77b7d0de401cbdc3d7850c77368f2b57249c6eaee3017794c4b8')
 
     variant('scalapack', default=False, description='Build with ScaLAPACK API')
     variant('openmp', default=True, description="Build with OpenMP support")
 
     depends_on('cmake@3.12:', type='build')
     depends_on('mpi@3:')
-    depends_on('openmp', when="+openmp")
+    # depends_on('openmp', when="+openmp")
     depends_on('scalapack', when='+scalapack')
 
     def url_for_version(self, version):
