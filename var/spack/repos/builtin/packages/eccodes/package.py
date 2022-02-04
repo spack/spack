@@ -4,6 +4,36 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+_definitions = {
+    # German Meteorological Service (Deutscher Wetterdienst, DWD):
+    'edzw': {
+        'conflicts': {'when': '@:2.19.1,2.22.0,2.24.0:'},
+        'resources': [
+            {
+                'when': '@2.20.0',
+                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz',
+                'sha256': 'a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4'
+            },
+            {
+                'when': '@2.21.0',
+                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2',
+                'sha256': '046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9'
+            },
+            {
+                'when': '@2.22.1',
+                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2',
+                'sha256': 'be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389'
+            },
+            {
+                'when': '@2.23.0',
+                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
+                'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
+            }
+        ]
+    }
+}
+
+
 class Eccodes(CMakePackage):
     """ecCodes is a package developed by ECMWF for processing meteorological
     data in GRIB (1/2), BUFR (3/4) and GTS header formats."""
@@ -45,6 +75,13 @@ class Eccodes(CMakePackage):
     variant('shared', default=True,
             description='Build shared versions of the libraries')
 
+    variant('definitions',
+            values=disjoint_sets(
+                ('auto',),
+                ('default',) + tuple(_definitions.keys()),
+            ).with_default('auto'),
+            description="List of definitions to install")
+
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
     depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
@@ -65,8 +102,17 @@ class Eccodes(CMakePackage):
 
     depends_on('cmake@3.6:', type='build')
     depends_on('cmake@3.12:', when='@2.19:', type='build')
+
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
+
+    for center, definitions in _definitions.items():
+        kwargs = definitions.get('conflicts', None)
+        if kwargs:
+            conflicts('definitions={0}'.format(center), **kwargs)
+        for kwargs in definitions.get('resources', []):
+            resource(name=center, destination='spack-definitions',
+                     placement='definitions.{0}'.format(center), **kwargs)
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
@@ -265,7 +311,24 @@ class Eccodes(CMakePackage):
         if '^python' in self.spec:
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
+        definitions = self.spec.variants['definitions'].value
+
+        if 'auto' not in definitions:
+            args.append(self.define('ENABLE_INSTALL_ECCODES_DEFINITIONS',
+                                    'default' in definitions))
+
         return args
+
+    @run_after('install')
+    def install_extra_definitions(self):
+        noop = set(['auto', 'none', 'default'])
+        for center in self.spec.variants['definitions'].value:
+            if center not in noop:
+                center_dir = 'definitions.{0}'.format(center)
+                install_tree(
+                    join_path(self.stage.source_path,
+                              'spack-definitions', center_dir),
+                    join_path(self.prefix.share.eccodes, center_dir))
 
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
