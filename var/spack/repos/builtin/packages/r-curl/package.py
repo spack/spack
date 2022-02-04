@@ -30,6 +30,5 @@ class RCurl(RPackage):
     version('1.0', sha256='f8927228754fdfb21dbf08b9e67c5f97e06764c4adf327a4126eed84b1508f3d')
     version('0.9.7', sha256='46e150998723fd1937da598f47f49fe47e40c1f57ec594436c6ef1e0145b44dc')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('curl', when='@4.3:')
     depends_on('curl@:7.63', when='@:4.0')

@@ -29,7 +29,6 @@ class RFactominer(RPackage):
     version('1.36', sha256='2198c3facaa41a23df6f9373d4ccb636b98a8810896e379e5deb686ab31b36de')
     version('1.35', sha256='afe176fe561d1d16c5965ecb2b80ec90a56d0fbcd75c43ec8025a401a5b715a9')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@2.4:')
     depends_on('r-car', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))

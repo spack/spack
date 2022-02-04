@@ -26,7 +26,6 @@ class RRrcov(RPackage):
     version('1.5-5', sha256='1f7f07558e347e7d1f1adff68631764670bc672777a7d990901c4fa94cc0e629')
     version('1.4-7', sha256='cbd08ccce8b583a2f88946a3267c8fc494ee2b44ba749b9296a6e3d818f6f293')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-robustbase@0.92.1:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

@@ -23,4 +23,3 @@ class RLattice(RPackage):
     version('0.20-35', sha256='0829ab0f4dec55aac6a73bc3411af68441ddb1b5b078d680a7c2643abeaa965d')
     version('0.20-34', sha256='4a1a1cafa9c6660fb9a433b3a51898b8ec8e83abf143c80f99e3e4cf92812518')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

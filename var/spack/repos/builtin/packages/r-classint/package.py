@@ -20,7 +20,6 @@ class RClassint(RPackage):
     version('0.3-1', sha256='e2e6f857b544dfecb482b99346aa3ecfdc27b4d401c3537ee8fbaf91caca92b9')
     version('0.1-24', sha256='f3dc9084450ea3da07e1ea5eeb097fd2fedc7e29e5d7794b418bcb438c4fcfa2')
 
-    depends_on('r@2.2:', type=('build', 'run'))
     depends_on('r-e1071', type=('build', 'run'))
     depends_on('r-class', type=('build', 'run'))
     depends_on('r-kernsmooth', type=('build', 'run'))

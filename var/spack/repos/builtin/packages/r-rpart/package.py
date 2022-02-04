@@ -21,4 +21,3 @@ class RRpart(RPackage):
     version('4.1-11', sha256='38ab80959f59bcdd2c4c72860e8dd0deab0307668cbbf24f96014d7a2496ad98')
     version('4.1-10', sha256='c5ddaed288d38118876a94c7aa5000dce0070b8d736dba12de64a9cb04dc2d85')
 
-    depends_on('r@2.15.0:', type=('build', 'run'))

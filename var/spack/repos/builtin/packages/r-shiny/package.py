@@ -22,7 +22,6 @@ class RShiny(RPackage):
     version('1.0.5', sha256='20e25f3f72f3608a2151663f7836f2e0c6da32683a555d7541063ae7a935fa42')
     version('0.13.2', sha256='0fe7e952f468242d7c43ae49afcc764788f7f2fd5436d18c3d20a80db7296231')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-httpuv@1.5.0:', type=('build', 'run'))
     depends_on('r-httpuv@1.5.2:', type=('build', 'run'), when='@1.5.0:')
     depends_on('r-mime@0.3:', type=('build', 'run'))

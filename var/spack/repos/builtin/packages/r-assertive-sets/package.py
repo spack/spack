@@ -18,5 +18,4 @@ class RAssertiveSets(RPackage):
 
     version('0.0-3', sha256='876975a16ed911ea1ad12da284111c6eada6abfc0118585033abc0edb5801bb3')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-assertive-base@0.0-7:', type=('build', 'run'))

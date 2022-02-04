@@ -35,7 +35,6 @@ class RMlr(RPackage):
     # udunits (optional), gsl (optional), gmp (optional), glu (optional), jags
     # (optional)
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-paramhelpers@1.10:', type=('build', 'run'))
     depends_on('r-backports@1.1.0:', type=('build', 'run'))
     depends_on('r-bbmisc@1.11:', type=('build', 'run'))

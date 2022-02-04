@@ -23,6 +23,5 @@ class RROo(RPackage):
     version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')
     version('1.21.0', sha256='645ceec2f815ed39650ca72db87fb4ece7357857875a4ec73e18bfaf647f431c')
 
-    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.8.0:', type=('build', 'run'), when='@1.24.0:')

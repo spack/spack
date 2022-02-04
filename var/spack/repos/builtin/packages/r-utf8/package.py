@@ -22,4 +22,3 @@ class RUtf8(RPackage):
     version('1.1.0', sha256='6a8ae2c452859800c3ef12993a55892588fc35df8fa1360f3d182ed97244dc4f')
     version('1.0.0', sha256='7562a80262cbc2017eee76c0d3c9575f240fab291f868a11724fa04a116efb80')
 
-    depends_on('r@2.10:', type=('build', 'run'))

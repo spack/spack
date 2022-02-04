@@ -28,7 +28,6 @@ class RPbkrtest(RPackage):
     version('0.4-6', sha256='9d28b8916fea3ffec8d5958bb8c531279b1e273f21fdbeb2fcad6d7e300a9c01')
     version('0.4-4', sha256='a685392ef3fca0ddc2254f6cc9bba6bc22b298fa823359fc4515e64e753abd31')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.3:', type=('build', 'run'), when='@0.4-6:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@0.5-0.1:')
     depends_on('r-lme4@1.1-10:', type=('build', 'run'))

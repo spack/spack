@@ -22,4 +22,3 @@ class RSparsem(RPackage):
     version('1.74', sha256='4712f0c80e9f3cb204497f146ba60b15e75976cdb7798996a7c51f841a85eeba')
     version('1.7',  sha256='df61550b267f8ee9b9d3b17acbadd57a428b43e5e13a6b1c56ed4c38cb523369')
 
-    depends_on('r@2.15:', type=('build', 'run'))

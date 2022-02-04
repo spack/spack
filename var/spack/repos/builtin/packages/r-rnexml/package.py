@@ -18,7 +18,6 @@ class RRnexml(RPackage):
 
     version('2.4.5', sha256='2b667ecb6400e4c0c125ca73a98cde81330cde3a85b764261f77159e702754f3')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-ape@3.1:', type=('build', 'run'))
     depends_on('r-xml@3.95:', type=('build', 'run'))
     depends_on('r-plyr@1.8:', type=('build', 'run'))

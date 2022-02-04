@@ -26,4 +26,3 @@ class RBackports(RPackage):
     version('1.1.1', sha256='494e81a4829339c8f1cc3e015daa807e9138b8e21b929965fc7c00b1abbe8897')
     version('1.1.0', sha256='c5536966ed6ca93f20c9a21d4f569cc1c6865d3352445ea66448f82590349fcd')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

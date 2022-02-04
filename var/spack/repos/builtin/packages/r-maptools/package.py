@@ -23,7 +23,6 @@ class RMaptools(RPackage):
     version('0.9-4', sha256='930875f598a516f0f9049fa2fae7391bc9bdf7e3e5db696059ab4ec2fc9ba39c')
     version('0.8-39', sha256='4b81e313e45dbb75e0fbb180b02985d1c34aaa5669e483283b632788e6a67dd2')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-sp@1.0-11:', type=('build', 'run'))
     depends_on('r-foreign@0.8:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

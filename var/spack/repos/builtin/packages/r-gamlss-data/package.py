@@ -20,5 +20,4 @@ class RGamlssData(RPackage):
     version('5.1-3', sha256='4941180e7eebe97678ba02ca24c2a797bcb69d92cd34600215a94110e2a70470')
     version('5.1-0', sha256='0aad438ea1aa6395677e52cd2cb496f9f4c9ba2d39edc92c8cb42e7fc91fe6c1')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@6.0-2:')

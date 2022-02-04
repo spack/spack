@@ -17,6 +17,5 @@ class RReams(RPackage):
 
     version('0.1', sha256='ac24ea875b24bd18152afd87538b1f807f442cf2bd1c6ac1a365cf543c88181e')
 
-    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-leaps', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))

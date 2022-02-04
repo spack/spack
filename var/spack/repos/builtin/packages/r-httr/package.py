@@ -22,7 +22,6 @@ class RHttr(RPackage):
     version('1.2.1', sha256='e7b90b90ee52c826e152efcfadf98e078fa75b65a6baaeb8fd25eeed2195730e')
     version('1.1.0', sha256='d7c0cdc11b2ded3132544580f52ebe5dad2a426cde1a5029f2cc693b2f195823')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@1.4.0:')
     depends_on('r@3.2:', type=('build', 'run'), when='@1.4.1:')
     depends_on('r-curl@3.0.0:', type=('build', 'run'))

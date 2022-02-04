@@ -21,6 +21,5 @@ class RAls(RPackage):
 
     version('0.0.6', sha256='ca90d27115ae9e476967f521bf6935723e410a3bf92477e7570e14bfd3b099eb')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-iso', type=('build', 'run'))
     depends_on('r-nnls@1.1:', type=('build', 'run'))

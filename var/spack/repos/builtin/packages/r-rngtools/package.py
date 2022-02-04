@@ -23,7 +23,6 @@ class RRngtools(RPackage):
     version('1.3.1.1', sha256='99e1a8fde6b81128d0946746c1ef84ec5b6c2973ad843a080098baf73aa3364c')
     version('1.3.1', sha256='763fc493cb821a4d3e514c0dc876d602a692c528e1d67f295dde70c77009e224')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@1.4:')
     depends_on('r-digest', type=('build', 'run'))
 

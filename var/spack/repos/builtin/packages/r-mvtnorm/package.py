@@ -21,5 +21,4 @@ class RMvtnorm(RPackage):
     version('1.0-6', sha256='4a015b57b645b520151b213eb04b7331598c06442a3f652c7dc149425bd2e444')
     version('1.0-5', sha256='d00f9f758f0d0d4b999f259223485dc55d23cbec09004014816f180045ac81dd')
 
-    depends_on('r@1.9.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@1.0-9:')

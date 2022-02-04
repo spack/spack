@@ -25,4 +25,3 @@ class RFastcluster(RPackage):
     version('1.2.3', sha256='1f229129e1cddc78c7bb5ecc90c4d28ed810ee68cf210004c7cdfa12cfaf2a01')
     version('1.1.25', sha256='f3661def975802f3dd3cec5b2a1379f3707eacff945cf448e33aec0da1ed4205')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

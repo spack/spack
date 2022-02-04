@@ -18,7 +18,6 @@ class RUpsetr(RPackage):
 
     version('1.4.0', sha256='351e5fee64204cf77fd378cf2a2c0456cc19d4d98a2fd5f3dac74b69a505f100')
 
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-gridextra', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))

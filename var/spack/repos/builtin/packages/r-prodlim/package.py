@@ -20,7 +20,6 @@ class RProdlim(RPackage):
     version('1.6.1', sha256='3f2665257118a3db8682731a500b1ae4d669af344672dc2037f987bee3cca154')
     version('1.5.9', sha256='853644886c57102e7f6dd26b6e03e54bf3f9e126f54c76f8d63a3324811f7b42')
 
-    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-kernsmooth', type=('build', 'run'))

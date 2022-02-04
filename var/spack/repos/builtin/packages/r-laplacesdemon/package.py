@@ -21,4 +21,3 @@ class RLaplacesdemon(RPackage):
     version('16.1.0', sha256='41d99261e8fc33c977b43ecf66ebed8ef1c84d9bd46b271609e9aadddc2ca8bb')
     version('16.0.1', sha256='be21eff3c821b4fe0b4724f03c9221c2456257f93d91f864de11e95dc35e8679')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

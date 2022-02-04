@@ -22,6 +22,5 @@ class RPopgenome(RPackage):
     version('2.7.1', sha256='a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa')
     version('2.6.1', sha256='7a2922ed505fa801117a153e479d246bcf4854b91c6ab0241acc620a9d779b1c')
 
-    depends_on('r@2.14.2:', type=('build', 'run'))
     depends_on('r-ff', type=('build', 'run'))
     depends_on('zlib')

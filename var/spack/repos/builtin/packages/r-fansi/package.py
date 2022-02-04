@@ -23,4 +23,3 @@ class RFansi(RPackage):
     version('0.2.2', sha256='71dfdda467985a4d630ecf93d4bc60446a8a78d69dbd7ac24cc45822329d4bce')
     version('0.2.1', sha256='abe709d69ddd6610aaa24e049c7a97c16a2c2dbe0873d4e3b8af57e486ef05c5')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))

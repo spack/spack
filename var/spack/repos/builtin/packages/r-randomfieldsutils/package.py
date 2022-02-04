@@ -21,4 +21,3 @@ class RRandomfieldsutils(RPackage):
     version('0.5.3', sha256='ea823cba2e254a9f534efb4b772c0aeef2039ee9ef99744e077b969a87f8031d')
     version('0.5.1', sha256='a95aab4e2025c4247503ff513570a65aa3c8e63cb7ce2979c9317a2798dfaca2')
 
-    depends_on('r@3.0:', type=('build', 'run'))

@@ -16,4 +16,3 @@ class RDynamictreecut(RPackage):
 
     version('1.63-1', sha256='831307f64eddd68dcf01bbe2963be99e5cde65a636a13ce9de229777285e4db9')
 
-    depends_on('r@2.3.0:', type=('build', 'run'))

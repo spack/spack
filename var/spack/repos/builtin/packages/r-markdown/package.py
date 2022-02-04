@@ -23,6 +23,5 @@ class RMarkdown(RPackage):
     version('0.8', sha256='538fd912b2220f2df344c6cca58304ce11e0960de7bd7bd573b3385105d48fed')
     version('0.7.7', sha256='0b86c3a4e42bbc425be229f70a4a0efdca0522f48c6ea1bf0285c6b122854102')
 
-    depends_on('r@2.11.1:', type=('build', 'run'))
     depends_on('r-mime@0.3:', type=('build', 'run'))
     depends_on('r-xfun', type=('build', 'run'), when='@1.1:')

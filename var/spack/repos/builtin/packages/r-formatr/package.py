@@ -24,5 +24,4 @@ class RFormatr(RPackage):
     version('1.5', sha256='874c197ae3720ec11b44984a055655b99a698e1912104eb9034c11fdf6104da7')
     version('1.4', sha256='6ec47a7b1f18efb5fd7559b81427363b66415d81cded9d5e7e2907e900b67ebb')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.3:', type=('build', 'run'), when='@1.11:')

@@ -19,7 +19,6 @@ class RPaleotree(RPackage):
     version('3.3.0', sha256='f8f6b0228dd5290b251cad3a8626689442b5aa793d8f072c8c2c7813a063df90')
     version('3.1.3', sha256='4c1cc8a5e171cbbbd88f78914f86d5e6d144ae573816fbeeff2ab54a814ec614')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-ape@4.1:', type=('build', 'run'))
     depends_on('r-phangorn@2.0.0:', type=('build', 'run'))
     depends_on('r-phytools@0.6-00:', type=('build', 'run'))

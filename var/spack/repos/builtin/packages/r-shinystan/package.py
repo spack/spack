@@ -21,7 +21,6 @@ class RShinystan(RPackage):
 
     version('2.5.0', sha256='45f9c552a31035c5de8658bb9e5d72da7ec1f88fbddb520d15fe701c677154a1')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-shiny@1.0.3:', type=('build', 'run'))
     depends_on('r-bayesplot@1.5.0:', type=('build', 'run'))
     depends_on('r-colourpicker', type=('build', 'run'))

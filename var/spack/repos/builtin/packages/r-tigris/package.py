@@ -19,7 +19,6 @@ class RTigris(RPackage):
     version('0.8.2', sha256='ed8d6ab25332c2cc800858d58324bd8264772d8a916a3f0a8d489250a7e7140e')
     version('0.5.3', sha256='6ecf76f82216798465cd9704acb432caea47469ffc4953f1aaefa4d642a28445')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.3.0:', type=('build', 'run'), when='@0.6.1:')
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

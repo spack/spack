@@ -18,7 +18,6 @@ class RRUtils(RPackage):
     version('2.9.0', sha256='b2aacc5a55d3ea86c41ac576d2583e446af145f4cb1103ad7b6f95b09ab09ff0')
     version('2.5.0', sha256='1ae1a0f0c6a4972bb2369a2dbccd29ade87d747255ff9cb5a0bd784a5be1039f')
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-r-oo@1.22.0:', type=('build', 'run'))
     depends_on('r-r-oo@1.23.0:', type=('build', 'run'), when='@2.10.1:')
     depends_on('r-r-oo@1.24.0:', type=('build', 'run'), when='@2.11.0:')

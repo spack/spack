@@ -20,7 +20,6 @@ class RVisnetwork(RPackage):
     version('2.0.6', sha256='ec2478e6a2af446569ef2d5210a2bc6b2600bcb7fd9908cef8f8c80b01e9c8aa')
     version('1.0.1', sha256='13aacf58d3bf9e78c7fb3af180062762bf22aec1777c829715c5b00396639a70')
 
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

@@ -23,6 +23,5 @@ class RForeach(RPackage):
     version('1.4.7', sha256='95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160')
     version('1.4.3', sha256='1ef03f770f726a62e3753f2402eb26b226245958fa99d570d003fc9e47d35881')
 
-    depends_on('r@2.5.0:', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-iterators', type=('build', 'run'))

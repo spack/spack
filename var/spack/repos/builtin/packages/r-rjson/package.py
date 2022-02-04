@@ -18,5 +18,4 @@ class RRjson(RPackage):
     version('0.2.19', sha256='5c2672461986f2b715416cab92ed262abe9875f31299bc8a1a072ef7c6dd49bc')
     version('0.2.15', sha256='77d00d8f6a1c936329b46f3b8b0be79a165f8c5f1989497f942ecc53dcf6f2ef')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r@4.0.0:', type=('build', 'run'), when='@0.2.21:')

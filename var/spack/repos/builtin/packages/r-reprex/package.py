@@ -25,7 +25,6 @@ class RReprex(RPackage):
     version('0.1.1', sha256='919ae93039b2d8fb8eace98da9376c031d734d9e75c237efb24d047f35b5ba4b')
 
     depends_on('r+X', type=('build', 'run'))
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@0.2.0:')
     depends_on('r@3.3:', type=('build', 'run'), when='@1:')
     depends_on('r-callr@2.0.0:', type=('build', 'run'))

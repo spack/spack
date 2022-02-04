@@ -32,7 +32,6 @@ class RMgcv(RPackage):
     version('1.8-16', sha256='9266a0cbd783717fc6130db4e0034e69465d177397687f35daf6a8ccdb0b435e')
     version('1.8-13', sha256='74bc819708ef59da94b777a446ef00d7f14b428eec843533e824017c29cc524b')
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r@3.6.0:', type=('build', 'run'), when='@1.8.34:')
     depends_on('r-nlme@3.1-64:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

@@ -18,4 +18,3 @@ class RTeachingdemos(RPackage):
     version('2.12', sha256='3e75405ce1affa406d6df85e06f96381412bc7a2810b25d8c81bfe64c4698644')
     version('2.10', sha256='2ef4c2e36ba13e32f66000e84281a3616584c86b255bca8643ff3fe4f78ed704')
 
-    depends_on('r@2.10:', type=('build', 'run'))

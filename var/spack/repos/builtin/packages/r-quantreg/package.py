@@ -28,7 +28,6 @@ class RQuantreg(RPackage):
     version('5.29', sha256='bb4638e8f295579afa5c40c4de7266a6ea9221436ba4ca802f94cdb43bf20f25')
     version('5.26', sha256='9d7403f7c5ee219ec155838648401a1c4915a46a74f5774a0f6876c537ef2c87')
 
-    depends_on('r@2.6:', type=('build', 'run'))
     depends_on('r-sparsem', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-matrixmodels', type=('build', 'run'))

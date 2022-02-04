@@ -19,7 +19,6 @@ class RRjags(RPackage):
     version('4-8', sha256='1529827ab11493fb5f05552e239d700ae2f818995d86d3c9e4c92523f594b59f')
     version('4-6', sha256='cf24bb1e7c8445bafb49097089ad33e5bd5d8efbccf16fc7e32ad230f05f89ad')
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-coda@0.13:', type=('build', 'run'))
     depends_on('jags@4.0.0:4.999.999', type=('link'))
 

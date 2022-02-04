@@ -22,7 +22,6 @@ class RRoxygen2(RPackage):
     version('6.1.1', sha256='ed46b7e062e0dfd8de671c7a5f6d120fb2b720982e918dbeb01e6985694c0273')
     version('5.0.1', sha256='9f755ddd08358be436f08b02df398e50e7508b856131aeeed235099bb3a7eba5')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@6.1.0:')
     depends_on('r@3.2:', type=('build', 'run'), when='@7.1.0:')
     depends_on('r@3.3:', type=('build', 'run'), when='@7.1.2:')

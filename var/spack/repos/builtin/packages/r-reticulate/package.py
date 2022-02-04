@@ -23,7 +23,6 @@ class RReticulate(RPackage):
     version('1.15', sha256='47db3e9c9424263ade15287da8e74f6ba261a936b644b197dba6772853b7b50d')
     version('1.13', sha256='adbe41d556b667c4419d563680f8608a56b0f792b8bc427b3bf4c584ff819de3')
 
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-rcpp@0.12.7:', type=('build', 'run', 'link'))
     depends_on('r-rcpptoml', type=('build', 'run', 'link'), when='@1.23:')

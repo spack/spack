@@ -22,8 +22,6 @@ class RSctransform(RPackage):
     version('0.3.2', sha256='5dbb0a045e514c19f51bbe11c2dba0b72dca1942d6eb044c36b0538b443475dc')
     version('0.2.0', sha256='d7f4c7958693823454f1426b23b0e1e9c207ad61a7a228602a1885a1318eb3e4')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r@3.1.0:', type=('build', 'run'), when='@0.3.2:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@0.3.3:')
     depends_on('r-dplyr', type=('build', 'run'), when='@0.3.3:')
     depends_on('r-magrittr', type=('build', 'run'), when='@0.3.3:')

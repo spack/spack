@@ -33,7 +33,6 @@ class RFpc(RPackage):
     version('2.2-2', sha256='b6907019eb161d5c8c814cf02a4663cc8aae6322699932881ce5b02f45ecf8d3')
     version('2.1-10', sha256='5d17c5f475c3f24a4809678cbc6186a357276240cf7fcb00d5670b9e68baa096')
 
-    depends_on('r@2.0.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-mclust', type=('build', 'run'))

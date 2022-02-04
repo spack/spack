@@ -24,7 +24,6 @@ class RDiversitree(RPackage):
     version('0.9-11', sha256='4caa6a468f93de9f1c8c30e4457f34bb8346e1acdaf74f684005bfa86a950ecb')
     version('0.9-10', sha256='e7df5910c8508a5c2c2d6d3deea53dd3f947bb762196901094c32a7033cb043e')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))
     depends_on('r-desolve@1.7:', type=('build', 'run'))
     depends_on('r-subplex', type=('build', 'run'))

@@ -25,4 +25,3 @@ class RR6(RPackage):
     version('2.2.0', sha256='7d7bddc4303fafa99954182ccad938166d681499d4e9ae7001d21b0fd60d25c7')
     version('2.1.2', sha256='1bfbb14d9da85b5f8eb865aa6355b2c71c9f86b71f616bfe5a28939b62484d79')
 
-    depends_on('r@3.0:', type=('build', 'run'))

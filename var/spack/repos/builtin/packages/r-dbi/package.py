@@ -22,4 +22,3 @@ class RDbi(RPackage):
     version('0.4-1', sha256='eff14a9af4975f23f8e1f4347d82c33c32c0b4f4f3e11370c582a89aeb8ac68e')
     version('0.7', sha256='2557d5d59a45620ec9de340c2c25eec4cc478d3fc3f8b87979cf337c5bcfde11')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

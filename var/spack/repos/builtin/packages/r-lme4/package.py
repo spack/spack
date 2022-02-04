@@ -23,7 +23,6 @@ class RLme4(RPackage):
     version('1.1-20', sha256='44f45f5cd20ec6a50bf96a939b1db44b1a180dbc871a5e3042baf7a107016b2c')
     version('1.1-12', sha256='2976b567a4a2144814ff9db987b0aa55c16122c78ecb51b9e09b87fe66a1c048')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@1.1-16:')
     depends_on('r-matrix@1.2-1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

@@ -19,4 +19,3 @@ class RIterators(RPackage):
     version('1.0.9', sha256='de001e063805fdd124953b571ccb0ed2838c55e40cca2e9d283d8a90b0645e9b')
     version('1.0.8', sha256='ae4ea23385776eb0c06c992a3da6b0256a6c84558c1061034c5a1fbdd43d05b8')
 
-    depends_on('r@2.5.0:', type=('build', 'run'))

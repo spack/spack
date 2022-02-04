@@ -23,4 +23,3 @@ class RFnn(RPackage):
     version('0.6-3', sha256='9ac1817852427a056b5c6ad6ac5212bc43abd29ce15f98441a6261b25cf5f810')
     version('0.6-2', sha256='f1fc410c341175bdb11a75b063c8c987e15b632378b56148d3566b91fca53a31')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

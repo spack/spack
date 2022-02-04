@@ -21,7 +21,6 @@ class RNetwork(RPackage):
     version('1.14-377', sha256='013c02f8d97f1f87f2c421760534df9353d2a8c2277f20b46b59fb79822d3e46')
     version('1.13.0', sha256='7a04ea89261cdf32ccb52222810699d5fca59a849053e306b5ec9dd5c1184f87')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'), when='@1.14-377:')
     depends_on('r-magrittr', type=('build', 'run'), when='@1.14-377:')
     depends_on('r-statnet-common@4.5:', type=('build', 'run'), when='@1.17.1:')

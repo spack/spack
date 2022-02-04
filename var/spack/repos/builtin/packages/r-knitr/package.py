@@ -24,9 +24,6 @@ class RKnitr(RPackage):
     version('1.17', sha256='9484a2b2c7b0c2aae24ab7f4eec6db48affbceb0e42bd3d69e34d953fe92f401')
     version('1.14', sha256='ba6d301482d020a911390d5eff181e1771f0e02ac3f3d9853a9724b1ec041aec')
 
-    depends_on('r@2.14.1:', type=('build', 'run'), when='@:1.9')
-    depends_on('r@3.0.2:', type=('build', 'run'), when='@1.10:1.14')
-    depends_on('r@3.1.0:', type=('build', 'run'), when='@1.15:1.22')
     depends_on('r@3.2.3:', type=('build', 'run'), when='@1.23:')
     depends_on('r-evaluate@0.10:', type=('build', 'run'))
     depends_on('r-highr', type=('build', 'run'))

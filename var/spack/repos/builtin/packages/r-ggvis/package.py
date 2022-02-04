@@ -20,7 +20,6 @@ class RGgvis(RPackage):
     version('0.4.3', sha256='34d517783016aaa1c4bef8972f4c06df5cd9ca0568035b647e60a8369043ecdc')
     version('0.4.2', sha256='2fcc2b6ca4fbdc69fe75a2c58c12cb43096ab418160c98367e5ac0fd19fc591d')
 
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-jsonlite@0.9.11:', type=('build', 'run'))
     depends_on('r-shiny@0.11.1:', type=('build', 'run'))

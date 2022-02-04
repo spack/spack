@@ -19,7 +19,6 @@ class RLabelled(RPackage):
     version('2.9.0', sha256='36ac0e169ee065a8bced9417efeb85d62e1504a590d4321667d8a6213285d639')
     version('2.7.0', sha256='b1b66b34d3ad682e492fc5bb6431780760576d29dbac40d87bef3c0960054bdb')
 
-    depends_on('r@3.0:', type=('build', 'run'), when='@2.9.0:')
     depends_on('r-haven@2.3.1:', type=('build', 'run'))
     depends_on('r-haven@2.4.1:', type=('build', 'run'), when='@2.9.0:')
     depends_on('r-dplyr', type=('build', 'run'))

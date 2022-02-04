@@ -19,7 +19,6 @@ class RZcompositions(RPackage):
     version('1.4.0', sha256='a00d7d0ba861988b1836e947fd521d58137a4def04a5d7aa73a099314b7e530c')
     version('1.3.4', sha256='ae22c86fe92368a26265933f42eecc518b9b69e7d9b698bc31bfaabfc3c48e95')
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-nada', type=('build', 'run'))
     depends_on('r-truncnorm', type=('build', 'run'))

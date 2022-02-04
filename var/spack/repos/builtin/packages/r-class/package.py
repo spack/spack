@@ -20,5 +20,4 @@ class RClass(RPackage):
     version('7.3-15', sha256='f6bf33d610c726d58622b6cea78a808c7d6a317d02409d27c17741dfd1c730f4')
     version('7.3-14', sha256='18b876dbc18bebe6a00890eab7d04ef72b903ba0049d5ce50731406a82426b9c')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

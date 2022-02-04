@@ -17,4 +17,3 @@ class RRegistry(RPackage):
     version('0.5', sha256='5d8be59ba791987b2400e9e8eaaac614cd544c1aece785ec4782ea6d5ea00efb')
     version('0.3', sha256='58a5c43b8012ca5e509fa29a8daf6f24f097b8eb021a723f6a9c33db1dd3f430')
 
-    depends_on('r@2.6.0:', type=('build', 'run'))

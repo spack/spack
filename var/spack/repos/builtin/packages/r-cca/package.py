@@ -16,6 +16,5 @@ class RCca(RPackage):
 
     version('1.2.1', sha256='28febfce7c46039240346410e70f9d8795b536fc4e7e0d48d5370bd23cba9bd0')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-fields', type=('build', 'run'))
     depends_on('r-fda', type=('build', 'run'))

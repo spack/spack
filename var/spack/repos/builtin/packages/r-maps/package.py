@@ -19,5 +19,4 @@ class RMaps(RPackage):
     version('3.2.0', sha256='437abeb4fa4ad4a36af6165d319634b89bfc6bf2b1827ca86c478d56d670e714')
     version('3.1.1', sha256='972260e5ce9519ecc09b18e5d7a28e01bed313fadbccd7b06c571af349cb4d2a')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@3.4.0:')

@@ -26,7 +26,6 @@ class RPbdzmq(RPackage):
     version('0.3-2', sha256='ece2a2881c662f77126e4801ba4e01c991331842b0d636ce5a2b591b9de3fc37')
     version('0.2-4', sha256='bfacac88b0d4156c70cf63fc4cb9969a950693996901a4fa3dcd59949ec065f6')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@0.2-6:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@0.3-4:')
     depends_on('libzmq@4.0.4:')

@@ -23,8 +23,6 @@ class RDiffusionmap(RPackage):
     version('0.0-2', sha256='b08b9d8a7b2b49d8f809ed14ab40cec92a635a284e43af068eb34e74172c0bcf')
     version('0.0-1', sha256='38c4af2d2a4fa4116c2e01a5e67ba313e7a8e76f724a3312a3c12b26e299f844')
 
-    depends_on('r@2.4.0:', type=('build', 'run'))
-    depends_on('r@2.10:', type=('build', 'run'), when='@1.2.0:')
     depends_on('r-scatterplot3d', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

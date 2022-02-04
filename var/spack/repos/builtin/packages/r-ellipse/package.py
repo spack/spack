@@ -22,4 +22,3 @@ class REllipse(RPackage):
     version('0.4.1', sha256='1a9a9c52195b26c2b4d51ad159ab98aff7aa8ca25fdc6b2198818d1a0adb023d')
     version('0.3-8', sha256='508d474c142f0770c25763d6c8f8f8c9dcf8205afd42ffa22e6be1e0360e7f45')
 
-    depends_on('r@2.0.0:', type=('build', 'run'))

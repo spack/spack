@@ -19,5 +19,4 @@ class RCheckmate(RPackage):
     version('1.9.4', sha256='faa25754b757fe483b876f5d07b73f76f69a1baa971420892fadec4af4bbad21')
     version('1.8.4', sha256='6f948883e5a885a1c409d997f0c782e754a549227ec3c8eb18318deceb38f8f6')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-backports@1.1.0:', type=('build', 'run'))

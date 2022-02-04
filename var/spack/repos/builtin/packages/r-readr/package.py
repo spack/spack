@@ -23,7 +23,6 @@ class RReadr(RPackage):
     version('1.3.1', sha256='33f94de39bb7f2a342fbb2bd4e5afcfec08798eac39672ee18042ac0b349e4f3')
     version('1.1.1', sha256='1a29b99009a06f2cee18d08bc6201fd4985b6d45c76cefca65084dcc1a2f7cb3')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@1.3.0:')
     depends_on('r-cli', type=('build', 'run'), when='@1.4.0:')
     depends_on('r-cli@3.0.0:', type=('build', 'run'), when='@2.1.2:')

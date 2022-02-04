@@ -21,4 +21,3 @@ class RPackrat(RPackage):
     version('0.4.8-1', sha256='a283caf4fda419e6571ae9ca6210a59002a030721feb8a50c0d0787fd6f672f3')
     version('0.4.7-1', sha256='6e5067edd41a4086bb828617d3378210a3dbc995e223b02af811549519f3223a')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

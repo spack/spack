@@ -19,8 +19,6 @@ class RVegan(RPackage):
     version('2.5-4', sha256='5116a440111fca49b5f95cfe888b180ff29a112e6301d5e2ac5cae0e628493e0')
     version('2.4-3', sha256='2556b1281a62e53f32bb57539bc600c00a599d0699867912220535d1a3ebec97')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.1.0:', type=('build', 'run'), when='@2.5-1')
     depends_on('r@3.2.0:', type=('build', 'run'), when='@2.5-2:')
     depends_on('r@3.4.0:', type=('build', 'run'), when='@2.5-5:')
     depends_on('r-permute@0.9-0:', type=('build', 'run'))

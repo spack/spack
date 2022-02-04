@@ -19,4 +19,3 @@ class RLazyeval(RPackage):
     version('0.2.1', sha256='83b3a43e94c40fe7977e43eb607be0a3cd64c02800eae4f2774e7866d1e93f61')
     version('0.2.0', sha256='13738f55b2044184fe91f53d17516a445dfb508227527921218cda6f01f98dcb')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))

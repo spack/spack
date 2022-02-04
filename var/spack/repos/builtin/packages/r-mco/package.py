@@ -19,4 +19,3 @@ class RMco(RPackage):
     version('1.0-15.1', sha256='3c13ebc8c1f1bfa18f3f95b3998c57fde5259876e92456b6c6d4c59bef07c193')
     version('1.0-15', sha256='a25e3effbb6dcae735fdbd6c0bfc775e9fbbcc00dc00076b69c53fe250627055')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))

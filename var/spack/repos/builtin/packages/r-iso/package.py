@@ -18,4 +18,3 @@ class RIso(RPackage):
     version('0.0-18', sha256='2d7e8c4452653364ee086d95cea620c50378e30acfcff129b7261e1756a99504')
     version('0.0-17', sha256='c007d6eaf6335a15c1912b0804276ff39abce27b7a61539a91b8fda653629252')
 
-    depends_on('r@1.7.0:', type=('build', 'run'))

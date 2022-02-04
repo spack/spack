@@ -16,6 +16,5 @@ class RCellranger(RPackage):
 
     version('1.1.0', sha256='5d38f288c752bbb9cea6ff830b8388bdd65a8571fd82d8d96064586bd588cf99')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-rematch', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))

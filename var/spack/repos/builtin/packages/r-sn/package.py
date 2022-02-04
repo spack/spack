@@ -26,8 +26,6 @@ class RSn(RPackage):
     version('1.2-4', sha256='a812f754abd1ecdbc9de4e5c8b8f5526c08c06a710d390b1fff2a09328637fb6')
     version('1.2-3', sha256='1af8ced9ed33680d731ab5132be4674d170d76c64a3059ff56c33159d8396154')
 
-    depends_on('r@2.15.3:', type=('build', 'run'))
-    depends_on('r@3.0.0:', type=('build', 'run'), when='@2.0.1:')
     depends_on('r-mnormt@1.5-4:', type=('build', 'run'))
     depends_on('r-mnormt@2.0.0:', type=('build', 'run'), when='@2.0.1:')
     depends_on('r-numderiv', type=('build', 'run'))

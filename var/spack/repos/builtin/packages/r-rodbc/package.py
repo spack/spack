@@ -18,6 +18,5 @@ class RRodbc(RPackage):
     version('1.3-15', sha256='c43e5a2f0aa2f46607e664bfc0bb3caa230bbb779f4ff084e01727642da136e1')
     version('1.3-13', sha256='e8ea7eb77a07be36fc2d824c28bb426334da7484957ffbc719140373adf1667c')
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@4.0.0:', type=('build', 'run'), when='@1.3-17:')
     depends_on('unixodbc')

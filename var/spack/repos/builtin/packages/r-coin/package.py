@@ -21,7 +21,6 @@ class RCoin(RPackage):
     version('1.2-2', sha256='d518065d3e1eb00121cb4e0200e1e4ae6b68eca6e249afc38bbffa35d24105bb')
     version('1.1-3', sha256='8b88ecc25903c83539dfc73cdc31a160e2aa4a7bea1773b22c79133d2f006035')
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r@3.4.0:', type=('build', 'run'), when='@1.3-0:')
     depends_on('r@3.6.0:', type=('build', 'run'), when='@1.4-2:')
     depends_on('r-survival', type=('build', 'run'))

@@ -20,7 +20,6 @@ class RIpred(RPackage):
     version('0.9-8', sha256='9c1d11c3cb0d72be7870e70a216e589e403bbfee38c796fe75cd0611d878ac07')
     version('0.9-5', sha256='3a466417808e17c4c6cd0f2b577407355d9da79a341558b42a8b76e24b6f6ba4')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart@3.1-8:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

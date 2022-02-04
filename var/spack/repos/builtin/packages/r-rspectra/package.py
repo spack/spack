@@ -25,7 +25,6 @@ class RRspectra(RPackage):
     version('0.16-0', sha256='aaf1cfc9ffe3a4c6684247899924e1c18306971dfef4bae1dc596a2fb42a64a9')
     version('0.15-0', sha256='1ad5698201007044a0420cb10b7c48e94312a8a1d22b9d946d5de1c6743969a9')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-matrix@1.1-0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
     depends_on('r-rcppeigen@0.3.3.3.0:', type=('build', 'run'))

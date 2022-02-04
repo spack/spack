@@ -23,7 +23,6 @@ class RRio(RPackage):
     version('0.5.29', sha256='9fa63187e1814053e6ed2a164665b4924e08c3453adccb78f7211d403dcc5412')
     version('0.5.16', sha256='d3eb8d5a11e0a3d26169bb9d08f834a51a6516a349854250629072d59c29d465')
 
-    depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-foreign', type=('build', 'run'))
     depends_on('r-haven@1.1.2:', type=('build', 'run'), when='@0.5.26:')
     depends_on('r-haven@1.1.0:', type=('build', 'run'))

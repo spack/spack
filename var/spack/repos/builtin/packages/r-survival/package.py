@@ -24,7 +24,6 @@ class RSurvival(RPackage):
     version('2.40-1', sha256='91d5217847e39bebcbce4f0a2e295304e5816b1270e71f5f2ed39807f004ee82')
     version('2.39-5', sha256='607170ebe36080d102e884cf13c3b29df01d6bb3b593258afffa67fee2a0ada7')
 
-    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r@3.4:', type=('build', 'run'), when='@3.1-12:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@3.2-13:')
     depends_on('r-matrix', type=('build', 'run'))

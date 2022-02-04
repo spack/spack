@@ -29,7 +29,6 @@ class RHh(RPackage):
     version('3.1-43', sha256='2ed35c8fc97092e9d2ce3439a2ec342d5d7bd93ad8f5266995cc80d88cd2235b')
     version('3.1-40', sha256='795924d900a98ae367e6697b2c951c3b4910a54931aebcad5024eda083d4a8a2')
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-latticeextra', type=('build', 'run'))
     depends_on('r-multcomp', type=('build', 'run'))

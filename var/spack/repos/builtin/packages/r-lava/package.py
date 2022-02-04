@@ -27,7 +27,6 @@ class RLava(RPackage):
     version('1.6.4', sha256='41c6eeb96eaef9e1bfb04b31f7203e250a5ea7e7860be4d95f7f96f2a8644718')
     version('1.4.7', sha256='d5cbd4835a94855478efb93051eece965db116ead203f4dd4e09d9a12d52f4bf')
 
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-future-apply', type=('build', 'run'), when='@1.6.10:')
     depends_on('r-progressr', type=('build', 'run'), when='@1.6.10:')
     depends_on('r-numderiv', type=('build', 'run'))

@@ -18,7 +18,6 @@ class RWebshot(RPackage):
     version('0.5.1', sha256='b9750d206c6fa0f1f16cc212b0a34f4f4bfa916962d2c877f0ee9a33620f4b23')
 
     depends_on('r+X', type=('build', 'run'))
-    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-callr', type=('build', 'run'))

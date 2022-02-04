@@ -17,7 +17,6 @@ class RRpostgres(RPackage):
     version('1.4.3', sha256='a5be494a54b6e989fadafdc6ee2dc5c4c15bb17bacea9ad540b175c693331be2')
     version('1.3.1', sha256='f68ab095567317ec32d3faa10e5bcac400aee5aeca8d7132260d4e90f82158ea')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-bit64', type=('build', 'run'))
     depends_on('r-blob@1.2.0:', type=('build', 'run'))
     depends_on('r-dbi@1.1.0:', type=('build', 'run'))

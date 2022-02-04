@@ -44,4 +44,3 @@ class RRcpp(RPackage):
 
     # leave the r dependency also for newer versions
     # (not listed in Description for @1.0.5:)
-    depends_on('r@3.0.0:', type=('build', 'run'))

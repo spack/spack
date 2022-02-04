@@ -21,7 +21,6 @@ class RShinyjs(RPackage):
     version('2.1.0', sha256='7ec20cbf1b1fd7a32d85a56dfc0df8b5f67c828d241da400a21d893cb37ea9c5')
     version('2.0.0', sha256='c2cdd9fab41f6b46bb41b288cd9b3fb3a7fe9627b664e3a58a0cb5dd4c19f8ff')
 
-    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-digest@0.6.8:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-shiny@1.0.0:', type=('build', 'run'))
