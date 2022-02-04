@@ -37,5 +37,5 @@ class RRgdal(RPackage):
     depends_on('proj@4.8.0:5', when='@:1.3-9')
     depends_on('proj@4.8.0:', when='@1.4-2:')
 
-    conflicts('proj@:5', when='gdal@3:')
-    conflicts('proj@6:', when='gdal@:2')
+    conflicts('^proj@:5', when='^gdal@3:')
+    conflicts('^proj@6:', when='^gdal@:2')
