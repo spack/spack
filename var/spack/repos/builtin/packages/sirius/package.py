@@ -146,7 +146,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('eigen@3.4.0:', when='@7.4: +tests')
 
-    depends_on('costa', when='@7.4:')
+    depends_on('costa+shared', when='@7.4:')
 
     # TODO:
     # add support for CRAY_LIBSCI, testing
