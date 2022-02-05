@@ -18,9 +18,9 @@ class CbtfKrell(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/cbtf-krell.git"
 
     version('develop', branch='master')
-    version('1.9.4.1', branch='1.9.4.1', deprecated=True)
-    version('1.9.4', branch='1.9.4', deprecated=True)
-    version('1.9.3', branch='1.9.3', deprecated=True)
+    version('1.9.4.1', branch='1.9.4.1')
+    version('1.9.4', branch='1.9.4')
+    version('1.9.3', branch='1.9.3')
 
     # MPI variants
     variant('openmpi', default=False,

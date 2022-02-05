@@ -67,7 +67,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~openmp', when='+omp_taskloops')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@1.5.2:')
+    depends_on('cmake@3.17.0:', type='build', when='@:1.5.1')
     depends_on('mpi')
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')

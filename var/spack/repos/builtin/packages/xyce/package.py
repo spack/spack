@@ -38,7 +38,17 @@ class Xyce(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
     depends_on('mpi', when='+mpi')
 
+    variant('plugin', default=False, description='Enable plug-in support for Xyce')
+    depends_on('adms', type=('build', 'run'), when='+plugin')
+
     variant('shared', default=False, description='Enable shared libraries for Xyce')
+    conflicts('~shared', when='+plugin', msg='Disabling shared libraries is incompatible with the activation of plug-in support')
+
+    # any option other than cxxstd=11 would be ignored in Xyce
+    # this defaults to 11, consistent with what will be used,
+    # and produces an error if any other value is attempted
+    cxxstd_choices = ['11']
+    variant('cxxstd', default='11', values=cxxstd_choices, multi=False)
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
@@ -57,6 +67,10 @@ class Xyce(CMakePackage):
     # The default settings for various Trilinos variants would require the
     # installation of many more packages than are needed for Xyce.
     depends_on('trilinos~float~ifpack2~ml~muelu~zoltan2')
+
+    # ensures trilinos built with same cxxstd as Xyce (which Xyce was tested against)
+    for cxxstd_ in cxxstd_choices:
+        depends_on('trilinos cxxstd={0}'.format(cxxstd_), when='cxxstd={0}'.format(cxxstd_))
 
     def cmake_args(self):
         spec = self.spec
@@ -81,7 +95,9 @@ class Xyce(CMakePackage):
         else:
             options.append('-DCMAKE_CXX_COMPILER:STRING={0}'.format(self.compiler.cxx))
 
+        options.append(self.define_from_variant('Xyce_PLUGIN_SUPPORT', 'plugin'))
         options.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+        options.append(self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
 
         if '+pymi' in spec:
             pybind11 = spec['py-pybind11']

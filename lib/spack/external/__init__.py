@@ -11,7 +11,7 @@ altgraph
 
 * Homepage: https://altgraph.readthedocs.io/en/latest/index.html
 * Usage: dependency of macholib
-* Version: 0.16.1
+* Version: 0.17.2
 
 archspec
 --------
@@ -96,7 +96,7 @@ macholib
 
 * Homepage: https://macholib.readthedocs.io/en/latest/index.html#
 * Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
-* Version: 1.12
+* Version: 1.15.2
 
 markupsafe
 ----------

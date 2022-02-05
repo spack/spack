@@ -23,6 +23,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.10.2', tag='v1.10.2', submodules=True)
     version('1.10.1', tag='v1.10.1', submodules=True)
     version('1.10.0', tag='v1.10.0', submodules=True)
     version('1.9.1', tag='v1.9.1', submodules=True)
@@ -107,7 +108,8 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-dataclasses', when='@1.7: ^python@3.6', type=('build', 'run'))
     depends_on('py-tqdm', type='run')
     depends_on('py-protobuf', type=('build', 'run'))
-    depends_on('protobuf')
+    # https://github.com/spack/spack/issues/28679
+    depends_on('protobuf@:3.14')
     depends_on('blas')
     depends_on('lapack')
     depends_on('eigen')
@@ -205,12 +207,18 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @property
     def libs(self):
-        root = join_path(python_platlib, 'torch', 'lib')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'lib'
+        )
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(python_platlib, 'torch', 'include')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'include'
+        )
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers
