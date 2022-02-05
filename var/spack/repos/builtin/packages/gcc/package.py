@@ -230,7 +230,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   see https://github.com/spack/spack/issues/23296
     #   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100340
     #   on XCode 12.5
-    conflicts('+bootstrap', when='@:10 %apple-clang@12.0.5')
+    conflicts('+bootstrap', when='@:11.1 %apple-clang@12.0.5')
 
     # aarch64/M1 is supported in GCC 12+
     conflicts('@:11', when='target=aarch64: platform=darwin',
