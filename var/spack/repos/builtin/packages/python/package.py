@@ -416,9 +416,6 @@ class Python(AutotoolsPackage):
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
 
-        # Need this to allow python build to find the Python installation.
-        env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
-
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
 
