@@ -228,6 +228,7 @@ fi
 #
 # 'mode' is set to one of:
 #    vcheck  version check
+#    search  lib search dir check
 #    cpp     preprocess
 #    cc      compile
 #    as      assemble
@@ -277,14 +278,18 @@ case "$command" in
         ;;
 esac
 
-# If any of the arguments below are present, then the mode is vcheck.
-# In vcheck mode, nothing is added in terms of extra search paths or
-# libraries.
+# If any of the arguments below are present, then the mode is one of
+# the check modes: vcheck or search. In either mode, nothing is added
+# in terms of extra search paths or libraries to the argument list.
 if [ -z "$mode" ] || [ "$mode" = ld ]; then
     for arg in "$@"; do
         case $arg in
             -v|-V|--version|-dumpversion)
                 mode=vcheck
+                break
+                ;;
+            --print-search-dirs)
+                mode=search
                 break
                 ;;
         esac
@@ -367,7 +372,32 @@ done
 unset IFS
 export PATH="$new_dirs"
 
-if [ "$mode" = vcheck ]; then
+#
+# In search mode paths to dependencies need to be added to the
+# LIBRARY_PATH, so they get included in the --print-search-dirs
+# output.
+#
+if [ "$mode" = search ] ; then
+    extend LIBRARY_PATH SPACK_LINK_DIRS
+    export LIBRARY_PATH
+fi
+
+if [ "$mode" = vcheck ] || [ "$mode" = search ] ; then
+    # dump test outputs before exiting if requested
+    case "$SPACK_TEST_COMMAND" in
+        dump-args)
+            echo "${command}" "$@"
+            exit
+            ;;
+        dump-env-*)
+            var=${SPACK_TEST_COMMAND#dump-env-}
+            eval "printf '%s\n' \"\$0: \$var: \$$var\""
+            ;;
+        *)
+            die "Unknown test command: '$SPACK_TEST_COMMAND'"
+            ;;
+    esac
+
     exec "${command}" "$@"
 fi
 

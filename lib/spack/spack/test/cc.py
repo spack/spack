@@ -157,14 +157,14 @@ def check_args(cc, args, expected):
         assert expected == cc_modified_args
 
 
-def check_env_var(executable, var, expected):
+def check_env_var(executable, var, expected, extra_args=[]):
     """Check environment variables updated by the passed compiler wrapper
 
     This assumes that cc will print debug output when it's environment
     contains SPACK_TEST_COMMAND=dump-env-<variable-to-debug>
     """
     with set_env(SPACK_TEST_COMMAND='dump-env-' + var):
-        output = executable(*test_args, output=str).strip()
+        output = executable(*test_args + extra_args, output=str).strip()
         assert executable.path + ': ' + var + ': ' + expected == output
 
 
@@ -187,6 +187,13 @@ def test_vcheck_mode(wrapper_environment):
     assert dump_mode(cc, ['-I/include', '-dumpversion']) == 'vcheck'
     assert dump_mode(cc, ['-I/include', '--version', '-c']) == 'vcheck'
     assert dump_mode(cc, ['-I/include', '-V', '-o', 'output']) == 'vcheck'
+
+
+def test_search_mode(wrapper_environment):
+    assert dump_mode(cc, ['-I/include', '--print-search-dirs']) == 'search'
+    assert dump_mode(cc, ['-I/include', '--print-search-dirs', '-c']) == 'search'
+    assert dump_mode(cc, [
+        '-I/include', '--print-search-dirs', '-o', 'output']) == 'search'
 
 
 def test_cpp_mode(wrapper_environment):
@@ -361,6 +368,16 @@ def test_dep_lib_no_lib(wrapper_environment):
             test_wl_rpaths +
             ['-Wl,-rpath,x'] +
             test_args_without_paths)
+
+
+def test_search_dep(wrapper_environment):
+    """Ensure a single dependency is added to the LIBRARY_PATH in
+       search mode, and not in any other mode."""
+    with set_env(LIBRARY_PATH='env:path', SPACK_LINK_DIRS='new:path with space',
+                 SPACK_CC='true'):
+        check_env_var(cc, 'LIBRARY_PATH', 'env:path')
+        check_env_var(cc, 'LIBRARY_PATH', 'env:path:new:path with space',
+                      extra_args=['--print-search-dirs'])
 
 
 def test_ccld_deps(wrapper_environment):
