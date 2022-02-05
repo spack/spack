@@ -108,7 +108,8 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-dataclasses', when='@1.7: ^python@3.6', type=('build', 'run'))
     depends_on('py-tqdm', type='run')
     depends_on('py-protobuf', type=('build', 'run'))
-    depends_on('protobuf')
+    # https://github.com/spack/spack/issues/28679
+    depends_on('protobuf@:3.14')
     depends_on('blas')
     depends_on('lapack')
     depends_on('eigen')

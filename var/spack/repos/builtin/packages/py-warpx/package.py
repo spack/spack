@@ -58,8 +58,10 @@ class PyWarpx(PythonPackage):
     depends_on('py-picmistandard@0.0.16', type=('build', 'run'), when='@21.12')
     depends_on('py-picmistandard@0.0.18', type=('build', 'run'), when='@22.01')
     depends_on('py-setuptools@42:', type='build')
-    depends_on('py-cmake@3.15:3', type='build')
-    depends_on('py-cmake@3.18:3', type='build', when='@22.01:')
+    # Since we use PYWARPX_LIB_DIR to pull binaries out of the
+    # 'warpx' spack package, we don't need py-cmake as declared
+    # depends_on('py-cmake@3.15:3', type='build')
+    # depends_on('py-cmake@3.18:3', type='build', when='@22.01:')
     depends_on('py-wheel', type='build')
     depends_on('warpx +lib ~mpi +shared', type=('build', 'link'), when='~mpi')
     depends_on('warpx +lib +mpi +shared', type=('build', 'link'), when='+mpi')

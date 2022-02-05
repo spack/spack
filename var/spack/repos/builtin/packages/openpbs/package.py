@@ -18,7 +18,7 @@ class Openpbs(AutotoolsPackage):
     url = "https://github.com/openpbs/openpbs/archive/v19.1.3.tar.gz"
 
     version('20.0.1', sha256='685a4abcea92bf518df02b544d25e237ae8cef76f86525f7bf3554812e9f50fa')
-    version('19.1.3', sha256='6e9d2614f839ff3d91d0ace3de04752b7c075da60c72fe6def76437aa05c9857', deprecated=True)
+    version('19.1.3', sha256='6e9d2614f839ff3d91d0ace3de04752b7c075da60c72fe6def76437aa05c9857')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

@@ -24,7 +24,7 @@ class Spectre(CMakePackage):
     url = "https://github.com/sxs-collaboration/spectre/archive/v2021.12.15.tar.gz"
     git = "https://github.com/sxs-collaboration/spectre.git"
 
-    maintainers = ['nilsleiffischer']
+    maintainers = ['nilsvu']
 
     generator = 'Ninja'
 
