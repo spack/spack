@@ -252,7 +252,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # https://github.com/Homebrew/homebrew-core/pull/39041
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
                   sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
-                  when='@6:8')
+                  when='@6:8.3')
         if macos_version() >= Version('10.15'):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
