@@ -32,3 +32,9 @@ class Lhapdf(AutotoolsPackage):
     def configure_args(self):
         args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
         return args
+
+    def patch(self):
+        if self.spec['python'].satisfies('@3.8:'):
+            filter_file(".tp_print = 0;",
+                        ".tp_vectorcall_offset = 0;",
+                        "wrappers/python/lhapdf.cpp")
