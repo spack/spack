@@ -36,6 +36,7 @@ class Coral(CMakePackage):
     depends_on('libunwind')
     depends_on('valgrind')
     depends_on('oracle-instant-client')
+    depends_on('libtirpc')
 
     def determine_binary_tag(self):
         # As far as I can tell from reading the source code, `binary_tag`
