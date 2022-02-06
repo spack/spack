@@ -478,9 +478,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     @property
     def libs(self):
-        shared = '+shared_libs' in self.spec
-        return find_libraries('libLLVMCore', self.prefix, shared=shared,
-                              recursive=True)
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
 
     @run_before('cmake')
     def codesign_check(self):
@@ -727,9 +726,10 @@ class Llvm(CMakePackage, CudaPackage):
         if not kwargs.get('output'):
             kwargs['output'] = str
         ret = lc(*args, **kwargs)
-        if kwargs.get('output') == "list":
+        if kwargs.get('result') == "list":
             return ret.split()
-        return ret
+        else:
+            return ret
 
 
 def get_llvm_targets_to_build(spec):
