@@ -226,8 +226,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # Binutils can't build ld on macOS
     conflicts('+binutils', when='platform=darwin')
 
+    # Bootstrap comparison failure:
+    #   see https://github.com/spack/spack/issues/23296
+    #   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100340
+    #   on XCode 12.5
+    conflicts('+bootstrap', when='@:11.1 %apple-clang@12.0.5')
+
     # aarch64/M1 is supported in GCC 12+
-    conflicts('@:11.99', when='target=aarch64: platform=darwin',
+    conflicts('@:11', when='target=aarch64: platform=darwin',
               msg='Only GCC 12 and newer support macOS M1 (aarch64)')
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -252,7 +258,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # https://github.com/Homebrew/homebrew-core/pull/39041
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
                   sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
-                  when='@6:8')
+                  when='@6:8.3')
         if macos_version() >= Version('10.15'):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
