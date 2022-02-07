@@ -753,7 +753,7 @@ class BaseContext(tengine.Context):
         # tokens uppercase.
         transform = {}
         for token in _valid_tokens:
-            transform[token] = lambda s, string: str.upper(string)
+            transform[token] = lambda s, string: str(string)
 
         for x in env:
             # Ensure all the tokens are valid in this context

@@ -1,0 +1,11 @@
+--- a/src/summary.c	2021-12-23 14:33:55.000000000 -0700
++++ b/src/summary.c	2021-12-23 14:33:06.000000000 -0700
+@@ -21,7 +21,7 @@
+ #include <string.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+-#include <sys/time.h>
++#include <sys/times.h>
+ #include <sys/utsname.h>
+ #ifdef _AIX
+ #include <sys/proc.h>   

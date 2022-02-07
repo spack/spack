@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class W3nco(CMakePackage):
@@ -19,3 +22,6 @@ class W3nco(CMakePackage):
     maintainers = ['t-brown', 'kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
     version('2.4.1', sha256='48b06e0ea21d3d0fd5d5c4e7eb50b081402567c1bff6c4abf4fd4f3669070139')
+
+    if sys.platform == 'darwin' and macos_version() >= Version('12.0'):
+        patch('darwin/apple-clang-13.0.0-times.patch')

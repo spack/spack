@@ -55,4 +55,14 @@ class Parallelio(CMakePackage):
         args.extend([
             define_from_variant('PIO_ENABLE_TIMING', 'timing'),
         ])
+        # Compatibility flags for gfortran
+        fflags = []
+        if self.compiler.name in ['gcc', 'clang', 'apple-clang']:
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
+            if gfortran_major_version>=10:
+                fflags.append('-fallow-argument-mismatch')
+        if fflags:
+            args.extend([
+                self.define('CMAKE_Fortran_FLAGS', ' '.join(fflags))
+            ])
         return args

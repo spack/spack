@@ -14,4 +14,17 @@ class Nccmp(CMakePackage):
     version('1.8.9.0', sha256='da5d2b4dcd52aec96e7d96ba4d0e97efebbd40fe9e640535e5ee3d5cd082ae50')
     version('1.8.2.0', sha256='7f5dad4e8670568a71f79d2bcebb08d95b875506d3d5faefafe1a8b3afa14f18')
 
-    depends_on('netcdf-c')
+    depends_on('cmake@3.12:', type='build')
+    depends_on('netcdf-c', type=('build', 'run'))
+
+    def cmake_args(self):
+        args = []
+        cflags = []
+
+        if self.spec.satisfies('%intel'):
+            cflags.append('-std=c99')
+
+        if cflags:
+            args.append(self.define('CMAKE_C_FLAGS', ' '.join(cflags)))
+
+        return args

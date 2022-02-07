@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -11,9 +12,17 @@ class Eckit(CMakePackage):
     and applications at ECMWF."""
 
     homepage = 'https://github.com/ecmwf/eckit'
+    git = "https://github.com/ecmwf/eckit.git"
     url = 'https://github.com/ecmwf/eckit/archive/refs/tags/1.16.0.tar.gz'
 
     maintainers = ['skosukhin']
+
+    version('1.18.2', commit='c28d3e6dd5c138ab1d42794ebc7cd5c249f0781d', preferred=True)
+    version('1.18.0', commit='623d42abc7b8acbffe180923398f2a8da7813da1')
+    version('1.17.1', commit='fa4a457945c5ce0f95df5cc76d2ef3940c4a11ec')
+    version('1.16.3', commit='64318b81bf3ba2afd78a592e6535d71e0b2dfd7f')
+    version('1.16.2', commit='1857de5b1eab9fb24fd7c6d56f8954506315247a')
+    version('1.16.1', commit='282cd626fc4e95d8a3dace8e051e84f30accc483')
 
     version('1.16.0', sha256='9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1')
 
@@ -127,6 +136,13 @@ class Eckit(CMakePackage):
             # Disable "prototyping code that may never see the light of day":
             self.define('ENABLE_SANDBOX', False)
         ]
+
+        if '+mpi' in self.spec:
+            args += [
+                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
+                ]
 
         if 'linalg=mkl' not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled

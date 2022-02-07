@@ -29,6 +29,10 @@ def configuration(module_set_name):
         return spack.config.get('modules:lmod', {})
     return config
 
+# DH* this is not the best way, but works for now
+def get_hash_length():
+    return configuration('default')['hash_length']
+# *DH
 
 # Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
@@ -285,7 +289,12 @@ class LmodFileLayout(BaseFileLayout):
         # among flavors of the same library (e.g. openblas~openmp vs.
         # openblas+openmp)
         path = path_part_fmt.format(token=value)
-        path = '-'.join([path, value.dag_hash(length=7)])
+
+        # Use the hash length that the user specied, not something else
+        if get_hash_length()>0:
+            path = '-'.join([path, value.dag_hash(get_hash_length())])
+        #path = '-'.join([path, value.dag_hash(length=7)])
+
         return path
 
     @property
@@ -401,7 +410,13 @@ class LmodContext(BaseContext):
     def version_part(self):
         """Version of this provider."""
         s = self.spec
-        return '-'.join([str(s.version), s.dag_hash(length=7)])
+
+        # Use the hash length that the user specied, not something else
+        if get_hash_length()>0:
+            return '-'.join([str(s.version), s.dag_hash(length=get_hash_length())])
+        else:
+            return str(s.version)
+        #return '-'.join([str(s.version), s.dag_hash(length=7)])
 
     @tengine.context_property
     def provides(self):
