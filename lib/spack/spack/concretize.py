@@ -788,7 +788,9 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
 
     if kwargs.get('multi_root', False):
         # This feature cannot be implemented in the old concretizer
-        raise Exception
+        msg = '`concretization: togethere_where_possible`'
+        msg +- ' cannot be implemented with original concretizer'
+        raise spack.error.SpackError(msg)
 
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
     concretization_repository = make_concretization_repository(abstract_specs)
