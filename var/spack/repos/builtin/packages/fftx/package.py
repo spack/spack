@@ -9,7 +9,9 @@ from spack import *
 
 
 class Fftx(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """FFTX is the exascale follow-on to the FFTW open source discrete FFT
+    package for executing the Fast Fourier Transform as well as higher-level
+    operations composed of linear operations combined with DFT transforms."""
 
     homepage = "https://spiral.net"
     url      = "https://github.com/spiral-software/fftx/archive/0.9.0.tar.gz"
