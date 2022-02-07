@@ -118,7 +118,13 @@ def solve(parser, args):
         opt, _, _ = min(result.answers)
         if ("opt" in dump) and (not args.format):
             tty.msg("Best of %d considered solutions." % result.nmodels)
-            tty.msg("Optimization Criteria:")
+            debug = spack.config.get('config:debug')
+            if debug:
+                tty.msg("Optimization Criteria:")
+            else:
+                msg = "Non-optimal Optimization Criteria:"
+                msg += " (to see full criteria run in debug mode)"
+                tty.msg(msg)
 
             maxlen = max(len(s[2]) for s in result.criteria)
             color.cprint(
@@ -127,6 +133,11 @@ def solve(parser, args):
 
             fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
             for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
+                # Only print 0-valued opt criteria in debug mode
+                if not opt[idx] and (not build_idx or not opt[build_idx]):
+                    if not spack.config.get('config:debug'):
+                        continue
+
                 color.cprint(
                     fmt % (
                         i,
