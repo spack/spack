@@ -73,7 +73,7 @@ def topological_sort(spec, deptype='all'):
     deptype = spack.dependency.canonical_deptype(deptype)
 
     # Work on a copy so this is nondestructive.
-    spec = spec.copy(deps=deptype)
+    spec = spec.copy(deps=True)
     nodes = spec.index(deptype=deptype)
 
     def dependencies(specs):
