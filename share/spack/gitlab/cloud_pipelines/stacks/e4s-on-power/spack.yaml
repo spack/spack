@@ -117,6 +117,7 @@ spack:
     - globalarrays
     - gmp
     - gotcha
+    - gptune
     - hdf5
     - heffte +fftw
     - hpctoolkit
@@ -128,7 +129,7 @@ spack:
     - libnrm
     - libquo
     - libunwind
-    - llvm +all_targets +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
+    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
     - loki
     - mercury
     - metall
@@ -179,6 +180,7 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - variorum
     - veloc
     - vtk-m
     - zfp
@@ -189,7 +191,6 @@ spack:
     #- qwt
     #- stat
     #- umpire
-    #- variorum
 
   - arch:
     - '%gcc target=ppc64le'

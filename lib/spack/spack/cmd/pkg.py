@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -16,6 +17,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.paths
 import spack.repo
+import spack.util.package_hash as ph
 from spack.util.executable import which
 
 description = "query packages associated with particular git revisions"
@@ -69,6 +71,15 @@ def setup_parser(subparser):
     rm_parser.add_argument(
         'rev2', nargs='?', default='HEAD',
         help="revision to compare to rev1 (default is HEAD)")
+
+    source_parser = sp.add_parser('source', help=pkg_source.__doc__)
+    source_parser.add_argument(
+        '-c', '--canonical', action='store_true', default=False,
+        help="dump canonical source as used by package hash.")
+    arguments.add_common_arguments(source_parser, ['spec'])
+
+    hash_parser = sp.add_parser('hash', help=pkg_hash.__doc__)
+    arguments.add_common_arguments(hash_parser, ['spec'])
 
 
 def packages_path():
@@ -201,14 +212,49 @@ def pkg_changed(args):
         colify(sorted(packages))
 
 
+def pkg_source(args):
+    """dump source code for a package"""
+    specs = spack.cmd.parse_specs(args.spec, concretize=False)
+    if len(specs) != 1:
+        tty.die("spack pkg source requires exactly one spec")
+
+    spec = specs[0]
+    filename = spack.repo.path.filename_for_package_name(spec.name)
+
+    # regular source dump -- just get the package and print its contents
+    if args.canonical:
+        message = "Canonical source for %s:" % filename
+        content = ph.canonical_source(spec)
+    else:
+        message = "Source for %s:" % filename
+        with open(filename) as f:
+            content = f.read()
+
+    if sys.stdout.isatty():
+        tty.msg(message)
+    sys.stdout.write(content)
+
+
+def pkg_hash(args):
+    """dump canonical source code hash for a package spec"""
+    specs = spack.cmd.parse_specs(args.spec, concretize=False)
+
+    for spec in specs:
+        print(ph.package_hash(spec))
+
+
 def pkg(parser, args):
     if not spack.cmd.spack_is_git_repo():
         tty.die("This spack is not a git clone. Can't use 'spack pkg'")
 
-    action = {'add': pkg_add,
-              'diff': pkg_diff,
-              'list': pkg_list,
-              'removed': pkg_removed,
-              'added': pkg_added,
-              'changed': pkg_changed}
+    action = {
+        'add': pkg_add,
+        'diff': pkg_diff,
+        'list': pkg_list,
+        'removed': pkg_removed,
+        'added': pkg_added,
+        'changed': pkg_changed,
+        'source': pkg_source,
+        'hash': pkg_hash,
+    }
     action[args.pkg_command](args)

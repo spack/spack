@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
-    version('11.0.0', sha256='dbfc6b5030a36936b46f56a0bede4b647d0160c178a5629d39ce392124e47936')
+    version('11.0.0', sha256='04d11d4d9041507e7f86f48eb45c36430f2b6544a74c0ccaff632ac51d9644f1')
     version('10.7.3', sha256='8615d93bd4178d34f31e19d67bc81720af67cdab1c8425af8523858dcddcf65b', preferred=True)
     version('10.7.2', sha256='593fc85883a361487b17548ba00553501f66a811b0a79039276bb75ad59528cf')
     version('10.7.1', sha256='2aa7cb4b231081e0a35d84c707be8f35e4edc4e97aad2b233943515476955293')
@@ -56,19 +56,19 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
     depends_on('cmake@3.5:', type='build')
 
-    depends_on('geant4-data@11.0.0', when='@11.0.0')
-    depends_on('geant4-data@10.7.3', when='@10.7.3')
-    depends_on('geant4-data@10.7.2', when='@10.7.2')
-    depends_on('geant4-data@10.7.1', when='@10.7.1')
-    depends_on('geant4-data@10.7.0', when='@10.7.0')
-    depends_on('geant4-data@10.6.3', when='@10.6.3')
-    depends_on('geant4-data@10.6.2', when='@10.6.2')
-    depends_on('geant4-data@10.6.1', when='@10.6.1')
-    depends_on('geant4-data@10.6.0', when='@10.6.0')
-    depends_on('geant4-data@10.5.1', when='@10.5.1')
-    depends_on('geant4-data@10.4.3', when='@10.4.3')
-    depends_on('geant4-data@10.4.0', when='@10.4.0')
-    depends_on('geant4-data@10.3.3', when='@10.3.3')
+    depends_on('geant4-data@11.0.0', type='run', when='@11.0.0')
+    depends_on('geant4-data@10.7.3', type='run', when='@10.7.3')
+    depends_on('geant4-data@10.7.2', type='run', when='@10.7.2')
+    depends_on('geant4-data@10.7.1', type='run', when='@10.7.1')
+    depends_on('geant4-data@10.7.0', type='run', when='@10.7.0')
+    depends_on('geant4-data@10.6.3', type='run', when='@10.6.3')
+    depends_on('geant4-data@10.6.2', type='run', when='@10.6.2')
+    depends_on('geant4-data@10.6.1', type='run', when='@10.6.1')
+    depends_on('geant4-data@10.6.0', type='run', when='@10.6.0')
+    depends_on('geant4-data@10.5.1', type='run', when='@10.5.1')
+    depends_on('geant4-data@10.4.3', type='run', when='@10.4.3')
+    depends_on('geant4-data@10.4.0', type='run', when='@10.4.0')
+    depends_on('geant4-data@10.3.3', type='run', when='@10.3.3')
 
     depends_on("expat")
     depends_on("zlib")
@@ -169,12 +169,8 @@ class Geant4(CMakePackage):
             # geant4 libs at application runtime
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
 
-        # install the data with geant4
-        datadir = spec['geant4-data'].prefix.share
-        dataver = '{0}-{1}'.format(spec['geant4-data'].name,
-                                   spec['geant4-data'].version.dotted)
-        datapath = join_path(datadir, dataver)
-        options.append('-DGEANT4_INSTALL_DATADIR={0}'.format(datapath))
+        # never install the data with geant4
+        options.append('-DGEANT4_INSTALL_DATA=OFF')
 
         # Vecgeom
         if '+vecgeom' in spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,11 +31,10 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     version('5.0.0',    branch='release-5.0.0')
     version('4.1.0',    branch='release-4.1.0')
     version('4.0.0',    branch='release-4.0.0')
-    version('4.0.0',    branch='release-4.0.0')
-    version('3.0.0',    branch='release-3.0.0')
-    version('2.3-lts',  branch='release-2-3-lts')
-    version('2.3.1',    branch='release-2-3-1')
-    version('2.3.0',    branch='release-2-3-0')
+    version('3.0.0',    branch='release-3.0.0', deprecated=True)
+    version('2.3-lts',  branch='release-2-3-lts', deprecated=True)
+    version('2.3.1',    branch='release-2-3-1', deprecated=True)
+    version('2.3.0',    branch='release-2-3-0', deprecated=True)
 
     variant('gui',      default=True,   description='Build GUI and interactive SAGA tools')
     variant('odbc',     default=True,   description='Build with ODBC support')
@@ -66,12 +65,11 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     # SAGA-GIS requires projects.h from proj
     depends_on('proj')
     # https://sourceforge.net/p/saga-gis/bugs/271/
-    depends_on('proj@:5', when='@:7.2')
+    depends_on('proj@:5', when='@:7.3')
 
     # Saga-Gis depends on legacy opencv API removed in opencv 4.x
-    depends_on('opencv@:3', when='+opencv')
-    # Set jpeg provider (similar to #8133)
-    depends_on('libjpeg', when='+opencv')
+    depends_on('opencv@:3.4.6+jpeg+video+objdetect+ml+openmp+photo', when='+opencv')
+    depends_on('jpeg', when='+opencv')
     # Set hl variant due to similar issue #7145
     depends_on('hdf5+hl')
 
@@ -88,6 +86,15 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     extends('python', when='+python')
 
     configure_directory = "saga-gis"
+
+    def patch(self):
+        if '+opencv' in self.spec:
+            opencv_dir = self.spec['opencv'].prefix
+            opencv_makefile = join_path('saga-gis', 'src', 'tools', 'imagery',
+                                        'imagery_opencv', 'Makefile.am')
+
+            filter_file(r"/usr(/include/opencv)", r"{0}\1".format(opencv_dir),
+                        opencv_makefile)
 
     def configure_args(self):
         args = []

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -192,7 +192,7 @@ class PyMatplotlib(PythonPackage):
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library))
 
-    @run_before('build')
+    @run_before('install')
     def configure(self):
         """Set build options with regards to backend GUI libraries."""
 
@@ -209,10 +209,11 @@ class PyMatplotlib(PythonPackage):
                 config.write('[libs]\n')
                 config.write('system_freetype = True\n')
                 config.write('system_qhull = True\n')
-                if self.spec.satisfies('%clang'):
+                # avoids error where link time opt is used for compile but not link
+                if self.spec.satisfies('%clang') or self.spec.satisfies('%oneapi'):
                     config.write('enable_lto = False\n')
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which('pytest')

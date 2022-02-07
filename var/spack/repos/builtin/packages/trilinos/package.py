@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import sys
 
 from spack import *
 from spack.build_environment import dso_suffix
+from spack.error import NoHeadersError
 from spack.operating_systems.mac_os import macos_version
 from spack.pkg.builtin.kokkos import Kokkos
 
@@ -21,7 +22,7 @@ from spack.pkg.builtin.kokkos import Kokkos
 # https://github.com/trilinos/Trilinos/issues/175
 
 
-class Trilinos(CMakePackage, CudaPackage):
+class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
@@ -173,7 +174,7 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # ###################### Conflicts ##########################
 
-    # Epetra packages
+    # Epetra stack
     with when('~epetra'):
         conflicts('+amesos')
         conflicts('+aztec')
@@ -187,10 +188,14 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+epetraextbtf')
         conflicts('+epetraextexperimental')
         conflicts('+epetraextgraphreorderings')
+    with when('+teko'):
+        conflicts('~stratimikos')
+        conflicts('@:12 gotype=long')
 
-    # Tpetra packages
+    # Tpetra stack
     with when('~kokkos'):
         conflicts('+cuda')
+        conflicts('+rocm')
         conflicts('+tpetra')
         conflicts('+intrepid2')
         conflicts('+phalanx')
@@ -202,31 +207,29 @@ class Trilinos(CMakePackage, CudaPackage):
         conflicts('+teko')
         conflicts('+zoltan2')
 
-    with when('+teko'):
-        conflicts('~amesos')
-        conflicts('~anasazi')
-        conflicts('~aztec')
-        conflicts('~ifpack')
-        conflicts('~ml')
-        conflicts('~stratimikos')
-        conflicts('@:12 gotype=long')
+    with when('~zoltan'):
+        conflicts('+isorropia')
+        conflicts('+scorec')
+        conflicts('+shylu')
+        conflicts('+zoltan2')
+    with when('~shards'):
+        conflicts('+intrepid')
+        conflicts('+intrepid2')
+        conflicts('+scorec')
+        conflicts('+stk')
+    with when('+scorec'):
+        conflicts('~mpi')
+        conflicts('~stk')
 
     # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
-    conflicts('+minitensor', when='~boost')
     conflicts('+ifpack2', when='~belos')
     conflicts('+intrepid', when='~sacado')
-    conflicts('+intrepid', when='~shards')
-    conflicts('+intrepid2', when='~shards')
-    conflicts('+isorropia', when='~zoltan')
+    conflicts('+minitensor', when='~boost')
     conflicts('+phalanx', when='~sacado')
-    conflicts('+scorec', when='~mpi')
-    conflicts('+scorec', when='~shards')
-    conflicts('+scorec', when='~stk')
-    conflicts('+scorec', when='~zoltan')
+    conflicts('+stokhos', when='~kokkos')
     conflicts('+tempus', when='~nox')
-    conflicts('+zoltan2', when='~zoltan')
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts('+dtk', when='~boost')
@@ -257,7 +260,8 @@ class Trilinos(CMakePackage, CudaPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=11', when='@13.2:')
+    conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -277,6 +281,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Old trilinos fails with new CUDA (see #27180)
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
+    # Build hangs with CUDA 11.6 (see #28439)
+    conflicts('+cuda +stokhos', when='^cuda@11.6:')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -410,6 +416,17 @@ class Trilinos(CMakePackage, CudaPackage):
             else:
                 env.set('CXX', spec["kokkos-nvcc-wrapper"].kokkos_cxx)
 
+        if '+rocm' in spec:
+            if '+mpi' in spec:
+                env.set('OMPI_CXX', self.spec['hip'].hipcc)
+                env.set('MPICH_CXX', self.spec['hip'].hipcc)
+                env.set('MPICXX_CXX', self.spec['hip'].hipcc)
+            else:
+                env.set('CXX', self.spec['hip'].hipcc)
+            if '+stk' in spec:
+                # Using CXXFLAGS for hipcc which doesn't use flags in the spack wrappers
+                env.set('CXXFLAGS', '-DSTK_NO_BOOST_STACKTRACE')
+
     def cmake_args(self):
         options = []
 
@@ -439,7 +456,6 @@ class Trilinos(CMakePackage, CudaPackage):
         options.extend([
             define('Trilinos_VERBOSE_CONFIGURE', False),
             define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             define_trilinos_enable('ALL_OPTIONAL_PACKAGES', False),
             define_trilinos_enable('ALL_PACKAGES', False),
             define_trilinos_enable('CXX11', True),
@@ -452,6 +468,18 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('EXPLICIT_INSTANTIATION',
                                    'explicit_template_instantiation')
         ])
+
+        if spec.version >= Version('13'):
+            options.append(define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            # Prior to version 13, Trilinos would erroneously inject
+            # '-std=c++11' regardless of CMAKE_CXX_STANDARD value
+            options.append(define(
+                'Trilinos_CXX11_FLAGS',
+                self.compiler.cxx14_flag
+                if spec.variants['cxxstd'].value == '14'
+                else self.compiler.cxx11_flag
+            ))
 
         # ################## Trilinos Packages #####################
 
@@ -504,6 +532,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_from_variant('EpetraExt_BUILD_GRAPH_REORDERINGS',
                                 'epetraextgraphreorderings'),
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
+            define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
 
         if '+dtk' in spec:
@@ -561,31 +590,40 @@ class Trilinos(CMakePackage, CudaPackage):
                 return
             depspec = spec[spack_name]
             libs = depspec.libs
+            try:
+                options.extend([
+                    define(trilinos_name + '_INCLUDE_DIRS',
+                           depspec.headers.directories),
+                ])
+            except NoHeadersError:
+                # Handle case were depspec does not have headers
+                pass
+
             options.extend([
-                define(trilinos_name + '_INCLUDE_DIRS', depspec.headers.directories),
                 define(trilinos_name + '_ROOT', depspec.prefix),
                 define(trilinos_name + '_LIBRARY_NAMES', libs.names),
                 define(trilinos_name + '_LIBRARY_DIRS', libs.directories),
             ])
 
         # Enable these TPLs explicitly from variant options.
+        # Format is (TPL name, variant name, Spack spec name)
         tpl_variant_map = [
-            ('ADIOS2', 'adios2'),
-            ('Boost', 'boost'),
-            ('CUDA', 'cuda'),
-            ('HDF5', 'hdf5'),
-            ('HYPRE', 'hypre'),
-            ('MUMPS', 'mumps'),
-            ('UMFPACK', 'suite-sparse'),
-            ('SuperLU', 'superlu'),
-            ('SuperLUDist', 'superlu-dist'),
-            ('X11', 'x11'),
+            ('ADIOS2', 'adios2', 'adios2'),
+            ('Boost', 'boost', 'boost'),
+            ('CUDA', 'cuda', 'cuda'),
+            ('HDF5', 'hdf5', 'hdf5'),
+            ('HYPRE', 'hypre', 'hypre'),
+            ('MUMPS', 'mumps', 'mumps'),
+            ('UMFPACK', 'suite-sparse', 'suite-sparse'),
+            ('SuperLU', 'superlu', 'superlu'),
+            ('SuperLUDist', 'superlu-dist', 'superlu-dist'),
+            ('X11', 'x11', 'libx11'),
         ]
         if spec.satisfies('@13.0.2:'):
-            tpl_variant_map.append(('STRUMPACK', 'strumpack'))
+            tpl_variant_map.append(('STRUMPACK', 'strumpack', 'strumpack'))
 
-        for tpl_name, var_name in tpl_variant_map:
-            define_tpl(tpl_name, var_name, spec.variants[var_name].value)
+        for tpl_name, var_name, spec_name in tpl_variant_map:
+            define_tpl(tpl_name, spec_name, spec.variants[var_name].value)
 
         # Enable these TPLs based on whether they're in our spec; prefer to
         # require this way so that packages/features disable availability
@@ -706,6 +744,22 @@ class Trilinos(CMakePackage, CudaPackage):
                     define("Kokkos_ARCH_" + arch_map[arch].upper(), True)
                     for arch in spec.variants['cuda_arch'].value
                 )
+
+            if '+rocm' in spec:
+                options.extend([
+                    define_kok_enable('ROCM', False),
+                    define_kok_enable('HIP', True)
+                ])
+                if '+tpetra' in spec:
+                    options.append(define('Tpetra_INST_HIP', True))
+                amdgpu_arch_map = Kokkos.amdgpu_arch_map
+                for amd_target in spec.variants['amdgpu_target'].value:
+                    try:
+                        arch = amdgpu_arch_map[amd_target]
+                    except KeyError:
+                        pass
+                    else:
+                        options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
 

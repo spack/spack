@@ -1,10 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This module contains the following external, potentially separately
 licensed, packages that are included in Spack:
+
+altgraph
+--------
+
+* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
+* Usage: dependency of macholib
+* Version: 0.17.2
 
 archspec
 --------
@@ -23,6 +30,22 @@ argparse
   error message formatting. See the following commit if the
   vendored copy ever needs to be updated again:
   https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
+
+astunparse
+----------------
+
+* Homepage: https://github.com/simonpercivall/astunparse
+* Usage: Unparsing Python ASTs for package hashes in Spack
+* Version: 1.6.3 (plus modifications)
+* Note: This is in ``spack.util.unparse`` because it's very heavily
+  modified, and we want to track coverage for it.
+  Specifically, we have modified this library to generate consistent unparsed ASTs
+  regardless of the Python version. It is based on:
+    1. The original ``astunparse`` library;
+    2. Modifications for consistency;
+    3. Backports from the ``ast.unparse`` function in Python 3.9 and later
+  The unparsing is now mostly consistent with upstream ``ast.unparse``, so if
+  we ever require Python 3.9 or higher, we can drop this external package.
 
 attrs
 ----------------
@@ -67,6 +90,13 @@ jsonschema
 * Usage: An implementation of JSON Schema for Python.
 * Version: 3.2.0 (last version before 2.7 and 3.6 support was dropped)
 * Note: We don't include tests or benchmarks; just what Spack needs.
+
+macholib
+--------
+
+* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
+* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
+* Version: 1.15.2
 
 markupsafe
 ----------
@@ -123,19 +153,5 @@ six
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.16.0
-
-macholib
---------
-
-* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
-* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
-* Version: 1.12
-
-altgraph
---------
-
-* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
-* Usage: dependency of macholib
-* Version: 0.16.1
 
 """

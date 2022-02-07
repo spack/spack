@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,14 +21,10 @@ from contextlib import contextmanager
 import six
 
 from llnl.util import tty
+from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
 
 from spack.util.executable import Executable
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
 
 __all__ = [
     'FileFilter',

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,11 @@ class Flit(MakefilePackage):
     homepage = "https://pruners.github.io/flit"
     url      = "https://github.com/PRUNERS/FLiT"
     url      = "https://github.com/PRUNERS/FLiT/archive/v2.1.0.tar.gz"
+    git      = "https://github.com/PRUNERS/FLiT.git"
 
     tags = ['e4s']
 
+    version('develop', branch='devel')
     version('2.1.0', sha256='b31ffa02fda1ab0f5555acdc6edc353d93d53ae8ef85e099f83bcf1c83e70885')
 
     maintainers = ['mikebentley15']

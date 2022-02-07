@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import shutil
 import sys
 
 from llnl.util import tty
+from llnl.util.compat import filter, map, zip
 from llnl.util.filesystem import mkdirp, remove_dead_links, remove_empty_directories
 from llnl.util.lang import index_by, match_predicate
 from llnl.util.link_tree import LinkTree, MergeConflictError
@@ -28,12 +29,6 @@ from spack.directory_layout import (
     YamlViewExtensionsLayout,
 )
 from spack.error import SpackError
-
-# compatability
-if sys.version_info < (3, 0):
-    from itertools import ifilter as filter
-    from itertools import imap as map
-    from itertools import izip as zip
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 

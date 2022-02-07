@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class PyGenders(Package):
 
     # FIXME: Missing a dependency on genders
     # #include <genders.h>
+    depends_on('bison', type='build')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

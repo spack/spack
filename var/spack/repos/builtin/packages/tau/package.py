@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,6 +93,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
+    depends_on('cmake@3.14:', type='build', when='%clang')
     depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ class PyMsrest(PythonPackage):
     homepage = "https://github.com/Azure/msrest-for-python"
     pypi = "msrest/msrest-0.6.16.tar.gz"
 
+    version('0.6.21', sha256='72661bc7bedc2dc2040e8f170b6e9ef226ee6d3892e01affd4d26b06474d68d8')
     version('0.6.16', sha256='214c5be98954cb45feb6a6a858a7ae6d41a664e80294b65db225bbaa33d9ca3c')
 
     depends_on('py-setuptools', type='build')

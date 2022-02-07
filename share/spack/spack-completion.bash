@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -123,7 +123,7 @@ _bash_completion_spack() {
     # If the cursor is in the middle of the line, like:
     #     `spack -d [] install`
     # COMP_WORDS will not contain the empty character, so we have to add it.
-    if [[ "${COMP_LINE:$COMP_POINT:1}" == " " ]]
+    if [[ "${COMP_LINE:$COMP_POINT-1:1}" == " " ]]
     then
         cur=""
     fi
@@ -434,8 +434,12 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="enable disable reset root list trust untrust"
+        SPACK_COMPREPLY="status enable disable reset root list trust untrust"
     fi
+}
+
+_spack_bootstrap_status() {
+    SPACK_COMPREPLY="-h --help --optional --dev"
 }
 
 _spack_bootstrap_enable() {
@@ -1440,7 +1444,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed"
+        SPACK_COMPREPLY="add list diff added changed removed source hash"
     fi
 }
 
@@ -1495,6 +1499,24 @@ _spack_pkg_removed() {
         SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_source() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -c --canonical"
+    else
+        _all_packages
+    fi
+}
+
+_spack_pkg_hash() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
     fi
 }
 

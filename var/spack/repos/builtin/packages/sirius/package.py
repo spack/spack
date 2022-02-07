@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets, when='+rocm')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -141,6 +141,8 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+
+    depends_on('eigen@3.4.0:', when='@7.4: +tests')
 
     # TODO:
     # add support for CRAY_LIBSCI, testing

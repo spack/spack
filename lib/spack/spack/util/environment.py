@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ import spack.config
 import spack.platforms
 import spack.spec
 import spack.util.executable as executable
+import spack.util.spack_json as sjson
 
 system_paths = ['/', '/usr', '/usr/local']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
@@ -59,7 +60,7 @@ def is_system_path(path):
     Returns:
         True or False
     """
-    return os.path.normpath(path) in system_dirs
+    return path and os.path.normpath(path) in system_dirs
 
 
 def filter_system_paths(paths):
@@ -1027,13 +1028,7 @@ def environment_after_sourcing_files(*files, **kwargs):
 
         # If we're in python2, convert to str objects instead of unicode
         # like json gives us.  We can't put unicode in os.environ anyway.
-        if sys.version_info[0] < 3:
-            environment = dict(
-                (k.encode('utf-8'), v.encode('utf-8'))
-                for k, v in environment.items()
-            )
-
-        return environment
+        return sjson.encode_json_dict(environment)
 
     current_environment = kwargs.get('env', dict(os.environ))
     for f in files:
@@ -1074,7 +1069,7 @@ def sanitize(environment, blacklist, whitelist):
         return subset
 
     # Don't modify input, make a copy instead
-    environment = dict(environment)
+    environment = sjson.decode_json_dict(dict(environment))
 
     # Retain (whitelist) has priority over prune (blacklist)
     prune = set_intersection(set(environment), *blacklist)

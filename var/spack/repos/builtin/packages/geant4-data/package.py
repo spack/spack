@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,6 +49,7 @@ class Geant4Data(BundlePackage):
     depends_on("g4saiddata@2.0", when='@11.0.0:11.0')
     depends_on("g4abla@3.1", when='@11.0.0:11.0')
     depends_on("g4incl@1.0", when='@11.0.0:11.0')
+    depends_on("g4ensdfstate@2.3", when='@11.0.0:11.0')
 
     # geant4@10.7.X
     depends_on("g4ndl@4.6", when='@10.7.0:10.7')

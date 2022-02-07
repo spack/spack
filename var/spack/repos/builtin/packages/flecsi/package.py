@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -88,7 +88,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('legion+shared', when='backend=legion @:1.9')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @:1.9')
     depends_on('legion build_type=Debug', when='backend=legion +debug_backend @:1.9')
-    depends_on('legion@ctrl-rep-7', when='backend=legion @:1.9')
+    depends_on('legion@cr', when='backend=legion @:1.9')
     depends_on('hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128', when='backend=hpx @:1.9')
     depends_on('hpx build_type=Debug', when='backend=hpx +debug_backend @:1.9')
     depends_on('googletest@1.8.1+gmock', when='@:1.9')
@@ -102,7 +102,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('cmake@3.15:', when='@2.0:')
     depends_on('boost +atomic +filesystem +regex +system', when='@2.0:')
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
-    depends_on('legion@ctrl-rep-9:ctrl-rep-99', when='backend=legion @2.0:')
+    depends_on('legion@cr', when='backend=legion @2.0:')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @2.0:')
     depends_on('hdf5@1.10.7:', when='backend=legion +hdf5 @2.0:')
     depends_on('hpx@1.3.0 cxxstd=17 malloc=system', when='backend=hpx @2.0:')

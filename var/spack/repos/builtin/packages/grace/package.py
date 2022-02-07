@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,14 @@ class Grace(AutotoolsPackage):
         # currently and would require to run "autoreconf".
         filter_file('<fftw.h>', '<dfftw.h>',
                     'configure', 'src/fourier.c')
+        filter_file('char   filename[128];',
+                    'char   filename[4096];',
+                    'T1lib/type1/scanfont.c',
+                    string=True)
+        filter_file('char CurFontName[120];',
+                    'char CurFontName[4096];',
+                    'T1lib/type1/fontfcn.c',
+                    string=True)
 
     def configure_args(self):
         args = []

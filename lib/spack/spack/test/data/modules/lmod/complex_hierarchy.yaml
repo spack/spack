@@ -17,4 +17,4 @@ lmod:
   verbose: false
 
   all:
-    autoload: 'all'
+    autoload: all

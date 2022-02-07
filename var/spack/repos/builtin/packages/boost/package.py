@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -309,6 +309,10 @@ class Boost(Package):
           sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
           when="@1.77.0",
           working_dir="tools/build")
+
+    # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
+    # See https://github.com/spack/spack/issues/28273
+    patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler

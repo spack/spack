@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -134,6 +134,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('bazel@0.1.1',         type='build', when='@0.5:0.6')
 
     depends_on('swig', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-future', type='build', when='^python@:2')
 
@@ -226,7 +228,6 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('cuda@:10.2', when='+cuda @:2.3')
     depends_on('cuda@:11.1', when='+cuda @2.4.0:')
     depends_on('cudnn', when='+cuda')
-    depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
     # depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
     depends_on('mpi', when='+mpi')
@@ -311,7 +312,7 @@ class PyTensorflow(Package, CudaPackage):
         env.set('PYTHON_BIN_PATH', spec['python'].command.path)
 
         # Please input the desired Python library path to use
-        env.set('PYTHON_LIB_PATH', site_packages_dir)
+        env.set('PYTHON_LIB_PATH', python_platlib)
 
         # Ensure swig is in PATH or set SWIG_PATH
         env.set('SWIG_PATH', spec['swig'].prefix.bin.swig)
@@ -788,9 +789,8 @@ def protobuf_deps():
         tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
-
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(tmp_path)
 
     def test(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,6 +59,7 @@ class Silo(AutotoolsPackage):
     patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:1.12')
 
     conflicts('hdf5@1.10.8:', when="@:4.10.2")
+    conflicts('hdf5@1.13.0:', when="@:4.11")
     conflicts('+hzip', when="@4.11-bsd")
     conflicts('+fpzip', when="@4.11-bsd")
     conflicts('+hzip', when="@4.10.2-bsd")

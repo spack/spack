@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,12 @@ class PyRadicalUtils(PythonPackage):
 
     homepage = 'https://radical-cybertools.github.io'
     git      = 'https://github.com/radical-cybertools/radical.utils.git'
-    pypi     = 'radical.utils/radical.utils-1.9.1.tar.gz'
+    pypi     = 'radical.utils/radical.utils-1.11.0.tar.gz'
 
     maintainers = ['andre-merzky']
 
     version('develop', branch='devel')
+    version('1.11.0',  sha256='81537c2a2f8a1a409b4a1aac67323c6b49cc994e2b70052425e2bc8d4622e2de')
     version('1.9.1',   sha256='0837d75e7f9dcce5ba5ac63151ab1683d6ba9ab3954b076d1f170cc4a3cdb1b4')
     version('1.8.4',   sha256='4777ba20e9f881bf3e73ad917638fdeca5a4b253d57ed7b321a07f670e3f737b')
     version('1.8.0',   sha256='8582c65593f51d394fc263c6354ec5ad9cc7173369dcedfb2eef4f5e8146cf03')

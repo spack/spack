@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,15 @@ from six import string_types
 
 import archspec.cpu
 
+from llnl.util.compat import Sequence
+
 try:
-    import clingo
+    import clingo  # type: ignore[import]
 
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
-    clingo = None  # type: ignore
+    clingo = None
     clingo_cffi = False
 
 import llnl.util.lang
@@ -48,11 +50,6 @@ import spack.store
 import spack.util.timer
 import spack.variant
 import spack.version
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
 
 # these are from clingo.ast and bootstrapped later
 ASTType = None
@@ -854,6 +851,9 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+
+            if variant.sticky:
+                self.gen.fact(fn.variant_sticky(pkg.name, name))
 
             self.gen.newline()
 
