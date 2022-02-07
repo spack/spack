@@ -99,6 +99,31 @@ DeclaredVersion = collections.namedtuple(
     'DeclaredVersion', ['version', 'idx', 'origin']
 )
 
+# Class for negating version ranges
+# This allows us to sort ascending by inverse version order
+class _InvertedVersion(object):
+    def __init__(self, version):
+        self.version = version
+
+    def __eq__(self, other):
+        return self.version == other.version
+
+    def __lt__(self, other):
+        return self.version > other.version
+
+    def __gt__(self, other):
+        return self.version < other.version
+
+    def __ne__(self, other):
+        return self.version != other.version
+
+    def __le__(self, other):
+        return self.version >= other.version
+
+    def __ge__(self, other):
+        return self.version <= other.version
+
+
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
 
@@ -745,7 +770,8 @@ class SpackSolverSetup(object):
             # 2. Externals
             # 3. Package preferences
             # 4. Directives in package.py
-            return version.origin, version.idx
+            # 5. Version itself (in reverse order)
+            return version.origin, version.idx, _InvertedVersion(version.version)
 
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
