@@ -463,18 +463,18 @@ class Result(object):
         best = min(self.answers)
         opt, _, answer = best
 
-        for idx, input_spec in enumerate(self.abstract_specs):
+        for psid, input_spec in enumerate(self.abstract_specs):
             # If everything has to fit in one process space, then only use
             # process space 0
             if not self.multi_root:
-                idx = 0
+                psid = 0
 
-            key = (str(idx), input_spec.name)
+            key = (str(psid), input_spec.name)
             if input_spec.virtual:
                 providers = [spec.name for key, spec in answer.items()
                              if spec.package.provides(input_spec.name) and
-                             str(idx) == key[0]]
-                key = (str(idx), providers[0])
+                             str(psid) == key[0]]
+                key = (str(psid), providers[0])
 
             self._concrete_specs.append(answer[key])
 
@@ -789,30 +789,30 @@ class SpackSolverSetup(object):
         for v in sorted(deprecated):
             self.gen.fact(fn.deprecated_version(pkg.name, v))
 
-    def spec_versions(self, idx, spec):
+    def spec_versions(self, psid, spec):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
         assert spec.name
 
         if spec.concrete:
-            return [fn.version(idx, spec.name, spec.version)]
+            return [fn.version(psid, spec.name, spec.version)]
 
         if spec.versions == spack.version.ver(":"):
             return []
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.node_version_satisfies(idx, spec.name, spec.versions)]
+        return [fn.node_version_satisfies(psid, spec.name, spec.versions)]
 
-    def target_ranges(self, idx, spec, single_target_fn):
+    def target_ranges(self, psid, spec, single_target_fn):
         target_spec = spec.architecture.target
 
         # Check if the target is a concrete target
         if str(target_spec) in archspec.cpu.TARGETS:
-            return [single_target_fn(idx, spec.name, target_spec)]
+            return [single_target_fn(psid, spec.name, target_spec)]
 
         self.target_constraints.add(target_spec)
-        return [fn.node_target_satisfies(idx, spec.name, target_spec)]
+        return [fn.node_target_satisfies(psid, spec.name, target_spec)]
 
     def conflict_rules(self, pkg):
         for trigger, constraints in pkg.conflicts.items():
@@ -1003,9 +1003,9 @@ class SpackSolverSetup(object):
             -1, named_cond, body=True, required_from=name)
         for pred in requirements:
             # condition_requirement clause are abstract, remove process space id
-            args_no_ps_id = pred.args[1:]
+            args_no_psid = pred.args[1:]
             self.gen.fact(
-                fn.condition_requirement(condition_id, pred.name, *args_no_ps_id)
+                fn.condition_requirement(condition_id, pred.name, *args_no_psid)
             )
 
         if imposed_spec:
@@ -1024,9 +1024,9 @@ class SpackSolverSetup(object):
             if not node and pred.name in ("node", "virtual_node"):
                 continue
             # imposed constraints are abstract, remove concrete root id
-            args_no_ps_id = pred.args[1:]
+            args_no_psid = pred.args[1:]
             self.gen.fact(
-                fn.imposed_constraint(condition_id, pred.name, *args_no_ps_id)
+                fn.imposed_constraint(condition_id, pred.name, *args_no_psid)
             )
 
     def package_provider_rules(self, pkg):
@@ -1214,13 +1214,13 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
-    def spec_clauses(self, idx, *args, **kwargs):
+    def spec_clauses(self, psid, *args, **kwargs):
         """Wrap a call to `_spec_clauses()` into a try/except block that
         raises a comprehensible error message in case of failure.
         """
         requestor = kwargs.pop('required_from', None)
         try:
-            clauses = self._spec_clauses(idx, *args, **kwargs)
+            clauses = self._spec_clauses(psid, *args, **kwargs)
         except RuntimeError as exc:
             msg = str(exc)
             if requestor:
@@ -1229,7 +1229,7 @@ class SpackSolverSetup(object):
         return clauses
 
     def _spec_clauses(
-            self, idx, spec, body=False, transitive=True, expand_hashes=False):
+            self, psid, spec, body=False, transitive=True, expand_hashes=False):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -1276,21 +1276,21 @@ class SpackSolverSetup(object):
 
         if spec.name:
             clauses.append(
-                f.node(idx, spec.name) if not spec.virtual
-                else f.virtual_node(idx, spec.name))
+                f.node(psid, spec.name) if not spec.virtual
+                else f.virtual_node(psid, spec.name))
 
-        clauses.extend(self.spec_versions(idx, spec))
+        clauses.extend(self.spec_versions(psid, spec))
 
         # seed architecture at the root (we'll propagate later)
         # TODO: use better semantics.
         arch = spec.architecture
         if arch:
             if arch.platform:
-                clauses.append(f.node_platform(idx, spec.name, arch.platform))
+                clauses.append(f.node_platform(psid, spec.name, arch.platform))
             if arch.os:
-                clauses.append(f.node_os(idx, spec.name, arch.os))
+                clauses.append(f.node_os(psid, spec.name, arch.os))
             if arch.target:
-                clauses.extend(self.target_ranges(idx, spec, f.node_target))
+                clauses.extend(self.target_ranges(psid, spec, f.node_target))
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
@@ -1315,7 +1315,7 @@ class SpackSolverSetup(object):
                         else:
                             variant_def.validate_or_raise(variant, spec.package)
 
-                clauses.append(f.variant_value(idx, spec.name, vname, value))
+                clauses.append(f.variant_value(psid, spec.name, vname, value))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -1324,40 +1324,40 @@ class SpackSolverSetup(object):
 
         # compiler and compiler version
         if spec.compiler:
-            clauses.append(f.node_compiler(idx, spec.name, spec.compiler.name))
+            clauses.append(f.node_compiler(psid, spec.name, spec.compiler.name))
 
             if spec.compiler.concrete:
                 clauses.append(f.node_compiler_version(
-                    idx, spec.name, spec.compiler.name, spec.compiler.version))
+                    psid, spec.name, spec.compiler.name, spec.compiler.version))
 
             elif spec.compiler.versions:
                 clauses.append(
                     fn.node_compiler_version_satisfies(
-                        idx, spec.name, spec.compiler.name, spec.compiler.versions))
+                        psid, spec.name, spec.compiler.name, spec.compiler.versions))
                 self.compiler_version_constraints.add(spec.compiler)
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
-                clauses.append(f.node_flag(idx, spec.name, flag_type, flag))
+                clauses.append(f.node_flag(psid, spec.name, flag_type, flag))
 
         # dependencies
         if spec.concrete:
-            clauses.append(fn.hash(idx, spec.name, spec.dag_hash()))
+            clauses.append(fn.hash(psid, spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
                 for dep_name, dep in spec.dependencies_dict().items():
                     for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(idx, spec.name, dep_name, dtype))
+                        clauses.append(fn.depends_on(psid, spec.name, dep_name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
-                    clauses.append(fn.hash(idx, dep.name, dep.dag_hash()))
+                    clauses.append(fn.hash(psid, dep.name, dep.dag_hash()))
                 if not spec.concrete or expand_hashes:
                     clauses.extend(
-                        self._spec_clauses(idx, dep, body, transitive=False)
+                        self._spec_clauses(psid, dep, body, transitive=False)
                     )
 
         return clauses
@@ -1528,18 +1528,18 @@ class SpackSolverSetup(object):
             ))
 
         # add any targets explicitly mentioned in specs
-        for idx, spec in enumerate(specs):
+        for psid, spec in enumerate(specs):
             # If we aren't allowing node splits, then we only need a single
             # process space, use 0
             if not self.gen.multi_root:
-                idx = 0
+                psid = 0
 
             if not spec.architecture or not spec.architecture.target:
                 continue
 
             target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
-                self.target_ranges(idx, spec, None)
+                self.target_ranges(psid, spec, None)
                 continue
 
             if target not in compatible_targets:
@@ -1850,18 +1850,18 @@ class SpackSolverSetup(object):
 
         self.gen.h1('Spec Constraints')
 
-        for idx, spec in enumerate(specs):
+        for psid, spec in enumerate(specs):
             # If we can't split nodes across process spaces, then they all
             # go to process space 0
             if not self.gen.multi_root:
-                idx = 0
+                psid = 0
 
             self.gen.h2('Spec: %s' % str(spec))
             self.gen.fact(
-                fn.virtual_root(idx, spec.name) if spec.virtual
-                else fn.root(idx, spec.name)
+                fn.virtual_root(psid, spec.name) if spec.virtual
+                else fn.root(psid, spec.name)
             )
-            for clause in self.spec_clauses(idx, spec):
+            for clause in self.spec_clauses(psid, spec):
                 self.gen.fact(clause)
                 if clause.name == 'variant_set':
                     self.gen.fact(fn.variant_default_value_from_cli(
@@ -1894,8 +1894,8 @@ class SpecBuilder(object):
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
-    def hash(self, ps_id, pkg, h):
-        pkg_id = (ps_id, pkg)
+    def hash(self, psid, pkg, h):
+        pkg_id = (psid, pkg)
         if pkg_id not in self._specs:
             try:
                 # try to get the candidate from the store
@@ -1922,30 +1922,30 @@ class SpecBuilder(object):
             spec = self._specs[pkg_id]
             assert spec.dag_hash() == h
 
-    def node(self, ps_id, pkg):
-        pkg_id = (ps_id, pkg)
+    def node(self, psid, pkg):
+        pkg_id = (psid, pkg)
         if pkg_id not in self._specs:
             self._specs[pkg_id] = spack.spec.Spec(pkg)
 
-    def _arch(self, ps_id, pkg):
-        pkg_id = (ps_id, pkg)
+    def _arch(self, psid, pkg):
+        pkg_id = (psid, pkg)
         arch = self._specs[pkg_id].architecture
         if not arch:
             arch = spack.spec.ArchSpec()
             self._specs[pkg_id].architecture = arch
         return arch
 
-    def node_platform(self, ps_id, pkg, platform):
-        self._arch(ps_id, pkg).platform = platform
+    def node_platform(self, psid, pkg, platform):
+        self._arch(psid, pkg).platform = platform
 
-    def node_os(self, ps_id, pkg, os):
-        self._arch(ps_id, pkg).os = os
+    def node_os(self, psid, pkg, os):
+        self._arch(psid, pkg).os = os
 
-    def node_target(self, ps_id, pkg, target):
-        self._arch(ps_id, pkg).target = target
+    def node_target(self, psid, pkg, target):
+        self._arch(psid, pkg).target = target
 
-    def variant_value(self, ps_id, pkg, name, value):
-        pkg_id = (ps_id, pkg)
+    def variant_value(self, psid, pkg, name, value):
+        pkg_id = (psid, pkg)
         # FIXME: is there a way not to special case 'dev_path' everywhere?
         if name == 'dev_path':
             self._specs[pkg_id].variants.setdefault(
@@ -1963,40 +1963,40 @@ class SpecBuilder(object):
 
         self._specs[pkg_id].update_variant_validate(name, value)
 
-    def version(self, ps_id, pkg, version):
-        pkg_id = (ps_id, pkg)
+    def version(self, psid, pkg, version):
+        pkg_id = (psid, pkg)
         self._specs[pkg_id].versions = spack.version.ver([version])
 
-    def node_compiler(self, ps_id, pkg, compiler):
-        pkg_id = (ps_id, pkg)
+    def node_compiler(self, psid, pkg, compiler):
+        pkg_id = (psid, pkg)
         self._specs[pkg_id].compiler = spack.spec.CompilerSpec(compiler)
 
-    def node_compiler_version(self, ps_id, pkg, compiler, version):
-        pkg_id = (ps_id, pkg)
+    def node_compiler_version(self, psid, pkg, compiler, version):
+        pkg_id = (psid, pkg)
         self._specs[pkg_id].compiler.versions = spack.version.VersionList(
             [version])
 
-    def node_flag_compiler_default(self, ps_id, pkg):
-        pkg_id = (ps_id, pkg)
+    def node_flag_compiler_default(self, psid, pkg):
+        pkg_id = (psid, pkg)
         self._flag_compiler_defaults.add(pkg_id)
 
-    def node_flag(self, ps_id, pkg, flag_type, flag):
-        pkg_id = (ps_id, pkg)
+    def node_flag(self, psid, pkg, flag_type, flag):
+        pkg_id = (psid, pkg)
         self._specs[pkg_id].compiler_flags.setdefault(flag_type, []).append(flag)
 
-    def node_flag_source(self, ps_id, pkg, source):
-        pkg_id = (ps_id, pkg)
+    def node_flag_source(self, psid, pkg, source):
+        pkg_id = (psid, pkg)
         self._flag_sources[pkg_id].add(source)
 
-    def no_flags(self, ps_id, pkg, flag_type):
-        pkg_id = (ps_id, pkg)
+    def no_flags(self, psid, pkg, flag_type):
+        pkg_id = (psid, pkg)
         self._specs[pkg_id].compiler_flags[flag_type] = []
 
-    def external_spec_selected(self, ps_id, pkg, idx):
+    def external_spec_selected(self, psid, pkg, idx):
         """This means that the external spec and index idx
         has been selected for this package.
         """
-        pkg_id = (ps_id, pkg)
+        pkg_id = (psid, pkg)
         packages_yaml = spack.config.get('packages')
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         spec_info = packages_yaml[pkg]['externals'][int(idx)]
@@ -2008,11 +2008,11 @@ class SpecBuilder(object):
             'extra_attributes', {}
         )
 
-    def depends_on(self, ps_id, pkg, dep, type):
-        pkg_id = (ps_id, pkg)
+    def depends_on(self, psid, pkg, dep, type):
+        pkg_id = (psid, pkg)
         dependency = self._specs[pkg_id]._dependencies.get(dep)
         if not dependency:
-            dep_id = (ps_id, dep)
+            dep_id = (psid, dep)
             self._specs[pkg_id]._add_dependency(
                 self._specs[dep_id], (type,))
         else:
@@ -2067,7 +2067,7 @@ class SpecBuilder(object):
             check_same_flags(spec.compiler_flags, flags)
             spec.compiler_flags.update(flags)
 
-    def deprecated(self, ps_id, pkg, version):
+    def deprecated(self, psid, pkg, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
         tty.warn(msg.format(pkg, version))
 
@@ -2098,14 +2098,14 @@ class SpecBuilder(object):
 
             # ignore predicates on virtual packages, as they're used for
             # solving but don't construct anything
-            ps_id = args[0]
+            psid = args[0]
             pkg = args[1]
             if spack.repo.path.is_virtual(pkg):
                 continue
 
             # if we've already gotten a concrete spec for this pkg,
             # do not bother calling actions on it.
-            spec = self._specs.get((ps_id, pkg))
+            spec = self._specs.get((psid, pkg))
             if spec and spec.concrete:
                 continue
 
