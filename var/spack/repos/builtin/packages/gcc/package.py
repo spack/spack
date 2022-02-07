@@ -277,6 +277,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.0:4.9.3')
 
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=92061
+        patch('darwin/clang13.patch', when='@:11.1 %apple-clang@13')
+
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.3,5:5.3')
 
