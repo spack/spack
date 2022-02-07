@@ -72,41 +72,52 @@ def topological_sort(spec, deptype='all'):
     """
     deptype = spack.dependency.canonical_deptype(deptype)
 
-    # Work on a copy so this is nondestructive.
+    # Work on a copy so this is nondestructive
     spec = spec.copy(deps=True)
     nodes = spec.index(deptype=deptype)
 
     def dependencies(specs):
+        """Return all the dependencies (including transitive) for a spec."""
         return list(set(itertools.chain.from_iterable(
             s.dependencies(deptype=deptype) for s in specs
         )))
 
     def dependents(specs):
+        """Return all the dependents (including those of transitive dependencies)
+        for a spec.
+        """
         candidates = list(set(itertools.chain.from_iterable(
             s.dependents(deptype=deptype) for s in specs
         )))
         return [x for x in candidates if x.name in nodes]
 
     topological_order, children = [], {}
+
+    # Map a spec encoded as (id, name) to a list of its transitive dependencies
     for spec in itertools.chain.from_iterable(nodes.values()):
         children[(id(spec), spec.name)] = [
             x for x in dependencies([spec]) if x.name in nodes
         ]
 
-    remaining = [
+    # To return a result that is topologically ordered we need to add nodes
+    # only after their dependencies. The first nodes we can add are leaf nodes,
+    # i.e. nodes that have no dependencies.
+    ready = [
         spec for spec in itertools.chain.from_iterable(nodes.values())
         if not dependencies([spec])
     ]
-    heapq.heapify(remaining)
+    heapq.heapify(ready)
 
-    while remaining:
-        s = heapq.heappop(remaining)
+    while ready:
+        # Pop a "ready" node and add it to the topologically ordered list
+        s = heapq.heappop(ready)
         topological_order.append(s)
 
+        # Check if adding the last node made other nodes "ready"
         for dep in dependents([s]):
             children[(id(dep), dep.name)].remove(s)
             if not children[(id(dep), dep.name)]:
-                heapq.heappush(remaining, dep)
+                heapq.heappush(ready, dep)
 
     return topological_order
 
