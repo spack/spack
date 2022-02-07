@@ -55,6 +55,7 @@ class Eccodes(CMakePackage):
     version('2.5.0', sha256='18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e')
     version('2.2.0', sha256='1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3')
 
+    variant('tools', default=False, description='Build the command line tools')
     variant('netcdf', default=False,
             description='Enable GRIB to NetCDF conversion tool')
     variant('jp2k', default='openjpeg', values=('openjpeg', 'jasper', 'none'),
@@ -111,6 +112,14 @@ class Eccodes(CMakePackage):
 
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
+
+    conflicts('+netcdf', when='~tools',
+              msg='Cannot enable the NetCDF conversion tool '
+                  'when the command line tools are disabled')
+
+    conflicts('~tools', when='@:2.18.0',
+              msg='The command line tools can be disabled '
+                  'only starting version 2.19.0')
 
     for center, definitions in _definitions.items():
         kwargs = definitions.get('conflicts', None)
@@ -271,6 +280,7 @@ class Eccodes(CMakePackage):
         jp2k = self.spec.variants['jp2k'].value
 
         args = [
+            self.define_from_variant('ENABLE_BUILD_TOOLS', 'tools'),
             self.define_from_variant('ENABLE_NETCDF', 'netcdf'),
             self.define('ENABLE_JPG', jp2k != 'none'),
             self.define('ENABLE_JPG_LIBJASPER', jp2k == 'jasper'),
