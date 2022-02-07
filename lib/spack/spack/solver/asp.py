@@ -99,6 +99,7 @@ DeclaredVersion = collections.namedtuple(
     'DeclaredVersion', ['version', 'idx', 'origin']
 )
 
+
 # Class for negating version ranges
 # This allows us to sort ascending by inverse version order
 class _InvertedVersion(object):
