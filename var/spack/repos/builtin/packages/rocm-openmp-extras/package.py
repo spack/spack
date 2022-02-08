@@ -140,7 +140,7 @@ class RocmOpenmpExtras(Package):
 
     resource(
         name='llvm-project',
-        git='https://github.com/llvm/llvm-project.git',
+        git='https://github.com/RadeonOpenCompute/llvm-project',
         branch='amd-stg-open',
         destination='rocm-openmp-extras',
         placement='llvm-project',
