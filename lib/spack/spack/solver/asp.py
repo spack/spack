@@ -1187,16 +1187,8 @@ class SpackSolverSetup(object):
             return
 
         preferred = preferred_targets[0]
-
-        if self.gen.multi_root:
-            for idx in range(len(self.specs)):
-                self.gen.fact(fn.package_target_weight(
-                    idx, str(preferred.architecture.target), pkg_name, -30))
-        else:
-            # Only one process space for a single root, use 0
-            self.gen.fact(fn.package_target_weight(
-                0, str(preferred.architecture.target), pkg_name, -30
-            ))
+        self.gen.fact(fn.package_target_weight(
+            str(preferred.architecture.target), pkg_name, -30))
 
     def flag_defaults(self):
         self.gen.h2("Compiler flag defaults")
