@@ -41,7 +41,8 @@ def activate_header(env, shell, prompt=None):
         if 'color' in os.getenv('TERM', '') and prompt:
             import re
             prompt = colorize('@G{%s}' % prompt, color=True)
-            prompt = re.sub(r'(\033)([^m]+m)(.*)(\033)([^m]+m)', r'\[\\033\2\]\3\[\\033\5\]', prompt)
+            prompt = re.sub(r'(\033)([^m]+m)(.*)(\033)([^m]+m)', \
+                            r'\[\\033\2\]\3\[\\033\5\]', prompt)
 
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
