@@ -16,6 +16,7 @@ class Coral(CMakePackage):
 
     tags = ['hep']
 
+    version('3.3.10', tag='CORAL_3_3_10')
     version('3.3.3', tag='CORAL_3_3_3')
     variant('binary_tag', default='auto')
 
