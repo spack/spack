@@ -156,9 +156,11 @@ class Caliper(CMakePackage, CudaPackage):
 
         test_dir = self.test_suite.current_test_cache_dir.examples.apps
         exe = 'cxx-example'
+        source_file = 'cxx-example.cpp'
 
-        if not os.path.isfile(join_path(test_dir, exe)):
-            tty.warn('Skipping caliper test: {0} does not exist'.format(exe))
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn('Skipping caliper test:
+                      {0} does not exist'.format(source_file))
             return
 
         if os.path.exists(self.prefix.lib):
@@ -169,7 +171,7 @@ class Caliper(CMakePackage, CudaPackage):
         self.run_test(exe=os.environ['CXX'],
                       options=['-L{0}'.format(lib_dir),
                                '-I{0}'.format(self.prefix.include),
-                               '{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
+                               '{0}'.format(join_path(test_dir, source_file)),
                                '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++'],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
