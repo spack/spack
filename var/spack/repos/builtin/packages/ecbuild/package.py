@@ -20,7 +20,8 @@ class Ecbuild(CMakePackage):
     # Some of the tests (ECBUILD-415 and test_ecbuild_regex_escape) fail with
     # cmake@2.20.0 and it is not yet clear why. For now, we simply limit the
     # version of cmake to the latest '3.19.x':
-    depends_on('cmake@3.11:3.19', type=('build', 'run'))
+    # depends_on('cmake@3.11:3.19', type=('build', 'run'))
+    depends_on('cmake@3.11:', type=('build', 'run'))
 
     # Some of the installed scripts require running Perl:
     depends_on('perl', type=('build', 'run'))
