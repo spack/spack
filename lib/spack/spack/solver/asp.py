@@ -1012,7 +1012,6 @@ class SpackSolverSetup(object):
 
         return condition_id
 
-
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
         # impose clauses are abstract, do not require psid
         imposed_constraints = self.spec_clauses(
