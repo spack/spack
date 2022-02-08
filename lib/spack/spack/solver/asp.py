@@ -241,11 +241,17 @@ def _id(thing):
         return '"%s"' % str(thing)
 
 
+# To avoid duplicate code paths for spec_clauses calls that do/don't require psid
+# we have the no_psid object. Any AspFunction created with psid set to `no_psid` will
+# strip that argument from its args.
+no_psid = object()
+
+
 @llnl.util.lang.key_ordering
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = () if args is None else args
+        self.args = () if args is None else tuple(a for a in args if a is not no_psid)
 
     def _cmp_key(self):
         return (self.name, self.args)
@@ -991,14 +997,12 @@ class SpackSolverSetup(object):
         self.gen.fact(fn.condition(condition_id))
 
         # requirements trigger the condition
-        # index does not matter, its simply a required argument to generate clauses
+        # condition_requirement clause are abstract, do not require psid
         requirements = self.spec_clauses(
-            -1, named_cond, body=True, required_from=name)
+            no_psid, named_cond, body=True, required_from=name)
         for pred in requirements:
-            # condition_requirement clause are abstract, remove process space id
-            args_no_psid = pred.args[1:]
             self.gen.fact(
-                fn.condition_requirement(condition_id, pred.name, *args_no_psid)
+                fn.condition_requirement(condition_id, pred.name, *pred.args)
             )
 
         if imposed_spec:
@@ -1006,20 +1010,17 @@ class SpackSolverSetup(object):
 
         return condition_id
 
+
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
-        # idx does not matter, just needed to generate clauses
-        # it would be much more complicated to generate clauses with/without
-        # process space ids
+        # impose clauses are abstract, do not require psid
         imposed_constraints = self.spec_clauses(
-            -1, imposed_spec, body=body, required_from=name)
+            no_psid, imposed_spec, body=body, required_from=name)
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if not node and pred.name in ("node", "virtual_node"):
                 continue
-            # imposed constraints are abstract, remove concrete root id
-            args_no_psid = pred.args[1:]
             self.gen.fact(
-                fn.imposed_constraint(condition_id, pred.name, *args_no_psid)
+                fn.imposed_constraint(condition_id, pred.name, *pred.args)
             )
 
     def package_provider_rules(self, pkg):
