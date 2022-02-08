@@ -68,9 +68,10 @@ def compare_specs(a, b, to_string=False, color=None):
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
-    # psid index doesn't matter
-    a_facts = set(t for t in setup.spec_clauses(0, a, body=True, expand_hashes=True))
-    b_facts = set(t for t in setup.spec_clauses(0, b, body=True, expand_hashes=True))
+    # psid doesn't matter because we're just comparing the clauses
+    # tell asp to generate clauses without psids
+    a_facts = set(t for t in setup.spec_clauses(asp.no_psid, a, body=True, expand_hashes=True))
+    b_facts = set(t for t in setup.spec_clauses(asp.no_psid, b, body=True, expand_hashes=True))
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))
