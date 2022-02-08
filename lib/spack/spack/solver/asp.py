@@ -604,10 +604,10 @@ class PyclingoDriver(object):
             self.backend = backend
             solver_setup.setup(self, specs_by_psid, tests=tests, reuse=reuse)
 
-            strings = []
+            dynamic_minimization_criteria = []
             for i, pkg in enumerate(sorted(set(solver_setup.possible_pkgs))):
                 priority = high_fixed_priority_offset + i
-                strings.extend([
+                dynamic_minimization_criteria.extend([
                     template_pkg_opt.format(priority, pkg),
                     template_pkg_null.format(priority),
                     template_pkg_present.format(priority, pkg)
@@ -615,19 +615,19 @@ class PyclingoDriver(object):
             virtual_offset = len(set(solver_setup.possible_pkgs))
             for i, virt in enumerate(sorted(set(solver_setup.possible_virtuals))):
                 priority = high_fixed_priority_offset + i + virtual_offset
-                strings.extend([
+                dynamic_minimization_criteria.extend([
                     template_virtual_opt.format(priority, virt),
                     template_virtual_null.format(priority),
                     template_virtual_present.format(priority, virt)
                 ])
             self.h1("Per-package minimization of unique nodes")
-            self.out.write('\n'.join(strings))
+            self.out.write('\n'.join(dynamic_minimization_criteria))
             self.newline()
 
             tmpdir = tempfile.mkdtemp()
             tmpfile = os.path.join(tmpdir, 'tmp.lp')
             with open(tmpfile, 'w') as f:
-                f.write('\n'.join(strings))
+                f.write('\n'.join(dynamic_minimization_criteria))
             self.control.load(tmpfile)
 
         timer.phase("setup")
