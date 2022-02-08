@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 import platform as py_platform
 
 from spack.util.executable import Executable
@@ -16,6 +17,17 @@ def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
     return Version(py_platform.mac_ver()[0])
+
+
+def macos_cltools_version():
+    pkgutil = Executable('pkgutil')
+    output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
+                     output=str, error=str, fail_on_error=False)
+    match = re.search(r'version:\s*([0-9.]+)', output)
+    if match:
+        return Version(match.group(1))
+
+    return None
 
 
 def macos_sdk_path():
