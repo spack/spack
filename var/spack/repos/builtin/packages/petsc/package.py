@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from llnl.util import tty
+
 
 class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
@@ -662,33 +664,34 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'ksp', 'ksp', 'tutorials')
         skip_test = 'Skipping petsc test:'
-        makefile_dir = join_path(self.prefix.share.petsc, 'Makefile.user')
+        makefile_dir = join_path(w_dir, 'makefile')
 
         if os.path.isfile(join_path(w_dir, 'ex50.c')):
             self.run_ex50_test(runexe, runopt, w_dir, makefile_dir)
         else:
-            print('{0} KSP tutorial example ex50 is missing'
+            tty.warn('{0} KSP tutorial example ex50 is missing'
                   .format(skip_test))
 
         if os.path.isfile(join_path(w_dir, 'ex7.c')):
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir, makefile_dir)
             else:
-                print('{0} KSP tutorial example ex7 requires +cuda'
+                tty.msg('{0} KSP tutorial example ex7 requires +cuda'
                       .format(skip_test))
         else:
-            print('{0} KSP tutorial example ex7 is missing'
+            tty.warn('{0} KSP tutorial example ex7 is missing'
                   .format(skip_test))
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
+        makefile_dir = join_path(w_dir, 'makefile')
 
         if os.path.isfile(join_path(w_dir, 'ex3k.kokkos.cxx')):
             if '+kokkos' in self.spec:
                 self.run_ex3k_test(runexe, runopt, w_dir, makefile_dir)
             else:
-                print('{0} SNES tutorial example ex3k requires +kokkos'
+                tty.msg('{0} SNES tutorial example ex3k requires +kokkos'
                       .format(skip_test))
         else:
-            print('{0} SNES tutorial example ex3k.kokkos is missing'
+            tty.warn('{0} SNES tutorial example ex3k.kokkos is missing'
                   .format(skip_test))
