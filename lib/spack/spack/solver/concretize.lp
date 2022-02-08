@@ -873,7 +873,13 @@ representative(PSID, Package)
 
 representative_virtual(PSID, Virtual)
   :- virtual_node(PSID, Virtual),
-     virtual_not_equal(_, PSID, Virtual).
+     not virtual_equal(_, PSID, Virtual).
+
+% Virtual representative may be a concrete root that provides the virtual
+representative_virtual(PSID, Virtual):
+  :- node(PSID, Provider),
+     possible_provider(Provider, Virtual),
+     not virtual_equal(_, PSID, Virtual).
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
@@ -925,12 +931,16 @@ package_not_equal(PSID1, PSID2, Package)
 
 % Do not tie this to whether the virtual node exists
 % because we want `mpi` and `mpich` to co-concretize
+virtual_equal(PSID1, PSID2, Virtual)
+ :- node(PSID1, Provider), node(PSID2, Provider),
+    possible_provider(Provider, Virtual),
+    package_equal(PSID1, PSID2, Provider).
+
 virtual_not_equal(PSID1, PSID2, Virtual)
  :- node(PSID1, Provider1), node(PSID2, Provider2),
     possible_provider(Provider1, Virtual),
     possible_provider(Provider2, Virtual),
-    PSID1 < PSID2,
-    Provider1 != Provider2.
+    not virtual_equal(PSID1, PSID2, Virtual).
 
 equality_attr("hash").
 equality_attr("depends_on").
