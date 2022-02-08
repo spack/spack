@@ -159,7 +159,7 @@ class Caliper(CMakePackage, CudaPackage):
         source_file = 'cxx-example.cpp'
 
         if not os.path.isfile(join_path(test_dir, source_file)):
-            tty.warn('Skipping caliper test:'\
+            tty.warn('Skipping caliper test:'
                      '{0} does not exist'.format(source_file))
             return
 
