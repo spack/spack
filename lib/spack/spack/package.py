@@ -1939,6 +1939,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
+    @contextlib.contextmanager
+    def _setup_test(self):
+        tty.debug('Initializing stand-alone test tracking')
+        self.test_failures = []
+        if self.test_suite:
+            self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
+            self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
+        else:
+            self.test_log_file = fsys.join_path(
+                self.stage.path, _spack_install_test_log)
+        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+        yield
+
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
@@ -1950,19 +1963,21 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        # Clear test failures
-        self.test_failures = []
-        self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
-        self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
-        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+        if self.spec.external and not externals:
+            with open(self.test_log_file, 'w') as ofd:
+                ofd.write('Testing package {0}\n'
+                          .format(self.test_suite.test_pkg_id(self.spec)))
+            return
 
-        kwargs = {
-            'dirty': dirty, 'fake': False, 'context': 'test',
-            'externals': externals
-        }
-        if tty.is_verbose():
-            kwargs['verbose'] = True
-        spack.build_environment.start_build_process(self, test_process, kwargs)
+        with self._setup_test():
+            kwargs = {
+                'dirty': dirty, 'fake': False, 'context': 'test',
+                'externals': externals
+            }
+            if tty.is_verbose():
+                kwargs['verbose'] = True
+            spack.build_environment.start_build_process(
+                self, test_process, kwargs)
 
     def test(self):
         # Defer tests to virtual and concrete packages
@@ -2738,38 +2753,35 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return
 
         # Ensure capture of output for tests that use run_test
-        self.test_failures = []
-        self.test_log_file = fsys.join_path(
-            self.stage.path, _spack_install_test_log)
-        fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+        with self._setup_test():
+            # Log running install-time tests to the build log
+            tty.msg('Running install-time tests')
 
-        # Log running install-time tests to the build log
-        tty.msg('Running install-time tests')
+            # Switch to the test log for logging test details
+            with tty.log.log_output(self.test_log_file):
+                # use debug print levels for log file to record commands
+                tty.set_debug(True)
 
-        # Switch to the test log for logging test details
-        with tty.log.log_output(self.test_log_file):
-            # use debug print levels for log file to record commands
-            tty.set_debug(True)
-
-            for name in self.install_time_test_callbacks:
-                try:
-                    fn = getattr(self, name)
-                except AttributeError:
-                    msg = 'RUN-TESTS: method not implemented [{0}]'
-                    tty.warn(msg.format(name))
-                else:
-                    tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                for name in self.install_time_test_callbacks:
                     try:
-                        fn()
-                    except BaseException as exc:
-                        self.test_failures.append((exc, str(exc)))
+                        fn = getattr(self, name)
+                    except AttributeError:
+                        msg = 'RUN-TESTS: method not implemented [{0}]'
+                        tty.warn(msg.format(name))
+                    else:
+                        tty.msg('RUN-TESTS: install-time tests [{0}]'
+                                .format(name))
+                        try:
+                            fn()
+                        except BaseException as exc:
+                            self.test_failures.append((exc, str(exc)))
 
-        # raise any collected failures here
-        if self.test_failures:
-            # Make sure the build log also contains the failure(s)
-            for _, msg in self.test_failures:
-                tty.msg(msg)
-            raise TestFailure(self.test_failures)
+            # raise any collected failures here
+            if self.test_failures:
+                # Make sure the build log also contains the failure(s)
+                for _, msg in self.test_failures:
+                    tty.msg(msg)
+                raise TestFailure(self.test_failures)
 
 
 def has_test_method(pkg):
