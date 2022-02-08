@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
 import platform as py_platform
+import re
 
 from spack.util.executable import Executable
 from spack.version import Version

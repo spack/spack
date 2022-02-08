@@ -15,7 +15,6 @@ import os
 import re
 from contextlib import contextmanager
 
-from llnl.util import tty
 from llnl.util.lang import match_predicate
 
 from spack import *

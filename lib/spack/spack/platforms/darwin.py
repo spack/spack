@@ -61,4 +61,3 @@ class Darwin(Platform):
 
         os = self.operating_sys[pkg.spec.os]
         env.set('MACOSX_DEPLOYMENT_TARGET', str(os.version))
-
