@@ -32,6 +32,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=True, description='Build with OpenMP support.')
     variant('shared', default=True, description='Build shared library')
 
+    # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
+    depends_on('cmake', type='run')
+
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('blaspp ~cuda', when='~cuda')
@@ -72,16 +75,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
 
-    def keystore(self, key, value=None):
-        """Set and get key/value pairs"""
-        filestore = join_path(self.install_test_root, key + '_keystore.txt')
-        if value is None:
-            with open(filestore, 'r') as in_file:
-                return in_file.read().strip()
-        else:
-            with open(filestore, 'w') as out_file:
-                out_file.write('{0}\n'.format(value))
-
     @run_after('install')
     def cache_test_sources(self):
         if self.spec.satisfies('@2020.10.00'):
@@ -89,12 +82,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(['examples'])
-        """The keystore() hack will be unnecessary once specs are properly
-        exposed to the stand-alone test framework."""
-        self.keystore('cmake', join_path(self.spec['cmake'].prefix.bin, 'cmake'))
-        self.keystore('mpi', self.spec['mpi'].prefix)
-        self.keystore('blaspp', self.spec['blaspp'].prefix)
-        self.keystore('lapackpp', self.spec['lapackpp'].prefix)
 
     def test(self):
         if self.spec.satisfies('@2020.10.00') or '+mpi' not in self.spec:
@@ -104,15 +91,15 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              'examples', 'build')
         with working_dir(test_dir, create=True):
-            cmake_bin = self.keystore('cmake')
-            prefixes = ';'.join([self.keystore('blaspp'),
-                                 self.keystore('lapackpp'),
-                                 self.keystore('mpi'),
+            cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+            prefixes = ';'.join([self.spec['blaspp'].prefix,
+                                 self.spec['lapackpp'].prefix,
+                                 self.spec['mpi'].prefix,
                                  ])
             self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH=' + prefixes, '..'])
             make()
             test_args = ['-n', '4', './ex05_blas']
-            mpi_path = join_path(self.keystore('mpi'), 'bin')
+            mpi_path = self.spec['mpi'].prefix.bin
             mpiexe_f = which('srun', 'mpirun', 'mpiexec', path=mpi_path)
             self.run_test(mpiexe_f.command, test_args,
                           purpose='SLATE smoke test')
