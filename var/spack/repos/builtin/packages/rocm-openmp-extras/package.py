@@ -89,7 +89,7 @@ class RocmOpenmpExtras(Package):
     git = "https://github.com/ROCm-Developer-Tools/aomp.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
-    version('master', branch='aomp-dev')
+    version('master', branch='aomp-epsdb')
     version('4.5.0', sha256=versions_dict['4.5.0']['aomp'])
     version('4.3.1', sha256=versions_dict['4.3.1']['aomp'])
     version('4.3.0', sha256=versions_dict['4.3.0']['aomp'])
@@ -108,6 +108,45 @@ class RocmOpenmpExtras(Package):
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
+    # Master
+    depends_on('hsakmt-roct@master', when='@master')
+    depends_on('comgr@master', when='@master')
+    depends_on('hsa-rocr-dev@master', when='@master')
+    depends_on('llvm-amdgpu@master ~openmp', when='@master')
+
+    resource(
+        name='rocm-device-libs',
+        git='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
+        branch='amd-stg-open',
+        destination='rocm-openmp-extras',
+        placement='rocm-device-libs',
+        when='@master')
+
+    resource(
+        name='flang',
+        git='https://github.com/ROCm-Developer-Tools/flang.git',
+        branch='aomp-epsdb',
+        destination='rocm-openmp-extras',
+        placement='flang',
+        when='@master')
+
+    resource(
+        name='aomp-extras',
+        git='https://github.com/ROCm-Developer-Tools/aomp-extras.git',
+        branch='aomp-epsdb',
+        destination='rocm-openmp-extras',
+        placement='aomp-extras',
+        when='@master')
+
+    resource(
+        name='llvm-project',
+        git='https://github.com/llvm/llvm-project.git',
+        branch='amd-stg-open',
+        destination='rocm-openmp-extras',
+        placement='llvm-project',
+        when='@master')
+    # End master
+
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1',
                 '4.5.0']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
@@ -115,11 +154,6 @@ class RocmOpenmpExtras(Package):
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('llvm-amdgpu@{0} ~openmp'.format(ver),
                    when='@' + ver)
-    if ver == 'master':
-        depends_on('hsakmt-roct@master')
-        depends_on('comgr@master')
-        depends_on('hsa-rocr-dev@master')
-        depends_on('llvm-amdgpu@master ~openmp')
 
         # tag changed to 'rocm-' in 4.0.0
         if ver == '3.9.0' or ver == '3.10.0':
@@ -138,13 +172,6 @@ class RocmOpenmpExtras(Package):
             when='@' + ver)
 
         resource(
-            name='rocm-device-libs',
-            url='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
-            destination='rocm-openmp-extras',
-            placement='rocm-device-libs',
-            when='@master')
-
-        resource(
             name='flang',
             url=tools_url + '/flang/archive/' + tag + ver + '.tar.gz',
             sha256=versions_dict[ver]['flang'],
@@ -152,13 +179,6 @@ class RocmOpenmpExtras(Package):
             destination='rocm-openmp-extras',
             placement='flang',
             when='@' + ver)
-
-        resource(
-            name='flang',
-            url='https://github.com/ROCm-Developer-Tools/flang.git',
-            destination='rocm-openmp-extras',
-            placement='flang',
-            when='@master')
 
         resource(
             name='aomp-extras',
@@ -170,13 +190,6 @@ class RocmOpenmpExtras(Package):
             when='@' + ver)
 
         resource(
-            name='aomp-extras',
-            url='https://github.com/ROCm-Developer-Tools/aomp-extras.git',
-            destination='rocm-openmp-extras',
-            placement='aomp-extras',
-            when='@master')
-
-        resource(
             name='llvm-project',
             url=compute_url + '/llvm-project/archive/rocm-' + ver + '.tar.gz',
             sha256=versions_dict[ver]['llvm'],
@@ -184,13 +197,6 @@ class RocmOpenmpExtras(Package):
             destination='rocm-openmp-extras',
             placement='llvm-project',
             when='@' + ver)
-
-        resource(
-            name='llvm-project',
-            url='https://github.com/llvm/llvm-project.git',
-            destination='rocm-openmp-extras',
-            placement='llvm-project',
-            when='@master')
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec['llvm-amdgpu'].prefix
