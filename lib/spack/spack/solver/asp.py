@@ -18,7 +18,7 @@ from six import string_types
 
 import archspec.cpu
 
-from llnl.util.compat import Sequence
+from llnl.util.compat import Sequence, zip_longest
 
 try:
     import clingo  # type: ignore[import]
@@ -325,8 +325,7 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, specs, asp=None, multi_root=False):
-        self.multi_root = multi_root
+    def __init__(self, specs_by_psid, asp=None):
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
@@ -344,7 +343,7 @@ class Result(object):
         self.criteria = []
 
         # Abstract user requests
-        self.abstract_specs = specs
+        self.abstract_specs_by_psid = specs_by_psid
 
         # Concrete specs
         self._concrete_specs = None
@@ -435,7 +434,7 @@ class Result(object):
         if self.satisfiable:
             return
 
-        constraints = self.abstract_specs
+        constraints = [spec for _, spec in self.abstract_specs_by_psid]
         if len(constraints) == 1:
             constraints = constraints[0]
 
@@ -463,12 +462,7 @@ class Result(object):
         best = min(self.answers)
         opt, _, answer = best
 
-        for psid, input_spec in enumerate(self.abstract_specs):
-            # If everything has to fit in one process space, then only use
-            # process space 0
-            if not self.multi_root:
-                psid = 0
-
+        for psid, input_spec in self.abstract_specs_by_psid:
             key = (str(psid), input_spec.name)
             if input_spec.virtual:
                 providers = [spec.name for key, spec in answer.items()
@@ -590,11 +584,10 @@ class PyclingoDriver(object):
             self.assumptions.append(atom)
 
     def solve(
-            self, solver_setup, specs, dump=None, nmodels=0,
-            timers=False, stats=False, tests=False, reuse=False,
-            multi_root=False
+            self, solver_setup, specs_by_psid, dump=None, nmodels=0,
+            timers=False, stats=False, tests=False, reuse=False
     ):
-        # Spec_list must always be treated in order so PSIDs match up
+        specs = [spec for _, spec in specs_by_psid]
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -607,10 +600,9 @@ class PyclingoDriver(object):
 
         # set up the problem -- this generates facts and rules
         self.assumptions = []
-        self.multi_root = multi_root
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs, tests=tests, reuse=reuse)
+            solver_setup.setup(self, specs_by_psid, tests=tests, reuse=reuse)
 
             strings = []
             for i, pkg in enumerate(sorted(set(solver_setup.possible_pkgs))):
@@ -670,7 +662,7 @@ class PyclingoDriver(object):
         timer.phase("ground")
 
         # With a grounded program, we can run the solve.
-        result = Result(specs, multi_root=multi_root)
+        result = Result(specs_by_psid)
         models = []  # stable models if things go well
         cores = []   # unsatisfiable cores if they do not
 
@@ -735,6 +727,7 @@ class SpackSolverSetup(object):
 
     def __init__(self):
         self.gen = None  # set by setup()
+        self.specs_by_psid = []  # set by setup()
 
         self.declared_versions = {}
         self.possible_versions = {}
@@ -1520,12 +1513,7 @@ class SpackSolverSetup(object):
             ))
 
         # add any targets explicitly mentioned in specs
-        for psid, spec in enumerate(specs):
-            # If we aren't allowing node splits, then we only need a single
-            # process space, use 0
-            if not self.gen.multi_root:
-                psid = 0
-
+        for psid, spec in self.specs_by_psid:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
@@ -1756,7 +1744,7 @@ class SpackSolverSetup(object):
             # TODO: (or any mirror really) doesn't have binaries.
             pass
 
-    def setup(self, driver, specs, tests=False, reuse=False):
+    def setup(self, driver, specs_by_psid, tests=False, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1766,6 +1754,9 @@ class SpackSolverSetup(object):
         Arguments:
             specs (list): list of Specs to solve
         """
+        self.specs_by_psid = specs_by_psid
+        specs = [spec for _, spec in specs_by_psid]
+
         # counter for conditions
         self._condition_id_counter = itertools.count()
 
@@ -1842,12 +1833,7 @@ class SpackSolverSetup(object):
 
         self.gen.h1('Spec Constraints')
 
-        for psid, spec in enumerate(specs):
-            # If we can't split nodes across process spaces, then they all
-            # go to process space 0
-            if not self.gen.multi_root:
-                psid = 0
-
+        for psid, spec in self.specs_by_psid:
             self.gen.h2('Spec: %s' % str(spec))
             self.gen.fact(
                 fn.virtual_root(psid, spec.name) if spec.virtual
@@ -2175,9 +2161,17 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
                 continue
             spack.spec.Spec.ensure_valid_variants(s)
 
+    # Associate specs with psids so we don't have to worry about order later
+    if multi_root:
+        # each spec gets its own psid
+        specs_by_psid = list(enumerate(specs))
+    else:
+        # all specs are given psid 0
+        specs_by_psid = list(zip_longest([0], specs, fillvalue=0))
+
     setup = SpackSolverSetup()
     return driver.solve(
-        setup, specs, dump, models, timers, stats, tests, reuse, multi_root
+        setup, specs_by_psid, dump, models, timers, stats, tests, reuse
     )
 
 
