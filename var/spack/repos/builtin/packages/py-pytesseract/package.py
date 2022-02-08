@@ -19,3 +19,4 @@ class PyPytesseract(PythonPackage):
     depends_on('py-pillow', type=('build', 'run'))
     depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
+    depends_on('pil', type=('build','run'))
