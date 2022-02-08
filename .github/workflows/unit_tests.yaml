@@ -127,6 +127,9 @@ jobs:
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
               pip install --upgrade flake8 isort>=4.3.5 mypy>=0.900 black
           fi
+          if python -c 'import sys; sys.exit(not sys.version_info == (2, 7))'; then
+              pip install --upgrade pathlib2==2.3.6
+          fi
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
