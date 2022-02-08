@@ -266,8 +266,8 @@ class RocmOpenmpExtras(Package):
 
         if self.spec.version >= Version('master'):
             filter_file(
-               '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
-               libomptarget.format(src) + '/libm/CMakeLists.txt')
+                '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
+                libomptarget.format(src) + '/libm/CMakeLists.txt')
 
         filter_file(
             '-nogpulib', '-nogpulib -nogpuinc',
