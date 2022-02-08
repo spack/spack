@@ -1385,7 +1385,7 @@ class TestConcretize(object):
         (['hdf5', 'mpich'], 2),
         (['hdf5^zmpi', 'mpich'], 4),
         (['mpi', 'zmpi'], 2),
-        (['mpi', 'mpich'], 1)
+        (['mpi', 'mpich'], 1),
     ])
     def test_best_effort_coconcretize(mock_packages, specs, expected):
         import spack.solver.asp
@@ -1397,3 +1397,27 @@ class TestConcretize(object):
             concrete_specs.update(s.traverse())
 
         assert len(concrete_specs) == expected
+
+    @pytest.mark.parametrize('specs,expected_spec,occurances', [
+        (['libdwarf@20130729^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20111030'],
+         'libelf@0.8.12', 2),
+        (['hdf5', 'zmpi', 'mpich'], 'mpich', 2)
+    ])
+    def test_best_effort_coconcretize_preferences(
+            mock_packages, specs, expected_spec, occurances):
+        """
+        Test that package preferences are being respected during coconcretization.
+        """
+        import spack.solver.asp
+
+        specs = [spack.spec.Spec(s) for s in specs]
+        result = spack.solver.asp.solve(specs, reuse=False, multi_root=True)
+
+        satisfying_results = []
+        for spec in result.specs:
+            for dep in spec.traverse():
+                if dep.satisfies(expected_spec):
+                    satisfying_results.append(dep)
+        assert len(satisfying_results) == occurances
