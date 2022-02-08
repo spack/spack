@@ -940,7 +940,8 @@ virtual_not_equal(PSID1, PSID2, Virtual)
  :- node(PSID1, Provider1), node(PSID2, Provider2),
     possible_provider(Provider1, Virtual),
     possible_provider(Provider2, Virtual),
-    not virtual_equal(PSID1, PSID2, Virtual).
+    not virtual_equal(PSID1, PSID2, Virtual),
+    PSID1 < PSID2.
 
 equality_attr("hash").
 equality_attr("depends_on").
