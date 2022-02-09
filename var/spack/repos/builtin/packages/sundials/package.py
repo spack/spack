@@ -7,7 +7,7 @@ import os
 import sys
 
 from spack import *
-
+from llnl.util.filesystem import copy_tree
 
 class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
@@ -24,6 +24,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.1.0', sha256='eea49f52140640e54931c779e73aece65f34efa996a26b2263db6a1e27d0901c')
     version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
     version('5.7.0', sha256='48da7baa8152ddb22aed1b02d82d1dbb4fbfea22acf67634011aa0303a100a43')
@@ -132,7 +133,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             description='Use generic (std-c) math libraries on unix systems')
 
     # Monitoring
-    variant('monitoring', default=False,
+    variant('monitoring', default=False, when='@5.5.0:',
             description='Build with simulation monitoring capabilities')
 
     # Profiling
@@ -152,7 +153,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
     conflicts('+trilinos',      when='@:4.1.0')
-    conflicts('+monitoring',    when='@:5.5.0')
     conflicts('+rocm',          when='@:5.6.0')
 
     # External libraries incompatible with 64-bit indices
@@ -321,9 +321,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             args.append('-DCUDA_ENABLE=ON')
             archs = spec.variants['cuda_arch'].value
-            if archs != 'none':
+            if archs[0] != 'none':
                 arch_str = ",".join(archs)
-            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+                args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
         else:
             args.append('-DCUDA_ENABLE=OFF')
 
@@ -337,9 +337,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 '-DROCM_PATH=%s' % spec['llvm-amdgpu'].prefix
             ])
             archs = spec.variants['amdgpu_target'].value
-            if archs != 'none':
+            if archs[0] != 'none':
                 arch_str = ",".join(archs)
-            args.append('-DAMDGPU_TARGETS=%s' % arch_str)
+                args.append('-DAMDGPU_TARGETS=%s' % arch_str)
         else:
             args.append('-DENABLE_HIP=OFF')
 
@@ -682,51 +682,65 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(self.build_directory):
             make("test_install")
 
-    @run_after('install')
-    def setup_build_tests(self):
-        """Copy the build test files after the package is installed to a
-        relative install test subdirectory for use during `spack test run`."""
-        # Now copy the relative files
-        self.cache_extra_test_sources(self.build_relpath)
+    @property
+    def _smoke_tests(self):
+        smoke_tests = [('nvector/serial/test_nvector_serial', ['10', '0'],
+                        'Test serial N_Vector')]
+        if '+CVODE' in self.spec:
+            smoke_tests.append(('cvode/serial/cvAdvDiff_bnd', [],
+                                'Test CVODE'))
 
-        # Ensure the path exists since relying on a relative path at the
-        # same level as the normal stage source path.
-        mkdirp(self.install_test_root)
+        if '+cuda' in self.spec:
+            smoke_tests.append(('nvector/cuda/test_nvector_cuda', ['10', '0', '0'],
+                                'Test CUDA N_Vector'))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/cuda/cvAdvDiff_kry_cuda', [],
+                                    'Test CVODE with CUDA'))
+
+        if '+hip' in self.spec:
+            smoke_tests.append(('nvector/hip/test_nvector_hip', ['10', '0', '0'],
+                                'Test HIP N_Vector'))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/hip/cvAdvDiff_kry_hip', [],
+                                    'Test CVODE with HIP'))
+
+        if '+sycl' in self.spec:
+            smoke_tests.append(('nvector/sycl/test_nvector_sycl', ['10', '0', '0'],
+                                'Test SYCL N_Vector'))
+            if '+CVODE' in self.spec:
+                smoke_tests.append(('cvode/sycl/cvAdvDiff_kry_sycl', [],
+                                    'Test CVODE with SYCL'))
+
+        return smoke_tests
 
     @property
-    def build_relpath(self):
-        """Relative path to the cmake build subdirectory."""
-        return join_path('..', self.build_dirname)
+    def _smoke_tests_path(self):
+        # examples/smoke-tests are cached for testing
+        return self.prefix.examples
 
-    @property
-    def _extra_tests_path(self):
-        return join_path(self.install_test_root, self.build_relpath)
+    def build_smoke_tests(self):
+        for smoke_test in self._smoke_tests:
+            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            with working_dir(work_dir):
+                # if we use cmake, then need to make a build dir first
+                # cmake()
+                make()
+
+    def run_smoke_tests(self):
+        for smoke_test in self._smoke_tests:
+            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            self.run_test(exe=join_path(self._smoke_tests_path, smoke_test[0]),
+                          options=smoke_test[1], status=[0], installed=True,
+                          skip_missing=True, purpose=smoke_test[2])
+
+    def clean_smoke_tests(self):
+        for smoke_test in self._smoke_tests:
+            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            with working_dir(work_dir):
+                make('clean')
 
     def test(self):
-        """Run the smoke tests."""
-        if '+examples' not in self.spec:
-            print('Smoke tests were skipped: install with examples enabled')
-        return
-
-        self.run_test('examples/nvector/serial/test_nvector_serial',
-                      options=['10', '0'],
-                      work_dir=self._extra_tests_path)
-        if '+cuda' in self.spec:
-            self.run_test('examples/cvode/cuda/cvAdvDiff_ky_cuda',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/cuda/test_nvector_cuda',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
-        if '+rocm' in self.spec:
-            self.run_test('examples/cvode/hip/cvAdvDiff_kry_hip',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/hip/test_nvector_hip',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
-        if '+sycl' in self.spec:
-            self.run_test('examples/cvode/CXX_sycl/cvAdvDiff_kry_sycl',
-                          work_dir=self._extra_tests_path)
-            self.run_test('examples/nvector/sycl/test_nvector_sycl',
-                          options=['10', '0', '0'],
-                          work_dir=self._extra_tests_path)
+        self.build_smoke_tests()
+        self.run_smoke_tests()
+        self.clean_smoke_tests()
         return
