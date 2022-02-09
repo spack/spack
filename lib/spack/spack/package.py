@@ -1946,11 +1946,31 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.test_suite:
             self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
             self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
+            pkg_id = self.test_suite.test_pkg_id(self.spec)
         else:
             self.test_log_file = fsys.join_path(
                 self.stage.path, _spack_install_test_log)
+            pkg_id = self.spec.format('{name}-{version}-{hash:7}')
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
-        yield
+
+        with tty.log.log_output(self.test_log_file) as logger:
+            with logger.force_echo():
+                tty.msg('Testing package {0}'.format(pkg_id))
+
+            # use debug print levels for log file to record commands
+            old_debug = tty.is_debug()
+            tty.set_debug(True)
+
+            try:
+                yield
+
+                # If we collected errors, raise them in batch here
+                if self.test_failures:
+                    raise TestFailure(self.test_failures)
+
+            finally:
+                # reset debug level
+                tty.set_debug(old_debug)
 
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
@@ -2752,36 +2772,28 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.install_time_test_callbacks is None:
             return
 
+        # Log running install-time tests to the build log
+        tty.msg('Running install-time tests')
+
         # Ensure capture of output for tests that use run_test
         with self._setup_test():
-            # Log running install-time tests to the build log
-            tty.msg('Running install-time tests')
-
-            # Switch to the test log for logging test details
-            with tty.log.log_output(self.test_log_file):
-                # use debug print levels for log file to record commands
-                tty.set_debug(True)
-
-                for name in self.install_time_test_callbacks:
+            for name in self.install_time_test_callbacks:
+                try:
+                    fn = getattr(self, name)
+                except AttributeError:
+                    msg = 'RUN-TESTS: method not implemented [{0}]'
+                    tty.warn(msg.format(name))
+                else:
+                    tty.msg('RUN-TESTS: install-time tests [{0}]'
+                            .format(name))
                     try:
-                        fn = getattr(self, name)
-                    except AttributeError:
-                        msg = 'RUN-TESTS: method not implemented [{0}]'
-                        tty.warn(msg.format(name))
-                    else:
-                        tty.msg('RUN-TESTS: install-time tests [{0}]'
-                                .format(name))
-                        try:
-                            fn()
-                        except BaseException as exc:
-                            self.test_failures.append((exc, str(exc)))
+                        fn()
+                    except BaseException as exc:
+                        self.test_failures.append((exc, str(exc)))
 
-            # raise any collected failures here
-            if self.test_failures:
-                # Make sure the build log also contains the failure(s)
-                for _, msg in self.test_failures:
-                    tty.msg(msg)
-                raise TestFailure(self.test_failures)
+        # Make sure the build log contains the failure(s)
+        for _, msg in self.test_failures:
+            tty.msg(msg)
 
 
 def has_test_method(pkg):
@@ -2812,21 +2824,7 @@ def print_test_message(logger, msg, verbose):
 
 
 def test_process(pkg, kwargs):
-    verbose = kwargs.get('verbose', False)
-    externals = kwargs.get('externals', False)
-    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
-        with logger.force_echo():
-            tty.msg('Testing package {0}'
-                    .format(pkg.test_suite.test_pkg_id(pkg.spec)))
-
-        if pkg.spec.external and not externals:
-            print_test_message(logger, 'Skipped external package', verbose)
-            return
-
-        # use debug print levels for log file to record commands
-        old_debug = tty.is_debug()
-        tty.set_debug(True)
-
+    with pkg._setup_test():
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
         v_names = list(set([vspec.name
@@ -2845,8 +2843,7 @@ def test_process(pkg, kwargs):
 
         ran_actual_test_function = False
         try:
-            with fsys.working_dir(
-                    pkg.test_suite.test_dir_for_spec(pkg.spec)):
+            with fsys.working_dir(pkg.test_suite.test_dir_for_spec(pkg.spec)):
                 for spec in test_specs:
                     pkg.test_suite.current_test_spec = spec
                     # Fail gracefully if a virtual has no package/tests
@@ -2890,15 +2887,7 @@ def test_process(pkg, kwargs):
                     ran_actual_test_function = True
                     test_fn(pkg)
 
-            # If fail-fast was on, we error out above
-            # If we collect errors, raise them in batch here
-            if pkg.test_failures:
-                raise TestFailure(pkg.test_failures)
-
         finally:
-            # reset debug level
-            tty.set_debug(old_debug)
-
             # flag the package as having been tested (i.e., ran one or more
             # non-pass-only methods
             if ran_actual_test_function:
