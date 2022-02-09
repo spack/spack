@@ -13,7 +13,7 @@ class Neovim(CMakePackage):
     git = "https://github.com/neovim/neovim.git"
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
 
-    maintainers = ['albestro']
+    maintainers = ['albestro','trws']
 
     version('master', branch='master')
     version('stable', tag='stable')
@@ -30,16 +30,21 @@ class Neovim(CMakePackage):
     version('0.2.1', sha256='9e2c068a8994c9023a5f84cde9eb7188d3c85996a7e42e611e3cd0996e345dd3')
     version('0.2.0', sha256='72e263f9d23fe60403d53a52d4c95026b0be428c1b9c02b80ab55166ea3f62b5')
 
+    variant('use_lua', default=False, description='use lua rather than luajit as lua language provider')
+
+    # depend on virtual, lua-luajit-openresty preferred
+    depends_on('lua-lang')
+    depends_on('luajit', when='~use_lua')
+
     depends_on('cmake@3.0:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('gettext', type=('build', 'link'))
-    depends_on('lua@5.1.0:5.1.9', type=('build', 'link'))
     depends_on('lua-lpeg', type='link')
     depends_on('lua-mpack', type='link')
-    depends_on('lua-bitlib', type='link')
+    depends_on('lua-bitlib', type='link', when='^lua')
     depends_on('libuv', type='link')
     depends_on('libuv@1.28:', type='link', when='@0.4:,stable')
-    depends_on('jemalloc', type='link')
+    depends_on('jemalloc', type='link', when='platform=linux')
     depends_on('libtermkey', type='link')
     depends_on('libtermkey@0.18:', type='link', when='@0.3.4:,stable')
     depends_on('libvterm@0.0.0', type='link', when='@0.2.0:0.3')
@@ -53,5 +58,3 @@ class Neovim(CMakePackage):
     depends_on('libluv@1.30.0:', type='link', when='@0.4:,stable')
     depends_on('tree-sitter', when='@0.5:')
 
-    def cmake_args(self):
-        return ['-DPREFER_LUA=ON']
