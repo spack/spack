@@ -535,10 +535,9 @@ class PyclingoDriver(object):
 
         # Initialize the control object for the solver
         self.control = clingo.Control()
-        self.control.configuration.solve.models = nmodels
-        self.control.configuration.asp.trans_ext = 'all'
-        self.control.configuration.asp.eq = '5'
         self.control.configuration.configuration = 'tweety'
+        self.control.configuration.solve.models = nmodels
+        self.control.configuration.solver.heuristic = 'Domain'
         self.control.configuration.solve.parallel_mode = '1'
         self.control.configuration.solver.opt_strategy = "usc,one"
 
