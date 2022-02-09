@@ -16,7 +16,7 @@ class DotnetCoreSdk(Package):
 
     version('6.0.2',
             url='https://download.visualstudio.microsoft.com/download/pr/e7acb87d-ab08-4620-9050-b3e80f688d36/e93bbadc19b12f81e3a6761719f28b47/dotnet-sdk-6.0.102-linux-x64.tar.gz',
-            sha512='edd79ebad3327032ea0aaa8504c14e3270050bb459b098202676776b41a3a1d282aaefd1e5e8aa09ef7f7cf7c4601c4783a57112ff6e3d427507e8eec2bfb748',
+            sha256='9bdd4dacdf9a23d386f207ec19260afd36a7fb7302233c9abc0b47e65ffc3119',
             preferred=True)
 
     version('5.0.4',
