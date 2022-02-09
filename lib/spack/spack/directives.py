@@ -30,13 +30,13 @@ The available directives are:
 import functools
 import os.path
 import re
-import sys
 from typing import List, Set  # novm
 
 import six
 
 import llnl.util.lang
 import llnl.util.tty.color
+from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -47,12 +47,6 @@ from spack.dependency import Dependency, canonical_deptype, default_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Sequence  # novm
-else:
-    from collections import Sequence
-
 
 __all__ = ['DirectiveError', 'DirectiveMeta']
 
@@ -568,7 +562,9 @@ def variant(
         values=None,
         multi=None,
         validator=None,
-        when=None):
+        when=None,
+        sticky=False
+):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -589,7 +585,8 @@ def variant(
             doesn't meet the additional constraints
         when (spack.spec.Spec, bool): optional condition on which the
             variant applies
-
+        sticky (bool): the variant should not be changed by the concretizer to
+            find a valid concrete spec.
     Raises:
         DirectiveError: if arguments passed to the directive are invalid
     """
@@ -663,7 +660,7 @@ def variant(
             when_specs += orig_when
 
         pkg.variants[name] = (spack.variant.Variant(
-            name, default, description, values, multi, validator
+            name, default, description, values, multi, validator, sticky
         ), when_specs)
     return _execute_variant
 

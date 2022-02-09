@@ -15,6 +15,7 @@ import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
+from typing import Dict  # novm
 
 import py
 import pytest
@@ -50,8 +51,8 @@ from spack.util.pattern import Bunch
 #
 # Return list of shas for latest two git commits in local spack repo
 #
-@pytest.fixture
-def last_two_git_commits(scope='session'):
+@pytest.fixture(scope='session')
+def last_two_git_commits():
     git = spack.util.executable.which('git', required=True)
     spack_git_path = spack.paths.prefix
     with working_dir(spack_git_path):
@@ -882,8 +883,8 @@ class MockLayout(object):
     def path_for_spec(self, spec):
         return '/'.join([self.root, spec.name + '-' + spec.dag_hash()])
 
-    def check_installed(self, spec):
-        return True
+    def ensure_installed(self, spec):
+        pass
 
 
 @pytest.fixture()
@@ -1488,7 +1489,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}  # type: ignore
+    versions = {}  # type: Dict
 
 
 @pytest.fixture

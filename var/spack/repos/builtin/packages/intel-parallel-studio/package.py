@@ -11,7 +11,7 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    maintainers = ['rscohn2', 'danvev']
+    maintainers = ['rscohn2']
 
     # As of 2016, the product comes in three "editions" that vary by scope.
     #

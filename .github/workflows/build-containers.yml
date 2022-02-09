@@ -81,7 +81,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & Deploy ${{ matrix.dockerfile[1] }}
-        uses: docker/build-push-action@1814d3dfb36d6f84174e61f4a4b05bd84089a4b9 # @v2
+        uses: docker/build-push-action@7f9d37fa544684fb73bfe4835ed7214c255ce02b # @v2
         with:
           file: share/spack/docker/${{matrix.dockerfile[1]}}
           platforms: ${{ matrix.dockerfile[2] }}

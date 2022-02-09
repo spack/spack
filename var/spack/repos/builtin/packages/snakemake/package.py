@@ -13,6 +13,7 @@ class Snakemake(PythonPackage):
     pypi = "snakemake/snakemake-6.12.3.tar.gz"
     maintainers = ['marcusboden']
 
+    version('6.15.1', sha256='a219601d57037f565ead9963e6bd8d04d3bdd985d172371e54197dcbdba79865')
     version('6.13.1', sha256='22f57dcd8b1ca8a30aaa45c5d2c0f56d381d4731abd0988f24f9de46b7d9827c')
     version('6.12.3', sha256='af86af9a540da3dceb05dad1040f1d3d733e6a695f8b3f8c30f8cf3bc6570a88')
     version('3.11.2', sha256='f7a3b586bc2195f2dce4a4817b7ec828b6d2a0cff74a04e0f7566dcd923f9761', deprecated=True)
