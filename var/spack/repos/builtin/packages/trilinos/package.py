@@ -288,9 +288,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
 
-    # Fortran mangling fails on Apple M1 (see spack/spack#25900)
-    conflicts('@:13.0.1 +fortran', when='target=m1')
-
     # ###################### Dependencies ##########################
 
     depends_on('adios2', when='+adios2')
