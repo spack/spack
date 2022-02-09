@@ -168,17 +168,22 @@ class Caliper(CMakePackage, CudaPackage):
         else:
             lib_dir = self.prefix.lib64
 
-        self.run_test(exe=os.environ['CXX'],
-                      options=['-L{0}'.format(lib_dir),
-                               '-I{0}'.format(self.prefix.include),
-                               '{0}'.format(join_path(test_dir, source_file)),
-                               '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++'],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+        options = ['-L{0}'.format(lib_dir),
+                   '-I{0}'.format(self.prefix.include),
+                   '{0}'.format(join_path(test_dir, source_file)),
+                   '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++']
 
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe=os.environ['CXX'],
+                             options=options,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to run example')
 
     def test(self):
         self.run_cxx_example_test()
