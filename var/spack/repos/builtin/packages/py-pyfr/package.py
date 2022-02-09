@@ -8,7 +8,8 @@ from spack import *
 
 
 class PyPyfr(PythonPackage):
-    """PyFR is an open-source Python based framework for solving advection-diffusion type problems on streaming architectures using the Flux Reconstruction approach of Huynh."""
+    """PyFR is an open-source Python based framework for solving advection-diffusion type
+problems on streaming architectures using the Flux Reconstruction approach of Huynh."""
 
     homepage = "http://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
