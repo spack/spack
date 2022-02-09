@@ -614,15 +614,21 @@ node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
 %-----------------------------------------------------------------------------
 % Target semantics
 %-----------------------------------------------------------------------------
-% one target per node -- optimization will pick the "best" one
+
+% Each node has only one target chosen among the known targets
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package), error("Each node must have exactly one target").
 
-% node_target_satisfies semantics
-1 { node_target(Package, Target) : node_target_satisfies(Package, Constraint, Target) } 1
+% If a node must satisfy a target constraint the choice is reduced among the targets
+% that satisfy that constraint
+1 { node_target(Package, Target) : target_satisfies(Constraint, Target) } 1
   :- node_target_satisfies(Package, Constraint), error("Each node must have exactly one target").
+
+% If a node has a target and the target satisfies a constraint, then the target
+% associated with the node satisfies the same constraint
 node_target_satisfies(Package, Constraint)
-  :- node_target(Package, Target), node_target_satisfies(Package, Constraint, Target).
-#defined node_target_satisfies/3.
+  :- node_target(Package, Target), target_satisfies(Constraint, Target).
+
+#defined target_satisfies/2.
 
 % The target weight is either the default target weight
 % or a more specific per-package weight if set

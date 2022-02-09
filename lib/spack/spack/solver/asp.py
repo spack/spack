@@ -1571,11 +1571,10 @@ class SpackSolverSetup(object):
                 allowed_targets.append(test_target)
             return allowed_targets
 
-        cache = {}
-        for spec_name, target_constraint in sorted(self.target_constraints):
-
+        constraints = set(c[1] for c in self.target_constraints)
+        for target_constraint in sorted(constraints):
             # Construct the list of allowed targets for this constraint
-            allowed_targets = []
+            allowed_targets, cache = [], {}
             for single_constraint in str(target_constraint).split(','):
                 if single_constraint not in cache:
                     cache[single_constraint] = _all_targets_satisfiying(
@@ -1584,11 +1583,7 @@ class SpackSolverSetup(object):
                 allowed_targets.extend(cache[single_constraint])
 
             for target in allowed_targets:
-                self.gen.fact(
-                    fn.node_target_satisfies(
-                        spec_name, target_constraint, target
-                    )
-                )
+                self.gen.fact(fn.target_satisfies(target_constraint, target))
             self.gen.newline()
 
     def define_variant_values(self):
