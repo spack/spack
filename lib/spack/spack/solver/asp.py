@@ -617,6 +617,9 @@ class PyclingoDriver(object):
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
 
+        if set(dump) == {'asp'}:
+            return
+
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
         self.control.load(os.path.join(parent_dir, "display.lp"))

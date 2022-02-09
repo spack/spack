@@ -34,7 +34,7 @@ def setup_parser(subparser):
         help="select outputs: comma-separated list of: \n"
         "  asp          asp program text\n"
         "  opt          optimization criteria for best model\n"
-        "  output       raw clingo output\n"
+        "  output       raw clingo output\n"  # TODO: does not work
         "  solutions    models found by asp program\n"
         "  all          all of the above"
     )
@@ -114,36 +114,37 @@ def solve(parser, args):
         specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
         reuse=args.reuse, multi_root=args.multi_root
     )
-    if 'solutions' not in dump:
+    if 'solutions' not in dump and 'opt' not in dump:
         return
 
     # die if no solution was found
     result.raise_if_unsat()
 
+    opt, _, _ = min(result.answers)
+
+    if ("opt" in dump) and (not args.format):
+        tty.msg("Best of %d considered solutions." % result.nmodels)
+        tty.msg("Optimization Criteria:")
+
+        maxlen = max(len(s[2]) for s in result.criteria)
+        color.cprint(
+            "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
+        )
+
+        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+        for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
+            color.cprint(
+                fmt % (
+                    i,
+                    name,
+                    "-" if build_idx is None else opt[idx],
+                    opt[idx] if build_idx is None else opt[build_idx],
+                )
+            )
+        print()
+
     # dump the solutions as concretized specs
     if 'solutions' in dump:
-        opt, _, _ = min(result.answers)
-        if ("opt" in dump) and (not args.format):
-            tty.msg("Best of %d considered solutions." % result.nmodels)
-            tty.msg("Optimization Criteria:")
-
-            maxlen = max(len(s[2]) for s in result.criteria)
-            color.cprint(
-                "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
-            )
-
-            fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-            for i, (idx, build_idx, name) in enumerate(result.criteria, 1):
-                color.cprint(
-                    fmt % (
-                        i,
-                        name,
-                        "-" if build_idx is None else opt[idx],
-                        opt[idx] if build_idx is None else opt[build_idx],
-                    )
-                )
-            print()
-
         for spec in result.specs:
             # With -y, just print YAML to output.
             if args.format == 'yaml':
