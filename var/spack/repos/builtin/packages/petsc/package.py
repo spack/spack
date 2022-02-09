@@ -670,17 +670,17 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             self.run_ex50_test(runexe, runopt, w_dir, makefile_dir)
         else:
             tty.warn('{0} KSP tutorial example ex50 is missing'
-                  .format(skip_test))
+                     .format(skip_test))
 
         if os.path.isfile(join_path(w_dir, 'ex7.c')):
             if '+cuda' in self.spec:
                 self.run_ex7_test(runexe, runopt, w_dir, makefile_dir)
             else:
                 tty.msg('{0} KSP tutorial example ex7 requires +cuda'
-                      .format(skip_test))
+                        .format(skip_test))
         else:
             tty.warn('{0} KSP tutorial example ex7 is missing'
-                  .format(skip_test))
+                     .format(skip_test))
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
@@ -691,7 +691,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 self.run_ex3k_test(runexe, runopt, w_dir, makefile_dir)
             else:
                 tty.msg('{0} SNES tutorial example ex3k requires +kokkos'
-                      .format(skip_test))
+                        .format(skip_test))
         else:
             tty.warn('{0} SNES tutorial example ex3k.kokkos is missing'
-                  .format(skip_test))
+                     .format(skip_test))
