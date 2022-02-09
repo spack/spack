@@ -35,6 +35,9 @@ class GoBootstrap(Package):
 
     depends_on('git', type=('build', 'link', 'run'))
 
+    conflicts('target=aarch64', when='platform=darwin',
+              msg='Go bootstrap is too old for Apple Silicon')
+
     def patch(self):
         if self.spec.satisfies('@:1.4.3'):
             # NOTE: Older versions of Go attempt to download external files that have
