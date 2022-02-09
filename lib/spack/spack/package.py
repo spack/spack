@@ -1186,22 +1186,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.extendees:
             return None
 
-        # TODO: allow more than one extendee.
-        name = next(iter(self.extendees))
+        deps = []
 
         # If the extendee is in the spec's deps already, return that.
         for dep in self.spec.traverse(deptypes=('link', 'run')):
-            if name == dep.name:
-                return dep
+            if dep.name in self.extendees:
+                deps.append(dep)
+
+        # TODO: allow more than one active extendee.
+        if deps:
+            assert len(deps) == 1
+            return deps[0]
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
         if self.spec._concrete:
             return None
         else:
+            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = self.extendees[name]
+            spec, kwargs = next(iter(self.extendees.items()))
             return spec
 
     @property
