@@ -202,6 +202,9 @@ class Bazel(Package):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
+    def install_test(self):
+        self.test()
+
     def test(self):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb
 
