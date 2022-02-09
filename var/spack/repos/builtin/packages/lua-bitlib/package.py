@@ -9,7 +9,7 @@ import os
 from spack import *
 
 
-class LuaBitlib(Package):
+class LuaBitlib(LuaPackage):
     """Lua-jit-like bitwise operations for lua"""
 
     homepage = "http://luaforge.net/projects/bitlib"
@@ -17,8 +17,6 @@ class LuaBitlib(Package):
 
     version('23-2', sha256='fe226edc2808162e67418e6b2c98befc0ed25a489ecffc6974fa153f951c0c34',
             expand=False)
-
-    extends('lua')
 
     def install(self, spec, prefix):
         luarocks('unpack', "bitlib-23-2.src.rock")
