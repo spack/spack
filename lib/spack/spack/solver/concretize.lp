@@ -871,10 +871,6 @@ representative(PSID, Package)
  :- node(PSID, Package),
     not package_equal(_, PSID, Package).
 
-representative_virtual(PSID, Virtual)
-  :- virtual_node(PSID, Virtual),
-     not virtual_equal(_, PSID, Virtual).
-
 % Virtual representative may be a concrete root that provides the virtual
 representative_virtual(PSID, Virtual):
   :- node(PSID, Provider),
