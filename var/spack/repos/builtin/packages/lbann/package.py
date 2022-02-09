@@ -74,6 +74,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
     variant('asan', default=False, description='Build with support for address-sanitizer')
+    variant('apps', default=True, description='Add python modules for standard LBANN applications')
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -215,19 +216,22 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
+    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+
+    # Add Python package dependencies to support applications in the LBANN repo
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-pytest', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-scipy', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-tqdm', type='run', when='@:0.90,0.99: +pfe +apps')
+
+    # Add common Python packages that are used for LBANN auxiliary tools
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +numpy')
     depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
-#    depends_on('py-pytest', type=('test', 'run'), when='@:0.90,0.99: +pfe')
-    depends_on('py-scipy', type='test', when='@:0.90,0.99: +pfe')
-#    depends_on('py-scipy', type=('test', 'run'), when='@:0.90,0.99: +pfe')
-    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
