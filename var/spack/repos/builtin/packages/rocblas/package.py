@@ -31,27 +31,28 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642', deprecated=True)
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0', deprecated=True)
 
-    tensile_architecture = ('all', 'gfx906', 'gfx908', 'gfx803', 'gfx900',
-                            'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
-                            'gfx90a:xnack-', 'gfx1010', 'gfx1011',
-                            'gfx1012', 'gfx1030')
+    amdgpu_targets = ('gfx906', 'gfx908', 'gfx803', 'gfx900',
+                      'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack+',
+                      'gfx90a:xnack-', 'gfx1010', 'gfx1011',
+                      'gfx1012', 'gfx1030')
 
-    variant('tensile_architecture', default='all', values=tensile_architecture, multi=True)
+    variant('amdgpu_target', default='gfx906:xnack-', values=amdgpu_targets, multi=True)
+    variant('tensile', default=False, description='Use Tensile as a backend')
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
     # gfx803,gfx900,gfx:xnack-,gfx908:xnack- are valid gpus for @4.1.0:4.2.0
     # gfx803 till gfx1030  are valid gpus for @4.3.0:
-    conflicts('tensile_architecture=gfx906', when='@4.0.1:')
-    conflicts('tensile_architecture=gfx908', when='@4.0.1:')
-    conflicts('tensile_architecture=gfx906:xnack-', when='@:4.0.0')
-    conflicts('tensile_architecture=gfx908:xnack-', when='@:4.0.0')
-    conflicts('tensile_architecture=gfx90a:xnack+', when='@:4.2.1')
-    conflicts('tensile_architecture=gfx90a:xnack-', when='@:4.2.1')
-    conflicts('tensile_architecture=gfx1010', when='@:4.2.1')
-    conflicts('tensile_architecture=gfx1011', when='@:4.2.1')
-    conflicts('tensile_architecture=gfx1012', when='@:4.2.1')
-    conflicts('tensile_architecture=gfx1030', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx906', when='@4.0.1:')
+    conflicts('amdgpu_target=gfx908', when='@4.0.1:')
+    conflicts('amdgpu_target=gfx906:xnack-', when='@:4.0.0')
+    conflicts('amdgpu_target=gfx908:xnack-', when='@:4.0.0')
+    conflicts('amdgpu_target=gfx90a:xnack+', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx90a:xnack-', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx1010', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx1011', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx1012', when='@:4.2.1')
+    conflicts('amdgpu_target=gfx1030', when='@:4.2.1')
 
     depends_on('cmake@3.16.8:', type='build', when='@4.2.0:')
     depends_on('cmake@3.8:', type='build', when='@3.9.0:')
@@ -109,7 +110,7 @@ class Rocblas(CMakePackage):
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
                  commit=t_commit,
-                 when=t_version)
+                 when='{} +tensile'.format(t_version))
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
@@ -120,45 +121,36 @@ class Rocblas(CMakePackage):
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
-    def get_gpulist_for_tensile_support(self):
-        arch = self.spec.variants['tensile_architecture'].value
-        if arch[0] == 'all':
-            if self.spec.satisfies('@:4.2.1'):
-                arch_value = self.tensile_architecture[0]
-            elif self.spec.satisfies('@4.3.0:'):
-                arch_value = self.tensile_architecture[3:]
-            return arch_value
-        else:
-            return arch
-
     def cmake_args(self):
-        tensile = join_path(self.stage.source_path, 'Tensile')
         args = [
             self.define('BUILD_CLIENTS_TESTS',
                         self.run_tests and '@4.2.0:' in self.spec),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('RUN_HEADER_TESTING', 'OFF'),
-            self.define('BUILD_WITH_TENSILE', 'ON'),
-            self.define('Tensile_TEST_LOCAL_PATH', tensile),
-            self.define('Tensile_COMPILER', 'hipcc'),
-            self.define('Tensile_LOGIC', 'asm_full'),
-            self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
-            self.define('BUILD_WITH_TENSILE_HOST', '@3.7.0:' in self.spec)
+            self.define_from_variant('BUILD_WITH_TENSILE', 'tensile'),
         ]
         if self.run_tests:
             args.append(self.define('LINK_BLIS', 'OFF'))
 
-        if '@3.7.0:' in self.spec:
-            args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
+        arch_define_name = 'AMDGPU_TARGETS'
+        if '+tensile' in self.spec:
+            tensile_path = join_path(self.stage.source_path, 'Tensile')
+            args += [
+                self.define('Tensile_TEST_LOCAL_PATH', tensile_path),
+                self.define('Tensile_COMPILER', 'hipcc'),
+                self.define('Tensile_LOGIC', 'asm_full'),
+                self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
+                self.define('BUILD_WITH_TENSILE_HOST', '@3.7.0:' in self.spec)
+            ]
+            if self.spec.satisfies('@3.7.0:'):
+                args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))
+            if self.spec.satisfies('@:4.2.0'):
+                arch_define_name = 'Tensile_ARCHITECTURE'
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
-        if self.spec.satisfies('@:4.2.0'):
-            args.append(self.define('Tensile_ARCHITECTURE',
-                        self.get_gpulist_for_tensile_support()))
-        else:
-            args.append(self.define('AMDGPU_TARGETS',
-                        self.get_gpulist_for_tensile_support()))
+        args.append(self.define(arch_define_name,
+                    self.spec.variants['amdgpu_target'].value))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
