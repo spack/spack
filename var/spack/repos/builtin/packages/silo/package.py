@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.operating_systems.mac_os import macos_version
 from spack.util.environment import is_system_path
 
 
@@ -130,6 +130,12 @@ class Silo(AutotoolsPackage):
             return False
         else:
             return self.spec.satisfies('+shared')
+
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('10.16')):
+            # Configure fails to add flags if MACOSX_DEPLOYMENT_TARGET=11+
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def configure_args(self):
         spec = self.spec

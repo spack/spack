@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Gsl(AutotoolsPackage, GNUMirrorPackage):
@@ -45,6 +45,12 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     def force_autoreconf(self):
         # The external cblas patch touches configure
         return self.spec.satisfies('+external-cblas')
+
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('10.16')):
+            # Configure fails to add flags if MACOSX_DEPLOYMENT_TARGET=11+
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def configure_args(self):
         configure_args = []

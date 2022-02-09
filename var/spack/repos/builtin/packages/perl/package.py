@@ -17,7 +17,6 @@ from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
 
 

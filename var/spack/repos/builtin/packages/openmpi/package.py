@@ -11,6 +11,8 @@ import sys
 
 import llnl.util.tty as tty
 
+from spack.operating_systems.mac_os import macos_version
+
 
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
@@ -624,6 +626,11 @@ class Openmpi(AutotoolsPackage):
         if '~gpfs' in self.spec:
             env.set('ac_cv_header_gpfs_h', 'no')
             env.set('ac_cv_header_gpfs_fcntl_h', 'no')
+
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('10.16')):
+            # Configure fails to add flags if MACOSX_DEPLOYMENT_TARGET=11+
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def configure_args(self):
         spec = self.spec

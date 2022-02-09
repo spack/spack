@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Libevent(AutotoolsPackage):
@@ -57,6 +57,12 @@ class Libevent(AutotoolsPackage):
             configure_args.append('--disable-openssl')
 
         return configure_args
+
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('10.16')):
+            # Configure fails to add flags if MACOSX_DEPLOYMENT_TARGET=11+
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def patch(self):
         if self.spec.satisfies('%nvhpc'):
