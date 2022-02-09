@@ -1812,78 +1812,34 @@ class Environment(object):
 
     def _read_lockfile_dict(self, d):
         """Read a lockfile dictionary into this environment."""
+        self.specs_by_hash = {}
+
         roots = d['roots']
         self.concretized_user_specs = [Spec(r['spec']) for r in roots]
         self.concretized_order = [r['hash'] for r in roots]
-
         json_specs_by_hash = d['concrete_specs']
-        root_hashes = set(self.concretized_order)
-
-        import pdb
-        pdb.set_trace()
 
         specs_by_hash = {}
-        for dag_hash, node_dict in json_specs_by_hash.items():
-            spec = Spec.from_node_dict(node_dict)
-            if d['_meta']['lockfile-version'] > 1:
-                # Build hash is stored as a key, but not as part of the node dict
-                # To ensure build hashes are not recomputed, we reattach here
-                setattr(spec, ht.dag_hash.attr, dag_hash)
-            specs_by_hash[dag_hash] = spec
 
-        for dag_hash, node_dict in json_specs_by_hash.items():
+        for lockfile_key, node_dict in json_specs_by_hash.items():
+            specs_by_hash[lockfile_key] = Spec.from_node_dict(node_dict)
+
+        for lockfile_key, node_dict in json_specs_by_hash.items():
             for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
-                specs_by_hash[dag_hash]._add_dependency(
+                specs_by_hash[lockfile_key]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
 
-        # Current lockfile key: dag_hash() (dag_hash() == full_hash())
-        # Previous lockfile keys from most recent to least:
-        #   1. build_hash
-        #   2. dag_hash (computed *without* build deps)
+        # Now make sure concretized_order and our internal specs dict
+        # contains the keys used by modern spack (i.e. the dag_hash
+        # that includes build deps and package hash).
+        self.concretized_order = [specs_by_hash[h_key].dag_hash()
+                                  for h_key in self.concretized_order]
 
-        # If we are reading an older lockfile format, the key may have been computed
-        # using a different hash type than the one spack uses currently (which
-        # includes build deps as well as the package hash).  If this is the case
-        # the following code updates the keys in in 'concretized_order' to be computed
-        # using the hash type spack currently uses, while maintaining the order of the
-        # list.
-        old_hash_to_new = {}
-        self.specs_by_hash = {}
-        for _, spec in specs_by_hash.items():
-            # - to get old dag_hash() (w/out build deps) use runtime_hash() now
-            # - dag_hash() now includes build deps and package hash
-            #     - i.e. dag_hash() == full_hash()
-            # - regardless of what hash type keyed the lockfile we're reading,
-            #   the dag_hash we read from the file may appear appear in install
-            #   trees and binary mirrors, and as such, must be considered the
-            #   permanent id of the spec.
-            dag_hash = spec.dag_hash()          # == full_hash()
-            runtime_hash = spec.runtime_hash()  # == old dag_hash()
-
-            if dag_hash in root_hashes:
-                # This spec's dag hash (now computed with build deps and pkg
-                # hash) is in the keys found in the file, so we're looking at
-                # the current format
-                pass
-            elif runtime_hash in root_hashes:
-                # This spec's runtime hash (the old dag hash w/out build deps,
-                # etc) is a key in this lockfile, so this is the oldest format
-                old_hash_to_new[runtime_hash] = dag_hash
-            else:
-                # Neither of this spec's hashes appeared as a key in the lock
-                # file, so
-                old_hash_to_new[build_hash] = dag_hash
-
-            if (runtime_hash in root_hashes or
-                    build_hash in root_hashes or dag_hash in root_hashes):
-                self.specs_by_hash[dag_hash] = spec
-
-        if old_hash_to_new:
-            # Replace any older hashes in concretized_order with hashes
-            # that include build deps
-            self.concretized_order = [
-                old_hash_to_new.get(h, h) for h in self.concretized_order]
+        for _, env_spec in specs_by_hash.items():
+            spec_dag_hash = env_spec.dag_hash()
+            if spec_dag_hash in self.concretized_order:
+                self.specs_by_hash[spec_dag_hash] = env_spec
 
     def write(self, regenerate=True):
         """Writes an in-memory environment to its location on disk.

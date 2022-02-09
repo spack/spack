@@ -9,9 +9,12 @@ import sys
 
 import pytest
 
+from llnl.util.filesystem import copy_tree
+
 import spack.cmd.install
 import spack.config
 import spack.package
+import spack.paths
 import spack.store
 from spack.main import SpackCommand
 
@@ -242,36 +245,27 @@ def test_has_test_method_fails(capsys):
     assert 'is not a class' in captured
 
 
-def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,
-                     install_mockery_mutable_config):
-    """Ensure output printed from pkgs is captured by output redirection."""
-    install('printing-package')
-    spack_test('run', '--alias', 'printpkg', 'printing-package')
+def test_read_old_results(mock_test_stage):
+    """Take test data generated before the switch to full hash everywhere
+    and make sure we can still read it in"""
+    # Test data was generated with:
+    #   spack install printing-package
+    #   spack test run --alias printpkg printing-package
 
-    stage_files = os.listdir(mock_test_stage)
+    test_data_src = os.path.join(
+        spack.paths.test_path, 'data', 'test', 'test_stage')
 
-    # Grab test stage directory contents
-    testdir = os.path.join(mock_test_stage, stage_files[0])
+    # Copy the old test data into the mock stage directory
+    copy_tree(test_data_src, mock_test_stage)
 
-    outfile = os.path.join(testdir, 'test_suite.lock')
-    with open(outfile, 'r') as f:
-        output = f.read()
-        val_replace = '"hash": "{0}"'.format(
-            spack.store.db.query('printing-package')[0].dag_hash())
-        changed_hash = output.replace(
-            val_replace,
-            '"hash": "fakehash492ucwhwvzhxfbmcc45x49ha"')
-    with open(outfile, 'w') as f:
-        f.write(changed_hash)
-
-    # The find command should show the contents
+    # The find command should print info about the old test, under
+    # the alias used at test generation time
     find_output = spack_test('find')
     assert 'printpkg' in find_output
-    # The results should be obtainable
+
+    # The results command should still print the old test results
     results_output = spack_test('results')
     assert 'PASSED' in results_output
-
-    assert(False)
 
 
 def test_test_results_none(mock_packages, mock_test_stage):

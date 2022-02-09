@@ -11,15 +11,12 @@ import sys
 import py
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.binary_distribution as bindist
 import spack.config
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
-import spack.spec as spec
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
@@ -426,14 +423,14 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
     # Put installed package in the buildcache
     buildcache_cmd('create', '-u', '-a', '-d', mirror_dir.strpath, s.name)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+    rebuild = bindist.needs_rebuild(s, mirror_url)
 
     assert not rebuild
 
-    # Now monkey patch Spec to change the full hash on the package
+    # Now monkey patch Spec to change the hash on the package
     monkeypatch.setattr(spack.spec.Spec, 'dag_hash', fake_dag_hash)
 
-    rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
+    rebuild = bindist.needs_rebuild(s, mirror_url)
 
     assert rebuild
 
