@@ -10,6 +10,7 @@ import platform
 import re
 from typing import List  # novm
 
+from llnl.util.compat import Sequence
 from llnl.util.filesystem import working_dir
 
 import spack.build_environment
@@ -222,7 +223,7 @@ class CMakePackage(PackageBase):
             value = "ON" if value else "OFF"
         else:
             kind = 'STRING'
-            if isinstance(value, (list, tuple)):
+            if isinstance(value, Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)
