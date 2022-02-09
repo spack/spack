@@ -250,6 +250,8 @@ class Qt(Package):
     else:
         conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
+        conflicts('target=aarch64', when='@:5.15.3',
+                  msg='Apple Silicon requires a very new version of qt')
 
     use_xcode = True
 
@@ -262,7 +264,7 @@ class Qt(Package):
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url.replace('http:', 'https:')
+        url = self.list_url
 
         if version < Version('5.12') and version.up_to(2) != Version('5.9'):
             # As of 28 April 2021:
@@ -715,6 +717,12 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        if spec.satisfies('platform=darwin target=aarch64'):
+            # https://www.qt.io/blog/qt-on-apple-silicon
+            # Not currently working for qt@5
+            config_args.extend(['-device-option',
+                                'QMAKE_APPLE_DEVICE_ARCHS=arm64'])
 
         configure(*config_args)
 
