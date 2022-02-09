@@ -1405,9 +1405,12 @@ class SpackSolverSetup(object):
             for target in supported:
                 best_targets.add(target.name)
                 self.gen.fact(fn.compiler_supports_target(
-                    compiler.name, compiler.version, target.name))
-                self.gen.fact(fn.compiler_supports_target(
-                    compiler.name, compiler.version, uarch.family.name))
+                    compiler.name, compiler.version, target.name
+                ))
+
+            self.gen.fact(fn.compiler_supports_target(
+                compiler.name, compiler.version, uarch.family.name
+            ))
 
         # add any targets explicitly mentioned in specs
         for spec in specs:
