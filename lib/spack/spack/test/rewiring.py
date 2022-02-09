@@ -42,7 +42,7 @@ def test_rewire(mock_fetch, install_mockery, transitive):
         for modded_spec in node.traverse(root=True):
             assert modded_spec.prefix in text
         # test install manifest
-        assert spack.store.layout.check_installed(node)
+        spack.store.layout.ensure_installed(node)
         manifest_file_path = os.path.join(node.prefix,
                                           spack.store.layout.metadata_dir,
                                           spack.store.layout.manifest_file_name)
@@ -78,7 +78,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
             bin_file_path = os.path.join(dep.prefix.bin, bin_names[dep.name])
             assert text_in_bin(dep.prefix, bin_file_path)
         # test install manifest
-        assert spack.store.layout.check_installed(node)
+        spack.store.layout.ensure_installed(node)
         manifest_file_path = os.path.join(node.prefix,
                                           spack.store.layout.metadata_dir,
                                           spack.store.layout.manifest_file_name)
