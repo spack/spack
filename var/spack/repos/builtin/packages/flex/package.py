@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack.operating_systems.mac_os import macos_version
+from spack import *
 
 
 class Flex(AutotoolsPackage):
@@ -79,12 +79,6 @@ class Flex(AutotoolsPackage):
     def force_autoreconf(self):
         # The patch for 2.6.4 touches configure
         return self.spec.satisfies('@2.6.4')
-
-    def setup_build_environment(self, env):
-        if (self.spec.platform == 'darwin'
-                and macos_version() >= Version('10.16')):
-            # Configure fails to add flags if MACOSX_DEPLOYMENT_TARGET=11+
-            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def url_for_version(self, version):
         url = "https://github.com/westes/flex"
