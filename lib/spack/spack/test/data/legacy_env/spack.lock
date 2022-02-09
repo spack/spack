@@ -1,0 +1,672 @@
+{
+  "_meta": {
+    "file-type": "spack-lockfile",
+    "lockfile-version": 3,
+    "specfile-version": 2
+  },
+  "roots": [
+    {
+      "hash": "wci7a3aaaa4nj6ct6rj4aeltgbfojefy",
+      "spec": "dttop ^dtbuild1@0.5"
+    },
+    {
+      "hash": "5zg6wxwir2xien62soca6xaeilfzofz7",
+      "spec": "dttop ^dtbuild1@1.0"
+    }
+  ],
+  "concrete_specs": {
+    "wci7a3aaaa4nj6ct6rj4aeltgbfojefy": {
+      "name": "dttop",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild1",
+          "build_hash": "qgpyperfcinui6o25aoglxzkdrlakf6b",
+          "type": [
+            "build"
+          ]
+        },
+        {
+          "name": "dtlink1",
+          "build_hash": "4skh62lxn6gra5li7sqaeunzgaxjkbns",
+          "type": [
+            "build",
+            "link"
+          ]
+        },
+        {
+          "name": "dtrun1",
+          "build_hash": "upfcexeb7zwzxdsimesyzo42yz35bw2s",
+          "type": [
+            "run"
+          ]
+        }
+      ],
+      "hash": "foya4e4rtwl5ep4mq463sdeslgaoc3qu"
+    },
+    "qgpyperfcinui6o25aoglxzkdrlakf6b": {
+      "name": "dtbuild1",
+      "version": "0.5",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild2",
+          "build_hash": "pq6krl6alw7ic5ix4g5izvlzt2llbvcp",
+          "type": [
+            "build"
+          ]
+        },
+        {
+          "name": "dtlink2",
+          "build_hash": "5isttyk6zuekua2nqp23rrjpmcpo7y6a",
+          "type": [
+            "build",
+            "link"
+          ]
+        },
+        {
+          "name": "dtrun2",
+          "build_hash": "ypkyvbgxdzvverb7ami5rb6yxmp5ylmo",
+          "type": [
+            "run"
+          ]
+        }
+      ],
+      "hash": "lgcxyf3mkho6hpzymcvbetrvbujacufn"
+    },
+    "pq6krl6alw7ic5ix4g5izvlzt2llbvcp": {
+      "name": "dtbuild2",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "pq6krl6alw7ic5ix4g5izvlzt2llbvcp"
+    },
+    "5isttyk6zuekua2nqp23rrjpmcpo7y6a": {
+      "name": "dtlink2",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "5isttyk6zuekua2nqp23rrjpmcpo7y6a"
+    },
+    "ypkyvbgxdzvverb7ami5rb6yxmp5ylmo": {
+      "name": "dtrun2",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "ypkyvbgxdzvverb7ami5rb6yxmp5ylmo"
+    },
+    "4skh62lxn6gra5li7sqaeunzgaxjkbns": {
+      "name": "dtlink1",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtlink3",
+          "build_hash": "iq7m6ubgajdcnukktxolh7nc2z666h7r",
+          "type": [
+            "build",
+            "link"
+          ]
+        }
+      ],
+      "hash": "4oxug37ghalgpxyzuurftzdvlr2a7wrz"
+    },
+    "iq7m6ubgajdcnukktxolh7nc2z666h7r": {
+      "name": "dtlink3",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild2",
+          "build_hash": "pq6krl6alw7ic5ix4g5izvlzt2llbvcp",
+          "type": [
+            "build"
+          ]
+        },
+        {
+          "name": "dtlink4",
+          "build_hash": "kdt2sgmlahmfyjt3rc3mdvuoh7wdyoe3",
+          "type": [
+            "build",
+            "link"
+          ]
+        }
+      ],
+      "hash": "n4j5jrvzgfnrvwwjwfycnk6n3ce2xk25"
+    },
+    "kdt2sgmlahmfyjt3rc3mdvuoh7wdyoe3": {
+      "name": "dtlink4",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "kdt2sgmlahmfyjt3rc3mdvuoh7wdyoe3"
+    },
+    "upfcexeb7zwzxdsimesyzo42yz35bw2s": {
+      "name": "dtrun1",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtlink5",
+          "build_hash": "bxpadcbd6xljttj5s5m3awlrt4zqztsh",
+          "type": [
+            "build",
+            "link"
+          ]
+        },
+        {
+          "name": "dtrun3",
+          "build_hash": "iqth4unmdwlv7zyw7joloh2lyuyvu6gb",
+          "type": [
+            "run"
+          ]
+        }
+      ],
+      "hash": "byqsjfa6hl27wpqbva5isxgbwdybgplb"
+    },
+    "bxpadcbd6xljttj5s5m3awlrt4zqztsh": {
+      "name": "dtlink5",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "bxpadcbd6xljttj5s5m3awlrt4zqztsh"
+    },
+    "iqth4unmdwlv7zyw7joloh2lyuyvu6gb": {
+      "name": "dtrun3",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild3",
+          "build_hash": "t77enxfrcdrc6mumxzcdossrq4gvdliq",
+          "type": [
+            "build"
+          ]
+        }
+      ],
+      "hash": "beml5jys2cfxib6evml7ufn4wy2ak5by"
+    },
+    "t77enxfrcdrc6mumxzcdossrq4gvdliq": {
+      "name": "dtbuild3",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "hash": "t77enxfrcdrc6mumxzcdossrq4gvdliq"
+    },
+    "5zg6wxwir2xien62soca6xaeilfzofz7": {
+      "name": "dttop",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild1",
+          "build_hash": "l7ikvcp4qgxtc4queb2kawhd267pylkn",
+          "type": [
+            "build"
+          ]
+        },
+        {
+          "name": "dtlink1",
+          "build_hash": "4skh62lxn6gra5li7sqaeunzgaxjkbns",
+          "type": [
+            "build",
+            "link"
+          ]
+        },
+        {
+          "name": "dtrun1",
+          "build_hash": "upfcexeb7zwzxdsimesyzo42yz35bw2s",
+          "type": [
+            "run"
+          ]
+        }
+      ],
+      "hash": "foya4e4rtwl5ep4mq463sdeslgaoc3qu"
+    },
+    "l7ikvcp4qgxtc4queb2kawhd267pylkn": {
+      "name": "dtbuild1",
+      "version": "1.0",
+      "arch": {
+        "platform": "test",
+        "platform_os": "debian6",
+        "target": {
+          "name": "core2",
+          "vendor": "GenuineIntel",
+          "features": [
+            "mmx",
+            "sse",
+            "sse2",
+            "ssse3"
+          ],
+          "generation": 0,
+          "parents": [
+            "nocona"
+          ]
+        }
+      },
+      "compiler": {
+        "name": "gcc",
+        "version": "4.5.0"
+      },
+      "namespace": "builtin.mock",
+      "parameters": {
+        "cflags": [],
+        "cppflags": [],
+        "cxxflags": [],
+        "fflags": [],
+        "ldflags": [],
+        "ldlibs": []
+      },
+      "dependencies": [
+        {
+          "name": "dtbuild2",
+          "build_hash": "pq6krl6alw7ic5ix4g5izvlzt2llbvcp",
+          "type": [
+            "build"
+          ]
+        },
+        {
+          "name": "dtlink2",
+          "build_hash": "5isttyk6zuekua2nqp23rrjpmcpo7y6a",
+          "type": [
+            "build",
+            "link"
+          ]
+        },
+        {
+          "name": "dtrun2",
+          "build_hash": "ypkyvbgxdzvverb7ami5rb6yxmp5ylmo",
+          "type": [
+            "run"
+          ]
+        }
+      ],
+      "hash": "4tldi4u3p35juizd5y5pqushwiddwmbm"
+    }
+  }
+}

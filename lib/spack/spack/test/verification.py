@@ -143,7 +143,7 @@ def test_check_prefix_manifest(tmpdir):
     prefix_path = tmpdir.join('prefix')
     prefix = str(prefix_path)
 
-    spec = spack.spec.Spec('libelf')
+    spec = spack.spec.Spec('libelf@0.8.13')
     spec._mark_concrete()
     spec.prefix = prefix
 

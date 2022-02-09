@@ -332,18 +332,15 @@ def _report_suite_results(test_suite, args, constraints):
                 .format(results_desc, test_suite.name, matching))
 
         results = {}
-        tty.msg('test results')
         with open(test_suite.results_file, 'r') as f:
             for line in f:
                 pkg_id, status = line.split()
                 results[pkg_id] = status
-                tty.msg('  {0}'.format(pkg_id))
 
         tty.msg('test specs:')
 
         failed, skipped, untested = 0, 0, 0
         for pkg_id in test_specs:
-            tty.msg('  {0}'.format(pkg_id))
             if pkg_id in results:
                 status = results[pkg_id]
                 if status == 'FAILED':

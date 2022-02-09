@@ -215,9 +215,9 @@ def test_python_ignore_namespace_init_conflict(
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
 
-    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+    ext1_pkg = create_python_ext_pkg('py-extension1@1.0.0', ext1_prefix, python_spec,
                                      monkeypatch, py_namespace)
-    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+    ext2_pkg = create_python_ext_pkg('py-extension2@1.0.0', ext2_prefix, python_spec,
                                      monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
@@ -250,9 +250,9 @@ def test_python_keep_namespace_init(
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
 
-    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+    ext1_pkg = create_python_ext_pkg('py-extension1@1.0.0', ext1_prefix, python_spec,
                                      monkeypatch, py_namespace)
-    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+    ext2_pkg = create_python_ext_pkg('py-extension2@1.0.0', ext2_prefix, python_spec,
                                      monkeypatch, py_namespace)
 
     view_dir = str(tmpdir.join('view'))
@@ -293,9 +293,9 @@ def test_python_namespace_conflict(tmpdir, namespace_extensions,
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
 
-    ext1_pkg = create_python_ext_pkg('py-extension1', ext1_prefix, python_spec,
+    ext1_pkg = create_python_ext_pkg('py-extension1@1.0.0', ext1_prefix, python_spec,
                                      monkeypatch, py_namespace)
-    ext2_pkg = create_python_ext_pkg('py-extension2', ext2_prefix, python_spec,
+    ext2_pkg = create_python_ext_pkg('py-extension2@1.0.0', ext2_prefix, python_spec,
                                      monkeypatch, other_namespace)
 
     view_dir = str(tmpdir.join('view'))

@@ -184,7 +184,7 @@ default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
 
 #: specfile format version. Must increase monotonically
-specfile_format_version = 2
+specfile_format_version = 3
 
 
 def colorize_spec(spec):

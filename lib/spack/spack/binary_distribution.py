@@ -27,7 +27,6 @@ import spack.cmd
 import spack.config as config
 import spack.database as spack_db
 import spack.fetch_strategy as fs
-import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -806,10 +805,8 @@ def generate_package_index(cache_prefix):
                 spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
                 # Need full spec.json name or this gets confused with index.json.
                 if spec_url.endswith('.json'):
-                    spec_dict = sjson.load(spec_file_contents)
                     s = Spec.from_json(spec_file_contents)
                 elif spec_url.endswith('.yaml'):
-                    spec_dict = syaml.load(spec_file_contents)
                     s = Spec.from_yaml(spec_file_contents)
                 if s:
                     db.add(s, None)
