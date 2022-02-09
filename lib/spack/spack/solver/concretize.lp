@@ -969,13 +969,13 @@ equality_attr("external_spec_selected").
 % Try to minimize the number of nodes of a given package
 % asp.py will generate statements of the following form for each literal "package"
 % indexed in an arbitrary but deterministic order.
-%opt_criterion(300+index, "number of non-identical package nodes").
-%#minimize { 0@300+index: #true }.
-%#minimize { 1@300+index,PSID1,PSID2 : package_not_equal(PSID1, PSID2, "package"), representative(PSID1, "package" }.
+opt_criterion(300, "number of non-identical package nodes").
+#minimize { 0@300: #true }.
+#minimize { 1@300,PSID1,PSID2,Package : package_not_equal(PSID1, PSID2, Package), representative(PSID1, Package), representative(PSID2, Package) }.
 % asp.py will generate statements of a similar form for each literal "virtual"
-%opt_criterion(300+index, "number of virtual providers")
-%#minimize { 0@300+index, #true }.
-%#minimize { 1@300+index,PSID1,PSID2 : virtual_not_equal(PSID1, PSID2, "virtual"), representative_virtual(PSID1, "virtual") }.
+opt_criterion(301, "number of virtual providers").
+#minimize { 0@301: #true }.
+#minimize { 1@301,PSID1,PSID2,Virtual : virtual_not_equal(PSID1, PSID2, Virtual), representative_virtual(PSID1, Virtual), representative_virtual(PSID2, Virtual) }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").

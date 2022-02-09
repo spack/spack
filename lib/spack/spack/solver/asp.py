@@ -521,22 +521,6 @@ def bootstrap_clingo():
         from clingo import parse_files
 
 
-template_pkg_opt = 'opt_criterion({0}, "number of non-identical {1} nodes").'
-template_pkg_null = '#minimize {{ 0@{0} : #true}}.'
-template_pkg_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
-                        'package_not_equal(PSID1, PSID2, "{1}"), '
-                        'representative(PSID1, "{1}"), '
-                        'representative(PSID2, "{1}"), '
-                        'node(PSID1, "{1}"), node(PSID2, "{1}") }}.')
-
-template_virtual_opt = 'opt_criterion({0}, "number of non-identical {1} providers").'
-template_virtual_null = '#minimize {{ 0@{0} : #true}}.'
-template_virtual_present = ('#minimize {{ 1@{0},PSID1,PSID2 : '
-                            'virtual_not_equal(PSID1, PSID2, "{1}"), '
-                            'representative_virtual(PSID1, "{1}"), '
-                            'representative_virtual(PSID2, "{1}")}}.')
-
-
 class PyclingoDriver(object):
     def __init__(self, cores=True, asp=None):
         """Driver for the Python clingo interface.
@@ -611,32 +595,6 @@ class PyclingoDriver(object):
         with self.control.backend() as backend:
             self.backend = backend
             solver_setup.setup(self, specs_by_psid, tests=tests, reuse=reuse)
-
-            dynamic_minimization_criteria = []
-            for i, pkg in enumerate(sorted(set(solver_setup.possible_pkgs))):
-                priority = high_fixed_priority_offset + i
-                dynamic_minimization_criteria.extend([
-                    template_pkg_opt.format(priority, pkg),
-                    template_pkg_null.format(priority),
-                    template_pkg_present.format(priority, pkg)
-                ])
-            virtual_offset = len(set(solver_setup.possible_pkgs))
-            for i, virt in enumerate(sorted(set(solver_setup.possible_virtuals))):
-                priority = high_fixed_priority_offset + i + virtual_offset
-                dynamic_minimization_criteria.extend([
-                    template_virtual_opt.format(priority, virt),
-                    template_virtual_null.format(priority),
-                    template_virtual_present.format(priority, virt)
-                ])
-            self.h1("Per-package minimization of unique nodes")
-            self.out.write('\n'.join(dynamic_minimization_criteria))
-            self.newline()
-
-            tmpdir = tempfile.mkdtemp()
-            tmpfile = os.path.join(tmpdir, 'tmp.lp')
-            with open(tmpfile, 'w') as f:
-                f.write('\n'.join(dynamic_minimization_criteria))
-            self.control.load(tmpfile)
 
         timer.phase("setup")
 
