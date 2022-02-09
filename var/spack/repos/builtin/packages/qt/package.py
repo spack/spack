@@ -250,7 +250,7 @@ class Qt(Package):
     else:
         conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
-        conflicts('target=aarch64', when='@:5.15.3',
+        conflicts('target=aarch64:', when='@:5.15.3',
                   msg='Apple Silicon requires a very new version of qt')
 
     use_xcode = True
@@ -718,7 +718,7 @@ class Qt(Package):
                 '-no-alsa',
             ])
 
-        if spec.satisfies('platform=darwin target=aarch64'):
+        if spec.satisfies('platform=darwin target=aarch64:'):
             # https://www.qt.io/blog/qt-on-apple-silicon
             # Not currently working for qt@5
             config_args.extend(['-device-option',
