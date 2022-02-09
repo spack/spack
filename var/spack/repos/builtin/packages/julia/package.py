@@ -48,7 +48,7 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on('llvm version_suffix=jl +link_llvm_dylib ~internal_unwind')
+    depends_on('llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib ~internal_unwind')
     depends_on('libuv')
 
     with when('@1.7.0:1.7'):
@@ -116,6 +116,9 @@ class Julia(MakefilePackage):
     # Patches for julia
     patch('julia-1.6-system-libwhich-and-p7zip-symlink.patch', when='@1.6.0:1.6')
     patch('use-add-rpath.patch')
+
+    # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
+    patch('fix-gfortran.patch', when='@1.7.0:1.7.1')
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
