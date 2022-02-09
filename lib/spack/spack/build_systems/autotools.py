@@ -20,6 +20,7 @@ from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
 from spack.version import Version
 
+
 class AutotoolsPackage(PackageBase):
     """Specialized class for packages built using GNU Autotools.
 
