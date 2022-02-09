@@ -68,6 +68,13 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
+    diffs_parser = subparser.add_mutually_exclusive_group()
+    diffs_parser.add_argument(
+        '--multi-root', action='store_true', default=True, dest='multi_root',
+        help='concretize specs together as much as possible')
+    diffs_parser.add_argument(
+        '--single-root', action='store_false', default=True, dest='multi_root',
+        help='concretize specs together or raise an error')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
@@ -105,7 +112,7 @@ def solve(parser, args):
     # dump generated ASP program
     result = asp.solve(
         specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        reuse=args.reuse, multi_root=True
+        reuse=args.reuse, multi_root=args.multi_root
     )
     if 'solutions' not in dump:
         return
