@@ -1536,18 +1536,14 @@ class SpackSolverSetup(object):
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
         compiler_list = list(sorted(set(compiler_list)))
+        constraints = set(c[1] for c in self.compiler_version_constraints)
 
-        for pkg_name, cspec in self.compiler_version_constraints:
+        for constraint in sorted(constraints):
             for compiler in compiler_list:
-                if compiler.satisfies(cspec):
-                    self.gen.fact(
-                        fn.node_compiler_version_satisfies(
-                            pkg_name,
-                            cspec.name,
-                            cspec.versions,
-                            compiler.version
-                        )
-                    )
+                if compiler.satisfies(constraint):
+                    self.gen.fact(fn.compiler_version_satisfies(
+                        constraint.name, constraint.versions, compiler.version
+                    ))
         self.gen.newline()
 
     def define_target_constraints(self):

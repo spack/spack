@@ -708,20 +708,21 @@ node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
    Compiler1 != Compiler2,
    error("Internal error: mismatch between selected compiler and compiler version").
 
-% define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
-% version_satisfies implies that exactly one of the satisfying versions
-% is the package's version, and vice versa.
+% If the compiler of a node must satisfy a constraint, then its version
+% must be chosen among the ones that satisfy said constraint
 1 { node_compiler_version(Package, Compiler, Version)
-    : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1 :-
+    : compiler_version_satisfies(Compiler, Constraint, Version) } 1 :-
     node_compiler_version_satisfies(Package, Compiler, Constraint),
     error("Internal error: node compiler version mismatch").
 
+% If the node is associated with a compiler and the compiler satisfy a constraint, then
+% the compiler associated with the node satisfy the same constraint
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
-     node_compiler_version_satisfies(Package, Compiler, Constraint, Version),
+     compiler_version_satisfies(Compiler, Constraint, Version),
      build(Package).
 
-#defined node_compiler_version_satisfies/4.
+#defined compiler_version_satisfies/3.
 
 % If the compiler version was set from the command line,
 % respect it verbatim
