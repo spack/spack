@@ -15,7 +15,7 @@
 :- not 1 { version(Package, _) } 1, node(Package).
 
 % each node must have a single platform, os and target
-:- not 1 { node_platform(Package, _) } 1, node(Package).
+:- not 1 { node_platform(Package, _) } 1, node(Package), error("A node must have exactly one platform").
 :- not 1 { node_os(Package, _) } 1, node(Package).
 :- not 1 { node_target(Package, _) } 1, node(Package).
 
@@ -34,7 +34,7 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 % We can't emit the same version **with the same weight** from two different sources
 :- version_declared(Package, Version, Weight, Origin1),
    version_declared(Package, Version, Weight, Origin2),
-   Origin1 != Origin2,
+   Origin1 < Origin2,
    error("Internal error: two versions with identical weights").
 
 % versions are declared w/priority -- declared with priority implies declared
@@ -450,7 +450,7 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
    variant_value(Package, Variant, Value2),
    variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
    variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
-   Set1 != Set2,
+   Set1 < Set2,
    build(Package),
    error("Variant values selected from multiple disjoint sets").
 
@@ -545,9 +545,6 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 % Platform semantics
 %-----------------------------------------------------------------------------
-
-% one platform per node
-:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package), error("A node must have exactly one platform").
 
 % if no platform is set, fall back to the default
 node_platform(Package, Platform)
