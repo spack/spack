@@ -70,12 +70,9 @@ class Zlib(CMakePackage, WindowsPackage):
             env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
         if '+optimize' in self.spec:
             env.append_flags('CFLAGS', '-O2')
-
+            
     def install(self, spec, prefix):
-        if 'platform=windows' in self.spec:
-            nmake('-f' 'win32\\Makefile.msc')
-            self.win_install()
-        else:
+        if not 'platform=windows' in self.spec:
             config_args = []
             if '~shared' in spec:
                 config_args.append('--static')
@@ -85,3 +82,5 @@ class Zlib(CMakePackage, WindowsPackage):
             if self.run_tests:
                 make('check')
             make('install')
+        else:
+            super(Zlib, self).install(spec, prefix)
