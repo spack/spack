@@ -1566,9 +1566,10 @@ class SpackSolverSetup(object):
                 allowed_targets.append(test_target)
             return allowed_targets
 
+        cache = {}
         for target_constraint in sorted(self.target_constraints):
             # Construct the list of allowed targets for this constraint
-            allowed_targets, cache = [], {}
+            allowed_targets = []
             for single_constraint in str(target_constraint).split(','):
                 if single_constraint not in cache:
                     cache[single_constraint] = _all_targets_satisfiying(
