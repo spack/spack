@@ -10,7 +10,6 @@ import itertools
 import os
 import pprint
 import sys
-import tempfile
 import types
 import warnings
 
@@ -18,7 +17,7 @@ from six import string_types
 
 import archspec.cpu
 
-from llnl.util.compat import Sequence, zip_longest
+from llnl.util.compat import Sequence
 
 try:
     import clingo  # type: ignore[import]
@@ -576,10 +575,10 @@ class PyclingoDriver(object):
             self.assumptions.append(atom)
 
     def solve(
-            self, solver_setup, specs_by_psid, dump=None, nmodels=0,
+            self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False, reuse=False
     ):
-        specs = [spec for _, spec in specs_by_psid]
+        specs_by_psid = list(enumerate(specs))
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -594,7 +593,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs_by_psid, tests=tests, reuse=reuse)
+            solver_setup.setup(self, specs, tests=tests, reuse=reuse)
 
         timer.phase("setup")
 
@@ -1707,7 +1706,7 @@ class SpackSolverSetup(object):
             # TODO: (or any mirror really) doesn't have binaries.
             pass
 
-    def setup(self, driver, specs_by_psid, tests=False, reuse=False):
+    def setup(self, driver, specs, tests=False, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1717,8 +1716,7 @@ class SpackSolverSetup(object):
         Arguments:
             specs (list): list of Specs to solve
         """
-        self.specs_by_psid = specs_by_psid
-        specs = [spec for _, spec in specs_by_psid]
+        self.specs_by_psid = list(enumerate(specs))
 
         # counter for conditions
         self._condition_id_counter = itertools.count()
@@ -1795,19 +1793,8 @@ class SpackSolverSetup(object):
                     _develop_specs_from_env(dep, env)
 
         self.gen.h1('Spec Constraints')
+        self.literal_specs()
 
-        for psid, spec in self.specs_by_psid:
-            self.gen.h2('Spec: %s' % str(spec))
-            self.gen.fact(
-                fn.virtual_root(psid, spec.name) if spec.virtual
-                else fn.root(psid, spec.name)
-            )
-            for clause in self.spec_clauses(psid, spec):
-                self.gen.fact(clause)
-                if clause.name == 'variant_set':
-                    self.gen.fact(fn.variant_default_value_from_cli(
-                        *clause.args
-                    ))
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
@@ -1823,6 +1810,21 @@ class SpackSolverSetup(object):
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
 
+    def literal_specs(self):
+        for psid, spec in self.specs_by_psid:
+            self.gen.h2('Spec: %s' % str(spec))
+            self.gen.fact(fn.literal(psid))
+
+            root_fn = fn.virtual_root(spec.name) if spec.virtual else fn.root(spec.name)
+
+            self.gen.fact(fn.literal(psid, root_fn.name, *root_fn.args))
+            for clause in self.spec_clauses(no_psid, spec):
+                self.gen.fact(fn.literal(psid, clause.name, *clause.args))
+                if clause.name == 'variant_set':
+                    self.gen.fact(fn.literal(
+                        psid, "variant_default_value_from_cli", *clause.args
+                    ))
+
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
@@ -1834,6 +1836,7 @@ class SpecBuilder(object):
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
+        self._literal_ids_by_psid = collections.defaultdict(list)
 
     def hash(self, psid, pkg, h):
         pkg_id = (psid, pkg)
@@ -2012,11 +2015,15 @@ class SpecBuilder(object):
         msg = 'using "{0}@{1}" which is a deprecated version'
         tty.warn(msg.format(pkg, version))
 
+    def literal_process_space(self, literal_id, psid):
+        self._literal_ids_by_psid[psid].append(literal_id)
+
     def build_specs(self, function_tuples):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
         function_tuples.sort(key=lambda f: {
+            "literal_process_space": -4,
             "hash": -3,
             "node": -2,
             "node_compiler": -1,
@@ -2029,7 +2036,7 @@ class SpecBuilder(object):
 
             action = getattr(self, name, None)
 
-            # print out unknown actions so we can display them for debugging
+            # print out unknown actions, so we can display them for debugging
             if not action:
                 msg = "%s(%s)" % (name, ", ".join(str(a) for a in args))
                 tty.debug(msg)
@@ -2082,7 +2089,13 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_no_deprecated(s)
 
-        return self._specs
+        # Map the process ids back to the literal ids
+        specs_by_literal_id = {}
+        for (psid, pkg), item in self._specs.items():
+            for literal_id in self._literal_ids_by_psid[psid]:
+                specs_by_literal_id[(literal_id, pkg)] = item
+
+        return specs_by_literal_id
 
 
 def _develop_specs_from_env(spec, env):
@@ -2124,17 +2137,9 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
                 continue
             spack.spec.Spec.ensure_valid_variants(s)
 
-    # Associate specs with psids so we don't have to worry about order later
-    if multi_root:
-        # each spec gets its own psid
-        specs_by_psid = list(enumerate(specs))
-    else:
-        # all specs are given psid 0
-        specs_by_psid = list(zip_longest([0], specs, fillvalue=0))
-
     setup = SpackSolverSetup()
     return driver.solve(
-        setup, specs_by_psid, dump, models, timers, stats, tests, reuse
+        setup, specs, dump, models, timers, stats, tests, reuse
     )
 
 

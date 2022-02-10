@@ -28,6 +28,7 @@
 #show external_spec_selected/3.
 
 #show build/2.
+#show literal_process_space/2.
 
 % names of optimization criteria
 #show opt_criterion/2.

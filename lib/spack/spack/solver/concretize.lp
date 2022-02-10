@@ -30,6 +30,48 @@
    error("Every node must have exactly one compiler_version").
 
 %-----------------------------------------------------------------------------
+% Map literal input specs to psids
+%-----------------------------------------------------------------------------
+
+#const maxpsids=2.
+
+possible_psids(0..maxpsids).
+
+% Each input spec must have a single PSID
+1 { literal_process_space(LiteralID, PSID) : possible_psids(PSID) } 1 :- literal(LiteralID).
+
+% Map constraint on the literal ID to the correct PSID
+attr(Name, PSID, A1)         :- literal_process_space(LiteralID, PSID), literal(LiteralID, Name, A1).
+attr(Name, PSID, A1, A2)     :- literal_process_space(LiteralID, PSID), literal(LiteralID, Name, A1, A2).
+attr(Name, PSID, A1, A2, A3) :- literal_process_space(LiteralID, PSID), literal(LiteralID, Name, A1, A2, A3).
+
+% For these two atoms we only need implications in one direction
+root(PSID, Package)         :- attr("root", PSID, Package).
+virtual_root(PSID, Package) :- attr("virtual_root", PSID, Package).
+
+node_platform_set(PSID, Package, Platform) :- attr("node_platform_set", PSID, Package, Platform).
+node_os_set(PSID, Package, OS)             :- attr("node_os_set", PSID, Package, OS).
+node_target_set(PSID, Package, Target)     :- attr("node_target_set", PSID, Package, Target).
+node_flag_set(PSID, Package, Flag, Value)  :- attr("node_flag_set", PSID, Package, Flag, Value).
+
+node_compiler_version_set(PSID, Package, Compiler, Version)
+  :- attr("node_compiler_version_set", PSID, Package, Compiler, Version).
+
+variant_default_value_from_cli(PSID, Package, Variant, Value)
+  :- attr("variant_default_value_from_cli", PSID, Package, Variant, Value).
+
+% Minimize the number of PSID in the solution
+opt_criterion(302, "number of psids").
+#minimize { 0@302 : #true }.
+#minimize { 1@302,PSID : literal_process_space(_, PSID) }.
+
+#defined literal/1.
+#defined literal/2.
+#defined literal/3.
+#defined literal/4.
+#defined literal/5.
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
@@ -1144,3 +1186,6 @@ opt_criterion(1, "non-preferred targets").
 #heuristic variant_value(PSID, Package, Variant, Value) : variant_default_value(PSID, Package, Variant, Value), node(PSID, Package). [10, true]
 #heuristic provider(PSID, Package, Virtual) : possible_provider_weight(PSID, Package, Virtual, 0, _), virtual_node(PSID, Virtual). [10, true]
 #heuristic node(PSID, Package) : possible_provider_weight(PSID, Package, Virtual, 0, _), virtual_node(PSID, Virtual). [10, true]
+#heuristic literal_process_space(LiteralID, 0) : literal(LiteralID). [10, true]
+#heuristic package_equal(PSID1, PSID2, Package) : node(PSID1, Package), node(PSID2, Package). [10, true]
+#heuristic literal_process_space(LiteralID, 0) : literal(LiteralID). [10, true]
