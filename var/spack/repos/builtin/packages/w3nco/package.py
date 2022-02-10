@@ -23,5 +23,4 @@ class W3nco(CMakePackage):
 
     version('2.4.1', sha256='48b06e0ea21d3d0fd5d5c4e7eb50b081402567c1bff6c4abf4fd4f3669070139')
 
-    if sys.platform == 'darwin' and macos_version() >= Version('12.0'):
-        patch('darwin/apple-clang-13.0.0-times.patch')
+    patch('darwin/apple-clang-13.0.0-times.patch', when="%apple-clang platform=darwin")
