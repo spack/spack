@@ -20,9 +20,21 @@ def macos_version():
 
 
 def macos_cltools_version():
+    """Find the last installed version of the CommandLineTools.
+
+    The CLT version might only affect the build if it's selected as the macOS
+    SDK path.
+    """
     pkgutil = Executable('pkgutil')
     output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
-                     output=str, error=str, fail_on_error=False)
+                     output=str, fail_on_error=False)
+    match = re.search(r'version:\s*([0-9.]+)', output)
+    if match:
+        return Version(match.group(1))
+
+    # No CLTools installed by package manager: try Xcode
+    output = pkgutil('--pkg-info=com.apple.pkg.Xcode',
+                     output=str, fail_on_error=False)
     match = re.search(r'version:\s*([0-9.]+)', output)
     if match:
         return Version(match.group(1))
@@ -31,10 +43,25 @@ def macos_cltools_version():
 
 
 def macos_sdk_path():
-    """Return SDK path
+    """Return path to the active macOS SDK.
     """
     xcrun = Executable('xcrun')
-    return xcrun('--show-sdk-path', output=str, error=str).rstrip()
+    return xcrun('--show-sdk-path', output=str).rstrip()
+
+
+def macos_sdk_version():
+    """Return the version of the active macOS SDK.
+
+    The SDK version usually corresponds to the installed Xcode version and can
+    affect how some packages (especially those that use the GUI) can fail. This
+    information should somehow be embedded into the future "compilers are
+    dependencies" feature.
+
+    The macOS deployment target cannot be greater than the SDK version, but
+    usually it can be at least a few versions less.
+    """
+    xcrun = Executable('xcrun')
+    return Version(xcrun('--show-sdk-version', output=str).rstrip())
 
 
 class MacOs(OperatingSystem):
