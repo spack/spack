@@ -172,6 +172,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         exe = 'test1'
         cc_exe = os.environ['CC']
 
+        self.run_test(exe='make',
+                      options=[join_path(test_dir, 'makefile'), exe],
+                      purpose='test:compile makefile',
+                      work_dir=test_dir)
+
         self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
                                '-L{0}'.format(self.prefix.lib),
