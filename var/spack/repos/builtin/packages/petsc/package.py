@@ -583,13 +583,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             join_path('src', 'snes', 'tutorials')
         ])
 
-    def run_ex50_test(self, runexe, runopt, w_dir, makefile_path):
+    def run_ex50_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex50"""
 
         self.run_test('make',
-                      options=['-f', 'ex50'],
+                      options=['ex50'],
                       purpose='test: compile ex50',
-                      work_dir=makefile_path)
+                      work_dir=w_dir)
 
         testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
         testdict = {
@@ -612,11 +612,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                               purpose=purpose_str,
                               work_dir=w_dir)
 
-    def run_ex7_test(self, runexe, runopt, w_dir, makefile_path):
+    def run_ex7_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex7 with cuda"""
 
         self.run_test('make',
-                      options=['-f', makefile_path, 'ex7'],
+                      options=['ex7'],
                       purpose='test: compile ex7',
                       work_dir=w_dir)
 
@@ -631,11 +631,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                       purpose=purpose_str,
                       work_dir=w_dir)
 
-    def run_ex3k_test(self, runexe, runopt, w_dir, makefile_path):
+    def run_ex3k_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex3.kokkos with kokkos"""
 
         self.run_test('make',
-                      options=['-f', makefile_path, 'ex3k.kokkos'],
+                      options=['ex3k.kokkos'],
                       purpose='test: compile ex3k.kokkos',
                       work_dir=w_dir)
 
@@ -664,17 +664,16 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'ksp', 'ksp', 'tutorials')
         skip_test = 'Skipping petsc test:'
-        makefile_path = join_path(w_dir, 'makefile')
 
         if os.path.isfile(join_path(w_dir, 'ex50.c')):
-            self.run_ex50_test(runexe, runopt, w_dir, makefile_path)
+            self.run_ex50_test(runexe, runopt, w_dir)
         else:
             tty.warn('{0} KSP tutorial example ex50 is missing'
                      .format(skip_test))
 
         if os.path.isfile(join_path(w_dir, 'ex7.c')):
             if '+cuda' in self.spec:
-                self.run_ex7_test(runexe, runopt, w_dir, makefile_path)
+                self.run_ex7_test(runexe, runopt, w_dir)
             else:
                 tty.msg('{0} KSP tutorial example ex7 requires +cuda'
                         .format(skip_test))
@@ -684,11 +683,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         w_dir = join_path(self.test_suite.current_test_cache_dir,
                           'src', 'snes', 'tutorials')
-        makefile_path = join_path(w_dir, 'makefile')
 
         if os.path.isfile(join_path(w_dir, 'ex3k.kokkos.cxx')):
             if '+kokkos' in self.spec:
-                self.run_ex3k_test(runexe, runopt, w_dir, makefile_path)
+                self.run_ex3k_test(runexe, runopt, w_dir)
             else:
                 tty.msg('{0} SNES tutorial example ex3k requires +kokkos'
                         .format(skip_test))
