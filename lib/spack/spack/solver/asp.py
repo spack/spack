@@ -716,7 +716,7 @@ class SpackSolverSetup(object):
         if str(target) in archspec.cpu.TARGETS:
             return [single_target_fn(spec.name, target)]
 
-        self.target_constraints.add((spec.name, target))
+        self.target_constraints.add(target)
         return [fn.node_target_satisfies(spec.name, target)]
 
     def conflict_rules(self, pkg):
@@ -1217,8 +1217,7 @@ class SpackSolverSetup(object):
                 clauses.append(
                     fn.node_compiler_version_satisfies(
                         spec.name, spec.compiler.name, spec.compiler.versions))
-                self.compiler_version_constraints.add(
-                    (spec.name, spec.compiler))
+                self.compiler_version_constraints.add(spec.compiler)
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
@@ -1538,9 +1537,7 @@ class SpackSolverSetup(object):
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
         compiler_list = list(sorted(set(compiler_list)))
-        constraints = set(c[1] for c in self.compiler_version_constraints)
-
-        for constraint in sorted(constraints):
+        for constraint in sorted(self.compiler_version_constraints):
             for compiler in compiler_list:
                 if compiler.satisfies(constraint):
                     self.gen.fact(fn.compiler_version_satisfies(
@@ -1569,8 +1566,7 @@ class SpackSolverSetup(object):
                 allowed_targets.append(test_target)
             return allowed_targets
 
-        constraints = set(c[1] for c in self.target_constraints)
-        for target_constraint in sorted(constraints):
+        for target_constraint in sorted(self.target_constraints):
             # Construct the list of allowed targets for this constraint
             allowed_targets, cache = [], {}
             for single_constraint in str(target_constraint).split(','):
