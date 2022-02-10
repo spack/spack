@@ -323,7 +323,7 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                 vrn = spack.spec.Spec(conflict)
                 try:
                     vrn.constrain(trigger)
-                except Exception as e:
+                except Exception:
                     # If one of the conflict/trigger includes a platform and the other
                     # includes an os or target, the constraint will fail if the current
                     # platform is not the plataform in the conflict/trigger. Audit the
