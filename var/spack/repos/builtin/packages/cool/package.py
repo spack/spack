@@ -27,8 +27,8 @@ class Cool(CMakePackage):
     #   (only necessary for Spack builds, for some reason)
     # * Explicitly request Boost components
     patch('cool.patch', level=0, when='@:3.3.8')
-    when('@3.3.9:')
 
+    @when('@3.3.9:')
     def patch(self):
         filter_file("find_package(Boost REQUIRED)",
                     "find_package(Boost REQUIRED chrono system thread)",
