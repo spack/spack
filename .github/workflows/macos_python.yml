@@ -32,7 +32,7 @@ jobs:
       run: |
         . .github/workflows/install_spack.sh
         # 9.2.0 is the latest version on which we apply homebrew patch
-        spack install -v --fail-fast gcc@9.2.0 %apple-clang
+        spack install -v --fail-fast gcc@11.2.0 %apple-clang
 
   install_jupyter_clang:
     name: jupyter

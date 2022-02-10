@@ -191,6 +191,7 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - variorum
     - veloc
     - zfp
     #- dealii
@@ -198,7 +199,6 @@ spack:
     #- qt
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
-    #- variorum # root fails
 
   - arch:
     - '%gcc target=x86_64'

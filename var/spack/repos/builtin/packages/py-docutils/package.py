@@ -29,7 +29,7 @@ class PyDocutils(PythonPackage):
     depends_on('py-setuptools',       when='@0.15:',         type='build')
     depends_on('python@2.7:2.8,3.5:', when='@0.16:',         type=('build', 'run'))
     depends_on('python@2.6:2.8,3.3:', when='@0.14:0.15',     type=('build', 'run'))
-    depends_on('python@2.4:3',        when='@:0.13',     type=('build', 'run'))
+    depends_on('python@2.4:',         when='@:0.13',     type=('build', 'run'))
 
     # NOTE: This creates symbolic links to be able to run docutils scripts
     # without .py file extension similarly to various linux distributions to

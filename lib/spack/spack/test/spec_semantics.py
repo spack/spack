@@ -1228,3 +1228,15 @@ def test_merge_abstract_anonymous_specs(specs, expected):
     specs = [Spec(x) for x in specs]
     result = spack.spec.merge_abstract_anonymous_specs(*specs)
     assert result == Spec(expected)
+
+
+@pytest.mark.parametrize('anonymous,named,expected', [
+    ('+plumed', 'gromacs', 'gromacs+plumed'),
+    ('+plumed ^plumed%gcc', 'gromacs', 'gromacs+plumed ^plumed%gcc'),
+    ('+plumed', 'builtin.gromacs', 'builtin.gromacs+plumed')
+])
+def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
+    s = Spec(anonymous)
+    changed = s.constrain(named)
+    assert changed
+    assert s == Spec(expected)
