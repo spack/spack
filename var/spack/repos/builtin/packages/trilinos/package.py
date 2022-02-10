@@ -63,7 +63,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant('complex', default=False, description='Enable complex numbers in Trilinos')
-    variant('cuda_rdc', default=False, description='turn on RDC for CUDA build')
+    variant('cuda_rdc', default=False, description='Turn on RDC for CUDA build')
+    variant('rocm_rdc', default=False, description='Turn on RDC for ROCm build')
     variant('cxxstd', default='14', values=['11', '14', '17'], multi=False)
     variant('debug', default=False, description='Enable runtime safety and debug checks')
     variant('explicit_template_instantiation', default=True, description='Enable explicit template instantiation (ETI)')
@@ -276,6 +277,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
     conflicts('+cuda_rdc', when='~cuda')
+    conflicts('+rocm_rdc', when='~rocm')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
 
@@ -749,6 +751,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 options.extend([
                     define_kok_enable('ROCM', False),
                     define_kok_enable('HIP', True)
+                    define_kok_enable('HIP_RELOCATABLE_DEVICE_CODE', 'rocm_rdc')
                 ])
                 if '+tpetra' in spec:
                     options.append(define('Tpetra_INST_HIP', True))
