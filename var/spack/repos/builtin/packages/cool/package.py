@@ -16,7 +16,7 @@ class Cool(CMakePackage):
     tags = ['hep']
     maintainers = ['iarspider']
 
-    version('3.3.10',tag='COOL_3_3_10')
+    version('3.3.10', tag='COOL_3_3_10')
     version('3.3.7', tag='COOL_3_3_7')
     version('3.3.5', tag='COOL_3_3_5')
     version('3.3.4', tag='COOL_3_3_4')
@@ -28,6 +28,7 @@ class Cool(CMakePackage):
     # * Explicitly request Boost components
     patch('cool.patch', level=0, when='@:3.3.8')
     when('@3.3.9:')
+
     def patch(self):
         filter_file("find_package(Boost REQUIRED)",
                     "find_package(Boost REQUIRED chrono system thread)",
