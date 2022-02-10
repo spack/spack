@@ -240,17 +240,11 @@ def _id(thing):
         return '"%s"' % str(thing)
 
 
-# To avoid duplicate code paths for spec_clauses calls that do/don't require psid
-# we have the no_psid object. Any AspFunction created with psid set to `no_psid` will
-# strip that argument from its args.
-no_psid = object()
-
-
 @llnl.util.lang.key_ordering
 class AspFunction(AspObject):
     def __init__(self, name, args=None):
         self.name = name
-        self.args = () if args is None else tuple(a for a in args if a is not no_psid)
+        self.args = () if args is None else args
 
     def _cmp_key(self):
         return (self.name, self.args)
@@ -330,7 +324,7 @@ def check_packages_exist(specs):
 
 class Result(object):
     """Result of an ASP solve."""
-    def __init__(self, specs_by_psid, asp=None):
+    def __init__(self, specs_by_literal_id, asp=None):
         self.asp = asp
         self.satisfiable = None
         self.optimal = None
@@ -348,7 +342,7 @@ class Result(object):
         self.criteria = []
 
         # Abstract user requests
-        self.abstract_specs_by_psid = specs_by_psid
+        self.abstract_specs_by_literal_id = specs_by_literal_id
 
         # Concrete specs
         self._concrete_specs = None
@@ -439,7 +433,7 @@ class Result(object):
         if self.satisfiable:
             return
 
-        constraints = [spec for _, spec in self.abstract_specs_by_psid]
+        constraints = [spec for _, spec in self.abstract_specs_by_literal_id]
         if len(constraints) == 1:
             constraints = constraints[0]
 
@@ -467,13 +461,13 @@ class Result(object):
         best = min(self.answers)
         opt, _, answer = best
 
-        for psid, input_spec in self.abstract_specs_by_psid:
-            key = (str(psid), input_spec.name)
+        for idx, input_spec in self.abstract_specs_by_literal_id:
+            key = (str(idx), input_spec.name)
             if input_spec.virtual:
                 providers = [spec.name for key, spec in answer.items()
                              if spec.package.provides(input_spec.name) and
-                             str(psid) == key[0]]
-                key = (str(psid), providers[0])
+                             str(idx) == key[0]]
+                key = (str(idx), providers[0])
 
             self._concrete_specs.append(answer[key])
 
@@ -695,7 +689,7 @@ class SpackSolverSetup(object):
 
     def __init__(self):
         self.gen = None  # set by setup()
-        self.specs_by_psid = []  # set by setup()
+        self.specs_by_literal_id = []  # set by setup()
 
         self.declared_versions = {}
         self.possible_versions = {}
@@ -750,30 +744,30 @@ class SpackSolverSetup(object):
         for v in sorted(deprecated):
             self.gen.fact(fn.deprecated_version(pkg.name, v))
 
-    def spec_versions(self, psid, spec):
+    def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
         assert spec.name
 
         if spec.concrete:
-            return [fn.version(psid, spec.name, spec.version)]
+            return [fn.version(spec.name, spec.version)]
 
         if spec.versions == spack.version.ver(":"):
             return []
 
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
-        return [fn.node_version_satisfies(psid, spec.name, spec.versions)]
+        return [fn.node_version_satisfies(spec.name, spec.versions)]
 
-    def target_ranges(self, psid, spec, single_target_fn):
+    def target_ranges(self, spec, single_target_fn):
         target_spec = spec.architecture.target
 
         # Check if the target is a concrete target
         if str(target_spec) in archspec.cpu.TARGETS:
-            return [single_target_fn(psid, spec.name, target_spec)]
+            return [single_target_fn(spec.name, target_spec)]
 
         self.target_constraints.add(target_spec)
-        return [fn.node_target_satisfies(psid, spec.name, target_spec)]
+        return [fn.node_target_satisfies(spec.name, target_spec)]
 
     def conflict_rules(self, pkg):
         for trigger, constraints in pkg.conflicts.items():
@@ -959,9 +953,7 @@ class SpackSolverSetup(object):
         self.gen.fact(fn.condition(condition_id))
 
         # requirements trigger the condition
-        # condition_requirement clause are abstract, do not require psid
-        requirements = self.spec_clauses(
-            no_psid, named_cond, body=True, required_from=name)
+        requirements = self.spec_clauses(named_cond, body=True, required_from=name)
         for pred in requirements:
             self.gen.fact(
                 fn.condition_requirement(condition_id, pred.name, *pred.args)
@@ -973,9 +965,9 @@ class SpackSolverSetup(object):
         return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, name=None, body=False):
-        # impose clauses are abstract, do not require psid
         imposed_constraints = self.spec_clauses(
-            no_psid, imposed_spec, body=body, required_from=name)
+            imposed_spec, body=body, required_from=name
+        )
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if not node and pred.name in ("node", "virtual_node"):
@@ -1161,13 +1153,13 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
-    def spec_clauses(self, psid, *args, **kwargs):
+    def spec_clauses(self, *args, **kwargs):
         """Wrap a call to `_spec_clauses()` into a try/except block that
         raises a comprehensible error message in case of failure.
         """
         requestor = kwargs.pop('required_from', None)
         try:
-            clauses = self._spec_clauses(psid, *args, **kwargs)
+            clauses = self._spec_clauses(*args, **kwargs)
         except RuntimeError as exc:
             msg = str(exc)
             if requestor:
@@ -1175,8 +1167,7 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def _spec_clauses(
-            self, psid, spec, body=False, transitive=True, expand_hashes=False):
+    def _spec_clauses(self, spec, body=False, transitive=True, expand_hashes=False):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -1223,21 +1214,21 @@ class SpackSolverSetup(object):
 
         if spec.name:
             clauses.append(
-                f.node(psid, spec.name) if not spec.virtual
-                else f.virtual_node(psid, spec.name))
+                f.node(spec.name) if not spec.virtual
+                else f.virtual_node(spec.name))
 
-        clauses.extend(self.spec_versions(psid, spec))
+        clauses.extend(self.spec_versions(spec))
 
         # seed architecture at the root (we'll propagate later)
         # TODO: use better semantics.
         arch = spec.architecture
         if arch:
             if arch.platform:
-                clauses.append(f.node_platform(psid, spec.name, arch.platform))
+                clauses.append(f.node_platform(spec.name, arch.platform))
             if arch.os:
-                clauses.append(f.node_os(psid, spec.name, arch.os))
+                clauses.append(f.node_os(spec.name, arch.os))
             if arch.target:
-                clauses.extend(self.target_ranges(psid, spec, f.node_target))
+                clauses.extend(self.target_ranges(spec, f.node_target))
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
@@ -1262,7 +1253,7 @@ class SpackSolverSetup(object):
                         else:
                             variant_def.validate_or_raise(variant, spec.package)
 
-                clauses.append(f.variant_value(psid, spec.name, vname, value))
+                clauses.append(f.variant_value(spec.name, vname, value))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -1271,40 +1262,42 @@ class SpackSolverSetup(object):
 
         # compiler and compiler version
         if spec.compiler:
-            clauses.append(f.node_compiler(psid, spec.name, spec.compiler.name))
+            clauses.append(f.node_compiler(spec.name, spec.compiler.name))
 
             if spec.compiler.concrete:
                 clauses.append(f.node_compiler_version(
-                    psid, spec.name, spec.compiler.name, spec.compiler.version))
+                    spec.name, spec.compiler.name, spec.compiler.version
+                ))
 
             elif spec.compiler.versions:
                 clauses.append(
                     fn.node_compiler_version_satisfies(
-                        psid, spec.name, spec.compiler.name, spec.compiler.versions))
+                        spec.name, spec.compiler.name, spec.compiler.versions
+                    ))
                 self.compiler_version_constraints.add(spec.compiler)
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
-                clauses.append(f.node_flag(psid, spec.name, flag_type, flag))
+                clauses.append(f.node_flag(spec.name, flag_type, flag))
 
         # dependencies
         if spec.concrete:
-            clauses.append(fn.hash(psid, spec.name, spec.dag_hash()))
+            clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
         if transitive:
             if spec.concrete:
                 for dep_name, dep in spec.dependencies_dict().items():
                     for dtype in dep.deptypes:
-                        clauses.append(fn.depends_on(psid, spec.name, dep_name, dtype))
+                        clauses.append(fn.depends_on(spec.name, dep_name, dtype))
 
             for dep in spec.traverse(root=False):
                 if spec.concrete:
-                    clauses.append(fn.hash(psid, dep.name, dep.dag_hash()))
+                    clauses.append(fn.hash(dep.name, dep.dag_hash()))
                 if not spec.concrete or expand_hashes:
                     clauses.extend(
-                        self._spec_clauses(psid, dep, body, transitive=False)
+                        self._spec_clauses(dep, body, transitive=False)
                     )
 
         return clauses
@@ -1475,13 +1468,13 @@ class SpackSolverSetup(object):
             ))
 
         # add any targets explicitly mentioned in specs
-        for psid, spec in self.specs_by_psid:
+        for _, spec in self.specs_by_literal_id:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
             target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
-                self.target_ranges(psid, spec, None)
+                self.target_ranges(spec, None)
                 continue
 
             if target not in compatible_targets:
@@ -1716,7 +1709,7 @@ class SpackSolverSetup(object):
         Arguments:
             specs (list): list of Specs to solve
         """
-        self.specs_by_psid = list(enumerate(specs))
+        self.specs_by_literal_id = list(enumerate(specs))
 
         # counter for conditions
         self._condition_id_counter = itertools.count()
@@ -1811,18 +1804,18 @@ class SpackSolverSetup(object):
         self.define_target_constraints()
 
     def literal_specs(self):
-        for psid, spec in self.specs_by_psid:
+        for idx, spec in self.specs_by_literal_id:
             self.gen.h2('Spec: %s' % str(spec))
-            self.gen.fact(fn.literal(psid))
+            self.gen.fact(fn.literal(idx))
 
             root_fn = fn.virtual_root(spec.name) if spec.virtual else fn.root(spec.name)
 
-            self.gen.fact(fn.literal(psid, root_fn.name, *root_fn.args))
-            for clause in self.spec_clauses(no_psid, spec):
-                self.gen.fact(fn.literal(psid, clause.name, *clause.args))
+            self.gen.fact(fn.literal(idx, root_fn.name, *root_fn.args))
+            for clause in self.spec_clauses(spec):
+                self.gen.fact(fn.literal(idx, clause.name, *clause.args))
                 if clause.name == 'variant_set':
                     self.gen.fact(fn.literal(
-                        psid, "variant_default_value_from_cli", *clause.args
+                        idx, "variant_default_value_from_cli", *clause.args
                     ))
 
 
