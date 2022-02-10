@@ -750,7 +750,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 options.extend([
                     define_kok_enable('ROCM', False),
-                    define_kok_enable('HIP', True)
+                    define_kok_enable('HIP', True),
                     define_kok_enable('HIP_RELOCATABLE_DEVICE_CODE', 'rocm_rdc')
                 ])
                 if '+tpetra' in spec:
