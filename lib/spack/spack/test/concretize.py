@@ -1387,7 +1387,7 @@ class TestConcretize(object):
         (['mpi', 'zmpi'], 2),
         (['mpi', 'mpich'], 1),
     ])
-    def test_best_effort_coconcretize(mock_packages, specs, expected):
+    def test_best_effort_coconcretize(self, mock_packages, specs, expected):
         import spack.solver.asp
         specs = [spack.spec.Spec(s) for s in specs]
         result = spack.solver.asp.solve(specs, reuse=False, multi_root=True)
@@ -1406,7 +1406,8 @@ class TestConcretize(object):
         (['hdf5', 'zmpi', 'mpich'], 'mpich', 2)
     ])
     def test_best_effort_coconcretize_preferences(
-            mock_packages, specs, expected_spec, occurances):
+            self, mock_packages, specs, expected_spec, occurances
+    ):
         """
         Test that package preferences are being respected during coconcretization.
         """
