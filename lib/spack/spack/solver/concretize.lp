@@ -11,10 +11,21 @@
 % Map literal input specs to facts that drive the solve
 %-----------------------------------------------------------------------------
 
+% concretize_everything().
+
+% Give clingo the choice to solve an input spec or not
+{ literal_solved(ID) } :- literal(ID).
+literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
+
+% If concretize_everything() is a fact, then we cannot have unsolved specs
+:- literal_not_solved(ID), concretize_everything().
+
+#minimize { 1@300,ID : literal_not_solved(ID) }.
+
 % Map constraint on the literal ID to the correct PSID
-attr(Name, A1)         :- literal(LiteralID, Name, A1).
-attr(Name, A1, A2)     :- literal(LiteralID, Name, A1, A2).
-attr(Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3).
+attr(Name, A1)         :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
+attr(Name, A1, A2)     :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
+attr(Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
 
 % For these two atoms we only need implications in one direction
 root(Package)         :- attr("root", Package).
@@ -31,6 +42,7 @@ node_compiler_version_set(Package, Compiler, Version)
 variant_default_value_from_cli(Package, Variant, Value)
   :- attr("variant_default_value_from_cli", Package, Variant, Value).
 
+#defined concretize_everything/0.
 #defined literal/1.
 #defined literal/3.
 #defined literal/4.
