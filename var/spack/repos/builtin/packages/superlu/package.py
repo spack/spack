@@ -188,7 +188,7 @@ class Superlu(CMakePackage):
                              self.examples_src_dir)
 
         if not os.path.exists(test_dir):
-            print('Skipping superlu test')
+            print('Skipping superlu test: missing required {0}'.format(test_dir))
             return
 
         with working_dir(test_dir, create=False):
