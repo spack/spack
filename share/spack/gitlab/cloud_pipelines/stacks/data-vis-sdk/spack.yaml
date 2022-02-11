@@ -14,9 +14,9 @@ spack:
       version:
         - "0.7.2"
     mesa:
-      variants: ~glx +osmesa
+      variants: ~glx ~osmesa +egl
     paraview:
-      variants: +osmesa
+      variants: +egl
     all:
       target: [x86_64]
 
