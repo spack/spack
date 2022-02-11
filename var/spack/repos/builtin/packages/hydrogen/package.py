@@ -212,8 +212,10 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         elif 'blas=essl' in spec:
             # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             args.extend([
-                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' % self.spec['essl'].libs,
-                '-DBLAS_LIBRARIES=%s;-lblas' % self.spec['essl'].libs])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas'
+                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas'
+                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         if '+omp_taskloops' in spec:
             args.extend([

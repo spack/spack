@@ -208,8 +208,10 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
         if self.spec.satisfies('^essl'):
             # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             args.extend([
-                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' % self.spec['essl'].libs,
-                '-DBLAS_LIBRARIES=%s;-lblas' % self.spec['essl'].libs])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas'
+                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas'
+                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 
