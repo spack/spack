@@ -33,13 +33,15 @@ class Vc(CMakePackage):
         if self.run_tests and self.spec.satisfies('@1.4.0:'):
             git = which('git')
             with working_dir(join_path(self.stage.source_path, 'tests/testdata')):
-                git('clone', '--filter=tree:0', 'https://github.com/VcDevel/vc-testdata' , '.')
-                # NOTE to maintainers: when adding new versions, check if the commit changed
+                git('clone', '--filter=tree:0', 'https://github.com/VcDevel/vc-testdata', '.')
+                # NOTE to maintainers: when adding new versions,
+                # check if the commit hash changed:
                 # https://github.com/VcDevel/Vc/tree/1.4/tests
                 git('fetch', 'origin', '9ada1f34d6a41f1b5553d6223f277eae72c039d3')
                 git('checkout', '9ada1f34d6a41f1b5553d6223f277eae72c039d3')
             with working_dir(join_path(self.stage.source_path, 'tests/virtest')):
-                git('clone',  'https://github.com/mattkretz/virtest/' , '.')
-                # NOTE to maintainers: when adding new versions, check if the commit changed
+                git('clone',  'https://github.com/mattkretz/virtest/', '.')
+                # NOTE to maintainers: when adding new versions,
+                # check if the commit hash changed:
                 # https://github.com/VcDevel/Vc/tree/1.4/tests
                 git('checkout', 'f7d03ef39fceba168745bd29e1b20af6e7971e04')
