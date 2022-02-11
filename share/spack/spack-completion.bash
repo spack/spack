@@ -1652,7 +1652,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status --reuse -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats"
+        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status --reuse -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats --multi-root --single-root"
     else
         _all_packages
     fi
