@@ -154,7 +154,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             pkg_config_path = '{0}/lib/pkgconfig'.format(self.prefix)
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):
