@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Veloc(CMakePackage):
     """Very-Low Overhead Checkpointing System. VELOC is a multi-level
     checkpoint-restart runtime for HPC supercomputing infrastructures"""
