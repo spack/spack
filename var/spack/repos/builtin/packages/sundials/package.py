@@ -7,7 +7,6 @@ import os
 import sys
 
 from spack import *
-from llnl.util.filesystem import copy_tree
 
 class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
@@ -24,6 +23,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('6.1.1', sha256='cfaf637b792c330396a25ef787eb59d58726c35918ebbc08e33466e45d50470c')
     version('6.1.0', sha256='eea49f52140640e54931c779e73aece65f34efa996a26b2263db6a1e27d0901c')
     version('6.0.0', sha256='c7178e54df20a9363ae3e5ac5b3ee9db756a4ddd4b8fff045127e93b73b151f4')
     version('5.8.0', sha256='d4ed403351f72434d347df592da6c91a69452071860525385b3339c824e8a213')
