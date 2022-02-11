@@ -426,10 +426,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
         if self.spec.satisfies('^essl'):
             args.extend([
-                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas'
-                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
-                '-DBLAS_LIBRARIES=%s;-lblas'
-                % ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 
