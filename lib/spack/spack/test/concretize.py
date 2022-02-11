@@ -1378,8 +1378,13 @@ class TestConcretize(object):
 
     @pytest.mark.parametrize('specs,expected', [
         (['libelf', 'libelf@0.8.10'], 1),
+        # There's nothing preventing the mix of libdwarf%gcc
+        # with libelf%clang, sp we expect only 2 specs
         (['libdwarf%gcc', 'libelf%clang'], 2),
-        (['libdwarf%gcc', 'libdwarf%clang'], 3),
+        # Since here instead we need two buckets, the concretizer
+        # will build two stacks (one with gcc and one with clang)
+        # so we expect 4 nodes in total
+        (['libdwarf%gcc', 'libdwarf%clang'], 4),
         (['libdwarf^libelf@0.8.12', 'libdwarf^libelf@0.8.13'], 4),
         (['hdf5', 'zmpi'], 3),
         (['hdf5', 'mpich'], 2),
@@ -1387,7 +1392,8 @@ class TestConcretize(object):
         (['mpi', 'zmpi'], 2),
         (['mpi', 'mpich'], 1),
     ])
-    def test_best_effort_coconcretize(self, mock_packages, specs, expected):
+    def test_best_effort_coconcretize(self, specs, expected):
+        """Check the semantics of concretizing 'together where possible'."""
         import spack.solver.asp
         specs = [spack.spec.Spec(s) for s in specs]
         result = spack.solver.asp.solve(specs, reuse=False, multi_root=True)
@@ -1403,10 +1409,10 @@ class TestConcretize(object):
           'libdwarf@20130207^libelf@0.8.12',
           'libdwarf@20111030'],
          'libelf@0.8.12', 2),
-        (['hdf5', 'zmpi', 'mpich'], 'mpich', 2)
+        (['hdf5^mpich', 'zmpi', 'mpich'], 'mpich', 2)
     ])
     def test_best_effort_coconcretize_preferences(
-            self, mock_packages, specs, expected_spec, occurances
+            self, specs, expected_spec, occurances
     ):
         """
         Test that package preferences are being respected during coconcretization.

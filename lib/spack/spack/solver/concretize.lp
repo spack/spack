@@ -45,7 +45,7 @@ attr(Name, PSID, A1)         :- literal_process_space(LiteralID, PSID), literal(
 attr(Name, PSID, A1, A2)     :- literal_process_space(LiteralID, PSID), literal(LiteralID, Name, A1, A2).
 attr(Name, PSID, A1, A2, A3) :- literal_process_space(LiteralID, PSID), literal(LiteralID, Name, A1, A2, A3).
 
-% For these two atoms we only need implications in one direction
+% For these atoms we only need implications in one direction
 root(PSID, Package)         :- attr("root", PSID, Package).
 virtual_root(PSID, Package) :- attr("virtual_root", PSID, Package).
 
@@ -59,11 +59,6 @@ node_compiler_version_set(PSID, Package, Compiler, Version)
 
 variant_default_value_from_cli(PSID, Package, Variant, Value)
   :- attr("variant_default_value_from_cli", PSID, Package, Variant, Value).
-
-% Minimize the number of PSID in the solution
-opt_criterion(302, "number of psids").
-#minimize { 0@302 : #true }.
-#minimize { 1@302,PSID : literal_process_space(_, PSID) }.
 
 #defined literal/1.
 #defined literal/2.
@@ -262,6 +257,18 @@ virtual_node(PSID, Virtual)
 % The provider must be selected among the possible providers.
 1 { provider(PSID, Package, Virtual) : possible_provider(Package, Virtual) } 1
   :- virtual_node(PSID, Virtual), error("Virtual packages must be satisfied by a unique provider").
+
+% In any case we cannot have more than one provider for the same
+% virtual in the same process space
+:- 2 { provider(PSID, _, Virtual) }, virtual(Virtual),  process_space(PSID).
+
+% Keep track of every use of a provider, so that we can penalize it. This is
+% important when we have more than one PSID so that the best providers are
+% used the most.
+provider_used_by(PSID, Provider, Package, Virtual, Weight)
+  :- provider_weight(PSID, Provider, Virtual, Weight),
+     depends_on(PSID, Package, Provider),
+     node(PSID, Package).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(PSID, Virtual) :- virtual_root(PSID, Virtual).
@@ -905,20 +912,6 @@ build(PSID, Package)
  :- not hash(PSID, Package, _),
     node(PSID, Package).
 
-build_representative(PSID, Package)
- :- not hash(PSID, Package, _),
-    representative(PSID, Package).
-
-representative(PSID, Package)
- :- node(PSID, Package),
-    not package_equal(_, PSID, Package).
-
-% Virtual representative may be a concrete root that provides the virtual
-representative_virtual(PSID, Virtual):
-  :- node(PSID, Provider),
-     possible_provider(Provider, Virtual),
-     not virtual_equal(_, PSID, Virtual).
-
 % Minimizing builds is tricky. We want a minimizing criterion
 
 % because we want to reuse what is avaialble, but
@@ -941,45 +934,6 @@ build_priority(PSID, Package, 0)
  :- not build(PSID, Package), node(PSID, Package).
 
 #defined installed_hash/2.
-
-%-----------------------------------------------------------------------------
-% How many of each package do we need?
-%-----------------------------------------------------------------------------
-% If two roots provide the same spec for the same package,
-% we only count it once in the optimizations
-% because we only have to build it once
-% We will then minimize within each package
-% for the number of PSIDs that are not handled by another PSID
-package_equal(PSID1, PSID2, Package)
- :- node(PSID1, Package);
-    node(PSID2, Package);
-    attr(Name, PSID1, Package) : attr(Name, PSID2, Package), equality_attr(Name);
-    attr(Name, PSID1, Package, A1) : attr(Name, PSID2, Package, A1), equality_attr(Name);
-    attr(Name, PSID1, Package, A1, A2) : attr(Name, PSID2, Package, A1, A2), equality_attr(Name);
-    attr(Name, PSID2, Package) : attr(Name, PSID1, Package), equality_attr(Name);
-    attr(Name, PSID2, Package, A1) : attr(Name, PSID1, Package, A1), equality_attr(Name);
-    attr(Name, PSID2, Package, A1, A2) : attr(Name, PSID1, Package, A1, A2), equality_attr(Name);
-    package_equal(PSID1, PSID2, Dependency) : depends_on(PSID1, Package, Dependebcy);
-    PSID1 < PSID2.
-
-package_not_equal(PSID1, PSID2, Package)
- :- node(PSID1, Package), node(PSID2, Package),
-    not package_equal(PSID1, PSID2, Package),
-    PSID1 < PSID2.
-
-% Do not tie this to whether the virtual node exists
-% because we want `mpi` and `mpich` to co-concretize
-virtual_equal(PSID1, PSID2, Virtual)
- :- node(PSID1, Provider), node(PSID2, Provider),
-    possible_provider(Provider, Virtual),
-    package_equal(PSID1, PSID2, Provider).
-
-virtual_not_equal(PSID1, PSID2, Virtual)
- :- node(PSID1, Provider1), node(PSID2, Provider2),
-    possible_provider(Provider1, Virtual),
-    possible_provider(Provider2, Virtual),
-    not virtual_equal(PSID1, PSID2, Virtual),
-    PSID1 < PSID2.
 
 equality_attr("hash").
 equality_attr("depends_on").
@@ -1004,21 +958,15 @@ equality_attr("external_spec_selected").
 %   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
 %      is displayed (clingo doesn't display sums over empty sets by default)
 
-% Try to minimize the number of nodes of a given package
-% asp.py will generate statements of the following form for each literal "package"
-% indexed in an arbitrary but deterministic order.
-opt_criterion(300, "number of non-identical package nodes").
-#minimize { 0@300: #true }.
-#minimize { 1@300,PSID1,PSID2,Package : package_not_equal(PSID1, PSID2, Package), representative(PSID1, Package), representative(PSID2, Package) }.
-% asp.py will generate statements of a similar form for each literal "virtual"
-opt_criterion(301, "number of virtual providers").
-#minimize { 0@301: #true }.
-#minimize { 1@301,PSID1,PSID2,Virtual : virtual_not_equal(PSID1, PSID2, Virtual), representative_virtual(PSID1, Virtual), representative_virtual(PSID2, Virtual) }.
+% Minimize the number of PSID in the solution
+opt_criterion(300, "number of psids").
+#minimize { 0@300 : #true }.
+#minimize { 1@300,PSID : literal_process_space(_, PSID) }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 0@100: #true }.
-#minimize { 1@100,Package,PSID : build_representative(PSID, Package), optimize_for_reuse() }.
+#minimize { 1@100,Package : build(PSID, Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
 % Minimize the number of deprecated versions being used
@@ -1091,8 +1039,8 @@ opt_criterion(9, "preferred providers (non-roots)").
 #minimize{ 0@209: #true }.
 #minimize{ 0@9: #true }.
 #minimize{
-    Weight@9+Priority,Provider,Virtual,PSID
-    : provider_weight(PSID, Provider, Virtual, Weight), not root(PSID, Provider),
+    Weight@9+Priority,Provider,Package,Virtual,PSID
+    : provider_used_by(PSID, Provider, Package, Virtual, Weight),
       build_priority(PSID, Provider, Priority)
 }.
 
@@ -1186,6 +1134,4 @@ opt_criterion(1, "non-preferred targets").
 #heuristic variant_value(PSID, Package, Variant, Value) : variant_default_value(PSID, Package, Variant, Value), node(PSID, Package). [10, true]
 #heuristic provider(PSID, Package, Virtual) : possible_provider_weight(PSID, Package, Virtual, 0, _), virtual_node(PSID, Virtual). [10, true]
 #heuristic node(PSID, Package) : possible_provider_weight(PSID, Package, Virtual, 0, _), virtual_node(PSID, Virtual). [10, true]
-#heuristic literal_process_space(LiteralID, 0) : literal(LiteralID). [10, true]
-#heuristic package_equal(PSID1, PSID2, Package) : node(PSID1, Package), node(PSID2, Package). [10, true]
 #heuristic literal_process_space(LiteralID, 0) : literal(LiteralID). [10, true]
