@@ -8,6 +8,7 @@ import sys
 
 from spack import *
 
+
 class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation
     Solvers)"""
@@ -722,13 +723,11 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                # if we use cmake, then need to make a build dir first
-                # cmake()
+                cmake()
                 make()
 
     def run_smoke_tests(self):
         for smoke_test in self._smoke_tests:
-            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             self.run_test(exe=join_path(self._smoke_tests_path, smoke_test[0]),
                           options=smoke_test[1], status=[0], installed=True,
                           skip_missing=True, purpose=smoke_test[2])
