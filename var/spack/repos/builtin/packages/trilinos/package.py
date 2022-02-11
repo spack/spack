@@ -736,8 +736,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                                   else 'OpenMP'),
             ])
             if '+cuda' in spec:
+                # See https://github.com/spack/spack/issues/28869
+                use_uvm = (spec.version < Version(13.2))
                 options.extend([
-                    define_kok_enable('CUDA_UVM', True),
+                    define_kok_enable('CUDA_UVM', use_uvm),
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
                 ])
