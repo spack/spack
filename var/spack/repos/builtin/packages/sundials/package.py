@@ -6,6 +6,8 @@
 import os
 import sys
 
+from llnl.util import tty
+
 from spack import *
 
 
@@ -17,6 +19,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/LLNL/sundials/releases/download/v2.7.0/sundials-2.7.0.tar.gz"
     git = "https://github.com/llnl/sundials.git"
     tags = ['radiuss', 'e4s']
+    test_requires_compiler = True
 
     maintainers = ['balos1', 'cswoodward', 'gardner48']
 
@@ -719,12 +722,38 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         # examples/smoke-tests are cached for testing
         return self.prefix.examples
 
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        elif os.path.isfile(filepath):
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
+    @run_after('install')
+    def setup_smoke_tests(self):
+        install_tree(self._smoke_tests_path,
+                     join_path(self.install_test_root, 'testing'))
+        self.cmake_bin(set=True)
+
     def build_smoke_tests(self):
+        cmake_bin = self.cmake_bin(set=False)
+
+        if not cmake_bin:
+            tty.msg('Skipping sundials test: cmake_bin_path.txt not found')
+            return
+
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                cmake()
-                make()
+                self.run_test(exe=cmake_bin, options=['.'])
+                self.run_test(exe='make')
 
     def run_smoke_tests(self):
         for smoke_test in self._smoke_tests:
@@ -736,7 +765,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                make('clean')
+                self.run_test(exe='make', options=['clean'])
 
     def test(self):
         self.build_smoke_tests()
