@@ -12,7 +12,7 @@ class Veloc(CMakePackage):
     homepage = "https://github.com/ECP-VeloC/VELOC"
     url      = "https://github.com/ECP-VeloC/VELOC/archive/1.6.tar.gz"
     git      = "https://github.com/ecp-veloc/veloc.git"
-
+    maintainers = ['bnicolae']
     tags = ['e4s']
 
     version('main', branch='main')
