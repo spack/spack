@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
 
-from ._functions import _host, by_name, platforms
+from ._functions import _host, by_name, platforms, prevent_cray_detection, reset
 from ._platform import Platform
 from .cray import Cray
 from .darwin import Darwin
@@ -19,7 +19,9 @@ __all__ = [
     'Test',
     'platforms',
     'host',
-    'by_name'
+    'by_name',
+    'reset',
+    'prevent_cray_detection'
 ]
 
 #: The "real" platform of the host running Spack. This should not be changed
