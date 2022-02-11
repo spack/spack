@@ -1846,19 +1846,7 @@ class SpackSolverSetup(object):
                     _develop_specs_from_env(dep, env)
 
         self.gen.h1('Spec Constraints')
-        for spec in sorted(specs):
-            self.gen.h2('Spec: %s' % str(spec))
-            self.gen.fact(
-                fn.virtual_root(spec.name) if spec.virtual
-                else fn.root(spec.name)
-            )
-
-            for clause in self.spec_clauses(spec):
-                self.gen.fact(clause)
-                if clause.name == 'variant_set':
-                    self.gen.fact(
-                        fn.variant_default_value_from_cli(*clause.args)
-                    )
+        self.literal_specs(specs)
 
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
@@ -1874,6 +1862,20 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
+
+    def literal_specs(self, specs):
+        for idx, spec in enumerate(specs):
+            self.gen.h2('Spec: %s' % str(spec))
+            self.gen.fact(fn.literal(idx))
+
+            root_fn = fn.virtual_root(spec.name) if spec.virtual else fn.root(spec.name)
+            self.gen.fact(fn.literal(idx, root_fn.name, *root_fn.args))
+            for clause in self.spec_clauses(spec):
+                self.gen.fact(fn.literal(idx, clause.name, *clause.args))
+                if clause.name == 'variant_set':
+                    self.gen.fact(fn.literal(
+                        idx, "variant_default_value_from_cli", *clause.args
+                    ))
 
 
 class SpecBuilder(object):

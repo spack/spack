@@ -8,6 +8,35 @@
 %=============================================================================
 
 %-----------------------------------------------------------------------------
+% Map literal input specs to facts that drive the solve
+%-----------------------------------------------------------------------------
+
+% Map constraint on the literal ID to the correct PSID
+attr(Name, A1)         :- literal(LiteralID, Name, A1).
+attr(Name, A1, A2)     :- literal(LiteralID, Name, A1, A2).
+attr(Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3).
+
+% For these two atoms we only need implications in one direction
+root(Package)         :- attr("root", Package).
+virtual_root(Package) :- attr("virtual_root", Package).
+
+node_platform_set(Package, Platform) :- attr("node_platform_set", Package, Platform).
+node_os_set(Package, OS)             :- attr("node_os_set", Package, OS).
+node_target_set(Package, Target)     :- attr("node_target_set", Package, Target).
+node_flag_set(Package, Flag, Value)  :- attr("node_flag_set", Package, Flag, Value).
+
+node_compiler_version_set(Package, Compiler, Version)
+  :- attr("node_compiler_version_set", Package, Compiler, Version).
+
+variant_default_value_from_cli(Package, Variant, Value)
+  :- attr("variant_default_value_from_cli", Package, Variant, Value).
+
+#defined literal/1.
+#defined literal/3.
+#defined literal/4.
+#defined literal/5.
+
+%-----------------------------------------------------------------------------
 % Version semantics
 %-----------------------------------------------------------------------------
 
