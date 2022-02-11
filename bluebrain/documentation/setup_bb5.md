@@ -40,7 +40,7 @@ To customise this, use the following commands:
 To generate a module for the package `my_package`,
 modify the whitelist with the following command:
 
-    $ spack config add modules:tcl:whitelist:my_package
+    $ spack config add "modules:tcl:whitelist:[my_package]"
 
 And use
 

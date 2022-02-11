@@ -75,7 +75,7 @@
 
   Use
 
-      $ spack config add modules:tcl:whitelist:my_package
+      $ spack config add "modules:tcl:whitelist:[my_package]"
       $ spack module tcl refresh my_package
 
   To produce an up-to-date module for `my_package` (adjust as needed).
