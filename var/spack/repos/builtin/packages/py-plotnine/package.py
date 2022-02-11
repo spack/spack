@@ -17,6 +17,7 @@ class PyPlotnine(PythonPackage):
         sha256="39de59edcc28106761b65238647d0b1f6212ea7f3a78f8be0b846616db969276",
     )
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on("py-descartes@1.1.0:", type=("build", "run"))
     depends_on("py-matplotlib@3.1.1:", type=("build", "run"))
     depends_on("py-mizani@0.7.3:", type=("build", "run"))

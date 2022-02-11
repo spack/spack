@@ -16,6 +16,7 @@ class PyMizani(PythonPackage):
         sha256="f521300bd29ca918fcd629bc8ab50fa04e41bdbe00f6bcf74055d3c6273770a4",
     )
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on("py-matplotlib@3.1.1:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-palettable", type=("build", "run"))
