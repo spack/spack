@@ -194,7 +194,7 @@ class Superlu(CMakePackage):
         with working_dir(test_dir, create=False):
             make(*args, parallel=False)
             self.run_test('./superlu',
-                          options=['-I{0}'.format(join_path(self.prefix, 'include'))],
+                          options=['-I{0}'.format(self.prefix.include)],
                           purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')
