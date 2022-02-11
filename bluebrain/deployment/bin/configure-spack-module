@@ -36,7 +36,7 @@ if [ module-info mode load ] {
     puts stderr "==========================================\n"
     puts stderr "Software will be installed into ~/spack_install${suffix} by default."
     puts stderr "Modules for installed software are disabled, to enable a specific one, use:\n"
-    puts stderr "\tspack config add \"modules:tcl:whitelist:[package_to_install]\"\n"
+    puts stderr "\tspack config add \"modules:tcl:whitelist:\[package_to_install\]\"\n"
     puts stderr "To modify the software installation directory, use\n"
     puts stderr "\texport SPACK_USER_CACHE_PATH=\$\{NEW_INSTALL_DIR\}\n"
     puts stderr "Or modify the Spack configuration with:\n"
