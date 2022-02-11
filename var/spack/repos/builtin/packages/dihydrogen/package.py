@@ -205,6 +205,12 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
 
+        if self.spec['essl'] in spec:
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' % self.spec['essl'].libs,
+                '-DBLAS_LIBRARIES=%s;-lblas' % self.spec['essl'].libs])
+
         return args
 
     def setup_build_environment(self, env):

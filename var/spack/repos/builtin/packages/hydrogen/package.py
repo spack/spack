@@ -210,8 +210,10 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         elif 'blas=accelerate' in spec:
             args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
         elif 'blas=essl' in spec:
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             args.extend([
-                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' % self.spec['essl'].libs,
+                '-DBLAS_LIBRARIES=%s;-lblas' % self.spec['essl'].libs])
 
         if '+omp_taskloops' in spec:
             args.extend([

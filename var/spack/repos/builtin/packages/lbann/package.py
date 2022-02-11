@@ -194,8 +194,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc
-    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add +powerpc
+    # When using a GCC compiler
+    depends_on('opencv@4.1.0: +powerpc', when='+vision %gcc arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
@@ -421,6 +422,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
                         arch_str, cxxflags_str)
                 )
+
+        # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+        if self.spec['essl'] in spec:
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' % self.spec['essl'].libs,
+                '-DBLAS_LIBRARIES=%s;-lblas' % self.spec['essl'].libs])
 
         return args
 
