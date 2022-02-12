@@ -591,10 +591,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                      'KSP tutorial example ex50 is missing')
             return
 
-        self.run_test('make',
-                      options=['ex50'],
-                      purpose='test: compile ex50',
-                      work_dir=w_dir)
+        if not self.run_test('make',
+                             options=['ex50'],
+                             purpose='test: compile ex50',
+                             work_dir=w_dir):
+            tty.warn('Skipping petsc test: '
+                     'failed to compile ex50')
+            return
 
         testexe = ['ex50', '-da_grid_x', '4', '-da_grid_y', '4']
         testdict = {
@@ -612,10 +615,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         for feature, featureopt in testdict.items():
             if not feature or feature in self.spec:
                 purpose_str = 'test: run ex50 example with {0}'.format(feature)
-                self.run_test(runexe,
-                              options=runopt + testexe + featureopt,
-                              purpose=purpose_str,
-                              work_dir=w_dir)
+                if not self.run_test(runexe,
+                                     options=runopt + testexe + featureopt,
+                                     purpose=purpose_str,
+                                     work_dir=w_dir):
+                    tty.warn('Skipping petsc test: '
+                             'failed to run ex50 with {0}'.format(feature))
 
     def run_ex7_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex7 with cuda"""
@@ -629,10 +634,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                      'KSP tutorial example ex7 is missing')
             return
 
-        self.run_test('make',
-                      options=['ex7'],
-                      purpose='test: compile ex7',
-                      work_dir=w_dir)
+        if not self.run_test('make',
+                             options=['ex7'],
+                             purpose='test: compile ex7',
+                             work_dir=w_dir):
+            tty.warn('Skipping petsc test: '
+                     'failed to compile ex7')
+            return
 
         testexe = ['ex7', '-mat_type', 'aijcusparse',
                    '-sub_pc_factor_mat_solver_type', 'cusparse',
@@ -640,10 +648,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                    '-use_gpu_aware_mpi', '0']
         purpose_str = 'test: run ex7 example with +cuda'
 
-        self.run_test(runexe,
-                      options=runopt + testexe,
-                      purpose=purpose_str,
-                      work_dir=w_dir)
+        if not self.run_test(runexe,
+                             options=runopt + testexe,
+                             purpose=purpose_str,
+                             work_dir=w_dir):
+            tty.warn('Skipping petsc test: '
+                     'failed to run ex7')
 
     def run_ex3k_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex3.kokkos with kokkos"""
@@ -657,20 +667,25 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                      'SNES tutorial example ex3k is missing')
             return
 
-        self.run_test('make',
+        if not self.run_test('make',
                       options=['ex3k.kokkos'],
                       purpose='test: compile ex3k.kokkos',
-                      work_dir=w_dir)
+                      work_dir=w_dir):
+            tty.warn('Skipping petsc test: '
+                     'failed to compile ex3k.kokkos')
+            return
 
         testexe = ['ex3k.kokkos', '-view_initial', '-dm_vec_type', 'kokkos',
                    '-dm_mat_type', 'aijkokkos', '-use_gpu_aware_mpi', '0',
                    '-snes_monitor']
         purpose_str = 'test: run ex3k.kokkos example with +kokkos'
 
-        self.run_test(runexe,
-                      options=runopt + testexe,
-                      purpose=purpose_str,
-                      work_dir=w_dir)
+        if not self.run_test(runexe,
+                             options=runopt + testexe,
+                             purpose=purpose_str,
+                             work_dir=w_dir):
+            tty.warn('Skipping petsc test: '
+                     'failed to run ex3k.kokkos')
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
