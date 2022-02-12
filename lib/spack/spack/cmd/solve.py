@@ -116,37 +116,37 @@ def solve(parser, args):
         stats=args.stats,
         setup_only=(set(show) == {'asp'})
     )
-    if 'solutions' not in show:
+    if 'solutions' not in show and 'opt' not in show:
         return
 
     # die if no solution was found
     result.raise_if_unsat()
 
-    # show the solutions as concretized specs
-    if 'solutions' in show:
-        opt, _, _ = min(result.answers)
+    opt, _, _ = min(result.answers)
 
-        if ("opt" in show) and (not args.format):
-            tty.msg("Best of %d considered solutions." % result.nmodels)
-            tty.msg("Optimization Criteria:")
+    if ("opt" in show) and (not args.format):
+        tty.msg("Best of %d considered solutions." % result.nmodels)
+        tty.msg("Optimization Criteria:")
 
-            maxlen = max(len(s[2]) for s in result.criteria)
+        maxlen = max(len(s[2]) for s in result.criteria)
+        color.cprint(
+            "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
+        )
+
+        fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
+        for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
             color.cprint(
-                "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
-            )
-
-            fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
-            for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
-                color.cprint(
-                    fmt % (
-                        i,
-                        name,
-                        "-" if build_cost is None else installed_cost,
-                        installed_cost if build_cost is None else build_cost,
-                    )
+                fmt % (
+                    i,
+                    name,
+                    "-" if build_cost is None else installed_cost,
+                    installed_cost if build_cost is None else build_cost,
                 )
-            print()
+            )
+        print()
 
+    # dump the solutions as concretized specs
+    if 'solutions' in show:
         for spec in result.specs:
             # With -y, just print YAML to output.
             if args.format == 'yaml':

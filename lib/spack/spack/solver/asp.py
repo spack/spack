@@ -98,6 +98,19 @@ DeclaredVersion = collections.namedtuple(
 # Below numbers are used to map names of criteria to the order
 # they appear in the solution. See concretize.lp
 
+# The space of possible priorities for optimization targets
+# is partitioned in the following ranges:
+#
+# [0-100) Optimization criteria for software being reused
+# [100-200) Fixed criteria that are higher priority than reuse, but lower than build
+# [200-300) Optimization criteria for software being built
+# [300-inf) High-priority fixed criteria
+#
+# Each optimization target is a minimization with optimal value 0.
+
+#: High fixed priority offset for criteria that supersede all build criteria
+high_fixed_priority_offset = 300
+
 #: Priority offset for "build" criteria (regular criterio shifted to
 #: higher priority for specs we have to build)
 build_priority_offset = 200
@@ -112,6 +125,7 @@ def build_criteria_names(costs, tuples):
     priorities_names = []
 
     num_fixed = 0
+    num_high_fixed = 0
     for pred, args in tuples:
         if pred != "opt_criterion":
             continue
@@ -128,6 +142,8 @@ def build_criteria_names(costs, tuples):
         if priority < fixed_priority_offset:
             build_priority = priority + build_priority_offset
             priorities_names.append((build_priority, name))
+        elif priority >= high_fixed_priority_offset:
+            num_high_fixed += 1
         else:
             num_fixed += 1
 
@@ -141,19 +157,27 @@ def build_criteria_names(costs, tuples):
 
     # split list into three parts: build criteria, fixed criteria, non-build criteria
     num_criteria = len(priorities_names)
-    num_build = (num_criteria - num_fixed) // 2
+    num_build = (num_criteria - num_fixed - num_high_fixed) // 2
 
-    build = priorities_names[:num_build]
-    fixed = priorities_names[num_build:num_build + num_fixed]
-    installed = priorities_names[num_build + num_fixed:]
+    build_start_idx = num_high_fixed
+    fixed_start_idx = num_high_fixed + num_build
+    installed_start_idx = num_high_fixed + num_build + num_fixed
+
+    high_fixed = priorities_names[:build_start_idx]
+    build = priorities_names[build_start_idx:fixed_start_idx]
+    fixed = priorities_names[fixed_start_idx:installed_start_idx]
+    installed = priorities_names[installed_start_idx:]
 
     # mapping from priority to index in cost list
     indices = dict((p, i) for i, (p, n) in enumerate(priorities_names))
 
     # make a list that has each name with its build and non-build costs
-    criteria = [
+    criteria = [(high_fixed_priority_offset - p + num_high_fixed - 1, None, name)
+                for p, name in high_fixed]
+    criteria += [
         (costs[p - fixed_priority_offset + num_build], None, name) for p, name in fixed
     ]
+
     for (i, name), (b, _) in zip(installed, build):
         criteria.append((costs[indices[i]], costs[indices[b]], name))
 
@@ -573,6 +597,7 @@ class PyclingoDriver(object):
                                     arg = ast_sym(ast_sym(term.atom).arguments[0])
                                     self.fact(AspFunction(name)(arg.string))
 
+            self.h1("Error messages")
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
 
@@ -1737,20 +1762,9 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def define_installed_packages(self, specs, possible):
-        """Add facts about all specs already in the database.
-
-        Arguments:
-            possible (dict): result of Package.possible_dependencies() for
-                specs in this solve.
-        """
-        # Specs from local store
-        with spack.store.db.read_transaction():
-            for spec in spack.store.db.query(installed=True):
-                if not spec.satisfies('dev_path=*'):
-                    self._facts_from_concrete_spec(spec, possible)
-
-        # Specs from configured buildcaches
+    def define_packages_in_buildcaches(self, possible):
+        """Define the concrete packages available in buildcaches"""
+        self.gen.h2('Specs available from buildcaches')
         try:
             index = spack.binary_distribution.update_cache_and_get_specs()
             for spec in index:
@@ -1761,6 +1775,14 @@ class SpackSolverSetup(object):
             # TODO: update mirror configuration so it can indicate that the source cache
             # TODO: (or any mirror really) doesn't have binaries.
             pass
+
+    def define_packages_in_store(self, possible):
+        """Define the concrete packages in the store"""
+        self.gen.h2('Specs available in the local store')
+        with spack.store.db.read_transaction():
+            for spec in spack.store.db.query(installed=True):
+                if not spec.satisfies('dev_path=*'):
+                    self._facts_from_concrete_spec(spec, possible)
 
     def setup(self, driver, specs):
         """Generate an ASP program with relevant constraints for specs.
@@ -1810,10 +1832,11 @@ class SpackSolverSetup(object):
         self.define_concrete_input_specs(specs, possible)
 
         if self.reuse:
-            self.gen.h1("Installed packages")
+            self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             self.gen.newline()
-            self.define_installed_packages(specs, possible)
+            self.define_packages_in_store(possible)
+            self.define_packages_in_buildcaches(possible)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
