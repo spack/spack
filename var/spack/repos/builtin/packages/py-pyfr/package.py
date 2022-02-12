@@ -9,7 +9,7 @@ from spack import *
 
 class PyPyfr(PythonPackage):
     """PyFR is an open-source Python based framework for solving advection-diffusion type
-problems on streaming architectures using the Flux Reconstruction approach of Huynh."""
+    problems on streaming architectures using the Flux Reconstruction approach of Huynh."""
 
     homepage = "http://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
@@ -34,18 +34,17 @@ problems on streaming architectures using the Flux Reconstruction approach of Hu
     # Required dependencies
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    depends_on("py-gimmik@2.2:")
-    depends_on("py-h5py@2.10:")
-    depends_on("py-mako@1.0.0:")
-    depends_on("py-mpi4py@3.1.0:")
-    depends_on("py-numpy@1.20:+blas")
-    depends_on("py-platformdirs@2.2.0:")
-    depends_on("py-pytools@2016.2.1:")
-    depends_on("py-scipy")
+    depends_on("py-gimmik@2.2:",type=('build', 'run'))
+    depends_on("py-h5py@2.10:", type=('build', 'run'))
+    depends_on("py-mako@1.0.0:", type=('build', 'run'))
+    depends_on("py-mpi4py@3.1.0:", type=('build', 'run'))
+    depends_on("py-numpy@1.20:+blas", type=('build', 'run'))
+    depends_on("py-platformdirs@2.2.0:", type=('build', 'run'))
+    depends_on("py-pytools@2016.2.1:", type=('build', 'run'))
+    depends_on("py-scipy", type=('build', 'run'))
 
     # Optional  dependecies
-    depends_on("metis@5.0:", when="+metis")
-    depends_on("scotch@6.0:", when="+scotch")
-    depends_on("cuda@8.0:", when="+cuda")
-    depends_on("rocblas@4.5.0:", when="+hip")
+    depends_on("metis@5.0:", when="+metis", type=('build', 'run'))
+    depends_on("scotch@6.0:", when="+scotch", type=('build', 'run'))
+    depends_on("cuda@8.0:", when="+cuda", type=('build', 'run'))
+    depends_on("rocblas@4.5.0:", when="+hip", type=('build', 'run'))
