@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,9 @@ class PrunersNinja(AutotoolsPackage):
        races."""
     homepage = "https://github.com/PRUNERS/NINJA"
     url      = "https://github.com/PRUNERS/NINJA/releases/download/v1.0.0/NINJA-1.0.0.tar.gz"
+    git      = "https://github.com/PRUNERS/NINJA.git"
 
+    version('master', branch='master')
     version("1.0.1", sha256="53df5c019054b60c68e63d3e249127f1d5f267a70539c8809fb42a8ddbfcb29b")
     version("1.0.0", sha256="f25c189783b57801f298dfff8770f42733a43f926668aceff4abd287b6e3a4d1")
 

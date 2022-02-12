@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class CandleBenchmarks(Package):
     depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
-    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff -dnn ~eigen ~gtk')
+    depends_on('opencv@3.2.0: +highgui +imgproc +jpeg +png +tiff ~dnn ~eigen ~gtk')
     depends_on('py-mdanalysis', type=('build', 'run'))
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
     depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))

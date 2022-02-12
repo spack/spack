@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,7 +110,7 @@ class Bazel(Package):
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
     depends_on('java', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('python+pythoncmd', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
 
     # make work on power9 (2x commits)

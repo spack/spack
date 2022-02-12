@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     version('doe', branch='doe', preferred=True)
     version('upstream', branch='llvm.org/main')
     version('bolt', branch='bolt/main')
-    version('clacc', branch='clacc/master')
+    version('develop.clacc', branch='clacc/main')
     version('pragma-clang-loop', branch='sollve/pragma-clang-loop')
     version('pragma-omp-tile', branch='sollve/pragma-omp-tile')
     version('13.0.0', branch='llvm.org/llvmorg-13.0.0')
@@ -639,10 +639,10 @@ class LlvmDoe(CMakePackage, CudaPackage):
                 ninja()
                 ninja("install")
         if "+python" in self.spec:
-            install_tree("llvm/bindings/python", site_packages_dir)
+            install_tree("llvm/bindings/python", python_platlib)
 
             if "+clang" in self.spec:
-                install_tree("clang/bindings/python", site_packages_dir)
+                install_tree("clang/bindings/python", python_platlib)
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))

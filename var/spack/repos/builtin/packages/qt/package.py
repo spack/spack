@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ import sys
 import llnl.util.tty as tty
 
 from spack import *
+from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
-LINUX_VERSION = Version(platform.release()) if platform.system() == 'Linux' else None
+LINUX_VERSION = kernel_version() if platform.system() == 'Linux' else None
 
 
 class Qt(Package):
@@ -131,6 +132,8 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-84037
+    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -144,6 +147,11 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
+    # https://github.com/microsoft/vcpkg/issues/21055
+    patch('qt5-macos12.patch',
+          working_dir='qtbase',
+          when='@5.14: %apple-clang@13:')
+
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
     conflicts('%gcc@11:', when='@5.8')
 
@@ -173,6 +181,7 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
+    depends_on("assimp@5.0.0:5.0", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -552,6 +561,12 @@ class Qt(Package):
                 # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
+
+        if '+opengl' in spec:
+            if version >= Version('5.14'):
+                use_spack_dep('assimp')
+            else:
+                config_args.append('-no-assimp')
 
         # COMPONENTS
 

@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1440,6 +1440,32 @@ be present on specs that otherwise satisfy the spec listed as the
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
 :py:func:`spack.directives.depends_on`
+
+^^^^^^^^^^^^^^^
+Sticky Variants
+^^^^^^^^^^^^^^^
+
+The variant directive can be marked as ``sticky`` by setting to ``True`` the
+corresponding argument:
+
+.. code-block:: python
+
+   variant('bar', default=False, sticky=True)
+
+A ``sticky`` variant differs from a regular one in that it is always set
+to either:
+
+#. An explicit value appearing in a spec literal or
+#. Its default value
+
+The concretizer thus is not free to pick an alternate value to work
+around conflicts, but will error out instead.
+Setting this property on a variant is useful in cases where the
+variant allows some dangerous or controversial options (e.g. using unsupported versions
+of a compiler for a library) and the packager wants to ensure that
+allowing these options is done on purpose by the user, rather than
+automatically by the solver.
+
 
 ^^^^^^^^^^^^^^^^^^^
 Overriding Variants

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,6 @@ import spack.cmd.install
 import spack.config
 import spack.package
 import spack.store
-from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 
 install = SpackCommand('install')
@@ -224,14 +223,6 @@ def test_test_list(
     install(pkg_with_tests)
     output = spack_test("list")
     assert pkg_with_tests in output
-
-
-def test_has_test_method_fails(capsys):
-    with pytest.raises(SystemExit):
-        has_test_method('printing-package')
-
-    captured = capsys.readouterr()[1]
-    assert 'is not a class' in captured
 
 
 def test_hash_change(mock_test_stage, mock_packages, mock_archive, mock_fetch,

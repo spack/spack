@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.4.1', sha256='332f053516ca45101ef0f7fa96309b64242688a8024780a5d93be0230e42173d')
     version('3.4.0', sha256='ac7bd2bb9436f3fc38bc7309704672980f82d64b4d57627d27849259b8f71d5c')
     version('3.3.3', sha256='1e8fc8b19c77238c7f4c27857d04857b65d8b7e8050d3aac256d70fa48a21e76')
     version('3.3.2', sha256='630e34141cf398c3078d7d8f08bb44e804c65bbf09807b3610dcbfbc37115cc3')
@@ -70,7 +71,7 @@ class Gdal(AutotoolsPackage):
     variant('hdf5',      default=False, description='Include HDF5 support')
     variant('kea',       default=False, description='Include kealib')
     variant('netcdf',    default=False, description='Include netCDF support')
-    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library')
+    variant('jasper',    default=False, description='Include JPEG-2000 support via JasPer library', when='@:3.4')
     variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
     variant('xerces',    default=False, description='Use Xerces-C++ parser')
     variant('expat',     default=False, description='Use Expat XML parser')
@@ -79,16 +80,17 @@ class Gdal(AutotoolsPackage):
     variant('curl',      default=False, description='Include curl')
     variant('xml2',      default=False, description='Include libxml2')
     variant('sqlite3',   default=False, description='Use SQLite 3 library')
+    variant('pcre2',     default=False, description='Include libpcre2 support', when='@3.4.1:')
     variant('pcre',      default=False, description='Include libpcre support')
     variant('geos',      default=False, description='Include GEOS support')
     variant('qhull',     default=False, description='Include QHull support')
     variant('opencl',    default=False, description='Include OpenCL (GPU) support')
     variant('poppler',   default=False, description='Include poppler (for PDF) support')
     variant('proj',      default=True,  description='Compile with PROJ.x')
-    variant('perl',      default=False, description='Enable perl bindings')
+    variant('perl',      default=False, description='Enable perl bindings', when='@:3.4')
     variant('python',    default=False, description='Enable python bindings')
     variant('java',      default=False, description='Include Java support')
-    variant('mdb',       default=False, description='Include MDB driver')
+    variant('mdb',       default=False, description='Include MDB driver', when='@:3.4 +java')
     variant('armadillo', default=False, description='Include Armadillo support for faster TPS transform computation')
     variant('cryptopp',  default=False, description='Include cryptopp support')
     variant('crypto',    default=False, description='Include crypto (from openssl) support')
@@ -137,6 +139,7 @@ class Gdal(AutotoolsPackage):
     depends_on('curl@7.10.8:', when='+curl')
     depends_on('libxml2', when='+xml2')
     depends_on('sqlite@3:', when='+sqlite3')
+    depends_on('pcre2', when='+pcre2')
     depends_on('pcre', when='+pcre')
     depends_on('geos', when='+geos')
     depends_on('qhull', when='+qhull @2.1:')
@@ -156,7 +159,7 @@ class Gdal(AutotoolsPackage):
     depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
-    depends_on('py-setuptools@:57', type='build', when='@:3.0+python')
+    depends_on('py-setuptools@:57', type='build', when='@:3.0+python')  # needs 2to3
     depends_on('py-setuptools', type='build', when='@3.1:+python')
     depends_on('py-numpy@1.0.0:', type=('build', 'run'), when='+python')
     depends_on('java@7:', type=('build', 'link', 'run'), when='@3.2:+java')
@@ -178,10 +181,7 @@ class Gdal(AutotoolsPackage):
     conflicts('%xl@:13.0',   msg=msg)
     conflicts('%xl_r@:13.0', msg=msg)
 
-    conflicts('+mdb', when='~java', msg='MDB driver requires Java')
-    conflicts('+mdb', when='@3.5:', msg='MDB driver removed in GDAL 3.5, use ODBC instead')
-    conflicts('+jasper', when='@3.5:', msg='JPEG2000 driver removed in GDAL 3.5')
-    conflicts('+perl', when='@3.5:', msg='Perl bindings removed in GDAL 3.5')
+    conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
@@ -420,6 +420,12 @@ class Gdal(AutotoolsPackage):
         else:
             args.append('--with-sqlite3=no')
 
+        if self.spec.satisfies('@3.4.1:'):
+            if '+pcre2' in spec:
+                args.append('--with-pcre2={0}'.format(spec['pcre2'].prefix))
+            else:
+                args.append('--with-pcre2=no')
+
         if '+pcre' in spec:
             args.append('--with-pcre={0}'.format(spec['pcre'].prefix))
         else:
@@ -465,7 +471,7 @@ class Gdal(AutotoolsPackage):
             args.append('--with-java=no')
 
         # https://trac.osgeo.org/gdal/wiki/mdbtools
-        # http://www.gdal.org/drv_mdb.html
+        # https://www.gdal.org/drv_mdb.html
         if '+mdb' in spec:
             args.append('--with-mdb=yes')
         else:

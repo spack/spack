@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,11 +30,15 @@ class Htslib(AutotoolsPackage):
             default=True,
             description='Enable libcurl-based support for http/https/etc URLs,'
             ' for versions >= 1.3. This also enables S3 and GCS support.')
+    variant('libdeflate',
+            default=True,
+            description='use libdeflate for faster crc and deflate algorithms')
 
     depends_on('zlib')
     depends_on('bzip2', when='@1.4:')
     depends_on('xz', when='@1.4:')
     depends_on('curl', when='@1.3:+libcurl')
+    depends_on('libdeflate', when='@1.8:+libdeflate')
 
     depends_on('m4', when="@1.2")
     depends_on('autoconf', when="@1.2")
@@ -56,5 +60,8 @@ class Htslib(AutotoolsPackage):
 
         if spec.satisfies('@1.3:'):
             args.extend(self.enable_or_disable('libcurl'))
+
+        if spec.satisfies('@1.8:'):
+            args.extend(self.enable_or_disable('libdeflate'))
 
         return args

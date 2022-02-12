@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,8 +68,6 @@ class Bohrium(CMakePackage, CudaPackage):
     conflicts('~node~proxy')
     conflicts('~openmp~opencl~cuda')
 
-    conflicts('+cbridge', when='~python')
-
     #
     # Dependencies
     #
@@ -86,10 +84,9 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv+imgproc', when="+opencv")
-    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
-    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
-    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv@:3+imgproc', when="+opencv")
+    depends_on('opencv+cudev', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', type=("build", "link", "test"), when="+python")
@@ -234,8 +231,7 @@ class Bohrium(CMakePackage, CudaPackage):
 
         # Add the PYTHONPATH to bohrium to the PYTHONPATH environment
         pythonpaths = [p for p in os.environ["PYTHONPATH"].split(":")]
-        pythonpaths.append(join_path(self.prefix,
-                                     spec['python'].package.site_packages_dir))
+        pythonpaths.append(python_platlib)
         test_env["PYTHONPATH"] = ":".join(pythonpaths)
 
         # Collect the stacks which should be available:

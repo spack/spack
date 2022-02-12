@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -312,6 +312,9 @@ class TestCMakePackage(object):
         for cls in (list, tuple):
             arg = pkg.define('MULTI', cls(['right', 'up']))
             assert arg == '-DMULTI:STRING=right;up'
+
+        arg = pkg.define('MULTI', fs.FileList(['/foo', '/bar']))
+        assert arg == '-DMULTI:STRING=/foo;/bar'
 
         arg = pkg.define('ENABLE_TRUTH', False)
         assert arg == '-DENABLE_TRUTH:BOOL=OFF'

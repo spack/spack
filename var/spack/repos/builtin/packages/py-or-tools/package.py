@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class PyOrTools(CMakePackage):
     version('7.8', sha256='d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68')
 
     depends_on('cmake@3.14:', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-protobuf@3.12.2:', type=('build', 'run'))
@@ -48,5 +50,5 @@ class PyOrTools(CMakePackage):
         with working_dir(self.build_directory):
             make("install")
         with working_dir(join_path(self.build_directory, 'python')):
-            setup_py('install', '--prefix=' + prefix,
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)

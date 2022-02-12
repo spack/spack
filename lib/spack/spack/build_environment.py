@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -177,6 +177,7 @@ def clean_environment():
     env.unset('OBJC_INCLUDE_PATH')
 
     env.unset('CMAKE_PREFIX_PATH')
+    env.unset('PYTHONPATH')
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     env.unset('MAKEFLAGS')
@@ -525,9 +526,10 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
-    # Standard CMake arguments
+    # Standard build system arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -856,7 +858,9 @@ def _make_runnable(pkg, env):
             env.prepend_path('PATH', bin_dir)
 
 
-def modifications_from_dependencies(spec, context, custom_mods_only=True):
+def modifications_from_dependencies(
+        spec, context, custom_mods_only=True, set_package_py_globals=True
+):
     """Returns the environment modifications that are required by
     the dependencies of a spec and also applies modifications
     to this spec's package at module scope, if need be.
@@ -889,6 +893,11 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         spec (spack.spec.Spec): spec for which we want the modifications
         context (str): either 'build' for build-time modifications or 'run'
             for run-time modifications
+        custom_mods_only (bool): if True returns only custom modifications, if False
+            returns custom and default modifications
+        set_package_py_globals (bool): whether or not to set the global variables in the
+            package.py files (this may be problematic when using buildcaches that have
+            been built on a different but compatible OS)
     """
     if context not in ['build', 'run', 'test']:
         raise ValueError(
@@ -962,7 +971,8 @@ def modifications_from_dependencies(spec, context, custom_mods_only=True):
         # PKG_CONFIG_PATH)
         if dep in custom_mod_deps:
             dpkg = dep.package
-            set_module_variables_for_package(dpkg)
+            if set_package_py_globals:
+                set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
             dpkg.setup_dependent_package(spec.package.module, spec)
             if context == 'build':

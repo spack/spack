@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Dray(Package, CudaPackage):
     git      = "https://github.com/LLNL/devil_ray.git"
     url      = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
 
-    maintainers = ['mclarsen', 'cyrush']
+    maintainers = ['cyrush']
 
     version('develop',  branch='develop', submodules='True')
     version('0.1.8',  sha256='ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30')
@@ -52,6 +52,8 @@ class Dray(Package, CudaPackage):
     variant("logging", default=False, description='Enable logging')
     variant("stats", default=False, description='Enable stats')
     variant("mpi", default=True, description='Enable MPI compiler')
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
 
     depends_on('cuda', when='+cuda')
     depends_on('mpi', when='+mpi')
@@ -185,27 +187,40 @@ class Dray(Package, CudaPackage):
         cfg.write("#######\n")
         cfg.write("# using %s compiler spec\n" % spec.compiler)
         cfg.write("#######\n\n")
+        cfg.write("# c compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
+        cfg.write("# cpp compiler used by spack\n")
+        cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         if "+mpi" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             mpicc_path = spec['mpi'].mpicc
             mpicxx_path = spec['mpi'].mpicxx
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-
-            cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", mpicc_path))
-            cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", mpicxx_path))
+            if spec['mpi'].mpicc == spack_cc:
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
+            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            if os.path.isfile(mpiexe_bin):
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
-            cfg.write("# c compiler used by spack\n")
-            cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
-            cfg.write("# cpp compiler used by spack\n")
-            cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         # use global spack compiler flags
         cppflags = ' '.join(spec.compiler_flags['cppflags'])

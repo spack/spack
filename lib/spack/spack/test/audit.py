@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,10 @@ import spack.config
     # The package use a non existing variant in a depends_on directive
     (['wrong-variant-in-depends-on'], 'PKG-DIRECTIVES'),
     # This package has no issues
-    (['mpileaks'], None)
+    (['mpileaks'], None),
+    # This package has a conflict with a trigger which cannot constrain the constraint
+    # Should not raise an error
+    (['unconstrainable-conflict'], None),
 ])
 def test_package_audits(packages, failing_check, mock_packages):
     reports = spack.audit.run_group('packages', pkgs=packages)

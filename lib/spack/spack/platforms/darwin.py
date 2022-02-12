@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,3 +39,25 @@ class Darwin(Platform):
     @classmethod
     def detect(cls):
         return 'darwin' in platform.system().lower()
+
+    def setup_platform_environment(self, pkg, env):
+        """Specify deployment target based on target OS version.
+
+        The ``MACOSX_DEPLOYMENT_TARGET`` environment variable provides a
+        default ``-mmacosx-version-min`` argument for GCC and Clang compilers,
+        as well as the default value of ``CMAKE_OSX_DEPLOYMENT_TARGET`` for
+        CMake-based build systems. The default value for the deployment target
+        is usually the major version (11, 10.16, ...) for CMake and Clang, but
+        some versions of GCC specify a minor component as well (11.3), leading
+        to numerous link warnings about inconsistent or incompatible target
+        versions. Setting the environment variable ensures consistent versions
+        for an install toolchain target, even when the host macOS version
+        changes.
+
+        TODO: it may be necessary to add SYSTEM_VERSION_COMPAT for older
+        versions of the macosx developer tools; see
+        https://github.com/spack/spack/pull/26290 for discussion.
+        """
+
+        os = self.operating_sys[pkg.spec.os]
+        env.set('MACOSX_DEPLOYMENT_TARGET', str(os.version))

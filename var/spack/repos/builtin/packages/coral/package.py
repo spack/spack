@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Coral(CMakePackage):
 
     tags = ['hep']
 
+    version('3.3.10', tag='CORAL_3_3_10')
     version('3.3.3', tag='CORAL_3_3_3')
     variant('binary_tag', default='auto')
 
@@ -36,6 +37,7 @@ class Coral(CMakePackage):
     depends_on('libunwind')
     depends_on('valgrind')
     depends_on('oracle-instant-client')
+    depends_on('libtirpc')
 
     def determine_binary_tag(self):
         # As far as I can tell from reading the source code, `binary_tag`

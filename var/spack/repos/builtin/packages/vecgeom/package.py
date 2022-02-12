@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,6 +50,7 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Build shared libraries')
 
+    depends_on('veccore@0.8.0', type=('build', 'link'), when='@1.1.18')
     depends_on('veccore@0.5.2:', type=('build', 'link'), when='@1.1.0:')
     depends_on('veccore@0.4.2', type=('build', 'link'), when='@:1.0')
     depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')

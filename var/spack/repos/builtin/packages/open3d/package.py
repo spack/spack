@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,17 +22,20 @@ class Open3d(CMakePackage, CudaPackage):
     # http://www.open3d.org/docs/latest/compilation.html
 
     depends_on('cmake@3.19:', type='build')
-    # depends_on('eigen')
-    # depends_on('flann')
+    # https://github.com/isl-org/Open3D/issues/3762
+    # https://github.com/isl-org/Open3D/issues/4570
+    depends_on('llvm@7:+clang+libcxx')
+    depends_on('eigen')
+    depends_on('flann')
     # depends_on('fmt')
-    # depends_on('glew')
-    # depends_on('glfw')
+    depends_on('glew')
+    depends_on('glfw')
     # depends_on('imgui')
-    # depends_on('jpeg')
+    depends_on('jpeg')
     # depends_on('liblzf')
-    # depends_on('libpng')
-    # depends_on('py-pybind11')
-    # depends_on('qhull')
+    depends_on('libpng')
+    depends_on('py-pybind11')
+    depends_on('qhull')
     # depends_on('tinygltf')
     # depends_on('tinyobjloader')
 
@@ -59,21 +62,23 @@ class Open3d(CMakePackage, CudaPackage):
             self.define('BUILD_UNIT_TESTS', self.run_tests),
             self.define_from_variant('BUILD_PYTHON_MODULE', 'python'),
             self.define_from_variant('BUILD_CUDA_MODULE', 'cuda'),
+            # https://github.com/isl-org/Open3D/issues/4570
+            # self.define('BUILD_FILAMENT_FROM_SOURCE', 'ON'),
             # Use Spack-installed dependencies instead of vendored dependencies
             # Numerous issues with using externally installed dependencies:
             # https://github.com/isl-org/Open3D/issues/4333
             # https://github.com/isl-org/Open3D/issues/4360
-            # self.define('USE_SYSTEM_EIGEN3', True),
-            # self.define('USE_SYSTEM_FLANN', True),
+            self.define('USE_SYSTEM_EIGEN3', True),
+            self.define('USE_SYSTEM_FLANN', True),
             # self.define('USE_SYSTEM_FMT', True),
-            # self.define('USE_SYSTEM_GLEW', True),
-            # self.define('USE_SYSTEM_GLFW', True),
+            self.define('USE_SYSTEM_GLEW', True),
+            self.define('USE_SYSTEM_GLFW', True),
             # self.define('USE_SYSTEM_IMGUI', True),
-            # self.define('USE_SYSTEM_JPEG', True),
+            self.define('USE_SYSTEM_JPEG', True),
             # self.define('USE_SYSTEM_LIBLZF', True),
-            # self.define('USE_SYSTEM_PNG', True),
-            # self.define('USE_SYSTEM_PYBIND11', True),
-            # self.define('USE_SYSTEM_QHULL', True),
+            self.define('USE_SYSTEM_PNG', True),
+            self.define('USE_SYSTEM_PYBIND11', True),
+            self.define('USE_SYSTEM_QHULL', True),
             # self.define('USE_SYSTEM_TINYGLTF', True),
             # self.define('USE_SYSTEM_TINYOBJLOADER', True),
         ]
