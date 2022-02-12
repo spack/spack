@@ -27,7 +27,7 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class VtkH(Package, CudaPackage):
+class VtkH(CMakePackage, CudaPackage):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-h brings together several projects like VTK-m
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
@@ -39,6 +39,8 @@ class VtkH(Package, CudaPackage):
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.8.1', sha256="0cb1c84087e2b9385477fba3e7e197d6eabe1d366bd3bc87d7824e50dcdbe057")
+    version('0.8.0', sha256="8366ebfe094c258555f343ba1f9bbad1d8e4804f844768b639f6ff13a6390f29")
     version('0.7.1', sha256="f28f7e6fb0f854a2293265b67cbdfb350b42c13ac08ffffe9cd246f3fe9fb77a")
     version('0.7.0', sha256="1b3c15c1340c5f66edcc2962ffe2f0d86e155f45a4932cf9c407261c203fbc19")
     version('0.6.9', sha256="8111f59c3528f02cb3c5083c17a1737dff9472266b156732794612471f3393c7")
@@ -60,6 +62,8 @@ class VtkH(Package, CudaPackage):
 
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
+    # set to false for systems that implicitly link mpi
+    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("serial", default=True, description="build serial (non-mpi) libraries")
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
@@ -68,91 +72,59 @@ class VtkH(Package, CudaPackage):
     variant("contourtree", default=False, description="Enable contour tree support")
 
     # Certain CMake versions have been found to break for our use cases
-    depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
+    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@:1.6~tbb+openmp", when="+openmp")
-    depends_on("vtk-m@:1.6~tbb~openmp", when="~openmp")
+    # use vtk-m 1.7 or newer for vtk-h 0.8 or newer
+    depends_on("vtk-m@1.7:", when="0.8:")
+
+    # use vtk-m 1.6 or lower for vtk-h 0.7 or lower
+    depends_on("vtk-m@:1.6", when=":0.7")
+    depends_on("vtk-m~tbb")
+    depends_on("vtk-m+openmp", when="+openmp")
+    depends_on("vtk-m~openmp", when="~openmp")
+
 
     for _arch in CudaPackage.cuda_arch_values:
-        depends_on("vtk-m@:1.6+cuda~tbb+openmp cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
-        depends_on("vtk-m@:1.6+cuda~tbb~openmp cuda_arch={0}".format(_arch), when="+cuda~openmp cuda_arch={0}".format(_arch))
+        depends_on("vtk-m+cuda cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
 
-    depends_on("vtk-m@:1.6~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@:1.6~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m~shared", when="~shared")
 
-    depends_on("vtk-m@:1.6+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m@:1.6+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    ###################################
+    # build phases used by this package
+    ###################################
+    phases = ['hostconfig', 'cmake', 'build', 'install']
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake_args = ["../src",
-                          "-DVTKM_DIR={0}".format(spec["vtk-m"].prefix),
-                          "-DENABLE_TESTS=OFF",
-                          "-DBUILD_TESTING=OFF"]
+    # provide cmake args (pass host config as cmake cache file)
+    def cmake_args(self):
+        host_config = self._get_host_config_path(self.spec)
+        options = []
+        options.extend(['-C', host_config, "../spack-src/src/"])
 
-            # shared vs static libs logic
-            # force static when building with CUDA <= 1.6
-            if "+cuda" in spec and spec["vtk-m"].satisfies('@:1.6'):
-                cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
-            else:
-                if "+shared" in spec:
-                    cmake_args.append('-DBUILD_SHARED_LIBS=ON')
-                else:
-                    cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
+    def _get_host_config_path(self, spec):
+        sys_type = spec.architecture
+        # if on llnl systems, we can use the SYS_TYPE
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        host_config_path = "{0}-{1}-{2}-vtkh-{3}.cmake".format(socket.gethostname(),
+                                                               sys_type,
+                                                               spec.compiler,
+                                                               spec.dag_hash())
+        dest_dir = spec.prefix
+        host_config_path = os.path.abspath(join_path(dest_dir,
+                                                     host_config_path))
+        return host_config_path
 
-            # mpi support
-            if "+mpi" in spec:
-                mpicc = spec['mpi'].mpicc
-                mpicxx = spec['mpi'].mpicxx
-                cmake_args.extend(["-DMPI_C_COMPILER={0}".format(mpicc),
-                                   "-DMPI_CXX_COMPILER={0}".format(mpicxx)])
-                mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-                if os.path.isfile(mpiexe_bin):
-                    cmake_args.append("-DMPIEXEC={0}".format(mpiexe_bin))
-
-            # openmp support
-            if "+openmp" in spec:
-                cmake_args.append("-DENABLE_OPENMP=ON")
-
-            # build with logging
-            if "+logging" in spec:
-                cmake_args.append("-DENABLE_LOGGING=ON")
-
-            if "+contourtree" in spec:
-                cmake_args.append("-DENABLE_FILTER_CONTOUR_TREE=ON")
-
-            # cuda support
-            if "+cuda" in spec:
-                cmake_args.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
-                cmake_args.append("-DENABLE_CUDA:BOOL=ON")
-                cmake_args.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
-                                  env["SPACK_CXX"]))
-            else:
-                cmake_args.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
-                cmake_args.append("-DENABLE_CUDA:BOOL=OFF")
-            # use release, instead of release with debug symbols b/c vtkh libs
-            # can overwhelm compilers with too many symbols
-            for arg in std_cmake_args:
-                if arg.count("CMAKE_BUILD_TYPE") == 0:
-                    cmake_args.extend(std_cmake_args)
-            cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
-            cmake(*cmake_args)
-            make()
-            make("install")
-
-            host_cfg_fname = self.create_host_config(spec,
-                                                     prefix)
-
-            install(host_cfg_fname, prefix)
-
-    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
+    def hostconfig(self, spec, prefix):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build vtkh.
         """
+        
+        if not os.path.isdir(spec.prefix):
+            os.mkdir(spec.prefix)
 
         #######################
         # Compiler Info
@@ -177,9 +149,8 @@ class VtkH(Package, CudaPackage):
 
         cmake_exe = spec['cmake'].command.path
 
-        host_cfg_fname = "%s-%s-%s-vtkh.cmake" % (socket.gethostname(),
-                                                  sys_type,
-                                                  spec.compiler)
+        # get hostconfig name
+        host_cfg_fname = self._get_host_config_path(spec)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -210,43 +181,8 @@ class VtkH(Package, CudaPackage):
         else:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
 
-        #######################################################################
-        # Core Dependencies
-        #######################################################################
-
-        #######################
-        # VTK-h (and deps)
-        #######################
-
-        cfg.write("# vtk-m support \n")
-
-        if "+openmp" in spec:
-            cfg.write("# enable openmp support\n")
-            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
-
-        cfg.write("# vtk-m from spack\n")
-        cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtk-m'].prefix))
-
-        #######################################################################
-        # Optional Dependencies
-        #######################################################################
-
-        #######################
-        # Serial
-        #######################
-
-        if "+serial" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
-
-        #######################
-        # Logging
-        #######################
-        if "+logging" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "ON"))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "OFF"))
+        cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
+        cfg.write(cmake_cache_entry("BUILD_TESTING", "OFF"))
 
         #######################
         # MPI
@@ -280,19 +216,68 @@ class VtkH(Package, CudaPackage):
                 else:
                     cfg.write(cmake_cache_entry("MPIEXEC",
                                                 mpiexe_bin))
+            if "+blt_find_mpi" in spec:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
+            else:
+                cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
         #######################
         # CUDA
         #######################
-
         cfg.write("# CUDA Support\n")
 
         if "+cuda" in spec:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
+            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA","ON"))
+            cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",env["SPACK_CXX"]))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
+            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA","OFF"))
+
+        #######################################################################
+        # Core Dependencies
+        #######################################################################
+
+        #######################
+        # VTK-h (and deps)
+        #######################
+
+        cfg.write("# vtk-m support \n")
+
+        if "+openmp" in spec:
+            cfg.write("# enable openmp support\n")
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
+
+        cfg.write("# vtk-m from spack\n")
+        cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtk-m'].prefix))
+
+        #######################################################################
+        # Optional Dependencies
+        #######################################################################
+
+        #######################
+        # Serial
+        #######################
+        if "+serial" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
+
+        #######################
+        # Logging
+        #######################
+        if "+logging" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "OFF"))
+
+        # contour tree
+        if "+contourtree" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE","ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE","ON"))
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
@@ -300,5 +285,4 @@ class VtkH(Package, CudaPackage):
         cfg.close()
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
-        tty.info("spack generated conduit host-config file: " + host_cfg_fname)
-        return host_cfg_fname
+        tty.info("spack generated host-config file: " + host_cfg_fname)
