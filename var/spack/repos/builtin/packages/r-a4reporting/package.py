@@ -7,14 +7,14 @@ from spack import *
 
 
 class RA4reporting(RPackage):
-    """Automated Affymetrix Array Analysis Reporting Package
+    """Automated Affymetrix Array Analysis Reporting Package.
 
     Utility functions to facilitate the reporting of the Automated Affymetrix
     Array Analysis Reporting set of packages."""
 
-    homepage = "https://bioconductor.org/packages/a4Reporting"
-    git      = "https://git.bioconductor.org/packages/a4Reporting.git"
+    bioc = "a4Reporting"
 
+    version('1.42.0', commit='b0d715b9cdac80bc412f0a9a6b33941c4a7582bb')
     version('1.38.0', commit='cd3cf244e7a299b2485684ed15519cbbda1c590f')
     version('1.32.0', commit='8d781899c625892080eb50f322694dd640d5f792')
     version('1.30.0', commit='ae9b9ade45cfac2636d0445a7e0a029dfe3b9390')
@@ -23,4 +23,5 @@ class RA4reporting(RPackage):
     version('1.24.0', commit='bf22c4d50daf40fc9eaf8c476385bf4a24a5b5ce')
 
     depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-annaffy', when='@:1.32.0', type=('build', 'run'))
+
+    depends_on('r-annaffy', type=('build', 'run'), when='@:1.32.0')

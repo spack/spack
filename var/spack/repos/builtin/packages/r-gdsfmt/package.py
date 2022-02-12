@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGdsfmt(RPackage):
-    """R Interface to CoreArray Genomic Data Structure (GDS) Files
+    """R Interface to CoreArray Genomic Data Structure (GDS) Files.
 
        This package provides a high-level R interface to CoreArray Genomic Data
        Structure (GDS) data files, which are portable across platforms with
@@ -22,14 +22,12 @@ class RGdsfmt(RPackage):
        GDS file in parallel with multiple R processes supported by the package
        parallel."""
 
-    homepage = "https://bioconductor.org/packages/gdsfmt"
-    git      = "https://git.bioconductor.org/packages/gdsfmt.git"
+    bioc = "gdsfmt"
 
+    version('1.30.0', commit='d27dde6a70bb2295f5bbc8961152b45ccee7a652')
     version('1.26.1', commit='bd180b21b1ace120035f0da255cbf6f13088f069')
     version('1.20.0', commit='b1fbaba0a5ace3dc45daecc85168651cd85dce00')
     version('1.18.1', commit='b911b953e9db7988e93ec2010b0ab1e384d073c9')
     version('1.16.0', commit='49b011452585e432b983b68466a230c9b71d8a95')
     version('1.14.1', commit='15743647b7eea5b82d3284858b4591fb6e59959d')
     version('1.12.0', commit='d705a95b0bea7be2a2b37e939f45017337ba0fb6')
-
-    depends_on('r@2.15.0:', type=('build', 'run'))

@@ -7,14 +7,13 @@ from spack import *
 
 
 class RRnaseqmap(RPackage):
-    """rnaSeq secondary analyses
+    """rnaSeq secondary analyses.
 
        The rnaSeqMap library provides classes and functions to analyze the RNA-
        sequencing data using the coverage profiles in multiple samples at a
        time"""
 
-    homepage = "https://bioconductor.org/packages/rnaSeqMap"
-    git      = "https://git.bioconductor.org/packages/rnaSeqMap.git"
+    bioc = "rnaSeqMap"
 
     version('2.48.0', commit='a8c515e518cebf571d1524c3a8a986ba7d1557db')
     version('2.42.0', commit='3a3a1030cc38d79d04536e0ab16114e4fa6721cf')
@@ -23,7 +22,6 @@ class RRnaseqmap(RPackage):
     version('2.36.0', commit='69c46fa467be0ac30776ede85a521f7622539b7e')
     version('2.34.0', commit='7881bc00600ed824ac437edf3cfba35573261e46')
 
-    depends_on('r@2.11.0:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))

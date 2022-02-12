@@ -7,14 +7,13 @@ from spack import *
 
 
 class RAffyexpress(RPackage):
-    """Affymetrix Quality Assessment and Analysis Tool
+    """Affymetrix Quality Assessment and Analysis Tool.
 
        The purpose of this package is to provide a comprehensive and easy-to-
        use tool for quality assessment and to identify differentially expressed
        genes in the Affymetrix gene expression data."""
 
-    homepage = "https://bioconductor.org/packages/AffyExpress"
-    git      = "https://git.bioconductor.org/packages/AffyExpress.git"
+    bioc = "AffyExpress"
 
     version('1.56.0', commit='e07085833de2bbf81537410cad526d39f8a82478')
     version('1.50.0', commit='8b98703b63396df9692afb0e15b594658125cc96')
@@ -23,6 +22,5 @@ class RAffyexpress(RPackage):
     version('1.44.0', commit='7517bc8b363ceb107d5dca66dd74f94edefde52a')
     version('1.42.0', commit='f5c5cf6173f4419e25f4aeff5e6b705a40abc371')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-affy@1.23.4:', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))

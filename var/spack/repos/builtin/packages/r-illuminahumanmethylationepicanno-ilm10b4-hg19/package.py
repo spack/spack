@@ -7,7 +7,7 @@ from spack import *
 
 
 class RIlluminahumanmethylationepicannoIlm10b4Hg19(RPackage):
-    """Annotation for Illumina's EPIC methylation arrays"""
+    """Annotation for Illumina's EPIC methylation arrays."""
 
     url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylationEPICanno.ilm10b4.hg19_0.6.0.tar.gz"
     bioc = "IlluminaHumanMethylationEPICanno.ilm10b4.hg19"

@@ -8,7 +8,7 @@ from spack import *
 
 class RSnprelate(RPackage):
     """Parallel Computing Toolset for Relatedness and Principal Component
-       Analysis of SNP Data
+       Analysis of SNP Data.
 
        Genome-wide association studies (GWAS) are widely used to investigate
        the genetic basis of diseases and traits, but they pose many
@@ -27,9 +27,9 @@ class RSnprelate(RPackage):
        variations (SNVs), insertion/deletion polymorphism (indel) and
        structural variation calls."""
 
-    homepage = "https://bioconductor.org/packages/SNPRelate"
-    git      = "https://git.bioconductor.org/packages/SNPRelate.git"
+    bioc = "SNPRelate"
 
+    version('1.28.0', commit='8fcd837f4627a3bb77cb8d992b2baedd0589d123')
     version('1.24.0', commit='419b13b761ea39a8b1b9bc73097fb0359c59f1c2')
     version('1.18.1', commit='81c581bf76392efdc8ba237ca2e42ca1dba788ca')
     version('1.16.0', commit='0e38e8df4af87dff6c27a23af2867661998c0d85')
@@ -37,5 +37,4 @@ class RSnprelate(RPackage):
     version('1.12.2', commit='dce2e2b6f36483a9f905bb5df6ae834a9f1136fe')
     version('1.10.2', commit='3f5c4010871df742e7a460586b38ad0c2fd37aeb')
 
-    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-gdsfmt@1.8.3:', type=('build', 'run'))

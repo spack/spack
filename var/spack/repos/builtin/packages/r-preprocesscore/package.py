@@ -7,13 +7,13 @@ from spack import *
 
 
 class RPreprocesscore(RPackage):
-    """A collection of pre-processing functions
+    """A collection of pre-processing functions.
 
        A library of core preprocessing routines."""
 
-    homepage = "https://bioconductor.org/packages/preprocessCore"
-    git      = "https://git.bioconductor.org/packages/preprocessCore.git"
+    bioc = "preprocessCore"
 
+    version('1.56.0', commit='8f3272219507aa85e0c876fb434dc3b926c22c5d')
     version('1.52.1', commit='91de4ab67315dc2af68554ae3c48823f4b1ea8ac')
     version('1.46.0', commit='8cfc3938c1b08424587f437ed6cd2ec43512500e')
     version('1.44.0', commit='dc1dc61fc562aaff3fd9b11ab0d48c2d6b3a5b81')

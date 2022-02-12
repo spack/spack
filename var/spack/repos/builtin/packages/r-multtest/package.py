@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMulttest(RPackage):
-    """Resampling-based multiple hypothesis testing
+    """Resampling-based multiple hypothesis testing.
 
        Non-parametric bootstrap and permutation resampling-based multiple
        testing procedures (including empirical Bayes methods) for controlling
@@ -27,9 +27,9 @@ class RMulttest(RPackage):
        identifying differentially expressed genes in DNA microarray
        experiments."""
 
-    homepage = "https://bioconductor.org/packages/multtest"
-    git      = "https://git.bioconductor.org/packages/multtest.git"
+    bioc = "multtest"
 
+    version('2.50.0', commit='1de96649a942b115d3d554394514745e86eb3fd3')
     version('2.46.0', commit='c4dd27b333c80313a88668b59d0299988c6478a2')
     version('2.40.0', commit='5f00017c2d3a31e05e1cfe06d9f7afdee19f8473')
     version('2.38.0', commit='4dfe71cecfb298a94521088fb7bd83c5498d2915')
@@ -37,7 +37,6 @@ class RMulttest(RPackage):
     version('2.34.0', commit='6ef873e05e6c93ede54f3421424f56eda057cd54')
     version('2.32.0', commit='c5e890dfbffcc3a3f107303a24b6085614312f4a')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

@@ -7,15 +7,15 @@ from spack import *
 
 
 class RKeggrest(RPackage):
-    """Client-side REST access to KEGG
+    """Client-side REST access to KEGG.
 
        A package that provides a client interface to the KEGG REST server.
        Based on KEGGSOAP by J. Zhang, R. Gentleman, and Marc Carlson, and KEGG
        (python package) by Aurelien Mazurie."""
 
-    homepage = "https://bioconductor.org/packages/KEGGREST"
-    git      = "https://git.bioconductor.org/packages/KEGGREST.git"
+    bioc = "KEGGREST"
 
+    version('1.34.0', commit='2056750dc202fa04a34b84c6c712e884c7cad2bd')
     version('1.30.1', commit='fd9970ea9df117d625257b8c6351cf85098cfbc1')
     version('1.24.1', commit='bbc3ef476e02147aad8e1f33178136cc797c1b3f')
     version('1.22.0', commit='4374507376be811d29416d0cbbfd9115a50494d9')

@@ -7,13 +7,13 @@ from spack import *
 
 
 class RGraph(RPackage):
-    """graph: A package to handle graph data structures
+    """A package to handle graph data structures.
 
        A package that implements some simple graph handling capabilities."""
 
-    homepage = "https://bioconductor.org/packages/graph"
-    git      = "https://git.bioconductor.org/packages/graph.git"
+    bioc = "graph"
 
+    version('1.72.0', commit='7afbd26ecd76e55e6bbd74915a561d7a9b15f907')
     version('1.68.0', commit='03ad9ed088095605e317510b8234501318994e94')
     version('1.62.0', commit='95223bd63ceb66cfe8d881f992a441de8b8c89a3')
     version('1.60.0', commit='e2aecb0a862f32091b16e0036f53367d3edf4c1d')
@@ -21,5 +21,4 @@ class RGraph(RPackage):
     version('1.56.0', commit='c4abe227dac525757679743e6fb4f49baa34acad')
     version('1.54.0', commit='2a8b08520096241620421078fc1098f4569c7301')
 
-    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.11:', type=('build', 'run'))

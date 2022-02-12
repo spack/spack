@@ -7,14 +7,14 @@ from spack import *
 
 
 class RCategory(RPackage):
-    """Category Analysis
+    """Category Analysis.
 
        A collection of tools for performing category (gene set enrichment)
        analysis."""
 
-    homepage = "https://bioconductor.org/packages/Category"
-    git      = "https://git.bioconductor.org/packages/Category.git"
+    bioc = "Category"
 
+    version('2.60.0', commit='55210d8c539474954d18cf913a219dce883eac2e')
     version('2.56.0', commit='ad478caa9d693dbc2770608e79dd852375b9a223')
     version('2.50.0', commit='d96f0b29cb778f6697b44d7ba7b0abd7086074a9')
     version('2.48.1', commit='941819a3d9dd129f47b4ea00fa74032e405be3a5')

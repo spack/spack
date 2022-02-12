@@ -8,7 +8,7 @@ from spack import *
 
 class RBsgenomeHsapiensUcscHg19(RPackage):
     """Full genome sequences for Homo sapiens (UCSC version hg19, based on
-    GRCh37.p13)
+    GRCh37.p13).
 
     Full genome sequences for Homo sapiens (Human) as provided by UCSC
     (hg19, Feb. 2009) and stored in Biostrings objects."""

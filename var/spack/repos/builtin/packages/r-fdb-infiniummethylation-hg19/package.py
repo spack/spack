@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFdbInfiniummethylationHg19(RPackage):
-    """Annotation package for Illumina Infinium DNA methylation probes
+    """Annotation package for Illumina Infinium DNA methylation probes.
 
     Compiled HumanMethylation27 and HumanMethylation450 annotations."""
 
