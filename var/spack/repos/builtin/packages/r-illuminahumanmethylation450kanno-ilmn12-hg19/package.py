@@ -13,8 +13,8 @@ class RIlluminahumanmethylation450kannoIlmn12Hg19(RPackage):
 
     # This package is available via bioconductor but there is no available git
     # repository.
-    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz"
     bioc = "IlluminaHumanMethylation450kanno.ilmn12.hg19"
+    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/IlluminaHumanMethylation450kanno.ilmn12.hg19_0.6.0.tar.gz"
 
     version('0.6.0', sha256='249b8fd62add3c95b5047b597cff0868d26a98862a47cebd656edcd175a73b15')
 
