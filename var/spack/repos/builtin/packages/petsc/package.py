@@ -625,7 +625,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def run_ex7_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex7 with cuda"""
 
-        if not '+cuda' in self.spec:
+        if '+cuda' not in self.spec:
             tty.warn('Skipping petsc test: '
                      'KSP tutorial example ex7 requires +cuda')
             return
@@ -658,7 +658,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def run_ex3k_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex3.kokkos with kokkos"""
 
-        if not '+kokkos' in self.spec:
+        if '+kokkos' not in self.spec:
             tty.warn('Skipping petsc test: '
                      'SNES tutorial example ex3k.kokkos requires +kokkos')
             return
@@ -668,9 +668,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             return
 
         if not self.run_test('make',
-                      options=['ex3k.kokkos'],
-                      purpose='test: compile ex3k.kokkos',
-                      work_dir=w_dir):
+                             options=['ex3k.kokkos'],
+                             purpose='test: compile ex3k.kokkos',
+                             work_dir=w_dir):
             tty.warn('Skipping petsc test: '
                      'failed to compile ex3k.kokkos')
             return
