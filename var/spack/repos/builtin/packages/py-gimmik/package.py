@@ -9,7 +9,8 @@ from spack import *
 
 class PyGimmik(PythonPackage):
     """Generator of Matrix Multiplication Kernels - GiMMiK - is a tool for generation of
-    high performance matrix multiplication kernel code for various accelerator platforms."""
+    high performance matrix multiplication kernel code.
+    for various accelerator platforms."""
 
     homepage = "https://github.com/PyFR/GiMMiK"
     pypi = "gimmik/gimmik-2.2.tar.gz"

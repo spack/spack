@@ -8,8 +8,9 @@ from spack import *
 
 
 class PyPyfr(PythonPackage):
-    """PyFR is an open-source Python based framework for solving advection-diffusion type
-    problems on streaming architectures using the Flux Reconstruction approach of Huynh."""
+    """PyFR is an open-source Python based framework for solving
+    advection-diffusion type problems on streaming architectures
+    using the Flux Reconstruction approach of Huynh."""
 
     homepage = "http://www.pyfr.org/"
     pypi = "pyfr/pyfr-1.13.0.tar.gz"
@@ -34,7 +35,7 @@ class PyPyfr(PythonPackage):
     # Required dependencies
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-gimmik@2.2:",type=('build', 'run'))
+    depends_on("py-gimmik@2.2:", type=('build', 'run'))
     depends_on("py-h5py@2.10:", type=('build', 'run'))
     depends_on("py-mako@1.0.0:", type=('build', 'run'))
     depends_on("py-mpi4py@3.1.0:", type=('build', 'run'))
