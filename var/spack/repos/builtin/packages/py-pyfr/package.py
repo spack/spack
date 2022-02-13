@@ -48,4 +48,4 @@ class PyPyfr(PythonPackage):
     depends_on("metis@5.0:", when="+metis", type=('run'))
     depends_on("scotch@6.0:", when="+scotch", type=('run'))
     depends_on("cuda@8.0:", when="+cuda", type=('run'))
-    depends_on("rocblas", when="+hip", type=('run'))
+    depends_on("rocblas@4.5.0:", when="+hip", type=('run'))
