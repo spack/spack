@@ -2859,7 +2859,7 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-See the :ref:`concretization-preferences` section for more details.
+See the :ref:`package-preferences` section for more details.
 
 
 .. _group_when_spec:
