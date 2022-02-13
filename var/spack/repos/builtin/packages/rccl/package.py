@@ -33,6 +33,11 @@ class Rccl(CMakePackage):
     version('3.7.0', sha256='8273878ff71aac2e7adf5cc8562d2933034c6c6b3652f88fbe3cd4f2691036e3', deprecated=True)
     version('3.5.0', sha256='290b57a66758dce47d0bfff3f5f8317df24764e858af67f60ddcdcadb9337253', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     patch('0001-Fix-numactl-path-issue.patch', when='@3.7.0:4.3.2')
@@ -63,6 +68,9 @@ class Rccl(CMakePackage):
                 'NUMACTL_DIR',
                 self.spec['numactl'].prefix
             ))
+
+        if self.spec.variants['amdgpu_target'].value != 'auto':
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

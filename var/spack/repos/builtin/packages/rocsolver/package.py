@@ -17,10 +17,10 @@ class Rocsolver(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     amdgpu_targets = (
-        'none', 'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
+        'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
         'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
     )
-    variant('amdgpu_target', default='gfx906:xnack-', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \
             size and compile time by adding specialized kernels \
@@ -64,7 +64,6 @@ class Rocsolver(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
-        tgt = self.spec.variants['amdgpu_target'].value
         args = [
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('BUILD_CLIENTS_TESTS', self.run_tests),
@@ -80,12 +79,13 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('@3.7.0:'):
             args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
-        if tgt[0] != 'none':
+        tgt = self.spec.variants['amdgpu_target'].value
+        if tgt != 'auto':
             if '@:3.8.0' in self.spec:
                 args.append(self.define('CMAKE_CXX_FLAGS',
                                         '--amdgpu-target={0}'.format(",".join(tgt))))
             else:
-                args.append(self.define('AMDGPU_TARGETS', ";".join(tgt)))
+                args.append(self.define('AMDGPU_TARGETS', tgt))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))

@@ -19,6 +19,11 @@ class Rocsparse(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
+                      'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     version('5.0.2', sha256='c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b')
@@ -53,6 +58,10 @@ class Rocsparse(CMakePackage):
             self.define('BUILD_CLIENTS_TESTS', 'OFF'),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF')
         ]
+
+        if self.spec.variants['amdgpu_target'].value != 'auto':
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
+
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
 

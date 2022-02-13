@@ -36,6 +36,11 @@ class Rocalution(CMakePackage):
     version('3.7.0', sha256='4d6b20aaaac3bafb7ec084d684417bf578349203b0f9f54168f669e3ec5699f8', deprecated=True)
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe', deprecated=True)
 
+    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
+                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+                      'gfx1030')
+
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3.5:', type='build')
@@ -75,6 +80,9 @@ class Rocalution(CMakePackage):
             self.define('SUPPORT_MPI', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
         ]
+
+        if self.spec.variants['amdgpu_target'].value != 'auto':
+            args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
             args.append(self.define('__skip_rocmclang', 'ON'))
