@@ -1502,6 +1502,13 @@ class Spec(object):
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(value)
 
+    @property
+    def sbom(self):
+        """
+        Get the sbom file associated with a spec (doesn't need to exist)
+        """
+        return os.path.join(self.prefix, ".spack", "sbom.json")
+
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
 

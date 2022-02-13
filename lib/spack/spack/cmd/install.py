@@ -20,6 +20,7 @@ import spack.fetch_strategy
 import spack.monitor
 import spack.paths
 import spack.report
+import spack.sbom
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -41,6 +42,7 @@ def update_kwargs_from_args(args, kwargs):
         'verbose': args.verbose or args.install_verbose,
         'fake': args.fake,
         'dirty': args.dirty,
+        'generate_sbom': args.generate_sbom,
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
         'include_build_deps': args.include_build_deps,
@@ -94,6 +96,9 @@ the dependencies"""
     subparser.add_argument(
         '--dont-restage', action='store_true',
         help="if a partial install is detected, don't delete prior state")
+    subparser.add_argument(
+        '--sbom', action='store_true', dest='generate_sbom', default=False,
+        help="generate a software bill of materials in the package directory.")
 
     cache_group = subparser.add_mutually_exclusive_group()
     cache_group.add_argument(
@@ -202,9 +207,12 @@ def install_specs(cli_args, kwargs, specs):
         kwargs (dict):  keyword arguments
         specs (list):  list of (abstract, concrete) spec tuples
     """
-
     # handle active environment, if any
     env = ev.active_environment()
+
+    # Flag to indicate we should enable sbom generation (hook)
+    if kwargs.get('generate_sbom', False) is True:
+        spack.sbom.generate_sbom = True
 
     try:
         if env:

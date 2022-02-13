@@ -216,6 +216,33 @@ the ``mpich`` will be build with the installed versions, if possible.
 You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
 will be reused and what will be built before you install.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Generate a software bill of materials (sbom)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack has support to generate a `CycloneDX Software Bill of Materials <https://cyclonedx.org/specification/overview/>`_,
+called an "SBOM." This is a `json data structure <https://cyclonedx.org/docs/1.3/json/>`_
+that describes the install tree and dependencies, and is becoming important to
+generate for understanding what is installed. By default since the files can be big,
+we do not generate them for installs. However, you can request an sbom to be generated
+in the install directory as follows:
+
+.. code-block:: console
+
+    $ spack install --sbom zlib
+
+The sbom is then generated in the package metadata directory, which you can find as follows:
+
+.. code-block:: console
+
+    $ spack sbom path zlib
+    ./opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/zlib-1.2.11-7dhzpqdz36kcfncmvqlaznfsxzpttpmq/.spack/sbom.json
+
+
+And you can further view or inspect it with :ref:_cmd-spack-sbom, an associated
+command.
+
+
 .. _cmd-spack-uninstall:
 
 ^^^^^^^^^^^^^^^^^^^
@@ -721,6 +748,35 @@ structured the way you want:
       "version": "6.1",
       "hash": "zvaa4lhlhilypw5quj3akyd3apbq5gap"
     }
+
+
+.. _cmd-spack-sbom:
+
+^^^^^^^^^^^^^^
+``spack sbom``
+^^^^^^^^^^^^^^
+
+The spack sbom command allows you to easily find or inspect existing sboms, or
+or generate an sbom for an already installed package on the fly. If you've already generated
+an sbom and just need the path, do:
+
+
+.. code-block:: console
+
+    $ spack sbom path zlib
+    ./opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/zlib-1.2.11-7dhzpqdz36kcfncmvqlaznfsxzpttpmq/.spack/sbom.json
+
+You can also dump the full json to your terminal with ``show``:
+
+.. code-block:: console
+
+    $ spack sbom show zlib
+
+Or finally, request creation of an sbom for a package that does not have one:
+
+.. code-block:: console
+
+    $ spack sbom create expat@2.4.1
 
 
 ^^^^^^^^^^^^^^
