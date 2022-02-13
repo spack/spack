@@ -60,7 +60,9 @@ class Rocsolver(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2']:
         depends_on('hip@' + ver, when='@' + ver)
-        depends_on('rocblas@' + ver, when='@' + ver)
+        for tgt in ['auto', *amdgpu_targets]:
+            depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, tgt),
+                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     def cmake_args(self):
