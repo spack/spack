@@ -35,7 +35,7 @@ class PyPyfr(PythonPackage):
     # Required dependencies
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-gimmik@2.2:", type=('build', 'run'))
+    depends_on("py-gimmik@2.2:2", type=('build', 'run'))
     depends_on("py-h5py@2.10:", type=('build', 'run'))
     depends_on("py-mako@1.0.0:", type=('build', 'run'))
     depends_on("py-mpi4py@3.1.0:", type=('build', 'run'))
@@ -45,7 +45,7 @@ class PyPyfr(PythonPackage):
     depends_on("py-scipy", type=('build', 'run'))
 
     # Optional  dependecies
-    depends_on("metis@5.0:", when="+metis", type=('build', 'run'))
-    depends_on("scotch@6.0:", when="+scotch", type=('build', 'run'))
-    depends_on("cuda@8.0:", when="+cuda", type=('build', 'run'))
-    depends_on("rocblas@4.5.0:", when="+hip", type=('build', 'run'))
+    depends_on("metis@5.0:", when="+metis", type=('run'))
+    depends_on("scotch@6.0:", when="+scotch", type=('run'))
+    depends_on("cuda@8.0:", when="+cuda", type=('run'))
+    depends_on("rocblas", when="+hip", type=('run'))
