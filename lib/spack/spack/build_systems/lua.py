@@ -11,11 +11,12 @@ import re
 from typing import List  # novm
 
 from llnl.util.filesystem import find, join_path, working_dir
-from spack.util.executable import Executable
 
 import spack.build_environment
 from spack.directives import *
 from spack.package import InstallError, PackageBase, run_after
+from spack.util.executable import Executable
+
 
 class LuaPackage(PackageBase):
     """Specialized class for lua packages
