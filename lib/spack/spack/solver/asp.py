@@ -544,6 +544,7 @@ class PyclingoDriver(object):
             setup,
             specs,
             nmodels=0,
+            reuse=None,
             timers=False,
             stats=False,
             out=None,
@@ -555,6 +556,7 @@ class PyclingoDriver(object):
           setup (SpackSolverSetup): An object to set up the ASP problem.
           specs (list): List of ``Spec`` objects to solve for.
           nmodels (list): Number of models to consider (default 0 for unlimited).
+          reuse (None or list): list of concrete specs that can be reused
           timers (bool):  Print out coarse timers for different solve phases.
           stats (bool): Whether to output Clingo's internal solver statistics.
           out: Optional output stream for the generated ASP program.
@@ -578,7 +580,7 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs)
+            setup.setup(self, specs, reuse=reuse)
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -679,7 +681,7 @@ class PyclingoDriver(object):
 class SpackSolverSetup(object):
     """Class to set up and run a Spack concretization solve."""
 
-    def __init__(self, reuse=False, tests=False):
+    def __init__(self, tests=False):
         self.gen = None  # set by setup()
 
         self.declared_versions = {}
@@ -703,9 +705,6 @@ class SpackSolverSetup(object):
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
-
-        # whether to add installed/binary hashes to the solve
-        self.reuse = reuse
 
         # whether to add installed/binary hashes to the solve
         self.tests = tests
@@ -1762,29 +1761,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def define_packages_in_buildcaches(self, possible):
-        """Define the concrete packages available in buildcaches"""
-        self.gen.h2('Specs available from buildcaches')
-        try:
-            index = spack.binary_distribution.update_cache_and_get_specs()
-            for spec in index:
-                if not spec.satisfies('dev_path=*'):
-                    self._facts_from_concrete_spec(spec, possible)
-        except (spack.binary_distribution.FetchCacheError, IndexError):
-            # this is raised when no mirrors had indices.
-            # TODO: update mirror configuration so it can indicate that the source cache
-            # TODO: (or any mirror really) doesn't have binaries.
-            pass
-
-    def define_packages_in_store(self, possible):
-        """Define the concrete packages in the store"""
-        self.gen.h2('Specs available in the local store')
-        with spack.store.db.read_transaction():
-            for spec in spack.store.db.query(installed=True):
-                if not spec.satisfies('dev_path=*'):
-                    self._facts_from_concrete_spec(spec, possible)
-
-    def setup(self, driver, specs):
+    def setup(self, driver, specs, reuse=None):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1792,7 +1769,9 @@ class SpackSolverSetup(object):
         specs, as well as constraints from the specs themselves.
 
         Arguments:
+            driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
+            reuse (None or list): list of concrete specs that can be reused
         """
         self._condition_id_counter = itertools.count()
 
@@ -1831,12 +1810,11 @@ class SpackSolverSetup(object):
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
-        if self.reuse:
+        if reuse:
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
-            self.gen.newline()
-            self.define_packages_in_store(possible)
-            self.define_packages_in_buildcaches(possible)
+            for reusable_spec in reuse:
+                self._facts_from_concrete_spec(reusable_spec, possible)
 
         self.gen.h1('General Constraints')
         self.available_compilers()
@@ -2253,11 +2231,33 @@ class Solver(object):
                     continue
                 spack.spec.Spec.ensure_valid_variants(s)
 
-        setup = SpackSolverSetup(reuse=self.reuse, tests=tests)
+        reusable_specs = []
+        if self.reuse:
+            # Specs from the local Database
+            with spack.store.db.read_transaction():
+                reusable_specs.extend([
+                    s for s in spack.store.db.query(installed=True)
+                    if not s.satisfies('dev_path=*')
+                ])
+
+            # Specs from buildcaches
+            try:
+                index = spack.binary_distribution.update_cache_and_get_specs()
+                reusable_specs.extend([
+                    s for s in index if not s.satisfies('dev_path=*')
+                ])
+            except (spack.binary_distribution.FetchCacheError, IndexError):
+                # this is raised when no mirrors had indices.
+                # TODO: update mirror configuration so it can indicate that the source cache
+                # TODO: (or any mirror really) doesn't have binaries.
+                pass
+
+        setup = SpackSolverSetup(tests=tests)
         return self.driver.solve(
             setup,
             specs,
             nmodels=models,
+            reuse=reusable_specs,
             timers=timers,
             stats=stats,
             out=out,
