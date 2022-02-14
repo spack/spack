@@ -159,6 +159,9 @@ class SIPPackage(PackageBase):
 
     @run_after('install')
     def extend_path_setup(self):
+        if self.spec['py-sip'].satisfies('@5:'):
+            return
+
         # See github issue #14121 and PR #15297
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
