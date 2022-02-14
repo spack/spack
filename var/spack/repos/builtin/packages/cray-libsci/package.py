@@ -13,7 +13,7 @@ class CrayLibsci(Package):
     has_code = False    # Skip attempts to fetch source that is not available
 
     maintainers = ['lukebroskop']
-    
+
     version("21.08.1.2")
     version("20.06.1")
     version("20.03.1")
