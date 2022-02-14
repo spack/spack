@@ -169,12 +169,18 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources([join_path('src', 'eps', 'tests')])
 
     def run_test1_example(self, test_dir):
+        """Run stand alone test: test1"""
+
+        if not os.path.isfile(join_path(test_dir, 'test1.c')):
+            tty.warn('Skipping slepc test: failed to find test1.c')
+            return
+
         exe = 'test1'
         cc_exe = os.environ['CC']
 
         self.run_test(exe='make',
-                      options=[join_path(test_dir, 'makefile'), exe],
-                      purpose='test:compile makefile',
+                      options=[exe],
+                      purpose='test: compile makefile',
                       work_dir=test_dir)
 
         self.run_test(exe=cc_exe,
@@ -196,9 +202,5 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              'src', 'eps', 'tests')
-
-        if not os.path.isfile(join_path(test_dir, 'test1.c')):
-            tty.warn('Skipping slepc test: failed to find test1.c')
-            return
 
         self.run_test1_example(test_dir)
