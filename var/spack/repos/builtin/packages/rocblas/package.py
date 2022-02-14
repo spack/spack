@@ -37,7 +37,7 @@ class Rocblas(CMakePackage):
                       'gfx1012', 'gfx1030')
 
     variant('amdgpu_target', default='gfx906:xnack-', values=amdgpu_targets, multi=True)
-    variant('tensile', default=False, description='Use Tensile as a backend')
+    variant('tensile', default=True, description='Use Tensile as a backend')
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     # gfx906, gfx908,gfx803,gfx900 are valid for @:4.0.0
