@@ -32,18 +32,29 @@ class Veloc(CMakePackage):
     depends_on('openssl')
     depends_on('cmake@3.9:', type='build')
 
-    # requires C++17
+    depends_on('boost', when='@:1.5')
+
     def flag_handler(self, name, flags):
         flags = list(flags)
         if name == 'cxxflags':
-            flags.append(self.compiler.cxx17_flag)
+            if self.spec.satisfies('@:1.5'):
+                flags.append(self.compiler.cxx11_flag)
+            else:
+                flags.append(self.compiler.cxx17_flag)
+            
         return (None, None, flags)
 
     def cmake_args(self):
         args = [
-            "-DCOMM_QUEUE=socket_queue",
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
             "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
             "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx
         ]
+
+        if self.spec.satisfies('@:1.5'):
+            args.append("-DBOOST_ROOT=%s" % self.spec['boost'].prefix)
+
+        if self.spec.satisfies('@1.6:'):
+            args.append("-DCOMM_QUEUE=socket_queue")
+
         return args
