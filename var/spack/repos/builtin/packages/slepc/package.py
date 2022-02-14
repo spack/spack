@@ -178,12 +178,14 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         exe = 'test1'
         cc_exe = os.environ['CC']
 
-        self.run_test(exe='make',
+        if not self.run_test(exe='make',
                       options=[exe],
                       purpose='test: compile makefile',
-                      work_dir=test_dir)
+                      work_dir=test_dir):
+            tty.warn('Skipping test: failed to run makefile')
+            return
 
-        self.run_test(exe=cc_exe,
+        if not self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
                                '-L{0}'.format(self.prefix.lib),
                                '-L{0}'.format(self.spec['petsc'].prefix.lib),
@@ -191,11 +193,14 @@ class Slepc(Package, CudaPackage, ROCmPackage):
                                join_path(test_dir, 'test1.c'), '-o', exe,
                                '-lslepc', '-lpetsc', '-lmpi', '-lm'],
                       purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+                      work_dir=test_dir):
+            tty.warn('Skipping test: failed to compile example')
+            return
 
-        self.run_test(exe,
+        if not self.run_test(exe,
                       purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+                      work_dir=test_dir):
+            tty.warn('Skipping test: failed to run example')
 
     def test(self):
         """Run stand alone test"""
