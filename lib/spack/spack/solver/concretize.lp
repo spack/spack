@@ -11,14 +11,12 @@
 % Map literal input specs to facts that drive the solve
 %-----------------------------------------------------------------------------
 
-concretize_everything().
-
 % Give clingo the choice to solve an input spec or not
 { literal_solved(ID) } :- literal(ID).
 literal_not_solved(ID) :- not literal_solved(ID), literal(ID).
 
 % If concretize_everything() is a fact, then we cannot have unsolved specs
-:- literal_not_solved(ID), concretize_everything().
+:- literal_not_solved(ID), concretize_everything.
 
 opt_criterion(300, "Number of input specs not concretized").
 #minimize{ 0@300: #true }.

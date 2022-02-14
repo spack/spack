@@ -330,7 +330,9 @@ class Result(object):
         self.abstract_specs = specs
 
         # Concrete specs
+        self._concrete_specs_by_input = None
         self._concrete_specs = None
+        self._unsolved_specs = None
 
     def format_core(self, core):
         """
@@ -427,15 +429,32 @@ class Result(object):
         """List of concretized specs satisfying the initial
         abstract request.
         """
-        # The specs were already computed, return them
-        if self._concrete_specs:
-            return self._concrete_specs
+        if not self._concrete_specs:
+            self._compute_specs_from_answer_set()
+        return self._concrete_specs
 
-        # Assert prerequisite
-        msg = 'cannot compute specs ["satisfiable" is not True ]'
-        assert self.satisfiable, msg
+    @property
+    def unsolved_specs(self):
+        """List of abstract input specs that were not solved."""
+        if not self._unsolved_specs:
+            self._compute_specs_from_answer_set()
+        return self._unsolved_specs
 
-        self._concrete_specs = []
+    @property
+    def specs_by_input(self):
+        if not self._concrete_specs_by_input:
+            self._compute_specs_from_answer_set()
+        return self._concrete_specs_by_input
+
+    def _compute_specs_from_answer_set(self):
+        if not self.satisfiable:
+            self._concrete_specs = []
+            self._unsolved_specs = self.abstract_specs
+            self._concrete_specs_by_input = {}
+            return
+
+        self._concrete_specs, self._unsolved_specs = [], []
+        self._concrete_specs_by_input = {}
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
@@ -444,10 +463,13 @@ class Result(object):
                 providers = [spec.name for spec in answer.values()
                              if spec.package.provides(key)]
                 key = providers[0]
+            candidate = answer.get(key)
 
-            self._concrete_specs.append(answer[key])
-
-        return self._concrete_specs
+            if candidate and candidate.satisfies(input_spec):
+                self._concrete_specs.append(answer[key])
+                self._concrete_specs_by_input[input_spec] = answer[key]
+            else:
+                self._unsolved_specs.append(input_spec)
 
 
 def _normalize_packages_yaml(packages_yaml):
@@ -555,7 +577,7 @@ class PyclingoDriver(object):
         Arguments:
           setup (SpackSolverSetup): An object to set up the ASP problem.
           specs (list): List of ``Spec`` objects to solve for.
-          nmodels (list): Number of models to consider (default 0 for unlimited).
+          nmodels (int): Number of models to consider (default 0 for unlimited).
           reuse (None or list): list of concrete specs that can be reused
           timers (bool):  Print out coarse timers for different solve phases.
           stats (bool): Whether to output Clingo's internal solver statistics.
@@ -708,6 +730,9 @@ class SpackSolverSetup(object):
 
         # whether to add installed/binary hashes to the solve
         self.tests = tests
+
+        # If False allows for input specs that are not solved
+        self.concretize_everything = True
 
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
@@ -1878,6 +1903,9 @@ class SpackSolverSetup(object):
                         idx, "variant_default_value_from_cli", *clause.args
                     ))
 
+        if self.concretize_everything:
+            self.gen.fact(fn.concretize_everything())
+
 
 class SpecBuilder(object):
     """Class with actions to rebuild a spec from ASP results."""
@@ -2186,7 +2214,7 @@ def _develop_specs_from_env(spec, env):
 class Solver(object):
     """This is the main external interface class for solving.
 
-    It manages solver configuration and preferences in once place. It sets up the solve
+    It manages solver configuration and preferences in one place. It sets up the solve
     and passes the setup method to the driver, as well.
 
     Properties of interest:
@@ -2201,6 +2229,38 @@ class Solver(object):
         # These properties are settable via spack configuration, and overridable
         # by setting them directly as properties.
         self.reuse = spack.config.get("concretizer:reuse", False)
+
+    @staticmethod
+    def _check_input(specs):
+        for root in specs:
+            for s in root.traverse():
+                if s.virtual:
+                    continue
+                spack.spec.Spec.ensure_valid_variants(s)
+
+    def _reusable_specs(self):
+        reusable_specs = []
+        if self.reuse:
+            # Specs from the local Database
+            with spack.store.db.read_transaction():
+                reusable_specs.extend([
+                    s for s in spack.store.db.query(installed=True)
+                    if not s.satisfies('dev_path=*')
+                ])
+
+            # Specs from buildcaches
+            try:
+                index = spack.binary_distribution.update_cache_and_get_specs()
+                reusable_specs.extend([
+                    s for s in index if not s.satisfies('dev_path=*')
+                ])
+
+            except (spack.binary_distribution.FetchCacheError, IndexError):
+                # this is raised when no mirrors had indices.
+                # TODO: update mirror configuration so it can indicate that the
+                # TODO: source cache (or any mirror really) doesn't have binaries.
+                pass
+        return reusable_specs
 
     def solve(
             self,
@@ -2225,33 +2285,8 @@ class Solver(object):
           setup_only (bool): if True, stop after setup and don't solve (default False).
         """
         # Check upfront that the variants are admissible
-        for root in specs:
-            for s in root.traverse():
-                if s.virtual:
-                    continue
-                spack.spec.Spec.ensure_valid_variants(s)
-
-        reusable_specs = []
-        if self.reuse:
-            # Specs from the local Database
-            with spack.store.db.read_transaction():
-                reusable_specs.extend([
-                    s for s in spack.store.db.query(installed=True)
-                    if not s.satisfies('dev_path=*')
-                ])
-
-            # Specs from buildcaches
-            try:
-                index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend([
-                    s for s in index if not s.satisfies('dev_path=*')
-                ])
-            except (spack.binary_distribution.FetchCacheError, IndexError):
-                # this is raised when no mirrors had indices.
-                # TODO: update mirror configuration so it can indicate that the source cache
-                # TODO: (or any mirror really) doesn't have binaries.
-                pass
-
+        self._check_input(specs)
+        reusable_specs = self._reusable_specs()
         setup = SpackSolverSetup(tests=tests)
         return self.driver.solve(
             setup,
@@ -2263,6 +2298,63 @@ class Solver(object):
             out=out,
             setup_only=setup_only,
         )
+
+    def solve_in_rounds(
+            self,
+            specs,
+            out=None,
+            models=0,
+            timers=False,
+            stats=False,
+            tests=False,
+    ):
+        """Solve for a stable model of specs in multiple rounds.
+
+        This relaxes the assumption of solve that everything must be consistent and
+        solvable in a single round. Each round tries to maximize the reuse of specs
+        from previous rounds.
+
+        The function is a generator that yields the result of each round.
+
+        Arguments:
+            specs (list): list of Specs to solve.
+            models (int): number of models to search (default: 0)
+            out: Optionally write the generate ASP program to a file-like object.
+            timers (bool): print timing if set to True
+            stats (bool): print internal statistics if set to True
+            tests (bool): add test dependencies to the solve
+        """
+        self._check_input(specs)
+        reusable_specs = self._reusable_specs()
+        setup = SpackSolverSetup(tests=tests)
+
+        # Tell clingo that we don't have to solve all the inputs at once
+        setup.concretize_everything = False
+
+        input_specs = specs
+        while True:
+            result = self.driver.solve(
+                setup,
+                input_specs,
+                nmodels=models,
+                reuse=reusable_specs,
+                timers=timers,
+                stats=stats,
+                out=out,
+                setup_only=False
+            )
+            yield result
+
+            # If we don't have unsolved specs we are done
+            if not result.unsolved_specs:
+                break
+
+            # This means we cannot progress with solving the input
+            if not result.satisfiable or not result.specs:
+                break
+
+            input_specs = result.unsolved_specs
+            reusable_specs.extend(result.specs)
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
