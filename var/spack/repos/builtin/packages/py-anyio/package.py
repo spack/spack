@@ -20,6 +20,7 @@ class PyAnyio(PythonPackage):
     depends_on('python@3.6.2:', type=('build', 'run'))
     depends_on('py-setuptools@42:', type='build')
     depends_on('py-setuptools-scm+toml@3.4:', type='build')
+    depends_on('py-wheel@0.29:', type='build')
     depends_on('py-contextvars', when='@3.4: ^python@:3.6', type=('build', 'run'))
     depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-idna@2.8:', type=('build', 'run'))
