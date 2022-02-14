@@ -13,10 +13,10 @@ class CrayMpich(Package):
     """Cray's MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
-    homepage = "https://docs.nersc.gov/development/compilers/wrappers/"
+    homepage = "https://support.hpe.com/"
     has_code = False    # Skip attempts to fetch source that is not available
 
-    maintainers = ['haampie']
+    maintainers = ['haampie', 'lukebroskop']
 
     version('8.1.7')
     version('8.1.0')
@@ -36,7 +36,9 @@ class CrayMpich(Package):
         'cce': 'CRAY',
         'intel': 'INTEL',
         'clang': 'ALLINEA',
-        'aocc': 'AOCC'
+        'aocc': 'AOCC',
+        'nvhpc': 'NVIDIA',
+        'rocmcc': 'AMD'
     }
 
     @property
