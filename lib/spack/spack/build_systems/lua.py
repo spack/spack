@@ -4,17 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import inspect
 import os
-import platform
-import re
-from typing import List  # novm
+from typing import List, Text
 
-from llnl.util.filesystem import find, join_path, working_dir
+from llnl.util.filesystem import find, join_path
 
-import spack.build_environment
-from spack.directives import *
-from spack.package import InstallError, PackageBase, run_after
+from spack.package import PackageBase
+from spack.pkgkit import *
 from spack.util.executable import Executable
 
 
@@ -36,8 +32,7 @@ class LuaPackage(PackageBase):
     extends('lua-luajit-openresty', when='^lua-luajit-openresty')
     depends_on('lua-luajit-openresty+lualinks', when='^lua-luajit-openresty')
 
-    rocks_build_flags = []
-
+    rocks_build_flags = []  # type: List[Text]
 
     def preprocess(self, spec, prefix):
         """Extend this to preprocess source before building with luarocks"""

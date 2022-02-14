@@ -48,4 +48,3 @@ class LuaLuajitOpenresty(LuaImplPackage):
         src_makefile.filter(
             '^TARGET_LD = .*',
             'TARGET_LD = {0}'.format(spack_cxx))
-

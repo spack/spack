@@ -5,8 +5,6 @@
 
 import os
 
-from llnl.util.filesystem import find_libraries
-
 from spack import *
 
 

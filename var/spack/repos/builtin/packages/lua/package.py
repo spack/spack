@@ -94,4 +94,3 @@ class Lua(LuaImplPackage):
         if "+pcfile" in self.spec:
             symlink(join_path(self.prefix.lib, 'pkgconfig', 'lua5.3.pc'),
                     join_path(self.prefix.lib, 'pkgconfig', 'lua.pc'))
-

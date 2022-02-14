@@ -5,18 +5,13 @@
 
 
 import glob
-import inspect
 import os
-import platform
-import re
-from typing import List  # novm
 
-from llnl.util.filesystem import find, find_libraries, join_path, working_dir
+from llnl.util.filesystem import find, join_path, working_dir
 
 import spack.build_environment
 from spack.build_systems.makefile import MakefilePackage
 from spack.directives import *
-from spack.package import InstallError, PackageBase, run_after
 from spack.util.executable import Executable
 
 __SUPPORTED_IMPLS = ("Lua", "LuaLuajit", "LuaLuajitOpenresty")
