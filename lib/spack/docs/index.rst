@@ -41,6 +41,7 @@ package:
 
    $ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
    $ cd spack/bin
+   $ ./spack compiler find
    $ ./spack install libelf
 
 If you're new to spack and want to start using it, see :doc:`getting_started`,
