@@ -11,8 +11,9 @@ class Genometools(MakefilePackage):
        of genome informatics) combined into a single binary named gt."""
 
     homepage = "http://genometools.org/"
-    url      = "https://github.com/genometools/genometools/archive/v1.6.1.tar.gz"
+    url      = "https://github.com/genometools/genometools/archive/refs/tags/v1.6.2.tar.gz"
 
+    version('1.6.2', sha256='974825ddc42602bdce3d5fbe2b6e2726e7a35e81b532a0dc236f6e375d18adac')
     version('1.6.1', sha256='528ca143a7f1d42af8614d60ea1e5518012913a23526d82e434f0dad2e2d863f')
     version('1.5.9', sha256='bba8e043f097e7c72e823f73cb0efbd20bbd60f1ce797a0e4c0ab632b170c909')
 
