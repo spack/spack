@@ -3,11 +3,11 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
-
-from contextlib import contextmanager
 import os
 import shutil
+from contextlib import contextmanager
+
+from spack import *
 
 
 class SimModel(Package):
@@ -223,6 +223,7 @@ class SimModel(Package):
             env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
         if os.path.isdir(self.prefix.lib.python):
             env.prepend_path('PYTHONPATH', self.prefix.lib.python)
+        env.set('{}_ROOT'.format(self.name.upper()), self.prefix)
 
     def setup_build_environment(self, env):
         self._setup_build_environment_common(env)
