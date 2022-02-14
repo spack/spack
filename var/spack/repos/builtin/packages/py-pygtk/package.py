@@ -12,7 +12,7 @@ class PyPygtk(AutotoolsPackage):
     homepage = "http://www.pygtk.org/"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
 
-    version('2.24.0', sha256='6e3e54fa6e65a69ac60bd58cb2e60a57f3346ac52efe995f3d10b6c38c972fd8', deprecated=True)
+    version('2.24.0', sha256='6e3e54fa6e65a69ac60bd58cb2e60a57f3346ac52efe995f3d10b6c38c972fd8')
 
     extends('python')
 

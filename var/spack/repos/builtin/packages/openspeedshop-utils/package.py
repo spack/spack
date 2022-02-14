@@ -32,10 +32,10 @@ class OpenspeedshopUtils(CMakePackage):
     homepage = "http://www.openspeedshop.org"
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
-    version('develop', branch='master', deprecated=True)
-    version('2.4.2.1', branch='2.4.2.1', deprecated=True)
-    version('2.4.2', branch='2.4.2', deprecated=True)
-    version('2.4.1', branch='2.4.1', deprecated=True)
+    version('develop', branch='master')
+    version('2.4.2.1', branch='2.4.2.1')
+    version('2.4.2', branch='2.4.2')
+    version('2.4.1', branch='2.4.1')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")

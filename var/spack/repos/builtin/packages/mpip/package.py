@@ -18,7 +18,7 @@ class Mpip(AutotoolsPackage):
     version('3.5',
             sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")
     version("3.4.1",
-            sha256="66a86dafde61546be80a130c46e4295f47fb764cf312ae62c70a6dc456a59dac", deprecated=True)
+            sha256="66a86dafde61546be80a130c46e4295f47fb764cf312ae62c70a6dc456a59dac")
 
     variant('demangling', default=True,
             description="Build with demangling support")

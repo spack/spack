@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Atompaw(Package):
+class Atompaw(AutotoolsPackage):
     """A Projector Augmented Wave (PAW) code for generating
     atom-centered functions.
 
@@ -30,19 +30,23 @@ class Atompaw(Package):
     depends_on('libxc@:2', when='@:4.0')
 
     patch('atompaw-4.1.1.0-fix-ifort.patch', when='@4.1.1.0:')
+    patch('atompaw-4.1.1.0-fix-fujitsu.patch', when='@4.1.1.0 %fj')
 
-    def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
+    parallel = False
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%fj') and name  == 'fflags':
+            opt_flag_found = any(f in self.compiler.opt_flags for f in flags)
+            if not opt_flag_found:
+                flags.append('-Kfast')
+        return (flags, None, None)
+
+    def configure_args(self):
+        spec = self.spec
         linalg = spec['lapack'].libs + spec['blas'].libs
-        options.extend([
+        return [
             "--with-linalg-libs=%s" % linalg.ld_flags,
             "--enable-libxc",
             "--with-libxc-incs=-I%s" % spec["libxc"].prefix.include,
             "--with-libxc-libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
-        ])
-
-        configure(*options)
-        make(parallel=False)  # parallel build fails
-        make("check")
-        make("install")
+        ]

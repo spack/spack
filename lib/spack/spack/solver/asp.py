@@ -535,10 +535,9 @@ class PyclingoDriver(object):
 
         # Initialize the control object for the solver
         self.control = clingo.Control()
-        self.control.configuration.solve.models = nmodels
-        self.control.configuration.asp.trans_ext = 'all'
-        self.control.configuration.asp.eq = '5'
         self.control.configuration.configuration = 'tweety'
+        self.control.configuration.solve.models = nmodels
+        self.control.configuration.solver.heuristic = 'Domain'
         self.control.configuration.solve.parallel_mode = '1'
         self.control.configuration.solver.opt_strategy = "usc,one"
 
@@ -717,7 +716,7 @@ class SpackSolverSetup(object):
         if str(target) in archspec.cpu.TARGETS:
             return [single_target_fn(spec.name, target)]
 
-        self.target_constraints.add((spec.name, target))
+        self.target_constraints.add(target)
         return [fn.node_target_satisfies(spec.name, target)]
 
     def conflict_rules(self, pkg):
@@ -851,6 +850,9 @@ class SpackSolverSetup(object):
 
             for value in sorted(values):
                 self.gen.fact(fn.variant_possible_value(pkg.name, name, value))
+
+            if variant.sticky:
+                self.gen.fact(fn.variant_sticky(pkg.name, name))
 
             self.gen.newline()
 
@@ -1215,8 +1217,7 @@ class SpackSolverSetup(object):
                 clauses.append(
                     fn.node_compiler_version_satisfies(
                         spec.name, spec.compiler.name, spec.compiler.versions))
-                self.compiler_version_constraints.add(
-                    (spec.name, spec.compiler))
+                self.compiler_version_constraints.add(spec.compiler)
 
         # compiler flags
         for flag_type, flags in spec.compiler_flags.items():
@@ -1402,9 +1403,12 @@ class SpackSolverSetup(object):
             for target in supported:
                 best_targets.add(target.name)
                 self.gen.fact(fn.compiler_supports_target(
-                    compiler.name, compiler.version, target.name))
-                self.gen.fact(fn.compiler_supports_target(
-                    compiler.name, compiler.version, uarch.family.name))
+                    compiler.name, compiler.version, target.name
+                ))
+
+            self.gen.fact(fn.compiler_supports_target(
+                compiler.name, compiler.version, uarch.family.name
+            ))
 
         # add any targets explicitly mentioned in specs
         for spec in specs:
@@ -1533,18 +1537,12 @@ class SpackSolverSetup(object):
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
         compiler_list = list(sorted(set(compiler_list)))
-
-        for pkg_name, cspec in self.compiler_version_constraints:
+        for constraint in sorted(self.compiler_version_constraints):
             for compiler in compiler_list:
-                if compiler.satisfies(cspec):
-                    self.gen.fact(
-                        fn.node_compiler_version_satisfies(
-                            pkg_name,
-                            cspec.name,
-                            cspec.versions,
-                            compiler.version
-                        )
-                    )
+                if compiler.satisfies(constraint):
+                    self.gen.fact(fn.compiler_version_satisfies(
+                        constraint.name, constraint.versions, compiler.version
+                    ))
         self.gen.newline()
 
     def define_target_constraints(self):
@@ -1569,8 +1567,7 @@ class SpackSolverSetup(object):
             return allowed_targets
 
         cache = {}
-        for spec_name, target_constraint in sorted(self.target_constraints):
-
+        for target_constraint in sorted(self.target_constraints):
             # Construct the list of allowed targets for this constraint
             allowed_targets = []
             for single_constraint in str(target_constraint).split(','):
@@ -1581,11 +1578,7 @@ class SpackSolverSetup(object):
                 allowed_targets.extend(cache[single_constraint])
 
             for target in allowed_targets:
-                self.gen.fact(
-                    fn.node_target_satisfies(
-                        spec_name, target_constraint, target
-                    )
-                )
+                self.gen.fact(fn.target_satisfies(target_constraint, target))
             self.gen.newline()
 
     def define_variant_values(self):

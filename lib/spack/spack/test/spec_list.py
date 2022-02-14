@@ -45,24 +45,34 @@ class TestSpecList(object):
         assert speclist.specs_as_constraints == self.default_constraints
         assert speclist.specs == self.default_specs
 
-    def test_spec_list_constraint_ordering(self):
-        specs = [{'matrix': [
+    @pytest.mark.regression('28749')
+    @pytest.mark.parametrize('specs,expected', [
+        # Constraints are ordered randomly
+        ([{'matrix': [
             ['^zmpi'],
             ['%gcc@4.5.0'],
             ['hypre', 'libelf'],
             ['~shared'],
             ['cflags=-O3', 'cflags="-g -O0"'],
             ['^foo']
-        ]}]
-
+        ]}], [
+            'hypre cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi',
+            'hypre cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi',
+            'libelf cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi',
+            'libelf cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi',
+        ]),
+        # A constraint affects both the root and a dependency
+        ([{'matrix': [
+            ['gromacs'],
+            ['%gcc'],
+            ['+plumed ^plumed%gcc']
+        ]}], [
+            'gromacs+plumed%gcc ^plumed%gcc'
+        ])
+    ])
+    def test_spec_list_constraint_ordering(self, specs, expected):
         speclist = SpecList('specs', specs)
-
-        expected_specs = [
-            Spec('hypre cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi'),
-            Spec('hypre cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi'),
-            Spec('libelf cflags=-O3 ~shared %gcc@4.5.0 ^foo ^zmpi'),
-            Spec('libelf cflags="-g -O0" ~shared %gcc@4.5.0 ^foo ^zmpi'),
-        ]
+        expected_specs = [Spec(x) for x in expected]
         assert speclist.specs == expected_specs
 
     def test_spec_list_add(self):

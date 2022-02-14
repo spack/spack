@@ -138,6 +138,7 @@ spack:
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
+    - lammps
     - legion
     - libnrm
     - libquo
@@ -149,6 +150,8 @@ spack:
     - mfem
     - mpark-variant
     - mpifileutils ~xattr
+    - nccmp
+    - nco
     - ninja
     - nrm
     - omega-h
@@ -191,14 +194,15 @@ spack:
     - umap
     - unifyfs@0.9.1
     - upcxx
+    - variorum
     - veloc
+    - wannier90
     - zfp
     #- dealii
     #- geopm
     #- qt
     #- qwt
     #- umpire # unsatisfiable concretization conflict w/ blt
-    #- variorum # root fails
 
   - arch:
     - '%gcc target=x86_64'
