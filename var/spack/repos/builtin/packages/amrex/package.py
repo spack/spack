@@ -107,7 +107,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
-    depends_on('rocrand', type='build', when='+rocm')
+    depends_on('hip', type=('test', 'run'), when='+rocm')
+    depends_on('rocrand', type=('build', 'test', 'run'), when='+rocm')
     depends_on('rocprim', type='build', when='@21.05: +rocm')
     depends_on('hypre@2.18.2:', type='link', when='@:21.02 +hypre')
     depends_on('hypre@2.19.0:', type='link', when='@21.03: ~cuda +hypre')
@@ -289,8 +290,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         args.append('-S./cache/amrex/Tests/SpackSmokeTest')
         args.append('-DAMReX_ROOT=' + self.prefix)
-        args.append('-DMPI_C_COMPILER=' + self.spec['mpi'].mpicc)
-        args.append('-DMPI_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+        if '+mpi' in self.spec:
+            args.append('-DMPI_C_COMPILER=' + self.spec['mpi'].mpicc)
+            args.append('-DMPI_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+
         args.extend(self.cmake_args())
         self.run_test(cmake_bin,
                       args,
