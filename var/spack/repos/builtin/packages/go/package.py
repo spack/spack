@@ -142,6 +142,9 @@ class Go(Package):
     # The fix for this issue has been merged into the 1.8 tree.
     patch('misc-cgo-testcshared.patch', level=0, when='@1.6.4:1.7.5')
 
+    # Unrecognized option '-fno-lto'
+    conflicts('%gcc@:4', when='@1.17:')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('version', output=str, error=str)

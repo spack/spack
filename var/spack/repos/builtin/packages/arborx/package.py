@@ -42,6 +42,7 @@ class Arborx(CMakePackage):
     depends_on('cmake@3.12:', type='build')
     depends_on('cmake@3.16:', type='build', when='@1.0:')
     depends_on('mpi', when='+mpi')
+    depends_on('rocthrust', when='+rocm')
 
     # Standalone Kokkos
     depends_on('kokkos@3.1.00:', when='~trilinos')
@@ -72,6 +73,9 @@ class Arborx(CMakePackage):
             # Only Kokkos allows '+cuda' for now
             options.append(
                 '-DCMAKE_CXX_COMPILER=%s' % spec["kokkos"].kokkos_cxx)
+        if '+rocm' in spec:
+            options.append(
+                '-DCMAKE_CXX_COMPILER=%s' % spec["hip"].hipcc)
 
         return options
 

@@ -14,6 +14,7 @@ class Libyogrt(AutotoolsPackage):
     homepage = "https://github.com/LLNL/libyogrt"
     url      = "https://github.com/LLNL/libyogrt/releases/download/1.21/libyogrt-1.21.tar.gz"
 
+    version('1.27',   sha256='c57ce60770b61aa20bc83fe34ff52b5e444964338df3786f282d0d9bcdd26138')
     version('1.24',   sha256='36695030e72b24b1f22bfcfe42bfd1d3c87f9c0eea5e94ce0120782581ea522f')
     version('1.23',   sha256='c95e7a6be29c0d1ac1b673b0ba1d4e5781981722f93d0da99ae62ff3b5f35b5f')
     version('1.22',   sha256='38e7d1ea3fa030f0169197aa96cde9f01caa595a590764ef1cb2ae07379cb711')
@@ -26,7 +27,7 @@ class Libyogrt(AutotoolsPackage):
     version('1.20-2', sha256='bf22a82ab3bfede780be3fb6c132cc354234f8d57d3cccd58fe594f074ed7f95')
 
     # libyogrt supports the following schedulers:
-    #     lcrm, lsf, moab, slurm, AIX+slurm
+    #     flux, lcrm, lsf, moab, slurm, AIX+slurm
 
     # however, only slurm exists in spack
     # libyogrt's build system is smart enough to detect the system scheduler
@@ -35,9 +36,13 @@ class Libyogrt(AutotoolsPackage):
 
     variant('scheduler', default='system',
             description="Select scheduler integration",
-            values=['system', 'slurm', 'lsf'], multi=False)
-    depends_on('slurm', when='scheduler=slurm')
+            values=['system', 'flux', 'lsf', 'slurm'], multi=False)
+    depends_on('flux-core@0.21.0:', when='scheduler=flux')
     depends_on('lsf', when='scheduler=lsf')
+    depends_on('slurm', when='scheduler=slurm')
+
+    # support for flux added in libyogrt 1.27
+    conflicts('scheduler=flux', when='@:1.26')
 
     conflicts('scheduler=lsf', when='@:1.22')
 
@@ -62,6 +67,8 @@ class Libyogrt(AutotoolsPackage):
             # to use, the user does not need to specify them
             args.append('--with-lsf')
             args.append('LIBS=-llsf -lrt -lnsl')
+        elif sched == "flux":
+            args.append('--with-flux=%s' % (self.spec['flux-core'].prefix))
         elif sched != "system":
             args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 

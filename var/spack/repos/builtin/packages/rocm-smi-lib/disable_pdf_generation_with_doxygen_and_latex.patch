@@ -1,0 +1,15 @@
+diff --git a/rocm_smi/CMakeLists.txt b/rocm_smi/CMakeLists.txt
+index 90cad13..02ea897 100755
+--- a/rocm_smi/CMakeLists.txt
++++ b/rocm_smi/CMakeLists.txt
+@@ -140,8 +140,8 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/bindings_link
+ 
+ 
+ # Generate Doxygen documentation
+-find_package(Doxygen)
+-find_package(LATEX COMPONENTS PDFLATEX)
++#find_package(Doxygen)
++#find_package(LATEX COMPONENTS PDFLATEX)
+ 
+ if (DOXYGEN_FOUND AND LATEX_FOUND)
+   set (RSMI_MANUAL_NAME "ROCm_SMI_Manual")

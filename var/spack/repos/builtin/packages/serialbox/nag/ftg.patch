@@ -1,0 +1,31 @@
+# This patch is applicable starting version 2.3.1
+--- a/src/serialbox-fortran/m_ser_ftg.f90
++++ b/src/serialbox-fortran/m_ser_ftg.f90
+@@ -822,5 +822,5 @@ SUBROUTINE ftg_write_logical_1d(fieldname, field, lbounds, ubounds)
+       CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+     END IF
+-    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
++    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', 'N/A')
+   END IF
+ 
+@@ -853,5 +853,5 @@ SUBROUTINE ftg_write_logical_2d(fieldname, field, lbounds, ubounds)
+       CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+     END IF
+-    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
++    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', 'N/A')
+   END IF
+ 
+@@ -886,5 +886,5 @@ SUBROUTINE ftg_write_logical_3d(fieldname, field, lbounds, ubounds)
+       CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+     END IF
+-    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
++    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', 'N/A')
+   END IF
+ 
+@@ -919,5 +919,5 @@ SUBROUTINE ftg_write_logical_4d(fieldname, field, lbounds, ubounds)
+       CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+     END IF
+-    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
++    CALL ftg_add_field_metainfo(TRIM(fieldname), 'ftg:loc', 'N/A')
+   END IF
+ 

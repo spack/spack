@@ -2618,6 +2618,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fn()
 
 
+def has_test_method(pkg):
+    """Returns True if the package defines its own stand-alone test method."""
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
+    return (
+        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
+        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    )
+
+
 def test_process(pkg, kwargs):
     with tty.log.log_output(pkg.test_log_file) as logger:
         with logger.force_echo():
