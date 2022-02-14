@@ -36,7 +36,7 @@ class Rocblas(CMakePackage):
                       'gfx90a:xnack-', 'gfx1010', 'gfx1011',
                       'gfx1012', 'gfx1030')
 
-    variant('amdgpu_target', default='gfx906:xnack-', values=amdgpu_targets, multi=True)
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('tensile', default=True, description='Use Tensile as a backend')
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
@@ -149,8 +149,8 @@ class Rocblas(CMakePackage):
                 arch_define_name = 'Tensile_ARCHITECTURE'
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
-        args.append(self.define(arch_define_name,
-                    self.spec.variants['amdgpu_target'].value))
+        if self.spec.variants['amdgpu_target'].value != 'auto':
+            args.append(self.define_from_variant(arch_define_name, 'amdgpu_target'))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/issues/1196
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):
