@@ -37,7 +37,9 @@ class Variant(object):
             description,
             values=(True, False),
             multi=False,
-            validator=None):
+            validator=None,
+            sticky=False
+    ):
         """Initialize a package variant.
 
         Args:
@@ -51,6 +53,8 @@ class Variant(object):
             multi (bool): whether multiple CSV are allowed
             validator (callable): optional callable used to enforce
                 additional logic on the set of values being validated
+            sticky (bool): if true the variant is set to the default value at
+                concretization time
         """
         self.name = name
         self.default = default
@@ -83,6 +87,7 @@ class Variant(object):
 
         self.multi = multi
         self.group_validator = validator
+        self.sticky = sticky
 
     def validate_or_raise(self, vspec, pkg=None):
         """Validate a variant spec against this package variant. Raises an

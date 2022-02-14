@@ -832,6 +832,7 @@ class IntelPackage(PackageBase):
               '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
+              '^intel-oneapi-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:

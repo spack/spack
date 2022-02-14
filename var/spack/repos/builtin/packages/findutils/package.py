@@ -55,7 +55,7 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     # does not work for GCC on macOS
     # <https://savannah.gnu.org/bugs/?func=detailitem&item_id=59972>; we thus
     # disable this attribute manually
-    patch('nonnull.patch')
+    patch('nonnull.patch', when='@4.8.0:')
 
     build_directory = 'spack-build'
 

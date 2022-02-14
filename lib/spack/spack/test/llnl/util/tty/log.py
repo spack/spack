@@ -11,8 +11,10 @@ import os
 import signal
 import sys
 import time
-from types import ModuleType  # novm
-from typing import Optional  # novm
+from typing import TYPE_CHECKING, Optional  # novm
+
+if TYPE_CHECKING:
+    from types import ModuleType  # novm
 
 import pytest
 

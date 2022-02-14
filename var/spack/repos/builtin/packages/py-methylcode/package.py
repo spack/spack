@@ -13,7 +13,7 @@ class PyMethylcode(PythonPackage):
     homepage = "https://github.com/brentp/methylcode"
     git      = "https://github.com/brentp/methylcode.git"
 
-    version('master', branch='master', deprecated=True)
+    version('master', branch='master')
 
     depends_on('python@2.6:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

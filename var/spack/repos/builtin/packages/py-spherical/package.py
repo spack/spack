@@ -13,7 +13,7 @@ class PySpherical(PythonPackage):
     homepage = "https://github.com/moble/spherical"
     pypi     = "spherical/spherical-1.0.10.tar.gz"
 
-    maintainers = ['nilsleiffischer', 'moble']
+    maintainers = ['nilsvu', 'moble']
 
     version('1.0.10', sha256='a7f1d902aa89fd51174a0c69b2379c352d229bf7e088907e8eb4461ad227d95f')
 
