@@ -8,18 +8,22 @@ from spack import *
 
 
 class Openmc(CMakePackage):
-    """The OpenMC project aims to provide a fully-featured Monte Carlo particle
-       transport code based on modern methods. It is a constructive solid
-       geometry, continuous-energy transport code that uses ACE format cross
-       sections. The project started under the Computational Reactor Physics
-       Group at MIT."""
+    """OpenMC is a community-developed Monte Carlo neutron and photon transport
+       simulation code. It is capable of performing fixed source, k-eigenvalue, and
+       subcritical multiplication calculations on models built using either a
+       constructive solid geometry or CAD representation. OpenMC supports both
+       continuous-energy and multigroup transport. The continuous-energy particle
+       interaction data is based on a native HDF5 format that can be generated from ACE
+       files produced by NJOY. Parallelism is enabled via a hybrid MPI and OpenMP
+       programming model."""
 
     homepage = "https://docs.openmc.org/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.12.2"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.13.0"
     git = "https://github.com/openmc-dev/openmc.git"
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
+    version('0.13.0', tag='v0.13.0', submodules=True)
     version('0.12.2', tag='v0.12.2', submodules=True)
     version('0.12.1', tag='v0.12.1', submodules=True)
     version('0.12.0', tag='v0.12.0', submodules=True)
