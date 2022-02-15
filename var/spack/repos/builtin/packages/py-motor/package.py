@@ -17,4 +17,3 @@ class PyMotor(PythonPackage):
     depends_on('python@3.5.2:', type=('build', 'run'))
     depends_on('py-pymongo@3.12:4', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    
