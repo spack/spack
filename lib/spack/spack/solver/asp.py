@@ -9,7 +9,6 @@ import copy
 import itertools
 import os
 import pprint
-import sys
 import types
 import warnings
 
@@ -474,18 +473,16 @@ def bootstrap_clingo():
 
 
 class PyclingoDriver(object):
-    def __init__(self, cores=True, asp=None):
+    def __init__(self, cores=True):
         """Driver for the Python clingo interface.
 
         Arguments:
             cores (bool): whether to generate unsatisfiable cores for better
                 error reporting.
-            asp (file-like): optional stream to write a text-based ASP program
-                for debugging or verification.
         """
         bootstrap_clingo()
 
-        self.out = asp or llnl.util.lang.Devnull()
+        self.out = llnl.util.lang.Devnull()
         self.cores = cores
 
     def title(self, name, char):
@@ -528,9 +525,30 @@ class PyclingoDriver(object):
             self.assumptions.append(atom)
 
     def solve(
-            self, solver_setup, specs, dump=None, nmodels=0,
-            timers=False, stats=False,
+            self,
+            setup,
+            specs,
+            nmodels=0,
+            timers=False,
+            stats=False,
+            out=None,
+            setup_only=False
     ):
+        """Set up the input and solve for dependencies of ``specs``.
+
+        Arguments:
+          setup (SpackSolverSetup): An object to set up the ASP problem.
+          specs (list): List of ``Spec`` objects to solve for.
+          nmodels (list): Number of models to consider (default 0 for unlimited).
+          timers (bool):  Print out coarse timers for different solve phases.
+          stats (bool): Whether to output Clingo's internal solver statistics.
+          out: Optional output stream for the generated ASP program.
+          setup_only (bool): if True, stop after setup and don't solve (default False).
+        """
+        # allow solve method to override the output stream
+        if out is not None:
+            self.out = out
+
         timer = spack.util.timer.Timer()
 
         # Initialize the control object for the solver
@@ -545,8 +563,12 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            solver_setup.setup(self, specs)
+            setup.setup(self, specs)
         timer.phase("setup")
+
+        # If we're only doing setup, just return an empty solve result
+        if setup_only:
+            return Result(specs)
 
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
@@ -2033,49 +2055,36 @@ class Solver(object):
       ``reuse (bool)``
         Whether to try to reuse existing installs/binaries
 
-      ``show (tuple)``
-        What information to print to the console while running. Options are:
-        * asp: asp program text
-        * opt: optimization criteria for best model
-        * output: raw clingo output
-        * solutions: models found by asp program
-        * all: all of the above
-
-      ``models (int)``
-        Number of models to search (default: 0 for unlimited)
-
-      ``timers (bool)``
-        Print out coarse fimers for different solve phases.
-
-      ``stats (bool)``
-        Print out detailed stats from clingo
-
-      ``tests (bool or tuple)``
-        If ``True``, concretize test dependencies for all packages. If
-        a tuple of package names, concretize test dependencies for named
-        packages. If ``False``, do not concretize test dependencies.
-
     """
     def __init__(self):
-        self.set_default_configuration()
+        self.driver = PyclingoDriver()
 
-    def set_default_configuration(self):
-        # These properties are settable via spack configuration. `None`
-        # means go with the configuration setting; user can override.
-        self.reuse = None
+        # These properties are settable via spack configuration, and overridable
+        # by setting them directly as properties.
+        self.reuse = spack.config.get("concretizer:reuse", False)
 
-        # these are concretizer settings
-        self.dump = ()
-        self.models = 0
-        self.timers = False
-        self.stats = False
-        self.tests = False
-
-    def solve(self, specs):
-        driver = PyclingoDriver()
-        if "asp" in self.dump:
-            driver.out = sys.stdout
-
+    def solve(
+            self,
+            specs,
+            out=None,
+            models=0,
+            timers=False,
+            stats=False,
+            tests=False,
+            setup_only=False,
+    ):
+        """
+        Arguments:
+          specs (list): List of ``Spec`` objects to solve for.
+          out: Optionally write the generate ASP program to a file-like object.
+          models (int): Number of models to search (default: 0 for unlimited).
+          timers (bool): Print out coarse fimers for different solve phases.
+          stats (bool): Print out detailed stats from clingo.
+          tests (bool or tuple): If True, concretize test dependencies for all packages.
+            If a tuple of package names, concretize test dependencies for named
+            packages (defaults to False: do not concretize test dependencies).
+          setup_only (bool): if True, stop after setup and don't solve (default False).
+        """
         # Check upfront that the variants are admissible
         for root in specs:
             for s in root.traverse():
@@ -2083,12 +2092,15 @@ class Solver(object):
                     continue
                 spack.spec.Spec.ensure_valid_variants(s)
 
-        if self.reuse is None:
-            self.reuse = spack.config.get("concretizer:reuse", False)
-
-        setup = SpackSolverSetup(reuse=self.reuse, tests=self.tests)
-        return driver.solve(
-            setup, specs, self.dump, self.models, self.timers, self.stats
+        setup = SpackSolverSetup(reuse=self.reuse, tests=tests)
+        return self.driver.solve(
+            setup,
+            specs,
+            nmodels=models,
+            timers=timers,
+            stats=stats,
+            out=out,
+            setup_only=setup_only,
         )
 
 
