@@ -1156,6 +1156,9 @@ class Environment(object):
             self.specs_by_hash = {}
 
         # Pick the right concretization strategy
+        if self.concretization == 'together_where_possible':
+            return self._concretize_together_where_possible(tests=tests)
+
         if self.concretization == 'together':
             return self._concretize_together(tests=tests)
 
@@ -1164,6 +1167,33 @@ class Environment(object):
 
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
+
+    def _concretize_together_where_possible(self, tests=False):
+        # Avoid cyclic dependency
+        import spack.solver.asp
+
+        # Exit early if the set of concretized specs is the set of user specs
+        user_specs_did_not_change = not bool(
+            set(self.user_specs) - set(self.concretized_user_specs)
+        )
+        if user_specs_did_not_change:
+            return []
+
+        # Proceed with concretization
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
+
+        result_by_user_spec = {}
+        solver = spack.solver.asp.Solver()
+        for result in solver.solve_in_rounds(self.user_specs, tests=tests):
+            result_by_user_spec.update(result.specs_by_input)
+
+        result = []
+        for abstract, concrete in sorted(result_by_user_spec.items()):
+            self._add_concrete_spec(abstract, concrete)
+            result.append((abstract, concrete))
+        return result
 
     def _concretize_together(self, tests=False):
         """Concretization strategy that concretizes all the specs
