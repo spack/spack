@@ -23,10 +23,10 @@ class Openmc(CMakePackage):
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
-    version('0.13.0', tag='v0.13.0', submodules=True)
-    version('0.12.2', tag='v0.12.2', submodules=True)
-    version('0.12.1', tag='v0.12.1', submodules=True)
-    version('0.12.0', tag='v0.12.0', submodules=True)
+    version('0.13.0', commit='cff247e35785e7236d67ccf64a3401f0fc50a469', submodules=True)
+    version('0.12.2', commit='cbfcf908f8abdc1ef6603f67872dcf64c5c657b1', submodules=True)
+    version('0.12.1', commit='36913589c4f43b7f843332181645241f0f10ae9e', submodules=True)
+    version('0.12.0', commit='93d6165ecb455fc57242cd03a3f0805089c0e0b9', submodules=True)
     version('0.11.0', sha256='19a9d8e9c3b581e9060fbd96d30f1098312d217cb5c925eb6372a5786d9175af')
     version('0.10.0', sha256='47650cb45e2c326ae439208d6f137d75ad3e5c657055912d989592c6e216178f')
 
