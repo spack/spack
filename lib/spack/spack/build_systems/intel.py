@@ -1362,8 +1362,9 @@ class IntelPackage(PackageBase):
             for lib in LLVMgold_libs:
                 if not self.spec.satisfies('^patchelf'):
                     raise spack.error.SpackError(
-                        'Attempting to patch RPATH in LLVMgold.so.
-                        `patchelf` dependency should be set in package.py')
+                        'Attempting to patch RPATH in LLVMgold.so.'
+                        + '`patchelf` dependency should be set in package.py'
+                    )
                 patchelf = Executable('patchelf')
                 rpath = ':'.join([patchelf('--print-rpath', lib, output=str).strip(),
                                   '$ORIGIN/../compiler/lib/intel64_lin'])
