@@ -33,10 +33,6 @@ class PyNumba(PythonPackage):
     depends_on('py-numpy@1.10:1', type=('build', 'run'), when='@:0.47')
     depends_on('py-setuptools', type=('build', 'run'))
 
-    # Note: As of 1 Nov 2018, 0.25 was the latest version of py-llvmlite.
-    # That's why it was chosen as an upper bound in the following depends_on
-    # calls.  If newer versions maintain backwards compatibility, the calls
-    # can be updated accordingly.
     depends_on('py-llvmlite@0.38', type=('build', 'run'), when='@0.55.1')
     depends_on('py-llvmlite@0.37', type=('build', 'run'), when='@0.54.0')
     depends_on('py-llvmlite@0.34', type=('build', 'run'), when='@0.51.1')
