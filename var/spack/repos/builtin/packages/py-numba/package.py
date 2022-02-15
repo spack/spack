@@ -38,11 +38,6 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.34', type=('build', 'run'), when='@0.51.1')
     depends_on('py-llvmlite@0.33', type=('build', 'run'), when='@0.50.1')
     depends_on('py-llvmlite@0.31', type=('build', 'run'), when='@0.47,0.48')
-    depends_on('py-llvmlite@0.30', type=('build', 'run'), when='@0.46')
-    depends_on('py-llvmlite@0.29', type=('build', 'run'), when='@0.44,0.45')
-    depends_on('py-llvmlite@0.28', type=('build', 'run'), when='@0.43')
-    depends_on('py-llvmlite@0.27', type=('build', 'run'), when='@0.42')
-    depends_on('py-llvmlite@0.26', type=('build', 'run'), when='@0.41')
     depends_on('py-llvmlite@0.25', type=('build', 'run'), when='@0.40')
     depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
 
