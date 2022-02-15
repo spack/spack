@@ -753,7 +753,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                if smoke_test[3]: # use cmake
+                if smoke_test[3]:  # use cmake
                     self.run_test(exe=cmake_bin, options=['.'])
                 self.run_test(exe='make')
 
