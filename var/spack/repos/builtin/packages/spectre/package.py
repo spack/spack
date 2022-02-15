@@ -179,6 +179,11 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch',
         sha256='29ad44594ecfd6442a64d2cb57ed2d712cb8d93707c6bceea8030a9a2682b7ed',
         when='@:2022.01.03 +shared')
+    # - Fix an issue with Boost pre v1.67
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/b229e939f15362aca892d4480a9182daf88305d4.patch',
+        sha256='06a41506d3652b5cb9127ae0e7e9b506f013bde695e478621a1540f46ed1e5bb',
+        when='@2022.02.08 ^boost@:1.66')
 
     def cmake_args(self):
         args = [
