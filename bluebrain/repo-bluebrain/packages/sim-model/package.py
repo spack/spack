@@ -223,7 +223,7 @@ class SimModel(Package):
             env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
         if os.path.isdir(self.prefix.lib.python):
             env.prepend_path('PYTHONPATH', self.prefix.lib.python)
-        env.set('{}_ROOT'.format(self.name.upper()), self.prefix)
+        env.set('{}_ROOT'.format(self.name.upper().replace("-", "_")), self.prefix)
 
     def setup_build_environment(self, env):
         self._setup_build_environment_common(env)
