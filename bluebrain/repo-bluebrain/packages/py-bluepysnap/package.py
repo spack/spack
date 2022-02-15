@@ -14,10 +14,9 @@ class PyBluepysnap(PythonPackage):
     url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.12.0.tar.gz"
 
     version('develop', branch='master')
-    version('0.13.0', sha256='7a59cf06db9c22b16b717ae1164f4108282c146b78fbf538197d838920121d16')
-    version('0.12.0', sha256='a2cc24031905310941296ca975814ee0c0f27229a2c133d6a13ca92cc8dc6c9b')
+    version('0.13.1', sha256='85a7bedb304f862fdc9138e98c84617ec7821f01439fde2989e179d7aba37ff0')
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-cached-property@1.0:', type=('build', 'run'))
@@ -27,5 +26,5 @@ class PyBluepysnap(PythonPackage):
     depends_on('py-morph-tool@2.4.3:2.999', type=('build', 'run'))
     depends_on('py-numpy@1.8:1.999', type=('build', 'run'))
     depends_on('py-pandas@1.0.0:1.999', type=('build', 'run'))
-    depends_on('py-click@7.0:7.999', type=('build', 'run'))
+    depends_on('py-click@7.0:', type=('build', 'run'))
     depends_on('py-more-itertools@8.2.0:', type=('build', 'run'))
