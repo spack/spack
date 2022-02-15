@@ -18,6 +18,7 @@ class Zstd(MakefilePackage):
     maintainers = ['haampie']
 
     version('develop', branch='dev')
+    version('1.5.2', sha256='f7de13462f7a82c29ab865820149e778cbfe01087b3a55b5332707abf9db4a6e')
     version('1.5.0', sha256='0d9ade222c64e912d6957b11c923e214e2e010a18f39bec102f572e693ba2867')
     version('1.4.9', sha256='acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8')
     version('1.4.8', sha256='f176f0626cb797022fbf257c3c644d71c1c747bb74c32201f9203654da35e9fa')
