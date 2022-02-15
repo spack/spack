@@ -21,9 +21,10 @@ class Costa(CMakePackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version('master', branch='master', submodules=True)
-    version('2.0', sha256='ef283b904b1b77b7d0de401cbdc3d7850c77368f2b57249c6eaee3017794c4b8')
+    version('2.0', sha256='de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4')
 
     variant('scalapack', default=False, description='Build with ScaLAPACK API')
+    variant('shared', default=False, description="Build shared libraries")
 
     depends_on('cmake@3.12:', type='build')
     depends_on('mpi@3:')
@@ -53,5 +54,6 @@ class Costa(CMakePackage):
             self.define('COSTA_WITH_APPS', 'OFF'),
             self.define('COSTA_WITH_TESTS', 'OFF'),
             self.define('COSTA_WITH_PROFILING', 'OFF'),
-            self.define('COSTA_SCALAPACK', self.costa_scalapack_cmake_arg())
+            self.define('COSTA_SCALAPACK', self.costa_scalapack_cmake_arg()),
+            self.define('BUILD_SHARED_LIBS', '+shared' in self.spec)
         ]
