@@ -347,6 +347,13 @@ class Llvm(CMakePackage, CudaPackage):
 
     patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
 
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13: %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13.0.0 %fj')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
