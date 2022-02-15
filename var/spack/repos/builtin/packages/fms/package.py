@@ -35,8 +35,10 @@ class Fms(CMakePackage):
     version('2020.04',    sha256='6528ef7a6bb386495c845b075c4524b4dc89093674c6410c06e5dfdaf56b781d')
     version('2020.02.01', sha256='86d9143ab13be232fddea80d9e528c3cdd6008702adb1ebe8fe4181f385896c7')
 
+    depends_on('cmake')
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
+    depends_on('mpi')
     depends_on('libyaml', when='+with_yaml')
 
     def cmake_args(self):
