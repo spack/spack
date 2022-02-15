@@ -34,7 +34,6 @@ class Veloc(CMakePackage):
     depends_on('openssl')
     depends_on('cmake@3.10:', type='build')
 
-
     def flag_handler(self, name, flags):
         flags = list(flags)
         if name == 'cxxflags':
@@ -48,7 +47,7 @@ class Veloc(CMakePackage):
         args = [
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
             "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
-            "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx
+            "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx,
             "-DBOOST_ROOT=%s" % self.spec['boost'].prefix
         ]
         return args
