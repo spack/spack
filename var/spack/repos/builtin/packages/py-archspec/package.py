@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-
-
 class PyArchspec(PythonPackage):
     """A library for detecting, labeling and reasoning about
     microarchitectures.
@@ -30,4 +27,6 @@ class PyArchspec(PythonPackage):
         with working_dir(self.build_directory):
             if self.spec.satisfies('@:0.1.3'):
                 filter_file("poetry>=0.12", "poetry_core>=1.0.0", 'pyproject.toml')
-                filter_file("poetry.masonry.api", "poetry.core.masonry.api", 'pyproject.toml')
+                filter_file(
+                    "poetry.masonry.api", "poetry.core.masonry.api", 'pyproject.toml'
+                )
