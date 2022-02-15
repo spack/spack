@@ -60,4 +60,13 @@ class Darwin(Platform):
         """
 
         os = self.operating_sys[pkg.spec.os]
-        env.set('MACOSX_DEPLOYMENT_TARGET', str(os.version))
+        version = os.version
+        if len(version) == 1:
+            # Version has only one component: add a minor version to prevent
+            # potential errors with `ld`,
+            # which fails with `-macosx_version_min 11`
+            # but succeeds with `-macosx_version_min 11.0`.
+            # Most compilers seem to perform this translation automatically,
+            # but older GCC does not.
+            version = str(version) + '.0'
+        env.set('MACOSX_DEPLOYMENT_TARGET', str(version))
