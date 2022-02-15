@@ -8,7 +8,6 @@ import glob
 import inspect
 import os
 import re
-import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ElementTree
@@ -25,6 +24,7 @@ from llnl.util.filesystem import (
     install,
 )
 
+import spack.error
 from spack.build_environment import dso_suffix
 from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
@@ -1360,11 +1360,14 @@ class IntelPackage(PackageBase):
             # in compiler releases, then we need to search for libimf.so instead
             # of this static path.
             for lib in LLVMgold_libs:
-                p = subprocess.Popen(['patchelf', '--print-rpath', lib],
-                                     stdout=subprocess.PIPE)
-                rpath = ':'.join([str(p.communicate()[0].decode()).strip(),
+                if not self.spec.satisfies('^patchelf'):
+                    raise spack.error.SpackError(
+                        'Attempting to patch RPATH in LLVMgold.so.
+                        `patchelf` dependency should be set in package.py')
+                patchelf = Executable('patchelf')
+                rpath = ':'.join([patchelf('--print-rpath', lib, output=str).strip(),
                                   '$ORIGIN/../compiler/lib/intel64_lin'])
-                subprocess.call(['patchelf', '--set-rpath', rpath, lib])
+                patchelf('--set-rpath', rpath, lib)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
