@@ -35,7 +35,6 @@ class PyDatalad(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools@40.8.0:', type='build')
-    depends_on('py-packaging', type=('build', 'run'), when='@0.15.4:')
 
     depends_on('git', type=('build', 'run'))
     depends_on('git-annex', type=('build', 'run'))
@@ -48,6 +47,7 @@ class PyDatalad(PythonPackage):
     depends_on('py-iso8601', type=('build', 'run'))
     depends_on('py-humanize', type=('build', 'run'))
     depends_on('py-fasteners@0.14:', type=('build', 'run'))
+    depends_on('py-packaging', type=('build', 'run'), when='@0.15.4:')
     depends_on('py-patool@1.7:', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-wrapt', type=('build', 'run'))
