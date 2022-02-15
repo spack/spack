@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ from llnl.util.filesystem import (
     install,
 )
 
+import spack.error
 from spack.build_environment import dso_suffix
 from spack.package import InstallError, PackageBase, run_after
 from spack.util.environment import EnvironmentModifications
@@ -690,6 +691,12 @@ class IntelPackage(PackageBase):
                 '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
+        elif '%clang' in self.spec:
+            clang = Executable(self.compiler.cc)
+            omp_lib_path = clang(
+                '--print-file-name', 'libomp.%s' % dso_suffix, output=str)
+            omp_libs = LibraryList(omp_lib_path.strip())
+
         if len(omp_libs) < 1:
             raise_lib_error('Cannot locate OpenMP libraries:', omp_libnames)
 
@@ -772,7 +779,7 @@ class IntelPackage(PackageBase):
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
                 mkl_threading = 'libmkl_intel_thread'
-            elif '%gcc' in self.spec:
+            elif '%gcc' in self.spec or '%clang' in self.spec:
                 mkl_threading = 'libmkl_gnu_thread'
             threading_engine_libs = self.openmp_libs
         elif self.spec.satisfies('threads=tbb'):
@@ -826,6 +833,7 @@ class IntelPackage(PackageBase):
               '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
+              '^intel-oneapi-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
@@ -994,6 +1002,16 @@ class IntelPackage(PackageBase):
                 libnames,
                 root=self.component_lib_dir('mpi'),
                 shared=True, recursive=True) + result
+            # Intel MPI since 2019 depends on libfabric which is not in the
+            # lib directory but in a directory of its own which should be
+            # included in the rpath
+            if self.version_yearlike >= ver('2019'):
+                d = ancestor(self.component_lib_dir('mpi'))
+                if '+external-libfabric' in self.spec:
+                    result += self.spec['libfabric'].libs
+                else:
+                    result += find_libraries(['libfabric'],
+                                             os.path.join(d, 'libfabric', 'lib'))
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):
@@ -1091,15 +1109,6 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
-
-                # Intel MPI since 2019 depends on libfabric which is not in the
-                # lib directory but in a directory of its own which should be
-                # included in the rpath
-                if self.version_yearlike >= ver('2019'):
-                    d = ancestor(self.component_lib_dir('mpi'))
-                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
-                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 
@@ -1324,6 +1333,43 @@ class IntelPackage(PackageBase):
 
         debug_print(os.getcwd())
         return
+
+    @property
+    def base_lib_dir(self):
+        """Provide the library directory located in the base of Intel installation.
+        """
+        d = self.normalize_path('')
+        d = os.path.join(d, 'lib')
+
+        debug_print(d)
+        return d
+
+    @run_after('install')
+    def modify_LLVMgold_rpath(self):
+        """Add libimf.so and other required libraries to the RUNPATH of LLVMgold.so.
+
+        These are needed explicitly at dependent link time when
+        `ld -plugin LLVMgold.so` is called by the compiler.
+        """
+        if self._has_compilers:
+            LLVMgold_libs = find_libraries('LLVMgold', self.base_lib_dir,
+                                           shared=True, recursive=True)
+            # Ignore ia32 entries as they mostly ignore throughout the rest
+            # of the file.
+            # The first entry in rpath preserves the original, the seconds entry
+            # is the location of libimf.so. If this relative location is changed
+            # in compiler releases, then we need to search for libimf.so instead
+            # of this static path.
+            for lib in LLVMgold_libs:
+                if not self.spec.satisfies('^patchelf'):
+                    raise spack.error.SpackError(
+                        'Attempting to patch RPATH in LLVMgold.so.'
+                        + '`patchelf` dependency should be set in package.py'
+                    )
+                patchelf = Executable('patchelf')
+                rpath = ':'.join([patchelf('--print-rpath', lib, output=str).strip(),
+                                  '$ORIGIN/../compiler/lib/intel64_lin'])
+                patchelf('--set-rpath', rpath, lib)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

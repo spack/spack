@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,7 +60,7 @@ class Protobuf(Package):
             description='Enables the build of shared libraries')
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Debug', 'Release'))
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     depends_on('cmake', when='@3.0.2:', type='build')
     depends_on('zlib')

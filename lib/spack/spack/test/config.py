@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -279,19 +279,30 @@ repos_high = {'repos': ["/some/other/path"]}
 # Test setting config values via path in filename
 
 
-def test_add_config_path():
-
+def test_add_config_path(mutable_config):
     # Try setting a new install tree root
     path = "config:install_tree:root:/path/to/config.yaml"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     set_value = spack.config.get('config')['install_tree']['root']
     assert set_value == '/path/to/config.yaml'
 
     # Now a package:all setting
     path = "packages:all:compiler:[gcc]"
-    spack.config.add(path, scope="command_line")
+    spack.config.add(path)
     compilers = spack.config.get('packages')['all']['compiler']
     assert "gcc" in compilers
+
+
+@pytest.mark.regression('17543,23259')
+def test_add_config_path_with_enumerated_type(mutable_config):
+    spack.config.add("config:concretizer:clingo")
+    assert spack.config.get('config')['concretizer'] == "clingo"
+
+    spack.config.add("config:concretizer:original")
+    assert spack.config.get('config')['concretizer'] == "original"
+
+    with pytest.raises(spack.config.ConfigError):
+        spack.config.add("config:concretizer:foo")
 
 
 def test_add_config_filename(mock_low_high_config, tmpdir):
@@ -429,13 +440,6 @@ def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
     assert '/foo/bar/' + user + '/baz' == spack_path.canonicalize_path(
         '/foo/bar/$user/baz'
-    )
-
-
-def test_substitute_user_config(mock_low_high_config):
-    user_config_path = spack.paths.user_config_path
-    assert user_config_path + '/baz' == spack_path.canonicalize_path(
-        '$user_cache_path/baz'
     )
 
 

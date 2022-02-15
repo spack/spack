@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class PyMarkdown(PythonPackage):
     homepage = "https://python-markdown.github.io/"
     pypi = "markdown/Markdown-2.6.11.tar.gz"
 
+    version('3.3.4', sha256='31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49')
     version('3.1.1', sha256='2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a')
     version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81')
     version('2.6.7', sha256='daebf24846efa7ff269cfde8c41a48bb2303920c7b2c7c5e04fa82e6282d05c0')
@@ -34,5 +35,8 @@ class PyMarkdown(PythonPackage):
     depends_on('python@2.7:2.8,3.2:3.4', when='@:2.6.7')
     depends_on('python@2.7:2.8,3.2:3.6', when='@2.6.8:2.6.11')
     depends_on('python@2.7:2.8,3.3.5:', when='@3.1.1:')
+    depends_on('python@3.6:', when='@3.3.4:')
 
     depends_on('py-setuptools', type='build', when='@2.6.11:')
+    depends_on('py-setuptools@36.6:', type='build', when='@3.1:')
+    depends_on('py-importlib-metadata', type=('build', 'run'), when='@3.3.4: ^python@:3.7')

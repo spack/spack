@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,6 @@ import types
 from typing import Any, Callable, Dict, List, Optional  # novm
 
 import six
-from ordereddict_backport import OrderedDict
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -469,8 +468,7 @@ class PackageViewMixin(object):
         example if two packages include the same file, it should only be
         removed when both packages are removed.
         """
-        for src, dst in merge_map.items():
-            view.remove_file(src, dst)
+        view.remove_files(merge_map.values())
 
 
 def test_log_pathname(test_stage, spec):
@@ -678,8 +676,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
-                      'parallel', 'make_jobs']
+    metadata_attrs = [
+        "homepage",
+        "url",
+        "urls",
+        "list_url",
+        "extendable",
+        "parallel",
+        "make_jobs",
+        "maintainers",
+        "tags",
+    ]
 
     #: Boolean. If set to ``True``, the smoke/install test requires a compiler.
     #: This is currently used by smoke tests to ensure a compiler is available
@@ -903,7 +910,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         explicitly defined ``url`` argument. So, this list may be empty
         if a package only defines ``url`` at the top level.
         """
-        version_urls = OrderedDict()
+        version_urls = collections.OrderedDict()
         for v, args in sorted(self.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
@@ -1286,7 +1293,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
@@ -1556,7 +1563,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             hash_content.append(source_id.encode('utf-8'))
         hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
                             for p in self.spec.patches)
-        hash_content.append(package_hash(self.spec, content))
+        hash_content.append(package_hash(self.spec, source=content).encode('utf-8'))
+
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
@@ -1975,11 +1983,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """On Darwin, make installed libraries more easily relocatable.
 
         Some build systems (handrolled, autotools, makefiles) can set their own
-        rpaths that are duplicated by spack's compiler wrapper. Additionally,
-        many simpler build systems do not link using ``-install_name
-        @rpath/foo.dylib``, which propagates the library's hardcoded
-        absolute path into downstream dependencies. This fixup interrogates,
-        and postprocesses if necessary, all libraries installed by the code.
+        rpaths that are duplicated by spack's compiler wrapper. This fixup
+        interrogates, and postprocesses if necessary, all libraries installed
+        by the code.
 
         It should be added as a @run_after to packaging systems (or individual
         packages) that do not install relocatable libraries by default.
@@ -2610,6 +2616,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             else:
                 tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
                 fn()
+
+
+def has_test_method(pkg):
+    """Returns True if the package defines its own stand-alone test method."""
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
+    return (
+        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
+        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    )
 
 
 def test_process(pkg, kwargs):

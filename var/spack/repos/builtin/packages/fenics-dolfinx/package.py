@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class FenicsDolfinx(CMakePackage):
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
     variant("slepc", default=False, description="slepc support")
+    variant("adios2", default=False, description="adios2 support")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("pkgconfig", type="build")
@@ -36,6 +37,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("kahip", when="+kahip")
     depends_on("parmetis", when="+parmetis")
     depends_on("slepc", when="+slepc")
+    depends_on("adios2", when="+adios2")
 
     depends_on("py-fenics-ffcx", type=("build", "run"))
     depends_on("py-fenics-ffcx@main", type=("build", "run"), when="@main")
@@ -62,6 +64,8 @@ class FenicsDolfinx(CMakePackage):
                 'ON' if "+parmetis" in self.spec else 'OFF'),
             "-DDOLFINX_ENABLE_SLEPC=%s" % (
                 'ON' if "+slepc" in self.spec else 'OFF'),
+            "-DDOLFINX_ENABLE_ADIOS2=%s" % (
+                'ON' if "+adios2" in self.spec else 'OFF'),
             "-DPython3_ROOT_DIR=%s" % self.spec['python'].home,
             "-DPython3_FIND_STRATEGY=LOCATION",
         ]

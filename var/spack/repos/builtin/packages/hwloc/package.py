@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 import sys
 
 
@@ -28,8 +29,11 @@ class Hwloc(AutotoolsPackage):
     git = 'https://github.com/open-mpi/hwloc.git'
 
     maintainers = ['bgoglin']
+    executables = ['^hwloc-bind$']
 
     version('master', branch='master')
+    version('2.7.0', sha256='d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374')
+    version('2.6.0', sha256='9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f')
     version('2.5.0', sha256='38aa8102faec302791f6b4f0d23960a3ffa25af3af6af006c64dbecac23f852c')
     version('2.4.1', sha256='4267fe1193a8989f3ab7563a7499e047e77e33fed8f4dec16822a7aebcf78459')
     version('2.4.0', sha256='30404065dc1d6872b0181269d0bb2424fbbc6e3b0a80491aa373109554006544')
@@ -120,6 +124,13 @@ class Hwloc(AutotoolsPackage):
         # variant of llvm-amdgpu depends on hwloc.
         depends_on('llvm-amdgpu~openmp', when='+opencl')
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'hwloc-bind (\S+)',
+                          output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
@@ -133,6 +144,14 @@ class Hwloc(AutotoolsPackage):
         # 'cuda' and 'rocm-opencl' to be used.
         if '+opencl' not in self.spec:
             args.append('--disable-opencl')
+
+        # If ROCm libraries are found in system /opt/rocm
+        # during config stage, hwloc builds itself with
+        # librocm_smi support.
+        # This can fail the config tests while building
+        # OpenMPI due to lack of rpath to librocm_smi
+        if '+rocm' not in self.spec:
+            args.append('--disable-rsmi')
 
         if '+netloc' in self.spec:
             args.append('--enable-netloc')

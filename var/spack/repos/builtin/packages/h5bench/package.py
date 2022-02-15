@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,17 @@ from spack import *
 class H5bench(CMakePackage):
     """A benchmark suite for measuring HDF5 performance."""
 
-    homepage = "https://github.com/hpc-io/h5bench"
-    git      = "https://github.com/hpc-io/h5bench.git"
+    homepage = 'https://github.com/hpc-io/h5bench'
+    git      = 'https://github.com/hpc-io/h5bench.git'
+    url      = 'https://github.com/hpc-io/h5bench/archive/refs/tags/1.1.tar.gz'
+
+    maintainers = ['jeanbez', 'sbyna']
 
     version('master', branch='master')
+    version('develop', branch='develop')
+
+    version('1.1', sha256='69f40e9bb0547235efe2114ab807825a513288b21ecfd9ce568443fe43bd9389')
+    version('1.0', sha256='c9151d0c138990f7fc684501f7a7e99d8727317b5169809ddbb63d8e84c9fa3f')
 
     depends_on('cmake@3.10:', type='build')
     depends_on('mpi')

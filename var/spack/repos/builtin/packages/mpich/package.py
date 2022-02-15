@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,6 +80,15 @@ spack package at this time.''',
     variant('argobots', default=False,
             description='Enable Argobots support')
     variant('fortran', default=True, description='Enable Fortran support')
+
+    variant(
+        'two_level_namespace',
+        default=False,
+        description='''Build shared libraries and programs
+built with the mpicc/mpifort/etc. compiler wrappers
+with '-Wl,-commons,use_dylibs' and without
+'-Wl,-flat_namespace'.'''
+    )
 
     provides('mpi@:3.1')
     provides('mpi@:3.0', when='@:3.1')
@@ -474,6 +483,9 @@ spack package at this time.''',
         if '+argobots' in spec:
             config_args.append('--with-thread-package=argobots')
             config_args.append('--with-argobots=' + spec['argobots'].prefix)
+
+        if '+two_level_namespace' in spec:
+            config_args.append('--enable-two-level-namespace')
 
         return config_args
 

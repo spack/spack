@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.19', sha256='947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562')
     version('0.3.18', sha256='1632c1e8cca62d8bed064b37747e331a1796fc46f688626337362bf0d16aeadb')
     version('0.3.17', sha256='df2934fa33d04fd84d839ca698280df55c690c86a5a1133b3f7266fce1de279f')
     version('0.3.16', sha256='fa19263c5732af46d40d3adeec0b2c77951b67687e670fb6ba52ea3950460d79')
@@ -49,6 +50,7 @@ class Openblas(MakefilePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
     variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
+    variant('symbol_suffix', default='none', description='Set a symbol suffix')
 
     variant('locking', default=True, description='Build with thread safety')
     variant(
@@ -302,6 +304,10 @@ class Openblas(MakefilePackage):
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
 
+        suffix = self.spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            make_defs += ['SYMBOLSUFFIX={0}'.format(suffix)]
+
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
         if '+consistent_fpcsr' in self.spec:
@@ -337,6 +343,19 @@ class Openblas(MakefilePackage):
         # one of the source files implementing functions declared in these
         # headers.
         return find_headers(['cblas', 'lapacke'], self.prefix.include)
+
+    @property
+    def libs(self):
+        spec = self.spec
+
+        # Look for openblas{symbol_suffix}
+        name = 'libopenblas'
+        search_shared = bool(spec.variants['shared'].value)
+        suffix = spec.variants['symbol_suffix'].value
+        if suffix != 'none':
+            name += suffix
+
+        return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
     @property
     def build_targets(self):

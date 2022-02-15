@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,11 @@ class Rclone(Package):
        to and from various cloud storage providers"""
 
     homepage = "https://rclone.org"
-    url      = "https://github.com/ncw/rclone/releases/download/v1.56.2/rclone-v1.56.2.tar.gz"
+    url      = "https://github.com/ncw/rclone/releases/download/v1.57.0/rclone-v1.57.0.tar.gz"
 
     maintainers = ['alecbcs']
 
+    version('1.57.0', sha256='3a762c02c202a9142c2d5c1a3927563a556d1683abadd25d2f695e237e4ea693')
     version('1.56.2', sha256='a8813d25c4640e52495fee83e525e76283c63f01d1cce8fbb58d8486b0c20c8a')
     version('1.56.1', sha256='090b4b082caa554812f341ae26ea6758b40338836122595d6283c60c39eb5a97')
     version('1.56.0', sha256='81d2eda23ebaad0a355aab6ff030712470a42505b94c01c9bb5a9ead9168cedb')

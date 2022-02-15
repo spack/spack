@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,12 @@ import re
 import shutil
 import sys
 
+import six
+
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.error
+import spack.paths
 import spack.util.prefix
 import spack.util.spack_json as sjson
 from spack.spec import Spec
@@ -41,7 +43,8 @@ def get_escaped_text_output(filename):
 
 def get_test_stage_dir():
     return spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', '~/.spack/test'))
+        spack.config.get('config:test_stage', spack.paths.default_test_path)
+    )
 
 
 def get_all_test_suites():
@@ -285,10 +288,15 @@ class TestSuite(object):
         try:
             with open(filename, 'r') as f:
                 data = sjson.load(f)
-                return TestSuite.from_dict(data)
+                test_suite = TestSuite.from_dict(data)
+                content_hash = os.path.basename(os.path.dirname(filename))
+                test_suite._hash = content_hash
+                return test_suite
         except Exception as e:
-            tty.debug(e)
-            raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
+            raise six.raise_from(
+                sjson.SpackJSONError("error parsing JSON TestSuite:", str(e)),
+                e,
+            )
 
 
 def _add_msg_to_file(filename, msg):

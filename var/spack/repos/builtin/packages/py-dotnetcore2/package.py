@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import sys
 
 
-class PyDotnetcore2(Package):
+class PyDotnetcore2(PythonPackage):
     """.Net Core 2.1 runtime."""
 
     homepage = "https://github.com/dotnet/core"
@@ -22,11 +22,5 @@ class PyDotnetcore2(Package):
     conflicts('target=ppc64le:', msg='py-dotnetcore2 is only available for x86_64')
     conflicts('target=aarch64:', msg='py-dotnetcore2 is only available for x86_64')
 
-    extends('python')
     depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
     depends_on('py-distro@1.2.0:', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))

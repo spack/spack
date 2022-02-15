@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,8 +84,7 @@ class Cray(Platform):
         if self.front_os != self.back_os:
             self.add_operating_system(self.front_os, front_distro)
 
-    @classmethod
-    def setup_platform_environment(cls, pkg, env):
+    def setup_platform_environment(self, pkg, env):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """

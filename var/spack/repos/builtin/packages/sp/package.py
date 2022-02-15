@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,3 +17,10 @@ class Sp(CMakePackage):
     maintainers = ['t-brown', 'kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
     version('2.3.3', sha256='c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f')
+
+    def setup_run_environment(self, env):
+        for suffix in ('4', '8', 'd'):
+            lib = find_libraries('libsp_' + suffix, root=self.prefix,
+                                 shared=False, recursive=True)
+            env.set('SP_LIB' + suffix, lib[0])
+            env.set('SP_INC' + suffix, 'include_' + suffix)

@@ -1,15 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import functools
-import os
-
-import llnl.util.filesystem
 
 import spack.cmd.common.arguments
 import spack.cmd.modules
+import spack.config
+import spack.modules.lmod
 
 
 def add_command(parser, command_dict):
@@ -41,12 +40,19 @@ def setdefault(module_type, specs, args):
     # https://lmod.readthedocs.io/en/latest/060_locating.html#marking-a-version-as-default
     #
     spack.cmd.modules.one_spec_or_raise(specs)
-    writer = spack.modules.module_types['lmod'](
-        specs[0], args.module_set_name)
-
-    module_folder = os.path.dirname(writer.layout.filename)
-    module_basename = os.path.basename(writer.layout.filename)
-    with llnl.util.filesystem.working_dir(module_folder):
-        if os.path.exists('default') and os.path.islink('default'):
-            os.remove('default')
-        os.symlink(module_basename, 'default')
+    spec = specs[0]
+    data = {
+        'modules': {
+            args.module_set_name: {
+                'lmod': {
+                    'defaults': [str(spec)]
+                }
+            }
+        }
+    }
+    # Need to clear the cache if a SpackCommand is called during scripting
+    spack.modules.lmod.configuration_registry = {}
+    scope = spack.config.InternalConfigScope('lmod-setdefault', data)
+    with spack.config.override(scope):
+        writer = spack.modules.module_types['lmod'](spec, args.module_set_name)
+        writer.update_module_defaults()

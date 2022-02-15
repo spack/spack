@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,8 +27,9 @@ class PyPyopencl(PythonPackage):
     depends_on('py-pybind11@2.5.0:', type='build')
     depends_on('py-pytools@2017.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))
 
-    @run_before('build')
+    @run_before('install')
     def prepare(self):
         cl_prefix = self.spec['ocl-icd'].prefix
         python('configure.py', '--cl-inc-dir=' + cl_prefix.include,

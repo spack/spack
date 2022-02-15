@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,15 @@ class PyAccimage(PythonPackage):
     version('0.1.1', sha256='573c56866a42683c7cf25185620fe82ec2ce78468e0621c29fac8f4134a785f5')
 
     depends_on('python', type=('build', 'link', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('jpeg')
     depends_on('ipp')
     depends_on('py-pytest', type='test')
     depends_on('py-numpy', type='test')
     depends_on('py-imageio', type='test')
 
-    @run_after('build')
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which('pytest')

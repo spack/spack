@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,7 +77,7 @@ class Rust(Package):
 
     # These version strings are officially supported, but aren't explicitly
     # listed because there's no stable checksum for them.
-    # version('nightly')
+    version('nightly')
     # version('beta')
 
     # Version Notes:

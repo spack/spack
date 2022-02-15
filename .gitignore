@@ -210,6 +210,9 @@ tramp
 /eshell/history
 /eshell/lastdir
 
+# zsh byte-compiled files
+*.zwc
+
 # elpa packages
 /elpa/
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""
 
     homepage = "https://slepc.upv.es"
-    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.0.tar.gz"
+    url      = "https://slepc.upv.es/download/distrib/slepc-3.16.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
@@ -22,6 +22,8 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('main', branch='main')
+    version('3.16.2', sha256='3ba58f5005513ae0ab9f3b27579c82d245a82687886eaaa67cad4cd6ba2ca3a1')
+    version('3.16.1', sha256='b1a8ad8db1ad88c60616e661ab48fc235d5a8b6965023cb6d691b9a2cfa94efb')
     version('3.16.0', sha256='be7292b85430e52210eb389c4f434b67164e96d19498585e82d117e850d477f4')
     version('3.15.2', sha256='15fd317c4dd07bb41a994ad4c27271a6675af5f2abe40b82a64a27eaae2e632a')
     version('3.15.1', sha256='9c7c3a45f0d9df51decf357abe090ef05114c38a69b7836386a19a96fb203aea')
@@ -112,21 +114,23 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         options = []
         if '+arpack' in spec:
-            options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
-            ])
-            if spec.satisfies('@:3.12'):
-                arpackopt = '--with-arpack-flags'
-            else:
-                arpackopt = '--with-arpack-lib'
-
-            if 'arpack-ng~mpi' in spec:
+            if spec.satisfies('@3.15:'):
                 options.extend([
-                    arpackopt + '=-larpack'
+                    '--with-arpack-include=%s' % spec['arpack-ng'].prefix.include,
+                    '--with-arpack-lib=%s' % spec['arpack-ng'].libs.joined()
                 ])
             else:
+                if spec.satisfies('@:3.12'):
+                    arpackopt = '--with-arpack-flags'
+                else:
+                    arpackopt = '--with-arpack-lib'
+                if 'arpack-ng~mpi' in spec:
+                    arpacklib = '-larpack'
+                else:
+                    arpacklib = '-lparpack,-larpack'
                 options.extend([
-                    arpackopt + '=-lparpack,-larpack'
+                    '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
+                    '%s=%s' % (arpackopt, arpacklib)
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
@@ -150,6 +154,11 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Set up SLEPC_DIR for dependent packages built with SLEPc
         env.set('SLEPC_DIR', self.prefix)
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, 'configure.log'),
+                join_path(self.stage.source_path, 'make.log')]
 
     def run_hello_test(self):
         """Run stand alone test: hello"""

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ def test_verify(tmpdir):
     lgpl_header = source_dir.join('lgpl_header.py')
     with lgpl_header.open('w') as f:
         f.write("""\
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
@@ -49,7 +49,7 @@ def test_verify(tmpdir):
     correct_header = source_dir.join('correct_header.py')
     with correct_header.open('w') as f:
         f.write("""\
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -85,6 +85,14 @@ def test_update_copyright_year(tmpdir):
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """ % year)
 
+    # add an old MIT license at top level
+    mit_file = os.path.join(spack.paths.prefix, "LICENSE-MIT")
+    test_mit_file = str(tmpdir.join("LICENSE-MIT"))
+    with open(mit_file) as real:
+        with open(test_mit_file, "w") as dummy:
+            old_copyright = re.sub(r"\d{4}-\d{4}", "2018-2019", real.read())
+            dummy.write(old_copyright)
+
     license('--root', str(tmpdir), 'update-copyright-year')
 
     for year in years:
@@ -92,3 +100,6 @@ def test_update_copyright_year(tmpdir):
         first_line = outdated.open().read().split("\n")[0]
         assert str(year) not in first_line
         assert spack.cmd.license.strict_date in first_line
+
+    mit_date = spack.cmd.license.strict_date.replace("Copyright", "Copyright (c)")
+    assert mit_date in open(test_mit_file).read()

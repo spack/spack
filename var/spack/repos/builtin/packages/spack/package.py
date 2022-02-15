@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class Spack(Package):
     maintainers = ['haampie']
 
     version('develop', branch='develop')
+    version('0.17.0', sha256='93df99256a892ceefb153d48e2080c01d18e58e27773da2c2a469063d67cb582')
     version('0.16.3', sha256='26636a2e2cc066184f12651ac6949f978fc041990dba73934960a4c9c1ea383d')
     version('0.16.2', sha256='ed3e5d479732b0ba82489435b4e0f9088571604e789f7ab9bc5ce89030793350')
     version('0.16.1', sha256='8d893036b24d9ee0feee41ac33dd66e4fc68d392918f346f8a7a36a69c567567')
@@ -29,7 +30,8 @@ class Spack(Package):
     variant('development_tools', default=True, description='Build development dependencies')
 
     # Python (with spack python -i ipython support)
-    depends_on('python', type='run')
+    depends_on('python@2.6.0:2.7,3.5:', type='run')
+    depends_on('python@2.7.0:2.7,3.5:', type='run', when='@0.18.0:')
     depends_on('py-ipython', type='run')
 
     # Concretizer
@@ -56,6 +58,12 @@ class Spack(Package):
     depends_on('mercurial', type='run')
     depends_on('subversion', type='run')
 
+    # Modules
+    depends_on('tcl', type='run')
+    depends_on('lmod', type='run')
+    # Spack 0.18 uses lmod's depends_on function, which was introduced in v7.5.12
+    depends_on('lmod@7.5.12:', type='run', when='@0.18:')
+
     # Buildcache
     # We just need the 'strings' executable, we don't want to install
     # binutil's linkers.
@@ -68,11 +76,15 @@ class Spack(Package):
     # See https://github.com/spack/spack/pull/24686
     # and #25595, #25726, #25853, #25923, #25924 upstream in python/cpython
     with when('@:0.16.2'):
-        conflicts('python@3.10:')
-        conflicts('python@3.9.6:3.9')
-        conflicts('python@3.8.11:3.8')
-        conflicts('python@3.7.11:3.7')
-        conflicts('python@3.6.14:3.6')
+        conflicts('^python@3.10:')
+        conflicts('^python@3.9.6:3.9')
+        conflicts('^python@3.8.11:3.8')
+        conflicts('^python@3.7.11:3.7')
+        conflicts('^python@3.6.14:3.6')
+
+    # https://bugs.python.org/issue45235#msg406121
+    # To be fixed in 3.9.9, no other releases are affected
+    conflicts('^python@3.9.8', when='@:0.17.0')
 
     # Development tools
     with when('+development_tools'):

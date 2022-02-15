@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
+import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.string
 
@@ -153,6 +154,7 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
+    reuse = kwargs.get('reuse', False)
 
     try:
         sargs = args
@@ -161,7 +163,7 @@ def parse_specs(args, **kwargs):
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
-                spec.concretize(tests=tests)  # implies normalize
+                spec.concretize(tests=tests, reuse=reuse)  # implies normalize
             elif normalize:
                 spec.normalize(tests=tests)
 
@@ -439,6 +441,28 @@ def display_specs(specs, args=None, **kwargs):
 
     output.write(out)
     output.flush()
+
+
+def filter_loaded_specs(specs):
+    """Filter a list of specs returning only those that are
+    currently loaded."""
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
+    return [x for x in specs if x.dag_hash() in hashes]
+
+
+def print_how_many_pkgs(specs, pkg_type=""):
+    """Given a list of specs, this will print a message about how many
+    specs are in that list.
+
+    Args:
+        specs (list): depending on how many items are in this list, choose
+            the plural or singular form of the word "package"
+        pkg_type (str): the output string will mention this provided
+            category, e.g. if pkg_type is "installed" then the message
+            would be "3 installed packages"
+    """
+    tty.msg("%s" % spack.util.string.plural(
+            len(specs), pkg_type + " package"))
 
 
 def spack_is_git_repo():

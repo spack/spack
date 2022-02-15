@@ -1,11 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import sys
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Jq(AutotoolsPackage):
@@ -19,6 +21,9 @@ class Jq(AutotoolsPackage):
 
     depends_on('oniguruma')
     depends_on('bison@3.0:', type='build')
+
+    if sys.platform == 'darwin' and macos_version() >= Version('10.15'):
+        patch('builtinc.patch', when='@1.5:')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

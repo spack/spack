@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,20 +33,6 @@ def test_list_filter(mock_packages):
 def test_list_search_description(mock_packages):
     output = list('--search-description', 'one build dependency')
     assert 'depb' in output
-
-
-def test_list_tags(mock_packages):
-    output = list('--tag', 'tag1')
-    assert 'mpich' in output
-    assert 'mpich2' in output
-
-    output = list('--tag', 'tag2')
-    assert 'mpich\n' in output
-    assert 'mpich2' not in output
-
-    output = list('--tag', 'tag3')
-    assert 'mpich\n' not in output
-    assert 'mpich2' in output
 
 
 def test_list_format_name_only(mock_packages):

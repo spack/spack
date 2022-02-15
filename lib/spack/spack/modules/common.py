@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-import spack.build_environment as build_environment
+import spack.build_environment
 import spack.config
 import spack.environment
 import spack.error
@@ -191,7 +191,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get('autoload', 'none')
+    autoload_strategy = spec_configuration.get('autoload', 'direct')
     spec_configuration['autoload'] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites
@@ -732,12 +732,12 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.modifications_from_dependencies(
+            spack.build_environment.modifications_from_dependencies(
                 spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(spec.package)
+        spack.build_environment.set_module_variables_for_package(spec.package)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
@@ -906,6 +906,9 @@ class BaseModuleFileWriter(object):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
         # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing

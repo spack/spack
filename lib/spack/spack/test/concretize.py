@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import spack.concretize
 import spack.error
 import spack.platforms
 import spack.repo
+import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import Spec
 from spack.util.mock_package import MockPackageMultiRepo
@@ -298,7 +299,7 @@ class TestConcretize(object):
 
         with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
-                        ' ^barpkg os=SuSE11 ^bazpkg os=be')
+                        ' ^barpkg os=CNL ^bazpkg os=CNL')
             spec.concretize()
 
             for s in spec.traverse(root=False):
@@ -556,6 +557,19 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    def test_conflicts_show_cores(self, conflict_spec, monkeypatch):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Testing debug statements specific to new concretizer')
+
+        monkeypatch.setattr(spack.solver.asp, 'full_cores', True)
+        monkeypatch.setattr(spack.solver.asp, 'minimize_cores', False)
+
+        s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError) as e:
+            s.concretize()
+
+        assert "conflict_trigger(" in e.value.message
+
     def test_conflict_in_all_directives_true(self):
         s = Spec('when-directives-true')
         with pytest.raises(spack.error.SpackError):
@@ -737,6 +751,41 @@ class TestConcretize(object):
 
         s = Spec(spec_str).concretized()
         assert s.satisfies(expected_str)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('conditional-variant-pkg@1.0',
+         ['two_whens'],
+         ['version_based', 'variant_based']),
+        ('conditional-variant-pkg@2.0',
+         ['version_based', 'variant_based'],
+         ['two_whens']),
+        ('conditional-variant-pkg@2.0~version_based',
+         ['version_based'],
+         ['variant_based', 'two_whens']),
+        ('conditional-variant-pkg@2.0+version_based+variant_based',
+         ['version_based', 'variant_based', 'two_whens'],
+         [])
+    ])
+    def test_conditional_variants(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for var in expected:
+            assert s.satisfies('%s=*' % var)
+        for var in unexpected:
+            assert not s.satisfies('%s=*' % var)
+
+    @pytest.mark.parametrize('bad_spec', [
+        '@1.0~version_based',
+        '@1.0+version_based',
+        '@2.0~version_based+variant_based',
+        '@2.0+version_based~variant_based+two_whens',
+    ])
+    def test_conditional_variants_fail(self, bad_spec):
+        with pytest.raises(
+                (spack.error.UnsatisfiableSpecError,
+                 vt.InvalidVariantForSpecError)
+        ):
+            _ = Spec('conditional-variant-pkg' + bad_spec).concretized()
 
     @pytest.mark.parametrize('spec_str,expected,unexpected', [
         ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
@@ -1288,3 +1337,41 @@ class TestConcretize(object):
                 if pkg.name == 'low-priority-provider':
                     continue
                 assert pkg not in s
+
+    @pytest.mark.regression('27237')
+    @pytest.mark.parametrize('spec_str,expect_installed', [
+        ('mpich', True),
+        ('mpich+debug', False),
+        ('mpich~debug', True)
+    ])
+    def test_concrete_specs_are_not_modified_on_reuse(
+            self, mutable_database, spec_str, expect_installed
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse specs')
+
+        # Test the internal consistency of solve + DAG reconstruction
+        # when reused specs are added to the mix. This prevents things
+        # like additional constraints being added to concrete specs in
+        # the answer set produced by clingo.
+        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        assert s.package.installed is expect_installed
+        assert s.satisfies(spec_str, strict=True)
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_in_package(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot use sticky variants')
+
+        # Here we test that a sticky variant cannot be changed from its default value
+        # by the ASP solver if not set explicitly. The package used in the test needs
+        # to have +allow-gcc set to be concretized with %gcc and clingo is not allowed
+        # to change the default ~allow-gcc
+        with pytest.raises(spack.error.SpackError):
+            spack.spec.Spec('sticky-variant %gcc').concretized()
+
+        s = spack.spec.Spec('sticky-variant+allow-gcc %gcc').concretized()
+        assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')
+
+        s = spack.spec.Spec('sticky-variant %clang').concretized()
+        assert s.satisfies('%clang') and s.satisfies('~allow-gcc')

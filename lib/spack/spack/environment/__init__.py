@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ from .environment import (
     default_view_name,
     display_specs,
     exists,
+    installed_specs,
     is_env_dir,
     is_latest_format,
     lockfile_name,
@@ -44,6 +45,7 @@ __all__ = [
     'default_view_name',
     'display_specs',
     'exists',
+    'installed_specs',
     'is_env_dir',
     'is_latest_format',
     'lockfile_name',

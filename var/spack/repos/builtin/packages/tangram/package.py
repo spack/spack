@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Tangram(CMakePackage):
     version('1.0.1', sha256='8f2f8c01bb2d726b0f64e5a5bc3aa2bd8057ccaee7a29c68f1439d16e39aaa90')
     version('master', branch='master', submodules=True)
 
-    variant('mpi', default=True,
+    variant('mpi', default=False,
             description='Enable interface reconstruction with MPI')
     variant('thrust', default=False,
             description='Enable on-node parallelism with NVidia Thrust')
@@ -46,15 +46,12 @@ class Tangram(CMakePackage):
     depends_on('cmake@3.13:', type='build')
 
     depends_on('mpi', when='+mpi')
+#   Wonton depends array
+    wonton_depends = ['mpi', 'jali', 'openmp', 'thrust', 'kokkos', 'cuda']
 
-    depends_on('wonton')
-    depends_on('wonton+jali', when='+jali')
-    depends_on('wonton~mpi', when='~mpi')
-    depends_on('wonton+mpi', when='+mpi')
-    depends_on('wonton+thrust', when='+thrust')
-    depends_on('wonton+kokkos', when='+kokkos')
-    depends_on('wonton+cuda', when='+cuda')
-    depends_on('wonton+openmp', when='+openmp')
+    for _variant in wonton_depends:
+        depends_on('wonton+' + _variant, when='+' + _variant)
+        depends_on('wonton~' + _variant, when='~' + _variant)
 
     def cmake_args(self):
         options = []
@@ -87,3 +84,8 @@ class Tangram(CMakePackage):
             options.append('-DENABLE_APP_TESTS=OFF')
 
         return options
+
+    def check(self):
+        if self.run_tests:
+            with working_dir(self.build_directory):
+                make("test")

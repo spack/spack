@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,10 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-g', '--generic-target', action='store_true',
+        help='show the best generic target'
+    )
     subparser.add_argument(
         '--known-targets', action='store_true',
         help='show a list of all known targets and exit'
@@ -74,6 +78,10 @@ def display_targets(targets):
 
 
 def arch(parser, args):
+    if args.generic_target:
+        print(archspec.cpu.host().generic)
+        return
+
     if args.known_targets:
         display_targets(archspec.cpu.TARGETS)
         return

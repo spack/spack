@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,8 @@ class Samrai(AutotoolsPackage):
             description='Compile with reduced optimization and debugging on')
     variant('silo', default=False,
             description='Compile with support for silo')
+    variant('shared', default=False,
+            description='Build shared libraries')
 
     depends_on('mpi')
     depends_on('zlib')
@@ -90,6 +92,9 @@ class Samrai(AutotoolsPackage):
 
         if '+silo' in self.spec:
             options.append('--with-silo=%s' % self.spec['silo'].prefix)
+
+        if '+shared' in self.spec:
+            options.append('--enable-shared')
 
         if self.spec.satisfies('@3.0:3.11'):
             options.append('--with-boost=%s' % self.spec['boost'].prefix)

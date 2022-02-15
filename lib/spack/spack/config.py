@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ from contextlib import contextmanager
 from typing import List  # novm
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
+import six
 from ruamel.yaml.error import MarkedYAMLError
 from six import iteritems
 
@@ -401,7 +401,7 @@ class Configuration(object):
                 Configuration, ordered from lowest to highest precedence
 
         """
-        self.scopes = OrderedDict()
+        self.scopes = collections.OrderedDict()
         for scope in scopes:
             self.push_scope(scope)
         self.format_updates = collections.defaultdict(list)
@@ -976,7 +976,7 @@ def validate(data, schema, filename=None):
             line_number = e.instance.lc.line + 1
         else:
             line_number = None
-        raise ConfigFormatError(e, data, filename, line_number)
+        raise six.raise_from(ConfigFormatError(e, data, filename, line_number), e)
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
     return test_data
@@ -1067,22 +1067,36 @@ def get_valid_type(path):
     path given, the priority order is ``list``, ``dict``, ``str``, ``bool``,
     ``int``, ``float``.
     """
+    types = {
+        'array': list,
+        'object': syaml.syaml_dict,
+        'string': str,
+        'boolean': bool,
+        'integer': int,
+        'number': float
+    }
+
     components = process_config_path(path)
     section = components[0]
-    for type in (list, syaml.syaml_dict, str, bool, int, float):
-        try:
-            ret = type()
-            test_data = ret
-            for component in reversed(components):
-                test_data = {component: test_data}
-            validate(test_data, section_schemas[section])
-            return ret
-        except (ConfigFormatError, AttributeError):
-            # This type won't validate, try the next one
-            # Except AttributeError because undefined behavior of dict ordering
-            # in python 3.5 can cause the validator to raise an AttributeError
-            # instead of a ConfigFormatError.
-            pass
+
+    # Use None to construct the test data
+    test_data = None
+    for component in reversed(components):
+        test_data = {component: test_data}
+
+    try:
+        validate(test_data, section_schemas[section])
+    except (ConfigFormatError, AttributeError) as e:
+        jsonschema_error = e.validation_error
+        if jsonschema_error.validator == 'type':
+            return types[jsonschema_error.validator_value]()
+        elif jsonschema_error.validator == 'anyOf':
+            for subschema in jsonschema_error.validator_value:
+                anyof_type = subschema.get('type')
+                if anyof_type is not None:
+                    return types[anyof_type]()
+    else:
+        return type(None)
     raise ConfigError("Cannot determine valid type for path '%s'." % path)
 
 
@@ -1301,6 +1315,7 @@ class ConfigFormatError(ConfigError):
     def __init__(self, validation_error, data, filename=None, line=None):
         # spack yaml has its own file/line marks -- try to find them
         # we prioritize these over the inputs
+        self.validation_error = validation_error
         mark = self._get_mark(validation_error, data)
         if mark:
             filename = mark.name

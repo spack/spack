@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,9 @@ class PyPynn(PythonPackage):
     version('0.8.1', sha256='ce94246284588414d1570c1d5d697805f781384e771816727c830b01ee30fe39')
     version('0.7.5', sha256='15f75f422f3b71c6129ecef23f29d8baeb3ed6502e7a321b8a2596c78ef7e03c')
 
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')
     depends_on('py-jinja2@2.7:',        type=('build', 'run'))
     depends_on('py-docutils@0.10:',     type=('build', 'run'))
     depends_on('py-numpy@1.5:',         type=('build', 'run'))

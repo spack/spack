@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
+import grp
 import os
 import re
 import shutil
@@ -14,7 +15,9 @@ import tempfile
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.package_prefs
 import spack.paths
+import spack.spec
 import spack.store
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
@@ -110,6 +113,10 @@ def filter_shebang(path):
         # Store the file permissions, the patched version needs the same.
         saved_mode = os.stat(path).st_mode
 
+        # Change non-writable files to be writable if needed.
+        if not os.access(path, os.W_OK):
+            os.chmod(path, saved_mode | stat.S_IWUSR)
+
         # No need to delete since we'll move it and overwrite the original.
         patched = tempfile.NamedTemporaryFile('wb', delete=False)
         patched.write(new_sbang_line)
@@ -183,11 +190,47 @@ def install_sbang():
             spack.paths.sbang_script, sbang_path):
         return
 
-    # make $install_tree/bin and copy in a new version of sbang if needed
+    # make $install_tree/bin
     sbang_bin_dir = os.path.dirname(sbang_path)
     fs.mkdirp(sbang_bin_dir)
-    fs.install(spack.paths.sbang_script, sbang_path)
-    fs.set_install_permissions(sbang_bin_dir)
+
+    # get permissions for bin dir from configuration files
+    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all"))
+    config_mode = spack.package_prefs.get_package_dir_permissions(
+        spack.spec.Spec("all")
+    )
+
+    if group_name:
+        os.chmod(sbang_bin_dir, config_mode)   # Use package directory permissions
+    else:
+        fs.set_install_permissions(sbang_bin_dir)
+
+    # set group on sbang_bin_dir if not already set (only if set in configuration)
+    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
+        os.chown(
+            sbang_bin_dir,
+            os.stat(sbang_bin_dir).st_uid,
+            grp.getgrnam(group_name).gr_gid
+        )
+
+    # copy over the fresh copy of `sbang`
+    sbang_tmp_path = os.path.join(
+        os.path.dirname(sbang_path),
+        ".%s.tmp" % os.path.basename(sbang_path),
+    )
+    shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
+
+    # set permissions on `sbang` (including group if set in configuration)
+    os.chmod(sbang_tmp_path, config_mode)
+    if group_name:
+        os.chown(
+            sbang_tmp_path,
+            os.stat(sbang_tmp_path).st_uid,
+            grp.getgrnam(group_name).gr_gid
+        )
+
+    # Finally, move the new `sbang` into place atomically
+    os.rename(sbang_tmp_path, sbang_path)
 
 
 def post_install(spec):

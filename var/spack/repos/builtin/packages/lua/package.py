@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class Lua(Package):
     variant("pcfile", default=False, description="Add patch for lua.pc generation")
     variant('shared', default=True,
             description='Builds a shared version of the library')
+    variant('fetcher', default='curl', values=('curl', 'wget'), description='Fetcher to use in the LuaRocks package manager')
 
     extendable = True
 
@@ -42,6 +43,11 @@ class Lua(Package):
     depends_on('readline')
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
     depends_on('unzip', type='run')
+
+    # luarocks needs a fetcher (curl/wget), unfortunately I have not found
+    # how to force a choice for curl or wget, but curl seems the default.
+    depends_on('curl', when='fetcher=curl', type='run')
+    depends_on('wget', when='fetcher=wget', type='run')
 
     patch(
         "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
@@ -63,10 +69,10 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -L%s' % (
-                 spec['readline'].prefix.lib,
-                 spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncursesw -ltinfow',
+             'MYLDFLAGS=' + ' '.join((
+                 spec['readline'].libs.search_flags,
+                 spec['ncurses'].libs.search_flags)),
+             'MYLIBS=%s' % spec['ncurses'].libs.link_flags,
              'CC=%s -std=gnu99 %s' % (spack_cc,
                                       self.compiler.cc_pic_flag),
              target)

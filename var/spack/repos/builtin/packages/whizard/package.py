@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,6 +58,7 @@ class Whizard(AutotoolsPackage):
     variant('latex', default=False,
             description="data visualization with latex")
 
+    depends_on('libtirpc')
     depends_on('ocaml@4.02.3:', type='build', when="@3:")
     depends_on('ocaml@4.02.3:~force-safe-string', type='build', when="@:2")
     depends_on('hepmc', when="hepmc=2")

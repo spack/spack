@@ -281,3 +281,38 @@ data-vis-sdk-develop-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-develop-generate
+
+########################################
+# Spack Tutorial
+########################################
+.tutorial:
+  variables:
+    SPACK_CI_STACK_NAME: tutorial
+
+tutorial-pr-generate:
+  extends: [ ".tutorial", ".pr-generate"]
+
+tutorial-develop-generate:
+  extends: [ ".tutorial", ".develop-generate"]
+
+tutorial-pr-build:
+  extends: [ ".tutorial", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-pr-generate
+
+tutorial-develop-build:
+  extends: [ ".tutorial", ".develop-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-develop-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-develop-generate

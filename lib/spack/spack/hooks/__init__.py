@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,6 +90,7 @@ on_phase_error = _HookRunner('on_phase_error')
 on_install_start = _HookRunner('on_install_start')
 on_install_success = _HookRunner('on_install_success')
 on_install_failure = _HookRunner('on_install_failure')
+on_install_cancel = _HookRunner('on_install_cancel')
 
 # Analyzer hooks
 on_analyzer_save = _HookRunner('on_analyzer_save')
