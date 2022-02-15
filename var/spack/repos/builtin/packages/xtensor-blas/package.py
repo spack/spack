@@ -7,7 +7,7 @@ from spack import *
 
 
 class XtensorBlas(CMakePackage):
-    """xtensor-blas"""
+    """BLAS extension to xtensor"""
 
     homepage = "https://xtensor-stack.github.io"
     url      = "https://github.com/xtensor-stack/xtensor-blas/archive/refs/tags/0.20.0.tar.gz"
