@@ -202,7 +202,7 @@ def diff(parser, args):
                  for spec in spack.cmd.parse_specs(args.args)]
         # note that len(args.args) != len(specs) necessarily.
         if len(specs) != 2:
-            tty.die("You must provide two specs to diff.")
+            tty.die("You must provide two specs or two environment lock files to diff.")
 
     # Calculate the comparison (c)
     c = compare_specs(specs[0], specs[1], to_string=True, color=color)
