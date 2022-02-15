@@ -42,7 +42,8 @@ class PyOpenmc(PythonPackage):
         )
 
     depends_on('git', type='build')
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'), when='@0.13:')
+    depends_on('python@3.5:', type=('build', 'run'), when='@:0.12')
     depends_on('py-cython', type='build')
     depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
     depends_on('py-h5py+mpi', when='+mpi', type=('build', 'run'))
