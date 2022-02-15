@@ -10,6 +10,7 @@ class PyNbconvert(PythonPackage):
     homepage = "https://github.com/jupyter/nbconvert"
     pypi = "nbconvert/nbconvert-6.0.1.tar.gz"
 
+    version('6.4.2', sha256='eb2803db18f6facce6bf3b01b684fe47907994bd156d15eaccdf011e3d7f8164')
     version('6.3.0', sha256='5e77d6203854944520105e38f2563a813a4a3708e8563aa598928a3b5ee1081a')
     version('6.2.0', sha256='16ceecd0afaa8fd26c245fa32e2c52066c02f13aa73387fffafd84750baea863')
     version('6.0.1', sha256='db94117fbac29153834447e31b30cda337d4450e46e0bdb1a36eafbbf4435156')
@@ -46,7 +47,11 @@ class PyNbconvert(PythonPackage):
     depends_on('py-testpath', type=('build', 'run'), when='@5:')
     depends_on('py-defusedxml', type=('build', 'run'), when='@5:')
     depends_on('py-nbclient@0.5.0:0.5', type=('build', 'run'), when='@6:')
-    depends_on('py-tornado@4.0:', type=('build', 'run'), when='+serve')
+
+    # https://bugs.gentoo.org/720870
+    # https://github.com/jupyter/nbconvert/pull/937
+    depends_on('py-tornado@4.0:', type=('build', 'run'), when='@5.4.1: +serve')
+    depends_on('py-tornado@4.0:5', type=('build', 'run'), when='@:5.4.0 +serve')
 
     def patch(self):
         # We bundle this with the spack package so that the installer
