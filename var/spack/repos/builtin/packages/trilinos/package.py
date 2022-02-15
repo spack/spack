@@ -77,7 +77,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('python', default=False, description='Build PyTrilinos wrappers')
     variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('uvm', default=False, when='@13.2:', description='Turn on UVM for CUDA build')
+    variant('uvm', default=False, when='@13.2: +cuda', description='Turn on UVM for CUDA build')
     variant('wrapper', default=False, description='Use nvcc-wrapper for CUDA build')
 
     # TPLs (alphabet order)
