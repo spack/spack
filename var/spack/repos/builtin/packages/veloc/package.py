@@ -27,12 +27,13 @@ class Veloc(CMakePackage):
 
     depends_on('libpthread-stubs')
     depends_on('mpi')
+    depends_on('boost')
     depends_on('er')
-    depends_on('axl')
+    depends_on('axl@:0.3.0', when='@:1.5')
+    depends_on('axl@0.5.0:', when='@1.6:')
     depends_on('openssl')
-    depends_on('cmake@3.9:', type='build')
+    depends_on('cmake@3.10:', type='build')
 
-    depends_on('boost', when='@:1.5')
 
     def flag_handler(self, name, flags):
         flags = list(flags)
@@ -41,7 +42,6 @@ class Veloc(CMakePackage):
                 flags.append(self.compiler.cxx11_flag)
             else:
                 flags.append(self.compiler.cxx17_flag)
-            
         return (None, None, flags)
 
     def cmake_args(self):
@@ -49,12 +49,6 @@ class Veloc(CMakePackage):
             "-DWITH_AXL_PREFIX=%s" % self.spec['axl'].prefix,
             "-DWITH_ER_PREFIX=%s" % self.spec['er'].prefix,
             "-DMPI_CXX_COMPILER=%s" % self.spec['mpi'].mpicxx
+            "-DBOOST_ROOT=%s" % self.spec['boost'].prefix
         ]
-
-        if self.spec.satisfies('@:1.5'):
-            args.append("-DBOOST_ROOT=%s" % self.spec['boost'].prefix)
-
-        if self.spec.satisfies('@1.6:'):
-            args.append("-DCOMM_QUEUE=socket_queue")
-
         return args
