@@ -32,7 +32,7 @@ class PyNumba(PythonPackage):
     depends_on('py-numpy@1.17:1.20', type=('build', 'run'), when='@0.54')
     # set upper bound for py-numpy the same as newer release
     depends_on('py-numpy@1.15:1.20', type=('build', 'run'), when='@0.48:0.53')
-    depends_on('py-numpy@1.10:1', type=('build', 'run'), when='@:0.47')
+    depends_on('py-numpy@1.10:1.20', type=('build', 'run'), when='@:0.47')
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-llvmlite@0.38', type=('build', 'run'), when='@0.55.1')
