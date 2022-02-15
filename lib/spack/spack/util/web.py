@@ -645,17 +645,21 @@ def find_versions_of_archive(
                 ver = spack.url.parse_version(url)
                 if ver in matched:
                     continue
-                tty.debug(url)
                 versions[ver] = url
                 # prevent this version from getting overwritten
-                if reference_package is not None:
+                if url in archive_urls:
+                    matched.add(ver)
+                elif reference_package is not None:
                     if url == reference_package.url_for_version(ver):
+                        matched.add(ver)
+                else:
+                    extrapolated_urls = [spack.url.substitute_version(u, ver) for u in archive_urls]
+                    if url in extrapolated_urls:
                         matched.add(ver)
             except spack.url.UndetectableVersionError:
                 continue
 
     from pprint import pprint
-    tty.debug(versions)
     return versions
 
 
