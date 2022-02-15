@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 import spack.hash_types as ht
 import spack.spec
 import spack.store
@@ -24,6 +25,9 @@ level = "short"
 
 def setup_parser(subparser):
     subparser.epilog = """\
+when an environment is active and no specs are provided, the environment root \
+specs are used instead
+
 for further documentation regarding the spec syntax, see:
     spack help --spec
 """
@@ -79,37 +83,46 @@ def spec(parser, args):
     if args.install_status:
         tree_context = spack.store.db.read_transaction
 
-    if not args.specs:
-        tty.die("spack spec requires at least one spec")
-
     concretize_kwargs = {
         'reuse': args.reuse
     }
 
-    for spec in spack.cmd.parse_specs(args.specs):
+    # Use command line specified specs, otherwise try to use environment specs.
+    if args.specs:
+        input_specs = spack.cmd.parse_specs(args.specs)
+        specs = [(s, s.concretized(**concretize_kwargs)) for s in input_specs]
+    else:
+        env = ev.active_environment()
+        if env:
+            env.concretize(**concretize_kwargs)
+            specs = env.concretized_specs()
+        else:
+            tty.die("spack spec requires at least one spec or an active environmnt")
+
+    for (input, output) in specs:
         # With -y, just print YAML to output.
         if args.format:
-            if spec.name in spack.repo.path or spec.virtual:
-                spec.concretize(**concretize_kwargs)
-
             # The user can specify the hash type to use
             hash_type = getattr(ht, args.hash_type)
 
             if args.format == 'yaml':
                 # use write because to_yaml already has a newline.
-                sys.stdout.write(spec.to_yaml(hash=hash_type))
+                sys.stdout.write(output.to_yaml(hash=hash_type))
             else:
-                print(spec.to_json(hash=hash_type))
+                print(output.to_json(hash=hash_type))
             continue
 
         with tree_context():
-            tree_kwargs['hashes'] = False  # Always False for input spec
-            print("Input spec")
-            print("--------------------------------")
-            print(spec.tree(**tree_kwargs))
+            # Only show the headers for input specs that are not concrete to avoid
+            # repeated output. This happens because parse_specs outputs concrete
+            # specs for `/hash` inputs.
+            if not input.concrete:
+                tree_kwargs['hashes'] = False  # Always False for input spec
+                print("Input spec")
+                print("--------------------------------")
+                print(input.tree(**tree_kwargs))
+                print("Concretized")
+                print("--------------------------------")
 
             tree_kwargs['hashes'] = args.long or args.very_long
-            print("Concretized")
-            print("--------------------------------")
-            spec.concretize(**concretize_kwargs)
-            print(spec.tree(**tree_kwargs))
+            print(output.tree(**tree_kwargs))
