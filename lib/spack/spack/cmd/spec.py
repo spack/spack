@@ -97,7 +97,7 @@ def spec(parser, args):
             env.concretize(**concretize_kwargs)
             specs = env.concretized_specs()
         else:
-            tty.die("spack spec requires at least one spec")
+            tty.die("spack spec requires at least one spec or an active environmnt")
 
     for (input, output) in specs:
         # With -y, just print YAML to output.
