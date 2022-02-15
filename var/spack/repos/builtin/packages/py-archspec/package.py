@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+
+
 class PyArchspec(PythonPackage):
     """A library for detecting, labeling and reasoning about
     microarchitectures.
@@ -20,3 +23,10 @@ class PyArchspec(PythonPackage):
     depends_on('py-six@1.13.0:1', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
+
+    @run_before('install')
+    def remove_pyproject_toml(self):
+        # Needed to work around having to install
+        # poetry for deployment
+        with working_dir(self.build_directory):
+            os.remove('pyproject.toml')
