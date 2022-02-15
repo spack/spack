@@ -688,32 +688,33 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     @property
     def _smoke_tests(self):
+        # smoke_tests tuple: exe, args, purpose, use cmake (true/false)
         smoke_tests = [('nvector/serial/test_nvector_serial', ['10', '0'],
-                        'Test serial N_Vector')]
+                        'Test serial N_Vector', False)]
         if '+CVODE' in self.spec:
             smoke_tests.append(('cvode/serial/cvAdvDiff_bnd', [],
-                                'Test CVODE'))
+                                'Test CVODE', True))
 
         if '+cuda' in self.spec:
             smoke_tests.append(('nvector/cuda/test_nvector_cuda', ['10', '0', '0'],
-                                'Test CUDA N_Vector'))
+                                'Test CUDA N_Vector', True))
             if '+CVODE' in self.spec:
                 smoke_tests.append(('cvode/cuda/cvAdvDiff_kry_cuda', [],
-                                    'Test CVODE with CUDA'))
+                                    'Test CVODE with CUDA', True))
 
         if '+hip' in self.spec:
             smoke_tests.append(('nvector/hip/test_nvector_hip', ['10', '0', '0'],
-                                'Test HIP N_Vector'))
+                                'Test HIP N_Vector', True))
             if '+CVODE' in self.spec:
                 smoke_tests.append(('cvode/hip/cvAdvDiff_kry_hip', [],
-                                    'Test CVODE with HIP'))
+                                    'Test CVODE with HIP', True))
 
         if '+sycl' in self.spec:
             smoke_tests.append(('nvector/sycl/test_nvector_sycl', ['10', '0', '0'],
                                 'Test SYCL N_Vector'))
             if '+CVODE' in self.spec:
                 smoke_tests.append(('cvode/sycl/cvAdvDiff_kry_sycl', [],
-                                    'Test CVODE with SYCL'))
+                                    'Test CVODE with SYCL', True))
 
         return smoke_tests
 
@@ -752,7 +753,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         for smoke_test in self._smoke_tests:
             work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
             with working_dir(work_dir):
-                self.run_test(exe=cmake_bin, options=['.'])
+                if smoke_test[3]: # use cmake
+                    self.run_test(exe=cmake_bin, options=['.'])
                 self.run_test(exe='make')
 
     def run_smoke_tests(self):
