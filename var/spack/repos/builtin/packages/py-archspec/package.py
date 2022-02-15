@@ -23,10 +23,11 @@ class PyArchspec(PythonPackage):
     depends_on('py-six@1.13.0:1', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-poetry-core@1.0.0:', type='build')
 
-    @run_before('install')
-    def remove_pyproject_toml(self):
-        # Needed to work around having to install
-        # poetry for deployment
+    def patch(self):
+        # See https://python-poetry.org/docs/pyproject/#poetry-and-pep-517
         with working_dir(self.build_directory):
-            os.remove('pyproject.toml')
+            if self.spec.satisfies('@:0.1.3'):
+                filter_file("poetry>=0.12", "poetry_core>=1.0.0", 'pyproject.toml')
+                filter_file("poetry.masonry.api", "poetry.core.masonry.api", 'pyproject.toml')
