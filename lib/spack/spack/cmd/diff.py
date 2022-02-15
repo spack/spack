@@ -58,8 +58,8 @@ def compare_specs(a, b, to_string=False, color=None):
     the differences, intersection, and names for a pair of specs a and b.
 
     Arguments:
-        a (spack.spec.Spec): the first spec to compare
-        b (spack.spec.Spec): the second spec to compare
+        a (spack.spec.Spec or list): the first spec to compare
+        b (spack.spec.Spec or list): the second spec to compare
         to_string (bool): return an object that can be json dumped
     """
 
