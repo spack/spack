@@ -15,6 +15,7 @@ class Lhapdf(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('6.4.0', sha256='7d2f0267e2d65b0ddee048553b342d7c893a6dbabe1e326cad62de0010dd810c')
     version('6.3.0', sha256='ed4d8772b7e6be26d1a7682a13c87338d67821847aa1640d78d67d2cef8b9b5d')
     version('6.2.3', sha256='d6e63addc56c57b6286dc43ffc56d901516f4779a93a0f1547e14b32cfd82dd1')
 
@@ -23,7 +24,8 @@ class Lhapdf(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    depends_on('python',        type=('build', 'run'))
+    depends_on('python@:3.7', when='@:6.3', type=('build', 'run'))
+    depends_on('python@3.8:', when='@6.4:', type=('build', 'run'))
     depends_on('py-cython',     type='build')
     depends_on('py-setuptools', type='build')
 
@@ -32,9 +34,3 @@ class Lhapdf(AutotoolsPackage):
     def configure_args(self):
         args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
         return args
-
-    def patch(self):
-        if self.spec['python'].satisfies('@3.8:'):
-            filter_file(".tp_print = 0;",
-                        ".tp_vectorcall_offset = 0;",
-                        "wrappers/python/lhapdf.cpp")
