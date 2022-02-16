@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
@@ -11,6 +12,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
     maintainers = ['alalazo']
+
+    executables = ['^nm$', '^readelf$']
 
     version('2.37', sha256='67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4')
     version('2.36.1', sha256='5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3')
@@ -79,6 +82,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts('~ld', '+gold')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU Binutils.*\) (\S+)', output)
+        return match.group(1) if match else None
 
     def setup_build_environment(self, env):
 
