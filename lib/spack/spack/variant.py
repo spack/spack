@@ -403,9 +403,18 @@ class MultiValuedVariant(AbstractVariant):
         """
         super_sat = super(MultiValuedVariant, self).satisfies(other)
 
+        if not super_sat:
+            return False
+
+        if '*' in other or '*' in self:
+            return True
+
+        # allow prefix find on patches
+        if self.name == 'patches':
+            return all(any(w.startswith(v) for w in self.value) for v in other.value)
+
         # Otherwise we want all the values in `other` to be also in `self`
-        return super_sat and (all(v in self.value for v in other.value) or
-                              '*' in other or '*' in self)
+        return all(v in self.value for v in other.value)
 
     def append(self, value):
         """Add another value to this multi-valued variant."""
