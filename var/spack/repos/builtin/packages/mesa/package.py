@@ -50,10 +50,8 @@ class Mesa(MesonPackage):
     _SWR_DISABLED_VALUES = ('none',)
     variant('swr', default=_SWR_AUTO_VALUE,
             values=_SWR_DISABLED_VALUES + _SWR_ENABLED_VALUES,
-            multi=True,
+            multi=True, when='+llvm',
             description="Enable the SWR driver.")
-    for swr_enabled_value in _SWR_ENABLED_VALUES:
-        conflicts('~llvm', when='swr={0}'.format(swr_enabled_value))
 
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
