@@ -5,6 +5,7 @@
 import os
 
 from llnl.util import tty
+
 from spack.util.executable import which_string
 
 
