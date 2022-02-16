@@ -562,7 +562,7 @@ def _urlopen(req, *args, **kwargs):
 
 
 def find_versions_of_archive(
-        archive_urls, list_url=None, list_depth=0, concurrency=32, reference_package=None
+    archive_urls, list_url=None, list_depth=0, concurrency=32, reference_package=None
 ):
     """Scrape web pages for new versions of a tarball.
 
@@ -653,13 +653,14 @@ def find_versions_of_archive(
                     if url == reference_package.url_for_version(ver):
                         matched.add(ver)
                 else:
-                    extrapolated_urls = [spack.url.substitute_version(u, ver) for u in archive_urls]
+                    extrapolated_urls = [
+                        spack.url.substitute_version(u, ver) for u in archive_urls
+                    ]
                     if url in extrapolated_urls:
                         matched.add(ver)
             except spack.url.UndetectableVersionError:
                 continue
 
-    from pprint import pprint
     return versions
 
 
