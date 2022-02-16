@@ -21,6 +21,5 @@ class PyNumpyQuaternion(PythonPackage):
 
     version('2021.11.4.15.26.3', sha256='b0dc670b2adc8ff2fb8d6105a48769873f68d6ccbe20af6a19e899b1e8d48aaf')
 
-    depends_on('python@3.0:',           type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
     depends_on('py-numpy@1.13:',        type=('build', 'run'))
