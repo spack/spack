@@ -5,6 +5,7 @@
 import os
 
 from llnl.util import tty
+from spack.util.executable import which_string
 
 
 class Petsc(Package, CudaPackage, ROCmPackage):
@@ -621,6 +622,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                                      work_dir=w_dir):
                     tty.warn('Skipping petsc test: '
                              'failed to run ex50 with {0}'.format(feature))
+                    return
 
     def run_ex7_test(self, runexe, runopt, w_dir):
         """Run stand alone test: ex7 with cuda"""
@@ -689,14 +691,12 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
-        env['PETSC_DIR'] = self.prefix
-        env['PETSC_ARCH'] = ''
         if ('+mpi' in self.spec):
-            runexe = Executable(join_path(self.spec['mpi'].prefix.bin,
-                                          'mpiexec')).command
+            mpi_path = self.spec['mpi'].prefix.bin
+            runexe = which_string('mpiexec', 'srun', path=mpi_path)
         else:
-            runexe = Executable(join_path(self.prefix.lib.petsc.bin,
-                                          'petsc-mpiexec.uni')).command
+            runexe = join_path(self.prefix.lib.petsc.bin,
+                               'petsc-mpiexec.uni')
 
         runopt = ['-n', '1']
         w_dir = join_path(self.test_suite.current_test_cache_dir,
