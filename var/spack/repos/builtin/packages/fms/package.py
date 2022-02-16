@@ -39,7 +39,7 @@ class Fms(CMakePackage):
     depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('mpi')
-    depends_on('libyaml', when='+with_yaml')
+    depends_on('libyaml', when='+yaml')
 
     def cmake_args(self):
         args = [
