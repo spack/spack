@@ -12,7 +12,7 @@ class CircuitBuild(PythonPackage):
     homepage = "https://bbpgitlab.epfl.ch/nse/circuit-build"
     git      = "git@bbpgitlab.epfl.ch:nse/circuit-build.git"
 
-    version('develop')
+    version('develop', branch='main')
     version('4.0.0', tag='circuit-build-v4.0.0')
 
     depends_on('py-setuptools', type=('build', 'run'))
