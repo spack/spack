@@ -12,10 +12,17 @@ from spack.version import Version
 from ._operating_system import OperatingSystem
 
 
-# FIXME: store versions inside OperatingSystem as a Version instead of string
 def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
+    swvers = Executable('sw_vers')
+    output = swvers(output=str, fail_on_error=False)
+    match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
+    if match:
+        return Version(match.group(1))
+
+    # Fall back to python-reported version, which can be inaccurate around
+    # macOS 11 (e.g. showing 10.16 for macOS 12)
     return Version(py_platform.mac_ver()[0])
 
 
@@ -26,7 +33,7 @@ def macos_cltools_version():
     SDK path.
     """
     pkgutil = Executable('pkgutil')
-    output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
+    output = pkgutil('--pkg-info=com.apple.pkg.cltools_executables',
                      output=str, fail_on_error=False)
     match = re.search(r'version:\s*([0-9.]+)', output)
     if match:
@@ -99,11 +106,13 @@ class MacOs(OperatingSystem):
             '12': 'monterey',
         }
 
+        version = macos_version()
+
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
         # only used the minor component)
-        part = 1 if macos_version() >= Version('11') else 2
+        part = 1 if version >= Version('11') else 2
 
-        mac_ver = str(macos_version().up_to(part))
+        mac_ver = str(version.up_to(part))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 
