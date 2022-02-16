@@ -21,6 +21,7 @@ class RBroom(RPackage):
     homepage = "https://github.com/tidyverse/broom"
     cran = "broom"
 
+    version('0.7.12', sha256='04fac12b2546689603a474fb92a0572f4241ae87b51b21b0808814a489227bd9')
     version('0.7.10', sha256='129fd5a53abef7f42b7efac6c64ebd71269b136aa648846d640562357927464f')
     version('0.7.9', sha256='1d5695f97b378b2b77fb8f64a4a54b72b278913d4adf9d61a7ca4f38a1c7c5fc')
     version('0.7.3', sha256='de5650e46ca6884876b63bc401d22bef9eace671147774466406d43324aebc2f')
