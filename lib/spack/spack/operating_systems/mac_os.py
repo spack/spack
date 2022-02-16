@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import platform as py_platform
 import re
 
@@ -13,8 +14,36 @@ from ._operating_system import OperatingSystem
 
 
 def macos_version():
-    """temporary workaround to return a macOS version as a Version object
+    """Get the current macOS version as a version object.
+
+    This has three mechanisms for determining the macOS version, which is used
+    for spack identification (the ``os`` in the spec's ``arch``) and indirectly
+    for setting the value of ``MACOSX_DEPLOYMENT_TARGET``, which affects the
+    ``minos`` value of the ``LC_BUILD_VERSION`` macho header. Mixing ``minos``
+    values can lead to lots of linker warnings, and using a consistent version
+    (pinned to the major OS version) allows distribution across clients that
+    might be slightly behind.
+
+    The version determination is made with three mechanisms in decreasing
+    priority:
+
+    1. The ``MACOSX_DEPLOYMENT_TARGET`` variable overrides the actual operating
+       system version, just like the value can be used to build for older macOS
+       targets on newer systems. Spack currently will truncate this value when
+       building packages, but at least the major version will be the same.
+
+    2. The system ``sw_vers`` command reports the actual operating system
+       version.
+
+    3. The Python ``platform.mac_ver`` function is a fallback if the operating
+       system identification fails, because some Python versions and/or
+       installations report the OS
+       on which Python was *built* rather than the one on which it is running.
     """
+    env_ver = os.environ.get('MACOSX_DEPLOYMENT_TARGET', None)
+    if env_ver:
+        return Version(env_ver)
+
     swvers = Executable('sw_vers')
     output = swvers(output=str, fail_on_error=False)
     match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
