@@ -412,6 +412,14 @@ class MultiValuedVariant(AbstractVariant):
         self._value = tuple(sorted((value,) + self._value))
         self._original_value = ",".join(self._value)
 
+    def __str__(self):
+        # Special-case patches to not print the full 64 character hashes
+        if self.name == 'patches':
+            values_str = ','.join(x[:7] for x in self.value)
+        else:
+            values_str = ','.join(str(x) for x in self.value)
+        return '{0}={1}'.format(self.name, values_str)
+
 
 class SingleValuedVariant(AbstractVariant):
     """A variant that can hold multiple values, but one at a time."""
