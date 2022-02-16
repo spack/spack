@@ -28,7 +28,7 @@ class Nwchem(Package):
     variant('mpipr', default=False, description='Enables ARMCI with progress rank')
 
     patch('fj.patch', when='@7.0.2 %fj')
-    
+
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi')
