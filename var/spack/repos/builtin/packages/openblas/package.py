@@ -265,6 +265,9 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_fc),
         ]
 
+        if self.spec.os == 'monterey':
+            make_defs.append('MACOSX_DEPLOYMENT_TARGET=11.0')
+
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version('0.3'):
             make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
