@@ -1589,8 +1589,9 @@ class SpackSolverSetup(object):
 
         """
         # Tell the concretizer about possible values from specs we saw in
-        # spec_clauses()
-        for pkg, variant, value in sorted(self.variant_values_from_specs):
+        # spec_clauses(). We might want to order these facts by pkg and name
+        # if we are debugging.
+        for pkg, variant, value in self.variant_values_from_specs:
             self.gen.fact(fn.variant_possible_value(pkg, variant, value))
 
     def _facts_from_concrete_spec(self, spec, possible):
