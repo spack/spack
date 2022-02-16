@@ -705,7 +705,8 @@ as follows:
 
 #. The following special strings are considered larger than any other
    numeric or non-numeric version component, and satisfy the following
-   order between themselves: ``develop > main > master > head > trunk``.
+   order between themselves:
+   ``develop > main > master > head > trunk > stable``.
 
 #. Numbers are ordered numerically, are less than special strings, and
    larger than other non-numeric components.
