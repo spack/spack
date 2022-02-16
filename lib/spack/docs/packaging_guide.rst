@@ -2469,6 +2469,24 @@ Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
 
+A package can only extend one other package at a time.  To support packages
+that may extend one of a list of other packages, Spack supports multiple
+``extends`` directives as long as at most one of them is selected as
+a dependency during concretization.  For example, a lua package could extend
+either lua or luajit, but not both:
+
+.. code-block:: python
+
+   class LuaLpeg(Package):
+       ...
+       variant('use_lua', default=True)
+       extends('lua', when='+use_lua')
+       extends('lua-luajit', when='~use_lua')
+       ...
+
+Now, a user can install, and activate, the ``lua-lpeg`` package for either
+lua or luajit.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
