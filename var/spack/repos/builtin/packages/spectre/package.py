@@ -123,6 +123,11 @@ class Spectre(CMakePackage):
     # - Shared libs builds on macOS don't work before
     #   https://github.com/sxs-collaboration/spectre/pull/2680
     conflicts('+shared', when='@:2022.01.03 platform=darwin')
+    # - Blaze with `BLAZE_BLAS_MODE` enabled doesn't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/3806 because it
+    #   doesn't find the BLAS header. Also, we haven't tested Blaze with BLAS
+    #   kernels before then.
+    conflicts('^blaze+blas', when='@:2022.02.17')
 
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
