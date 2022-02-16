@@ -128,7 +128,7 @@ class TestSuite(object):
         remove_directory = kwargs.get('remove_directory', True)
         dirty = kwargs.get('dirty', False)
         fail_first = kwargs.get('fail_first', False)
-        test_externals = kwargs.get('test_externals', False)
+        externals = kwargs.get('externals', False)
 
         for spec in self.specs:
             try:
@@ -150,10 +150,7 @@ class TestSuite(object):
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(
-                    dirty=dirty,
-                    test_externals=test_externals
-                )
+                spec.package.do_test(dirty=dirty, externals=externals)
 
                 # Clean up on success
                 if remove_directory:
@@ -166,7 +163,7 @@ class TestSuite(object):
                     status = 'PASSED'
                 else:
                     self.ensure_stage()
-                    if spec.external and not test_externals:
+                    if spec.external and not externals:
                         status = 'SKIPPED'
                         msg = 'Skipped external package'
                     else:

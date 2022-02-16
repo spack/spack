@@ -55,7 +55,7 @@ def setup_parser(subparser):
         help="Stop after the first failed package."
     )
     run_parser.add_argument(
-        '--test-externals', action='store_true',
+        '--externals', action='store_true',
         help="Test packages that are externally installed."
     )
     run_parser.add_argument(
@@ -209,7 +209,7 @@ environment variables:
         test_suite(remove_directory=not args.keep_stage,
                    dirty=args.dirty,
                    fail_first=args.fail_first,
-                   test_externals=args.test_externals)
+                   externals=args.externals)
 
 
 def has_test_method(pkg):

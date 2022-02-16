@@ -172,8 +172,8 @@ class InfoCollector(object):
                 try:
                     value = do_fn(instance, *args, **kwargs)
 
-                    test_externals = kwargs.get('test_externals', False)
-                    skip_externals = pkg.spec.external and not test_externals
+                    externals = kwargs.get('externals', False)
+                    skip_externals = pkg.spec.external and not externals
                     if do_fn.__name__ == 'do_test' and skip_externals:
                         package['result'] = 'skipped'
                         package['stdout'] = 'Skipped external package'

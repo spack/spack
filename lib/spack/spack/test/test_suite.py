@@ -89,7 +89,7 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
 
 @pytest.mark.parametrize('arguments,status,msg', [
     ({}, 'SKIPPED', 'Skipped'),
-    ({'test_externals': True}, 'NO-TESTS', 'No tests'),
+    ({'externals': True}, 'NO-TESTS', 'No tests'),
 ])
 def test_test_external(mock_packages, install_mockery, mock_test_stage,
                        arguments, status, msg):
