@@ -15,6 +15,8 @@ class Intel(IntelPackage):
     # Robert Cohn
     maintainers = ['rscohn2']
 
+    depends_on('patchelf', type='build')
+
     # Same as in ../intel-parallel-studio/package.py, Composer Edition,
     # but the version numbering in Spack differs.
     version('20.0.4',              sha256='ac1efeff608a8c3a416e6dfe20364061e8abf62d35fbaacdffe3fc9676fc1aa3', url='https://registrationcenter-download.intel.com/akdlm/irc_nas/tec/17117/parallel_studio_xe_2020_update4_composer_edition.tgz')

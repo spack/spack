@@ -138,6 +138,7 @@ spack:
     - hypre
     - kokkos +openmp
     - kokkos-kernels +openmp
+    - lammps
     - legion
     - libnrm
     - libquo
@@ -149,6 +150,8 @@ spack:
     - mfem
     - mpark-variant
     - mpifileutils ~xattr
+    - nccmp
+    - nco
     - ninja
     - nrm
     - omega-h
@@ -193,6 +196,7 @@ spack:
     - upcxx
     - variorum
     - veloc
+    - wannier90
     - zfp
     #- dealii
     #- geopm

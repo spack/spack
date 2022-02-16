@@ -27,6 +27,7 @@ class PyPyopencl(PythonPackage):
     depends_on('py-pybind11@2.5.0:', type='build')
     depends_on('py-pytools@2017.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))
 
     @run_before('install')
     def prepare(self):

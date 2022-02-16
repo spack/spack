@@ -15,10 +15,10 @@ import os
 import re
 from contextlib import contextmanager
 
-from llnl.util import tty
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -297,24 +297,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def setup_build_environment(self, env):
         spec = self.spec
 
-        # This is to avoid failures when using -mmacosx-version-min=11.1
-        # since not all Apple Clang compilers support that version range
-        # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        # It seems that this is only necessary for older versions of the
-        # command line tools rather than the xcode/clang version.
-        if spec.satisfies('os=bigsur'):
-            pkgutil = Executable('pkgutil')
-            output = pkgutil('--pkg-info=com.apple.pkg.CLTools_Executables',
-                             output=str, error=str, fail_on_error=False)
-            match = re.search(r'version:\s*([0-9.]+)', output)
-            if not match:
-                tty.warn('Failed to detect macOS command line tools version: '
-                         + output)
-            else:
-                if Version(match.group(1)) < Version('12'):
-                    tty.warn("Setting SYSTEM_VERSION_COMPAT=1 due to older "
-                             "command line tools version")
-                    env.set('SYSTEM_VERSION_COMPAT', 1)
+        if (spec.version <= Version('5.34.0')
+            and spec.platform == 'darwin'
+            and macos_version() >= Version('10.16')):
+            # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
+            # as "unexpected"; override the environment variable set by spack's
+            # platforms.darwin .
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
         # This is how we tell perl the locations of bzip and zlib.
         env.set('BUILD_BZIP2', 0)

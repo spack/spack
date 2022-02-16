@@ -147,6 +147,11 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
+    # https://github.com/microsoft/vcpkg/issues/21055
+    patch('qt5-macos12.patch',
+          working_dir='qtbase',
+          when='@5.14: %apple-clang@13:')
+
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
     conflicts('%gcc@11:', when='@5.8')
 

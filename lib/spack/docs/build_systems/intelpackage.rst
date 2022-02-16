@@ -649,7 +649,7 @@ follow `the next section <intel-install-libs_>`_ instead.
 
    * If you specified a custom variant (for example ``+vtune``) you may want to add this as your
      preferred variant in the packages configuration for the ``intel-parallel-studio`` package
-     as described in :ref:`concretization-preferences`. Otherwise you will have to specify
+     as described in :ref:`package-preferences`. Otherwise you will have to specify
      the variant everytime ``intel-parallel-studio`` is being used as ``mkl``, ``fftw`` or ``mpi``
      implementation to avoid pulling in a different variant.
 
@@ -811,13 +811,13 @@ by one of the following means:
      $ spack install libxc@3.0.0%intel
 
 
-* Alternatively, request Intel compilers implicitly by concretization preferences.
+* Alternatively, request Intel compilers implicitly by package preferences.
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
   `Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
   and
-  :ref:`Concretization Preferences <concretization-preferences>`.
+  :ref:`Package Preferences <package-preferences>`.
 
 Example: ``etc/spack/packages.yaml`` might simply contain:
 
@@ -867,7 +867,7 @@ virtual package, in order of decreasing preference.  To learn more about the
 ``providers:`` settings, see the Spack tutorial for
 `Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
 and the section
-:ref:`Concretization Preferences <concretization-preferences>`.
+:ref:`Package Preferences <package-preferences>`.
 
 Example: The following fairly minimal example for ``packages.yaml`` shows how
 to exclusively use the standalone ``intel-mkl`` package for all the linear

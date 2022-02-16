@@ -63,7 +63,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant('complex', default=False, description='Enable complex numbers in Trilinos')
-    variant('cuda_rdc', default=False, description='turn on RDC for CUDA build')
+    variant('cuda_rdc', default=False, description='Turn on RDC for CUDA build')
+    variant('rocm_rdc', default=False, description='Turn on RDC for ROCm build')
     variant('cxxstd', default='14', values=['11', '14', '17'], multi=False)
     variant('debug', default=False, description='Enable runtime safety and debug checks')
     variant('explicit_template_instantiation', default=True, description='Enable explicit template instantiation (ETI)')
@@ -76,7 +77,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('python', default=False, description='Build PyTrilinos wrappers')
     variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('wrapper', default=False, description="Use nvcc-wrapper for CUDA build")
+    variant('uvm', default=False, when='@13.2: +cuda', description='Turn on UVM for CUDA build')
+    variant('wrapper', default=False, description='Use nvcc-wrapper for CUDA build')
 
     # TPLs (alphabet order)
     variant('adios2',       default=False, description='Enable ADIOS2')
@@ -276,6 +278,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
     conflicts('+cuda_rdc', when='~cuda')
+    conflicts('+rocm_rdc', when='~rocm')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
 
@@ -283,6 +286,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts('+cuda +stokhos', when='^cuda@11.6:')
+    # Cuda UVM must be enabled prior to 13.2
+    # See https://github.com/spack/spack/issues/28869
+    conflicts('~uvm', when='@:13.1 +cuda')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
@@ -734,8 +740,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                                   else 'OpenMP'),
             ])
             if '+cuda' in spec:
+                use_uvm = '+uvm' in spec
                 options.extend([
-                    define_kok_enable('CUDA_UVM', True),
+                    define_kok_enable('CUDA_UVM', use_uvm),
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
                 ])
@@ -748,7 +755,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 options.extend([
                     define_kok_enable('ROCM', False),
-                    define_kok_enable('HIP', True)
+                    define_kok_enable('HIP', True),
+                    define_kok_enable('HIP_RELOCATABLE_DEVICE_CODE', 'rocm_rdc')
                 ])
                 if '+tpetra' in spec:
                     options.append(define('Tpetra_INST_HIP', True))

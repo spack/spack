@@ -53,6 +53,7 @@ import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
+import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
@@ -69,6 +70,7 @@ from spack.util.cpus import cpus_available
 #: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
+    'concretizer': spack.schema.concretizer.schema,
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
@@ -101,7 +103,7 @@ config_defaults = {
         'dirty': False,
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
-        'concretizer': 'original',
+        'concretizer': 'clingo',
     }
 }
 

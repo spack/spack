@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,3 +80,24 @@ get_origin = None
 get_type_hints = None
 no_type_check = None
 no_type_check_decorator = None
+
+## typing_extensions
+# We get a ModuleNotFoundError when attempting to import anything from typing_extensions
+# if we separate this into a separate typing_extensions.py file for some reason.
+
+# (1) Unparameterized types.
+IntVar = object
+Literal = object
+NewType = object
+Text = object
+
+# (2) Parameterized types.
+Protocol = defaultdict(lambda: object)
+
+# (3) Macro for avoiding evaluation except during type checking.
+TYPE_CHECKING = False
+
+# (4) Decorators.
+final = lambda x: x
+overload = lambda x: x
+runtime_checkable = lambda x: x
