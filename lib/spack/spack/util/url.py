@@ -67,11 +67,18 @@ def local_file_path(url):
 def parse(url, scheme="file"):
     """Parse a url.
 
-    For file:// URLs, the netloc and path components are concatenated and
-    passed through spack.util.path.canoncalize_path().
+    Path variable substitution is performed on file URLs as needed. The
+    variables are documented at
+    https://spack.readthedocs.io/en/latest/configuration.html#spack-specific-variables.
 
-    Otherwise, the returned value is the same as urllib's urlparse() with
-    allow_fragments=False.
+    Arguments:
+        url (str): URL to be parsed
+        scheme (str): associated URL scheme
+    Returns:
+        (urllib_parse.ParseResult): For file scheme URLs, the netloc and path
+        components are concatenated and passed through spack.util.path.canoncalize_path().
+        Otherwise, the returned value is the same as urllib's urlparse() with
+        allow_fragments=False.
     """
     # guarantee a value passed in is of proper url format. Guarantee
     # allows for easier string manipulation accross platforms
@@ -337,9 +344,12 @@ def parse_git_url(url):
     return (scheme, user, hostname, port, path)
 
 
+def is_url_format(url):
+    return re.search(r"^(file://|http://|https://|ftp://|s3://|gs://|ssh://|git://|/)", url)
+
+
 def require_url_format(url):
-    ut = re.search(r"^(file://|http://|https://|ftp://|s3://|gs://|ssh://|git://|/)", url)
-    if not ut:
+    if not is_url_format(url):
         raise ValueError("Invalid url format from url: %s" % url)
 
 

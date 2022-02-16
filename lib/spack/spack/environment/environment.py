@@ -17,7 +17,6 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import rename
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
@@ -593,7 +592,7 @@ class ViewDescriptor(object):
             symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
-            rename(tmp_symlink_name, self.root)
+            fs.rename(tmp_symlink_name, self.root)
         except Exception as e:
             # Clean up new view and temporary symlink on any failure.
             try:
@@ -898,6 +897,11 @@ class Environment(object):
         return os.path.join(self.path, env_subdir_name, "logs")
 
     @property
+    def config_stage_dir(self):
+        """Directory for any staged configuration file(s)."""
+        return os.path.join(self.env_subdir_path, "config")
+
+    @property
     def view_path_default(self):
         # default path for environment views
         return os.path.join(self.env_subdir_path, "view")
@@ -928,6 +932,47 @@ class Environment(object):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
 
+            # strip file URL prefix, if needed, to avoid unnecessary remote
+            # config processing for local files
+            config_path = config_path.replace("file://", "")
+
+            if not os.path.exists(config_path):
+                # Stage any remote configuration file(s)
+                if spack.util.url.is_url_format(config_path):
+                    staged_configs = (
+                        os.listdir(self.config_stage_dir)
+                        if os.path.exists(self.config_stage_dir)
+                        else []
+                    )
+                    basename = os.path.basename(config_path)
+                    if basename in staged_configs:
+                        # Do NOT re-stage configuration files over existing
+                        # ones with the same name since there is a risk of
+                        # losing changes (e.g., from 'spack config update').
+                        tty.warn(
+                            "Will not re-stage configuration from {0} to avoid "
+                            "losing changes to the already staged file of the "
+                            "same name.".format(config_path)
+                        )
+
+                        # Recognize the configuration stage directory
+                        # is flattened to ensure a single copy of each
+                        # configuration file.
+                        config_path = self.config_stage_dir
+                        if basename.endswith(".yaml"):
+                            config_path = os.path.join(config_path, basename)
+                    else:
+                        staged_path = spack.config.fetch_remote_configs(
+                            config_path,
+                            self.config_stage_dir,
+                            skip_existing=True,
+                        )
+                        if not staged_path:
+                            raise SpackEnvironmentError(
+                                "Unable to fetch remote configuration {0}".format(config_path)
+                            )
+                        config_path = staged_path
+
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
                 config_path = os.path.join(self.path, config_path)
@@ -936,10 +981,14 @@ class Environment(object):
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
                 config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
+                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (self.name, config_path)
+                tty.debug(
+                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
+                )
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema
                 )
