@@ -13,9 +13,9 @@ class RCaret(RPackage):
     models."""
 
     homepage = "https://github.com/topepo/caret/"
-    url      = "https://cloud.r-project.org/src/contrib/caret_6.0-73.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/caret"
+    cran = "caret"
 
+    version('6.0-90', sha256='e851a4ed7d939c665e57e3551a5464b09fe4285e7c951236efdd890b0da866bc')
     version('6.0-86', sha256='da4a1c7c3fbf645c5b02871e563a77404622b83623f0d1c5dc1425de7aa4ce37')
     version('6.0-84', sha256='a1831c086a9c71b469f7405649ba04517683cdf229e119c005189cf57244090d')
     version('6.0-83', sha256='9bde5e4da1f0b690bfe06c2439c0136504e851a8d360bf56b644f171fe20dcef')
@@ -26,14 +26,15 @@ class RCaret(RPackage):
     depends_on('r@3.2.0:', when='@6.0-82:', type=('build', 'run'))
     depends_on('r-lattice@0.20:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-e1071', when='@6.0.89:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-modelmetrics@1.1.0:', type=('build', 'run'))
     depends_on('r-modelmetrics@1.2.2.2:', when='@6.0-86:', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
-    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-proc', when='@6.0-86:', type=('build', 'run'))
     depends_on('r-recipes@0.1.4:', when='@6.0-83:6.0-84', type=('build', 'run'))
     depends_on('r-recipes@0.1.10:', when='@6.0-86:', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-withr@2.0.0:', when='@6.0-83:', type=('build', 'run'))
-    depends_on('r-proc', when='@6.0-86:', type=('build', 'run'))
     depends_on('r-car', when='@:6.0-73', type=('build', 'run'))
