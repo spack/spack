@@ -44,11 +44,15 @@ def macos_version():
     if env_ver:
         return Version(env_ver)
 
-    swvers = Executable('sw_vers')
-    output = swvers(output=str, fail_on_error=False)
-    match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
-    if match:
-        return Version(match.group(1))
+    try:
+        swvers = Executable('sw_vers')
+    except Exception:  # Change to FileNotFoundError if py3
+        pass
+    else:
+        output = swvers(output=str, fail_on_error=False)
+        match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
+        if match:
+            return Version(match.group(1))
 
     # Fall back to python-reported version, which can be inaccurate around
     # macOS 11 (e.g. showing 10.16 for macOS 12)
