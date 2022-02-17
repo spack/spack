@@ -32,6 +32,17 @@ _definitions = {
                 'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
             }
         ]
+    },
+    # Max Planck Institute for Meteorology (MPI-M):
+    'mpim': {
+        'conflicts': {'when': '@:2.19'},
+        'resources': [
+            {
+                'when': '@2.20:',
+                'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
+                'branch': 'master'
+            }
+        ]
     }
 }
 
@@ -356,13 +367,21 @@ class Eccodes(CMakePackage):
     @run_after('install')
     def install_extra_definitions(self):
         noop = set(['auto', 'none', 'default'])
+
         for center in self.spec.variants['definitions'].value:
-            if center not in noop:
-                center_dir = 'definitions.{0}'.format(center)
-                install_tree(
-                    join_path(self.stage.source_path,
-                              'spack-definitions', center_dir),
-                    join_path(self.prefix.share.eccodes, center_dir))
+            if center in noop:
+                continue
+
+            center_dir = 'definitions.{0}'.format(center)
+            center_src_path = join_path(self.stage.source_path,
+                                        'spack-definitions', center_dir)
+
+            if center == 'mpim':
+                # MPI-M definitions reside in a subdirectory:
+                center_src_path = join_path(center_src_path, 'definitions.mpim')
+
+            install_tree(center_src_path,
+                         join_path(self.prefix.share.eccodes, center_dir))
 
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
