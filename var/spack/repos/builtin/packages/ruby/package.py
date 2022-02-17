@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-
+import os
 
 class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
@@ -128,11 +128,9 @@ class Ruby(AutotoolsPackage):
             rubygems_updated_cert_path = join_path(self.stage.source_path,
                                                    'rubygems-updated-ssl-cert',
                                                    'GlobalSignRootCA_R3.pem')
-            rubygems_certs_path = join_path(self.spec.prefix.lib,
-                                            'ruby',
-                                            '{0}.0'.format(self.spec.version.
-                                                           up_to(2)),
-                                            'rubygems',
+            rubygems_path = Executable(self.prefix.bin.gem)('which', 'rubygems', output=str, error=str)
+            rubygems_path = os.path.splitext(rubygems_path)[0]
+            rubygems_certs_path = join_path(rubygems_path,
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
 
