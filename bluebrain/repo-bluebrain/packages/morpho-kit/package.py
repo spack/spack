@@ -20,6 +20,8 @@ class MorphoKit(CMakePackage):
     depends_on('morphio@2.3.9:')
     depends_on('boost', when='@0.2.0')
 
+    patch('h5.patch', when='@0.3.2')
+
     def cmake_args(self):
         return [
             '-DBUILD_BINDINGS:BOOL=OFF',

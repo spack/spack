@@ -1,0 +1,23 @@
+commit f19b3d110e55dcbb25d6a8962a49aa87b5b859b0
+Author: Matthias Wolf <matthias.wolf@epfl.ch>
+Date:   Thu Feb 17 11:12:40 2022 +0100
+
+    dependencies: we have an explicit dependency on HighFive, link to it.
+    
+    Otherwise, this fails to compile on Monterey.
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index b13b7bd..776776b 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -64,6 +64,10 @@ foreach(lib morphokit_shared morphokit_static)
+     PUBLIC
+     MorphIO::morphio
+     )
++  target_link_libraries(${lib}
++    PRIVATE
++    HighFive
++    )
+ endforeach(lib)
+ 
+ install(
