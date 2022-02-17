@@ -269,7 +269,7 @@ spack:
       tags: ["spack", "public", "medium", "x86_64"]
 
   cdash:
-    build-group: New PR testing workflow
+    build-group: E4S
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
