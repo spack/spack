@@ -39,7 +39,7 @@ class PySentrySdk(PythonPackage):
     depends_on('py-setuptools',        type='build')
     depends_on('py-urllib3@1.10.0:',   type=('build', 'run'))
     depends_on('py-certifi',           type=('build', 'run'))
-    
+
     depends_on('py-flask@0.11:',       type=('build', 'run'), when='+flask')
     depends_on('py-blinker@1.1:',      type=('build', 'run'), when='+flask')
     depends_on('py-quart@0.16.1:',     type=('build', 'run'), when='+quart')
