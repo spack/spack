@@ -2297,7 +2297,7 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         for dep in spec.dependencies():
-                            del dep._dependents[spec.name]
+                            dep._dependents.pop(spec.name, None)
                         changed = True
                         spec._dependencies = DependencyMap()
                     replacement._dependencies = DependencyMap()
