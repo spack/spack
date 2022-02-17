@@ -5,7 +5,6 @@
 
 
 from spack import *
-
 import os
 
 _os_map = {
