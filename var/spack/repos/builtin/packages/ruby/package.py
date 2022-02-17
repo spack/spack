@@ -127,7 +127,7 @@ class Ruby(AutotoolsPackage):
         if self.spec.satisfies("+openssl"):
             rubygems_updated_cert_path = join_path(self.stage.source_path,
                                                    'rubygems-updated-ssl-cert',
-                                                   'GlobalSignRootCA.pem')
+                                                   'GlobalSignRootCA_R3.pem')
             rubygems_certs_path = join_path(self.spec.prefix.lib,
                                             'ruby',
                                             '{0}.0'.format(self.spec.version.
