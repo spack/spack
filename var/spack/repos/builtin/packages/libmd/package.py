@@ -16,6 +16,7 @@ class Libmd(AutotoolsPackage):
 
     maintainers = ['haampie']
 
+    version('1.0.4', sha256='f51c921042e34beddeded4b75557656559cf5b1f2448033b4c1eec11c07e530f')
     version('1.0.3', sha256='5a02097f95cc250a3f1001865e4dbba5f1d15554120f95693c0541923c52af4a')
     version('1.0.2', sha256='dc66b8278f82e7e1bf774fbd4bc83a0348e8f27afa185b2c2779cfcb3da25013')
     version('1.0.1', sha256='e14eeb931cf85330f95ff822262d3033125488dfb2f867441e36e2d2c4a34c71')
