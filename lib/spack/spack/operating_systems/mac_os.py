@@ -45,11 +45,11 @@ def macos_version():
         return Version(env_ver)
 
     try:
-        swvers = Executable('sw_vers')
-    except Exception:  # Change to FileNotFoundError if py3
+        output = Executable('sw_vers')(output=str, fail_on_error=False)
+    except Exception:
+        # FileNotFoundError, or spack.util.executable.ProcessError
         pass
     else:
-        output = swvers(output=str, fail_on_error=False)
         match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
         if match:
             return Version(match.group(1))
