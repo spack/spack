@@ -12,9 +12,11 @@ class PySentrySdk(PythonPackage):
     homepage = "https://github.com/getsentry/sentry-python"
     pypi = "sentry-sdk/sentry-sdk-0.17.6.tar.gz"
 
+    version('1.5.5', sha256='98fd155fa5d5fec1dbabed32a1a4ae2705f1edaa5dae4e7f7b62a384ba30e759')
     version('0.17.6', sha256='1a086486ff9da15791f294f6e9915eb3747d161ef64dee2d038a4d0b4a369b24')
 
     variant('flask', default=False)
+    variant('quart', default=False)
     variant('bottle', default=False)
     variant('falcon', default=False)
     variant('django', default=False)
@@ -28,6 +30,10 @@ class PySentrySdk(PythonPackage):
     variant('pyspark', default=False)
     variant('pure_eval', default=False)
     variant('chalice', default=False)
+    variant('httpx', default=False)
+
+    conflicts('+quart', when='@:1.5.4')
+    conflicts('+httpx', when='@:1.5.4')
 
     depends_on('python@2.7,3.4:',      type=('build', 'run'))
     depends_on('py-setuptools',        type='build')
@@ -36,6 +42,8 @@ class PySentrySdk(PythonPackage):
     
     depends_on('py-flask@0.11:',       type=('build', 'run'), when='+flask')
     depends_on('py-blinker@1.1:',      type=('build', 'run'), when='+flask')
+    depends_on('py-quart@0.16.1:',     type=('build', 'run'), when='+quart')
+    depends_on('py-blinker@1.1:',      type=('build', 'run'), when='+quart')
     depends_on('py-bottle@0.12.13:',   type=('build', 'run'), when='+bottle')
     depends_on('py-falcon@1.4:',       type=('build', 'run'), when='+falcon')
     depends_on('py-django@1.8:',       type=('build', 'run'), when='+django')
@@ -51,3 +59,4 @@ class PySentrySdk(PythonPackage):
     depends_on('py-executing',         type=('build', 'run'), when='+pure_eval')
     depends_on('py-asttokens',         type=('build', 'run'), when='+pure_eval')
     depends_on('py-chalice@1.16.0:',   type=('build', 'run'), when='+chalice')
+    depends_on('py-httpx@0.16.0:',     type=('build', 'run'), when='+httpx')
