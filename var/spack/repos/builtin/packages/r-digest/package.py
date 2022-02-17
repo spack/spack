@@ -29,6 +29,7 @@ class RDigest(RPackage):
     homepage = "https://dirk.eddelbuettel.com/code/digest.html"
     cran = "digest"
 
+    version('0.6.29', sha256='792c1f14a4c8047745152f5e45ce7351978af8d770c29d2ea39c7acd5d619cd9')
     version('0.6.28', sha256='4a328c75e95f8522fc07390d1dd00c19fb643f558e761a8aed04f99c1dc7db00')
     version('0.6.27', sha256='f485f75122907da24c41d4a62c91a232f0c371befd2f77e973342a1bef00253f')
     version('0.6.25', sha256='15ccadb7b8bccaa221b6700bb549011719d0f4b38dbd3a1f29face3e019e2de5')
