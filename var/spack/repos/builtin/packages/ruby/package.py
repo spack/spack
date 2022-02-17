@@ -55,7 +55,7 @@ class Ruby(AutotoolsPackage):
 
     resource(
         name='rubygems-updated-ssl-cert',
-        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/index.rubygems.org/GlobalSignRootCA.pem',
+        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/rubygems.org/GlobalSignRootCA_R3.pem',
         sha256='df68841998b7fd098a9517fe971e97890be0fc93bbe1b2a1ef63ebdea3111c80',
         when='+openssl',
         destination='',
