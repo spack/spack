@@ -42,6 +42,14 @@ _definitions = {
                 'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
                 'branch': 'master'
             }
+        ],
+        'copies': [
+            {
+                'when': '@2.20:',
+                'files': ['boot.def'],
+                'regex': r'(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)',
+                'repl': r'\11\2'
+            }
         ]
     }
 }
@@ -379,6 +387,24 @@ class Eccodes(CMakePackage):
             if center == 'mpim':
                 # MPI-M definitions reside in a subdirectory:
                 center_src_path = join_path(center_src_path, 'definitions.mpim')
+
+            # Make sure the directory exists to cover the case when no resources
+            # are assigned to the center:
+            mkdirp(center_src_path)
+
+            for cp in _definitions[center].get('copies', []):
+                if 'when' in cp and cp['when'] not in self.spec:
+                    continue
+
+                for f in cp['files']:
+                    cp_src_path = join_path(self.stage.source_path,
+                                            'definitions', f)
+                    cp_dst_path = join_path(center_src_path, f)
+                    copy(cp_src_path, cp_dst_path)
+
+                    if 'regex' in cp:
+                        filter_file(cp['regex'], cp['repl'],
+                                    cp_dst_path, backup=False)
 
             install_tree(center_src_path,
                          join_path(self.prefix.share.eccodes, center_dir))
