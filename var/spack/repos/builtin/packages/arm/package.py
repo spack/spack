@@ -17,6 +17,28 @@ _os_map = {
 
 
 _versions = {
+    '21.1': {
+        'RHEL-7': (
+            '66f672a49a4b10171a666ca674d4f9eeaab417572f5ec58e45a78529c862ec3f',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-1/ACfL/arm-compiler-for-linux_21.1_RHEL-7_aarch64.tar'
+        ),
+        'RHEL-8': (
+            '79e42048db13c9517033a92e74a0abe61e03181c113be32ec69e118c55d68e2d',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-1/ACfL/arm-compiler-for-linux_21.1_RHEL-8_aarch64.tar'
+        ),
+        'SLES-15': (
+            '79f46219aa4e2776394286119a4fb29a09afbbda7b843a0b57f1fe9f083c8d9e',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-1/ACfL/arm-compiler-for-linux_21.1_SLES-15_aarch64.tar'
+        ),
+        'Ubuntu-18.04': (
+            '97d964aebab5dadaefcc4fd4cfa29cd04fb2d47445e44bcb2c903c10787969ee',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-1/ACfL/arm-compiler-for-linux_21.1_Ubuntu-18.04_aarch64.tar'
+        ),
+        'Ubuntu-20.04': (
+            '8b118ea8d38c598c60b0145c073fea84dcf61bf2ce4daa8dfaedae90c1782377',
+            'https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/21-1/ACfL/arm-compiler-for-linux_21.1_Ubuntu-20.04_aarch64.tar'
+        )
+    },
     '21.0': {
         'RHEL-7': (
             'fa67a4b9c1e562ec73e270aa4ef7a969af99bdd792ce8916b69ee47f7906110b',
@@ -40,7 +62,6 @@ _versions = {
         )
     }
 }
-
 
 def get_os():
     spack_os = spack.platforms.host().default_os
@@ -69,11 +90,9 @@ class Arm(Package):
     maintainers = ['OliverPerks']
 
     # Build Versions: establish OS for URL
-    acfl_os = get_os()
-
     # Build Versions
     for ver, packages in _versions.items():
-        pkg = packages.get(acfl_os)
+        pkg = packages.get(get_os())
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
@@ -162,3 +181,4 @@ class Arm(Package):
         env.prepend_path("CPATH", join_path(arm_dir, 'include'))
         env.prepend_path("MANPATH", join_path(arm_dir, 'share', 'man'))
         env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, 'licences'))
+
