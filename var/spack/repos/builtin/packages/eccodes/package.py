@@ -9,25 +9,25 @@ from spack.package import *
 _definitions = {
     # German Meteorological Service (Deutscher Wetterdienst, DWD):
     'edzw': {
-        'conflicts': {'when': '@:2.19.1,2.22.0,2.24.0:'},
+        'conflicts': {'when': '@:2.19'},
         'resources': [
             {
-                'when': '@2.20.0',
+                'when': '@2.20.0:2.20',
                 'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz',
                 'sha256': 'a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4'
             },
             {
-                'when': '@2.21.0',
+                'when': '@2.21.0:2.22.0',
                 'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2',
                 'sha256': '046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9'
             },
             {
-                'when': '@2.22.1',
+                'when': '@2.22.1:2.22',
                 'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2',
                 'sha256': 'be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389'
             },
             {
-                'when': '@2.23.0',
+                'when': '@2.23.0:',
                 'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
                 'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
             }
