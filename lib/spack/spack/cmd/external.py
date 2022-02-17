@@ -58,7 +58,7 @@ def setup_parser(subparser):
 
 def external_find(args):
     # If the user didn't specify anything, search for build tools by default
-    if not args.tags and not args.all:
+    if not args.tags and not args.all and not args.packages:
         args.tags = ['build-tools']
 
     # If the user specified both --all and --tag, then --all has precedence
