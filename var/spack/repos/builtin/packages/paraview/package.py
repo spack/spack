@@ -77,6 +77,7 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts('+python', when='@5.9:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
+    conflicts('+cuda', when='@5.8:5.10')
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
