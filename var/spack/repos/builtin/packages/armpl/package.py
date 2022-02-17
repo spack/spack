@@ -5,7 +5,7 @@
 
 
 from spack import *
-import llnl.util.tty as tty
+
 import os
 
 _os_map = {
