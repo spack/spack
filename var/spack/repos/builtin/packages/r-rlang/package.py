@@ -14,6 +14,7 @@ class RRlang(RPackage):
 
     cran = "rlang"
 
+    version('1.0.1', sha256='e59fd5c0f7530dbe329aa01621f6ef5a6474ff3ec96de0c0d24018fc2f21ad7f')
     version('1.0.0', sha256='ab6134c97b3100613ba2a15792fde5341f485ba85432a81370c6270c73396e6a')
     version('0.4.12', sha256='2a26915738be120a56ec93e781bcb50ffa1031e11904544198b4a15c35029915')
     version('0.4.10', sha256='07530270c4c199f2b7efc5d57a476d99babd9d0c3388a02bb7d57fe312da3576')
