@@ -13,7 +13,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['alalazo']
 
-    tags = ['core-packages']
+    tags = ['build-tools', 'core-packages']
 
     executables = ['^nm$', '^readelf$']
 
