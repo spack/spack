@@ -54,6 +54,10 @@ def setup_parser(subparser):
         help="Stop after the first failed package."
     )
     run_parser.add_argument(
+        '--externals', action='store_true',
+        help="Test packages that are externally installed."
+    )
+    run_parser.add_argument(
         '--keep-stage',
         action='store_true',
         help='Keep testing directory for debugging'
@@ -203,7 +207,8 @@ environment variables:
     with reporter('test', test_suite.stage):
         test_suite(remove_directory=not args.keep_stage,
                    dirty=args.dirty,
-                   fail_first=args.fail_first)
+                   fail_first=args.fail_first,
+                   externals=args.externals)
 
 
 def test_list(args):
