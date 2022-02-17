@@ -1680,7 +1680,7 @@ class TestConcretize(object):
         (['mpi', 'zmpi'], 2),
         (['mpi', 'mpich'], 1),
     ])
-    def test_best_effort_coconcretize(mock_packages, specs, expected):
+    def test_best_effort_coconcretize(self, specs, expected):
         import spack.solver.asp
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Original concretizer cannot concretize in rounds')
@@ -1696,25 +1696,37 @@ class TestConcretize(object):
         assert len(concrete_specs) == expected
 
     @pytest.mark.parametrize('specs,expected_spec,occurances', [
+        # This document the greediness of the algorithm. Since this environment needs
+        # to be solved in 3 rounds, by selecting versions of dependencies in the
+        # opposite way as the root (newer dependencies for older roots) we have to use
+        # 3 versions of libelf instead of 2.
         (['libdwarf@20130729^libelf@0.8.10',
           'libdwarf@20130207^libelf@0.8.12',
-          'libdwarf@20111030'],
-         'libelf@0.8.12', 2),
+          'libdwarf@20111030'], 'libelf@0.8.12', 1),
+        # For a saner environment instead we'll always use the same libelf
+        (['libdwarf@20130729',
+          'libdwarf@20130207',
+          'libdwarf@20111030'], 'libelf@0.8.13', 3),
+        # We need to solve in 2 rounds and we expect mpich to be preferred to zmpi
         (['hdf5', 'zmpi', 'mpich'], 'mpich', 2)
     ])
     def test_best_effort_coconcretize_preferences(
-            mock_packages, specs, expected_spec, occurances):
-        """
-        Test that package preferences are being respected during coconcretization.
-        """
+            self, specs, expected_spec, occurances
+    ):
+        """Test package preferences during coconcretization."""
         import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot concretize in rounds')
 
         specs = [spack.spec.Spec(s) for s in specs]
-        result = spack.solver.asp.solve(specs, reuse=False, multi_root=True)
+        solver = spack.solver.asp.Solver()
+        solver.reuse = False
+        concrete_specs = {}
+        for result in solver.solve_in_rounds(specs):
+            concrete_specs.update(result.specs_by_input)
 
-        satisfying_results = []
-        for spec in result.specs:
-            for dep in spec.traverse():
-                if dep.satisfies(expected_spec):
-                    satisfying_results.append(dep)
-        assert len(satisfying_results) == occurances
+        counter = 0
+        for spec in concrete_specs.values():
+            if expected_spec in spec:
+                counter += 1
+        assert counter == occurances, concrete_specs
