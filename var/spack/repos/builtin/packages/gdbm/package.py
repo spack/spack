@@ -16,7 +16,8 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org.ua/software/gdbm/gdbm.html"
     gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
 
-    version('1.22', sha256='f366c823a6724af313b6bbe975b2809f9a157e5f6a43612a72949138d161d762')
+    version('1.23',   sha256='74b1081d21fff13ae4bd7c16e5d6e504a4c26f7cde1dca0d963a484174bbcacd')
+    version('1.22',   sha256='f366c823a6724af313b6bbe975b2809f9a157e5f6a43612a72949138d161d762')
     version('1.21',   sha256='b0b7dbdefd798de7ddccdd8edf6693a30494f7789777838042991ef107339cc2')
     version('1.20',   sha256='3aeac05648b3482a10a2da986b9f3a380a29ad650be80b9817a435fb8114a292')
     version('1.19',   sha256='37ed12214122b972e18a0d94995039e57748191939ef74115b1d41d8811364bc')

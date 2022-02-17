@@ -14,8 +14,12 @@ class PyBackportsEntryPointsSelectable(PythonPackage):
 
     maintainers = ['iarspider']
 
+    version('1.1.1', sha256='914b21a479fde881635f7af5adc7f6e38d6b274be32269070c53b698c60d5386')
     version('1.1.0', sha256='988468260ec1c196dab6ae1149260e2f5472c9110334e5d51adcb77867361f6a')
 
-    depends_on('python@2.7.0:2.7,3.0:3.10', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-importlib-metadata@:3.8', type='build')
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-setuptools@56:', when='@1.1.1: ^python@3.6:', type='build')
+    depends_on('py-setuptools@42:', type='build')
+    depends_on('py-setuptools-scm+toml@3.4.1:', type='build')
+
+    depends_on('py-importlib-metadata', when='^python@:3.7', type=('build', 'run'))

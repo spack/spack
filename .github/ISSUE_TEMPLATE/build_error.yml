@@ -16,19 +16,29 @@ body:
     attributes:
       label: Steps to reproduce the issue
       description: |
-        Fill in the exact spec you are trying to build and the relevant part of the error message
-      placeholder: |
+        Fill in the console output from the exact spec you are trying to build.
+      value: |
         ```console
-        $ spack install <spec>
+        $ spack spec -I <spec>
         ...
         ```
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: |
+        Please post the error message from spack inside the `<details>` tag below:
+      value: |
+        <details><summary>Error message</summary><pre>
+        ...
+        </pre></details>
     validations:
       required: true
   - type: textarea
     id: information
     attributes:
       label: Information on your system
-      description: Please include the output of `spack debug report`
+      description: Please include the output of `spack debug report`.
     validations:
       required: true
   - type: markdown

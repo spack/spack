@@ -13,6 +13,8 @@ class IntelParallelStudio(IntelPackage):
 
     maintainers = ['rscohn2']
 
+    depends_on('patchelf', type='build')
+
     # As of 2016, the product comes in three "editions" that vary by scope.
     #
     # In Spack, select the edition via the version number in the spec, e.g.:
