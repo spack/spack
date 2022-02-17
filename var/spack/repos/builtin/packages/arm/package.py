@@ -63,6 +63,7 @@ _versions = {
     }
 }
 
+
 def get_os():
     spack_os = spack.platforms.host().default_os
     return _os_map.get(spack_os, 'RHEL-7')
@@ -181,4 +182,3 @@ class Arm(Package):
         env.prepend_path("CPATH", join_path(arm_dir, 'include'))
         env.prepend_path("MANPATH", join_path(arm_dir, 'share', 'man'))
         env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, 'licences'))
-
