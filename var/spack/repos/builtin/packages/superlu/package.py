@@ -115,13 +115,9 @@ class Superlu(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.version == Version('5.2.2'):
+        if self.spec.satisfies('@5.2.2:'):
             # Include dir was hardcoded in 5.2.2
             filter_file(r'INCLUDEDIR  = -I\.\./SRC',
-                        'INCLUDEDIR = -I' + self.prefix.include,
-                        join_path(self.examples_src_dir, 'Makefile'))
-
-        filter_file(r'INCLUDEDIR  = -I\.\./SRC',
                         'INCLUDEDIR = -I' + self.prefix.include,
                         join_path(self.examples_src_dir, 'Makefile'))
 
