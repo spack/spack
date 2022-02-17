@@ -119,6 +119,10 @@ class Superlu(CMakePackage):
                         'INCLUDEDIR = -I' + self.prefix.include,
                         join_path(self.examples_src_dir, 'Makefile'))
 
+        filter_file(r'INCLUDEDIR  = -I\.\./SRC',
+                        'INCLUDEDIR = -I' + self.prefix.include,
+                        join_path(self.examples_src_dir, 'Makefile'))
+
         self.cache_extra_test_sources(self.examples_src_dir)
 
     def _generate_make_hdr_for_test(self):
@@ -169,6 +173,20 @@ class Superlu(CMakePackage):
 
         return config_args
 
+    def run_superlu_test(self, test_dir, exe):
+        self.run_test(os.environ['CC'],
+                      options=['-I{0}'.format(self.prefix.include),
+                               '-L{0}'.format(self.prefix.lib),
+                               '-L{0}'.format(self.spec['openblas'].prefix.lib),
+                               join_path(test_dir, 'superlu.c'), '-o', exe,
+                               '-lsuperlu', '-lopenblas'],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe,
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
     def test(self):
         config_args = self._generate_make_hdr_for_test()
 
@@ -183,6 +201,7 @@ class Superlu(CMakePackage):
         if self.version < Version('5.2.2'):
             args.append('HEADER=' + self.prefix.include)
         args.append('superlu')
+        args.append('-L{0}'.format(self.spec['openblas'].prefix.lib))
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              self.examples_src_dir)
@@ -191,10 +210,13 @@ class Superlu(CMakePackage):
             print('Skipping superlu test: missing required {0}'.format(test_dir))
             return
 
+        self.run_superlu_test(test_dir, 'superlu')
+        return
+
         with working_dir(test_dir, create=False):
             make(*args, parallel=False)
             self.run_test('./superlu',
-                          options=['-I{0}'.format(self.prefix.include)],
+                          options=[],
                           purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')
