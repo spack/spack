@@ -5,6 +5,8 @@
 
 import os
 
+from llnl.util import tty
+
 
 class Superlu(CMakePackage):
     """SuperLU is a general purpose library for the direct solution of large,
@@ -177,7 +179,7 @@ class Superlu(CMakePackage):
         self.run_test(os.environ['CC'],
                       options=['-I{0}'.format(self.prefix.include),
                                '-L{0}'.format(self.prefix.lib),
-                               '-L{0}'.format(self.spec['openblas'].prefix.lib),
+                               '-L{0}'.format(self.spec['blas'].prefix.lib),
                                join_path(test_dir, 'superlu.c'), '-o', exe,
                                '-lsuperlu', '-lopenblas'],
                       purpose='test: compile {0} example'.format(exe),
@@ -201,13 +203,12 @@ class Superlu(CMakePackage):
         if self.version < Version('5.2.2'):
             args.append('HEADER=' + self.prefix.include)
         args.append('superlu')
-        args.append('-L{0}'.format(self.spec['openblas'].prefix.lib))
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              self.examples_src_dir)
 
         if not os.path.exists(test_dir):
-            print('Skipping superlu test: missing required {0}'.format(test_dir))
+            tty.warn('Skipping superlu test: missing required {0}'.format(test_dir))
             return
 
         self.run_superlu_test(test_dir, 'superlu')
@@ -216,7 +217,6 @@ class Superlu(CMakePackage):
         with working_dir(test_dir, create=False):
             make(*args, parallel=False)
             self.run_test('./superlu',
-                          options=[],
                           purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')
