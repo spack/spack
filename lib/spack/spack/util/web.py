@@ -577,6 +577,10 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
+        reference_package (Package or None): a spack package instance
+            Used as a reference for url detection.  Uses the url_for_version
+            method on the package to produce reference urls which, if found,
+            are preferred.
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
