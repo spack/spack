@@ -7,7 +7,7 @@ from spack import *
 
 
 class REmmeans(RPackage):
-    """Estimated Marginal Means, aka Least-Squares Means
+    """Estimated Marginal Means, aka Least-Squares Means.
 
     Obtain estimated marginal means (EMMs) for many linear, generalized
     linear, and mixed models. Compute contrasts or linear functions of EMMs,
@@ -21,6 +21,7 @@ class REmmeans(RPackage):
     homepage = "https://github.com/rvlenth/emmeans"
     cran     = "emmeans"
 
+    version('1.7.2', sha256='d3e51c2a4b6c74dd9840efebe241a53072172f269f4324421f28f68db71721bc')
     version('1.7.1-1', sha256='6b01eaad1ea0f96245db8563cc77929a3c3b96cd61c24ce1d452308d6e0250de')
     version('1.7.0', sha256='d4b654896197dfda8354b33257380a66ee06117d6177b1ed7f1e42176525e9c5')
     version('1.6.0', sha256='201bb7b008dde94231ed60bcc6a32749442faaab4baeea99ad28b97c951b3c1e')
