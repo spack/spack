@@ -86,7 +86,6 @@ class VtkH(CMakePackage, CudaPackage):
     depends_on("vtk-m+openmp", when="+openmp")
     depends_on("vtk-m~openmp", when="~openmp")
 
-
     for _arch in CudaPackage.cuda_arch_values:
         depends_on("vtk-m+cuda cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
 
@@ -122,7 +121,7 @@ class VtkH(CMakePackage, CudaPackage):
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build vtkh.
         """
-        
+
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
 
@@ -230,11 +229,11 @@ class VtkH(CMakePackage, CudaPackage):
 
         if "+cuda" in spec:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
-            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA","ON"))
-            cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",env["SPACK_CXX"]))
+            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
+            cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER", env["SPACK_CXX"]))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
-            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA","OFF"))
+            cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
 
         #######################################################################
         # Core Dependencies
@@ -275,9 +274,9 @@ class VtkH(CMakePackage, CudaPackage):
 
         # contour tree
         if "+contourtree" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE","ON"))
+            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE", "ON"))
         else:
-            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE","ON"))
+            cfg.write(cmake_cache_entry("ENABLE_FILTER_CONTOUR_TREE", "ON"))
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
