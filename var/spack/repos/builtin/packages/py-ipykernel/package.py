@@ -36,7 +36,7 @@ class PyIpykernel(PythonPackage):
     depends_on('python@3.4:', when='@5.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', when='@5:', type='build')
-    depends_on('py-jupyter-core', when='@5:', type='build')
+    depends_on('py-jupyter-core@4.2:', when='@5:', type='build')
     depends_on('py-ipython-genutils', when='@6.3.1:6.4', type=('build', 'run'))
     depends_on('py-ipython-genutils', when='@5.5.6', type=('build', 'run'))
     depends_on('py-importlib-metadata@:4', when='@6.1:6.6 ^python@:3.7', type=('build', 'run'))
