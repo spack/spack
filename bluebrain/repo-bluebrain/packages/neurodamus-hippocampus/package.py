@@ -24,4 +24,4 @@ class NeurodamusHippocampus(NeurodamusModel):
     # IMPORTANT: Register new versions only using version_from_model_*
     # Final version name is combined e.g. "1.0-3.0.1"
     version_from_model_ndpy_dep('1.6')
-    version_from_model_core_dep('1.5', '3.3.3')
+    version_from_model_core_dep('1.5', '3.3.4')

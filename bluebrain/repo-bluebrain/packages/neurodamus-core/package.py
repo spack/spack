@@ -23,6 +23,7 @@ class NeurodamusCore(SimModel):
     git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-core.git"
 
     version('develop', branch='main', get_full_repo=False)
+    version('3.3.4',  tag='3.3.4', get_full_repo=False)
     version('3.3.3',  tag='3.3.3', get_full_repo=False)
     version('3.3.2',  tag='3.3.2', get_full_repo=False)
     version('3.3.1',  tag='3.3.1', get_full_repo=False)
