@@ -15,7 +15,7 @@ class Votca(CMakePackage):
     """
     homepage = "https://www.votca.org"
     url      = "https://github.com/votca/votca/tarball/v2022-rc.1"
-    git      = "https://github.com/votca/xtp.git"
+    git      = "https://github.com/votca/votca.git"
     maintainers = ['junghans']
 
     version('master', branch='master')
