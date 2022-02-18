@@ -13,6 +13,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['alalazo']
 
+    tags = ['build-tools', 'core-packages']
+
     executables = ['^nm$', '^readelf$']
 
     version('2.37', sha256='67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4')

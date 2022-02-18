@@ -17,6 +17,8 @@ class Subversion(AutotoolsPackage):
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
     ]
 
+    tags = ['build-tools']
+
     version('1.14.1', sha256='dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad')
     version('1.14.0', sha256='ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0')
     version('1.13.0', sha256='daad440c03b8a86fcca804ea82217bb1902cfcae1b7d28c624143c58dcb96931')
