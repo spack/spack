@@ -86,6 +86,97 @@ def test_find_external_two_instances_same_package(mock_executable, executables_f
         spack.detection.executable_prefix(os.path.dirname(cmake_path2)))
 
 
+def pkgconfig_do_detection(pkgs_to_check):
+    spack.detection.by_pkgconfig(pkgs_to_check)
+    pkgs_to_entries = spack.detection.by_pkgconfig(pkgs_to_check)
+    return pkgs_to_entries
+
+
+def test_pkgconfig_executible_not_found(monkeypatch, mock_pkgconfig):
+    pkgs_to_check = [spack.repo.get('zlib')]
+    pkgfile = mock_pkgconfig(name='zlib', pkgcfg={'version': '1.2.11',
+                                                  'prefix': '/x/y1'})
+    monkeypatch.delenv('PKG_CONFIG', raising=False)
+    monkeypatch.setenv('PATH', ':')
+    if pkgfile is not None:
+        monkeypatch.setenv('PKG_CONFIG_LIBDIR', os.path.dirname(pkgfile))
+
+    pkgs_to_entries = pkgconfig_do_detection(pkgs_to_check)
+    assert 'zlib' not in pkgs_to_entries.keys()
+
+
+def test_pkgconfig_module_not_found(monkeypatch, mock_pkgconfig):
+    pkgs_to_check = [spack.repo.get('zlib')]
+    pkgfile = mock_pkgconfig(name='zlib', pkgcfg={'version': '1.2.11',
+                                                  'prefix': '/x/y1'})
+
+    def _mock_list_all(path_hints=None):
+        return []
+
+    monkeypatch.setattr(spack.detection.path.pkgconfig, 'list_all', _mock_list_all)
+
+    if pkgfile is not None:
+        monkeypatch.setenv('PKG_CONFIG_LIBDIR', os.path.dirname(pkgfile))
+
+    pkgs_to_entries = pkgconfig_do_detection(pkgs_to_check)
+
+    assert 'zlib' not in pkgs_to_entries.keys()
+
+
+def test_find_path_by_pkgconfig(monkeypatch, mock_pkgconfig, capsys):
+    pkgs_to_check = [spack.repo.get('zlib'), spack.repo.get('lzma'),
+                     spack.repo.get('libpciaccess'), spack.repo.get('libxml2'),
+                     spack.repo.get('bzip2'), spack.repo.get('hwloc'),
+                     spack.repo.get('cmake')]
+    # repo name and pkgconfig name match
+    pkgfile = mock_pkgconfig(name='zlib', pkgcfg={'version': '1.2.11',
+                                                  'prefix': '/x/y1'})
+    # repo name has no 'lib', pkgconfig does
+    mock_pkgconfig(name='liblzma', pkgcfg={'version': '5.2.3',
+                                           'prefix': '/x/y2'})
+    # repo name has 'lib' prepended, pkgconfig does
+    mock_pkgconfig(name='pciaccess', pkgcfg={'version': '0.14',
+                                             'prefix': '/x/y3'})
+    # libxml2 pkgconfig file has a different name specified in package
+    mock_pkgconfig(name='libxml-2.0', pkgcfg={'version': '2.0.1',
+                                              'prefix': '/x/y4'})
+    # no prefix in pkgconfig file: error -> not to be considered
+    mock_pkgconfig(name='bzip2', pkgcfg={'version': '1.0.5',
+                                         'execprefix': '/x/y5'})
+    # invalid character '@' in version: error -> not to be considered
+    mock_pkgconfig(name='hwloc', pkgcfg={'version': '2.4@0',
+                                         'prefix': '/x/y6'})
+    # explicitly fail validation by mocking a validation function
+    mock_pkgconfig(name='cmake', pkgcfg={'version': '3.17.0',
+                                         'prefix': '/x/y7'})
+    errmsg = 'DEAD_BEEF'
+
+    def _detected_spec(*args):
+        assert False, errmsg
+
+    monkeypatch.setattr(spack.pkg.builtin.cmake.Cmake,
+                        'validate_detected_spec', _detected_spec, raising=False)
+
+    if pkgfile is not None:
+        monkeypatch.setenv('PKG_CONFIG_LIBDIR', os.path.dirname(pkgfile))
+
+    pkgs_to_entries = pkgconfig_do_detection(pkgs_to_check)
+    captured = capsys.readouterr()
+
+    assert pkgs_to_entries['zlib'][0].spec == Spec('zlib@1.2.11')
+    assert pkgs_to_entries['lzma'][0].spec == Spec('lzma@5.2.3')
+    assert pkgs_to_entries['libpciaccess'][0].spec == Spec('libpciaccess@0.14')
+    assert pkgs_to_entries['libxml2'][0].spec == Spec('libxml2@2.0.1')
+    assert pkgs_to_entries['zlib'][0].prefix == '/x/y1'
+    assert pkgs_to_entries['lzma'][0].prefix == '/x/y2'
+    assert pkgs_to_entries['libpciaccess'][0].prefix == '/x/y3'
+    assert pkgs_to_entries['libxml2'][0].prefix == '/x/y4'
+    assert 'bzip2' not in pkgs_to_entries.keys()
+    assert 'hwloc' not in pkgs_to_entries.keys()
+    assert 'cmake' not in pkgs_to_entries.keys()
+    assert errmsg in captured[1]
+
+
 def test_find_external_update_config(mutable_config):
     entries = [
         spack.detection.DetectedPackage(Spec.from_detection('cmake@1.foo'), '/x/y1/'),
@@ -132,6 +223,38 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable,
     cmake_externals = cmake_cfg['externals']
 
     assert {'spec': 'cmake@1.foo', 'prefix': prefix} in cmake_externals
+
+
+def test_find_external_cmd_pkgconfig(monkeypatch, mutable_config, working_env,
+                                     mock_pkgconfig, executables_found):
+    """Test invoking 'spack external find' with additional package arguments
+    on packages for which pkg_config information, which restricts the set of
+    packages that Spack looks for.
+    """
+    executables_found({})
+    pkgfile = mock_pkgconfig(name='zlib', pkgcfg={'version': '1.2.10',
+                                                  'prefix': '/x/y1'})
+    mock_pkgconfig(name='liblzma', pkgcfg={'version': '5.2.3',
+                                           'prefix': '/x/y2'})
+    mock_pkgconfig(name='pciaccess', pkgcfg={'version': '0.14',
+                                             'prefix': '/x/y3'})
+    mock_pkgconfig(name='libxml-2.0', pkgcfg={'version': '2.0.1',
+                                              'prefix': '/x/y4'})
+
+    if pkgfile is not None:
+        monkeypatch.setenv('PKG_CONFIG_LIBDIR', os.path.dirname(pkgfile))
+
+    external('find', 'zlib', 'lzma', 'libpciaccess', 'libxml2')
+
+    pkgs_cfg = spack.config.get('packages')
+    assert {'spec': 'zlib@1.2.10', 'prefix': '/x/y1'} \
+        in pkgs_cfg['zlib']['externals']
+    assert {'spec': 'lzma@5.2.3', 'prefix': '/x/y2'} \
+        in pkgs_cfg['lzma']['externals']
+    assert {'spec': 'libpciaccess@0.14', 'prefix': '/x/y3'} \
+        in pkgs_cfg['libpciaccess']['externals']
+    assert {'spec': 'libxml2@2.0.1', 'prefix': '/x/y4'} \
+        in pkgs_cfg['libxml2']['externals']
 
 
 def test_find_external_cmd_not_buildable(

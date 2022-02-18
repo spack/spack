@@ -5,6 +5,7 @@
 
 import collections
 import datetime
+import distutils.spawn as spawn
 import errno
 import inspect
 import itertools
@@ -1565,6 +1566,88 @@ def mock_executable(tmpdir):
         f.write(t.render(shebang=shebang, output=output))
         f.chmod(0o755)
         return str(f)
+
+    return _factory
+
+
+@pytest.fixture
+def mock_pkgconfig(tmpdir, monkeypatch, mock_executable, request):
+    """Factory to create a mock pkgconfig file in a temporary directory
+    with content passed in a dict if the python pkgconfig module is
+    available or create a mock that behaves like it returning the same
+    values.
+    Return value: pkgconfig file name if module is available 'None'
+    otherwise.
+    """
+    import jinja2
+    pkgs = {}
+    have_pkgconfig_bin = True
+
+    def _mock_list_all():
+        return list(pkgs.keys())
+
+    def _mock_variables(pkgname):
+        try:
+            return {'prefix': pkgs[pkgname]['prefix']}
+        except KeyError:
+            return {}
+
+    def _mock_modversion(pkgname):
+        try:
+            return pkgs[pkgname]['version']
+        except KeyError:
+            return ''
+
+    def _factory(name, pkgcfg):
+        if not (have_pkgconfig_bin or os.environ.get('PKG_CONFIG', None)):
+            # Fake it to 'fool' the test in spack.path.by_pkgconfig:
+            pkgconfig_path = mock_executable('pkg-config', output='')
+            monkeypatch.setenv('PKG_CONFIG',
+                               os.pathsep.join([os.path.dirname(pkgconfig_path)]))
+
+        if have_pkgconfig_bin and 'pkgconfig' in list(sys.modules.keys()):
+            f = tmpdir.ensure('pkgconfig', dir=True).join(name + '.pc')
+            line1 = ''
+            prefix = '/dummy'
+            version = '1.2.3'
+            for k in pkgcfg.keys():
+                if k in 'version':
+                    version = pkgcfg[k]
+                elif k in 'prefix':
+                    prefix = pkgcfg[k]
+                    line1 += 'prefix = {{ prefix }}\n'
+                else:
+                    line1 += '{0}= {1}'.format(k, pkgcfg[k])
+            t = jinja2.Template(
+                line1 +
+                'exec_prefix={{ prefix }}\n'
+                'libdir={{ prefix }}/lib\n'
+                'includedir={{ prefix }}/include\n\n'
+                'Name: {{ name }}\n'
+                'Version: {{ version }}\n'
+                'Description: {{ name }} pkgconfig test file\n'
+                'Requires:\nLibs: -L${libdir}\nLibs.private\nCflags:')
+            f.write(t.render(name=name, prefix=prefix, version=version))
+            return str(f)
+        else:
+            if spack.detection.path.pkgconfig.list_all != _mock_list_all:
+                monkeypatch.setattr(spack.detection.path.pkgconfig,
+                                    'list_all', _mock_list_all)
+                monkeypatch.setattr(spack.detection.path.pkgconfig,
+                                    'variables', _mock_variables)
+                monkeypatch.setattr(spack.detection.path.pkgconfig,
+                                    'modversion', _mock_modversion)
+            pkgs.update({name: {'version': pkgcfg['version']}})
+            for k in pkgcfg.keys():
+                if k in 'version':
+                    continue
+                pkgs[name].update({k: pkgcfg[k]})
+
+            return None
+
+    if not (os.access(os.environ.get('PKG_CONFIG', ''), os.X_OK)
+            or spawn.find_executable('pkg-config')):
+        have_pkgconfig_bin = False
 
     return _factory
 
