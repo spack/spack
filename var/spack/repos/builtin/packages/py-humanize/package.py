@@ -16,9 +16,11 @@ class PyHumanize(PythonPackage):
     homepage = "https://github.com/jmoiron/humanize"
     pypi = "humanize/humanize-0.5.1.tar.gz"
 
+    version('4.0.0', sha256='ee1f872fdfc7d2ef4a28d4f80ddde9f96d36955b5d6b0dac4bdeb99502bddb00')
     version('3.12.0', sha256='5ec1a66e230a3e31fb3f184aab9436ea13d4e37c168e0ffc345ae5bb57e58be6')
     version('0.5.1', sha256='a43f57115831ac7c70de098e6ac46ac13be00d69abbf60bdcac251344785bb19')
 
+    depends_on('python@3.7:', when='@4:', type=('build', 'run'))
     depends_on('python@3.6:', when='@3:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.1.0:', type=('build', 'run'))
     depends_on('python@2.7:2,3.5:', when='@1.0.0', type=('build', 'run'))
