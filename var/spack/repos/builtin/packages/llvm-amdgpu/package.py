@@ -36,7 +36,7 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
-    variant('openmp', default=True, description='Enable OpenMP')
+    variant('openmp', default=False, description='Enable OpenMP')
     variant(
         'llvm_dylib',
         default=False,
