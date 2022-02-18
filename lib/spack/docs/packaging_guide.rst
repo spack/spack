@@ -5149,6 +5149,7 @@ The simplest way to make a package discoverable with
 
 1. Define the executables associated with the package
 2. Implement a method to determine the versions of these executables
+3. Rely on pkgconfig files to provide basic package information.
 
 ^^^^^^^^^^^^^^^^^
 Minimal detection
@@ -5406,6 +5407,30 @@ follows:
            )
 
 .. _package-lifecycle:
+
+^^^^^^^^^^^^^^^^^
+pkg-config Method
+^^^^^^^^^^^^^^^^^
+
+'pkg-config'-files are located in the default directories or those
+specified in the PKG_CONFIG_PATH environment variable. The search
+algorithm works as follows:
+
+1. Search for a pkg-config file whose name matches the package name
+   verbatim.
+2. If none is found, and the package name doesn't start with 'lib'
+   prepend this string and search again.
+3. If none is found and the package name starts with 'lib' remove
+   it and search again.
+
+Optionally, packages may provide a package level ``pkgconfigs`` attribute
+with a list of regular expressions to match the pkg-config file name:
+
+.. code-block:: python
+
+   class Foo(Package):
+
+       pkgconfigs = [ 'libfoo-2.*' ]
 
 -----------------------------
 Style guidelines for packages

@@ -194,11 +194,16 @@ Specific limitations include:
 * Packages are not discoverable by default: For a package to be
   discoverable with ``spack external find``, it needs to add special
   logic. See :ref:`here <make-package-findable>` for more details.
-* The current implementation only collects and examines executable files,
-  so it is typically only useful for build/run dependencies (in some cases
-  if a library package also provides an executable, it may be possible to
-  extract a meaningful Spec by running the executable - for example the
-  compiler wrappers in MPI implementations).
+* The current implementation collects and examines executable files
+  and looks for pkg-config files in the default directories or those
+  specified with the PKG_CONFIG_PATH environment variable.
+  The former is typically only useful for build/run dependencies (in some
+  cases if a library package also provides an executable, it may be possible
+  to extract a meaningful Spec by running the executable - for example the
+  compiler wrappers in MPI implementations). Using custom extraction code
+  in packages it is generally possible to extract more information using
+  this method, thus the pkg-config method is only used as fallback
+  and is used for those packages which have not been found thru binaries.
 * The logic does not search through module files, it can only detect
   packages with executables defined in ``PATH``; you can help Spack locate
   externals which use module files by loading any associated modules for
