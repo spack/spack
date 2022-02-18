@@ -326,6 +326,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on('kokkos-kernels+cuda', when='+kokkos +cuda')
     depends_on('kokkos+rocm', when='+kokkos +rocm')
 
+    phases = ['configure', 'build', 'install']
+
     # Using the following tarballs
     # * petsc-3.12 (and older) - includes docs
     # * petsc-lite-3.13, petsc-lite-3.14 (without docs)
@@ -358,49 +360,49 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 compiler_opts.append('--FC_LINKER_FLAGS=-lintlc')
         return compiler_opts
 
-    def install(self, spec, prefix):
+    def configure_options(self):
         options = ['--with-ssl=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
                    '--download-hwloc=0',
-                   'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
-                   'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
-                   'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
+                   'CFLAGS=%s' % ' '.join(self.spec.compiler_flags['cflags']),
+                   'FFLAGS=%s' % ' '.join(self.spec.compiler_flags['fflags']),
+                   'CXXFLAGS=%s' % ' '.join(self.spec.compiler_flags['cxxflags'])]
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
-                'double' if '+double' in spec else 'single'),
+                'double' if '+double' in self.spec else 'single'),
             '--with-scalar-type=%s' % (
-                'complex' if '+complex' in spec else 'real'),
-            '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
-            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
-            '--with-openmp=%s' % ('1' if '+openmp' in spec else '0'),
-            '--with-64-bit-indices=%s' % ('1' if '+int64' in spec else '0')
+                'complex' if '+complex' in self.spec else 'real'),
+            '--with-shared-libraries=%s' % ('1' if '+shared' in self.spec else '0'),
+            '--with-debugging=%s' % ('1' if '+debug' in self.spec else '0'),
+            '--with-openmp=%s' % ('1' if '+openmp' in self.spec else '0'),
+            '--with-64-bit-indices=%s' % ('1' if '+int64' in self.spec else '0')
         ])
-        if '+debug' not in spec:
+        if '+debug' not in self.spec:
             options.extend(['COPTFLAGS=',
                             'FOPTFLAGS=',
                             'CXXOPTFLAGS='])
 
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas = self.spec['lapack'].libs + self.spec['blas'].libs
         options.extend([
             '--with-blas-lapack-lib=%s' % lapack_blas.joined()
         ])
 
-        if '+batch' in spec:
+        if '+batch' in self.spec:
             options.append('--with-batch=1')
-        if '+knl' in spec:
+        if '+knl' in self.spec:
             options.append('--with-avx-512-kernels')
             options.append('--with-memalign=64')
-        if '+X' in spec:
+        if '+X' in self.spec:
             options.append('--with-x=1')
         else:
             options.append('--with-x=0')
 
-        if 'trilinos' in spec:
-            if spec.satisfies('^trilinos+boost'):
+        if 'trilinos' in self.spec:
+            if self.spec.satisfies('^trilinos+boost'):
                 options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
@@ -409,8 +411,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             options.append('--with-clanguage=C')
 
         # Activates library support if needed (i.e. direct dependency)
-        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
+        jpeg_sp = self.spec['jpeg'].name if 'jpeg' in self.spec else 'jpeg'
+        scalapack_sp = self.spec['scalapack'].name if 'scalapack' in self.spec else 'scalapack'
 
         # tuple format (spacklibname, petsclibname, useinc, uselib)
         # default: 'gmp', => ('gmp', 'gmp', True, True)
@@ -457,7 +459,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 'parmmg',
                 ('tetgen', 'tetgen', False, False),
         ):
-            # Cannot check `library in spec` because of transitive deps
+            # Cannot check `library in self.spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
             if isinstance(library, tuple):
                 spacklibname, petsclibname, useinc, uselib = library
@@ -467,7 +469,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 useinc = True
                 uselib = True
 
-            library_requested = spacklibname.split(':')[0] in direct_dependencies
+            library_requested = spacklibname.split(':')[0] in self.spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,
@@ -479,31 +481,31 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                         options.append(
                             '--with-{library}-include={value}'.format(
                                 library=petsclibname,
-                                value=spec[spacklibname].prefix.include)
+                                value=self.spec[spacklibname].prefix.include)
                         )
                     if uselib:
                         options.append(
                             '--with-{library}-lib={value}'.format(
                                 library=petsclibname,
-                                value=spec[spacklibname].libs.joined())
+                                value=self.spec[spacklibname].libs.joined())
                         )
                 else:
                     options.append(
                         '--with-{library}-dir={path}'.format(
-                            library=petsclibname, path=spec[spacklibname].prefix)
+                            library=petsclibname, path=self.spec[spacklibname].prefix)
                     )
 
-        if '+cuda' in spec:
-            if not spec.satisfies('cuda_arch=none'):
-                cuda_arch = spec.variants['cuda_arch'].value
-                if spec.satisfies('@3.14:'):
+        if '+cuda' in self.spec:
+            if not self.spec.satisfies('cuda_arch=none'):
+                cuda_arch = self.spec.variants['cuda_arch'].value
+                if self.spec.satisfies('@3.14:'):
                     options.append('--with-cuda-gencodearch={0}'.format(cuda_arch[0]))
                 else:
                     options.append('CUDAFLAGS=-gencode arch=compute_{0},code=sm_{0}'
                                    .format(cuda_arch[0]))
-        if '+rocm' in spec:
-            if not spec.satisfies('amdgpu_target=none'):
-                hip_arch = spec.variants['amdgpu_target'].value
+        if '+rocm' in self.spec:
+            if not self.spec.satisfies('amdgpu_target=none'):
+                hip_arch = self.spec.variants['amdgpu_target'].value
                 options.append('--with-hip-arch={0}'.format(hip_arch[0]))
             hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
             hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
@@ -511,41 +513,51 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             hip_inc = ''
             hip_lib = ''
             for pkg in hip_ipkgs:
-                hip_inc += spec[pkg].headers.include_flags + ' '
+                hip_inc += self.spec[pkg].headers.include_flags + ' '
             for pkg in hip_lpkgs:
-                hip_lib += spec[pkg].libs.joined() + ' '
+                hip_lib += self.spec[pkg].libs.joined() + ' '
             options.append('HIPPPFLAGS=%s' % hip_inc)
             options.append('with-hip-lib=%s -L%s -lamdhip64' %
-                           (hip_lib, spec['hip'].prefix.lib))
+                           (hip_lib, self.spec['hip'].prefix.lib))
 
-        if 'superlu-dist' in spec:
-            if spec.satisfies('@3.10.3:3.15'):
+        if 'superlu-dist' in self.spec:
+            if self.spec.satisfies('@3.10.3:3.15'):
                 options.append('--with-cxx-dialect=C++11')
 
-        if '+mkl-pardiso' in spec:
+        if '+mkl-pardiso' in self.spec:
             options.append(
-                '--with-mkl_pardiso-dir=%s' % spec['mkl'].prefix
+                '--with-mkl_pardiso-dir=%s' % self.spec['mkl'].prefix
             )
 
         # For the moment, HPDDM does not work as a dependency
         # using download instead
-        if '+hpddm' in spec:
+        if '+hpddm' in self.spec:
             options.append('--download-hpddm')
 
+        return options
+
+    def revert_kokkos_nvcc_wrapper(self):
         # revert changes by kokkos-nvcc-wrapper
-        if spec.satisfies('^kokkos+cuda+wrapper'):
+        if self.spec.satisfies('^kokkos+cuda+wrapper'):
             env['MPICH_CXX'] = env['CXX']
             env['OMPI_CXX'] = env['CXX']
             env['MPICXX_CXX'] = env['CXX']
 
-        python('configure', '--prefix=%s' % prefix, *options)
+    def configure(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
+        python('configure', '--prefix=%s' % prefix, *self.configure_options())
 
+    def build(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         # PETSc has its own way of doing parallel make.
         make('V=1 MAKE_NP=%s' % make_jobs, parallel=False)
+
+    def install(self, spec, prefix):
+        self.revert_kokkos_nvcc_wrapper()
         make("install")
 
         if self.run_tests:
-            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(self.prefix),
+            make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix),
                  parallel=False)
 
     def setup_build_environment(self, env):
