@@ -14,6 +14,7 @@ class PyPythran(PythonPackage):
     homepage = "https://github.com/serge-sans-paille/pythran"
     pypi     = "pythran/pythran-0.9.11.tar.gz"
 
+    version('0.11.0', sha256='0b2cba712e09f7630879dff69f268460bfe34a6d6000451b47d598558a92a875')
     version('0.10.0', sha256='9dac8e1d50f33d4676003e350b1f0c878ce113e6f907920e92dc103352cac5bf')
     version('0.9.12', sha256='5d50dc74dca1d3f902941865acbae981fc24cceeb9d54673d68d6b5c8c1b0001')
     version('0.9.11', sha256='a317f91e2aade9f6550dc3bf40b5caeb45b7e012daf27e2b3e4ad928edb01667')
