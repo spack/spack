@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFuture(RPackage):
-    """Unified Parallel and Distributed Processing in R for Everyone
+    """Unified Parallel and Distributed Processing in R for Everyone.
 
     The purpose of this package is to provide a lightweight and unified
     Future API for sequential and parallel processing of R expression via
@@ -27,6 +27,7 @@ class RFuture(RPackage):
     homepage = "https://github.com/HenrikBengtsson/future"
     cran = "future"
 
+    version('1.23.0', sha256='d869c80e837c0937a414b8050deff081aefeac586b796f3d634d64f0f4fdb8f8')
     version('1.22.1', sha256='87b24a85caf08e1d809eab28f9258444105cd7788eee2e3e2f21727ba3bbedcd')
     version('1.21.0', sha256='909e6602068eba543a6d2e464b911123cc29efdb600a7000eff0e5624ff0d12d')
     version('1.14.0', sha256='0a535010d97a01b21aaf9d863603e44359335e273019c1e1980bbb5b2917dbcb')
