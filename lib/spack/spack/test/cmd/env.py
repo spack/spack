@@ -2989,3 +2989,19 @@ def test_environment_depfile_out(tmpdir, mock_packages):
         stdout = env('depfile', '-G', 'make')
         with open(makefile_path, 'r') as f:
             assert stdout == f.read()
+
+
+def test_together_where_possible_works_around_conflicts():
+    e = ev.create('coconcretization')
+    e.concretization = 'together_where_possible'
+
+    e.add('mpileaks+opt')
+    e.add('mpileaks~opt')
+    e.add('mpich')
+
+    e.concretize()
+
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks')]) == 2
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks+opt')]) == 1
+    assert len([x for x in e.all_specs() if x.satisfies('mpileaks~opt')]) == 1
+    assert len([x for x in e.all_specs() if x.satisfies('mpich')]) == 1
