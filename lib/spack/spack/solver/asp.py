@@ -429,20 +429,20 @@ class Result(object):
         """List of concretized specs satisfying the initial
         abstract request.
         """
-        if not self._concrete_specs:
+        if self._concrete_specs is None:
             self._compute_specs_from_answer_set()
         return self._concrete_specs
 
     @property
     def unsolved_specs(self):
         """List of abstract input specs that were not solved."""
-        if not self._unsolved_specs:
+        if self._unsolved_specs is None:
             self._compute_specs_from_answer_set()
         return self._unsolved_specs
 
     @property
     def specs_by_input(self):
-        if not self._concrete_specs_by_input:
+        if self._concrete_specs_by_input is None:
             self._compute_specs_from_answer_set()
         return self._concrete_specs_by_input
 
