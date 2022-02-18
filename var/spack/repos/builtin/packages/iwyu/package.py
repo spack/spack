@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import archspec
 
 
 class Iwyu(CMakePackage):
@@ -34,8 +34,10 @@ class Iwyu(CMakePackage):
     depends_on('llvm+clang@8.0:8', when='@0.12')
     depends_on('llvm+clang@7.0:7', when='@0.11')
 
-    # iwyu uses X86AsmParser
-    depends_on('llvm targets=x86')
+    # iwyu uses X86AsmParser so must have the x86 target on non-x86 arch
+    _arches = set(str(x.family) for x in archspec.cpu.TARGETS.values())
+    for _arch in _arches - set(['x86', 'x86_64']):
+        depends_on('llvm targets=x86', when='arch={0}:'.format(_arch))
 
     @when('@0.14:')
     def cmake_args(self):
