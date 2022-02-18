@@ -197,4 +197,4 @@ config:
   # Whether to set the terminal title to display status information during
   # building and installing packages. This gives information about Spack's
   # current progress as well as the current and total number of packages.
-  terminal_title: false
+  terminal_title: true
