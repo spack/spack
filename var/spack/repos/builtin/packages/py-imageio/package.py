@@ -30,7 +30,7 @@ class PyImageio(PythonPackage):
     depends_on('python@3.5:', when='@2.9.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@:2.5.0', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', when='@2.16:', type=('build', 'run'))
+    depends_on('py-numpy@1.20:', when='@2.16:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('pil@8.3.2:', when='@2.10:', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
