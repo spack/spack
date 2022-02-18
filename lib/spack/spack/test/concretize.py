@@ -1696,14 +1696,16 @@ class TestConcretize(object):
         assert len(concrete_specs) == expected
 
     @pytest.mark.parametrize('specs,expected_spec,occurances', [
-        # This document the greediness of the algorithm. Since this environment needs
-        # to be solved in 3 rounds, by selecting versions of dependencies in the
-        # opposite way as the root (newer dependencies for older roots) we have to use
-        # 3 versions of libelf instead of 2.
+        # The algorithm is greedy, and it might decide to solve the "best"
+        # spec early in which case reuse is suboptimal. In this case the most
+        # recent version of libdwarf is selected and concretized to libelf@0.8.13
+        (['libdwarf@20111030^libelf@0.8.10',
+          'libdwarf@20130207^libelf@0.8.12',
+          'libdwarf@20130729'], 'libelf@0.8.12', 1),
+        # Check we reuse the best libelf in the environment
         (['libdwarf@20130729^libelf@0.8.10',
           'libdwarf@20130207^libelf@0.8.12',
-          'libdwarf@20111030'], 'libelf@0.8.12', 1),
-        # For a saner environment instead we'll always use the same libelf
+          'libdwarf@20111030'], 'libelf@0.8.12', 2),
         (['libdwarf@20130729',
           'libdwarf@20130207',
           'libdwarf@20111030'], 'libelf@0.8.13', 3),

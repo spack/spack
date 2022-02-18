@@ -671,7 +671,7 @@ class PyclingoDriver(object):
 
         if result.satisfiable:
             # build spec from the best model
-            builder = SpecBuilder(specs)
+            builder = SpecBuilder(specs, reuse=reuse)
             min_cost, best_model = min(models)
             tuples = [
                 (sym.name, [stringify(a) for a in sym.arguments])
@@ -1912,39 +1912,24 @@ class SpecBuilder(object):
     #: Attributes that don't need actions
     ignored_attributes = ["opt_criterion"]
 
-    def __init__(self, specs):
+    def __init__(self, specs, reuse=None):
         self._specs = {}
         self._result = None
         self._command_line_specs = specs
         self._flag_sources = collections.defaultdict(lambda: set())
         self._flag_compiler_defaults = set()
 
+        # Pass in as arguments reusable specs and plug them in
+        # from this dictionary during reconstruction
+        self._hash_lookup = {}
+        if reuse is not None:
+            for spec in reuse:
+                for node in spec.traverse():
+                    self._hash_lookup.setdefault(node.dag_hash(), node)
+
     def hash(self, pkg, h):
         if pkg not in self._specs:
-            try:
-                # try to get the candidate from the store
-                concrete_spec = spack.store.db.get_by_hash(h)[0]
-            except TypeError:
-                # the dag hash was not in the DB, try buildcache
-                s = spack.binary_distribution.binary_index.find_by_hash(h)
-                if s:
-                    concrete_spec = s[0]['spec']
-                else:
-                    # last attempt: maybe the hash comes from a particular input spec
-                    # this only occurs in tests (so far)
-                    for clspec in self._command_line_specs:
-                        for spec in clspec.traverse():
-                            if spec.concrete and spec.dag_hash() == h:
-                                concrete_spec = spec
-
-            assert concrete_spec, "Unable to look up concrete spec with hash %s" % h
-            self._specs[pkg] = concrete_spec
-        else:
-            # TODO: remove this code -- it's dead unless we decide that node() clauses
-            # should come before hashes.
-            # ensure that if it's already there, it's correct
-            spec = self._specs[pkg]
-            assert spec.dag_hash() == h
+            self._specs[pkg] = self._hash_lookup[h]
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -2231,12 +2216,16 @@ class Solver(object):
         self.reuse = spack.config.get("concretizer:reuse", False)
 
     @staticmethod
-    def _check_input(specs):
+    def _check_input_and_extract_concrete_specs(specs):
+        reusable = []
         for root in specs:
             for s in root.traverse():
                 if s.virtual:
                     continue
+                if s.concrete:
+                    reusable.append(s)
                 spack.spec.Spec.ensure_valid_variants(s)
+        return reusable
 
     def _reusable_specs(self):
         reusable_specs = []
@@ -2285,8 +2274,8 @@ class Solver(object):
           setup_only (bool): if True, stop after setup and don't solve (default False).
         """
         # Check upfront that the variants are admissible
-        self._check_input(specs)
-        reusable_specs = self._reusable_specs()
+        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs.extend(self._reusable_specs())
         setup = SpackSolverSetup(tests=tests)
         return self.driver.solve(
             setup,
@@ -2324,8 +2313,8 @@ class Solver(object):
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
         """
-        self._check_input(specs)
-        reusable_specs = self._reusable_specs()
+        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs.extend(self._reusable_specs())
         setup = SpackSolverSetup(tests=tests)
 
         # Tell clingo that we don't have to solve all the inputs at once
@@ -2354,7 +2343,8 @@ class Solver(object):
                 break
 
             input_specs = result.unsolved_specs
-            reusable_specs.extend(result.specs)
+            for spec in result.specs:
+                reusable_specs.extend(spec.traverse())
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
