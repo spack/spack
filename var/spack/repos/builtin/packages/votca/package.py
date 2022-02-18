@@ -24,7 +24,6 @@ class Votca(CMakePackage):
 
     variant('mkl', default=False, description='Build with MKL support')
     variant('new-gmx', default=False, description='Build against gromacs>2019 - no tabulated kernels')
-support')
     variant('xtp', default=True, description='Build xtp parts of votca')
     conflicts('votca-tools')
     conflicts('votca-csg')
