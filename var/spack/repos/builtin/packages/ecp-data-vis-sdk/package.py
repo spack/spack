@@ -100,7 +100,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
                        when='+adios2',
                        propagate=['hdf5', 'sz', 'zfp'])
 
-    dav_sdk_depends_on('darshan-runtime+mpi', when='+darshan')
+    dav_sdk_depends_on('darshan-runtime+mpi',
+                       when='+darshan',
+                       propagate=['hdf5'])
     dav_sdk_depends_on('darshan-util', when='+darshan')
 
     dav_sdk_depends_on('faodel+shared+mpi network=libfabric',
