@@ -256,6 +256,11 @@ class Gromacs(CMakePackage):
                 '-DGMX_MPI:BOOL=OFF',
                 '-DGMX_THREAD_MPI:BOOL=ON'])
 
+        if self.spec.satisfies('%aocc'):
+            opt_flags = '-Ofast -ffast-math'
+            options.append(self.define('CMAKE_C_FLAGS_RELEASE', opt_flags))
+            options.append(self.define('CMAKE_CXX_FLAGS_RELEASE', opt_flags))
+
         if self.spec.satisfies('@2020:'):
             options.append('-DGMX_INSTALL_LEGACY_API=ON')
 
