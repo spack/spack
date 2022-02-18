@@ -249,6 +249,14 @@ class Openblas(MakefilePackage):
         else:
             args.append('TARGET=' + microarch.name.upper())
 
+        if self.spec.target == 'm1' and self.spec.platform == 'darwin':
+            # M1 support, otherwise fails in the linking stage.
+            #
+            # See also
+            # https://github.com/xianyi/OpenBLAS/issues/3032#issuecomment-743808777
+            # and following comments
+            args.append('MACOSX_DEPLOYMENT_TARGET=11.0')
+
         return args
 
     @property
