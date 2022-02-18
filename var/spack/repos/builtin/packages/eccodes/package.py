@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import itertools
 
 from spack.package import *
 
@@ -61,25 +62,62 @@ _resources = {
 
 
 def _declare_definitions_and_samples():
+    def gen_all_permutations(seq, only_with=None):
+        """Returns an iterable that provides all permutations of all lengths of
+        elements in a sequence. Optionally returns only those permutations that
+        contain element only_with."""
+        if only_with is None:
+            return itertools.chain.from_iterable(
+                itertools.permutations(seq, length + 1)
+                for length in range(len(seq)))
+        elif only_with in seq:
+            def filtered_permutations():
+                only_with_tuple = (only_with,)
+                yield only_with_tuple
+                for perm in gen_all_permutations([e for e in seq
+                                                  if e != only_with]):
+                    for pos in range(len(perm) + 1):
+                        yield perm[:pos] + only_with_tuple + perm[pos:]
+
+            return filtered_permutations()
+        else:
+            return ()
+
+    def gen_values(seq, only_with=None):
+        for p in gen_all_permutations(seq, only_with):
+            yield ':'.join(p)
+
     for variant_stem in ['definitions', 'samples']:
         variant_name = 'extra-{0}'.format(variant_stem)
         variant_dict = _resources[variant_stem]
         variant(variant_name,
-                values=any_combination_of(*variant_dict.keys()),
-                description='List of extra {0} to install'.format(variant_stem))
+                values=('none',) + tuple(gen_values(variant_dict.keys())),
+                default='none',
+                description='Colon-separated list of extra '
+                            '{0} to install'.format(variant_stem),
+                sticky=True)
         for center, center_dict in variant_dict.items():
             conflicts_kwargs = center_dict.get('conflicts', None)
             if conflicts_kwargs:
-                conflicts('{0}={1}'.format(variant_name, center),
-                          **conflicts_kwargs)
+                for value in gen_values(variant_dict.keys(),
+                                        only_with=center):
+                    conflicts('{0}={1}'.format(variant_name, value),
+                              **conflicts_kwargs)
             for resource_kwargs in center_dict.get('resources', []):
+                resource_kwargs = resource_kwargs.copy()
                 if 'placement' not in resource_kwargs:
                     resource_kwargs['placement'] = {
                         '': '{0}.{1}'.format(variant_stem, center)
                     }
-                resource(name=center,
-                         destination='spack-{0}'.format(variant_stem),
-                         **resource_kwargs)
+                orig_when = resource_kwargs.pop('when', None)
+                for value in gen_values(variant_dict.keys(),
+                                        only_with=center):
+                    when = '{0}={1}'.format(variant_name, value)
+                    if orig_when:
+                        when = '{0} {1}'.format(orig_when, when)
+                    resource(name=center,
+                             destination='spack-{0}'.format(variant_stem),
+                             when=when, **resource_kwargs)
 
 
 class Eccodes(CMakePackage):
@@ -264,6 +302,34 @@ class Eccodes(CMakePackage):
                     '\\1; use f90_unix_env; use f90_unix_proc\\2',
                     *patch_unix_ext_files, **kwargs)
 
+    def setup_run_environment(self, env):
+        for variant_stem in ['definitions', 'samples']:
+            env_var_name = 'ECCODES_{0}_PATH'.format(
+                variant_stem.upper()
+                if variant_stem != 'definitions'
+                # Workaround for the inconsistent name:
+                else 'DEFINITION'
+            )
+
+            default_path = (
+                # The following is a marker, not a real path:
+                '/MEMFS/{0}'.format(variant_stem) if '+memfs' in self.spec
+                else join_path(self.prefix.share.eccodes, variant_stem)
+            )
+            env.prepend_path(env_var_name, default_path)
+
+            variant_name = 'extra-{0}'.format(variant_stem)
+            value = self.spec.variants[variant_name].value
+
+            if value == 'none':
+                continue
+
+            for center in reversed(value.split(':')):
+                env.prepend_path(
+                    env_var_name,
+                    join_path(self.prefix.share.eccodes,
+                              '{0}.{1}'.format(variant_stem, center)))
+
     @property
     def libs(self):
         libraries = []
@@ -372,10 +438,12 @@ class Eccodes(CMakePackage):
     def install_extra_definitions_and_samples(self):
         for variant_stem in ['definitions', 'samples']:
             variant_name = 'extra-{0}'.format(variant_stem)
-            for center in self.spec.variants[variant_name].value:
-                if center == 'none':
-                    continue
+            value = self.spec.variants[variant_name].value
 
+            if value == 'none':
+                continue
+
+            for center in value.split(':'):
                 center_dir = '{0}.{1}'.format(variant_stem, center)
                 center_src_path = join_path(self.stage.source_path,
                                             'spack-{0}'.format(variant_stem),
