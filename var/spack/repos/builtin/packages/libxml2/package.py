@@ -46,6 +46,8 @@ class Libxml2(AutotoolsPackage):
     patch('nvhpc-configure.patch', when='%nvhpc')
     patch('nvhpc-elfgcchack.patch', when='%nvhpc')
 
+    pkgconfigs = ['libxml-2.*']
+
     @property
     def headers(self):
         include_dir = self.spec.prefix.include.libxml2
