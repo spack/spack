@@ -11,10 +11,11 @@ class Hipfort(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipfort"
     git      = "https://github.com/ROCmSoftwarePlatform/hipfort.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-4.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/hipfort/archive/rocm-5.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.0.0', sha256='af0f332fec082a03ca0403618ab20d31baadf3103e3371db9edc39dc9474ef4c')
     version('4.5.2', sha256='14599d027b57189c6734b04ace7792d2ae5c409cf7983c0970b086fb4e634dd8')
     version('4.5.0', sha256='48626dfb15bb5dcb044c9e1d4dc4b0654a2cd0abfc69485aa285dc20d7f40d51')
     version('4.3.1', sha256='279a35edbc0c22fa930a4355e663a86adf4d0316c5b1b6b9ccc6ee5c19c8c2e4')
@@ -31,7 +32,7 @@ class Hipfort(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
-                '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 

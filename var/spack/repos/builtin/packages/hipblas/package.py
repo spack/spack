@@ -16,6 +16,7 @@ class Hipblas(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('5.0.0', sha256='63cffe748ed4a86fc80f408cb9e8a9c6c55c22a2b65c0eb9a76360b97bbb9d41')
     version('4.5.2', sha256='82dd82a41bbadbb2a91a2a44a5d8e0d2e4f36d3078286ed4db3549b1fb6d6978')
     version('4.5.0', sha256='187777ed49cc7c496c897e8ba80532d458c9afbc51a960e45f96923ad896c18e')
     version('4.3.1', sha256='7b1f774774de5fa3d2b777e3a262328559d56165c32aa91b002505694362e7b2')
@@ -36,14 +37,15 @@ class Hipblas(CMakePackage):
     depends_on('boost@1.64.0:1.76.0 cxxstd=14', type='test')
 
     patch('link-clients-blas.patch', when='@4.3.0:4.3.2')
-    patch('link-clients-blas-4.5.0.patch', when='@4.5.0:')
+    patch('link-clients-blas-4.5.0.patch', when='@4.5.0:4.5.2')
+    patch('hipblas-link-clients-blas-5.0.0.patch', when='@5.0.0:')
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'hipblas-test')
         self.run_test(exe)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocsolver@' + ver, when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
