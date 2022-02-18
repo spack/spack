@@ -49,7 +49,7 @@ class RocmTensile(CMakePackage):
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('comgr@' + ver,                     when='@' + ver)
         depends_on('rocm-openmp-extras@' + ver,        when='@' + ver + '+openmp')
-        depends_on('llvm-amdgpu@' + ver , when='@' + ver + '~openmp')
+        depends_on('llvm-amdgpu@' + ver, when='@' + ver + '~openmp')
         depends_on('rocminfo@' + ver,    type='build', when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
