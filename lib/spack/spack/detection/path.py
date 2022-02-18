@@ -202,7 +202,8 @@ def by_pkgconfig(packages_to_check):
          packages_to_check (list): list of packages to be detected.
     """
     pkg_to_entries = collections.defaultdict(list)
-    if not spawn.find_executable('pkg-config'):
+    if not (os.access(os.environ.get('PKG_CONFIG', ''), os.X_OK)
+            or spawn.find_executable('pkg-config')):
         llnl.util.tty.debug('pkg-config binary not installed')
         return pkg_to_entries
     pkgconfig_packages = pkgconfig.list_all()

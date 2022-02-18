@@ -109,10 +109,23 @@ def external_find(args):
         packages_to_check = list(set(packages_to_check))
 
     # If the list of packages is empty, search for every possible package
-    if not args.tags and not packages_to_check:
-        packages_to_check = spack.repo.path.all_packages()
+    detected_packages = spack.detection.by_executable(
+        packages_to_check
+        if packages_to_check
+        else spack.repo.path.all_packages())
 
-    detected_packages = spack.detection.by_executable(packages_to_check)
+    def filter_packages(package_list, names):
+        for pkg in package_list:
+            if pkg.name not in names:
+                yield pkg
+
+    detected_packages.update(
+        spack.detection.by_pkgconfig(
+            filter_packages(packages_to_check if packages_to_check
+                            else spack.repo.path.all_packages(),
+                            detected_packages.keys())
+        ))
+
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )

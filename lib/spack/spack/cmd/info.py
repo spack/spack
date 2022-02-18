@@ -184,6 +184,8 @@ def print_text_info(pkg):
         # mechanism. In this case, just inform the user it's detectable somehow.
         color.cprint('    True{0}'.format(
             ' (' + ', '.join(find_attributes) + ')' if find_attributes else ''))
+    elif hasattr(pkg, 'pkgconfigs'):
+        color.cprint('    True (pkgconfig)')
     else:
         color.cprint('    False')
 
