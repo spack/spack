@@ -70,8 +70,8 @@ def setup_parser(subparser):
         '--stats', action='store_true', default=False,
         help='print out statistics from clingo')
     subparser.add_argument(
-        '--multiple-rounds', action='store_true', default=False,
-        help='allow solving input specs in multiple rounds')
+        '-T', '--together-where-possible', action='store_true', default=False,
+        help='allow some inconsistencies when solving input specs')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
@@ -163,7 +163,7 @@ def solve(parser, args):
     specs = list(env.roots()) if env else spack.cmd.parse_specs(args.specs)
 
     solver = asp.Solver()
-    if not args.multiple_rounds:
+    if not args.together_where_possible:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         output = sys.stdout if "asp" in show else None
