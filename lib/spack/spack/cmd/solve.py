@@ -116,7 +116,7 @@ def _process_result(result, show, required_format, kwargs):
                     spec.tree(color=sys.stdout.isatty(), **kwargs))
         print()
 
-    if result.unsolved_specs:
+    if result.unsolved_specs and "solutions" in show:
         tty.msg("Unsolved specs")
         for spec in result.unsolved_specs:
             print(spec)
@@ -160,13 +160,13 @@ def solve(parser, args):
         msg = "cannot give explicit specs when an environment is active"
         raise RuntimeError(msg)
 
-    specs = list(env.roots()) if env else spack.cmd.parse_specs(args.specs)
+    specs = list(env.user_specs) if env else spack.cmd.parse_specs(args.specs)
 
     solver = asp.Solver()
+    output = sys.stdout if "asp" in show else None
     if not args.together_where_possible:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
-        output = sys.stdout if "asp" in show else None
         setup_only = set(show) == {'asp'}
         result = solver.solve(
             specs,
@@ -180,8 +180,11 @@ def solve(parser, args):
             _process_result(result, show, required_format, kwargs)
     else:
         for idx, result in enumerate(solver.solve_in_rounds(
-                specs, out=None, models=models, timers=args.timers, stats=args.stats
+                specs, out=output, models=models, timers=args.timers, stats=args.stats
         )):
-            tty.msg("ROUND {0}".format(idx))
-            tty.msg("")
+            if "solutions" in show:
+                tty.msg("ROUND {0}".format(idx))
+                tty.msg("")
+            else:
+                print("% END ROUND {0}\n".format(idx))
             _process_result(result, show, required_format, kwargs)
