@@ -12,7 +12,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
 
     tags = ['ecp']
-    maintainers = ['chuckatkins']
+    maintainers = ['chuckatkins', 'kwryankrattiger']
 
     version('1.0')
 
