@@ -103,7 +103,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             default=False,
             description='Target nvptx offloading to NVIDIA GPUs')
     variant('bootstrap',
-            default=True,
+            default=False,
             description='Enable 3-stage bootstrap')
     variant('graphite',
             default=False,
