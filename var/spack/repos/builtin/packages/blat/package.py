@@ -23,4 +23,10 @@ class Blat(Package):
     def install(self, spec, prefix):
         filter_file('CC=.*', 'CC={0}'.format(spack_cc), 'inc/common.mk')
         mkdirp(prefix.bin)
-        make("BINDIR=%s" % prefix.bin)
+        if spec.satisfies('%gcc@10:'):
+            make(
+                "BINDIR=%s" % prefix.bin,
+                "CFLAGS=-fcommon",
+                )
+        else:
+            make("BINDIR=%s" % prefix.bin)
