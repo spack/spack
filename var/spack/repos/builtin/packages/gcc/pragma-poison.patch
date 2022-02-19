@@ -1,0 +1,26 @@
+diff --git a/gcc/system.h b/gcc/system.h
+index a3f5948..95d5b4e 100644
+--- a/gcc/system.h
++++ b/gcc/system.h
+@@ -907,7 +907,7 @@ extern void fancy_abort (const char *, int, const char *)
+ #undef calloc
+ #undef strdup
+ #undef strndup
+- #pragma GCC poison calloc strdup strndup
++ #pragma GCC poison strdup strndup
+ 
+ #if !defined(FLEX_SCANNER) && !defined(YYBISON)
+ #undef malloc
+diff --git a/libcpp/system.h b/libcpp/system.h2
+index ee5fbe2..56f4bdc 100644
+--- a/libcpp/system.h
++++ b/libcpp/system.h
+@@ -428,7 +428,7 @@ extern void fancy_abort (const char *, int, const char *) ATTRIBUTE_NORETURN;
+ #undef strdup
+ #undef malloc
+ #undef realloc
+- #pragma GCC poison calloc strdup
++ #pragma GCC poison strdup
+  #pragma GCC poison malloc realloc
+ 
+ /* Libiberty macros that are no longer used in GCC.  */
