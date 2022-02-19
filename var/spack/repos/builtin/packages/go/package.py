@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import platform
 import re
 
 import llnl.util.tty as tty
@@ -128,12 +127,7 @@ class Go(Package):
     provides('golang')
 
     depends_on('git', type=('build', 'link', 'run'))
-    # TODO: Make non-c self-hosting compilers feasible without backflips
-    # should be a dep on external go compiler
-    if platform.machine() == 'aarch64':
-        depends_on('gcc languages=go', type='build')
-    else:
-        depends_on('go-bootstrap', type='build')
+    depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')
