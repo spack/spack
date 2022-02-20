@@ -8,6 +8,7 @@ import re
 import shlex
 import sys
 from textwrap import dedent
+from typing import Callable, Dict, List, Tuple
 
 from six import string_types
 
@@ -36,17 +37,21 @@ class Token(object):
         return (self.type == other.type) and (self.value == other.value)
 
 
+_Lexicon = List['Tuple[str, Callable]']
+_Switches = Dict[str, List]
+
+
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
     def __init__(self, lexicon_and_mode_switches):
-        self.scanners = []
-        self.switchbook = []
-        for lexicon, mode_switches_dict in lexicon_and_mode_switches:
-            self.scanners.append(re.Scanner(lexicon))
-            self.switchbook.append(mode_switches_dict)
-
-        self.mode = 0
+        # type: (List[Tuple[str, _Lexicon, _Switches]]) -> None
+        self.scanners = {}      # type: Dict[str, _Lexicon]
+        self.switchbook = {}    # type: Dict[str, _Switches]
+        self.mode = lexicon_and_mode_switches[0][0]
+        for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
+            self.scanners[mode_name] = re.Scanner(lexicon)  # type: ignore[attr-defined]
+            self.switchbook[mode_name] = mode_switches_dict
 
     def token(self, type, value=''):
         cur_scanner = self.scanners[self.mode]
