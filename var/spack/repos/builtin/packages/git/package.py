@@ -390,7 +390,6 @@ class Git(AutotoolsPackage):
             with working_dir('contrib/credential/osxkeychain'):
                 make()
 
-
     def install(self, spec, prefix):
         args = ["install"]
         if '~nls' in self.spec:
