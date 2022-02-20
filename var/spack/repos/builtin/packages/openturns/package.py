@@ -16,6 +16,7 @@ class Openturns(CMakePackage):
     deterministic studies."""
 
     homepage = "https://openturns.github.io/www/"
+    url      = "https://github.com/openturns/openturns/archive/refs/tags/v1.1.8.tar.gz" 
     git      = "https://github.com/openturns/openturns.git"
     maintainers = ['liuyangzhuan']
 
