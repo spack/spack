@@ -1345,7 +1345,7 @@ class TestConcretize(object):
         ('mpich~debug', True)
     ])
     def test_concrete_specs_are_not_modified_on_reuse(
-            self, mutable_database, spec_str, expect_installed
+            self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Original concretizer cannot reuse specs')
@@ -1354,7 +1354,8 @@ class TestConcretize(object):
         # when reused specs are added to the mix. This prevents things
         # like additional constraints being added to concrete specs in
         # the answer set produced by clingo.
-        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        with spack.config.override("concretizer:reuse", True):
+            s = spack.spec.Spec(spec_str).concretized()
         assert s.package.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
 

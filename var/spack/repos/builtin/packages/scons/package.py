@@ -12,6 +12,8 @@ class Scons(PythonPackage):
     homepage = "https://scons.org"
     pypi = "scons/scons-3.1.1.tar.gz"
 
+    tags = ['build-tools']
+
     version('3.1.2', sha256='8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f')
     version('3.1.1', sha256='fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3')
     version('3.1.0', sha256='94e0d0684772d3e6d9368785296716e0ed6ce757270b3ed814e5aa72d3163890')

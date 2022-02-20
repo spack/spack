@@ -124,7 +124,7 @@ def test_find_external_cmd_not_buildable(
 
 def test_find_external_cmd_full_repo(
         mutable_config, working_env, mock_executable, mutable_mock_repo):
-    """Test invoking 'spack external find' with no additional arguments, which
+    """Test invoking 'spack external find --all' with no additional arguments
     iterates through each package in the repository.
     """
 
@@ -134,7 +134,7 @@ def test_find_external_cmd_full_repo(
     prefix = os.path.dirname(os.path.dirname(exe_path1))
 
     os.environ['PATH'] = ':'.join([os.path.dirname(exe_path1)])
-    external('find')
+    external('find', '--all')
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']

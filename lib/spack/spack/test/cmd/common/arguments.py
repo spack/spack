@@ -11,6 +11,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
+import spack.main
 
 
 @pytest.fixture()
@@ -112,3 +113,18 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
         env_spec2 = spack.cmd.matching_spec_from_env(
             spack.cmd.parse_specs(['b@1.0'])[0])
         assert env_spec2
+
+
+def test_concretizer_arguments(mutable_config, mock_packages):
+    """Ensure that ConfigSetAction is doing the right thing."""
+    spec = spack.main.SpackCommand("spec")
+
+    assert spack.config.get("concretizer:reuse", None) is None
+
+    spec("--reuse", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) is True
+
+    spec("--fresh", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) is False

@@ -1,0 +1,29 @@
+From 2ea8d31a2a75de75f838b4650e1531c346dfa6fe Mon Sep 17 00:00:00 2001
+From: sclarkson <sc@lambdal.com>
+Date: Thu, 12 Aug 2021 03:23:28 -0700
+Subject: [PATCH 8/8] Fix protobuf errors when using system protobuf
+
+When tensorflow and python protobuf use the same instance of
+libprotobuf, pywrap_tensorflow must be imported before anything
+else that would import protobuf definitions.
+---
+ tensorflow/python/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tensorflow/python/__init__.py b/tensorflow/python/__init__.py
+index 6efba380ca0..38d1eb55027 100644
+--- a/tensorflow/python/__init__.py
++++ b/tensorflow/python/__init__.py
+@@ -37,8 +37,8 @@ import traceback
+ # go/tf-wildcard-import
+ # pylint: disable=wildcard-import,g-bad-import-order,g-import-not-at-top
+ 
+-from tensorflow.python.eager import context
+ from tensorflow.python import pywrap_tensorflow as _pywrap_tensorflow
++from tensorflow.python.eager import context
+ 
+ # pylint: enable=wildcard-import
+ 
+-- 
+2.32.0
+

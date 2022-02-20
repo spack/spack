@@ -14,9 +14,9 @@ class Ninja(Package):
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
     git      = "https://github.com/ninja-build/ninja.git"
 
-    executables = ['^ninja$']
+    tags = ['build-tools', 'e4s']
 
-    tags = ['e4s']
+    executables = ['^ninja$']
 
     version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
     version('master', branch='master')

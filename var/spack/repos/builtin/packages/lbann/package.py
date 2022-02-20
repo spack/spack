@@ -74,6 +74,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
     variant('asan', default=False, description='Build with support for address-sanitizer')
+    variant('apps', default=True, description='Add python modules for standard LBANN applications')
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -193,15 +194,16 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc
-    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add +powerpc
+    # When using a GCC compiler
+    depends_on('opencv@4.1.0: +powerpc', when='+vision %gcc arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0 +conduit')
     depends_on('conduit@0.5.0:0.6 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    depends_on('conduit@0.6.0: +hdf5~hdf5_compat~fortran~parmetis', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -215,6 +217,15 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
+    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+
+    # Add Python package dependencies to support applications in the LBANN repo
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-pytest', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-scipy', type=('test', 'run'), when='@:0.90,0.99: +pfe +apps')
+    depends_on('py-tqdm', type='run', when='@:0.90,0.99: +pfe +apps')
+
+    # Add common Python packages that are used for LBANN auxiliary tools
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
@@ -222,8 +233,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
-    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
@@ -324,6 +333,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -409,6 +422,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
                         arch_str, cxxflags_str)
                 )
+
+        # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+        if self.spec.satisfies('^essl'):
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 
