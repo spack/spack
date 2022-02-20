@@ -19,6 +19,7 @@ class Openturns(CMakePackage):
     git      = "https://github.com/openturns/openturns.git"
     maintainers = ['liuyangzhuan']
 
+    version('1.18', sha256='1840d3fd8b38fd5967b1fa04e49d8f760c2c497400430e97623595ca48754ae0')
     version('master', branch='master')
 
     variant('python',   default=True,  description='Build Python bindings')
