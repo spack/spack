@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 
 class Geant4(CMakePackage):
     """Geant4 is a toolkit for the simulation of the passage of particles
@@ -198,7 +196,8 @@ class Geant4(CMakePackage):
 
     @property
     def datadir(self):
-         dataspec = self.spec['geant4-data']
-         return join_path(dataspec.prefix.share,
-                          '{0}-{1}'.format(dataspec.name,
-                                           dataspec.version.dotted))
+        dataspec = self.spec['geant4-data']
+        return join_path(
+            dataspec.prefix.share,
+            '{0}-{1}'.format(dataspec.name, dataspec.version.dotted)
+        )
