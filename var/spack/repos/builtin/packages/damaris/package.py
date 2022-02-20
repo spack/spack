@@ -15,7 +15,7 @@ class Damaris(CMakePackage):
     git      = "https://gitlab.inria.fr/Damaris/damaris.git"
     maintainers = ['jcbowden']
 
-    # version('master', branch='master')
+    version('master', branch='master')
     version('1.6.0',  tag='v1.6.0')
     version('1.5.0',  tag='v1.5.0')
     version('1.3.3',  tag='v1.3.3')
