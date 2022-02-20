@@ -128,6 +128,7 @@ class TestSuite(object):
         remove_directory = kwargs.get('remove_directory', True)
         dirty = kwargs.get('dirty', False)
         fail_first = kwargs.get('fail_first', False)
+        externals = kwargs.get('externals', False)
 
         for spec in self.specs:
             try:
@@ -149,9 +150,7 @@ class TestSuite(object):
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(
-                    dirty=dirty
-                )
+                spec.package.do_test(dirty=dirty, externals=externals)
 
                 # Clean up on success
                 if remove_directory:
@@ -160,7 +159,18 @@ class TestSuite(object):
                 # Log test status based on whether any non-pass-only test
                 # functions were called
                 tested = os.path.exists(self.tested_file_for_spec(spec))
-                status = 'PASSED' if tested else 'NO-TESTS'
+                if tested:
+                    status = 'PASSED'
+                else:
+                    self.ensure_stage()
+                    if spec.external and not externals:
+                        status = 'SKIPPED'
+                        msg = 'Skipped external package'
+                    else:
+                        status = 'NO-TESTS'
+                        msg = 'No tests to run'
+                    _add_msg_to_file(self.log_file_for_spec(spec), msg)
+
                 self.write_test_result(spec, status)
             except BaseException as exc:
                 self.fails += 1

@@ -476,6 +476,11 @@ class Llvm(CMakePackage, CudaPackage):
             result = os.path.join(self.spec.prefix.bin, 'flang')
         return result
 
+    @property
+    def libs(self):
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
+
     @run_before('cmake')
     def codesign_check(self):
         if self.spec.satisfies("+code_signing"):
@@ -721,9 +726,10 @@ class Llvm(CMakePackage, CudaPackage):
         if not kwargs.get('output'):
             kwargs['output'] = str
         ret = lc(*args, **kwargs)
-        if kwargs.get('output') == "list":
+        if kwargs.get('result') == "list":
             return ret.split()
-        return ret
+        else:
+            return ret
 
 
 def get_llvm_targets_to_build(spec):

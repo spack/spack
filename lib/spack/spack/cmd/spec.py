@@ -32,7 +32,7 @@ for further documentation regarding the spec syntax, see:
     spack help --spec
 """
     arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status', 'reuse']
+        subparser, ['long', 'very_long', 'install_status']
     )
     subparser.add_argument(
         '-y', '--yaml', action='store_const', dest='format', default=None,
@@ -55,6 +55,8 @@ for further documentation regarding the spec syntax, see:
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
     arguments.add_common_arguments(subparser, ['specs'])
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 @contextlib.contextmanager
@@ -83,21 +85,17 @@ def spec(parser, args):
     if args.install_status:
         tree_context = spack.store.db.read_transaction
 
-    concretize_kwargs = {
-        'reuse': args.reuse
-    }
-
     # Use command line specified specs, otherwise try to use environment specs.
     if args.specs:
         input_specs = spack.cmd.parse_specs(args.specs)
-        specs = [(s, s.concretized(**concretize_kwargs)) for s in input_specs]
+        specs = [(s, s.concretized()) for s in input_specs]
     else:
         env = ev.active_environment()
         if env:
-            env.concretize(**concretize_kwargs)
+            env.concretize()
             specs = env.concretized_specs()
         else:
-            tty.die("spack spec requires at least one spec or an active environmnt")
+            tty.die("spack spec requires at least one spec or an active environment")
 
     for (input, output) in specs:
         # With -y, just print YAML to output.

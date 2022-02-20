@@ -21,6 +21,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ['^info$']
 
+    tags = ['build-tools']
+
     version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
     version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')
     version('6.0', sha256='83d3183290f34e7f958d209d0b20022c6fe9e921eb6fe94c27d988827d4878d2')

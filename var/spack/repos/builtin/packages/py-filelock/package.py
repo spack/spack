@@ -16,6 +16,7 @@ class PyFilelock(PythonPackage):
     homepage = "https://github.com/benediktschmitt/py-filelock"
     pypi = "filelock/filelock-3.0.4.tar.gz"
 
+    version('3.5.0',  sha256='137b661e657f7850eec9def2a001efadba3414be523b87cd3f9a037372d80a15')
     version('3.4.0',  sha256='93d512b32a23baf4cac44ffd72ccf70732aeff7b8050fcaf6d3ec406d954baf4')
     version('3.0.12', sha256='18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59')
     version('3.0.4',  sha256='011327d4ed939693a5b28c0fdf2fd9bda1f68614c1d6d0643a89382ce9843a71')
@@ -28,6 +29,10 @@ class PyFilelock(PythonPackage):
     version('2.0.9',  sha256='0f91dce339c9f25d6f2e0733a17e4f9a47b139dffda52619a0e61e013e5c6782')
     version('2.0.8',  sha256='7e48e4906de3c9a5d64d8f235eb3ae1050dfefa63fd65eaf318cc915c935212b')
 
+    depends_on('python@3.7:', when='@3.4.2:', type=('build', 'run'))
     depends_on('python@3.6:', when='@3.3:', type=('build', 'run'))
     depends_on('python@2.7:2,3.5:', when='@3.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@41.0.0:', when='@3.1:', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-wheel@0.30:', when='@3.1:', type='build')
+    depends_on('py-setuptools-scm@2:', when='@3.1:', type='build')

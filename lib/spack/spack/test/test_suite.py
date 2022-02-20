@@ -87,6 +87,34 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     assert os.path.exists(data_filename)
 
 
+@pytest.mark.parametrize('arguments,status,msg', [
+    ({}, 'SKIPPED', 'Skipped'),
+    ({'externals': True}, 'NO-TESTS', 'No tests'),
+])
+def test_test_external(mock_packages, install_mockery, mock_test_stage,
+                       arguments, status, msg):
+    def ensure_results(filename, expected):
+        assert os.path.exists(filename)
+        with open(filename, 'r') as fd:
+            lines = fd.readlines()
+            have = False
+            for line in lines:
+                if expected in line:
+                    have = True
+                    break
+            assert have
+
+    name = 'trivial-smoke-test'
+    spec = spack.spec.Spec(name).concretized()
+    spec.external_path = '/path/to/external/{0}'.format(name)
+
+    test_suite = spack.install_test.TestSuite([spec])
+    test_suite(**arguments)
+
+    ensure_results(test_suite.results_file, status)
+    ensure_results(test_suite.log_file_for_spec(spec), msg)
+
+
 def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
     def ensure_current_cache_fail(test_suite):
         with pytest.raises(spack.install_test.TestSuiteSpecError):

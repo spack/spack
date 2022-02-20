@@ -20,6 +20,7 @@ class RDistributional(RPackage):
     homepage = "https://github.com/mitchelloharawild/distributional"
     cran     = "distributional"
 
+    version('0.3.0', sha256='fab36c7346617d8f2ca4b3cd0e3c9da93cb2f95fb7f102a3ae88670e694751d6')
     version('0.2.2', sha256='028e5a91aabe3a676eb7b7f3dc907f7f34735a123fe0d9adcabc03476504435f')
 
     depends_on('r-vctrs@0.3.0:', type=('build', 'run'))
