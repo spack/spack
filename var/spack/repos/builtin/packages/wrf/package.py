@@ -111,7 +111,7 @@ class Wrf(Package):
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
     patch("patches/3.9/configure_aocc_2.3.patch", when="@3.9.1.1 %aocc@:2.4.0")
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
-    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
+    patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0:3.3.0")
     patch("patches/3.9/fujitsu.patch", when="@3.9.1.1 %fj")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
@@ -138,7 +138,9 @@ class Wrf(Package):
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2:")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
-    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
+    patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0")
+    patch("patches/4.2/configure_aocc_3.1.patch", when="@4.2 %aocc@3.1.0")
+    patch("patches/4.2/configure_aocc_3.2.patch", when="@4.2 %aocc@3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
     # Various syntax fixes found by FPT tool
