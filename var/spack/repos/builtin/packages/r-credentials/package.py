@@ -7,7 +7,7 @@ from spack import *
 
 
 class RCredentials(RPackage):
-    """Tools for Managing SSH and Git Credentials
+    """Tools for Managing SSH and Git Credentials.
 
     Setup and retrieve HTTPS and SSH credentials for use with 'git' and other
     services. For HTTPS remotes the package interfaces the 'git-credential'
@@ -17,10 +17,9 @@ class RCredentials(RPackage):
     and also provides a back-end for git/ssh client libraries to authenticate
     with existing user credentials."""
 
-    homepage = "https://docs.ropensci.org/credentials"
-    url      = "https://cloud.r-project.org/src/contrib/credentials_1.3.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/credentials"
+    cran = "credentials"
 
+    version('1.3.2', sha256='2ffa7c11bedbfa034adf553d0a2f2e4f6a496b858af753a09a89219cff9028b8')
     version('1.3.0', sha256='c119ec26fd97b977c3b0cd1eb8fad3c59b84df6262c3adbf5ee9f3d6c9903ff1')
 
     depends_on('r-openssl@1.3:', type=('build', 'run'))

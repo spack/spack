@@ -7,12 +7,12 @@ from spack import *
 
 
 class RHwriter(RPackage):
-    """Easy-to-use and versatile functions to
+    """HTML Writer - Outputs R objects in HTML format.
+
+    Easy-to-use and versatile functions to
     output R objects in HTML format."""
 
-    homepage = "https://cloud.r-project.org/package=hwriter"
-    url      = "https://cloud.r-project.org/src/contrib/hwriter_1.3.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/hwriter"
+    cran = "hwriter"
 
     version('1.3.2', sha256='6b3531d2e7a239be9d6e3a1aa3256b2745eb68aa0bdffd2076d36552d0d7322b')
 

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RFarver(RPackage):
-    """High Performance Colour Space Manipulation
+    """High Performance Colour Space Manipulation.
 
     The encoding of colour can be handled in many different ways, using
     different colour spaces. As different colour spaces have different uses,
@@ -17,7 +17,6 @@ class RFarver(RPackage):
     speed improvements over the 'convertColor' function in the 'grDevices'
     package."""
 
-    homepage = "https://github.com/thomasp85/farver"
     cran = "farver"
 
     version('2.1.0', sha256='e5c8630607049f682fb3002b99ca4f5e7c6b94f8b2a4342df594e7853b77cef4')

@@ -7,16 +7,14 @@ from spack import *
 
 
 class RQuickplot(RPackage):
-    """A System of Plotting Optimized for Speed and Modularity
+    """A System of Plotting Optimized for Speed and Modularity.
 
-    A high-level plotting system, built using 'grid' graphics, that
-    is optimized for speed and modularity. This has great utility
-    for quick visualizations when testing code, with the key benefit
-    that visualizations are updated independently of one another."""
+    A high-level plotting system, built using 'grid' graphics, that is
+    optimized for speed and modularity. This has great utility for quick
+    visualizations when testing code, with the key benefit that visualizations
+    are updated independently of one another."""
 
-    homepage = "https://quickplot.predictiveecology.org/"
-    url      = "https://cloud.r-project.org/src/contrib/quickPlot_0.1.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/quickPlot"
+    cran = "quickPlot"
 
     maintainers = ['dorton21']
 

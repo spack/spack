@@ -6,19 +6,19 @@ from spack import *
 
 
 class RGoplot(RPackage):
-    """Implementation of multilayered visualizations for enhanced graphical
-       representation of functional analysis data. It combines and integrates
-       omics data derived from expression and functional annotation enrichment
-       analyses. Its plotting functions have been developed with an
-       hierarchical structure in mind: starting from a general overview to
-       identify the most enriched categories (modified bar plot, bubble plot)
-       to a more detailed one displaying different types of relevant
-       information for the molecules in a given set of categories
-       (circle plot, chord plot, cluster plot, Venn diagram, heatmap)."""
+    """Visualization of Functional Analysis Data.
 
-    homepage = "https://github.com/wencke/wencke.github.io/issues"
-    url      = "https://cloud.r-project.org/src/contrib/GOplot_1.0.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/GOplot"
+    Implementation of multilayered visualizations for enhanced graphical
+    representation of functional analysis data. It combines and integrates
+    omics data derived from expression and functional annotation enrichment
+    analyses. Its plotting functions have been developed with an hierarchical
+    structure in mind: starting from a general overview to identify the most
+    enriched categories (modified bar plot, bubble plot) to a more detailed one
+    displaying different types of relevant information for the molecules in a
+    given set of categories (circle plot, chord plot, cluster plot, Venn
+    diagram, heatmap)."""
+
+    cran = "GOplot"
 
     version('1.0.2', sha256='3ddaa2b6d1297ad6daad30d18af708adf43d86e8804b1b92fa29dfbf26d80df9')
 

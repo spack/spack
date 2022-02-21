@@ -7,19 +7,18 @@ from spack import *
 
 
 class RRgl(RPackage):
-    """3D Visualization Using OpenGL
+    """3D Visualization Using OpenGL.
 
     Provides medium to high level functions for 3D interactive graphics,
     including functions modelled on base graphics (plot3d(), etc.) as well as
     functions for constructing representations of geometric objects (cube3d(),
-    etc.). Output may be on screen using OpenGL, or to various standard
-    3D file formats including WebGL, PLY, OBJ, STL as well as 2D image formats,
+    etc.). Output may be on screen using OpenGL, or to various standard 3D file
+    formats including WebGL, PLY, OBJ, STL as well as 2D image formats,
     including PNG, Postscript, SVG, PGF."""
 
-    homepage = "https://r-forge.r-project.org/projects/rgl"
-    url      = "https://cloud.r-project.org/src/contrib/rgl_0.99.16.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rgl"
+    cran = "rgl"
 
+    version('0.108.3', sha256='89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b')
     version('0.104.16', sha256='b82d2e2b965e76d6cc55bbd15ee0f79c36913ab09ce5436d2104551563462a99')
     version('0.100.26', sha256='e1889c2723ad458b39fdf9366fdaf590d7657d3762748f8534a8491ef754e740')
     version('0.100.24', sha256='1233a7bdc5a2b908fc64d5f56e92a0e123e8f7c0b9bac93dfd005608b78fa35a')
@@ -29,14 +28,14 @@ class RRgl(RPackage):
 
     depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.3.0:', type=('build', 'run'), when='@0.108.3:')
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-knitr@1.33:', type=('build', 'run'), when='@0.108.3:')
     depends_on('r-jsonlite@0.9.20:', type=('build', 'run'))
-    depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-crosstalk', when='@0.99.16:', type=('build', 'run'))
-    depends_on('r-manipulatewidget@0.9.0:', when='@0.99.16:', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'), when='@0.108.3:')
     depends_on('libx11')
     depends_on('gl')
     depends_on('glu')
@@ -44,6 +43,10 @@ class RRgl(RPackage):
     depends_on('libpng@1.2.9:', type='link')
     depends_on('freetype', type='link')
     depends_on('pandoc@1.14:', type='build')
+
+    depends_on('r-shiny', type=('build', 'run'), when='@:0.104.16')
+    depends_on('r-crosstalk', type=('build', 'run'), when='@0.99.16:0.104.16')
+    depends_on('r-manipulatewidget@0.9.0:', type=('build', 'run'), when='@0.99.16:0.104.16')
 
     def configure_args(self):
         args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,

@@ -7,10 +7,15 @@ from spack import *
 
 
 class RCommonmark(RPackage):
-    """commonmark: CommonMark and Github Markdown Rendering in R"""
+    """High Performance CommonMark and Github Markdown Rendering in R.
 
-    homepage = "https://cloud.r-project.org/package=commonmark"
-    url      = "https://cloud.r-project.org/src/contrib/commonmark_1.7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/commonmark/"
+    The CommonMark specification defines a rationalized version of markdown
+    syntax. This package uses the 'cmark' reference implementation for
+    converting markdown text into various formats including html, latex and
+    groff man. In addition it exposes the markdown parse tree in xml format.
+    Also includes opt-in support for GFM extensions including tables,
+    autolinks, and strikethrough text."""
+
+    cran = "commonmark"
 
     version('1.7', sha256='d14a767a3ea9778d6165f44f980dd257423ca6043926e3cd8f664f7171f89108')
