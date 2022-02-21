@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenefilter(RPackage):
-    """: methods for filtering genes from high-throughput experiments.
+    """Methods for filtering genes from high-throughput experiments.
 
     Some basic functions for filtering genes."""
 
