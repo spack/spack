@@ -139,6 +139,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
         depends_on('paraview {0}'.format(cuda_arch),
                    when='+paraview {0} ^paraview@5.11:'.format(cuda_arch))
     depends_on('paraview ~cuda', when='+paraview ~cuda')
+    conflicts('paraview@master')
 
     dav_sdk_depends_on('visit', when='+visit')
 
