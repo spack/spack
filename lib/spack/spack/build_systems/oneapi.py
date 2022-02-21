@@ -7,10 +7,11 @@
 
 """
 
+from genericpath import exists
 import getpass
 import platform
 import shutil
-from os.path import basename, dirname, isdir
+from os.path import basename, dirname, isdir, exists, join, expanduser
 
 from llnl.util.filesystem import find_headers, find_libraries, join_path
 
@@ -62,24 +63,44 @@ class IntelOneApiPackage(Package):
             # with other install depends on the userid. For root, we
             # delete the installercache before and after install. For
             # non root we redefine the HOME environment variable.
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
-
             bash = Executable('bash')
-
-            # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env('HOME', prefix)
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
             bash.add_default_env('XDG_RUNTIME_DIR',
                                  join_path(self.stage.path, 'runtime'))
 
-            bash(installer_path,
-                 '-s', '-a', '-s', '--action', 'install',
-                 '--eula', 'accept',
-                 '--install-dir', prefix)
+            if '2021' in str(spec.version):
+                if getpass.getuser() == 'root':
+                    if exists('/var/intel/installercache'):
+                        shutil.move('/var/intel/installercache', '/tmp/intel/installercache')
 
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+                # Installer writes files in ~/intel set HOME so it goes to prefix
+                bash.add_default_env('HOME', prefix)
+
+                bash(installer_path,
+                     '-s', '-a', '-s', '--action', 'install',
+                     '--eula', 'accept',
+                     '--install-dir', prefix)
+
+                if getpass.getuser() == 'root':
+                    shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+                    if exists('/tmp/intel/installercache'):
+                        shutil.move('/tmp/intel/installercache', '/var/intel/installercache')
+            else:
+                # Since 2022 release oneAPI installer supports multi-instance mode
+                # and can separate one installation from another. That means 
+                # all manipulations with installercahce is unnessesary. 
+                instance = prefix.split('/')[-1]
+                bash(installer_path,
+                     '-s', '-a', '-s', '--action', 'install',
+                     '--eula', 'accept',
+                     '--instance', instance,
+                     '--download-cache', '/tmp/intel/downloadcache',
+                     '--install-dir', prefix)
+                shutil.rmtree('/tmp/intel/downloadcache')
+                if getpass.getuser() == 'root':
+                    shutil.rmtree(join('/var/intel/installercache/instances', instance))
+                else:
+                    shutil.rmtree(join(expanduser('~'), 'intel/installercache/instances', instance))
 
         # Some installers have a bug and do not return an error code when failing
         if not isdir(join_path(prefix, self.component_dir)):
