@@ -16,7 +16,7 @@ class RScaledmatrix(RPackage):
 
     bioc = "ScaledMatrix"
 
-    version('1.2.0', commit='d0573e1')
+    version('1.2.0', commit='d0573e14ca537b40ade7dd1c9cf0cadae60d4349')
 
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))

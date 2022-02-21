@@ -16,7 +16,7 @@ class RGgtree(RPackage):
 
     bioc = "ggtree"
 
-    version('3.2.1', commit='d3747e6')
+    version('3.2.1', commit='d3747e636fe1a6a9e09b56a3a3899208ebd05547')
 
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))

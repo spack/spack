@@ -18,7 +18,7 @@ class RTreeio(RPackage):
 
     bioc = "treeio"
 
-    version('1.18.1', commit='a06b6b3')
+    version('1.18.1', commit='a06b6b3d2a64f1b22c6c8c5f97c08f5863349c83')
 
     depends_on('r@3.6.0:', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))

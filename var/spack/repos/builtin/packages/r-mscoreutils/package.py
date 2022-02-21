@@ -19,7 +19,7 @@ class RMscoreutils(RPackage):
 
     bioc = "MsCoreUtils"
 
-    version('1.6.0', commit='9ed95b2')
+    version('1.6.0', commit='9ed95b2d20dacaa83567fadd04349c81db9127ef')
 
     depends_on('r@3.6.0:', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
