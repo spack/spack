@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Geant4(CMakePackage):
     """Geant4 is a toolkit for the simulation of the passage of particles
@@ -56,19 +54,10 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
     depends_on('cmake@3.5:', type='build')
 
-    depends_on('geant4-data@11.0.0', type='run', when='@11.0.0')
-    depends_on('geant4-data@10.7.3', type='run', when='@10.7.3')
-    depends_on('geant4-data@10.7.2', type='run', when='@10.7.2')
-    depends_on('geant4-data@10.7.1', type='run', when='@10.7.1')
-    depends_on('geant4-data@10.7.0', type='run', when='@10.7.0')
-    depends_on('geant4-data@10.6.3', type='run', when='@10.6.3')
-    depends_on('geant4-data@10.6.2', type='run', when='@10.6.2')
-    depends_on('geant4-data@10.6.1', type='run', when='@10.6.1')
-    depends_on('geant4-data@10.6.0', type='run', when='@10.6.0')
-    depends_on('geant4-data@10.5.1', type='run', when='@10.5.1')
-    depends_on('geant4-data@10.4.3', type='run', when='@10.4.3')
-    depends_on('geant4-data@10.4.0', type='run', when='@10.4.0')
-    depends_on('geant4-data@10.3.3', type='run', when='@10.3.3')
+    for _vers in ["11.0.0", "10.7.3", "10.7.2", "10.7.1", "10.7.0", "10.6.3",
+                  "10.6.2", "10.6.1", "10.6.0", "10.5.1", "10.4.3", "10.4.0",
+                  "10.3.3"]:
+        depends_on('geant4-data@' + _vers, type='run', when='@' + _vers)
 
     depends_on("expat")
     depends_on("zlib")
@@ -169,8 +158,11 @@ class Geant4(CMakePackage):
             # geant4 libs at application runtime
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
 
-        # never install the data with geant4
-        options.append('-DGEANT4_INSTALL_DATA=OFF')
+        # Never install the data with geant4, but point to the dependent
+        # geant4-data's install directory to correctly set up the
+        # Geant4Config.cmake values for Geant4_DATASETS .
+        options.append(self.define('GEANT4_INSTALL_DATA', False))
+        options.append(self.define('GEANT4_INSTALL_DATADIR', self.datadir))
 
         # Vecgeom
         if '+vecgeom' in spec:
@@ -201,3 +193,11 @@ class Geant4(CMakePackage):
                                                     'python'))
 
         return options
+
+    @property
+    def datadir(self):
+        dataspec = self.spec['geant4-data']
+        return join_path(
+            dataspec.prefix.share,
+            '{0}-{1}'.format(dataspec.name, dataspec.version.dotted)
+        )
