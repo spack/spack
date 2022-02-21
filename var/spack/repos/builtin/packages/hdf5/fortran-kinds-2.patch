@@ -1,0 +1,24 @@
+From 598df49b738fd99df9f2671e4e967fd9c33ae8a9 Mon Sep 17 00:00:00 2001
+From: Seth R Johnson <johnsonsr@ornl.gov>
+Date: Wed, 16 Feb 2022 20:38:03 -0500
+Subject: [PATCH] Close file to work around GCC11.2/macOS12 bug
+
+---
+ m4/aclocal_fc.f90 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/m4/aclocal_fc.f90 b/m4/aclocal_fc.f90
+index e9a11c0ab5..bfda49aa40 100644
+--- a/m4/aclocal_fc.f90
++++ b/m4/aclocal_fc.f90
+@@ -151,6 +151,7 @@ PROGRAM FC_AVAIL_KINDS
+      WRITE(8,'(I0)') max_decimal_prec
+      WRITE(8,'(I0)') num_ikinds
+      WRITE(8,'(I0)') num_rkinds
++     CLOSE(8)
+ END PROGRAM FC_AVAIL_KINDS
+ !---- END ----- Determine the available KINDs for REALs and INTEGERs
+ 
+-- 
+2.32.0
+

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Libzmq(AutotoolsPackage):
@@ -37,7 +37,7 @@ class Libzmq(AutotoolsPackage):
     variant("docs", default=True,
             description="Build documentation")
 
-    variant("libbsd", default=True,
+    variant("libbsd", when='@4.3.3:', default=(sys.platform != 'darwin'),
             description="Use strlcpy from libbsd " +
                         "(will use own implementation if false)")
 
@@ -51,8 +51,7 @@ class Libzmq(AutotoolsPackage):
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', when='@4.3.3: platform=linux +libbsd')
-    depends_on('libbsd', when='@4.3.3: platform=cray +libbsd')
+    depends_on('libbsd', when='+libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
