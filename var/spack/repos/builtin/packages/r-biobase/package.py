@@ -7,14 +7,14 @@ from spack import *
 
 
 class RBiobase(RPackage):
-    """Biobase: Base functions for Bioconductor
+    """Biobase: Base functions for Bioconductor.
 
        Functions that are needed by many other packages or which replace R
        functions."""
 
-    homepage = "https://bioconductor.org/packages/Biobase"
-    git      = "https://git.bioconductor.org/packages/Biobase.git"
+    bioc = "Biobase"
 
+    version('2.54.0', commit='8215d76ce44899e6d10fe8a2f503821a94ef6b40')
     version('2.50.0', commit='9927f90d0676382f2f99e099d8d2c8e2e6f1b4de')
     version('2.44.0', commit='bde2077f66047986297ec35a688751cdce150dd3')
     version('2.42.0', commit='3e5bd466b99e3cc4af1b0c3b32687fa56d6f8e4d')
@@ -24,4 +24,4 @@ class RBiobase(RPackage):
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.3.2:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.27.1:', when='@2.42.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.27.1:', type=('build', 'run'), when='@2.42.0:')

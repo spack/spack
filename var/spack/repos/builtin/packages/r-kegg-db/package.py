@@ -7,13 +7,13 @@ from spack import *
 
 
 class RKeggDb(RPackage):
-    """A set of annotation maps for KEGG
+    """A set of annotation maps for KEGG.
 
     A set of annotation maps for KEGG assembled using data from KEGG."""
 
     # NOTE: The KEGG.db package was removed in Bioconductor-3.13
 
-    homepage = "https://www.bioconductor.org/packages/KEGG.db/"
+    bioc = "KEGG.db"
     url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/KEGG.db_3.2.3.tar.gz"
 
     version('3.2.4',

@@ -7,14 +7,14 @@ from spack import *
 
 
 class RRgraphviz(RPackage):
-    """Provides plotting capabilities for R graph objects
+    """Provides plotting capabilities for R graph objects.
 
        Interfaces R with the AT and T graphviz library for plotting R graph
        objects from the graph package."""
 
-    homepage = "https://bioconductor.org/packages/Rgraphviz"
-    git      = "https://git.bioconductor.org/packages/Rgraphviz.git"
+    bioc = "Rgraphviz"
 
+    version('2.38.0', commit='004de09a5b171211aff6cbaa1969ab8e3a5d6c61')
     version('2.34.0', commit='9746623211be794226258631992dfcccccfd7487')
     version('2.28.0', commit='c1f57c11f037c977f1d17f227f12a09a999e8c0b')
     version('2.26.0', commit='e9b08c77121a45c65129d94a12b5c0b31c65617f')
