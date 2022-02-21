@@ -23,6 +23,7 @@ class RLumi(RPackage):
     version('2.42.0', commit='a643b3ba46fee951b8566ddd8216af7e6c92f6f6')
     version('2.38.0', commit='321d480d44ce9a0c02ce5af1bddc1f549abdea59')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase@2.5.5:', type=('build', 'run'))
     depends_on('r-affy@1.23.4:', type=('build', 'run'))
     depends_on('r-methylumi@2.3.2:', type=('build', 'run'))

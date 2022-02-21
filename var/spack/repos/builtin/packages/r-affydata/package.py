@@ -23,4 +23,5 @@ class RAffydata(RPackage):
     version('1.26.0', commit='eb0a44a39990b361f9fb1094837ffafb320f39a9')
     version('1.24.0', commit='663991606507572f083232e2b393d901270291d4')
 
+    depends_on('r@2.4.0:', type=('build', 'run'))
     depends_on('r-affy@1.23.4:', type=('build', 'run'))

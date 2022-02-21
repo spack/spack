@@ -25,5 +25,6 @@ class RAims(RPackage):
     version('1.10.0', commit='972945980b39168502a02ac3aa396f9b99fb3d71')
     version('1.8.0', commit='86b866c20e191047492c51b43e3f73082c3f8357')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-e1071', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

@@ -23,6 +23,7 @@ class RSnpstats(RPackage):
     version('1.28.0', commit='8df9f4188f720dfbb4f4f4ec255cd2e22f3f4426')
     version('1.26.0', commit='7c9b3304073e0556d694a8531882b349822fdda8')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

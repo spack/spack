@@ -18,6 +18,7 @@ class RWatermelon(RPackage):
     version('1.34.0', commit='3fa2745535c22068a438747b41b9d793196098d4')
     version('1.30.0', commit='66d7579fe49206d965832288df7937c3d43ed578')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))

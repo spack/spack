@@ -22,5 +22,6 @@ class RAgdex(RPackage):
     version('1.26.0', commit='260bc641111770176707d4d43e67b5877bf5eb82')
     version('1.24.0', commit='29c6bcfa6919a5c6d8bcb36b44e75145a60ce7b5')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-gseabase', type=('build', 'run'))

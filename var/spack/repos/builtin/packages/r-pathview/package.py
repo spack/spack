@@ -29,6 +29,7 @@ class RPathview(RPackage):
     version('1.16.7', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-kegggraph', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rgraphviz', type=('build', 'run'))

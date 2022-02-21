@@ -22,6 +22,7 @@ class RGseabase(RPackage):
     version('1.40.1', commit='3e5441708b80aab2c9642988bee709d5732831a6')
     version('1.38.2', commit='84c9f10c316163118ca990900a7a67555b96e75b')
 
+    depends_on('r@2.6.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.8:', type=('build', 'run'))
     depends_on('r-biobase@2.17.8:', type=('build', 'run'))
     depends_on('r-annotate@1.45.3:', type=('build', 'run'))

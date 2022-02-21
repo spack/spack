@@ -18,4 +18,5 @@ class RDoDb(RPackage):
 
     version('2.9', sha256='762bcb9b5188274fd81d82f785cf2846a5acc61fad55e2ff8ec1502282c27881')
 
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.9.7:', type=('build', 'run'))

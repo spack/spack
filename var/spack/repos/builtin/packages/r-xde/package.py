@@ -23,6 +23,7 @@ class RXde(RPackage):
     version('2.24.0', commit='fd5f245f82893657dc36e5a67a1d3b8255772462')
     version('2.22.0', commit='25bcec965ae42a410dd285a9db9be46d112d8e81')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-biobase@2.5.5:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))

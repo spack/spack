@@ -21,6 +21,7 @@ class RGeneplotter(RPackage):
     version('1.56.0', commit='881d25aece3dc00cc4280457ffecdc25e93bb1f1')
     version('1.54.0', commit='efdd946e092e44e35fde1eb4bcc5ec1d52090940')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

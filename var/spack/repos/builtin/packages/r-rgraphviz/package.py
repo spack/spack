@@ -23,5 +23,6 @@ class RRgraphviz(RPackage):
     version('2.20.0', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.6.0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))
     depends_on('graphviz@2.16:', type='run')

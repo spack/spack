@@ -23,6 +23,7 @@ class RAgimicrorna(RPackage):
     version('2.26.0', commit='6dd74bae47986f2a23d03e3f1f9f78f701dd8053')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))
     depends_on('r-affy@1.22:', type=('build', 'run'))

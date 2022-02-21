@@ -20,6 +20,7 @@ class RAromaLight(RPackage):
     version('3.20.0', commit='02cde7fa166259bce73c396a87dca2ecc8249c39')
     version('3.16.0', commit='fc16179fc4bee8954c5415d7cd13e3112b75b4fd')
 
+    depends_on('r@2.15.2:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
     depends_on('r-r-oo@1.22.0:', type=('build', 'run'))
     depends_on('r-r-oo@1.23.0:', type=('build', 'run'), when='@3.20.0:')

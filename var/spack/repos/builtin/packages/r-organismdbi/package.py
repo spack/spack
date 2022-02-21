@@ -24,6 +24,7 @@ class ROrganismdbi(RPackage):
     version('1.20.0', commit='d42e06a24777e5ffb966ad5addb4f46dfffa2269')
     version('1.18.1', commit='ba2d1237256805e935d9534a0c6f1ded07b42e95')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.33.15:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.23.31:', type=('build', 'run'))

@@ -22,4 +22,5 @@ class RHypergraph(RPackage):
     version('1.50.0', commit='fb3d523caf1d5791ef6962dd3c1a142742025ad5')
     version('1.48.0', commit='a4c19ea0b5f15204f706a7bfdea5363706382820')
 
+    depends_on('r@2.1.0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))

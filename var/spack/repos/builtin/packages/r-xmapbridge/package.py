@@ -21,3 +21,5 @@ class RXmapbridge(RPackage):
     version('1.38.0', commit='08138f00385fa0c669ff4cc33d7eac3d29cd615d')
     version('1.36.0', commit='e44f648c9da9eaa130849a738d90dc11685050e2')
     version('1.34.0', commit='f162e1f72ead5f5a1aede69032d5771a6572d965')
+
+    depends_on('r@2.0:', type=('build', 'run'))

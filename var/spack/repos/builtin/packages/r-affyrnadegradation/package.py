@@ -26,4 +26,5 @@ class RAffyrnadegradation(RPackage):
     version('1.24.0', commit='1f85f3da4720cef94623828713eb84d8accbcf8a')
     version('1.22.0', commit='0fa78f8286494711a239ded0ba587b0de47c15d3')
 
+    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))

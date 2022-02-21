@@ -23,6 +23,7 @@ class ROligoclasses(RPackage):
     version('1.40.0', commit='32f40617e62d05c457baaebc7e27585b852848ed')
     version('1.38.0', commit='fe2bb7f02c7ed3cbd338254c27ceba6ff829a962')
 
+    depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.3.2:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.27.1:', type=('build', 'run'), when='@1.44.0:')
     depends_on('r-biobase@2.17.8:', type=('build', 'run'))

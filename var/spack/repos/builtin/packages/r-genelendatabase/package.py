@@ -22,5 +22,6 @@ class RGenelendatabase(RPackage):
     version('1.14.0', commit='b456b3ffb04eaf335893fdec2bb10f6795dd7e08')
     version('1.12.0', commit='85d6536763c12850e6c01da9e2f9e0b9c07601fe')
 
+    depends_on('r@2.11.0:', type=('build', 'run'))
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.3.15:', type=('build', 'run'))

@@ -24,6 +24,7 @@ class RSimpleaffy(RPackage):
     version('2.54.0', commit='6876e028d412b14504ad3915cbec1a189e9c6478')
     version('2.52.0', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
 
+    depends_on('r@2.0.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.1.12:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-affy@1.33.6:', type=('build', 'run'))

@@ -21,6 +21,7 @@ class RAnnotate(RPackage):
     version('1.56.2', commit='95ec3b004f5356bd78b2a60cbf7f93e0d48cf346')
     version('1.54.0', commit='860cc5b696795a31b18beaf4869f9c418d74549e')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.27.5:', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

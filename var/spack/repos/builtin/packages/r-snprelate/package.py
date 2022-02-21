@@ -37,4 +37,5 @@ class RSnprelate(RPackage):
     version('1.12.2', commit='dce2e2b6f36483a9f905bb5df6ae834a9f1136fe')
     version('1.10.2', commit='3f5c4010871df742e7a460586b38ad0c2fd37aeb')
 
+    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-gdsfmt@1.8.3:', type=('build', 'run'))

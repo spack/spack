@@ -24,6 +24,7 @@ class RAnnaffy(RPackage):
     version('1.50.0', commit='a822e20f3e961a8afa5eb23536343115a33fb259')
     version('1.48.0', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
 
+    depends_on('r@2.5.0:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocmanager', type=('build', 'run'), when='@1.64.2:')
     depends_on('r-go-db', type=('build', 'run'))

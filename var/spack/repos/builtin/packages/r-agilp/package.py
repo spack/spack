@@ -20,3 +20,5 @@ class RAgilp(RPackage):
     version('3.12.0', commit='a86dea1b03b2b56c2c8317d4b10903fb8948ffcb')
     version('3.10.0', commit='cffec1004704a0c5119a50e3ad474897978981be')
     version('3.8.0', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))

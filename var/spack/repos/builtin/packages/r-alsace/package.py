@@ -26,5 +26,6 @@ class RAlsace(RPackage):
     version('1.14.0', commit='aebb13b00eb850f9569391c4c92183b55b70ae89')
     version('1.12.0', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-als', type=('build', 'run'))
     depends_on('r-ptw@1.0.6:', type=('build', 'run'))

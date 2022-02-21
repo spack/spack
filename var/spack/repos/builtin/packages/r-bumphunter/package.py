@@ -21,6 +21,7 @@ class RBumphunter(RPackage):
     version('1.20.0', commit='c9d8e7ab0c19299988e5d7fa74970312e9a1eac0')
     version('1.16.0', commit='1c3ab4d1fd2d75b1586ccef12665960b3602080a')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r@3.4:', type=('build', 'run'), when='@1.20.0:')
     depends_on('r@3.5:', type=('build', 'run'), when='@1.24.5:')
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))

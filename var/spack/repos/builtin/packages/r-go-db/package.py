@@ -25,6 +25,7 @@ class RGoDb(RPackage):
             sha256='2fc2048e9d26edb98e35e4adc4d18c6df54f44836b5cc4a482d36ed99e058cc1',
             url='https://bioconductor.org/packages/3.5/data/annotation/src/contrib/GO.db_3.4.1.tar.gz')
 
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.37.4:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.51.3:', type=('build', 'run'), when='@3.12.1:')
     depends_on('r-annotationdbi@1.55.1:', type=('build', 'run'), when='@3.14.0:')

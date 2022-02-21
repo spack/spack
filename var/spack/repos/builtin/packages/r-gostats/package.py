@@ -24,6 +24,7 @@ class RGostats(RPackage):
     version('2.42.0', commit='8b29709064a3b66cf1d963b2be0c996fb48c873e')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase@1.15.29:', type=('build', 'run'))
     depends_on('r-category@2.3.26:', type=('build', 'run'))
     depends_on('r-category@2.43.2:', type=('build', 'run'), when='@2.44.0:')

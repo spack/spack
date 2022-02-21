@@ -25,5 +25,6 @@ class RAbsseq(RPackage):
     version('1.32.3', commit='189d81c3d70f957bf50780f76a6ddcee499b4784')
     version('1.22.8', commit='a67ba49bc156a4522092519644f3ec83d58ebd6a')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-locfit', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))

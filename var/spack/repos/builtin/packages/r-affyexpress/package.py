@@ -22,5 +22,6 @@ class RAffyexpress(RPackage):
     version('1.44.0', commit='7517bc8b363ceb107d5dca66dd74f94edefde52a')
     version('1.42.0', commit='f5c5cf6173f4419e25f4aeff5e6b705a40abc371')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-affy@1.23.4:', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))

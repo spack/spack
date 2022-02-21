@@ -24,6 +24,7 @@ class RAffyilm(RPackage):
     version('1.30.0', commit='c07d91ae52a2a48f0a5f212c3ecf3243741bee13')
     version('1.28.0', commit='307bee3ebc599e0ea4a1d6fa8d5511ccf8bef7de')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-gcrma', type=('build', 'run'))
     depends_on('r-affxparser@1.16.0:', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))

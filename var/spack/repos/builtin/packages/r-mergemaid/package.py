@@ -28,6 +28,7 @@ class RMergemaid(RPackage):
     version('2.50.0', commit='b77d7fcb8ac8cf9ee71303bb193ef1a36a7f6049')
     version('2.48.0', commit='aee89c523fcafff4c166ff3db4fff90df16a1ed4')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

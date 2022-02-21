@@ -26,6 +26,7 @@ class RAffycompatible(RPackage):
     version('1.38.0', commit='d47ee3a3a3d3bce11121e80fe02ee216b9199b12')
     version('1.36.0', commit='dbbfd43a54ae1de6173336683a9461084ebf38c3')
 
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-xml@2.8-1:', type=('build', 'run'))
     depends_on('r-rcurl@0.8-1:', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))

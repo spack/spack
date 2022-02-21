@@ -28,6 +28,7 @@ class ROrgHsEgDb(RPackage):
             sha256='0f87b3f1925a1d7007e5ad9200bdf511788bd1d7cb76f1121feeb109889c2b00',
             url='https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/org.Hs.eg.db_3.4.1.tar.gz')
 
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.37.4:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.43.1:', type=('build', 'run'), when='@3.8.2:')
     depends_on('r-annotationdbi@1.51.3:', type=('build', 'run'), when='@3.12.0:')

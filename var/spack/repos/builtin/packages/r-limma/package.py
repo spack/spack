@@ -22,4 +22,5 @@ class RLimma(RPackage):
     version('3.34.9', commit='6755278a929f942a49e2441fb002a3ed393e1139')
     version('3.32.10', commit='593edf28e21fe054d64137ae271b8a52ab05bc60')
 
+    depends_on('r@2.3.0:', type=('build', 'run'))
     depends_on('r@3.6.0:', type=('build', 'run'), when='@3.40.6:')

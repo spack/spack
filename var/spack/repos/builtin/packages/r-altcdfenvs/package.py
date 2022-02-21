@@ -21,6 +21,7 @@ class RAltcdfenvs(RPackage):
     version('2.40.0', commit='517a208f49f168bdd3cde40ed216282c417237d7')
     version('2.38.0', commit='2e92b9da76dbe50af4bf33c525134e29e9809291')
 
+    depends_on('r@2.7:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.1.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-biobase@2.15.1:', type=('build', 'run'))

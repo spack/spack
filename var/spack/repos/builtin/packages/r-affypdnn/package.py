@@ -20,4 +20,5 @@ class RAffypdnn(RPackage):
     version('1.52.0', commit='17d74c593ce4f0dfd43f13a5016e482c1399d21e')
     version('1.50.0', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
 
+    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-affy@1.5:', type=('build', 'run'))

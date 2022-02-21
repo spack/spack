@@ -24,6 +24,7 @@ class RTopgo(RPackage):
     version('2.30.1', commit='b1469ce1d198ccb73ef79ca22cab81659e16dbaa')
     version('2.28.0', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.6:', type=('build', 'run'))
     depends_on('r-graph@1.14.0:', type=('build', 'run'))
     depends_on('r-biobase@2.0.0:', type=('build', 'run'))

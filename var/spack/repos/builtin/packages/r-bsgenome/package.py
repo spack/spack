@@ -22,6 +22,7 @@ class RBsgenome(RPackage):
     version('1.46.0', commit='bdfbd6d09820993585b8231ddea5e11c99008dc5')
     version('1.44.2', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
 
+    depends_on('r@2.8.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.8:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.36:', type=('build', 'run'))
     depends_on('r-s4vectors@0.17.28:', type=('build', 'run'), when='@1.48.0:')

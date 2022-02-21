@@ -25,4 +25,5 @@ class RKeggDb(RPackage):
             url='https://bioconductor.org/packages/3.10/data/annotation/src/contrib/KEGG.db_3.2.3.tar.gz',
             deprecated=True)
 
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-annotationdbi@1.34.3:', type=('build', 'run'))

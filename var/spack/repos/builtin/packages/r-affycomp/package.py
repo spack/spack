@@ -22,4 +22,5 @@ class RAffycomp(RPackage):
     version('1.54.0', commit='65281c1ca37147c2a54ad3722a8d5ff0ffa5acc5')
     version('1.52.0', commit='1b97a1cb21ec93bf1e5c88d5d55b988059612790')
 
+    depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-biobase@2.3.3:', type=('build', 'run'))

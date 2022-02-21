@@ -24,6 +24,7 @@ class RMethylumi(RPackage):
     version('2.36.0', commit='5fb0b609f9c9181ac99f902745958774e5489606')
     version('2.32.0', commit='e2a29c1b214c0d43c7325d176f9ce41dcf8e2f9d')
 
+    depends_on('r@2.13:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))

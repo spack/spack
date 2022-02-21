@@ -31,5 +31,6 @@ class RSseq(RPackage):
     version('1.16.0', commit='b7f2b99dbd4a12ee9d18b0ec9898f13f1038479e')
     version('1.14.0', commit='20ccffeb60196914975aa1feef902ddba659c571')
 
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-catools', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))

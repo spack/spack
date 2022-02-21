@@ -26,6 +26,7 @@ class RKegggraph(RPackage):
     version('1.38.0', commit='72f102e2611e3966362cfaa43646a6e66dd2ba27')
     version('1.38.1', commit='dd31665beb36d5aad8ed09ed56c603633b6b2292')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@1.54.0:')
     depends_on('r-xml@2.3-0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))

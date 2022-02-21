@@ -26,6 +26,7 @@ class RGviz(RPackage):
     version('1.22.3', commit='2238079d0a7017c474f010acb35d98ee7cc1c5d1')
     version('1.20.0', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r@4.0:', type=('build', 'run'), when='@1.34.0:')
     depends_on('r@4.1:', type=('build', 'run'), when='@1.38.3:')
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))

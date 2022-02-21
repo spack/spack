@@ -21,6 +21,7 @@ class RAmpliqueso(RPackage):
     version('1.14.0', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.15.0:', type=('build', 'run'))
     depends_on('r-rnaseqmap@2.17.1:', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
     depends_on('r-rgl', type=('build', 'run'))

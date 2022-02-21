@@ -17,6 +17,7 @@ class RFdbInfiniummethylationHg18(RPackage):
 
     version('2.2.0', sha256='4a9028ac03c11fffbab731ea750bc7f9b0884fc43c6a8dac6eb2c644e4c79f6f')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.7.22:', type=('build', 'run'))
     depends_on('r-txdb-hsapiens-ucsc-hg18-knowngene', type=('build', 'run'))
     depends_on('r-org-hs-eg-db', type=('build', 'run'))
