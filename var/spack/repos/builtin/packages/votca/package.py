@@ -36,6 +36,9 @@ class Votca(CMakePackage):
     depends_on("boost")
     depends_on('mkl', when='+mkl')
     depends_on("hdf5+cxx~mpi")
+    depends_on("gromacs~mpi@5.1:")
+    depends_on("gromacs~mpi@5.1:2019", when="~new-gmx")
+
     with when('+xtp'):
         depends_on("libxc")
         depends_on("libint@2.6.0:")
@@ -43,8 +46,6 @@ class Votca(CMakePackage):
         depends_on("py-h5py")
         depends_on("py-lxml")
 
-    depends_on("gromacs~mpi@5.1:")
-    depends_on("gromacs~mpi@5.1:2019", when="~new-gmx")
     depends_on('lammps', type='test')
     depends_on('py-espresso', type='test')
     depends_on('py-pytest', type='test')
