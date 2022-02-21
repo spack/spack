@@ -1,4 +1,5 @@
 #!/bin/sh
+# vim: filetype=python
 """:"
 # Provides some feedback to a Github pull request about installed software
 # and testing procedures
@@ -9,28 +10,59 @@ MY_VENV=$(mktemp -d)/venv
 trap "rm -rf '${MY_VENV}'" EXIT
 python3 -mvenv "${MY_VENV}"
 . "${MY_VENV}/bin/activate"
-pip install requests pyyaml
+pip install requests pyyaml jinja2 lxml
 exec python3 $0
 # Error out if the above fails
 exit 1
 ":"""
 
-from copy import copy
-from glob import glob
+import fnmatch
+import io
 import json
 import os
-from pprint import pprint
-import yaml
 import requests
+import yaml
+import zipfile
+from copy import copy
+from glob import glob
+from jinja2 import Environment, BaseLoader
+from lxml import etree
+from pprint import pprint
 
 
-GLOBAL_FORMAT_KEYS = {
-    "github_repository": os.environ["GITHUB_REPOSITORY"],
-    "github_pull_request": int(os.environ["GITHUB_PULL_REQUEST_ID"]),
-}
-
-
-DEPLOYMENT_ROOT = os.environ["DEPLOYMENT_ROOT"]
+COMMENT_TEMPLATE = """
+{%- if failed_stages -%}
+The following build jobs of the deployment for this PR failed:
+{% for name, link in failed_stages|sort -%}
+* [{{name}}]({{link}})
+{% endfor %}
+{% else -%}
+To test your PR, use the following on BlueBrain5:
+```shell
+unset MODULEPATH
+. {{deployment_root}}/config/modules.sh
+module load unstable
+```
+{% if updated_modules -%}
+Please test the following updated modules:
+{% for module in updated_modules|sort -%}
+* `{{module}}`
+{% endfor %}
+{% endif -%}
+{% endif -%}
+{% if failed_builds -%}
+Please fix the following packages that failed to build:
+{% for name, sha, link in failed_builds|sort -%}
+* [`{{name}}` ({{sha}})]({{link}})
+{% endfor %}
+{% endif -%}
+{% if failed_tests -%}
+The following module tests failed:
+{% for name, link in failed_tests -%}
+* [{{name}}]({{link}})
+{% endfor -%}
+{%- endif -%}
+"""
 
 
 def gather_updated_modules(basedir):
@@ -47,9 +79,7 @@ def gather_updated_modules(basedir):
                 yield data[sha]["use_name"]
 
 
-def github_api_post(url, payload, **kwargs):
-    format_keys = copy(GLOBAL_FORMAT_KEYS)
-    format_keys.update(**kwargs)
+def github_api_post(url, payload):
     auth_user = os.environ.get("GITHUB_API_USER_OVERRIDE", "")
     if not len(auth_user):
         auth_user = "bbpbuildbot"
@@ -57,44 +87,183 @@ def github_api_post(url, payload, **kwargs):
     if not len(auth_token):
         auth_token = os.environ["GITHUB_API_KEY"]
     return requests.post(
-        url.format(**format_keys),
+        url,
         data=json.dumps(payload),
         auth=(auth_user, auth_token),
         headers={"Accept": "application/vnd.github.v3+json"},
     )
 
 
-COMMENT_TEST_TEMPLATE = f"""
-To test your PR, use the following on BlueBrain5:
-```shell
-unset MODULEPATH
-. {DEPLOYMENT_ROOT}/config/modules.sh
-module load unstable
-```
-"""
-
-COMMENT_UPDATED_MODULES = """
-
-Please test the following updated modules:
-```
-{updated_modules}
-```
-"""
+def gitlab_api_do(url, payload=None, to_json=True, method="get"):
+    auth_token = os.environ["GITLAB_API_KEY"]
+    data = None
+    headers = {"PRIVATE-TOKEN": auth_token}
+    if payload:
+        data = json.dumps(payload)
+        headers["Content-Type"] = "application/json"
+    response = getattr(requests, method)(url, data=data, headers=headers)
+    response.raise_for_status()
+    if to_json:
+        return response.json()
+    else:
+        return response.content
 
 
-def run():
-    comment_body = COMMENT_TEST_TEMPLATE
-    mods = list(gather_updated_modules(DEPLOYMENT_ROOT))
-    if mods:
-        comment_body += COMMENT_UPDATED_MODULES.format(updated_modules="\n".join(mods))
+def query(what, payload=None, to_json=True, method="get", project=None):
+    project = project or os.environ["CI_PROJECT_ID"]
+    api_url = os.environ["CI_API_V4_URL"]
+    url = "{0}/projects/{1}/{2}".format(api_url, project, what)
+    return gitlab_api_do(url, payload=payload, to_json=to_json, method=method)
+
+
+def upload_failure_snippet(name, sha, build_logs):
+    data = {
+        "title": "{0} ({1})".format(name, sha),
+        "description": "Built output from Spack",
+        "visibility": "internal",
+        "files": [
+            {"file_path": "{0}.txt".format(name), "content": content}
+            for name, content in build_logs.items()
+        ],
+    }
+    return query("snippets", payload=data, method="post")["web_url"]
+
+
+def get_bridges(pipeline):
+    return query("pipelines/{0}/bridges".format(pipeline))
+
+
+def get_jobs(pipeline, project=None):
+    """Returns the first page of the jobs for a pipeline."""
+    q = "pipelines/{0}/jobs".format(pipeline)
+    return query(q, project=project)
+
+
+def get_jobs_with_tests(pipeline):
+    """Returns the deployment jobs that build stuff."""
+    for job in get_jobs(pipeline):
+        stage = job["stage"]
+        jid = job["id"]
+        if stage == job["name"]:
+            name = job["name"]
+        else:
+            name = " / ".join([stage, job["name"]])
+        status = job["status"]
+        url = job["web_url"]
+        junit = False
+        for fragment in job["artifacts"]:
+            if fragment["file_type"] == "junit":
+                junit = True
+        yield (jid, name, stage, status, url, junit)
+
+
+def get_real_pipeline():
+    for j in get_bridges(os.environ["CI_PIPELINE_ID"]):
+        info = j["downstream_pipeline"]
+        if str(info["project_id"]) == os.environ["CI_PROJECT_ID"]:
+            return info["id"]
+    raise KeyError()
+
+
+def get_junit(job, stage):
+    what = "jobs/{0}/artifacts".format(job)
+    data = query(what, to_json=False)
+    q = "spack_tests/{0}/*.xml".format(stage)
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        for fn in zf.namelist():
+            if fnmatch.fnmatch(fn, q) and not fn.endswith("fake.xml"):
+                yield zf.open(fn).read()
+
+
+def get_build_failures(pipeline):
+    failed_jobs = set()
+    failed_builds = dict()
+
+    for (
+        job_id,
+        job_name,
+        job_stage,
+        job_status,
+        job_url,
+        job_junit,
+    ) in get_jobs_with_tests(pipeline):
+        if job_status == "failed":
+            failed_jobs.add((job_name, job_url))
+        if job_junit:
+            print("Processing JUnit of", job_name)
+            for data in get_junit(job_id, job_stage):
+                tree = etree.fromstring(data)
+                for failed in tree.xpath("//failure/ancestor::testcase"):
+                    data = dict()
+                    for kind in ("error", "system-out", "system-err"):
+                        try:
+                            data[kind] = next(failed.iterchildren(kind)).text
+                        except StopIteration:
+                            pass
+                    print("Found build failure for", failed.get("classname"))
+                    failed_builds[
+                        (failed.get("classname"), failed.get("name"))
+                    ] = data
+    return (
+        list(failed_jobs),
+        [(n, i, v) for (n, i), v in failed_builds.items()],
+    )
+
+
+def get_module_test_failures(pipeline):
+    for j in get_bridges(pipeline):
+        if j["name"] == "check_modules":
+            break
+    else:
+        raise KeyError()
+    test_pipe = j["downstream_pipeline"]
+    if test_pipe:
+        for j in get_jobs(test_pipe["id"], project=test_pipe["project_id"]):
+            if j["status"] == "failed":
+                yield (j["name"], j["web_url"])
+
+
+def post_pipeline_info():
+    repo = os.environ["GITHUB_REPOSITORY"]
+    pr = os.environ["GITHUB_PULL_REQUEST_ID"]
+    deployment_root = os.environ["DEPLOYMENT_ROOT"]
+
+    updated_modules = list(gather_updated_modules(deployment_root))
+
+    # Use this when triggering from a parent pipeline
+    # pipe = get_real_pipeline()
+    pipe = os.environ["CI_PIPELINE_ID"]
+    failed_stages, raw_failed_builds = get_build_failures(pipe)
+    failed_module_tests = list(get_module_test_failures(pipe))
+
+    failed_builds = []
+    for name, sha, logs in raw_failed_builds:
+        url = upload_failure_snippet(name, sha, logs)
+        failed_builds.append((name, sha, url))
+    print("Failed builds to pass on to GitHub:")
+    pprint(failed_builds)
+
+    data = (
+        Environment(loader=BaseLoader)
+        .from_string(COMMENT_TEMPLATE)
+        .render(
+            failed_stages=failed_stages,
+            failed_builds=failed_builds,
+            failed_tests=failed_module_tests,
+            updated_modules=updated_modules,
+            deployment_root=deployment_root,
+        )
+    )
     print("Posting a comment to the GitHub PR...")
     comment_request = github_api_post(
-        "https://api.github.com/repos/{github_repository}/issues/{github_pull_request}/comments",
-        {"body": comment_body},
+        "https://api.github.com/repos/{repo}/issues/{pr}/comments".format(
+            repo=repo, pr=pr
+        ),
+        {"body": data},
     )
     pprint(comment_request.json())
     print(":wave:")
 
 
 if __name__ == "__main__":
-    run()
+    post_pipeline_info()
