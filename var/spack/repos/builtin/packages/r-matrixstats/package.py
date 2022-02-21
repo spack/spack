@@ -23,3 +23,5 @@ class RMatrixstats(RPackage):
     version('0.55.0', sha256='16d6bd90eee4cee8df4c15687de0f9b72730c03e56603c2998007d4533e8db19')
     version('0.54.0', sha256='8f0db4e181300a208b9aedbebfdf522a2626e6675d2662656efb8ba71b05a06f')
     version('0.52.2', sha256='39da6aa6b109f89a141dab8913d981abc4fbd3f8be9e206f92e382cc5270d2a5')
+
+    depends_on('r@2.12.0:', type=('build', 'run'))

@@ -23,6 +23,7 @@ class RRmarkdown(RPackage):
     version('1.0', sha256='ff1ecb74ebc444b9b0b7b547adc512daefe1ee08d06bc0e3ee4eb68e58d2ef30')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-knitr@1.22:', type=('build', 'run'))
     depends_on('r-yaml@2.1.19:', type=('build', 'run'))
     depends_on('r-htmltools@0.3.5:', type=('build', 'run'))

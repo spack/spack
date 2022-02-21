@@ -20,6 +20,7 @@ class RAer(RPackage):
     version('1.2-6', sha256='653c3a2d253819e0ce8c2cf12cff2ab222bf3d19dbf382b7c4b4c3d762469474')
     version('1.2-5', sha256='ef0cf14ff9d3de2b97e5855243426cc918808eb1011f0e2253b3b00043927a62')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-car@2.0-19:', type=('build', 'run'))
     depends_on('r-lmtest', type=('build', 'run'))
     depends_on('r-sandwich@2.4-0:', type=('build', 'run'))

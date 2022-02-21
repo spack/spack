@@ -21,5 +21,6 @@ class RGmp(RPackage):
     version('0.5-13.4', sha256='f05605b40fc39fc589e3a4d2f526a591a649faa45eef7f95c096e1bff8775196')
     version('0.5-13.1', sha256='2f805374a26742cd43f6b2054130d8670eda1940070aabb9971e9e48226d0976')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@0.6-2:')
     depends_on('gmp@4.2.3:')

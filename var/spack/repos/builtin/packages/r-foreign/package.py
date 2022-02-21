@@ -22,4 +22,5 @@ class RForeign(RPackage):
     version('0.8-70.2', sha256='ae82fad68159860b8ca75b49538406ef3d2522818e649d7ccc209c18085ef179')
     version('0.8-66', sha256='d7401e5fcab9ce6e697d3520dbb8475e229c30341c0004c4fa489c82aa4447a4')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@4.0.0:', type=('build', 'run'), when='@0.8-81:')

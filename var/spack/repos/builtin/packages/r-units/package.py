@@ -26,6 +26,7 @@ class RUnits(RPackage):
     version('0.6-2', sha256='5e286775d0712c8e15b6ae3a533d4c4349b0f6410c2d9d897ca519c3d0e5f170')
     version('0.4-6', sha256='db383c9b7ec221a5da29a2ddf4f74f9064c44ea2102ea7e07cc1cc5bb30fa1ef')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.10:', type=('build', 'run'))
     depends_on('udunits', when='@0.6-0:')
 

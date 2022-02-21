@@ -17,6 +17,7 @@ class RMutoss(RPackage):
 
     version('0.1-12', sha256='2889ae3d502157592697124eb86adc14911e2b7fdaa7204743a376b1eeb967fa')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-plotrix', type=('build', 'run'))
     depends_on('r-multtest@2.2.0:', type=('build', 'run'))

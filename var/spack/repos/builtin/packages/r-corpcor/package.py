@@ -28,3 +28,5 @@ class RCorpcor(RPackage):
 
     version('1.6.10', sha256='71a04c503c93ec95ddde09abe8c7ddeb36175b7da76365a14b27066383e10e09')
     version('1.6.9', sha256='2e4fabd1d3936fecea67fa365233590147ca50bb45cf80efb53a10345a8a23c2')
+
+    depends_on('r@3.0.2:', type=('build', 'run'))

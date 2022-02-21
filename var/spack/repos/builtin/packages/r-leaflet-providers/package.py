@@ -17,3 +17,5 @@ class RLeafletProviders(RPackage):
     cran = "leaflet.providers"
 
     version('1.9.0', sha256='9e8fc75c83313ab24663c2e718135459599549ed6e7396086cacb44e36cfd67b')
+
+    depends_on('r@2.10:', type=('build', 'run'))

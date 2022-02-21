@@ -21,6 +21,7 @@ class RS2(RPackage):
     version('1.0.7', sha256='2010c1c6ae29938ec9cd153a8b2c06a333ea4d647932369b2fc7d0c68d6d9e3f')
     version('1.0.4', sha256='3c274ebae33aa5473f94afb3066c6f388aced17ff3b5f6add9edcc9af22b985e')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-wk', type=('build', 'run'))
     depends_on('r-wk@0.5.0:', type=('build', 'run'), when='@1.0.7:')

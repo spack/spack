@@ -18,6 +18,7 @@ class RBslib(RPackage):
 
     version('0.3.1', sha256='5f5cb56e5cab9039a24cd9d70d73b69c2cab5b2f5f37afc15f71dae0339d9849')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-htmltools@0.5.2:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-sass@0.4.0:', type=('build', 'run'))

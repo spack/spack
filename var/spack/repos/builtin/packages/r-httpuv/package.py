@@ -25,6 +25,7 @@ class RHttpuv(RPackage):
     version('1.3.5', sha256='4336b993afccca2a194aca577b1975b89a35ac863423b18a11cdbb3f8470e4e9')
     version('1.3.3', sha256='bb37452ddc4d9381bee84cdf524582859af6a988e291debb71c8a2e120d02b2a')
 
+    depends_on('r@2.15.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-rcpp@1.0.7:', type=('build', 'run'), when='@1.6.5:')
     depends_on('r-r6', type=('build', 'run'), when='@1.5.0:')

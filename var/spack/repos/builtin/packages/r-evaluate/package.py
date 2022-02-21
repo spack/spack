@@ -19,4 +19,6 @@ class REvaluate(RPackage):
     version('0.10', sha256='6163baeb382c2c1e87d4e36a2e986ef74673d8a92ea8508c39ac662ff3519657')
     version('0.9',  sha256='e8118c9d6ec479c0e712913848404431b6b6c0282f3c131acaf9a677ab5fc6ae')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
+
     depends_on('r-stringr@0.6.2:', type=('build', 'run'), when='@:0.11')

@@ -35,4 +35,5 @@ class RDataTable(RPackage):
     version('1.9.8',    sha256='dadb21a14a7f4d60955cdd8fb9779136833498be97b1625914e9a6b580646f4d')
     version('1.9.6',    sha256='6f74c349c1731823aef6899edcf18418454167d04eba983e3a6fe17ee9fd236e')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('zlib')

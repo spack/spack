@@ -16,3 +16,6 @@ class RProj(RPackage):
 
     version('0.4.0', sha256='dde90cfeca83864e61a7422e1573d2d55bb0377c32b9a8f550f47b8631121ce7')
     version('0.1.0', sha256='5186f221335e8092bbcd4d82bd323ee7e752c7c9cf83d3f94e4567e0b407aa6f')
+
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'), when='@0.4.0:')

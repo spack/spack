@@ -25,6 +25,7 @@ class RRunjags(RPackage):
     version('2.2.0-3', sha256='1b1fc0b0cfecf9ecdecc3abcba804cdc114b3c5352d5cc801602deeca90db528')
     version('2.2.0-2', sha256='e5dfeb83d36faf19ebe64429f6db64aedecf3c9a040fd5bf9c0200914bf5039a')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-lattice@0.20-10:', type=('build', 'run'))
     depends_on('r-coda@0.17-1:', type=('build', 'run'))
     depends_on('jags@4.3.0:')

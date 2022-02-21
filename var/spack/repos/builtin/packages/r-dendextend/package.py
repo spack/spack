@@ -23,6 +23,7 @@ class RDendextend(RPackage):
     version('1.10.0', sha256='88f0fb3362d69144daf4f35d0ea09f32c2df1adf614e040327a42552a8fd3224')
     version('1.5.2', sha256='8228cf9cfd31ec30038aaa61a35959179bad748582d796999cd9ad78152a5f12')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.0.1:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-viridis', type=('build', 'run'))

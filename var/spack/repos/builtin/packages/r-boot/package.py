@@ -21,3 +21,5 @@ class RBoot(RPackage):
     version('1.3-22', sha256='cf1f0cb1e0a7a36dcb6ae038f5d0211a0e7a009c149bc9d21acb9c58c38b4dfc')
     version('1.3-20', sha256='adcb90b72409705e3f9c69ea6c15673dcb649b464fed06723fe0930beac5212a')
     version('1.3-18', sha256='12fd237f810a69cc8d0a51a67c57eaf9506bf0341c764f8ab7c1feb73722235e')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

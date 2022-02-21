@@ -17,6 +17,7 @@ class RGgbeeswarm(RPackage):
 
     version('0.6.0', sha256='bbac8552f67ff1945180fbcda83f7f1c47908f27ba4e84921a39c45d6e123333')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-beeswarm', type=('build', 'run'))
     depends_on('r-ggplot2@2.0:', type=('build', 'run'))
     depends_on('r-vipor', type=('build', 'run'))

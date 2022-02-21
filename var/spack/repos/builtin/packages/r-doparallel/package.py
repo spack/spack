@@ -19,5 +19,6 @@ class RDoparallel(RPackage):
     version('1.0.11', sha256='4ccbd2eb46d3e4f5251b0c3de4d93d9168b02bb0be493656d6aea236667ff76a')
     version('1.0.10', sha256='70024b6950025cc027022ee409f382e5ad3680c0a25bcd404bfc16418be8add5')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-foreach@1.2.0:', type=('build', 'run'))
     depends_on('r-iterators@1.0.0:', type=('build', 'run'))

@@ -30,6 +30,7 @@ class RAmelia(RPackage):
     version('1.8.0', sha256='3ec1d5a68dac601b354227916aa8ec72fa1216b603dd887aae2b24cb69b5995e')
     version('1.7.6',  sha256='63c08d374aaf78af46c34dc78da719b3085e58d9fabdc76c6460d5193a621bea')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-rcpp@0.11:', type=('build', 'run'))
     depends_on('r-foreign', type=('build', 'run'))
     depends_on('r-rcpparmadillo', type=('build', 'run'))

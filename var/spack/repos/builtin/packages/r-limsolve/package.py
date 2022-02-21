@@ -20,6 +20,7 @@ class RLimsolve(RPackage):
 
     version('1.5.6', sha256='b97ea9930383634c8112cdbc42f71c4e93fe0e7bfaa8f401921835cb44cb49a0')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-quadprog', type=('build', 'run'))
     depends_on('r-lpsolve', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

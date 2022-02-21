@@ -22,4 +22,5 @@ class RPlyr(RPackage):
     version('1.8.6', sha256='ea55d26f155443e9774769531daa5d4c20a0697bb53abd832e891b126c935287')
     version('1.8.4', sha256='60b522d75961007658c9806f8394db27989f1154727cb0bb970062c96ec9eac5')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

@@ -24,6 +24,7 @@ class RRCache(RPackage):
     version('0.15.0', sha256='adb4d3b08f7917e10fe6188c7b90a3318701a974c58eaa09943b929382bdf126')
     version('0.14.0', sha256='18af4e372440b9f28b4b71346c8ed9de220232f9903730ccee2bfb3c612c16d9')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.8.1:', type=('build', 'run'), when='@0.15.0:')
     depends_on('r-r-oo@1.23.0:', type=('build', 'run'))

@@ -15,6 +15,7 @@ class RHdrcde(RPackage):
 
     version('3.4', sha256='4341c6a021da46dcae3b1ef6d580e84dcf625c2b2139f537d0c26ec90899149b')
 
+    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-locfit', type=('build', 'run'))
     depends_on('r-ash', type=('build', 'run'))
     depends_on('r-ks', type=('build', 'run'))

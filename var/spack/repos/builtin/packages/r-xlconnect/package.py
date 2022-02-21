@@ -21,6 +21,7 @@ class RXlconnect(RPackage):
     version('0.2-12', sha256='500624f078fb27338aa91d8710daaf38633659a9b17f7cb713232a3d66f9f62c')
     version('0.2-11', sha256='17c5eddd00b933fd7a2ab9d942c813046d45f0af487f8d5b11011a004db69d0b')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-rjava', type=('build', 'run'))
     depends_on('java@6:')
     depends_on('java@8:11', when='@1.0.1:')

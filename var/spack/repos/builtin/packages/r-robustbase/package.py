@@ -23,5 +23,7 @@ class RRobustbase(RPackage):
     version('0.93-4', sha256='ea9e03d484ef52ea805803477ffc48881e4c8c86ffda4eea56109f8b23f0a6e0')
     version('0.92-7', sha256='fcbd6ccbb0291b599fe6a674a91344511e0a691b9cadba0a9d40037faa22bf8f')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'), when='@0.93-2:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@0.93-9:')
     depends_on('r-deoptimr', type=('build', 'run'))

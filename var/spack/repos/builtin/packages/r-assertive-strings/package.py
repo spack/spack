@@ -18,6 +18,7 @@ class RAssertiveStrings(RPackage):
 
     version('0.0-3', sha256='d541d608a01640347d661cc9a67af8202904142031a20caa270f1c83d0ccd258')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
     depends_on('r-assertive-types', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))

@@ -23,3 +23,5 @@ class RTclust(RPackage):
     version('1.2-3',  sha256='d749d4e4107b876a22ca2c0299e30e2c77cb04f53f7e5658348e274aae3f2b28')
     version('1.1-03', sha256='b8a62a1d27e69ac7e985ba5ea2ae5d182d2e51665bfbfb178e22b63041709270')
     version('1.1-02', sha256='f73c0d7a495552f901b710cf34e114c0ba401d5a17c48156313245904bcccad4')
+
+    depends_on('r@2.12.0:', type=('build', 'run'))

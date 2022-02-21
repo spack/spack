@@ -36,5 +36,6 @@ class RGdata(RPackage):
     version('2.18.0', sha256='4b287f59f5bbf5fcbf18db16477852faac4a605b10c5284c46b93fa6e9918d7f')
     version('2.17.0', sha256='8097ec0e4868f6bf746f821cff7842f696e874bb3a84f1b2aa977ecd961c3e4e')
 
+    depends_on('r@2.3.0:', type=('build', 'run'))
     depends_on('r-gtools', type=('build', 'run'))
     depends_on('perl@5.10.0:')

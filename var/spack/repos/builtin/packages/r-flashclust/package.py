@@ -12,3 +12,5 @@ class RFlashclust(RPackage):
     cran = "flashClust"
 
     version('1.01-2', sha256='48a7849bb86530465ff3fbfac1c273f0df4b846e67d5eee87187d250c8bf9450')
+
+    depends_on('r@2.3.0:', type=('build', 'run'))

@@ -16,3 +16,5 @@ class RBrobdingnag(RPackage):
     cran = "Brobdingnag"
 
     version('1.2-6', sha256='19eccaed830ce9d93b70642f6f126ac66722a98bbd48586899cc613dd9966ad4')
+
+    depends_on('r@2.13.0:', type=('build', 'run'))

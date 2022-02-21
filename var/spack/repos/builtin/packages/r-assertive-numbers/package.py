@@ -18,4 +18,5 @@ class RAssertiveNumbers(RPackage):
 
     version('0.0-2', sha256='bae18c0b9e5b960a20636e127eb738ecd8a266e5fc29d8bc5ca712498cd68349')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))

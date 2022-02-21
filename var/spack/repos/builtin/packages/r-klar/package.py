@@ -22,6 +22,7 @@ class RKlar(RPackage):
 
     version('0.6-15', sha256='5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae')
 
+    depends_on('r@2.10.0:',    type=('build', 'run'))
     depends_on('r-mass',       type=('build', 'run'))
     depends_on('r-combinat',  type=('build', 'run'))
     depends_on('r-questionr', type=('build', 'run'))

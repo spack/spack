@@ -16,6 +16,7 @@ class RRandomglm(RPackage):
 
     version('1.02-1', sha256='3bf7c1dbdacc68125f8ae3014b9bc546dd3328d04ad015d154781bdf3f1a230c')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-doparallel', type=('build', 'run'))

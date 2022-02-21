@@ -21,6 +21,7 @@ class RNmf(RPackage):
     version('0.23.0', sha256='0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753')
     version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))
     depends_on('r-rngtools@1.2.3:', type=('build', 'run'))

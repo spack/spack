@@ -19,6 +19,7 @@ class RCompositions(RPackage):
     version('2.0-1', sha256='84a291308faf858e5a9d9570135c2da5e57b0887f407903485fa85d09da61a0f')
     version('1.40-2', sha256='110d71ae000561987cb73fc76cd953bd69d37562cb401ed3c36dca137d01b78a')
 
+    depends_on('r@2.2.0:', type=('build', 'run'))
     depends_on('r@3.6:', type=('build', 'run'), when='@2.0-4:')
     depends_on('r-tensora', type=('build', 'run'))
     depends_on('r-robustbase', type=('build', 'run'))

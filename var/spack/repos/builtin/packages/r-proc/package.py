@@ -19,5 +19,6 @@ class RProc(RPackage):
     version('1.18.0', sha256='d5ef54b384176ece6d6448014ba40570a98181b58fee742f315604addb5f7ba9')
     version('1.17.0.1', sha256='221c726ffb81b04b999905effccfd3a223cd73cae70d7d86688e2dd30e51a6bd')
 
+    depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-rcpp@0.11.1:', type=('build', 'run'))

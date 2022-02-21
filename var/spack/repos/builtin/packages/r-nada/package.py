@@ -16,4 +16,5 @@ class RNada(RPackage):
 
     version('1.6-1.1', sha256='670ff6595ba074ed0a930b7a09624d5ef20616379a20e768c1a7b37332aee44a')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

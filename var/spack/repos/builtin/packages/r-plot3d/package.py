@@ -20,4 +20,5 @@ class RPlot3d(RPackage):
     version('1.1.1', sha256='f6fe4a001387132626fc553ed1d5720d448b8064eb5a6917458a798e1d381632')
 
     depends_on('r+X', type=('build', 'run'))
+    depends_on('r@2.15:', type=('build', 'run'))
     depends_on('r-misc3d', type=('build', 'run'))

@@ -21,6 +21,7 @@ class RDevtools(RPackage):
     version('1.12.0', sha256='8a3e2ca3988dffe29341e45a160bb588995eae43485d6a811a9ae4836d37afd4')
     version('1.11.1', sha256='51c876f9ddbfdf611f6ea0b06c0b46da8cefcb8cc98d60e06d576b61f0a06346')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-usethis@1.5.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('r-usethis@1.6.0:', type=('build', 'run'), when='@2.3.0:')
     depends_on('r-usethis@1.6.3:', type=('build', 'run'), when='@2.3.2:')

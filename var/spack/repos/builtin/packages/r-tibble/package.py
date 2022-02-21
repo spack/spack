@@ -27,6 +27,7 @@ class RTibble(RPackage):
     version('1.1', sha256='10ea18890e5514faa4c2c05fa231a6e2bbb7689f3800850cead214306414c88e')
 
     depends_on('r@3.1.2:', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'), when='@1.3.0:')
     depends_on('r-ellipsis@0.2.0:', type=('build', 'run'), when='@3.0.5:')
     depends_on('r-ellipsis@0.3.2:', type=('build', 'run'), when='@3.1.2:')
     depends_on('r-fansi@0.4.0:', type=('build', 'run'), when='@2.0.0:')

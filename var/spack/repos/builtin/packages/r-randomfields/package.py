@@ -23,6 +23,7 @@ class RRandomfields(RPackage):
     version('3.3.4', sha256='a340d4f3ba7950d62acdfa19b9724c82e439d7b1a9f73340124038b7c90c73d4')
     version('3.1.50', sha256='2d6a07c3a716ce20f9c685deb59e8fcc64fd52c8a50b0f04baf451b6b928e848')
 
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@3.3.8:')
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-randomfieldsutils@0.5.1:', type=('build', 'run'))

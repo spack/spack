@@ -23,3 +23,5 @@ class RYaimpute(RPackage):
     cran = "yaImpute"
 
     version('1.0-32', sha256='08eee5d851b80aad9c7c80f9531aadd50d60e4b16b3a80657a50212269cd73ff')
+
+    depends_on('r@3.0:', type=('build', 'run'))

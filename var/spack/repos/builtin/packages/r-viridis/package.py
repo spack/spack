@@ -24,6 +24,7 @@ class RViridis(RPackage):
     version('0.5.0', sha256='fea477172c1e11be40554545260b36d6ddff3fe6bc3bbed87813ffb77c5546cd')
     version('0.4.0', sha256='93d2ded68ed7cec5633c260dbc47051416147aae074f29ebe135cc329250b00e')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-viridislite@0.3.0:', type=('build', 'run'))
     depends_on('r-viridislite@0.4.0:', type=('build', 'run'), when='@0.6.2:')
     depends_on('r-ggplot2@1.0.1:', type=('build', 'run'))

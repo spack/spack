@@ -19,6 +19,7 @@ class RGetoptlong(RPackage):
     version('0.1.7', sha256='b9a98881db407eae9b711c4fa9170168fd5f3be1f8485cd8f28d0a60ace083ba')
     version('0.1.6', sha256='f526f006e3ed8507f1f236430ac9e97341c1ee9c207fbb68f936dd4d377b28b5')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.3.0:', type=('build', 'run'), when='@1.0.5:')
     depends_on('r-rjson', type=('build', 'run'))
     depends_on('r-globaloptions@0.1.0:', type=('build', 'run'))

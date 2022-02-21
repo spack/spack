@@ -22,4 +22,5 @@ class RSp(RPackage):
     version('1.2-7', sha256='6d60e03e1abd30a7d4afe547d157ce3dd7a8c166fc5e407fd6d62ae99ff30460')
     version('1.2-3', sha256='58b3a9e395ca664ee61b20b480be4eb61576daca44c3d3f6f9a943bb0155879a')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

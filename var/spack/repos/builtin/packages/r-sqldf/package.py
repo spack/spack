@@ -23,6 +23,7 @@ class RSqldf(RPackage):
 
     version('0.4-11', sha256='cee979d4e8c67b4924655365d925a8d67104e62adf71741f645cdc5196de2260')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-gsubfn@0.6:', type=('build', 'run'))
     depends_on('r-proto', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))

@@ -26,4 +26,5 @@ class RRsnns(RPackage):
     version('0.4-10.1', sha256='38bb3d172390bd01219332ec834744274b87b01f94d23b29a9d818c2bca04071')
     version('0.4-7', sha256='ec941dddda55e4e29ed281bd8768a93d65e0d86d56ecab0f2013c64c8d1a4994')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.8.5:', type=('build', 'run'))

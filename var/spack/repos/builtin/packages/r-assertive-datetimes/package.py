@@ -18,5 +18,6 @@ class RAssertiveDatetimes(RPackage):
 
     version('0.0-3', sha256='014e2162f5a8d95138ed8330f7477e71c908a29341697c09a1b7198b7e012d94')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-assertive-base@0.0-7:', type=('build', 'run'))
     depends_on('r-assertive-types', type=('build', 'run'))

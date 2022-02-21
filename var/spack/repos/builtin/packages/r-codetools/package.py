@@ -15,3 +15,5 @@ class RCodetools(RPackage):
     version('0.2-16', sha256='c276757c3adabaf700f2ea25835892b09bc1bd438ebd17c805ea9073ed8a74b6')
     version('0.2-15', sha256='4e0798ed79281a614f8cdd199e25f2c1bd8f35ecec902b03016544bd7795fa40')
     version('0.2-14', sha256='270d603b89076081af8d2db0256927e55ffeed4c27309d50deea75b444253979')
+
+    depends_on('r@2.1:', type=('build', 'run'))

@@ -20,6 +20,7 @@ class RRvest(RPackage):
     version('0.3.3', sha256='b10a87fa2d733f7c0fc567242ef0ab10a1a77d58d51796996cc0fd81381a556f')
     version('0.3.2', sha256='0d6e8837fb1df79b1c83e7b48d8f1e6245f34a10c4bb6952e7bec7867e4abb12')
 
+    depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@0.3.3')
     depends_on('r@3.2:', type=('build', 'run'), when='@0.3.4:')
     depends_on('r-httr@0.5:', type=('build', 'run'))

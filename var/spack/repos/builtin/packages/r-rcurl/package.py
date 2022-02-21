@@ -26,6 +26,7 @@ class RRcurl(RPackage):
     version('1.95-4.12', sha256='393779efafdf40823dac942a1e028905d65c34f3d41cfd21bcd225e411385ff4')
     version('1.95-4.8', sha256='e72243251bbbec341bc5864305bb8cc23d311d19c5d0d9310afec7eb35aa2bfb')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.4.0:', type=('build', 'run'), when='@1.98:')
     depends_on('r-bitops', type=('build', 'run'))
     depends_on('curl')

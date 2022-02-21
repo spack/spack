@@ -24,6 +24,7 @@ class RStrucchangercpp(RPackage):
 
     version('1.5-3-1.0.4', sha256='f506fcb593ce4bacf1892de25154257d0fe02260ef956a75438c6330195cd86d')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-sandwich', type=('build', 'run'))
     depends_on('r-rcpp@0.12.7:', type=('build', 'run'))

@@ -23,6 +23,7 @@ class RRaster(RPackage):
     version('2.9-22', sha256='8107d95f1aa85cea801c8101c6aa391becfef4b5b915d9bc7a323531fee26128')
     version('2.5-8', sha256='47992abd783450513fbce3770298cc257030bf0eb77e42aa3a4b3924b16264cc')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@3.4-5:')
     depends_on('r-sp@1.2-0:', type=('build', 'run'))
     depends_on('r-sp@1.4.1:', type=('build', 'run'), when='@3.4-5:')

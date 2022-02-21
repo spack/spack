@@ -29,6 +29,7 @@ class RPartykit(RPackage):
     version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
     version('1.1-1', sha256='d9f4762690cd85ee4e3dc44f5a14069d10a1900afdfbcdc284d2a94b4a8e8332')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', type=('build', 'run'), when='@1.2-11:')
     depends_on('r-libcoin@1.0-0:', type=('build', 'run'), when='@1.2-0:')
     depends_on('r-mvtnorm', type=('build', 'run'), when='@1.2-0:')

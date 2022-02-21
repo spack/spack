@@ -26,6 +26,7 @@ class RCovr(RPackage):
     version('3.2.0', sha256='b26135306b1d6b14dd4deb481359dd919a7ca1e802ca5479fed394dcf35f0ef9')
     version('3.0.1', sha256='66b799fd03cb83a9ab382d9cf4ff40603d1e3f3a89905a3174546b0c63e8d184')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'), when='@3.2.0:')
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-rex', type=('build', 'run'))

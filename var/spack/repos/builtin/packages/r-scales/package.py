@@ -20,6 +20,7 @@ class RScales(RPackage):
     version('0.4.1', sha256='642b88fb1fce7bac72a0038ce532b65b8a79dffe826fec25033cf386ab630cd3')
     version('0.4.0', sha256='851ef6136339b361b3f843fb73ea89f9112279b9cc126bdb38acde8d24c1c6a7')
 
+    depends_on('r@2.13:', type=('build', 'run'))
     depends_on('r@3.1:', type=('build', 'run'), when='@1.0.0:')
     depends_on('r@3.2:', type=('build', 'run'), when='@1.1.1:')
     depends_on('r-farver@2.0.3:', type=('build', 'run'), when='@1.1.1:')

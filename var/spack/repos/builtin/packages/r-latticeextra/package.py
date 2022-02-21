@@ -18,6 +18,7 @@ class RLatticeextra(RPackage):
     version('0.6-29', sha256='6cadc31d56f73d926e2e8d72e43ae17ac03607a4d1a374719999a4a231e3df11')
     version('0.6-28', sha256='780695323dfadac108fb27000011c734e2927b1e0f069f247d65d27994c67ec2')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r@3.6.0:', type=('build', 'run'), when='@0.6-29:')
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'), when='@0.6-29:')

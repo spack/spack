@@ -25,6 +25,7 @@ class RGgpubr(RPackage):
     version('0.2', sha256='06c3075d8c452840662f5d041c3d966494b87254a52a858c849b9e1e96647766')
     version('0.1.2', sha256='9b4749fe1a6e0e4c5201a587c57c1b4bed34253f95ab4fb365f7e892b86003fe')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-ggrepel', type=('build', 'run'))
     depends_on('r-ggsci', type=('build', 'run'))

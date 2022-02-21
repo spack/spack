@@ -40,6 +40,7 @@ class RFields(RPackage):
     version('11.6', sha256='8600d1d992c40668cc2ab01b3c17d0e1bd44a001ec7ba9f468bc0e9ef87c59db')
     version('9.9', sha256='262f03c630773b580c7162ab2a031c894ca489fd83989fd8a2f67573306e78e1')
 
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-spam', type=('build', 'run'))
     depends_on('r-viridis', type=('build', 'run'), when='@13.3:')
     depends_on('r-maps', type=('build', 'run'))

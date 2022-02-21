@@ -26,6 +26,7 @@ class RMatrix(RPackage):
     version('1.2-8',  sha256='3cd2a187c45fc18a0766dc148b7f83dbf6f2163c256e887c41cbaa7c9a20dbb7')
     version('1.2-6',  sha256='4b49b639b7bf612fa3d1c1b1c68125ec7859c8cdadae0c13f499f24099fd5f20')
 
+    depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@1.2.13:')
     depends_on('r@3.6.0:', type=('build', 'run'), when='@1.3-2:')
     depends_on('r@3.5.0:', type=('build', 'run'), when='@1.3-3:')

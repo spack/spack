@@ -29,6 +29,7 @@ class RMice(RPackage):
     version('3.5.0', sha256='4fccecdf9e8d8f9f63558597bfbbf054a873b2d0b0820ceefa7b6911066b9e45')
     version('3.0.0', sha256='98b6bb1c5f8fb099bd0024779da8c865146edb25219cc0c9542a8254152c0add')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-broom', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
     depends_on('r-generics', type=('build', 'run'), when='@3.12.0:')

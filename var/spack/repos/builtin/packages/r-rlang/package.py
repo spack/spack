@@ -28,5 +28,6 @@ class RRlang(RPackage):
     version('0.1.2', sha256='90cfcd88cae6fff044fca64b24a8e6bdc09fc276163b518ff2d90268b0c785f9')
     version('0.1.1', sha256='5901f95d68728a7d9bb1c2373a20ce6e4ad222f66e397e7735e9eff987c73c3f')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r@3.2.0:', type=('build', 'run'), when='@0.4.0:')
     depends_on('r@3.3.0:', type=('build', 'run'), when='@0.4.10:')

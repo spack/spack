@@ -18,3 +18,5 @@ class RAod(RPackage):
     cran = "aod"
 
     version('1.3.1', sha256='052d8802500fcfdb3b37a8e3e6f3fbd5c3a54e48c3f68122402d2ea3a15403bc')
+
+    depends_on('r@2.10:', type=('build', 'run'))

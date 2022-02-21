@@ -23,6 +23,7 @@ class RBayesplot(RPackage):
     version('1.8.1', sha256='d8d74201ea91fa5438714686ca22a947ec9375b6c12b0cfef010c57104b1aa2a')
     version('1.8.0', sha256='a605f9929e681593a3ef3ca9c836e713314994aaea00f359f71cfc42d151c948')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-dplyr@0.8.0:', type=('build', 'run'))
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-ggridges', type=('build', 'run'))

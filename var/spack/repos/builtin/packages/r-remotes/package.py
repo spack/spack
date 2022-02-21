@@ -21,5 +21,6 @@ class RRemotes(RPackage):
     version('2.1.1', sha256='4e590746fce618094089372b185e1ea234b3337b23c44c44118e942d0fb5118b')
     version('2.1.0', sha256='8944c8f6fc9f0cd0ca04d6cf1221b716eee08facef9f4b4c4d91d0346d6d68a7')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('subversion', type='run')
     depends_on('git', type='run')

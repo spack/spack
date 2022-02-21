@@ -20,6 +20,7 @@ class RGgmap(RPackage):
     version('2.6.2', sha256='4e9cf53ab108fc70805d971dadb69b26fe67ea289c23c38adf6e30b198379d90')
     version('2.6.1', sha256='fc450ef422005fc7d2018a34f6b410fbdf80824f9ed60351d91205c413585a57')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
     depends_on('r-rgooglemaps', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))

@@ -21,6 +21,7 @@ class RGgraph(RPackage):
     version('2.0.4', sha256='9c6092d9a98b7b116f9c765ba44de7a34ceff2f584e776ef7a2082ad1d717dc8')
     version('2.0.0', sha256='4307efe85bfc6a0496797f6b86d6b174ba196538c51b1a6b6af55de0d4e04762')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.2:', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))

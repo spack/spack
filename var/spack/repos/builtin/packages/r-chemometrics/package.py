@@ -20,6 +20,7 @@ class RChemometrics(RPackage):
     version('1.3.8', sha256='5a977bf1a9475d4dd4764ec9e99cbce237c5b624ef9aa96fcaf08406b1b8a56d')
     version('1.3.7', sha256='653a4f728c996983a4b5e5144229d0cf8b6754fb7e85e9014eeaf34fa19da42f')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))
     depends_on('r-mclust', type=('build', 'run'))
     depends_on('r-lars', type=('build', 'run'))
