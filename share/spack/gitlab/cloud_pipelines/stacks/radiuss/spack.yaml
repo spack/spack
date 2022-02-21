@@ -1,5 +1,8 @@
 spack:
   concretization: separately
+  concretizer:
+    reuse: false
+
   view: false
 
   config:
@@ -20,7 +23,7 @@ spack:
   definitions:
     #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
     - compilers: ['%gcc@7.5.0']
-    
+
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0

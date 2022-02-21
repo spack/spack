@@ -14,4 +14,4 @@ concretizer:
   # concretizing specs. If `true`, we'll try to use as many installs/binaries
   # as possible, rather than building. If `false`, we'll always give you a fresh
   # concretization.
-  reuse: false
+  reuse: true
