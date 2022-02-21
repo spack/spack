@@ -12,7 +12,7 @@ class RDoDb(RPackage):
     A set of annotation maps describing the entire Disease
     Ontology assembled using data from DO."""
 
-    # There is no git repoistory for this package.
+    # There is no git repository for this package.
     homepage = "https://bioconductor.org/packages/DO.db/"
     url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/DO.db_2.9.tar.gz"
 
