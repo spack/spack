@@ -33,10 +33,17 @@ level = "short"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        "--ignore-packages",
+        nargs="*",
+        type=str,
+        default=[],
+        help="PACKAGE specifications to ignore if passed as positional arguments.",
+    )
+    subparser.add_argument(
         "--write-commit-file",
         default=None,
         type=str,
-        help="File to write SPACK_{PACKAGE}_COMMIT=1234 values to.",
+        help="File to write {PACKAGE}_COMMIT=1234 values to.",
     )
     subparser.add_argument(
         "modifications",
@@ -49,6 +56,7 @@ def setup_parser(subparser):
 def configure_pipeline(parser, args):
     # Parse all of our inputs before trying to modify any recipes.
     modifications = {}
+    packages_to_ignore = set(args.ignore_packages)
     mod_pattern = re.compile("^([^=]+)_(BRANCH|COMMIT|TAG)=(.*)$", re.IGNORECASE)
     for mod_str in args.modifications:
         match = mod_pattern.match(mod_str)
@@ -57,6 +65,10 @@ def configure_pipeline(parser, args):
         package_name = match.group(1)
         ref_type = match.group(2).lower()
         val = match.group(3)
+        # Handle --ignore-packges arguments
+        if package_name in packages_to_ignore:
+            tty.info("{}: ignoring {}".format(package_name, mod_str))
+            continue
         # Try and transform the input name, which is probably all upper case
         # and may contain underscores, into a Spack-style name that is all
         # lower case and contains hyphens.
@@ -130,18 +142,25 @@ def configure_pipeline(parser, args):
             spack_package.package_dir, spack.repo.package_file_name
         )
         # Using filter_file seems neater than calling sed, but it is a little
-        # more limited. First, redefine what branch/commit/tag the develop
-        # version refers to.
+        # more limited. First, remove any existing branch/commit/tag from the
+        # develop version.
+        tty.info("{}@develop: remove branch/commit/tag".format(spack_package_name))
+        filter_file(
+            "version\\s*\\(\\s*(['\"]{1})develop\\1(.*?)"
+            + ",\\s*(branch|commit|tag)=(['\"]{1})(.*?)\\4(.*?)\\)",
+            "version('develop'\\2\\6) # old: \\3=\\4\\5\\4",
+            spack_recipe,
+        )
+        # Second, insert the new commit="sha" part
         tty.info(
             '{}@develop: use commit="{}"'.format(spack_package_name, info["commit"])
         )
         filter_file(
-            "version\\s*\\(\\s*(['\"]{1})develop\\1(.*?)"
-            + "(branch|commit|tag)=(['\"]{1}).*?\\4(.*?)\\)",
-            "version('develop'\\2commit=\\4{}\\4\\5)".format(info["commit"]),
+            "version\\('develop'",
+            "version('develop', commit='{}'".format(info["commit"]),
             spack_recipe,
         )
-        # Second, make sure that the develop version, and only the develop
+        # Third, make sure that the develop version, and only the develop
         # version, is flagged as the preferred version. Start by getting a list
         # of versions that are already explicitly flagged as preferred.
         already_preferred = {

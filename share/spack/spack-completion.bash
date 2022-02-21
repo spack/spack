@@ -809,7 +809,7 @@ _spack_config_revert() {
 _spack_configure_pipeline() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --write-commit-file"
+        SPACK_COMPREPLY="-h --help --ignore-packages --write-commit-file"
     else
         SPACK_COMPREPLY=""
     fi
