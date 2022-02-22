@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack.package import *
 
@@ -398,8 +399,28 @@ class Eccodes(CMakePackage):
                             filter_file(cp['regex'], cp['repl'],
                                         cp_dst_path, backup=False)
 
+                readme_msg = ['This directory contains extra {0} from {1}, '
+                              'fetched from:'.format(variant_stem, center)]
+                for key in self.resources:
+                    if key in self.spec:
+                        for res in self.resources[key]:
+                            if res.name == center:
+                                readme_msg.append(str(res.fetcher))
+                self._create_or_prepend(join_path(center_src_path, 'README'),
+                                        '\n'.join(readme_msg))
+
                 install_tree(center_src_path,
                              join_path(self.prefix.share.eccodes, center_dir))
+
+    @staticmethod
+    def _create_or_prepend(fname, msg, separator='#' * 80):
+        lines = [msg, '\n']
+        if os.path.exists(fname):
+            with open(fname, 'r') as f:
+                lines.extend([separator, '\n', f.read()])
+
+        with open(fname, 'w') as f:
+            f.writelines(lines)
 
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
