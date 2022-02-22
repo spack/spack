@@ -477,6 +477,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                             'typedef void* dispatch_block_t',
                             new_header)
 
+        patches = []
         # Alpine Linux requires multiple other patches to avoid compile errors due to
         # their use of musl libc and a few other things.
         # TODO: enable matching against a glob in a 'when' clause so we could do e.g.
@@ -486,10 +487,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # This *should* be made to work against any alpine gcc, but these patches
             # are finicky and currently only work against the 11.x series.
             if spec.version >= Version('11'):
-                patches = [
+                patches.extend([
                     FilePatch(Gcc, 'pragma-poison.patch', 1, '.'),
                     FilePatch(Gcc, 'alpine-missing-includes.patch', 1, '.'),
-                ]
+                ])
             else:
                 tty.warn('Spack only supports building gcc@11: on Alpine Linux.')
         for patch in patches:
