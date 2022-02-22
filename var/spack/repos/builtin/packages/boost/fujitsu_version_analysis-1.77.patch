@@ -1,0 +1,11 @@
+--- spack-src/tools/build/src/tools/clang-linux.jam.orig	2022-02-22 09:51:17.000000000 +0900
++++ spack-src/tools/build/src/tools/clang-linux.jam	2022-02-22 11:22:58.000000000 +0900
+@@ -97,7 +97,7 @@
+ 
+ rule get-full-version ( command-string )
+ {
+-    return [ common.match-command-output version : "version ([0-9.]+)"
++    return [ common.match-command-output version : "LLVM ([0-9.]+)"
+            : "$(command-string) --version" ] ;
+ }
+ 

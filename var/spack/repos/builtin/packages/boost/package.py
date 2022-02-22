@@ -261,7 +261,8 @@ class Boost(Package):
           working_dir='libs/system', level=1)
 
     # Change the method for version analysis when using Fujitsu compiler.
-    patch('fujitsu_version_analysis.patch', when='@1.67.0:%fj')
+    patch('fujitsu_version_analysis.patch', when='@1.67.0:1.76.0%fj')
+    patch('fujitsu_version_analysis-1.77.patch', when='@1.77.0:%fj')
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
