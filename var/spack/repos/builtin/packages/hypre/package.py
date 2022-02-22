@@ -209,7 +209,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             ])
             rocm_arch = spec.variants['amdgpu_target'].value
             if rocm_arch:
-                options.append('--with-gpu-arch={0}'.format(rocm_arch))
+                configure_args.append('--with-gpu-arch={0}'.format(rocm_arch))
         else:
             configure_args.extend([
                 '--without-hip',
