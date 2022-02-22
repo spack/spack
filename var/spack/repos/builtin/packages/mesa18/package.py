@@ -42,7 +42,8 @@ class Mesa18(AutotoolsPackage):
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
+    _SWR_ENABLED_VALUES = ('avx', 'avx2', 'knl', 'skx')
+    variant('swr', values=any_combination_of(*_SWR_ENABLED_VALUES),
             description="Enable the SWR driver.")
     # conflicts('~llvm', when='~swr=none')
 
@@ -69,6 +70,10 @@ class Mesa18(AutotoolsPackage):
 
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')
+
+    # llvm-amdgpu is not compatible with swr
+    for swr_value in _SWR_ENABLED_VALUES:
+        conflicts('llvm-amdgpu', when='+llvm swr={0}'.format(swr_value))
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
