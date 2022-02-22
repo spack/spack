@@ -7,15 +7,13 @@ from spack import *
 
 
 class RBoot(RPackage):
-    """Bootstrap Functions (Originally by Angelo Canty for S)
+    """Bootstrap Functions (Originally by Angelo Canty for S).
 
-    Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+    Functions and datasets for bootstrapping from the book "Bootstrap Methods
+    and Their Application" by A. C. Davison and D. V. Hinkley (1997, CUP),
+    originally written by Angelo Canty for S."""
 
-    homepage = "https://cloud.r-project.org/package=boot"
-    url      = "https://cloud.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/boot"
+    cran = "boot"
 
     version('1.3-28', sha256='9f7158fd2714659f590c3955651893dc24bd8f39196bc5a4cc35b0b031744a32')
     version('1.3-25', sha256='464835fcb453072346ce49e4ae318e04c9dba682349be49db616623b6088fbbe')

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPathview(RPackage):
-    """a tool set for pathway based data integration and visualization
+    """a tool set for pathway based data integration and visualization.
 
        Pathview is a tool set for pathway based data integration and
        visualization. It maps and renders a wide variety of biological data on
@@ -18,9 +18,9 @@ class RPathview(RPackage):
        seamlessly integrates with pathway and gene set (enrichment) analysis
        tools for large-scale and fully automated analysis."""
 
-    homepage = "https://bioconductor.org/packages/pathview"
-    git      = "https://git.bioconductor.org/packages/pathview.git"
+    bioc = "pathview"
 
+    version('1.34.0', commit='a8788902a3bb047f8ee785966e57f84596076bbd')
     version('1.30.1', commit='a6a32395db408798cb076894678e90148bae6bf4')
     version('1.24.0', commit='e4401c1425c980ce2e6e478a4602a9f6d36ccd8d')
     version('1.22.3', commit='ff86f9e166a5b03bbed1a0ad276778958c3045ce')

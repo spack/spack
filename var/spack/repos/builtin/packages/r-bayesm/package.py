@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBayesm(RPackage):
-    """Bayesian Inference for Marketing/Micro-Econometrics
+    """Bayesian Inference for Marketing/Micro-Econometrics.
 
     Covers many important models used in marketing and micro-econometrics
     applications.  The package includes: Bayes Regression (univariate or
@@ -29,9 +29,7 @@ class RBayesm(RPackage):
     2005) and Bayesian Non- and Semi-Parametric Methods and Applications
     (Princeton U Press 2014)."""
 
-    homepage = "https://cloud.r-project.org/package=bayesm"
-    url      = "https://cloud.r-project.org/src/contrib/bayesm_3.1-0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/bayesm"
+    cran = "bayesm"
 
     version('3.1-4', sha256='061b216c62bc72eab8d646ad4075f2f78823f9913344a781fa53ea7cf4a48f94')
     version('3.1-3', sha256='51e4827eca8cd4cf3626f3c2282543df7c392b3ffb843f4bfb386fe104642a10')

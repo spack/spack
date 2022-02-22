@@ -24,10 +24,11 @@ class Liblas(CMakePackage):
     variant('geotiff', default=True,  description='Build with GeoTIFF for enhanced performance')
     variant('laszip',  default=False, description='Build with LasZip')
 
-    depends_on('libgeotiff')
-    depends_on('boost@:1.69.0')
-    depends_on('laszip', when='+laszip')
-    depends_on('gdal', when='+gdal')
+    depends_on('cmake@2.6:', type='build')
+    depends_on('libgeotiff@1.3:', when='+geotiff')
+    depends_on('boost@1.42:1.72+program_options+thread+system+iostreams+filesystem')
+    depends_on('laszip@2.0.1:', when='+laszip')
+    depends_on('gdal@1.7:', when='+gdal')
 
     def cmake_args(self):
         args = []

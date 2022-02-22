@@ -7,12 +7,12 @@ from spack import *
 
 
 class RGgjoy(RPackage):
-    """Joyplots provide a convenient way of visualizing changes in distributions
-    over time or space."""
+    """Joyplots in 'ggplot2'.
 
-    homepage = "https://cloud.r-project.org/package=ggjoy"
-    url      = "https://cloud.r-project.org/src/contrib/ggjoy_0.4.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggjoy"
+    Joyplots provide a convenient way of visualizing changes in
+    distributions over time or space."""
+
+    cran = "ggjoy"
 
     version('0.4.1', sha256='d2f778bc40203d7fbb7c81b40beed8614c36ea10448e911663cc6109aa685504')
     version('0.4.0', sha256='cb9ef790921ffcd3cfb6a55b409d17ccae9e8f5fdd2a28e55ea2ccfa8efd44e8')

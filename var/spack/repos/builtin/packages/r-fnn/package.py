@@ -7,13 +7,13 @@ from spack import *
 
 
 class RFnn(RPackage):
-    """Cover-tree and kd-tree fast k-nearest neighbor search algorithms and
+    """Fast Nearest Neighbor Search Algorithms and Applications.
+
+    Cover-tree and kd-tree fast k-nearest neighbor search algorithms and
     related applications including KNN classification, regression and
     information measures are implemented."""
 
-    homepage = "https://cloud.r-project.org/package=FNN"
-    url      = "https://cloud.r-project.org/src/contrib/FNN_1.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/FNN"
+    cran = "FNN"
 
     version('1.1.3', sha256='de763a25c9cfbd19d144586b9ed158135ec49cf7b812938954be54eb2dc59432')
     version('1.1.2.2', sha256='b51a60fbbeff58c48cc90c2023c48972d5082d68efd02284c17ccd9820986326')

@@ -35,8 +35,8 @@ class Zstd(MakefilePackage):
     variant('programs', default=False, description='Build executables')
 
     depends_on('zlib', when='+programs')
-    depends_on('lzma', when='+programs')
     depends_on('lz4', when='+programs')
+    depends_on('xz', when='+programs')
 
     def _make(self, *args, **kwargs):
         # PREFIX must be defined on macOS even when building the library, since

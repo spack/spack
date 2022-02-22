@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGrbase(RPackage):
-    """A Package for Graphical Modelling in R
+    """A Package for Graphical Modelling in R.
 
     The 'gRbase' package provides graphical modelling features used by e.g. the
     packages 'gRain', 'gRim' and 'gRc'. 'gRbase' implements graph algorithms
@@ -24,18 +24,16 @@ class RGrbase(RPackage):
     and 'RBGL' are installed from 'bioconductor'; for installation instructions
     please refer to the web page given below."""
 
-    homepage = "https://people.math.aau.dk/~sorenh/software/gR/"
-    url      = "https://cloud.r-project.org/src/contrib/gRbase_1.8-3.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/gRbase"
+    cran = "gRbase"
 
     version('1.8-6.7', sha256='aaafc7e1b521de60e1a57c0175ac64d4283850c3273bd14774cf24dabc743388')
     version('1.8-3.4', sha256='d35f94c2fb7cbd4ce3991570424dfe6723a849658da32e13df29f53b6ea2cc2c')
 
     depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r@3.6.0:', when='@1.8-6.7:', type=('build', 'run'))
+    depends_on('r@3.6.0:', type=('build', 'run'), when='@1.8-6.7:')
     depends_on('r-graph', type=('build', 'run'))
-    depends_on('r-rgraphviz', when='@1.8-6.7:', type=('build', 'run'))
+    depends_on('r-rgraphviz', type=('build', 'run'), when='@1.8-6.7:')
     depends_on('r-rbgl', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RVsn(RPackage):
-    """Variance stabilization and calibration for microarray data
+    """Variance stabilization and calibration for microarray data.
 
        The package implements a method for normalising microarray intensities,
        and works for single- and multiple-color arrays. It can also be used for
@@ -22,9 +22,9 @@ class RVsn(RPackage):
        they are usually more sensitive and specific in detecting differential
        transcription."""
 
-    homepage = "https://bioconductor.org/packages/vsn"
-    git      = "https://git.bioconductor.org/packages/vsn.git"
+    bioc = "vsn"
 
+    version('3.62.0', commit='6ae7f4e07ec1a5a9482cab892d98175983bfcd50')
     version('3.58.0', commit='a451e6ae989623750feacf26d99683a7955adf85')
     version('3.52.0', commit='e80642d850ae93bc141654200a8970b561a94fbe')
     version('3.50.0', commit='ad49fcc288c6065d0f04040acd688e7f0d7d927e')
@@ -33,10 +33,12 @@ class RVsn(RPackage):
     version('3.44.0', commit='e54513fcdd07ccfb8094359e93cef145450f0ee0')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@3.46.0:', type=('build', 'run'))
+    depends_on('r@3.4.0:', type=('build', 'run'), when='@3.46.0:')
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@3.62.0:')
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-hexbin', when='@3.44.0:3.52.0', type=('build', 'run'))
+
+    depends_on('r-hexbin', type=('build', 'run'), when='@3.44.0:3.52.0')

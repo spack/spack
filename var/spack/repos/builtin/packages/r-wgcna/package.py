@@ -7,7 +7,7 @@ from spack import *
 
 
 class RWgcna(RPackage):
-    """Weighted Correlation Network Analysis
+    """Weighted Correlation Network Analysis.
 
     Functions necessary to perform Weighted Correlation Network Analysis on
     high-dimensional data as originally described in Horvath and Zhang (2005)
@@ -18,10 +18,9 @@ class RWgcna(RPackage):
     includes a number of utility functions for data manipulation and
     visualization."""
 
-    homepage = "https://cloud.r-project.org/package=WGCNA"
-    url      = "https://cloud.r-project.org/src/contrib/WGCNA_1.68.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/WGCNA/"
+    cran = "WGCNA"
 
+    version('1.70-3', sha256='b9843b839728183af6b746f239e9519d438b294613362b556002acdb8522cbd4')
     version('1.69', sha256='2ea152d45b2d4f0e40b4b9f7b5ea8a96e230f7744ece8be27bdba96cf39d5008')
     version('1.68', sha256='0a04f15a20817f9260ae1896eda3be83a7f4855a27a348df85c7f4d376f1efe8')
     version('1.67', sha256='c9cc9989763b2c80835489eabd38d9ee35b204305044d115ca7c775a103f6824')
@@ -40,4 +39,5 @@ class RWgcna(RPackage):
     depends_on('r-go-db', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
-    depends_on('r-robust', when='@:1.68', type=('build', 'run'))
+
+    depends_on('r-robust', type=('build', 'run'), when='@:1.68')

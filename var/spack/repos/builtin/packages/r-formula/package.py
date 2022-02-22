@@ -8,15 +8,13 @@ from spack import *
 
 
 class RFormula(RPackage):
-    """Extended Model Formulas
+    """Extended Model Formulas.
 
     Infrastructure for extended formulas with multiple parts on the right-hand
     side and/or multiple responses on the left-hand side (see
     <doi:10.18637/jss.v034.i01>)."""
 
-    homepage = "https://cloud.r-project.org/package=Formula"
-    url      = "https://cloud.r-project.org/src/contrib/Formula_1.2-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Formula"
+    cran = "Formula"
 
     version('1.2-4', sha256='cb70e373b5ed2fc8450937fb3321d37dfd22dcc6f07cb872a419d51205125caf')
     version('1.2-3', sha256='1411349b20bd09611a9fd0ee6d15f780c758ad2b0e490e908facb49433823872')
