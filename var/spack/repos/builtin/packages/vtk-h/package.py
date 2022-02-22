@@ -101,6 +101,7 @@ class VtkH(CMakePackage, CudaPackage):
         host_config = self._get_host_config_path(self.spec)
         options = []
         options.extend(['-C', host_config, "../spack-src/src/"])
+        return options
 
     def _get_host_config_path(self, spec):
         sys_type = spec.architecture
