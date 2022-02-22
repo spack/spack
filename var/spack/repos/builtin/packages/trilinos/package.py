@@ -98,7 +98,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('amesos',       default=True, description='Compile with Amesos')
     variant('amesos2',      default=True, description='Compile with Amesos2')
     variant('anasazi',      default=True, description='Compile with Anasazi')
-    variant('aprepro',      default=False, description='Compile with Aprepro from SEACAS')
     variant('aztec',        default=True, description='Compile with Aztec')
     variant('belos',        default=True, description='Compile with Belos')
     variant('chaco',        default=False, description='Compile with Chaco from SEACAS')
@@ -129,8 +128,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('stratimikos',  default=False, description='Compile with Stratimikos')
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
+<<<<<<< HEAD
     variant('thyra',        default=False, description='Compile with Thyra')
     variant('teuchos',      default=False, description='Compile with Teuchos')
+=======
+>>>>>>> Respond to coments in PR #28935
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
     variant('triutils',     default=False, description='Compile with Triutils')
@@ -569,8 +571,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
+<<<<<<< HEAD
             define_trilinos_enable('Thyra'),
             define_trilinos_enable('Teuchos'),
+=======
+>>>>>>> Respond to coments in PR #28935
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Triutils'),
@@ -589,16 +594,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.extend([
                 define('Trilinos_EXTRA_REPOSITORIES', 'DataTransferKit'),
                 define_trilinos_enable('DataTransferKit', True),
-            ])
-
-        if '+aprepro' in spec:
-            options.extend([
-                define_trilinos_enable('SEACAS', True),
-                define_trilinos_enable('SEACASAprepro', True),
-            ])
-        else:
-            options.extend([
-                define_trilinos_enable('SEACASAprepro', False),
             ])
 
         if '+exodus' in spec:
