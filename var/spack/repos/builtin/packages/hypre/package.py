@@ -94,6 +94,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     conflicts('+cuda', when='+int64')
     conflicts('+rocm', when='+int64')
+    conflicts('+rocm', when='@:2.23.0')
     conflicts('+unified-memory', when='~cuda~rocm')
     conflicts('+gptune', when='~mpi')
 
