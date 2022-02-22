@@ -167,6 +167,11 @@ class Eccodes(CMakePackage):
 
     _declare_definitions_and_samples()
 
+    variant('create-view', default=False,
+            # Enabling this option allows for using the library without setting
+            # the environment variables:
+            description='Project definitions and samples to a single directory')
+
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
     depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
@@ -205,6 +210,13 @@ class Eccodes(CMakePackage):
     conflicts('~tools', when='@:2.18.0',
               msg='The command line tools can be disabled '
                   'only starting version 2.19.0')
+
+    conflicts('+create-view', when='extra-definitions=none extra-samples=none',
+              msg='Creating the view without extra definitions and samples '
+                  'does not make sense')
+
+    conflicts('+create-view', when='+memfs',
+              msg='In-memory view is not supported yet')
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
@@ -311,17 +323,22 @@ class Eccodes(CMakePackage):
                 else 'DEFINITION'
             )
 
-            default_path = (
-                # The following is a marker, not a real path:
-                '/MEMFS/{0}'.format(variant_stem) if '+memfs' in self.spec
-                else join_path(self.prefix.share.eccodes, variant_stem)
-            )
-            env.prepend_path(env_var_name, default_path)
-
             variant_name = 'extra-{0}'.format(variant_stem)
             value = self.spec.variants[variant_name].value
 
-            if value == 'none':
+            if '+memfs' in self.spec:
+                # The following is a marker, not a real path:
+                default_path = '/MEMFS/{0}'.format(variant_stem)
+            elif '+create-view' in self.spec and value != 'none':
+                default_path = join_path(self.prefix.share.eccodes,
+                                         '{0}.all'.format(variant_stem))
+            else:
+                default_path = join_path(self.prefix.share.eccodes,
+                                         variant_stem)
+
+            env.prepend_path(env_var_name, default_path)
+
+            if '+create-view' in self.spec or value == 'none':
                 continue
 
             for center in reversed(value.split(':')):
@@ -432,6 +449,23 @@ class Eccodes(CMakePackage):
         if '^python' in self.spec:
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
+        if '+create-view' in self.spec:
+            if '~memfs' in self.spec:
+                for variant_stem in ['definitions', 'samples']:
+                    variant_name = 'extra-{0}'.format(variant_stem)
+                    if self.spec.variants[variant_name].value != 'none':
+                        cmake_variable_stem = (
+                            variant_stem.upper()
+                            if variant_stem != 'definitions'
+                            # Workaround for the inconsistent name:
+                            else 'DEFINITION'
+                        )
+                        args.append(
+                            self.define(
+                                'ECCODES_{0}_SUFF'.format(cmake_variable_stem),
+                                join_path('share', 'eccodes',
+                                          '{0}.all'.format(variant_stem))))
+
         return args
 
     @run_after('install')
@@ -479,6 +513,67 @@ class Eccodes(CMakePackage):
 
                 install_tree(center_src_path,
                              join_path(self.prefix.share.eccodes, center_dir))
+
+    def create_file_view(self):
+        pass
+
+    @run_after('install')
+    @when('+create-view~memfs')
+    def create_file_view(self):
+        for variant_stem in ['definitions', 'samples']:
+            variant_name = 'extra-{0}'.format(variant_stem)
+            value = self.spec.variants[variant_name].value
+
+            if value == 'none':
+                continue
+
+            # Path to the default directory (i.e. the one that the library
+            # searches for the definitions/samples by default):
+            default_dir = join_path(self.prefix.share.eccodes,
+                                    '{0}.all'.format(variant_stem))
+
+            # Path to the usual installation directory for the
+            # definitions/samples:
+            usual_dir = join_path(self.prefix.share.eccodes, variant_stem)
+
+            # Move the default definitions/samples to the usual directory:
+            os.rename(default_dir, usual_dir)
+
+            # Recreate the default directory:
+            mkdirp(default_dir)
+
+            # List of the projected directories:
+            projected_dirs = [join_path(self.prefix.share.eccodes,
+                                        '{0}.{1}'.format(variant_stem, center))
+                              for center in value.split(':')]
+            projected_dirs.append(usual_dir)
+
+            # Generate README file for the curious users:
+            readme_path = join_path(default_dir, 'README')
+            with open(readme_path, 'w') as f:
+                f.write('This directory is a projection of {0} from the '
+                        'following directories:\n'
+                        '{1}'.format(variant_stem, '\n'.join(projected_dirs)))
+            set_install_permissions(readme_path)
+
+            self._create_view(default_dir, *projected_dirs)
+
+    @staticmethod
+    def _create_view(dst_path, *src_paths):
+        from llnl.util.link_tree import LinkTree
+        for src_path in src_paths:
+            tree = LinkTree(src_path)
+
+            def ignore(file_or_dir):
+                dst_file_or_dir = join_path(dst_path, file_or_dir)
+                # Ignore if dst_file_or_dir exists and it's either a file (not a
+                # directory) or a directory that conflicts with a file (not a
+                # directory) from src_path:
+                return (os.path.exists(dst_file_or_dir) and
+                        (not os.path.isdir(dst_file_or_dir) or
+                         not os.path.isdir(join_path(src_path, file_or_dir))))
+
+            tree.merge(dst_path, ignore=ignore, relative=True)
 
     @staticmethod
     def _create_or_prepend(fname, msg, separator='#' * 80):
