@@ -203,6 +203,12 @@ def display_env(env, args, decorator):
 
 def find(parser, args):
     if args.bootstrap:
+        tty.warn(
+            "`spack find --bootstrap` is deprecated and will be removed in v0.19.",
+            "Use `spack --bootstrap find` instead."
+        )
+
+    if args.bootstrap:
         bootstrap_store_path = spack.bootstrap.store_path()
         with spack.bootstrap.ensure_bootstrap_configuration():
             msg = 'Showing internal bootstrap store at "{0}"'
