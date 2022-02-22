@@ -15,6 +15,7 @@ import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.patch import FilePatch
+from spack.version import Version
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -482,14 +483,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # patch('pragma-poison.patch', when='arch=linux-alpine*-*')
         if ((spec.architecture.platform == 'linux') and
             spec.architecture.os.startswith('alpine')):
-            patches = [
-                FilePatch(Gcc, 'pragma-poison.patch', 1, '.'),
-                FilePatch(Gcc, 'alpine-missing-includes.patch', 1, '.'),
-            ]
-            for patch in patches:
-                tty.warn('applying patch at {} to stage at {}'
-                         .format(patch.path_or_url, self.stage.source_path))
-                patch.apply(self.stage)
+            # This *should* be made to work against any alpine gcc, but these patches
+            # are finicky and currently only work against the 11.x series.
+            if spec.version >= Version('11'):
+                patches = [
+                    FilePatch(Gcc, 'pragma-poison.patch', 1, '.'),
+                    FilePatch(Gcc, 'alpine-missing-includes.patch', 1, '.'),
+                ]
+            else:
+                tty.warn('Spack only supports building gcc@11: on Alpine Linux.')
+        for patch in patches:
+            tty.warn('applying patch at {} to stage at {}'
+                     .format(patch.path_or_url, self.stage.source_path))
+            patch.apply(self.stage)
 
         # Use installed libz
         if self.version >= Version('6'):
