@@ -142,6 +142,10 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             if '+fortran' in spec:
                 os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
+            configure_args.append('--with-MPI-lib-dirs={0}'.format(
+                spec['mpi'].prefix.lib))
+            configure_args.append('--with-MPI-include={0}'.format(
+                spec['mpi'].prefix.include))
         else:
             configure_args.append('--without-MPI')
 
@@ -207,9 +211,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 '--enable-rocrand',
                 '--enable-rocsparse',
             ])
-            rocm_arch = spec.variants['amdgpu_target'].value
-            if rocm_arch:
-                options.append('--with-gpu-arch={0}'.format(rocm_arch))
+            rocm_arch_vals = spec.variants['amdgpu_target'].value
+            if rocm_arch_vals:
+                rocm_arch_sorted = list(sorted(rocm_arch_vals, reverse=True))
+                rocm_arch = rocm_arch_sorted[0]
+                configure_args.append('--with-gpu-arch={0}'.format(rocm_arch))
         else:
             configure_args.extend([
                 '--without-hip',
