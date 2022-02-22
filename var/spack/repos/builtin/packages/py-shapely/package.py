@@ -18,6 +18,7 @@ class PyShapely(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.8.1', sha256='0956a3aced40c31a957a52aa1935467334926844a6776b469acb0760a5e6aba8')
     version('1.8.0', sha256='f5307ee14ba4199f8bbcf6532ca33064661c1433960c432c84f0daa73b47ef9c')
     version('1.7.1', sha256='1641724c1055459a7e2b8bbe47ba25bdc89554582e62aec23cb3f3ca25f9b129')
     version('1.7.0', sha256='e21a9fe1a416463ff11ae037766fe410526c95700b9e545372475d2361cc951e')
@@ -27,7 +28,7 @@ class PyShapely(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@1.7:', type=('build', 'link', 'run'))
     depends_on('python@2.6:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
+    depends_on('py-cython@0.29.24:', type='build')
     depends_on('py-numpy', type=('build', 'link', 'run'))
     depends_on('geos')
     depends_on('geos@3.3:', when='@1.3:1.7')

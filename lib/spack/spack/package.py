@@ -1186,22 +1186,27 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.extendees:
             return None
 
-        # TODO: allow more than one extendee.
-        name = next(iter(self.extendees))
+        deps = []
 
         # If the extendee is in the spec's deps already, return that.
         for dep in self.spec.traverse(deptypes=('link', 'run')):
-            if name == dep.name:
-                return dep
+            if dep.name in self.extendees:
+                deps.append(dep)
+
+        # TODO: allow more than one active extendee.
+        if deps:
+            assert len(deps) == 1
+            return deps[0]
 
         # if the spec is concrete already, then it extends something
         # that is an *optional* dependency, and the dep isn't there.
         if self.spec._concrete:
             return None
         else:
+            # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = self.extendees[name]
+            spec, kwargs = next(iter(self.extendees.items()))
             return spec
 
     @property
@@ -1791,7 +1796,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.mkdirp(os.path.dirname(dest_path))
                 fsys.copy(src_path, dest_path)
 
-    def do_test(self, dirty=False):
+    def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1807,6 +1812,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
+
+        if self.spec.external and not externals:
+            with open(self.test_log_file, 'w') as ofd:
+                ofd.write('Testing package {0}\n'
+                          .format(self.test_suite.test_pkg_id(self.spec)))
+            return
 
         kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
         spack.build_environment.start_build_process(self, test_process, kwargs)

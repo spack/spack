@@ -7,11 +7,16 @@ from spack import *
 
 
 class RRcppcnpy(RPackage):
-    """Rcpp bindings for NumPy files."""
+    """Read-Write Support for 'NumPy' Files via 'Rcpp'.
 
-    homepage = "https://github.com/eddelbuettel/rcppcnpy"
-    url      = "https://cloud.r-project.org/src/contrib/RcppCNPy_0.2.9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppCNPy"
+    The 'cnpy' library written by Carl Rogers provides read and write
+    facilities for files created with (or for) the 'NumPy' extension for
+    'Python'. Vectors and matrices of numeric types can be read or written to
+    and from files as well as compressed files. Support for integer files is
+    available if the package has been built with -std=c++11 which should be the
+    default on all platforms since the release of R 3.3.0."""
+
+    cran = "RcppCNPy"
 
     version('0.2.10', sha256='77d6fbc86520a08da40d44c0b82767099f8f719ca95870d91efff1a9cab1ab9c')
     version('0.2.9', sha256='733f004ad1a8b0e5aafbf547c4349d2df3118afd57f1ff99f20e39135c6edb30')

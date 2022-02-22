@@ -7,7 +7,7 @@ from spack import *
 
 
 class RParty(RPackage):
-    """A Laboratory for Recursive Partytioning
+    """A Laboratory for Recursive Partytioning.
 
     A computational toolbox for recursive partitioning. The core of the package
     is ctree(), an implementation of conditional inference trees which embed
@@ -26,17 +26,16 @@ class RParty(RPackage):
     <doi:10.1198/106186008X319331> and  Strobl et al. (2007)
     <doi:10.1186/1471-2105-8-25>."""
 
-    homepage = "https://cloud.r-project.org/package=party"
-    url      = "https://cloud.r-project.org/src/contrib/party_1.1-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/party"
+    cran = "party"
 
+    version('1.3-9', sha256='29a1fefdb86369285ebf5d48ab51268a83e2011fb9d9f609a2250b5f0b169089')
     version('1.3-5', sha256='1c3a35d3fe56498361542b3782de2326561c14a8fa1b76f3c9f13beb1fd51364')
     version('1.3-3', sha256='9f72eea02d43a4cee105790ae7185b0478deb6011ab049cc9d31a0df3abf7ce9')
     version('1.3-2', sha256='9f350fa21114151c49bccc3d5f8536dbc5a608cfd88f60461c9805a4c630510b')
     version('1.1-2', sha256='c3632b4b02dc12ec949e2ee5b24004e4a4768b0bc9737432e9a85acbc2ed0e74')
 
-    depends_on('r@2.14.0:', when='@:1.2-2', type=('build', 'run'))
-    depends_on('r@3.0.0:', when='@1.2-3:', type=('build', 'run'))
+    depends_on('r@2.14.0:', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'), when='@1.2-3:')
     depends_on('r-mvtnorm@1.0-2:', type=('build', 'run'))
     depends_on('r-modeltools@0.2-21:', type=('build', 'run'))
     depends_on('r-strucchange', type=('build', 'run'))

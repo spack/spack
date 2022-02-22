@@ -7,15 +7,16 @@ from spack import *
 
 
 class RMcmcglmm(RPackage):
-    """MCMC Generalised Linear Mixed Models
+    """MCMC Generalised Linear Mixed Models.
 
-    Fits Multi-response Generalised Linear Mixed Models (and related models)
-    using Markov chain Monte Carlo techniques."""
+    Fits Multivariate Generalised Linear Mixed Models (and related models)
+    using Markov chain Monte Carlo techniques (Hadfield 2010 J. Stat.
+    Soft.)."""
 
-    homepage = "https://cloud.r-project.org/package=MCMCglmm"
-    url      = "https://cloud.r-project.org/src/contrib/MCMCglmm_2.25.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/MCMCglmm"
+    cran = "MCMCglmm"
 
+    version('2.33', sha256='b56d72e799f8ed5fa2a05ecc743e5b8051f9cc2de57ad3e6de2dcb1c1715d4fc')
+    version('2.32', sha256='a9156e1e0d0f912f2f239476dc8765dc61c480f903381be7ec5db05bd6d3f0b3')
     version('2.30', sha256='714250fe6ebdd1bd3dc284f7fcb92326de1273b0c34d31e71dc825312527e042')
     version('2.29', sha256='13ba7837ea2049e892c04e7ec5c83d5b599a7e4820b9d875f55ec40fc2cc67b4')
     version('2.28', sha256='7d92e6d35638e5e060a590b92c3b1bfc02a11386276a8ab99bceec5d797bfc2a')

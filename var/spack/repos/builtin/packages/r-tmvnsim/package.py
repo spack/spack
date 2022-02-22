@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTmvnsim(RPackage):
-    """Truncated Multivariate Normal Simulation
+    """Truncated Multivariate Normal Simulation.
 
     Importance sampling from the truncated multivariate normal using the GHK
     (Geweke-Hajivassiliou-Keane) simulator. Unlike Gibbs sampling which can get
@@ -19,8 +19,6 @@ class RTmvnsim(RPackage):
     returned along with sampling weights, based on which, one can calculate
     integrals over truncated regions for multivariate normals."""
 
-    homepage = "https://cloud.r-project.org/package=tmvnsim"
-    url      = "https://cloud.r-project.org/src/contrib/tmvnsim_1.0-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/tmvnsim"
+    cran = "tmvnsim"
 
     version('1.0-2', sha256='97f63d0bab3b240cc7bdbe6e6e74e90ad25a4382a345ee51a26fe3959edeba0f')

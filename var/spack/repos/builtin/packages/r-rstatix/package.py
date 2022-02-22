@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRstatix(RPackage):
-    """Pipe-Friendly Framework for Basic Statistical Tests
+    """Pipe-Friendly Framework for Basic Statistical Tests.
 
     Provides a simple and intuitive pipe-friendly framework, coherent with the
     'tidyverse' design philosophy, for performing basic statistical tests,
@@ -24,16 +24,16 @@ class RRstatix(RPackage):
     functions for identifying univariate and multivariate outliers, assessing
     normality and homogeneity of variances."""
 
-    homepage = "https://rpkgs.datanovia.com/rstatix/"
-    url      = "https://cloud.r-project.org/src/contrib/rstatix_0.6.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rstatix"
+    cran = "rstatix"
 
+    version('0.7.0', sha256='a5ae17dc32cc26fc5dcab9ff0a9747ce3786c9fe091699247ad8b9f823f2600c')
     version('0.6.0', sha256='ebb28e20c7e28809194a2a027bc83303b17be1e3db32f49325727c9279df9c5b')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-tidyr@1.0.0:', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
     depends_on('r-broom@0.5.6:', type=('build', 'run'))
+    depends_on('r-broom@0.7.4:', type=('build', 'run'), when='@0.7.0:')
     depends_on('r-rlang@0.3.1:', type=('build', 'run'))
     depends_on('r-tibble@2.1.3:', type=('build', 'run'))
     depends_on('r-dplyr@0.7.1:', type=('build', 'run'))

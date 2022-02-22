@@ -10,8 +10,8 @@ class RGenomeinfodbdata(RPackage):
     """for mapping between NCBI taxonomy ID and species. Used by functions
        in the GenomeInfoDb package."""
 
-    homepage = "https://bioconductor.org/packages/GenomeInfoDbData/"
-    url      = "https://bioconductor.org/packages/release/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
+    bioc = "GenomeInfoDbData"
+    url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
     version('1.2.7',
             url='https://bioconductor.org/packages/3.14/data/annotation/src/contrib/GenomeInfoDbData_1.2.7.tar.gz',

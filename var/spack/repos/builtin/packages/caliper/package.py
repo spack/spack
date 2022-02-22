@@ -154,30 +154,36 @@ class Caliper(CMakePackage, CudaPackage):
     def run_cxx_example_test(self):
         """Run stand alone test: cxx_example"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
-
-        if not os.path.isfile(join_path(test_dir, 'cxx-example.cpp')):
-            tty.msg('Skipping caliper test: file does not exist')
-            return
-
+        test_dir = self.test_suite.current_test_cache_dir.examples.apps
         exe = 'cxx-example'
+        source_file = 'cxx-example.cpp'
+
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn('Skipping caliper test:'
+                     '{0} does not exist'.format(source_file))
+            return
 
         if os.path.exists(self.prefix.lib):
             lib_dir = self.prefix.lib
         else:
             lib_dir = self.prefix.lib64
 
-        self.run_test(exe='gcc',
-                      options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
-                               '-L{0}'.format(lib_dir),
-                               '-I{0}'.format(self.prefix.include),
-                               '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+        options = ['-L{0}'.format(lib_dir),
+                   '-I{0}'.format(self.prefix.include),
+                   '{0}'.format(join_path(test_dir, source_file)),
+                   '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++']
 
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe=os.environ['CXX'],
+                             options=options,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to run example')
 
     def test(self):
         self.run_cxx_example_test()

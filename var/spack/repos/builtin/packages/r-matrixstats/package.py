@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMatrixstats(RPackage):
-    """Functions that Apply to Rows and Columns of Matrices (and to Vectors)
+    """Functions that Apply to Rows and Columns of Matrices (and to Vectors).
 
     High-performing functions operating on rows and columns of matrices, e.g.
     col / rowMedians(), col / rowRanks(), and col / rowSds(). Functions
@@ -15,7 +15,6 @@ class RMatrixstats(RPackage):
     memory usage and processing time is minimized. There are also optimized
     vector-based methods, e.g. binMeans(), madDiff() and weightedMedian()."""
 
-    homepage = "https://cloud.r-project.org/package=matrixStats"
     cran = "matrixStats"
 
     version('0.61.0', sha256='dbd3c0ec59b1ae62ff9b4c2c90c4687cbd680d1796f6fdd672319458d4d2fd9a')

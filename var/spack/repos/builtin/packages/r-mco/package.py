@@ -7,15 +7,13 @@ from spack import *
 
 
 class RMco(RPackage):
-    """Multiple Criteria Optimization Algorithms and Related Functions
+    """Multiple Criteria Optimization Algorithms and Related Functions.
 
     A collection of function to solve multiple criteria optimization problems
     using genetic algorithms (NSGA-II). Also included is a collection of test
     functions."""
 
-    homepage = "https://github.com/cran/mco"
-    url      = "https://cloud.r-project.org/src/contrib/mco_1.0-15.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/mco"
+    cran = "mco"
 
     version('1.15.6', sha256='17ebe279cb9c89b7cd8054ac50d3b657d2b10dadbc584b88da7e79c3a9680582')
     version('1.0-15.1', sha256='3c13ebc8c1f1bfa18f3f95b3998c57fde5259876e92456b6c6d4c59bef07c193')

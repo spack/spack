@@ -7,16 +7,16 @@ from spack import *
 
 
 class RTestthat(RPackage):
-    """Unit Testing for R
+    """Unit Testing for R.
 
     Software testing is important, but, in part because it is frustrating and
     boring, many of us avoid it. 'testthat' is a testing framework for R that
     is easy to learn and use, and integrates with your existing 'workflow'."""
 
-    homepage = "https://github.com/hadley/testthat"
-    url      = "https://cloud.r-project.org/src/contrib/testthat_1.0.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/testthat"
+    cran = "testthat"
 
+    version('3.1.2', sha256='ed41a6168ca22869b6aebe1e5865bb2f5338a7c35ca0a13cf69ac2f5c6aeb659')
+    version('3.1.1', sha256='e6755fb4f5388751af952edfd555533bb55d6252606f6fcef07bdb6268c8cf80')
     version('3.0.1', sha256='297fc45c719684f11ddf9dc9088f5528fdf9b44625165543384eaf579f243ad0')
     version('2.3.2', sha256='1a268d8df07f7cd8d282d03bb96ac2d96a24a95c9aa52f4cca5138a09dd8e06c')
     version('2.2.1', sha256='67ee0512bb312695c81fd74338bb8ce9e2e58763681ddbcdfdf35f52dfdb0b78')
@@ -24,27 +24,29 @@ class RTestthat(RPackage):
     version('1.0.2', sha256='0ef7df0ace1fddf821d329f9d9a5d42296085350ae0d94af62c45bd203c8415e')
 
     depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r-brio', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-callr@3.5.1:', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-cli', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-cli@2.2.0:', when='@3.0.1:', type=('build', 'run'))
+    depends_on('r-brio', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-callr@3.5.1:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-cli', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-cli@2.2.0:', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-crayon@1.3.4:', type=('build', 'run'))
-    depends_on('r-desc', when='@3.0.1:', type=('build', 'run'))
+    depends_on('r-desc', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-ellipsis', when='@2.3.2:', type=('build', 'run'))
-    depends_on('r-ellipsis@0.2.0:', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-evaluate', when='@2.2.0:', type=('build', 'run'))
-    depends_on('r-jsonlite', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-lifecycle', when='@3.0.1:', type=('build', 'run'))
+    depends_on('r-ellipsis', type=('build', 'run'), when='@2.3.2:')
+    depends_on('r-ellipsis@0.2.0:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-evaluate', type=('build', 'run'), when='@2.2.0:')
+    depends_on('r-jsonlite', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-lifecycle', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-pkgload', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-pkgload', type=('build', 'run'), when='@2.3.2:')
     depends_on('r-praise', type=('build', 'run'))
-    depends_on('r-processx', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-ps@1.3.4:', when='@3.0.1:', type=('build', 'run'))
+    depends_on('r-processx', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-ps@1.3.4:', type=('build', 'run'), when='@3.0.1:')
     depends_on('r-r6@2.2.0:', type=('build', 'run'))
-    depends_on('r-rlang@0.3.0:', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.1:', when='@2.3.2:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.9:', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-waldo@0.2.1:', when='@3.0.1:', type=('build', 'run'))
-    depends_on('r-withr@2.0.0:', when='@2.0.0:', type=('build', 'run'))
-    depends_on('r-withr@2.3.0:', when='@3.0.1:', type=('build', 'run'))
+    depends_on('r-rlang@0.3.0:', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-rlang@0.4.1:', type=('build', 'run'), when='@2.3.2:')
+    depends_on('r-rlang@0.4.9:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-waldo@0.2.1:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-waldo@0.2.4:', type=('build', 'run'), when='@3.1.1:')
+    depends_on('r-withr@2.0.0:', type=('build', 'run'), when='@2.0.0:')
+    depends_on('r-withr@2.3.0:', type=('build', 'run'), when='@3.0.1:')
+    depends_on('r-withr@2.4.3:', type=('build', 'run'), when='@3.1.2:')

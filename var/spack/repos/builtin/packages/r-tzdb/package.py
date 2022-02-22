@@ -19,8 +19,7 @@ class RTzdb(RPackage):
     are provided for calendar specific calculations, along with a limited
     interface for time zone manipulations."""
 
-    homepage = "https://github.com/r-lib/tzdb"
-    cran     = "tzdb"
+    cran = "tzdb"
 
     version('0.2.0', sha256='c335905d452b400af7ed54b916b5246cb3f47ede0602911a2bcb25a1cf56d5a9')
 

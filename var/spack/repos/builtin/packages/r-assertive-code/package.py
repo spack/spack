@@ -7,17 +7,14 @@ from spack import *
 
 
 class RAssertiveCode(RPackage):
-    """assertive.code: Assertions to Check Properties of Code
+    """Assertions to Check Properties of Code.
 
-    A set of predicates and assertions for checking the
-    properties of code. This is mainly for use by other package
-    developers who want to include run-time testing features in
-    their own packages. End-users will usually want to use
-    assertive directly."""
+    A set of predicates and assertions for checking the properties of code.
+    This is mainly for use by other package developers who want to include
+    run-time testing features in their own packages. End-users will usually
+    want to use assertive directly."""
 
-    homepage = "https://bitbucket.org/richierocks/assertive.code"
-    url      = "https://cloud.r-project.org/src/contrib/assertive.code_0.0-3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.code"
+    cran = "assertive.code"
 
     version('0.0-3', sha256='ef80e8d1d683d776a7618e78ddccffca7f72ab4a0fcead90c670bb8f8cb90be2')
 

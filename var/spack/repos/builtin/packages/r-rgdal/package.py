@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRgdal(RPackage):
-    """Bindings for the 'Geospatial' Data Abstraction Library
+    """Bindings for the 'Geospatial' Data Abstraction Library.
 
     Provides bindings to the 'Geospatial' Data Abstraction Library ('GDAL') (>=
     1.11.4) and access to projection/transformation operations from the 'PROJ'
@@ -21,10 +21,9 @@ class RRgdal(RPackage):
     and 'macOS' binaries (including 'GDAL', 'PROJ' and their dependencies) are
     provided on 'CRAN'."""
 
-    homepage = "https://cloud.r-project.org/package=rgdal"
-    url      = "https://cloud.r-project.org/src/contrib/rgdal_1.3-9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rgdal"
+    cran = "rgdal"
 
+    version('1.5-28', sha256='7f54432cfa8c0db463f68e8856c3ca0a90671dc841ac5203af049eb318e261a2')
     version('1.5-19', sha256='6fbfd71b19e7b8d9dbddc91cb1eef8890c74a1e2bf8f619da165ff51bf1231b2')
     version('1.5-18', sha256='53467c19bc93d8ea311458eaa281c8c456168ab75e84d76ef5cc6c00f53122df')
     version('1.4-4',  sha256='2532e76e0af27d145f799d70006a5dbecb2d3be698e3d0bbf580f4c41a34c5d7')
@@ -32,8 +31,11 @@ class RRgdal(RPackage):
     version('1.2-16', sha256='017fefea4f9a6d4540d128c707197b7025b55e4aff98fc763065366b025b03c9')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@1.5:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.5:')
     depends_on('r-sp@1.1-0:', type=('build', 'run'))
     depends_on('gdal@1.11.4:')
     depends_on('proj@4.8.0:5', when='@:1.3-9')
     depends_on('proj@4.8.0:', when='@1.4-2:')
+
+    conflicts('^proj@:5', when='^gdal@3:')
+    conflicts('^proj@6:', when='^gdal@:2')

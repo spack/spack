@@ -1345,7 +1345,7 @@ class TestConcretize(object):
         ('mpich~debug', True)
     ])
     def test_concrete_specs_are_not_modified_on_reuse(
-            self, mutable_database, spec_str, expect_installed
+            self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Original concretizer cannot reuse specs')
@@ -1354,7 +1354,8 @@ class TestConcretize(object):
         # when reused specs are added to the mix. This prevents things
         # like additional constraints being added to concrete specs in
         # the answer set produced by clingo.
-        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        with spack.config.override("concretizer:reuse", True):
+            s = spack.spec.Spec(spec_str).concretized()
         assert s.package.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
 
@@ -1375,3 +1376,16 @@ class TestConcretize(object):
 
         s = spack.spec.Spec('sticky-variant %clang').concretized()
         assert s.satisfies('%clang') and s.satisfies('~allow-gcc')
+
+    def test_do_not_invent_new_concrete_versions_unless_necessary(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve concrete versions to known ones"
+            )
+
+        # ensure we select a known satisfying version rather than creating
+        # a new '2.7' version.
+        assert ver("2.7.11") == Spec("python@2.7").concretized().version
+
+        # Here there is no known satisfying version - use the one on the spec.
+        assert ver("2.7.21") == Spec("python@2.7.21").concretized().version

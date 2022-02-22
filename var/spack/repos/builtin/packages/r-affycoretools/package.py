@@ -8,14 +8,14 @@ from spack import *
 
 class RAffycoretools(RPackage):
     """Functions useful for those doing repetitive analyses with Affymetrix
-       GeneChips
+       GeneChips.
 
        Various wrapper functions that have been written to streamline the more
        common analyses that a core Biostatistician might see."""
 
-    homepage = "https://bioconductor.org/packages/affycoretools"
-    git      = "https://git.bioconductor.org/packages/affycoretools.git"
+    bioc = "affycoretools"
 
+    version('1.66.0', commit='6bf769d70e196634097f465ed2fa85cce5312a6d')
     version('1.62.0', commit='c9779e4da648fd174c9bd575c6020be1c03047c4')
     version('1.56.0', commit='71eab04056a8d696470420a600b14900186be898')
     version('1.54.0', commit='1e1f9680bc3e1fa443f4a81ce5ab81349959b845')
@@ -41,5 +41,5 @@ class RAffycoretools(RPackage):
     depends_on('r-edger', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-dbi', when='@1.50.6:', type=('build', 'run'))
-    depends_on('r-glimma', when='@1.62.0:', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'), when='@1.50.6:')
+    depends_on('r-glimma', type=('build', 'run'), when='@1.62.0:')

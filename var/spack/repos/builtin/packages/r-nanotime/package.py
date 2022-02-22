@@ -7,16 +7,16 @@ from spack import *
 
 
 class RNanotime(RPackage):
-    """Nanosecond-Resolution Time Support for R
+    """Nanosecond-Resolution Time Support for R.
 
-    Full 64-bit resolution date and time support with resolution up to
-    nanosecond granularity is provided, with easy transition to and from the
-    standard 'POSIXct' type."""
+    Full 64-bit resolution date and time functionality with; nanosecond
+    granularity is provided, with easy transition to and from; the standard
+    'POSIXct' type. Three additional classes offer interval,; period and
+    duration functionality for nanosecond-resolution timestamps."""
 
-    homepage = "https://cloud.r-project.org/package=nanotime"
-    url      = "https://cloud.r-project.org/src/contrib/nanotime_0.2.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/nanotime"
+    cran = "nanotime"
 
+    version('0.3.5', sha256='44deaae58452bacea4855d018212593811401c2afc460ffb11905479013923a0')
     version('0.3.2', sha256='9ef53c3bca01b605a9519190117988e170e63865327007c90b05d31fe7f22b1d')
     version('0.2.4', sha256='2dfb7e7435fec59634b87563a215467e7793e2711e302749c0533901c74eb184')
     version('0.2.3', sha256='7d6df69a4223ae154f610b650e24ece38ce4aa706edfa38bec27d15473229f5d')
@@ -24,7 +24,7 @@ class RNanotime(RPackage):
 
     depends_on('r-bit64', type=('build', 'run'))
     depends_on('r-rcppcctz@0.2.3:', type=('build', 'run'))
-    depends_on('r-rcppcctz@0.2.9:', when='@0.3.2:', type=('build', 'run'))
+    depends_on('r-rcppcctz@0.2.9:', type=('build', 'run'), when='@0.3.2:')
     depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-rcpp', when='@0.3.2:', type=('build', 'run'))
-    depends_on('r-rcppdate', when='@0.3.2:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'), when='@0.3.2:')
+    depends_on('r-rcppdate', type=('build', 'run'), when='@0.3.2:')

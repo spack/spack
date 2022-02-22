@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRminer(RPackage):
-    """Data Mining Classification and Regression Methods
+    """Data Mining Classification and Regression Methods.
 
     Facilitates the use of data mining algorithms in classification and
     regression (including time series forecasting) tasks by presenting a short
@@ -25,9 +25,7 @@ class RRminer(RPackage):
     1.2 - new input importance methods via improved Importance() function; 1.0
     - first version."""
 
-    homepage = "http://www3.dsi.uminho.pt/pcortez/rminer.html"
-    url      = "https://cloud.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/rminer"
+    cran = "rminer"
 
     version('1.4.6', sha256='1f8bf7b3fbc887fd766568c1ec1f861021c962259354bd8967a61c1d0761cdf7')
     version('1.4.2', sha256='64444dcedcd17f2f26129819d6bd2f84d4bb59c8f65328b6054ef32cb9624fc2')

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack import *
 
 
@@ -14,6 +16,8 @@ class Subversion(AutotoolsPackage):
         'https://archive.apache.org/dist/subversion/subversion-1.12.2.tar.gz',
         'https://downloads.apache.org/subversion/subversion-1.13.0.tar.gz'
     ]
+
+    tags = ['build-tools']
 
     version('1.14.1', sha256='dee2796abaa1f5351e6cc2a60b1917beb8238af548b20d3e1ec22760ab2f0cad')
     version('1.14.0', sha256='ef3d1147535e41874c304fb5b9ea32745fbf5d7faecf2ce21d4115b567e937d0')
@@ -41,6 +45,8 @@ class Subversion(AutotoolsPackage):
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
     depends_on('perl-termreadkey', when='+perl')
+
+    executables = [r'^svn$']
 
     # https://www.linuxfromscratch.org/blfs/view/svn/general/subversion.html
     def configure_args(self):
@@ -108,3 +114,9 @@ class Subversion(AutotoolsPackage):
             with working_dir(join_path(
                     'subversion', 'bindings', 'swig', 'perl', 'native')):
                 make('install')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'^svn, version\s+([\d\.]+)', output)
+        return match.group(1) if match else None

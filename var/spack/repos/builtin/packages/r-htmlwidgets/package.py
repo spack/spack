@@ -7,16 +7,15 @@ from spack import *
 
 
 class RHtmlwidgets(RPackage):
-    """HTML Widgets for R
+    """HTML Widgets for R.
 
     A framework for creating HTML widgets that render in various contexts
     including the R console, 'R Markdown' documents, and 'Shiny' web
     applications."""
 
-    homepage = "https://cloud.r-project.org/package=htmlwidgets"
-    url      = "https://cloud.r-project.org/src/contrib/htmlwidgets_0.9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlwidgets"
+    cran = "htmlwidgets"
 
+    version('1.5.4', sha256='1a3fc60f40717de7f1716b754fd1c31a132e489a2560a278636ee78eba46ffc1')
     version('1.5.3', sha256='01a5833182cc224bd100be2815e57e67b524de9f2bb1542787b6e3d1303f0f29')
     version('1.3', sha256='f1e4ffabc29e6cfe857f627da095be3cfcbe0e1f02ae75e572f10b4a026c5a12')
     version('0.9', sha256='1154b541ccd868e41d3cf0d7f188f7275ec99f61fe2c7de21c8a05edb19b985e')

@@ -146,7 +146,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
 
         args = [
-            '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
@@ -166,6 +166,10 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         ]
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             args.append('-DCMAKE_CUDA_STANDARD=14')
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
@@ -206,8 +210,12 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
         elif 'blas=accelerate' in spec:
             args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
         elif 'blas=essl' in spec:
+            # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
             args.extend([
-                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         if '+omp_taskloops' in spec:
             args.extend([

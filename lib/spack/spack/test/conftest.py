@@ -612,19 +612,23 @@ def configuration_dir(tmpdir_factory, linux_os):
     shutil.rmtree(str(tmpdir))
 
 
+def _create_mock_configuration_scopes(configuration_dir):
+    """Create the configuration scopes used in `config` and `mutable_config`."""
+    scopes = [
+        spack.config.InternalConfigScope('_builtin', spack.config.config_defaults),
+    ]
+    scopes += [
+        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
+        for name in ['site', 'system', 'user']
+    ]
+    scopes += [spack.config.InternalConfigScope('command_line')]
+    return scopes
+
+
 @pytest.fixture(scope='session')
 def mock_configuration_scopes(configuration_dir):
     """Create a persistent Configuration object from the configuration_dir."""
-    defaults = spack.config.InternalConfigScope(
-        '_builtin', spack.config.config_defaults
-    )
-    test_scopes = [defaults]
-    test_scopes += [
-        spack.config.ConfigScope(name, str(configuration_dir.join(name)))
-        for name in ['site', 'system', 'user']]
-    test_scopes.append(spack.config.InternalConfigScope('command_line'))
-
-    yield test_scopes
+    yield _create_mock_configuration_scopes(configuration_dir)
 
 
 @pytest.fixture(scope='function')
@@ -640,9 +644,7 @@ def mutable_config(tmpdir_factory, configuration_dir):
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
-    scopes = [spack.config.ConfigScope(name, str(mutable_dir.join(name)))
-              for name in ['site', 'system', 'user']]
-
+    scopes = _create_mock_configuration_scopes(mutable_dir)
     with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
 
@@ -662,6 +664,8 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
 def no_compilers_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
     for scope, local_config in mutable_config.scopes.items():
+        if not local_config.path:  # skip internal scopes
+            continue
         compilers_yaml = os.path.join(local_config.path, 'compilers.yaml')
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSelectr(RPackage):
-    """Translate CSS Selectors to XPath Expressions
+    """Translate CSS Selectors to XPath Expressions.
 
     Translates a CSS3 selector into an equivalent XPath expression. This allows
     us to use CSS selectors when working with the XML package as it can only
@@ -15,9 +15,7 @@ class RSelectr(RPackage):
     for using CSS selectors on XML nodes. This package is a port of the Python
     package 'cssselect' (<https://cssselect.readthedocs.io/>)."""
 
-    homepage = "https://sjp.co.nz/projects/selectr"
-    url      = "https://cloud.r-project.org/src/contrib/selectr_0.3-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/selectr"
+    cran = "selectr"
 
     version('0.4-2', sha256='5588aed05f3f5ee63c0d29953ef53da5dac7afccfdd04b7b22ef24e1e3b0c127')
     version('0.4-1', sha256='8bd42f167629344e485e586f9b05fed342746132489079084d82133d7b3ee2ca')
@@ -26,4 +24,4 @@ class RSelectr(RPackage):
 
     depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-r6', when='@0.4-0:', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'), when='@0.4-0:')

@@ -5,7 +5,6 @@
 
 import os
 import re
-import sys
 
 from spack import *
 
@@ -18,6 +17,8 @@ class Git(AutotoolsPackage):
 
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
+
+    tags = ['build-tools']
 
     executables = ['^git$']
 
@@ -372,7 +373,7 @@ class Git(AutotoolsPackage):
 
     @run_after('configure')
     def filter_rt(self):
-        if sys.platform == 'darwin':
+        if self.spec.satisfies('platform=darwin'):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
 
@@ -385,11 +386,19 @@ class Git(AutotoolsPackage):
             args.append('NO_GETTEXT=1')
         make(*args)
 
+        if spec.satisfies('platform=darwin'):
+            with working_dir('contrib/credential/osxkeychain'):
+                make()
+
     def install(self, spec, prefix):
         args = ["install"]
         if '~nls' in self.spec:
             args.append('NO_GETTEXT=1')
         make(*args)
+
+        if spec.satisfies('platform=darwin'):
+            install('contrib/credential/osxkeychain/git-credential-osxkeychain',
+                    join_path(prefix, "libexec", "git-core"))
 
     @run_after('install')
     def install_completions(self):
