@@ -12,11 +12,8 @@ class PyDeepsig(PythonPackage):
 
     homepage = "https://github.com/Kaleidophon/deep-significance"
     pypi     = "deepsig/deepsig-1.2.0.tar.gz"
-    git      = "https://github.com/Kaleidophon/deep-significance.git"
 
-    # The tarball for pypi is missing files using github
-    version('1.2.0', url='https://github.com/Kaleidophon/deep-significance/archive/refs/tags/v1.2.0.zip',
-            sha256='4fc5d572d1bec91849daacdbba5722bd216e8398c1a8dc362d7671ff5d16548f')
+    version('1.2.1', sha256='8543630c00264898116a065f6461c131d026ef75d8703bc631a4fd2bafb31f89')
 
     depends_on('python@3.5.3:',         type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
@@ -26,3 +23,11 @@ class PyDeepsig(PythonPackage):
     depends_on('py-joblib@1.0.1',       type=('build', 'run'))
     depends_on('py-pandas@1.3.3',       type=('build', 'run'))
     depends_on('py-dill@0.3.4',         type=('build', 'run'))
+
+    def patch(self):
+        filter_file(r'^with open\("README_RAW.md", "r"\) as fh:',
+                    '# no op',
+                    'setup.py')
+        filter_file(r'^    long_description = fh.read\(\)',
+                    'long_description = ""',
+                    'setup.py')
