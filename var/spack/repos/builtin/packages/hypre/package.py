@@ -182,7 +182,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             ])
             cuda_arch_vals = spec.variants['cuda_arch'].value
             if cuda_arch_vals:
-                cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse=True))
+                cuda_arch_sorted = list(sorted(cuda_arch_vals, reverse = True))
                 cuda_arch=cuda_arch_sorted[0]
                 configure_args.append('--with-gpu-arch={0}'.format(cuda_arch))
             # New in 2.21.0: replaces --enable-cub
