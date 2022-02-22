@@ -13,6 +13,7 @@ class PyFlitCore(PythonPackage):
     pypi = "flit-core/flit_core-3.3.0.tar.gz"
     maintainers = ['takluyver']
 
+    version('3.7.0', sha256='c2aa7757bb3e056ecf741427fb8f1f759a180d7235a8c5f9b4aa929f3dd4e327')
     version('3.6.0', sha256='5892962ab8b8ea945835b3a288fe9dd69316f1903d5288c3f5cafdcdd04756ad')
     version('3.5.1', sha256='3083720351a6cb00e0634a1ec0e26eae7b273174c3c6c03d5b597a14203b282e')
     version('3.5.0', sha256='2db800d33ff41e4c6e7c1b594666cb2a11553024106655272c7245933b1d75bd')
