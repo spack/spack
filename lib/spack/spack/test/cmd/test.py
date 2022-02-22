@@ -268,6 +268,7 @@ def test_test_results_none(mock_packages, mock_test_stage):
 @pytest.mark.parametrize('status,expected', [
     ('FAILED', '1 failed'),
     ('NO-TESTS', '1 no-tests'),
+    ('SKIPPED', '1 skipped'),
     ('PASSED', '1 passed'),
 ])
 def test_test_results_status(mock_packages, mock_test_stage, status, expected):

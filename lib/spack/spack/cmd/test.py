@@ -337,7 +337,7 @@ def _report_suite_results(test_suite, args, constraints):
                 pkg_id, status = line.split()
                 results[pkg_id] = status
 
-        failed, untested = 0, 0
+        failed, skipped, untested = 0, 0, 0
         for pkg_id in test_specs:
             if pkg_id in results:
                 status = results[pkg_id]
@@ -345,6 +345,8 @@ def _report_suite_results(test_suite, args, constraints):
                     failed += 1
                 elif status == 'NO-TESTS':
                     untested += 1
+                elif status == 'SKIPPED':
+                    skipped += 1
 
                 if args.failed and status != 'FAILED':
                     continue
@@ -358,7 +360,8 @@ def _report_suite_results(test_suite, args, constraints):
                             msg += '\n{0}'.format(''.join(f.readlines()))
                 tty.msg(msg)
 
-        spack.install_test.write_test_summary(failed, untested, len(test_specs))
+        spack.install_test.write_test_summary(
+            failed, skipped, untested, len(test_specs))
     else:
         msg = "Test %s has no results.\n" % test_suite.name
         msg += "        Check if it is running with "
