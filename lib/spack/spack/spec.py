@@ -1273,7 +1273,7 @@ class Spec(object):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
 
-    def reset_edges(self):
+    def clear_edges(self):
         """Trim the dependencies and dependents of this spec."""
         self._dependencies.clear()
         self._dependents.clear()
@@ -2940,7 +2940,7 @@ class Spec(object):
             if not copy:
                 for spec in flat_deps.values():
                     if not spec.concrete:
-                        spec.reset_edges()
+                        spec.clear_edges()
                 self.clear_dependencies()
 
             return flat_deps
