@@ -769,12 +769,7 @@ class FlagMap(lang.HashableMap):
 
 def _sort_by_dep_types(dspec):
     # Use negation since False < True for sorting
-    return (
-        'link' not in dspec.deptypes,
-        'run' not in dspec.deptypes,
-        'build' not in dspec.deptypes,
-        'test' not in dspec.deptypes
-    )
+    return tuple(t not in dspec.deptypes for t in ("link", "run", "build", "test"))
 
 
 #: Enum for edge directions
@@ -786,7 +781,7 @@ class _EdgeMap(Mapping):
     """Represent a collection of edges (DependencySpec objects) in the DAG.
 
     Objects of this class are used in Specs to track edges that are
-    outgoing towards direct dependencies, or edges that are ingoing
+    outgoing towards direct dependencies, or edges that are incoming
     from direct dependents.
 
     Edges are stored in a dictionary and keyed by package name.
@@ -856,9 +851,11 @@ class _EdgeMap(Mapping):
         return clone
 
     def select_by(self, parent=None, child=None, dependency_types='all'):
-        """Return a list of edges selected by dependency types.
+        """Select a list of edges and return them.
 
-        If an edge has any of the dependency types passed as argument
+        If an edge:
+        - Has *any* of the dependency types passed as argument,
+        - Matches the parent and/or child name, if passed
         then it is selected.
 
         Args:
@@ -1308,8 +1305,9 @@ class Spec(object):
         # WARNING: using index 0 i.e. we assume that we have only
         # WARNING: one edge from package "name"
         deps = self.edges_to_dependencies(name=name)
-        err_msg = 'expected only 1 "{0}" dependency, but got {1}'
-        assert len(deps) == 1, err_msg.format(name, len(deps))
+        if len(deps) != 1:
+            err_msg = 'expected only 1 "{0}" dependency, but got {1}'
+            raise spack.error.SpecError(err_msg.format(name, len(deps)))
         return deps[0]
 
     def edges_from_dependents(self, name=None, deptype='all'):
