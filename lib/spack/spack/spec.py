@@ -1343,10 +1343,7 @@ class Spec(object):
             name (str): filter dependencies by package name
             deptype (str or tuple): allowed dependency types
         """
-        return [
-            d.spec for d in
-            self._dependencies.select(child=name, dependency_types=deptype)
-        ]
+        return [d.spec for d in self.edges_to_dependencies(name, deptype=deptype)]
 
     def dependents(self, name=None, deptype='all'):
         """Return a list of direct dependents (nodes in the DAG).
@@ -1355,10 +1352,7 @@ class Spec(object):
             name (str): filter dependents by package name
             deptype (str or tuple): allowed dependency types
         """
-        return [
-            d.parent for d in
-            self._dependents.select(parent=name, dependency_types=deptype)
-        ]
+        return [d.parent for d in self.edges_from_dependents(name, deptype=deptype)]
 
     def _dependencies_dict(self, deptype='all'):
         """Return a dictionary, keyed by package name, of the direct
