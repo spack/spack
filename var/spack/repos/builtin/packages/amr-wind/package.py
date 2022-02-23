@@ -73,7 +73,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
-        if '+mpi' in spec:
+        if '+mpi' in self.spec:
             args.append(define('MPI_ROOT', spec['mpi'].prefix))
 
         if '+cuda' in self.spec:
