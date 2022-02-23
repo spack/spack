@@ -428,6 +428,18 @@ class Hdf5(CMakePackage):
                 symlink('h5fc', 'h5pfc')
 
     @run_after('install')
+    def symlink_to_h5hl_wrappers(self):
+        # CMake's FindHDF5 relies only on h5cc so it doesn't find
+        # the HL component unless it uses h5hlcc so we symlink
+        # h5cc to h5hlcc etc
+        if self.spec.satisfies('@1.8.21:1.8.22,1.10.2:1.10.7,1.12.0+hl'):
+            with working_dir(self.prefix.bin):
+                os.remove('h5cc')
+                os.remove('h5c++')
+                symlink('h5hlcc', 'h5cc')
+                symlink('h5hlc++', 'h5c++')
+
+    @run_after('install')
     def fix_package_config(self):
         # We need to fix the pkg-config files, which are also used by the
         # compiler wrappers. The files are created starting versions 1.8.21,
