@@ -60,14 +60,12 @@ _resources = {
 
 
 def _declare_definitions_and_samples():
-    for variant_name in ['definitions', 'samples']:
-        variant_dict = _resources[variant_name]
+    for variant_stem in ['definitions', 'samples']:
+        variant_name = 'extra-{0}'.format(variant_stem)
+        variant_dict = _resources[variant_stem]
         variant(variant_name,
-                values=disjoint_sets(
-                    ('auto',),
-                    ('default',) + tuple(variant_dict.keys()),
-                ).with_default('auto'),
-                description='List of {0} to install'.format(variant_name))
+                values=any_combination_of(*variant_dict.keys()),
+                description='List of extra {0} to install'.format(variant_stem))
         for center, center_dict in variant_dict.items():
             conflicts_kwargs = center_dict.get('conflicts', None)
             if conflicts_kwargs:
@@ -76,10 +74,10 @@ def _declare_definitions_and_samples():
             for resource_kwargs in center_dict.get('resources', []):
                 if 'placement' not in resource_kwargs:
                     resource_kwargs['placement'] = {
-                        '': '{0}.{1}'.format(variant_name, center)
+                        '': '{0}.{1}'.format(variant_stem, center)
                     }
                 resource(name=center,
-                         destination='spack-{0}'.format(variant_name),
+                         destination='spack-{0}'.format(variant_stem),
                          **resource_kwargs)
 
 
@@ -367,40 +365,32 @@ class Eccodes(CMakePackage):
         if '^python' in self.spec:
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
-        for variant_name in ['definitions', 'samples']:
-            variant_value = self.spec.variants[variant_name].value
-            if 'auto' not in variant_value:
-                args.append(self.define(
-                    'ENABLE_INSTALL_ECCODES_{0}'.format(variant_name.upper()),
-                    'default' in variant_value))
-
         return args
 
     @run_after('install')
     def install_extra_definitions_and_samples(self):
-        noop = set(['auto', 'none', 'default'])
-
-        for variant_name in ['definitions', 'samples']:
+        for variant_stem in ['definitions', 'samples']:
+            variant_name = 'extra-{0}'.format(variant_stem)
             for center in self.spec.variants[variant_name].value:
-                if center in noop:
+                if center == 'none':
                     continue
 
-                center_dir = '{0}.{1}'.format(variant_name, center)
+                center_dir = '{0}.{1}'.format(variant_stem, center)
                 center_src_path = join_path(self.stage.source_path,
-                                            'spack-{0}'.format(variant_name),
+                                            'spack-{0}'.format(variant_stem),
                                             center_dir)
 
                 # Make sure the directory exists to cover the case when no
                 # resources are assigned to the center:
                 mkdirp(center_src_path)
 
-                for cp in _resources[variant_name][center].get('copies', []):
+                for cp in _resources[variant_stem][center].get('copies', []):
                     if 'when' in cp and cp['when'] not in self.spec:
                         continue
 
                     for f in cp['files']:
                         cp_src_path = join_path(self.stage.source_path,
-                                                variant_name, f)
+                                                variant_stem, f)
                         cp_dst_path = join_path(center_src_path, f)
                         copy(cp_src_path, cp_dst_path)
 
