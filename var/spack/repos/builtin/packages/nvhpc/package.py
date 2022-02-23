@@ -107,7 +107,7 @@ class Nvhpc(Package):
             description="Enable LAPACK")
     variant('mpi',          default=False,
             description="Enable MPI")
-    variant('cuda'          default=False,
+    variant('cuda',         default=False,
             description="Enable CUDA")
 
     provides('blas',        when='+blas')
