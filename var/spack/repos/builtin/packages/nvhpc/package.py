@@ -90,7 +90,7 @@ class Nvhpc(Package):
 
     maintainers = ['samcmill']
     tags = ['e4s']
-
+   
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -201,10 +201,8 @@ class Nvhpc(Package):
             cuda_prefix = Prefix(join_path(self.prefix,
                                            'Linux_%s' % self.spec.target.family,
                                            self.version, 'cuda'))
-            env.prepend_path('CUDA_HOME', cuda_prefix)
-            env.prepend_path('PATH', cuda_prefix.bin)
-            env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
-            env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+            self.spec.cuda_home = cuda_prefix
+            self.spec.nvcc = join_path(cuda_prefix.bin, 'nvcc')
 
     @property
     def libs(self):
