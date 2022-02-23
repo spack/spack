@@ -33,8 +33,6 @@ spack:
       variants: +bzip2 ~nls +xz
     hdf5:
       variants: +fortran +hl +shared
-      version:
-        - 1.10.7
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
