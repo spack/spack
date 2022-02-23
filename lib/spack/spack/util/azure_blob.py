@@ -40,12 +40,13 @@ class AzureBlob:
  spack buildcache")
 
     def get_container_blob_path(self):
-        blob_path = self.url.path
-        path_list = blob_path.split('/')
-        container_name = path_list[1]
-        blob_path = os.path.join(*path_list[2:])
-        tty.debug("container_name = %s, blob_path = %s"
-                  % (container_name, blob_path))
+        """Return the container name and the blob path from the full url."""
+
+        path_components = self.url.path.split('/')
+        container_name = path_components[1]
+        blob_path = os.path.join(*path_components[2:])
+        msg = "container_name = {0}, blob_path = {1}"
+        tty.debug(msg.format(container_name, blob_path))
         return (container_name, blob_path)
 
     def is_https(self):
