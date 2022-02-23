@@ -1,0 +1,87 @@
+# Originally from LCGCMAKE:
+# https://gitlab.cern.ch/sft/lcgcmake/-/blob/master/generators/patches/starlight-r313.patch
+--- a/CMakeLists.txt	2017-10-25 21:59:44.000000001 +0200
++++ b/CMakeLists.txt	2017-10-25 22:03:20.000000001 +0200
+@@ -71,7 +71,7 @@
+ 
+ # define build types
+ # set a default build type for single-configuration CMake generators, if no build type is set.
+-set(CMAKE_BUILD_TYPE Debug)
++set(CMAKE_BUILD_TYPE Release)
+ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+   message(STATUS "No build type was specified. Setting build type to 'Release'.")
+   set(CMAKE_BUILD_TYPE Release)
+@@ -84,10 +84,10 @@
+   if (GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6)
+     message(STATUS "GCC_VERSION>=4.6")
+     if(CPP11)
+-      set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wno-error=unused-but-set-variable -Wno-error=unused-but-set-parameter -std=c++11")
++      set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-private-field -Wno-error=unused-but-set-variable -Wno-error=unused-but-set-parameter -std=c++11")
+       message(STATUS "Enabling usage of C++11 features")
+     else()
+-      set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wno-error=unused-but-set-variable -Wno-error=unused-but-set-parameter")
++      set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-private-field -Wno-error=unused-but-set-variable -Wno-error=unused-but-set-parameter")
+     endif()
+   else()
+     message(STATUS "GCC_VERSION<4.6")
+@@ -98,14 +98,14 @@
+   endif()
+ else()
+   message(STATUS "Not GCC")
+-  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
++  set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -Wno-error=unused-private-field -Wno-error=sometimes-uninitialized")
+   if(CPP11)
+     message(WARNING "C++11 feautures not supported for your compiler")
+   endif()
+ endif()
+ # flags for specific build types
+ set(CMAKE_CXX_FLAGS_DEBUG "-g")
+-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
++set(CMAKE_CXX_FLAGS_RELEASE "")
+ set(CMAKE_CXX_LDFLAGS_DEBUG "-g")
+ # report global build settings
+ message(STATUS "Using CXX compiler '${CMAKE_CXX_COMPILER}'")
+@@ -287,12 +287,18 @@
+ endif()
+ 
+ # add Starlight library to the build system
+-set(THIS_LIB "Starlib")
+-add_library(${THIS_LIB} STATIC ${SOURCES})
+-#make_shared_library("${THIS_LIB}" "${SOURCES}"
+-#	"${PYTHIA8_LIBRARY}"
+-#	"${LHAPDF_LIBRARIES}"
+-#)
++
++add_library(Starlib STATIC ${SOURCES})
++install(TARGETS Starlib DESTINATION "lib")
++install(TARGETS Starlib DESTINATION "lib/archive")
++
++add_library(Starlib_dy SHARED ${SOURCES})
++SET_TARGET_PROPERTIES(Starlib_dy PROPERTIES OUTPUT_NAME Starlib)
++install(TARGETS Starlib_dy DESTINATION "lib")
++
++file(GLOB INCLUDES ${PROJECT_SOURCE_DIR}/include/*.h)
++
++install(FILES ${INCLUDES} DESTINATION "include")
+ 
+ if(ENABLE_DPMJET)
+   enable_language(Fortran)
+@@ -314,6 +320,7 @@
+ target_link_libraries(starlight Starlib ${optionalLibs})# ${CMAKE_THREAD_LIBS_INIT}) 
+ 
+ #make_executable(starlight src/main.cpp ${THIS_LIB})
++install(TARGETS starlight DESTINATION "bin")
+ 
+ configure_file (
+   "${PROJECT_SOURCE_DIR}/starlightconfig.h.in"
+--- a/src/randomgenerator.cpp        2018-04-24 16:20:55.700554453 +0300
++++ b/src/randomgenerator.cpp     2018-04-24 16:21:04.232657042 +0300
+@@ -125,7 +125,7 @@
+    const unsigned int kMatrixA =         0x9908b0df;
+ 
+    if (_count624 >= kN) {
+-      register int i;
++      int i;
+ 
+       for (i=0; i < kN-kM; i++) {
+          y = (_Mt[i] & kUpperMask) | (_Mt[i+1] & kLowerMask);
