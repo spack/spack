@@ -6,53 +6,81 @@
 
 from spack.package import *
 
-_definitions = {
-    # German Meteorological Service (Deutscher Wetterdienst, DWD):
-    'edzw': {
-        'conflicts': {'when': '@:2.19'},
-        'resources': [
-            {
-                'when': '@2.20.0:2.20',
-                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz',
-                'sha256': 'a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4'
-            },
-            {
-                'when': '@2.21.0:2.22.0',
-                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2',
-                'sha256': '046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9'
-            },
-            {
-                'when': '@2.22.1:2.22',
-                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2',
-                'sha256': 'be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389'
-            },
-            {
-                'when': '@2.23.0:',
-                'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
-                'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
-            }
-        ]
+_resources = {
+    'definitions': {
+        # German Meteorological Service (Deutscher Wetterdienst, DWD):
+        'edzw': {
+            'conflicts': {'when': '@:2.19'},
+            'resources': [
+                {
+                    'when': '@2.20.0:2.20',
+                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz',
+                    'sha256': 'a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4'
+                },
+                {
+                    'when': '@2.21.0:2.22.0',
+                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2',
+                    'sha256': '046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9'
+                },
+                {
+                    'when': '@2.22.1:2.22',
+                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2',
+                    'sha256': 'be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389'
+                },
+                {
+                    'when': '@2.23.0:',
+                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
+                    'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
+                }
+            ]
+        },
+        'mpim': {
+            'conflicts': {'when': '@:2.19'},
+            'resources': [
+                {
+                    'when': '@2.20:',
+                    'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
+                    'branch': 'master',
+                    'placement': {'definitions.mpim': 'definitions.mpim'}
+                }
+            ],
+            'copies': [
+                {
+                    'when': '@2.20:',
+                    'files': ['boot.def'],
+                    'regex':
+                        r'(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)',
+                    'repl': r'\11\2'
+                }
+            ]
+        }
     },
-    # Max Planck Institute for Meteorology (MPI-M):
-    'mpim': {
-        'conflicts': {'when': '@:2.19'},
-        'resources': [
-            {
-                'when': '@2.20:',
-                'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
-                'branch': 'master'
-            }
-        ],
-        'copies': [
-            {
-                'when': '@2.20:',
-                'files': ['boot.def'],
-                'regex': r'(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)',
-                'repl': r'\11\2'
-            }
-        ]
-    }
+    'samples': {}
 }
+
+
+def _declare_definitions_and_samples():
+    for variant_name in ['definitions', 'samples']:
+        variant_dict = _resources[variant_name]
+        variant(variant_name,
+                values=disjoint_sets(
+                    ('auto',),
+                    ('default',) + tuple(variant_dict.keys()),
+                ).with_default('auto'),
+                description='List of {0} to install'.format(variant_name))
+        for center, center_dict in variant_dict.items():
+            conflicts_kwargs = center_dict.get('conflicts', None)
+            if conflicts_kwargs:
+                conflicts('{0}={1}'.format(variant_name, center),
+                          **conflicts_kwargs)
+            for resource_kwargs in center_dict.get('resources', []):
+                if 'placement' not in resource_kwargs:
+                    resource_kwargs['placement'] = {
+                        '': '{0}.{1}'.format(variant_name, center)
+                    }
+                resource(name=center,
+                         destination='spack-{0}'.format(variant_name),
+                         **resource_kwargs)
 
 
 class Eccodes(CMakePackage):
@@ -100,18 +128,7 @@ class Eccodes(CMakePackage):
     variant('shared', default=True,
             description='Build shared versions of the libraries')
 
-    variant('definitions',
-            values=disjoint_sets(
-                ('auto',),
-                ('default',) + tuple(_definitions.keys()),
-            ).with_default('auto'),
-            description="List of definitions to install")
-
-    variant('samples',
-            values=disjoint_sets(
-                ('auto',), ('default',),
-            ).with_default('auto'),
-            description="List of samples to install")
+    _declare_definitions_and_samples()
 
     depends_on('netcdf-c', when='+netcdf')
     # Cannot be built with openjpeg@2.0.x.
@@ -151,14 +168,6 @@ class Eccodes(CMakePackage):
     conflicts('~tools', when='@:2.18.0',
               msg='The command line tools can be disabled '
                   'only starting version 2.19.0')
-
-    for center, definitions in _definitions.items():
-        kwargs = definitions.get('conflicts', None)
-        if kwargs:
-            conflicts('definitions={0}'.format(center), **kwargs)
-        for kwargs in definitions.get('resources', []):
-            resource(name=center, destination='spack-definitions',
-                     placement='definitions.{0}'.format(center), **kwargs)
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
@@ -358,56 +367,49 @@ class Eccodes(CMakePackage):
         if '^python' in self.spec:
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
-        definitions = self.spec.variants['definitions'].value
-
-        if 'auto' not in definitions:
-            args.append(self.define('ENABLE_INSTALL_ECCODES_DEFINITIONS',
-                                    'default' in definitions))
-
-        samples = self.spec.variants['samples'].value
-
-        if 'auto' not in samples:
-            args.append(self.define('ENABLE_INSTALL_ECCODES_SAMPLES',
-                                    'default' in samples))
+        for variant_name in ['definitions', 'samples']:
+            variant_value = self.spec.variants[variant_name].value
+            if 'auto' not in variant_value:
+                args.append(self.define(
+                    'ENABLE_INSTALL_ECCODES_{0}'.format(variant_name.upper()),
+                    'default' in variant_value))
 
         return args
 
     @run_after('install')
-    def install_extra_definitions(self):
+    def install_extra_definitions_and_samples(self):
         noop = set(['auto', 'none', 'default'])
 
-        for center in self.spec.variants['definitions'].value:
-            if center in noop:
-                continue
-
-            center_dir = 'definitions.{0}'.format(center)
-            center_src_path = join_path(self.stage.source_path,
-                                        'spack-definitions', center_dir)
-
-            if center == 'mpim':
-                # MPI-M definitions reside in a subdirectory:
-                center_src_path = join_path(center_src_path, 'definitions.mpim')
-
-            # Make sure the directory exists to cover the case when no resources
-            # are assigned to the center:
-            mkdirp(center_src_path)
-
-            for cp in _definitions[center].get('copies', []):
-                if 'when' in cp and cp['when'] not in self.spec:
+        for variant_name in ['definitions', 'samples']:
+            for center in self.spec.variants[variant_name].value:
+                if center in noop:
                     continue
 
-                for f in cp['files']:
-                    cp_src_path = join_path(self.stage.source_path,
-                                            'definitions', f)
-                    cp_dst_path = join_path(center_src_path, f)
-                    copy(cp_src_path, cp_dst_path)
+                center_dir = '{0}.{1}'.format(variant_name, center)
+                center_src_path = join_path(self.stage.source_path,
+                                            'spack-{0}'.format(variant_name),
+                                            center_dir)
 
-                    if 'regex' in cp:
-                        filter_file(cp['regex'], cp['repl'],
-                                    cp_dst_path, backup=False)
+                # Make sure the directory exists to cover the case when no
+                # resources are assigned to the center:
+                mkdirp(center_src_path)
 
-            install_tree(center_src_path,
-                         join_path(self.prefix.share.eccodes, center_dir))
+                for cp in _resources[variant_name][center].get('copies', []):
+                    if 'when' in cp and cp['when'] not in self.spec:
+                        continue
+
+                    for f in cp['files']:
+                        cp_src_path = join_path(self.stage.source_path,
+                                                variant_name, f)
+                        cp_dst_path = join_path(center_src_path, f)
+                        copy(cp_src_path, cp_dst_path)
+
+                        if 'regex' in cp:
+                            filter_file(cp['regex'], cp['repl'],
+                                        cp_dst_path, backup=False)
+
+                install_tree(center_src_path,
+                             join_path(self.prefix.share.eccodes, center_dir))
 
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
