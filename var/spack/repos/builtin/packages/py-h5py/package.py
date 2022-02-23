@@ -36,38 +36,39 @@ class PyH5py(PythonPackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     # Python versions
-    depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:3.1')
-    depends_on('python@3.7:', type=('build', 'run'), when='@3.2.0:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@3:3.1')
+    depends_on('python@3.7:', type=('build', 'run'), when='@3.2:')
 
     # Build dependencies
     depends_on('py-cython@0.23:', type='build', when='@:2')
-    depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:^python@:3.7')
-    depends_on('py-cython@0.29.14:', type=('build'), when='@3.0.0:^python@3.8.0:3.8')
-    depends_on('py-cython@0.29.15:', type=('build'), when='@3.0.0:^python@3.9.0:')
+    depends_on('py-cython@0.29:', type=('build'), when='@3: ^python@:3.7')
+    depends_on('py-cython@0.29.14:', type=('build'), when='@3: ^python@3.8.0:3.8')
+    depends_on('py-cython@0.29.15:', type=('build'), when='@3: ^python@3.9.0:')
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build', when='@3.0.0:')
+    depends_on('py-wheel', type='build', when='@3:')
 
     # Build and runtime dependencies
     depends_on('py-cached-property@1.5:', type=('build', 'run'), when='^python@:3.7')
     depends_on('py-numpy@1.7:', type=('build', 'run'), when='@:2')
-    depends_on('py-numpy@1.12:', type=('build', 'run'), when='@3.0.0:^python@3.6.0:3.6')
-    depends_on('py-numpy@1.14.5:', type=('build', 'run'), when='@3.0.0:^python@3.7.0:3.7')
-    depends_on('py-numpy@1.17.5:', type=('build', 'run'), when='@3.0.0:^python@3.8.0:3.8')
-    depends_on('py-numpy@1.19.3:', type=('build', 'run'), when='@3.0.0:^python@3.9.0:')
+    depends_on('py-numpy@1.12:', type=('build', 'run'), when='@3: ^python@3.6.0:3.6')
+    depends_on('py-numpy@1.14.5:', type=('build', 'run'), when='@3: ^python@3.7.0:3.7')
+    depends_on('py-numpy@1.17.5:', type=('build', 'run'), when='@3: ^python@3.8.0:3.8')
+    depends_on('py-numpy@1.19.3:', type=('build', 'run'), when='@3: ^python@3.9.0:')
     depends_on('py-six', type=('build', 'run'), when='@:2')
 
-    # Link dependencies
-    depends_on('hdf5@1.8.4:1.11+hl', when='@:2')
-    depends_on('hdf5@1.8.4:+hl', when='@3.0.0:')
+    # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
+    # of API setting)
+    depends_on('hdf5@1.8.4:1.11 +hl', when='@:2')
+    depends_on('hdf5@1.8.4: +hl', when='@3:')
 
     # MPI dependencies
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='@:2 +mpi', type=('build', 'run'))
-    depends_on('py-mpi4py@3.0.0:', when='@3.0.0:3.2+mpi^python@3.0.0:3.7', type=('build', 'run'))
-    depends_on('py-mpi4py@3.0.2:', when='@3.3.0:+mpi^python@3.0.0:3.7', type=('build', 'run'))
-    depends_on('py-mpi4py@3.0.3:', when='@3.0.0:+mpi^python@3.8.0:', type=('build', 'run'))
+    depends_on('py-mpi4py@3:', when='@3:3.2+mpi^python@3:3.7', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.2:', when='@3.3.0:+mpi^python@3:3.7', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.3:', when='@3:+mpi^python@3.8.0:', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         env.set('HDF5_DIR', self.spec['hdf5'].prefix)
