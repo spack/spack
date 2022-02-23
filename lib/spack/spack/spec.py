@@ -871,25 +871,25 @@ class _EdgeMap(Mapping):
 
         dependency_types = dp.canonical_deptype(dependency_types)
         # Start from all the edges we store
-        selected = [d for d in itertools.chain.from_iterable(self.values())]
+        selected = (d for d in itertools.chain.from_iterable(self.values()))
 
         # Filter by parent name
         if parent:
-            selected = [d for d in selected if d.parent.name == parent]
+            selected = (d for d in selected if d.parent.name == parent)
 
         # Filter by child name
         if child:
-            selected = [d for d in selected if d.spec.name == child]
+            selected = (d for d in selected if d.spec.name == child)
 
         # Filter by allowed dependency types
         if dependency_types:
-            selected = [
+            selected = (
                 dep for dep in selected
-                if any(d in dependency_types for d in dep.deptypes)
-                or not dep.deptypes
-            ]
+                if not dep.deptypes or
+                any(d in dependency_types for d in dep.deptypes)
+            )
 
-        return selected
+        return list(selected)
 
     def clear(self):
         self.edges.clear()
