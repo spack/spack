@@ -71,6 +71,10 @@ class AzureBlob:
         return True
 
     def azure_blob_exists(self):
+        """Returns True if the blob exists, otherwise False.
+           Not aware of any exists fucntion, so work-around is to trigger 
+           an exception when an attempt is made to access a non-existent 
+           blob property."""
         try:
             blob_client = (self.blob_service_client.
                            get_blob_client(container=self.container_name,
