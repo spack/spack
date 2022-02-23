@@ -74,7 +74,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         ]
 
         if '+mpi' in self.spec:
-            args.append(define('MPI_ROOT', spec['mpi'].prefix))
+            args.append(define('MPI_HOME', self.spec['mpi'].prefix))
 
         if '+cuda' in self.spec:
             amrex_arch = ['{0:.1f}'.format(float(i) / 10.0)
