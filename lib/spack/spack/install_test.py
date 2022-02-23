@@ -177,12 +177,9 @@ class TestSuite(object):
                     if spec.external and not externals:
                         status = 'SKIPPED'
                         skipped += 1
-                        msg = 'Skipped external package'
                     else:
                         status = 'NO-TESTS'
                         untested += 1
-                        msg = 'No tests to run'
-                    _add_msg_to_file(self.log_file_for_spec(spec), msg)
 
                 self.write_test_result(spec, status)
             except BaseException as exc:
