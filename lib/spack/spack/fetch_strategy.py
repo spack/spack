@@ -318,7 +318,7 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if url[0:5] == 'azure':
+            if url.startswith('azure'):
                 import spack.util.azure_blob as azure_blob_util
                 parsed_url = urllib_parse.urlparse(url)
                 azureblob = azure_blob_util.AzureBlob(parsed_url)
