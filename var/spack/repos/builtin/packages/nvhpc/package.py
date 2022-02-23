@@ -107,10 +107,13 @@ class Nvhpc(Package):
             description="Enable LAPACK")
     variant('mpi',          default=False,
             description="Enable MPI")
+    variant('cuda'          default=False,
+            description="Enable CUDA")
 
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
+    provides('cuda',        when='+cuda')
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
@@ -151,6 +154,14 @@ class Nvhpc(Package):
             env.prepend_path('PATH', mpi_prefix.bin)
             env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
+        if '+cuda' in self.spec:
+            cuda_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'cuda'))
+            env.prepend_path('CUDA_HOME', cuda_prefix)
+            env.prepend_path('PATH', cuda_prefix.bin)
+            env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         prefix = Prefix(join_path(self.prefix,
                                   'Linux_%s' % self.spec.target.family,
@@ -166,6 +177,15 @@ class Nvhpc(Package):
 
             env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
+        if '+cuda' in self.spec:
+            cuda_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'cuda'))
+            env.prepend_path('CUDA_HOME', cuda_prefix)
+            env.prepend_path('PATH', cuda_prefix.bin)
+            env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
+            env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+
     def setup_dependent_package(self, module, dependent_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
             mpi_prefix = Prefix(join_path(self.prefix,
@@ -176,6 +196,15 @@ class Nvhpc(Package):
             self.spec.mpicxx = join_path(mpi_prefix.bin, 'mpicxx')
             self.spec.mpif77 = join_path(mpi_prefix.bin, 'mpif77')
             self.spec.mpifc  = join_path(mpi_prefix.bin, 'mpif90')
+
+        if '+cuda' in self.spec or self.provides('cuda'):
+            cuda_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'cuda'))
+            env.prepend_path('CUDA_HOME', cuda_prefix)
+            env.prepend_path('PATH', cuda_prefix.bin)
+            env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
+            env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
 
     @property
     def libs(self):
@@ -191,4 +220,23 @@ class Nvhpc(Package):
             libs.append('liblapack')
             libs.append('libnvf')
 
-        return find_libraries(libs, root=prefix, recursive=True)
+        pfxlibs = find_libraries(libs, root=prefix, recursive=True)
+
+        # The following block is adapted from 'cuda' spec
+        if '+cuda' in self.spec:
+            cuda_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'cuda'))
+            cuda_libs = find_libraries('libcudart', root=cuda_prefix,
+                                       shared=True, recursive=True)
+            filtered_libs = []
+            # CUDA 10.0 provides Compatibility libraries for running newer
+            # versions of CUDA with older drivers. These do not work with newer
+            # drivers.
+            for lib in cuda_libs:
+                parts = lib.split(os.sep)
+                if 'compat' not in parts and 'stubs' not in parts:
+                    filtered_libs.append(lib)
+            return pfxlibs + LibraryList(filtered_libs)
+        else:
+            return pfxlibs
