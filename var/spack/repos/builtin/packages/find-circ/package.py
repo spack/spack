@@ -14,7 +14,7 @@ class FindCirc(Package):
     homepage = "https://github.com/marvin-jens/find_circ"
     url      = "https://github.com/marvin-jens/find_circ/archive/v1.2.tar.gz"
 
-    version('1.2', sha256='f88bf9b5d0cc818313074982d4460c96706f555d924e2821832c3d03bf67743e', deprecated=True)
+    version('1.2', sha256='f88bf9b5d0cc818313074982d4460c96706f555d924e2821832c3d03bf67743e')
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))

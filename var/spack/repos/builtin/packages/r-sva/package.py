@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSva(RPackage):
-    """Surrogate Variable Analysis
+    """Surrogate Variable Analysis.
 
        The sva package contains functions for removing batch effects and other
        unwanted variation in high-throughput experiment. Specifically, the sva
@@ -28,9 +28,9 @@ class RSva(RPackage):
        2007 PLoS Genetics, 2008 PNAS or Leek et al. 2011 Nat. Reviews
        Genetics)."""
 
-    homepage = "https://bioconductor.org/packages/sva"
-    git      = "https://git.bioconductor.org/packages/sva.git"
+    bioc = "sva"
 
+    version('3.42.0', commit='54c843cc46437be233ecb43b6aa868e968d71138')
     version('3.38.0', commit='5ded8ba649200ec4829051f86a59e1a2548a7ab8')
     version('3.32.1', commit='1b8286734d00533b49d9f1456b6523cc778bb744')
     version('3.30.1', commit='fdb98bc2299dc5213c62d83cb7c0b1c1b4912f0c')
@@ -44,4 +44,4 @@ class RSva(RPackage):
     depends_on('r-biocparallel', type=('build', 'run'))
     depends_on('r-matrixstats', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-edger', when='@3.38.0:', type=('build', 'run'))
+    depends_on('r-edger', type=('build', 'run'), when='@3.38.0:')

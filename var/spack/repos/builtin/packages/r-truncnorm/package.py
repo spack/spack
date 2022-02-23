@@ -7,12 +7,12 @@ from spack import *
 
 
 class RTruncnorm(RPackage):
-    """Density, probability, quantile and random number generation functions
-    for the truncated normal distribution."""
+    """Truncated Normal Distribution.
 
-    homepage = "https://cloud.r-project.org/package=truncnorm"
-    url      = "https://cloud.r-project.org/src/contrib/truncnorm_1.0-8.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/truncnorm"
+    Density, probability, quantile and random number generation functions for
+    the truncated normal distribution."""
+
+    cran = "truncnorm"
 
     version('1.0-8', sha256='49564e8d87063cf9610201fbc833859ed01935cc0581b9e21c42a0d21a47c87e')
 

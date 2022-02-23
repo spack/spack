@@ -7,14 +7,13 @@ from spack import *
 
 
 class RPool(RPackage):
-    """Object Pooling
+    """Object Pooling.
 
     Enables the creation of object pools, which make it less computationally
     expensive to fetch a new object. Currently the only supported pooled
     objects are 'DBI' connections."""
 
-    homepage = "https://github.com/rstudio/pool"
-    cran     = "pool"
+    cran = "pool"
 
     version('0.1.6', sha256='cdbe5f6c7f757c01893dc9870df0fb8d300829da0e427f6c2559b01caa52d9e1')
 

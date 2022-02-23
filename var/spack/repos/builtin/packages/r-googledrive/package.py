@@ -11,8 +11,7 @@ class RGoogledrive(RPackage):
 
     Manage Google Drive files from R."""
 
-    homepage = "https://github.com/tidyverse/googledrive"
-    cran     = "googledrive"
+    cran = "googledrive"
 
     version('2.0.0', sha256='605c469a6a086ef4b049909c2e20a35411c165ce7ce4f62d68fd39ffed8c5a26')
 

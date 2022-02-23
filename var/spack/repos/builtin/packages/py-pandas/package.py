@@ -14,6 +14,7 @@ class PyPandas(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.4.1',  sha256='8db93ec98ac7cb5f8ac1420c10f5e3c43533153f253fe7fb6d891cf5aa2b80d2')
     version('1.4.0',  sha256='cdd76254c7f0a1583bd4e4781fb450d0ebf392e10d3f12e92c95575942e37df5')
     version('1.3.5',  sha256='1e4285f5de1012de20ca46b188ccf33521bff61ba5c5ebd78b4fb28e5416a9f1')
     version('1.3.4',  sha256='a2aa18d3f0b7d538e21932f637fbfe8518d085238b429e4790a35e1e44a96ffc')
@@ -100,9 +101,13 @@ class PyPandas(PythonPackage):
 
     @property
     def import_modules(self):
-        modules = super(PythonPackage, self).import_modules
+        modules = super(__class__, self).import_modules
 
-        ignored_imports = ["pandas.tests", "pandas.plotting._matplotlib"]
+        ignored_imports = [
+            "pandas.tests",
+            "pandas.plotting._matplotlib",
+            "pandas.core._numba.kernels"
+        ]
 
         return [i for i in modules
                 if not any(map(i.startswith, ignored_imports))]

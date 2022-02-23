@@ -7,7 +7,9 @@ from spack import *
 
 
 class RBiomartr(RPackage):
-    """Perform large scale genomic data retrieval and functional annotation
+    """Genomic Data Retrieval.
+
+    Perform large scale genomic data retrieval and functional annotation
     retrieval. This package aims to provide users with a standardized way to
     automate genome, proteome, 'RNA', coding sequence ('CDS'), 'GFF', and
     metagenome retrieval from 'NCBI RefSeq', 'NCBI Genbank', 'ENSEMBL',
@@ -19,9 +21,7 @@ class RBiomartr(RPackage):
     Genbank' (Benson et al. (2013) <doi:10.1093/nar/gks1195>), etc. as well as
     'ENSEMBL' and 'ENSEMBLGENOMES' with only one command."""
 
-    homepage = "https://docs.ropensci.org/biomartr"
-    url      = "https://cloud.r-project.org/src/contrib/biomartr_0.9.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/biomartr"
+    cran = "biomartr"
 
     version('0.9.2', sha256='d88085696e9c5614828602254c33f2cdd3bbfeebc2f21a705eee3cb961097c89')
 

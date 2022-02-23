@@ -28,7 +28,8 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master', branch='master')
     version('release', branch='release')
-    version('1.7.0', sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4", preferred=True)
+    version('1.7.1', sha256="7ea3e945110b837a8c2ba49b41e45e1a1d8d0029bb472b291f7674871dbbbb63", preferred=True)
+    version('1.7.0', sha256="a86667ac22057462fc14495363cfdcc486da125b366cb568ec23c86946439be4")
     version('1.6.0', sha256="14e62d306dd33f82eb9ddb1d5cee987b7a0b91bf08a7a02ca3bce3968c95fd76")
     version('1.5.5', commit="d2d1c854adc8c0518802f153b48afd17646b6252")
     version('1.5.4', commit="bbba2a1967b271cc393abd043716d957bca97972")
@@ -96,7 +97,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
 
-    conflicts("+shared", when="+cuda_native")
+    # Can build +shared+cuda after @1.7:
+    conflicts("+shared", when="@:1.6 +cuda_native")
+    conflicts("+cuda~cuda_native~kokkos", msg="Cannot have +cuda without a cuda device")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")

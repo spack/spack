@@ -7,19 +7,16 @@ from spack import *
 
 
 class RROo(RPackage):
-    """R Object-Oriented Programming with or without References
+    """R Object-Oriented Programming with or without References.
 
-    Methods and classes for object-oriented programming in R with
-    or without references. Large effort has been made on making
-    definition of methods as simple as possible with a minimum of
-    maintenance for package developers. The package has been developed
-    since 2001 and is now considered very stable. This is a
-    cross-platform package implemented in pure R that defines
+    Methods and classes for object-oriented programming in R with or without
+    references. Large effort has been made on making definition of methods as
+    simple as possible with a minimum of maintenance for package developers.
+    The package has been developed since 2001 and is now considered very
+    stable. This is a cross-platform package implemented in pure R that defines
     standard S3 classes without any tricks."""
 
-    homepage = "https://github.com/HenrikBengtsson/R.oo"
-    url      = "https://cloud.r-project.org/src/contrib/R.oo_1.21.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/R.oo"
+    cran = "R.oo"
 
     version('1.24.0', sha256='37a1dab8dd668ceba69a1ba36c0c60e9809e29b74bd56d1e8ed519e19c8e3bb6')
     version('1.23.0', sha256='f5124ce3dbb0a62e8ef1bfce2de2d1dc2f776e8c48fd8cac358f7f5feb592ea1')
@@ -28,4 +25,4 @@ class RROo(RPackage):
 
     depends_on('r@2.13.0:', type=('build', 'run'))
     depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
-    depends_on('r-r-methodss3@1.8.0:', when='@1.24.0:', type=('build', 'run'))
+    depends_on('r-r-methodss3@1.8.0:', type=('build', 'run'), when='@1.24.0:')

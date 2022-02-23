@@ -7,14 +7,13 @@ from spack import *
 
 
 class RDataTable(RPackage):
-    """Extension of `data.frame`
+    """Extension of `data.frame`.
 
     Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
     fast add/modify/delete of columns by group using no copies at all, list
     columns and a fast file reader (fread). Offers a natural and flexible
     syntax, for faster development."""
 
-    homepage = "https://github.com/Rdatatable/data.table/wiki"
     cran = "data.table"
 
     version('1.14.2', sha256='f741b951e5937440139514aedbae78dbd6862d825066848bdb006aa02c2f3d2b')

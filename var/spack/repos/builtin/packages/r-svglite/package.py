@@ -7,13 +7,12 @@ from spack import *
 
 
 class RSvglite(RPackage):
-    """An 'SVG' Graphics Device
+    """An 'SVG' Graphics Device.
 
     A graphics device for R that produces 'Scalable Vector Graphics'. 'svglite'
     is a fork of the older 'RSvgDevice' package."""
 
-    homepage = "https://svglite.r-lib.org/"
-    cran     = "svglite"
+    cran = "svglite"
 
     version('2.0.0', sha256='76e625fe172a5b7ce99a67b6d631b037b3f7f0021cfe15f2e15e8851b89defa5')
 

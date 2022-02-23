@@ -57,13 +57,23 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
     conflicts('^cuda@11:', when='@:2.5.3')
 
+    # Many cuda_arch values are not yet recognized by MAGMA's CMakeLists.txt
+    for target in [10, 11, 12, 13, 21, 32, 52, 53, 61, 62, 72, 86]:
+        conflicts('cuda_arch={}'.format(target))
+
+    # Some cuda_arch values had support added recently
+    conflicts('cuda_arch=37', when='@:2.5')
+    conflicts('cuda_arch=60', when='@:2.2')
+    conflicts('cuda_arch=70', when='@:2.2')
+    conflicts('cuda_arch=75', when='@:2.5.0')
+    conflicts('cuda_arch=80', when='@:2.5.3')
+
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
     patch('cmake-W.patch', when='@2.5.0:%nvhpc')
-    patch('sm_37.patch', when='@2.5.4 cuda_arch=37')
 
     @run_before('cmake')
     def generate_cuda(self):
@@ -154,7 +164,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         self.cache_extra_test_sources([self.test_src_dir])
 
     def test(self):
-        test_dir = join_path(self.install_test_root, self.test_src_dir)
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=False):
             pkg_config_path = '{0}/lib/pkgconfig'.format(self.prefix)
             with spack.util.environment.set_env(PKG_CONFIG_PATH=pkg_config_path):

@@ -12,6 +12,7 @@ class PyAttrs(PythonPackage):
     homepage = "https://attrs.org/"
     pypi = "attrs/attrs-20.3.0.tar.gz"
 
+    version('21.4.0', sha256='626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd')
     version('21.2.0', sha256='ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb')
     version('20.3.0', sha256='832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700')
     version('20.2.0', sha256='26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594')
@@ -24,4 +25,5 @@ class PyAttrs(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', when='@21.2.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('py-setuptools@40.6.0:', when='@19.1.0:', type='build')
     depends_on('py-setuptools', type='build')

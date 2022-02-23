@@ -12,8 +12,7 @@ class RAmpliqueso(RPackage):
        The package provides tools and reports for the analysis of amplicon
        sequencing panels, such as AmpliSeq"""
 
-    homepage = "https://bioconductor.org/packages/3.8/bioc/html/ampliQueso.html"
-    git      = "https://git.bioconductor.org/packages/ampliQueso.git"
+    bioc = "ampliQueso"
 
     version('1.21.0', commit='ed99c5194a452ee299a93e981da2224e4dab5bdd')
     version('1.20.0', commit='ed064ffe9c5f2b47136e5f0f2e2c4214af4deae8')

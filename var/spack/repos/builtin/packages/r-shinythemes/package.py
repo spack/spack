@@ -7,14 +7,13 @@ from spack import *
 
 
 class RShinythemes(RPackage):
-    """Themes for Shiny:
+    """Themes for Shiny.
 
     Themes for use with Shiny. Includes several Bootstrap themes from
     <https://bootswatch.com/>, which are packaged for use with Shiny
     applications."""
 
-    homepage = "https://rstudio.github.io/shinythemes/"
-    cran     = "shinythemes"
+    cran = "shinythemes"
 
     version('1.2.0', sha256='37d68569ce838c7da9f0ea7e2b162ecf38fba2ae448a4888b6dd29c4bb5b2963')
 

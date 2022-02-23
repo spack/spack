@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBackports(RPackage):
-    """Reimplementations of Functions Introduced Since R-3.0.0
+    """Reimplementations of Functions Introduced Since R-3.0.0.
 
     Functions introduced or changed since R v3.0.0 are re-implemented in this
     package. The backports are conditionally exported in order to let R resolve
@@ -16,9 +16,9 @@ class RBackports(RPackage):
     functions or arguments by selectively importing specific backports to
     support older installations."""
 
-    homepage = "https://github.com/r-lib/backports"
     cran = "backports"
 
+    version('1.4.1', sha256='845c3c59fbb05e5a892c4231b955a0afdd331d82b7cc815bcff0672023242474')
     version('1.4.0', sha256='e7611565d24a852ad8b08579a7c67ad9121c1bda148bade98c7bec686e8dabbf')
     version('1.2.1', sha256='a2834bbd57e305e5d8010322f1906ea1789b3b5ba5eca77c5ff4248aceb7c2d5')
     version('1.1.4', sha256='ee4b5efef22fa7ef27d7983ffcd31db52f81e1fbb7189c6e89ee09b69349ff03')

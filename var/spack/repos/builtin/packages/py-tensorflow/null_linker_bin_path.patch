@@ -1,0 +1,15 @@
+diff -ru a/third_party/gpus/cuda_configure.bzl b/third_party/gpus/cuda_configure.bzl
+--- a/third_party/gpus/cuda_configure.bzl	2021-05-12 13:26:41.000000000 +0000
++++ b/third_party/gpus/cuda_configure.bzl	2021-10-28 21:38:06.949271099 +0000
+@@ -1205,10 +1205,7 @@
+     # TODO: when bazel stops adding '-B/usr/bin' by default, remove this
+     #       flag from the CROSSTOOL completely (see
+     #       https://github.com/bazelbuild/bazel/issues/5634)
+-    if should_download_clang:
+-        cuda_defines["%{linker_bin_path}"] = ""
+-    else:
+-        cuda_defines["%{linker_bin_path}"] = host_compiler_prefix
++    cuda_defines["%{linker_bin_path}"] = ""
+ 
+     cuda_defines["%{extra_no_canonical_prefixes_flags}"] = ""
+     cuda_defines["%{unfiltered_compile_flags}"] = ""

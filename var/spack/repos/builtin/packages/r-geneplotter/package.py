@@ -7,13 +7,13 @@ from spack import *
 
 
 class RGeneplotter(RPackage):
-    """Graphics related functions for Bioconductor
+    """Graphics related functions for Bioconductor.
 
     Functions for plotting genomic data."""
 
-    homepage = "https://bioconductor.org/packages/geneplotter"
-    git      = "https://git.bioconductor.org/packages/geneplotter.git"
+    bioc = "geneplotter"
 
+    version('1.72.0', commit='57a1d830ba7844fda5236af0153d5b5587634f96')
     version('1.68.0', commit='f1fea7e468fb24fdfa93ef4493600a4d8d183f69')
     version('1.62.0', commit='1fbaddde11014b453b131860409f89cd784e8e48')
     version('1.60.0', commit='6723a9fc0730e146187e79c2ddab6a68186dc5ad')

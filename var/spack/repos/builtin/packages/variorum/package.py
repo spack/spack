@@ -39,6 +39,7 @@ class Variorum(CMakePackage):
     ########################
     depends_on("cmake@2.8:", type="build")
     depends_on("hwloc")
+    depends_on("jansson", type="link")
 
     #########################
     # Documentation related #
@@ -50,6 +51,8 @@ class Variorum(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
+
+        cmake_args.append('-DJANSSON_DIR={0}'.format(spec['jansson'].prefix))
 
         if "+shared" in spec:
             cmake_args.append("-DBUILD_SHARED_LIBS=ON")

@@ -7,12 +7,12 @@ from spack import *
 
 
 class RGamm4(RPackage):
-    """Generalized Additive Mixed Models using 'mgcv' and 'lme4':
+    """Generalized Additive Mixed Models using 'mgcv' and 'lme4'.
 
     Estimate generalized additive mixed models via a version of function gamm()
     from 'mgcv', using 'lme4' for estimation."""
 
-    cran     = "gamm4"
+    cran = "gamm4"
 
     version('0.2-6', sha256='57c5b66582b2adc32f6a3bb6a259f5b95198e283a96d966a6007e8e48b380c89')
 

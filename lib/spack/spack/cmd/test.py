@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import argparse
 import fnmatch
-import inspect
 import os
 import re
 import shutil
@@ -53,6 +52,10 @@ def setup_parser(subparser):
     run_parser.add_argument(
         '--fail-first', action='store_true',
         help="Stop after the first failed package."
+    )
+    run_parser.add_argument(
+        '--externals', action='store_true',
+        help="Test packages that are externally installed."
     )
     run_parser.add_argument(
         '--keep-stage',
@@ -204,18 +207,8 @@ environment variables:
     with reporter('test', test_suite.stage):
         test_suite(remove_directory=not args.keep_stage,
                    dirty=args.dirty,
-                   fail_first=args.fail_first)
-
-
-def has_test_method(pkg):
-    if not inspect.isclass(pkg):
-        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
-
-    pkg_base = spack.package.PackageBase
-    return (
-        (issubclass(pkg, pkg_base) and pkg.test != pkg_base.test) or
-        (isinstance(pkg, pkg_base) and pkg.test.__func__ != pkg_base.test)
-    )
+                   fail_first=args.fail_first,
+                   externals=args.externals)
 
 
 def test_list(args):
@@ -224,7 +217,7 @@ def test_list(args):
         else set()
 
     def has_test_and_tags(pkg_class):
-        return has_test_method(pkg_class) and \
+        return spack.package.has_test_method(pkg_class) and \
             (not args.tag or pkg_class.name in tagged)
 
     if args.list_all:

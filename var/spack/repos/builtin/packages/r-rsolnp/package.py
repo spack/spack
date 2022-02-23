@@ -7,12 +7,12 @@ from spack import *
 
 
 class RRsolnp(RPackage):
-    """General Non-linear Optimization Using Augmented Lagrange Multiplier
+    """General Non-Linear Optimization.
+
+    General Non-linear Optimization Using Augmented Lagrange Multiplier
     Method."""
 
-    homepage = "https://cloud.r-project.org/package=Rsolnp"
-    url      = "https://cloud.r-project.org/src/contrib/Rsolnp_1.16.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rsolnp"
+    cran = "Rsolnp"
 
     version('1.16', sha256='3142776062beb8e2b45cdbc4fe6e5446b6d33505253d79f2890fe4178d9cf670')
 

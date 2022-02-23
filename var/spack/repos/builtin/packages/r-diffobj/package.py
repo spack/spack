@@ -7,12 +7,11 @@ from spack import *
 
 
 class RDiffobj(RPackage):
-    """Diffs for R Objects
+    """Diffs for R Objects.
 
     Generate a colorized diff of two R objects for an intuitive visualization
     of their differences."""
 
-    homepage = "https://github.com/brodieG/diffobj"
     cran = "diffobj"
 
     version('0.3.5', sha256='d860a79b1d4c9e369282d7391b539fe89228954854a65ba47181407c53e3cf60')

@@ -22,10 +22,16 @@ class Nwchem(Package):
     version('7.0.0', sha256='e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0',
             url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
-            url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2', deprecated=True)
+            url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
 
     variant('openmp', default=False, description='Enables OpenMP support')
     variant('mpipr', default=False, description='Enables ARMCI with progress rank')
+
+    # This patch is for the modification of the build system (e.g. compiler flags) and
+    # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
+    # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/347
+    # for more detail.
+    patch('fj.patch', when='@7.0.2 %fj')
 
     depends_on('blas')
     depends_on('lapack')

@@ -63,7 +63,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build options
     variant('complex', default=False, description='Enable complex numbers in Trilinos')
-    variant('cuda_rdc', default=False, description='turn on RDC for CUDA build')
+    variant('cuda_rdc', default=False, description='Turn on RDC for CUDA build')
+    variant('rocm_rdc', default=False, description='Turn on RDC for ROCm build')
     variant('cxxstd', default='14', values=['11', '14', '17'], multi=False)
     variant('debug', default=False, description='Enable runtime safety and debug checks')
     variant('explicit_template_instantiation', default=True, description='Enable explicit template instantiation (ETI)')
@@ -76,7 +77,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('python', default=False, description='Build PyTrilinos wrappers')
     variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('wrapper', default=False, description="Use nvcc-wrapper for CUDA build")
+    variant('uvm', default=False, when='@13.2: +cuda', description='Turn on UVM for CUDA build')
+    variant('wrapper', default=False, description='Use nvcc-wrapper for CUDA build')
 
     # TPLs (alphabet order)
     variant('adios2',       default=False, description='Enable ADIOS2')
@@ -260,7 +262,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         msg='Cannot build Trilinos with STK as a shared library on Darwin.'
     )
     conflicts('+adios2', when='@:12.14.1')
-    conflicts('cxxstd=11', when='@master:')
+    conflicts('cxxstd=11', when='@13.2:')
     conflicts('cxxstd=17', when='@:12')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
@@ -276,6 +278,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                       msg='trilinos~wrapper+cuda can only be built with the '
                       'Clang compiler')
     conflicts('+cuda_rdc', when='~cuda')
+    conflicts('+rocm_rdc', when='~rocm')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
 
@@ -283,13 +286,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts('+cuda +stokhos', when='^cuda@11.6:')
+    # Cuda UVM must be enabled prior to 13.2
+    # See https://github.com/spack/spack/issues/28869
+    conflicts('~uvm', when='@:13.1 +cuda')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
-
-    # Fortran mangling fails on Apple M1 (see spack/spack#25900)
-    conflicts('@:13.0.1 +fortran', when='target=m1')
 
     # ###################### Dependencies ##########################
 
@@ -456,7 +459,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options.extend([
             define('Trilinos_VERBOSE_CONFIGURE', False),
             define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             define_trilinos_enable('ALL_OPTIONAL_PACKAGES', False),
             define_trilinos_enable('ALL_PACKAGES', False),
             define_trilinos_enable('CXX11', True),
@@ -469,6 +471,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('EXPLICIT_INSTANTIATION',
                                    'explicit_template_instantiation')
         ])
+
+        if spec.version >= Version('13'):
+            options.append(define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'))
+        else:
+            # Prior to version 13, Trilinos would erroneously inject
+            # '-std=c++11' regardless of CMAKE_CXX_STANDARD value
+            options.append(define(
+                'Trilinos_CXX11_FLAGS',
+                self.compiler.cxx14_flag
+                if spec.variants['cxxstd'].value == '14'
+                else self.compiler.cxx11_flag
+            ))
 
         # ################## Trilinos Packages #####################
 
@@ -514,7 +528,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
-            define_tpl_enable('Cholmod', False),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
             define_from_variant('EpetraExt_BUILD_EXPERIMENTAL',
                                 'epetraextexperimental'),
@@ -523,10 +536,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
             define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
-
-        if spec.version < Version('13'):
-            # Suppress TriBITS flags in favor of CMake's built-in flags
-            options.append(define('Trilinos_CXX11_FLAGS', ' '))
 
         if '+dtk' in spec:
             options.extend([
@@ -678,6 +687,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define('PNetCDF_ROOT', spec['parallel-netcdf'].prefix),
             ])
 
+        options.append(define_tpl_enable('Cholmod', False))
+
+        if spec.satisfies('platform=darwin'):
+            # Don't let TriBITS define `libdl` as an absolute path to
+            # the MacOSX{nn.n}.sdk since that breaks at every xcode update
+            options.append(define_tpl_enable('DLlib', False))
+
         # ################# Explicit template instantiation #################
 
         complex_s = spec.variants['complex'].value
@@ -727,8 +743,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                                   else 'OpenMP'),
             ])
             if '+cuda' in spec:
+                use_uvm = '+uvm' in spec
                 options.extend([
-                    define_kok_enable('CUDA_UVM', True),
+                    define_kok_enable('CUDA_UVM', use_uvm),
                     define_kok_enable('CUDA_LAMBDA', True),
                     define_kok_enable('CUDA_RELOCATABLE_DEVICE_CODE', 'cuda_rdc')
                 ])
@@ -741,7 +758,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 options.extend([
                     define_kok_enable('ROCM', False),
-                    define_kok_enable('HIP', True)
+                    define_kok_enable('HIP', True),
+                    define_kok_enable('HIP_RELOCATABLE_DEVICE_CODE', 'rocm_rdc')
                 ])
                 if '+tpetra' in spec:
                     options.append(define('Tpetra_INST_HIP', True))

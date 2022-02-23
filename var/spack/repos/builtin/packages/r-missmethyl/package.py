@@ -7,7 +7,7 @@ from spack import *
 
 
 class RMissmethyl(RPackage):
-    """Analysing Illumina HumanMethylation BeadChip Data:
+    """Analysing Illumina HumanMethylation BeadChip Data.
 
     Normalisation, testing for differential variability and differential
     methylation and gene set testing for data from Illumina's Infinium
@@ -21,8 +21,9 @@ class RMissmethyl(RPackage):
     taking into account the number of probes per gene on the array, as well as
     taking into account multi-gene associated probes."""
 
-    bioc     = "missMethyl"
+    bioc = "missMethyl"
 
+    version('1.28.0', commit='6a36aee28837736291ac630c1da3909f0e9c8d6a')
     version('1.24.0', commit='f6c86048911dc0e302fb593b7d0623f6e77ac332')
 
     depends_on('r@3.6.0:', type=('build', 'run'))
