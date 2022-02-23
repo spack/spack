@@ -116,6 +116,7 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('java', type='run') # for paraprof
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')
