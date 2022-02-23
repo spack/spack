@@ -1658,25 +1658,25 @@ class Spec(object):
 
             # This code determines direction and yields the children/parents
             if direction == 'children':
-                edges = self._dependencies
+                edges = self.edges_to_dependencies
+                key_fn = lambda dspec: dspec.spec.name
                 succ = lambda dspec: dspec.spec
             elif direction == 'parents':
-                edges = self._dependents
+                edges = self.edges_from_dependents
+                key_fn = lambda dspec: dspec.parent.name
                 succ = lambda dspec: dspec.parent
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
-            for name in sorted(edges):
-                edges_from_name = edges[name]
-                for dspec in edges_from_name:
-                    dt = dspec.deptypes
-                    if dt and not any(d in deptype for d in dt):
-                        continue
+            for dspec in sorted(edges(), key=key_fn):
+                dt = dspec.deptypes
+                if dt and not any(d in deptype for d in dt):
+                    continue
 
-                    for child in succ(dspec).traverse_edges(
-                            visited, d + 1, deptype, dspec, **kwargs
-                    ):
-                        yield child
+                for child in succ(dspec).traverse_edges(
+                        visited, d + 1, deptype, dspec, **kwargs
+                ):
+                    yield child
 
         # Postorder traversal yields after successors
         if yield_me and order == 'post':
