@@ -1269,7 +1269,7 @@ class Spec(object):
     def external(self):
         return bool(self.external_path) or bool(self.external_modules)
 
-    def reset_dependencies(self):
+    def clear_dependencies(self):
         """Trim the dependencies of this spec."""
         self._dependencies.clear()
 
@@ -2592,8 +2592,8 @@ class Spec(object):
                         for dep in spec.dependencies():
                             del dep._dependents.edges[spec.name]
                         changed = True
-                        spec.reset_dependencies()
-                    replacement.reset_dependencies()
+                        spec.clear_dependencies()
+                    replacement.clear_dependencies()
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -2941,7 +2941,7 @@ class Spec(object):
                 for spec in flat_deps.values():
                     if not spec.concrete:
                         spec.reset_edges()
-                self.reset_dependencies()
+                self.clear_dependencies()
 
             return flat_deps
 

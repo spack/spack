@@ -615,7 +615,7 @@ class TestConcretize(object):
         assert s.concrete
 
         # Remove the dependencies and reset caches
-        s.reset_dependencies()
+        s.clear_dependencies()
         s._concrete = False
 
         assert not s.concrete
