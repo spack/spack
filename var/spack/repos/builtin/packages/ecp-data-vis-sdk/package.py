@@ -124,9 +124,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     dav_sdk_depends_on('ascent+mpi+fortran+openmp+python+shared+vtkh+dray',
                        when='+ascent',
                        propagate=['adios2'] + cuda_arch_variants)
-    # Need to explicitly turn off conduit hdf5_compat in order to build
-    # hdf5@1.12 which is required for SDK
-    depends_on('ascent ^conduit ~hdf5_compat', when='+ascent +hdf5')
+    depends_on('ascent ^conduit', when='+ascent +hdf5')
     depends_on('ascent~cuda', when='+ascent~cuda')
     depends_on('ascent+cuda', when='+ascent+cuda ^vtk-m@1.7:')
     # Disable configuring with @develop. This should be removed after ascent

@@ -77,8 +77,6 @@ class Conduit(CMakePackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
-    variant("hdf5_compat", default=True, when='+hdf5',
-            description="Build Conduit with HDF5 1.8.x (compatibility mode)")
     variant("silo", default=False, description="Build Conduit Silo support")
     variant("adios", default=False, description="Build Conduit ADIOS support")
     variant("parmetis", default=True, description="Build Conduit Parmetis support")
@@ -120,12 +118,7 @@ class Conduit(CMakePackage):
     # Note: cxx variant is disabled due to build issue Cyrus
     # experienced on BGQ. When on, the static build tries
     # to link against shared libs.
-    #
-    # Use HDF5 1.8, for wider output compatibly
-    # variants reflect we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx", when="+hdf5")
-    depends_on("hdf5~shared", when="+hdf5~shared")
-    depends_on("hdf5@1.8.19:1.8", when="+hdf5+hdf5_compat")
+    depends_on("hdf5~cxx~shared", when="+hdf5~shared")
 
     # we need to hand this to conduit so it can properly
     # handle downstream linking of zlib reqed by hdf5
@@ -135,8 +128,8 @@ class Conduit(CMakePackage):
     # Silo
     ###############
     # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+silo+shared")
-    depends_on("silo~shared~fortran", when="+silo~shared")
+    depends_on("silo+shared", when="+silo+shared")
+    depends_on("silo~shared", when="+silo~shared")
 
     ###############
     # ADIOS
