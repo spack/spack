@@ -1278,7 +1278,7 @@ class Spec(object):
         self._dependencies.clear()
         self._dependents.clear()
 
-    def detach_node(self, deptype='all'):
+    def detach(self, deptype='all'):
         """Remove any reference that dependencies have of this node.
 
         Args:

@@ -1213,7 +1213,7 @@ class Database(object):
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
-        rec.spec.detach_node(deptype=_tracked_deps)
+        rec.spec.detach(deptype=_tracked_deps)
         for dep in rec.spec.dependencies(deptype=_tracked_deps):
             self._decrement_ref_count(dep)
 
