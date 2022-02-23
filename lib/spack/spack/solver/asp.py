@@ -1909,6 +1909,12 @@ class SpecBuilder(object):
 
     def depends_on(self, pkg, dep, type):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
+
+        # TODO: assertion to be removed when cross-compilation is handled correctly
+        msg = ("Current solver does not handle multiple dependency edges "
+               "of the same name")
+        assert len(dependencies) < 2, msg
+
         if not dependencies:
             self._specs[pkg].add_dependency_edge(self._specs[dep], (type,))
         else:
