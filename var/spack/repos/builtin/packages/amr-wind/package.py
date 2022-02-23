@@ -83,7 +83,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(define('AMReX_CUDA_ARCH', amrex_arch))
 
         if '+rocm' in self.spec:
-            define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc)
+            args.append(define('CMAKE_CXX_COMPILER', self.spec['hip'].hipcc))
             targets = self.spec.variants['amdgpu_target'].value
             args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets))
 
