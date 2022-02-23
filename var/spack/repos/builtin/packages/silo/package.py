@@ -59,9 +59,9 @@ class Silo(AutotoolsPackage):
     # with hdf5@1.10.8 or later 1.10 or with hdf5@1.12.1 or later
     patch('H5EPR_SEMI_COLON.patch', when='@:4.11 ^hdf5@1.10.8:1.10,1.12.1:')
 
-    conflicts('hdf5 api=v18', when='@4.11: +hdf5')
-    conflicts('hdf5 api=v112', when="@:4.10 +hdf5")
-    conflicts('hdf5@1.13:', when="+hdf5")
+    conflicts('^hdf5 api=v18', when="@4.11: +hdf5")
+    conflicts('^hdf5 api=v112', when="@:4.10 +hdf5")
+    conflicts('^hdf5@1.13:', when="+hdf5")
     conflicts('+hzip', when="@4.11-bsd")
     conflicts('+fpzip', when="@4.11-bsd")
     conflicts('+hzip', when="@4.10.2-bsd")
