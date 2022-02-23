@@ -56,6 +56,11 @@ class AzureBlob:
             return False
 
     def azure_container_exists(self):
+        """Returns True if contain exists, otherwise false.
+           Not aware of any exists function, so work-around is to check if the 
+           container has any blobs (returns an iterable object). When the iterable object
+           is accessed a exception occurs azure.core.exceptions.ResourceNotFoundError is the
+           container does not exist."""
         try:
             ttt = (self.blob_service_client.
                    get_container_client(self.container_name).list_blobs())
