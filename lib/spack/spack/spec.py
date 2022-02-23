@@ -850,7 +850,7 @@ class _EdgeMap(Mapping):
 
         return clone
 
-    def select_by(self, parent=None, child=None, dependency_types='all'):
+    def select(self, parent=None, child=None, dependency_types='all'):
         """Select a list of edges and return them.
 
         If an edge:
@@ -1320,7 +1320,7 @@ class Spec(object):
         """
         return [
             d for d in
-            self._dependents.select_by(parent=name, dependency_types=deptype)
+            self._dependents.select(parent=name, dependency_types=deptype)
         ]
 
     def edges_to_dependencies(self, name=None, deptype='all'):
@@ -1333,7 +1333,7 @@ class Spec(object):
         """
         return [
             d for d in
-            self._dependencies.select_by(child=name, dependency_types=deptype)
+            self._dependencies.select(child=name, dependency_types=deptype)
         ]
 
     def dependencies(self, name=None, deptype='all'):
@@ -1345,7 +1345,7 @@ class Spec(object):
         """
         return [
             d.spec for d in
-            self._dependencies.select_by(child=name, dependency_types=deptype)
+            self._dependencies.select(child=name, dependency_types=deptype)
         ]
 
     def dependents(self, name=None, deptype='all'):
@@ -1357,7 +1357,7 @@ class Spec(object):
         """
         return [
             d.parent for d in
-            self._dependents.select_by(parent=name, dependency_types=deptype)
+            self._dependents.select(parent=name, dependency_types=deptype)
         ]
 
     def _dependencies_dict(self, deptype='all'):
@@ -1371,7 +1371,7 @@ class Spec(object):
         """
         _sort_fn = lambda x: (x.spec.name,) + _sort_by_dep_types(x)
         _group_fn = lambda x: x.spec.name
-        selected_edges = self._dependencies.select_by(dependency_types=deptype)
+        selected_edges = self._dependencies.select(dependency_types=deptype)
         result = {}
         for key, group in itertools.groupby(
                 sorted(selected_edges, key=_sort_fn), key=_group_fn
