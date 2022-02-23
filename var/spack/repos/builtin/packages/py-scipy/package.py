@@ -95,6 +95,12 @@ class PyScipy(PythonPackage):
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
+        # https://github.com/scipy/scipy/issues/14935
+        # Disable pythran backend with latest Intel compilers
+        if self.spec.satisfies('%intel@2021:') or \
+            self.spec.satisfies('%intel-oneapi-compilers@2021:'):
+            env.set('SCIPY_USE_PYTHRAN', '0')
+
         # Kluge to get the gfortran linker to work correctly on Big
         # Sur, at least until a gcc release > 10.2 is out with a fix.
         # (There is a fix in their development tree.)
