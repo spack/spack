@@ -196,6 +196,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -457,7 +458,6 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
-            config_args.append('--with-pm=none')
 
         # setup device configuration
         device_config = ''
