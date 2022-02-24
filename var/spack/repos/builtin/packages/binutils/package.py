@@ -89,8 +89,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
-        match = re.search(r'GNU Binutils.*\) (\S+)', output)
-        return match.group(1) if match else None
+        match = re.search(r'GNU (nm|readelf).* (\S+)', output)
+        return Version(match.group(2)).dotted.up_to(3) if match else None
 
     def setup_build_environment(self, env):
 
