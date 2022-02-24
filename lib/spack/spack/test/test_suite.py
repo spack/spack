@@ -149,6 +149,23 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
         test_suite()
 
 
+def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
+    spec = spack.spec.Spec('simple-standalone-test').concretized()
+    test_suite = spack.install_test.TestSuite([spec])
+
+    test_suite(verbose=True)
+    passed, msg = False, False
+    with open(test_suite.log_file_for_spec(spec), 'r') as fd:
+        for line in fd:
+            if 'simple stand-alone test' in line:
+                msg = True
+            elif 'PASSED' in line:
+                passed = True
+
+    assert msg
+    assert passed
+
+
 def test_get_test_suite():
     assert not spack.install_test.get_test_suite('nothing')
 
