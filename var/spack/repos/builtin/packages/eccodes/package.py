@@ -215,9 +215,6 @@ class Eccodes(CMakePackage):
               msg='Creating the view without extra definitions and samples '
                   'does not make sense')
 
-    conflicts('+create-view', when='+memfs',
-              msg='In-memory view is not supported yet')
-
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
     patch('openjpeg_jasper.patch', when='@:2.16')
@@ -398,6 +395,84 @@ class Eccodes(CMakePackage):
             raise InstallError(
                 'Fortran interface requires a Fortran compiler!')
 
+    @run_before('cmake')
+    def prepare_extra_definitions_and_samples(self):
+        for variant_stem in ['definitions', 'samples']:
+            variant_name = 'extra-{0}'.format(variant_stem)
+            value = self.spec.variants[variant_name].value
+
+            if value == 'none':
+                continue
+
+            for center in value.split(':'):
+                center_placement_path = join_path(
+                    self.stage.source_path, 'spack-{0}'.format(variant_stem),
+                    '{0}.{1}'.format(variant_stem, center))
+
+                # Make sure the directory exists to cover the case when no
+                # resources are assigned to the center:
+                mkdirp(center_placement_path)
+
+                for cp in _resources[variant_stem][center].get('copies', []):
+                    if 'when' in cp and cp['when'] not in self.spec:
+                        continue
+
+                    for f in cp['files']:
+                        cp_src_path = join_path(self.stage.source_path,
+                                                variant_stem, f)
+                        cp_dst_path = join_path(center_placement_path, f)
+                        copy(cp_src_path, cp_dst_path)
+
+                        if 'regex' in cp:
+                            filter_file(cp['regex'], cp['repl'],
+                                        cp_dst_path, backup=False)
+
+    def create_memfs_view(self):
+        pass
+
+    @run_before('cmake')
+    @when('+create-view+memfs')
+    def create_memfs_view(self):
+        for variant_stem in ['definitions', 'samples']:
+            variant_name = 'extra-{0}'.format(variant_stem)
+            value = self.spec.variants[variant_name].value
+
+            if value == 'none':
+                continue
+
+            # Path to the root view directory to be searched for files when
+            # generating the in-memory representation on definitions/samples:
+            view_dir = join_path(self.stage.source_path,
+                                 'spack-{0}'.format(variant_stem),
+                                 variant_stem)
+
+            # List of the projected directories:
+            projected_dirs = [join_path(self.stage.source_path,
+                                        'spack-{0}'.format(variant_stem),
+                                        '{0}.{1}'.format(variant_stem, center))
+                              for center in value.split(':')]
+            projected_dirs.append(join_path(self.stage.source_path,
+                                            variant_stem))
+
+            # Create the view:
+            self._create_view(view_dir, *projected_dirs)
+
+            # Tell Cmake where to search for definitions/samples files when
+            # generating their in-memory representation:
+            filter_file('${{PROJECT_SOURCE_DIR}}/{0}'.format(variant_stem),
+                        view_dir,
+                        join_path(self.root_cmakelists_dir,
+                                  'memfs', 'CMakeLists.txt'),
+                        string=True,
+                        backup=False)
+
+        if self.run_tests:
+            # Run the tests using unmodified definitions/samples from the files:
+            filter_file('HAVE_MEMFS=@HAVE_MEMFS@', 'HAVE_MEMFS=0',
+                        *find(self.root_cmakelists_dir, 'include.ctest.sh.in',
+                              recursive=True),
+                        string=True, backup=False)
+
     def cmake_args(self):
         jp2k = self.spec.variants['jp2k'].value
 
@@ -450,7 +525,16 @@ class Eccodes(CMakePackage):
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
         if '+create-view' in self.spec:
-            if '~memfs' in self.spec:
+            if '+memfs' in self.spec:
+                for variant_stem in ['definitions', 'samples']:
+                    variant_name = 'extra-{0}'.format(variant_stem)
+                    if self.spec.variants[variant_name].value != 'none':
+                        args.append(
+                            self.define(
+                                'ENABLE_INSTALL_ECCODES_{0}'.format(
+                                    variant_stem.upper()),
+                                True))
+            else:
                 for variant_stem in ['definitions', 'samples']:
                     variant_name = 'extra-{0}'.format(variant_stem)
                     if self.spec.variants[variant_name].value != 'none':
@@ -482,24 +566,6 @@ class Eccodes(CMakePackage):
                 center_src_path = join_path(self.stage.source_path,
                                             'spack-{0}'.format(variant_stem),
                                             center_dir)
-
-                # Make sure the directory exists to cover the case when no
-                # resources are assigned to the center:
-                mkdirp(center_src_path)
-
-                for cp in _resources[variant_stem][center].get('copies', []):
-                    if 'when' in cp and cp['when'] not in self.spec:
-                        continue
-
-                    for f in cp['files']:
-                        cp_src_path = join_path(self.stage.source_path,
-                                                variant_stem, f)
-                        cp_dst_path = join_path(center_src_path, f)
-                        copy(cp_src_path, cp_dst_path)
-
-                        if 'regex' in cp:
-                            filter_file(cp['regex'], cp['repl'],
-                                        cp_dst_path, backup=False)
 
                 readme_msg = ['This directory contains extra {0} from {1}, '
                               'fetched from:'.format(variant_stem, center)]
