@@ -5,7 +5,6 @@
 
 import json
 import os
-import platform
 import re
 
 import llnl.util.tty as tty
@@ -380,9 +379,6 @@ class Python(AutotoolsPackage):
             tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
-
-        # Need this to allow python build to find the Python installation.
-        env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')

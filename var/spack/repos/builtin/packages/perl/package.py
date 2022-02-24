@@ -18,6 +18,7 @@ from contextlib import contextmanager
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.operating_systems.mac_os import macos_version
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -296,11 +297,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def setup_build_environment(self, env):
         spec = self.spec
 
-        # This is to avoid failures when using -mmacosx-version-min=11.1
-        # since not all Apple Clang compilers support that version range
-        # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
-        if spec.satisfies('os=bigsur'):
-            env.set('SYSTEM_VERSION_COMPAT', 1)
+        if (spec.version <= Version('5.34.0')
+            and spec.platform == 'darwin'
+            and macos_version() >= Version('10.16')):
+            # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
+            # as "unexpected"; override the environment variable set by spack's
+            # platforms.darwin .
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
         # This is how we tell perl the locations of bzip and zlib.
         env.set('BUILD_BZIP2', 0)
