@@ -75,6 +75,12 @@ class Paraview(CMakePackage, CudaPackage):
                         ' "default" lets the build_edition make the decision.'
                         ' "on" or "off" will always override the build_edition.')
 
+    # The ninja generator has problems with XL and CCE
+    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+    variant('generator', default='ninja', multi=False,
+            values=('ninja', 'unix_makefiles'),
+            description='CMake generator.')
+
     conflicts('+adios2', when='@:5.10 ~mpi')
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -106,7 +112,10 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.3:', type='build')
 
-    depends_on('ninja', type='build')
+    # The ninja generator has problems with XL and CCE
+    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+    depends_on('ninja', type='build', when='generator=ninja')
+    depends_on('gmake', type='build', when='generator=unix_makefiles')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -219,14 +228,6 @@ class Paraview(CMakePackage, CudaPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
-    # The ninja generator has problems with XL and CCE
-    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-    @property
-    def generator(self):
-        if self.spec.satisfies('%cce') or self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
-            return "Unix Makefiles"
-        return "Ninja"
-
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
@@ -312,6 +313,15 @@ class Paraview(CMakePackage, CudaPackage):
                                                              '_paraview.zip'))
                     env.prepend_path('PYTHONPATH', join_path(pv_pydir,
                                                              '_vtk.zip'))
+    # The ninja generator has problems with XL and CCE
+    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+    @property
+    def generator(self):
+      """Choose cmake generator for Paraview."""
+      spec = self.spec
+      if spec.variants['generator'].value == 'unix_makefiles':
+        return "Unix Makefiles"
+      return "Ninja"
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
