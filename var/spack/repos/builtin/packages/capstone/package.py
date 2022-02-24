@@ -11,8 +11,8 @@ class Capstone(CMakePackage):
        multi-architecture disassembly framework."""
 
     homepage = "https://www.capstone-engine.org/"
-    url      = "https://github.com/aquynh/capstone/archive/4.0.1.tar.gz"
-    git      = "https://github.com/aquynh/capstone.git"
+    url      = "https://github.com/capstone-engine/capstone/archive/4.0.1.tar.gz"
+    git      = "https://github.com/capstone-engine/capstone.git"
 
     version('next', branch='next')
     version('master', branch='master')
