@@ -25,9 +25,4 @@ class PyDeepsig(PythonPackage):
     depends_on('py-dill@0.3.4',         type=('build', 'run'))
 
     def patch(self):
-        filter_file(r'^with open\("README_RAW.md", "r"\) as fh:',
-                    '# no op',
-                    'setup.py')
-        filter_file(r'^    long_description = fh.read\(\)',
-                    'long_description = ""',
-                    'setup.py')
+        filter_file('README_RAW.md', 'README.md', 'setup.py', string=True)
