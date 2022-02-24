@@ -11,7 +11,7 @@ class PyDeepsig(PythonPackage):
     Networks"""
 
     homepage = "https://github.com/Kaleidophon/deep-significance"
-    pypi     = "deepsig/deepsig-1.2.0.tar.gz"
+    pypi     = "deepsig/deepsig-1.2.1.tar.gz"
 
     version('1.2.1', sha256='8543630c00264898116a065f6461c131d026ef75d8703bc631a4fd2bafb31f89')
 
