@@ -19,9 +19,7 @@ class Blaze(CMakePackage):
     url      = "https://bitbucket.org/blaze-lib/blaze/downloads/blaze-3.8.tar.gz"
     git      = "https://bitbucket.org/blaze-lib/blaze.git"
 
-    # Blaze requires at least cmake 3.8.0 for C++14 features.
-    depends_on('cmake@3.8.0:', type='build')
-    depends_on('blas')
+    maintainers = ['nilsvu']
 
     version('master', branch='master')
     version('3.8', sha256='dfaae1a3a9fea0b3cc92e78c9858dcc6c93301d59f67de5d388a3a41c8a629ae')
@@ -46,3 +44,57 @@ class Blaze(CMakePackage):
     version('1.2', sha256='16f56d4f61dca229fa7e17a0d1e348a1f3246c65cded2df5db33babebf8f9b9d')
     version('1.1', sha256='6add20eb9c176ea9f8091c49b101f46d1a1a6bd9c31553a6eff5e53603f0527f')
     version('1.0', sha256='ee13cfd467c1a4b0fe7cc58b61b846eae862167a90dd2e60559626a30418b5a3')
+
+    # These configuration options set defaults for dependent packages and
+    # control Blaze dependencies. They can also be enabled or disabled with
+    # compiler flags later by dependent packages, since Blaze is a header-only
+    # library.
+    # - BLAS mode is turned off by default in the Blaze CMake configuration (as
+    #   of v3.8), so we turn it off by default here as well.
+    variant('blas', default=False, description='Enable BLAS kernels')
+    # - LAPACK is only a link-time dependency, but Blaze provides a CMake
+    #   configuration check. It is enabled by default in the Blaze CMake
+    #   configuration (as of v3.8).
+    variant('lapack', default=True, description='Enable LAPACK kernels')
+    # - SMP mode is set to OpenMP by default in the Blaze CMake configuration
+    #   (as of v3.8), but isn't a required dependency.
+    variant('smp', values=['none', 'openmp', 'cpp11', 'boost', 'hpx'],
+            default='openmp', description='Shared memory parallelization mode')
+
+    # Blaze requires at least cmake 3.8.0 for C++14 features.
+    depends_on('cmake@3.8.0:', type='build')
+    depends_on('blas', when='+blas')
+    depends_on('lapack', when='+lapack')
+    depends_on('boost@1.54.0: +thread', when='smp=boost')
+    depends_on('hpx', when='smp=hpx')
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('BLAZE_BLAS_MODE', 'blas'),
+            # These flags can be set at compile time, but it would be useful to
+            # determine them from the BLAS provider if possible and pass them to
+            # the CMake configuration:
+            # - BLAZE_BLAS_IS_64BIT
+            # - BLAZE_BLAS_IS_PARALLEL
+            # The name of the header file is particularly important because
+            # builds will fail if `BLAZE_BLAS_MODE` is enabled but the header
+            # file is missing:
+            # - BLAZE_BLAS_INCLUDE_FILE (defaults to <cblas.h>)
+            self.define_from_variant('USE_LAPACK', 'lapack'),
+        ]
+
+        # SMP mode
+        if self.spec.variants['smp'].value == 'none':
+            args.append(self.define('BLAZE_SHARED_MEMORY_PARALLELIZATION', False))
+        else:
+            args.extend([
+                self.define('BLAZE_SHARED_MEMORY_PARALLELIZATION', True),
+                self.define('BLAZE_SMP_THREADS', {
+                    'openmp': 'OpenMP',
+                    'cpp11': 'C++11',
+                    'boost': 'Boost',
+                    'hpx': 'HPX',
+                }[self.spec.variants['smp'].value])
+            ])
+
+        return args

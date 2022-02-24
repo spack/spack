@@ -94,6 +94,16 @@ def write_test_suite_file(suite):
         sjson.dump(suite.to_dict(), stream=f)
 
 
+def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
+    failed = "{0} failed, ".format(num_failed) if num_failed else ''
+    skipped = "{0} skipped, ".format(num_skipped) if num_skipped else ''
+    no_tests = "{0} no-tests, ".format(num_untested) if num_untested else ''
+    num_passed = num_specs - num_failed - num_untested - num_skipped
+
+    print("{:=^80}".format(" {0}{1}{2}{3} passed of {4} specs "
+          .format(failed, no_tests, skipped, num_passed, num_specs)))
+
+
 class TestSuite(object):
     def __init__(self, specs, alias=None):
         # copy so that different test suites have different package objects
@@ -130,6 +140,7 @@ class TestSuite(object):
         fail_first = kwargs.get('fail_first', False)
         externals = kwargs.get('externals', False)
 
+        skipped, untested = 0, 0
         for spec in self.specs:
             try:
                 if spec.package.test_suite:
@@ -165,11 +176,10 @@ class TestSuite(object):
                     self.ensure_stage()
                     if spec.external and not externals:
                         status = 'SKIPPED'
-                        msg = 'Skipped external package'
+                        skipped += 1
                     else:
                         status = 'NO-TESTS'
-                        msg = 'No tests to run'
-                    _add_msg_to_file(self.log_file_for_spec(spec), msg)
+                        untested += 1
 
                 self.write_test_result(spec, status)
             except BaseException as exc:
@@ -188,6 +198,8 @@ class TestSuite(object):
                 spec.package.test_suite = None
                 self.current_test_spec = None
                 self.current_base_spec = None
+
+        write_test_summary(self.fails, skipped, untested, len(self.specs))
 
         if self.fails:
             raise TestSuiteFailure(self.fails)

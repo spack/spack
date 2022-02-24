@@ -176,10 +176,9 @@ class InfoCollector(object):
                     skip_externals = pkg.spec.external and not externals
                     if do_fn.__name__ == 'do_test' and skip_externals:
                         package['result'] = 'skipped'
-                        package['stdout'] = 'Skipped external package'
                     else:
                         package['result'] = 'success'
-                        package['stdout'] = fetch_log(pkg, do_fn, self.dir)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
                     if do_fn.__name__ == '_install_task' and installed_already:

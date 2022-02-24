@@ -50,7 +50,7 @@ class Mpich(AutotoolsPackage):
         'pmi',
         default='pmi',
         description='''PMI interface.''',
-        values=('off', 'pmi', 'pmi2', 'pmix'),
+        values=('off', 'pmi', 'pmi2', 'pmix', 'cray'),
         multi=False
     )
     variant(
@@ -146,6 +146,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('hwloc@2.0.0:', when='@3.3: +hwloc')
 
     depends_on('libfabric', when='netmod=ofi')
+    depends_on('libfabric fabrics=gni', when='netmod=ofi pmi=cray')
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
@@ -184,6 +185,8 @@ with '-Wl,-commons,use_dylibs' and without
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
 
+    depends_on('cray-pmi', when='pmi=cray')
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
@@ -193,6 +196,7 @@ with '-Wl,-commons,use_dylibs' and without
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
     conflicts('pmi=pmix', when='+hydra')
+    conflicts('pmi=cray', when='+hydra')
 
     # MPICH does not require libxml2 and libpciaccess for versions before 3.3
     # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
@@ -327,6 +331,14 @@ with '-Wl,-commons,use_dylibs' and without
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
+        if 'pmi=cray' in self.spec:
+            env.set(
+                "CRAY_PMI_INCLUDE_OPTS",
+                "-I" + self.spec['cray-pmi'].headers.directories[0])
+            env.set(
+                "CRAY_PMI_POST_LINK_OPTS",
+                "-L" + self.spec['cray-pmi'].libs.directories[0])
+
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
@@ -444,6 +456,8 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmi=pmi2/simple')
         elif 'pmi=pmix' in spec:
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        elif 'pmi=cray' in spec:
+            config_args.append('--with-pmi=cray')
 
         # setup device configuration
         device_config = ''

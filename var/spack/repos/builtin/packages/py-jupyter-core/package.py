@@ -12,6 +12,7 @@ class PyJupyterCore(PythonPackage):
     homepage = "https://jupyter-core.readthedocs.io/"
     pypi = "jupyter-core/jupyter_core-4.6.0.tar.gz"
 
+    version('4.9.2', sha256='d69baeb9ffb128b8cd2657fcf2703f89c769d1673c851812119e3a2a0e93ad9a')
     version('4.7.1', sha256='79025cb3225efcd36847d0840f3fc672c0abd7afd0de83ba8a1d3837619122b4')
     version('4.6.3', sha256='394fd5dd787e7c8861741880bdf8a00ce39f95de5d18e579c74b882522219e7e')
     version('4.6.1', sha256='a183e0ec2e8f6adddf62b0a3fc6a2237e3e0056d381e536d3e7c7ecc3067e244')
