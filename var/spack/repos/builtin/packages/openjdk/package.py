@@ -80,12 +80,15 @@ class Openjdk(Package):
     homepage = "https://jdk.java.net"
     preferred_version_prefix = "11."
 
-    prefered_defined = False
+    preferred_defined = False
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            is_preferred = not prefered_defined and ver.startswith(preferred_version_prefix)
+            is_preferred = not preferred_defined and ver.startswith(preferred_version_prefix)
+            if is_preferred:
+                preferred_defined = True
+
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
     provides('java@17', when='@17.0:17')
