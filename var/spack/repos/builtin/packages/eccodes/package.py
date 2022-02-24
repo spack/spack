@@ -8,7 +8,13 @@ import itertools
 
 from spack.package import *
 
-_resources = {
+
+def das_placement_dirname(das_type, center):
+    return '{0}.{1}'.format(das_type, center)
+
+
+# Extra definitions and samples:
+das = {
     'definitions': {
         # German Meteorological Service (Deutscher Wetterdienst, DWD):
         'edzw': {
@@ -43,7 +49,11 @@ _resources = {
                     'when': '@2.20:',
                     'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
                     'branch': 'master',
-                    'placement': {'definitions.mpim': 'definitions.mpim'}
+                    'placement': {
+                        # The definitions reside in a subdirectory:
+                        'definitions.mpim':
+                            das_placement_dirname('definitions', 'mpim')
+                    }
                 }
             ],
             'copies': [
@@ -61,63 +71,57 @@ _resources = {
 }
 
 
-def _declare_definitions_and_samples():
-    def gen_all_permutations(seq, only_with=None):
+def das_values(centers, only_with=None):
+    def permutations(seq, ow=None):
         """Returns an iterable that provides all permutations of all lengths of
         elements in a sequence. Optionally returns only those permutations that
         contain element only_with."""
-        if only_with is None:
+        if ow is None:
             return itertools.chain.from_iterable(
                 itertools.permutations(seq, length + 1)
                 for length in range(len(seq)))
-        elif only_with in seq:
-            def filtered_permutations():
-                only_with_tuple = (only_with,)
-                yield only_with_tuple
-                for perm in gen_all_permutations([e for e in seq
-                                                  if e != only_with]):
-                    for pos in range(len(perm) + 1):
-                        yield perm[:pos] + only_with_tuple + perm[pos:]
-
-            return filtered_permutations()
         else:
-            return ()
+            def filtered_permutations():
+                for perm in permutations(seq):
+                    if ow in perm:
+                        yield perm
+            return filtered_permutations()
 
-    def gen_values(seq, only_with=None):
-        for p in gen_all_permutations(seq, only_with):
-            yield ':'.join(p)
+    for p in permutations(centers, only_with):
+        yield ':'.join(p)
 
-    for variant_stem in ['definitions', 'samples']:
-        variant_name = 'extra-{0}'.format(variant_stem)
-        variant_dict = _resources[variant_stem]
-        variant(variant_name,
-                values=('none',) + tuple(gen_values(variant_dict.keys())),
-                default='none',
+
+def declare_das_variants():
+    for das_type, das_dict in das.items():
+        variant('extra-{0}'.format(das_type), default='none', sticky=True,
+                values=('none',) + tuple(das_values(das_dict.keys())),
                 description='Colon-separated list of extra '
-                            '{0} to install'.format(variant_stem),
-                sticky=True)
-        for center, center_dict in variant_dict.items():
-            conflicts_kwargs = center_dict.get('conflicts', None)
-            if conflicts_kwargs:
-                for value in gen_values(variant_dict.keys(),
-                                        only_with=center):
-                    conflicts('{0}={1}'.format(variant_name, value),
-                              **conflicts_kwargs)
-            for resource_kwargs in center_dict.get('resources', []):
-                resource_kwargs = resource_kwargs.copy()
-                if 'placement' not in resource_kwargs:
-                    resource_kwargs['placement'] = {
-                        '': '{0}.{1}'.format(variant_stem, center)
-                    }
-                orig_when = resource_kwargs.pop('when', None)
-                for value in gen_values(variant_dict.keys(),
-                                        only_with=center):
-                    when = '{0}={1}'.format(variant_name, value)
-                    if orig_when:
-                        when = '{0} {1}'.format(orig_when, when)
+                            '{0} to install'.format(das_type))
+
+
+def declare_das_resources():
+    for das_type, das_dict in das.items():
+        for center, center_dict in das_dict.items():
+            for kwargs in center_dict.get('resources', ()):
+                kwargs = kwargs.copy()
+                if 'placement' not in kwargs:
+                    kwargs['placement'] = {
+                        '': das_placement_dirname(das_type, center)}
+                when = Spec(kwargs.get('when', None))
+                for value in das_values(das_dict.keys(), only_with=center):
+                    kwargs['when'] = when.constrained(
+                        'extra-{0}={1}'.format(das_type, value))
                     resource(name=center,
-                             destination='spack-{0}'.format(variant_stem),
-                             when=when, **resource_kwargs)
+                             destination='spack-{0}'.format(das_type), **kwargs)
+
+
+def declare_das_conflicts():
+    for das_type, das_dict in das.items():
+        for center, center_dict in das_dict.items():
+            if 'conflicts' in center_dict:
+                for value in das_values(das_dict.keys(), only_with=center):
+                    conflicts('extra-{0}={1}'.format(das_type, value),
+                              **center_dict['conflicts'])
 
 
 class Eccodes(CMakePackage):
@@ -165,7 +169,7 @@ class Eccodes(CMakePackage):
     variant('shared', default=True,
             description='Build shared versions of the libraries')
 
-    _declare_definitions_and_samples()
+    declare_das_variants()
 
     variant('create-view', default=False,
             # Enabling this option allows for using the library without setting
@@ -200,6 +204,8 @@ class Eccodes(CMakePackage):
 
     depends_on('ecbuild', type='build', when='@develop')
 
+    declare_das_resources()
+
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
 
@@ -214,6 +220,8 @@ class Eccodes(CMakePackage):
     conflicts('+create-view', when='extra-definitions=none extra-samples=none',
               msg='Creating the view without extra definitions and samples '
                   'does not make sense')
+
+    declare_das_conflicts()
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
@@ -312,26 +320,21 @@ class Eccodes(CMakePackage):
                     *patch_unix_ext_files, **kwargs)
 
     def setup_run_environment(self, env):
-        for variant_stem in ['definitions', 'samples']:
-            env_var_name = 'ECCODES_{0}_PATH'.format(
-                variant_stem.upper()
-                if variant_stem != 'definitions'
-                # Workaround for the inconsistent name:
-                else 'DEFINITION'
-            )
-
-            variant_name = 'extra-{0}'.format(variant_stem)
-            value = self.spec.variants[variant_name].value
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
 
             if '+memfs' in self.spec:
                 # The following is a marker, not a real path:
-                default_path = '/MEMFS/{0}'.format(variant_stem)
+                default_path = '/MEMFS/{0}'.format(das_type)
             elif '+create-view' in self.spec and value != 'none':
-                default_path = join_path(self.prefix.share.eccodes,
-                                         '{0}.all'.format(variant_stem))
+                default_path = join_path(
+                    self.prefix.share.eccodes,
+                    das_placement_dirname(das_type, 'all'))
             else:
-                default_path = join_path(self.prefix.share.eccodes,
-                                         variant_stem)
+                default_path = join_path(self.prefix.share.eccodes, das_type)
+
+            env_var_name = 'ECCODES_{0}_PATH'.format(
+                self._get_var_stem(das_type))
 
             env.prepend_path(env_var_name, default_path)
 
@@ -339,10 +342,9 @@ class Eccodes(CMakePackage):
                 continue
 
             for center in reversed(value.split(':')):
-                env.prepend_path(
-                    env_var_name,
-                    join_path(self.prefix.share.eccodes,
-                              '{0}.{1}'.format(variant_stem, center)))
+                center_path = join_path(self.prefix.share.eccodes,
+                                        das_placement_dirname(das_type, center))
+                env.prepend_path(env_var_name, center_path)
 
     @property
     def libs(self):
@@ -396,30 +398,30 @@ class Eccodes(CMakePackage):
                 'Fortran interface requires a Fortran compiler!')
 
     @run_before('cmake')
-    def prepare_extra_definitions_and_samples(self):
-        for variant_stem in ['definitions', 'samples']:
-            variant_name = 'extra-{0}'.format(variant_stem)
-            value = self.spec.variants[variant_name].value
+    def prepare_extra_das(self):
+        for das_type, das_dict in das.items():
+            value = self._get_das_value(das_type)
 
             if value == 'none':
                 continue
 
             for center in value.split(':'):
                 center_placement_path = join_path(
-                    self.stage.source_path, 'spack-{0}'.format(variant_stem),
-                    '{0}.{1}'.format(variant_stem, center))
+                    self.stage.source_path, 'spack-{0}'.format(das_type),
+                    das_placement_dirname(das_type, center))
 
                 # Make sure the directory exists to cover the case when no
                 # resources are assigned to the center:
                 mkdirp(center_placement_path)
 
-                for cp in _resources[variant_stem][center].get('copies', []):
+                # Copy files from the default definitions/samples directory:
+                for cp in das_dict[center].get('copies', ()):
                     if 'when' in cp and cp['when'] not in self.spec:
                         continue
 
                     for f in cp['files']:
-                        cp_src_path = join_path(self.stage.source_path,
-                                                variant_stem, f)
+                        cp_src_path = join_path(
+                            self.stage.source_path, das_type, f)
                         cp_dst_path = join_path(center_placement_path, f)
                         copy(cp_src_path, cp_dst_path)
 
@@ -433,38 +435,37 @@ class Eccodes(CMakePackage):
     @run_before('cmake')
     @when('+create-view+memfs')
     def create_memfs_view(self):
-        for variant_stem in ['definitions', 'samples']:
-            variant_name = 'extra-{0}'.format(variant_stem)
-            value = self.spec.variants[variant_name].value
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
 
             if value == 'none':
                 continue
 
-            # Path to the root view directory to be searched for files when
+            # Path to the root directory with extra definitions/samples:
+            das_destination_dir = join_path(self.stage.source_path,
+                                            'spack-{0}'.format(das_type))
+
+            # Path to the view directory to be searched for files when
             # generating the in-memory representation on definitions/samples:
-            view_dir = join_path(self.stage.source_path,
-                                 'spack-{0}'.format(variant_stem),
-                                 variant_stem)
+            view_dir = join_path(das_destination_dir, das_type)
 
             # List of the projected directories:
-            projected_dirs = [join_path(self.stage.source_path,
-                                        'spack-{0}'.format(variant_stem),
-                                        '{0}.{1}'.format(variant_stem, center))
-                              for center in value.split(':')]
-            projected_dirs.append(join_path(self.stage.source_path,
-                                            variant_stem))
+            projected_dirs = [
+                join_path(das_destination_dir,
+                          das_placement_dirname(das_type, center))
+                for center in value.split(':')]
+            projected_dirs.append(join_path(self.root_cmakelists_dir, das_type))
 
             # Create the view:
             self._create_view(view_dir, *projected_dirs)
 
             # Tell Cmake where to search for definitions/samples files when
             # generating their in-memory representation:
-            filter_file('${{PROJECT_SOURCE_DIR}}/{0}'.format(variant_stem),
+            filter_file('${{PROJECT_SOURCE_DIR}}/{0}'.format(das_type),
                         view_dir,
                         join_path(self.root_cmakelists_dir,
                                   'memfs', 'CMakeLists.txt'),
-                        string=True,
-                        backup=False)
+                        string=True, backup=False)
 
         if self.run_tests:
             # Run the tests using unmodified definitions/samples from the files:
@@ -525,50 +526,47 @@ class Eccodes(CMakePackage):
             args.append(self.define('PYTHON_EXECUTABLE', python.path))
 
         if '+create-view' in self.spec:
-            if '+memfs' in self.spec:
-                for variant_stem in ['definitions', 'samples']:
-                    variant_name = 'extra-{0}'.format(variant_stem)
-                    if self.spec.variants[variant_name].value != 'none':
-                        args.append(
-                            self.define(
-                                'ENABLE_INSTALL_ECCODES_{0}'.format(
-                                    variant_stem.upper()),
-                                True))
-            else:
-                for variant_stem in ['definitions', 'samples']:
-                    variant_name = 'extra-{0}'.format(variant_stem)
-                    if self.spec.variants[variant_name].value != 'none':
-                        cmake_variable_stem = (
-                            variant_stem.upper()
-                            if variant_stem != 'definitions'
-                            # Workaround for the inconsistent name:
-                            else 'DEFINITION'
-                        )
-                        args.append(
-                            self.define(
-                                'ECCODES_{0}_SUFF'.format(cmake_variable_stem),
-                                join_path('share', 'eccodes',
-                                          '{0}.all'.format(variant_stem))))
+            for das_type in das.keys():
+                if self._get_das_value(das_type) == 'none':
+                    continue
+
+                if '+memfs' in self.spec:
+                    # Enforce installation of the default definitions/samples to
+                    # let the user override the in-memory representation if
+                    # needed:
+                    var_name = 'ENABLE_INSTALL_ECCODES_{0}'.format(
+                        das_type.upper())
+                    var_value = True
+                else:
+                    # Make the view directory the default one to be searched for
+                    # the definitions/samples:
+                    var_name = 'ECCODES_{0}_SUFF'.format(
+                        self._get_var_stem(das_type))
+                    var_value = join_path(
+                        'share', 'eccodes',
+                        das_placement_dirname(das_type, 'all'))
+
+                args.append(self.define(var_name, var_value))
 
         return args
 
     @run_after('install')
-    def install_extra_definitions_and_samples(self):
-        for variant_stem in ['definitions', 'samples']:
-            variant_name = 'extra-{0}'.format(variant_stem)
-            value = self.spec.variants[variant_name].value
+    def install_extra_das(self):
+        for das_type, das_dict in das.items():
+            value = self._get_das_value(das_type)
 
             if value == 'none':
                 continue
 
             for center in value.split(':'):
-                center_dir = '{0}.{1}'.format(variant_stem, center)
+                center_dir = das_placement_dirname(das_type, center)
                 center_src_path = join_path(self.stage.source_path,
-                                            'spack-{0}'.format(variant_stem),
+                                            'spack-{0}'.format(das_type),
                                             center_dir)
 
+                # Generate README file for the curious users:
                 readme_msg = ['This directory contains extra {0} from {1}, '
-                              'fetched from:'.format(variant_stem, center)]
+                              'fetched from:'.format(das_type, center)]
                 for key in self.resources:
                     if key in self.spec:
                         for res in self.resources[key]:
@@ -586,9 +584,8 @@ class Eccodes(CMakePackage):
     @run_after('install')
     @when('+create-view~memfs')
     def create_file_view(self):
-        for variant_stem in ['definitions', 'samples']:
-            variant_name = 'extra-{0}'.format(variant_stem)
-            value = self.spec.variants[variant_name].value
+        for das_type in das.keys():
+            value = self._get_das_value(das_type)
 
             if value == 'none':
                 continue
@@ -596,11 +593,11 @@ class Eccodes(CMakePackage):
             # Path to the default directory (i.e. the one that the library
             # searches for the definitions/samples by default):
             default_dir = join_path(self.prefix.share.eccodes,
-                                    '{0}.all'.format(variant_stem))
+                                    das_placement_dirname(das_type, 'all'))
 
             # Path to the usual installation directory for the
             # definitions/samples:
-            usual_dir = join_path(self.prefix.share.eccodes, variant_stem)
+            usual_dir = join_path(self.prefix.share.eccodes, das_type)
 
             # Move the default definitions/samples to the usual directory:
             os.rename(default_dir, usual_dir)
@@ -609,9 +606,10 @@ class Eccodes(CMakePackage):
             mkdirp(default_dir)
 
             # List of the projected directories:
-            projected_dirs = [join_path(self.prefix.share.eccodes,
-                                        '{0}.{1}'.format(variant_stem, center))
-                              for center in value.split(':')]
+            projected_dirs = [
+                join_path(self.prefix.share.eccodes,
+                          das_placement_dirname(das_type, center))
+                for center in value.split(':')]
             projected_dirs.append(usual_dir)
 
             # Generate README file for the curious users:
@@ -619,10 +617,24 @@ class Eccodes(CMakePackage):
             with open(readme_path, 'w') as f:
                 f.write('This directory is a projection of {0} from the '
                         'following directories:\n'
-                        '{1}'.format(variant_stem, '\n'.join(projected_dirs)))
+                        '{1}'.format(das_type, '\n'.join(projected_dirs)))
             set_install_permissions(readme_path)
 
+            # Create the view:
             self._create_view(default_dir, *projected_dirs)
+
+    def check(self):
+        # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
+        with working_dir(self.build_directory):
+            ctest()
+
+    def _get_das_value(self, das_type):
+        return self.spec.variants['extra-{0}'.format(das_type)].value
+
+    @staticmethod
+    def _get_var_stem(das_type):
+        # Workaround for the inconsistent name:
+        return das_type.upper() if das_type != 'definitions' else 'DEFINITION'
 
     @staticmethod
     def _create_view(dst_path, *src_paths):
@@ -650,8 +662,3 @@ class Eccodes(CMakePackage):
 
         with open(fname, 'w') as f:
             f.writelines(lines)
-
-    def check(self):
-        # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
-        with working_dir(self.build_directory):
-            ctest()
