@@ -685,11 +685,8 @@ class Openmpi(AutotoolsPackage):
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
 
-        if spec.satisfies('@2.0.0:'):
-            if 'fabrics=xpmem' in spec and 'platform=cray' in spec:
-                config_args.append('--with-cray-xpmem')
-            else:
-                config_args.append('--without-cray-xpmem')
+        if spec.satisfies('@2.0.0: fabrics=xpmem platform=cray'):
+            config_args.append('--with-cray-xpmem')
 
         # Schedulers
         if 'schedulers=auto' not in spec:
