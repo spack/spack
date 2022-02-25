@@ -908,13 +908,11 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if not follow_nonexisting and not os.path.exists(dest_child):
-                print("Not entering", dest_child)
                 continue
 
             # When a symlink, ensure it's inside the prefix.
             if os.path.islink(source_child):
                 if not follow_links:
-                    print("Not following", source_child, "cause disabled")
                     continue
 
                 # isdir already made sure the symlink exists
@@ -922,7 +920,6 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
                 # Symlink to dir out of the prefix
                 if not symlink_dir_realpath.startswith(canonical_real_source_path):
-                    print("Not following", source_child, "cause not in prefix")
                     continue
 
             for t in traverse_tree(source_root, dest_root, rel_child, **kwargs):
