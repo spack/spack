@@ -19,6 +19,7 @@ class PyOnnx(PythonPackage):
     homepage = "https://github.com/onnx/onnx"
     pypi = "Onnx/onnx-1.6.0.tar.gz"
 
+    version('1.8.1', sha256='9d65c52009a90499f8c25fdfe5acda3ac88efe0788eb1d5f2575a989277145fb')
     version('1.6.0', sha256='3b88c3fe521151651a0403c4d131cb2e0311bd28b753ef692020a432a81ce345')
     version('1.5.0', sha256='1a584a4ef62a6db178c257fffb06a9d8e61b41c0a80bfd8bcd8a253d72c4b0b4')
 
