@@ -82,44 +82,6 @@ class LlvmAmdgpu(CMakePackage):
     root_cmakelists_dir = 'llvm'
     install_targets = ['clang-tidy', 'install']
 
-    for d_version, d_shasum in [
-        ('5.0.0',  'da1bbc694bd930a504406eb0a0018c2e317d8b2c136fb2cab8de426870efe9a8')
-    ]:
-        resource(
-            name='comgr',
-            url='https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-{0}.tar.gz'.format(d_version),
-            sha256=d_shasum,
-            expand=True,
-            destination='',
-            placement='comgr',
-            when='@{0}'.format(d_version)
-        )
-    resource(
-        name='comgr',
-        placement='comgr',
-        git='https://github.com/RadeonOpenCompute/ROCm-CompilerSupport.git',
-        branch='amd-stg-open',
-        when='@master'
-    )
-    for d_version, d_shasum in [
-        ('5.0.0',  '61644365ea2b09fa7ec22f3dbdb74f2b6b1daa34b180138da9e0c856006a373e')
-    ]:
-        resource(
-            name='hsa-rocr-dev',
-            url='https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-{0}.tar.gz'.format(d_version),
-            sha256=d_shasum,
-            expand=True,
-            destination='',
-            placement='hsa-rocr-dev',
-            when='@{0}'.format(d_version)
-        )
-    resource(
-        name='hsa-rocr-dev',
-        placement='hsa-rocr-dev',
-        git='https://github.com/RadeonOpenCompute/ROCR-Runtime.git',
-        branch='master',
-        when='@master'
-    )
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
         ('5.0.0',  '83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0'),
@@ -160,22 +122,22 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
+        if self.spec.satisfies('@4.3.0:'):
+            args = [
+                self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF'),
+                self.define('LLLVM_ENABLE_ZLIB', 'ON'),
+                self.define('CLANG_DEFAULT_LINKER', 'lld')
+            ]
         if self.spec.satisfies('@4.3.0:4.5.2'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
-            args = [
-                self.define('LIBCXX_ENABLE_SHARED', 'OFF'),
-                self.define('LIBCXX_ENABLE_STATIC', 'ON'),
-                self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
-                self.define('LIBCXX_INSTALL_HEADERS', 'OFF'),
-                self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
-                self.define('LIBCXXABI_ENABLE_STATIC', 'ON'),
-                self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF')
-            ]
-        if self.spec.satisfies('@4.3.0:'):
-            args.append(self.define('LLVM_ENABLE_Z3_SOLVER', 'OFF'))
-            args.append(self.define('LLLVM_ENABLE_ZLIB', 'ON'))
-            args.append(self.define('CLANG_DEFAULT_LINKER', 'lld'))
+            args.append(self.define('LIBCXX_ENABLE_SHARED', 'OFF'))
+            args.append(self.define('LIBCXX_ENABLE_STATIC', 'ON'))
+            args.append(self.define('LIBCXX_INSTALL_LIBRARY', 'OFF'))
+            args.append(self.define('LIBCXX_INSTALL_HEADERS', 'OFF'))
+            args.append(self.define('LIBCXXABI_ENABLE_SHARED', 'OFF'))
+            args.append(self.define('LIBCXXABI_ENABLE_STATIC', 'ON'))
+            args.append(self.define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF'))
 
         if '+openmp' in self.spec:
             llvm_projects.append('openmp')
@@ -187,10 +149,7 @@ class LlvmAmdgpu(CMakePackage):
 
         if self.spec.satisfies('@5.0.0:'):
             args.append(self.define('CLANG_ENABLE_AMDCLANG', 'ON'))
-            args.append(self.define('SANITIZER_AMDGPU', '1'))
-            args.append(self.define('HSA_INCLUDE_PATH', self.stage.source_path + '/hsa-rocr-dev/src/inc'))
-            args.append(self.define('COMGR_INCLUDE_PATH',
-                                    self.stage.source_path + '/comgr/lib/comgr/include'))
+
         # Enable rocm-device-libs as a external project
         if '+rocm-device-libs' in self.spec:
             dir = os.path.join(self.stage.source_path, 'rocm-device-libs')
@@ -236,13 +195,6 @@ class LlvmAmdgpu(CMakePackage):
                     define("CMAKE_C_COMPILER", spec.prefix.bin + "/clang"),
                     define("CMAKE_CXX_COMPILER", spec.prefix.bin + "/clang++"),
                     define("CMAKE_INSTALL_PREFIX", spec.prefix),
-                    define('LIBCXX_ENABLE_SHARED', 'OFF'),
-                    define('LIBCXX_ENABLE_STATIC', 'ON'),
-                    define('LIBCXX_INSTALL_LIBRARY', 'OFF'),
-                    define('LIBCXX_INSTALL_HEADERS', 'OFF'),
-                    define('LIBCXXABI_ENABLE_SHARED', 'OFF'),
-                    define('LIBCXXABI_ENABLE_STATIC', 'ON'),
-                    define('LIBCXXABI_INSTALL_STATIC_LIBRARY', 'OFF')
                 ]
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
