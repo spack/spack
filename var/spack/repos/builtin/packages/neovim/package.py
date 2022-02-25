@@ -53,5 +53,7 @@ class Neovim(CMakePackage):
     depends_on('libluv@1.30.0:', type='link', when='@0.4:,stable')
     depends_on('tree-sitter', when='@0.5:')
 
+    patch('ncurses.patch')
+
     def cmake_args(self):
         return ['-DPREFER_LUA=ON']

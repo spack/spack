@@ -39,7 +39,7 @@ class Lua(Package):
 
     provides('lua-lang')
 
-    depends_on('ncurses+termlib')
+    depends_on('ncurses~termlib')
     depends_on('readline')
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
     depends_on('unzip', type='run')

@@ -29,7 +29,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
-    variant('termlib', default=True,
+    variant('termlib', default=False,
             description='Enables termlib features. This is an extra '
                         'lib and optional internal dependency.')
     # Build ncurses with ABI compaitibility.
