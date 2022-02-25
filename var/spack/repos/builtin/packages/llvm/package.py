@@ -238,6 +238,8 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@:5.0", when="@8:")
     # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
     conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
 
     # When these versions are concretized, but not explicitly with +libcxx, these
     # conflicts will enable clingo to set ~libcxx, making the build successful:
