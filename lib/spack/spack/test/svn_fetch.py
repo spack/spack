@@ -29,7 +29,8 @@ def test_fetch(
         secure,
         mock_svn_repository,
         config,
-        mutable_mock_repo
+        mutable_mock_repo,
+        monkeypatch
 ):
     """Tries to:
 
@@ -48,7 +49,7 @@ def test_fetch(
     spec = Spec('svn-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('svn')] = t.args
+    monkeypatch.setitem(pkg.versions, ver('svn'), t.args)
 
     # Enter the stage directory and check some properties
     with pkg.stage:
