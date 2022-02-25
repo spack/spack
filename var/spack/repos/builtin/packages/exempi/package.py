@@ -37,7 +37,7 @@ class Exempi(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-boost={0}'.format(self.spec['boost'].prefix)]
 
-        if self.spec.satisfies('polatform=darwin'):
+        if self.spec.satisfies('platform=darwin'):
             args += ['--with-darwinports', '--with-fink']
 
         return args
