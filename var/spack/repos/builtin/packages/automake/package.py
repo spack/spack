@@ -25,6 +25,7 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on('autoconf', type='build')
     depends_on('perl', type=('build', 'run'))
+    depends_on('gzip', type='build')
 
     build_directory = 'spack-build'
 
