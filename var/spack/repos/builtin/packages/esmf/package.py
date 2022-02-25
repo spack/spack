@@ -18,6 +18,8 @@ class Esmf(MakefilePackage):
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = 'https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz'
 
+    maintainers = ['climbfuji']
+
     version('8.2.0',  sha256='3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485')
     version('8.1.1',  sha256='58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75')
     version('8.0.1',  sha256='9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84')
