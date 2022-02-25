@@ -21,6 +21,7 @@ spack:
         - ffmpeg
         - gdb
         - git
+        - git-lfs
         - graphviz
         - hpctoolkit
         - hpcviewer
@@ -89,6 +90,7 @@ spack:
     - freetype
     - gdb~python
     - git
+    - git-lfs
     - glew
     - gmsh+metis~mpi+oce+openmp+shared
     - graphviz
