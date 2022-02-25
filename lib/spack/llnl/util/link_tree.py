@@ -73,44 +73,50 @@ class LinkTree(object):
 
     def get_file_map(self, dest_root, ignore):
         merge_map = {}
-        kwargs = {'follow_nonexisting': True, 'ignore': ignore}
-        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore,
+                                       follow_links=True, follow_nonexisting=True):
             if not os.path.isdir(src):
                 merge_map[src] = dest
         return merge_map
 
     def merge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
-            if os.path.isdir(src):
-                if not os.path.exists(dest):
-                    mkdirp(dest)
-                    continue
+        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore,
+                                       follow_links=True, follow_nonexisting=True):
+            if not os.path.isdir(src):
+                continue
 
-                if not os.path.isdir(dest):
-                    raise ValueError("File blocks directory: %s" % dest)
+            if not os.path.exists(dest):
+                mkdirp(dest)
+                continue
 
-                # mark empty directories so they aren't removed on unmerge.
-                if not os.listdir(dest):
-                    marker = os.path.join(dest, empty_file_name)
-                    touch(marker)
+            if not os.path.isdir(dest):
+                raise ValueError("File blocks directory: %s" % dest)
+
+            # mark empty directories so they aren't removed on unmerge.
+            if not os.listdir(dest):
+                marker = os.path.join(dest, empty_file_name)
+                touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(
-                self._root, dest_root, ignore=ignore, order='post'):
-            if os.path.isdir(src):
-                if not os.path.exists(dest):
-                    continue
-                elif not os.path.isdir(dest):
-                    raise ValueError("File blocks directory: %s" % dest)
+        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore,
+                                       order='post', follow_links=True,
+                                       follow_nonexisting=True):
+            if not os.path.isdir(src):
+                continue
 
-                # remove directory if it is empty.
-                if not os.listdir(dest):
-                    shutil.rmtree(dest, ignore_errors=True)
+            if not os.path.exists(dest):
+                continue
+            elif not os.path.isdir(dest):
+                raise ValueError("File blocks directory: %s" % dest)
 
-                # remove empty dir marker if present.
-                marker = os.path.join(dest, empty_file_name)
-                if os.path.exists(marker):
-                    os.remove(marker)
+            # remove directory if it is empty.
+            if not os.listdir(dest):
+                shutil.rmtree(dest, ignore_errors=True)
+
+            # remove empty dir marker if present.
+            marker = os.path.join(dest, empty_file_name)
+            if os.path.exists(marker):
+                os.remove(marker)
 
     def merge(self, dest_root, ignore_conflicts=False, ignore=None,
               link=os.symlink, relative=False):

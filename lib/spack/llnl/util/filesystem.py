@@ -875,7 +875,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
     follow_nonexisting = kwargs.get('follow_nonexisting', True)
-    follow_links = kwargs.get('follow_link', False)
+    follow_links = kwargs.get('follow_links', False)
 
     # Yield in pre or post order?
     order = kwargs.get('order', 'pre')
@@ -892,6 +892,8 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     source_path = os.path.join(source_root, rel_path)
     dest_path = os.path.join(dest_root, rel_path)
 
+    canonical_real_source_path = os.path.realpath(source_path)
+
     # preorder yields directories before children
     if order == 'pre':
         yield (source_path, dest_path)
@@ -902,19 +904,29 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         rel_child = os.path.join(rel_path, f)
 
         # Treat as a directory
-        # TODO: for symlinks, os.path.isdir looks for the link target. If the
-        # target is relative to the link, then that may not resolve properly
-        # relative to our cwd - see resolve_link_target_relative_to_the_link
-        if os.path.isdir(source_child) and (
-                follow_links or not os.path.islink(source_child)):
-
+        if os.path.isdir(source_child):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
-            if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(
-                    source_root, dest_root, rel_child, **kwargs)
-                for t in tuples:
-                    yield t
+            if not follow_nonexisting and not os.path.exists(dest_child):
+                print("Not entering", dest_child)
+                continue
+
+            # When a symlink, ensure it's inside the prefix.
+            if os.path.islink(source_child):
+                if not follow_links:
+                    print("Not following", source_child, "cause disabled")
+                    continue
+
+                # isdir already made sure the symlink exists
+                symlink_dir_realpath = os.path.realpath(source_child)
+
+                # Symlink to dir out of the prefix
+                if not symlink_dir_realpath.startswith(canonical_real_source_path):
+                    print("Not following", source_child, "cause not in prefix")
+                    continue
+
+            for t in traverse_tree(source_root, dest_root, rel_child, **kwargs):
+                yield t
 
         # Treat as a file.
         elif not ignore(os.path.join(rel_path, f)):
