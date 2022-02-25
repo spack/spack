@@ -89,7 +89,8 @@ def test_fetch(type_of_test,
                mock_git_repository,
                config,
                mutable_mock_repo,
-               git_version):
+               git_version,
+               monkeypatch):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -107,7 +108,7 @@ def test_fetch(type_of_test,
     spec = Spec('git-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('git')] = t.args
+    monkeypatch.setitem(pkg.versions, ver('git'), t.args)
 
     # Enter the stage directory and check some properties
     with pkg.stage:
@@ -137,7 +138,9 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
+def test_debug_fetch(
+        mock_packages, type_of_test, mock_git_repository, config, monkeypatch
+):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -146,7 +149,7 @@ def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     spec = Spec('git-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('git')] = t.args
+    monkeypatch.setitem(pkg.versions, ver('git'), t.args)
 
     # Fetch then ensure source path exists
     with pkg.stage:
@@ -176,7 +179,7 @@ def test_needs_stage():
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
-                       config, mutable_mock_repo):
+                       config, mutable_mock_repo, monkeypatch):
     """Ensure that we can clone a full repository."""
 
     if git_version < ver('1.7.1'):
@@ -193,7 +196,7 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
     pkg = spack.repo.get(spec)
     args = copy.copy(t.args)
     args['get_full_repo'] = get_full_repo
-    pkg.versions[ver('git')] = args
+    monkeypatch.setitem(pkg.versions, ver('git'), args)
 
     with pkg.stage:
         with spack.config.override('config:verify_ssl', secure):
@@ -222,7 +225,7 @@ def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize("submodules", [True, False])
 def test_gitsubmodule(submodules, mock_git_repository, config,
-                      mutable_mock_repo):
+                      mutable_mock_repo, monkeypatch):
     """
     Test GitFetchStrategy behavior with submodules
     """
@@ -235,7 +238,7 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
     pkg = spack.repo.get(spec)
     args = copy.copy(t.args)
     args['submodules'] = submodules
-    pkg.versions[ver('git')] = args
+    monkeypatch.setitem(pkg.versions, ver('git'), args)
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
         for submodule_count in range(2):
@@ -249,7 +252,9 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
+def test_gitsubmodules_delete(
+        mock_git_repository, config, mutable_mock_repo, monkeypatch
+):
     """
     Test GitFetchStrategy behavior with submodules_delete
     """
@@ -264,7 +269,7 @@ def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
     args['submodules'] = True
     args['submodules_delete'] = ['third_party/submodule0',
                                  'third_party/submodule1']
-    pkg.versions[ver('git')] = args
+    monkeypatch.setitem(pkg.versions, ver('git'), args)
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
         file_path = os.path.join(pkg.stage.source_path,
