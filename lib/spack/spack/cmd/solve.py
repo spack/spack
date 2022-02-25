@@ -164,10 +164,10 @@ def solve(parser, args):
 
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
+    setup_only = set(show) == {'asp'}
     if not args.together_where_possible:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
-        setup_only = set(show) == {'asp'}
         result = solver.solve(
             specs,
             out=output,
@@ -187,4 +187,5 @@ def solve(parser, args):
                 tty.msg("")
             else:
                 print("% END ROUND {0}\n".format(idx))
-            _process_result(result, show, required_format, kwargs)
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)
