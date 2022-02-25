@@ -160,6 +160,14 @@ class Esmf(MakefilePackage):
             os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
 
         #######
+        # OS  #
+        #######
+
+        # ESMF_OS must be set for Cray systems
+        if 'platform=cray' in self.spec:
+            os.environ['ESMF_OS']='Unicos'
+
+        #######
         # MPI #
         #######
 
