@@ -5,6 +5,8 @@
 
 from spack import *
 
+import os
+
 
 class LibflameBase(AutotoolsPackage):
     """Base class for building Libflame, shared with the AMD
@@ -55,6 +57,10 @@ class LibflameBase(AutotoolsPackage):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
             flags.append('-std=gnu99')
+        elif self.spec.satisfies('^blis') and name == 'ldflags':
+            lib = os.path.join(self.spec['blis'].prefix.lib, 'libblis.so')
+            flags.append(LibraryList(lib).ld_flags)
+            return (None, flags, None)
         return (flags, None, None)
 
     def enable_or_disable_threads(self):
