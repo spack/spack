@@ -69,15 +69,9 @@ class Charmpp(Package):
     )
 
     # Communication mechanisms (choose exactly one)
-    # - Default to 'multicore' on macOS because that's probably the right choice
-    #   for a personal machine.
-    if sys.platform == "darwin":
-        backend_default = "multicore"
-    else:
-        backend_default = "netlrts"
     variant(
         "backend",
-        default=backend_default,
+        default="netlrts",
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
                 "ucx", "ofi", "pami", "pamilrts"),
         description="Set the backend to use"
