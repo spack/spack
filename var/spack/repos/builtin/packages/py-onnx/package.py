@@ -28,6 +28,7 @@ class PyOnnx(PythonPackage):
     depends_on('protobuf@:3.17')
     depends_on('py-protobuf+cpp@:3.17', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.16.6:', type=('build', 'run'), when='@1.8.1:')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-typing@3.6.4:', when='^python@:3.4', type=('build', 'run'))
     depends_on('py-typing-extensions@3.6.2.1:', type=('build', 'run'))
