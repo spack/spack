@@ -238,7 +238,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
-    variant('gpfs', default=True, description='Enable GPFS support (if present)')
+    variant('gpfs', default=False, description='Enable GPFS support')
     variant('singularity', default=False,
             description="Build support for the Singularity container")
     variant('lustre', default=False,
