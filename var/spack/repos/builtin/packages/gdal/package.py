@@ -187,8 +187,8 @@ class Gdal(AutotoolsPackage):
     conflicts('+pcre2', when='+pcre', msg='+pcre2 and +pcre are mutually exclusive')
 
     # https://github.com/OSGeo/gdal/issues/3782
-    patch('https://github.com/OSGeo/gdal/pull/3786.patch', when='@3.3.0', level=2,
-          sha256='5e14c530289bfa1257277357baa8d485f852ea480152fb150d152c85af8d01f8')
+    patch('https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1', when='@3.3.0', level=2,
+          sha256='9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce')
 
     executables = ['^gdal-config$']
 
