@@ -19,6 +19,9 @@ class Libtermkey(Package):
 
     depends_on('libtool', type='build')
     depends_on('ncurses')
+    depends_on('pkgconfig')
+
+    patch('deps.patch')
 
     def install(self, spec, prefix):
         make()

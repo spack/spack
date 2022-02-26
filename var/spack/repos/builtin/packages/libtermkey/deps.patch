@@ -1,0 +1,39 @@
+--- a/Makefile
++++ b/Makefile
+@@ -24,14 +24,18 @@ endif
+ ifeq ($(call pkgconfig, --atleast-version=0.1.0 unibilium && echo 1),1)
+   override CFLAGS +=$(call pkgconfig, --cflags unibilium) -DHAVE_UNIBILIUM
+   override LDFLAGS+=$(call pkgconfig, --libs   unibilium)
++  DEPS="unibilium = 0.1.0"
+ else ifeq ($(call pkgconfig, tinfo && echo 1),1)
+   override CFLAGS +=$(call pkgconfig, --cflags tinfo)
+   override LDFLAGS+=$(call pkgconfig, --libs   tinfo)
++  DEPS=tinfo
+ else ifeq ($(call pkgconfig, ncursesw && echo 1),1)
+   override CFLAGS +=$(call pkgconfig, --cflags ncursesw)
+   override LDFLAGS+=$(call pkgconfig, --libs   ncursesw)
++  DEPS=ncursesw
+ else
+   override LDFLAGS+=-lncurses
++  DEPS=ncurses
+ endif
+ 
+ OBJECTS=termkey.lo driver-csi.lo driver-ti.lo
+@@ -110,7 +114,7 @@ install-inc: termkey.h
+ 	install -d $(DESTDIR)$(INCDIR)
+ 	install -m644 termkey.h $(DESTDIR)$(INCDIR)
+ 	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
+-	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
++	sed "s,@LIBDIR@,$(LIBDIR),;s,@INCDIR@,$(INCDIR),;s,@DEPS@,$(DEPS)," <termkey.pc.in >$(DESTDIR)$(LIBDIR)/pkgconfig/termkey.pc
+ 
+ install-lib: $(LIBRARY)
+ 	install -d $(DESTDIR)$(LIBDIR)
+--- a/termkey.pc.in
++++ b/termkey.pc.in
+@@ -4,5 +4,6 @@ includedir=@INCDIR@
+ Name: termkey
+ Description: Abstract terminal key input library
+ Version: 0.18
++Requires: @DEPS@
+ Libs: -L${libdir} -ltermkey
+ Cflags: -I${includedir}
