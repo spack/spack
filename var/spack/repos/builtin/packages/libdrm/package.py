@@ -16,6 +16,7 @@ class Libdrm(Package):
 
     maintainers = ['wdconinc']
 
+    version('2.4.110', sha256='eecee4c4b47ed6d6ce1a9be3d6d92102548ea35e442282216d47d05293cf9737')
     version('2.4.109', sha256='629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26')
     version('2.4.108', sha256='a1d7948cbc536763fde14b4beb5e4da7867607966d4cf46301087e8b8fe3d6a0')
     version('2.4.107', sha256='c554cef03b033636a975543eab363cc19081cb464595d3da1ec129f87370f888')
