@@ -44,22 +44,25 @@ class Embree(CMakePackage):
             '-DEMBREE_TUTORIALS=OFF',
             '-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON',
             self.define_from_variant('EMBREE_ISPC_SUPPORT', 'ispc'),
-
-            # code selection and defines controlling namespace names are based on
-            # defines controlled by compiler flags, so disable ISAs below compiler
-            # flags chosen by spack
-            self.define('EMBREE_ISA_SSE2', 'sse4_2' not in spec.target),
-            self.define('EMBREE_ISA_SSE42', 'avx' not in spec.target),
-            self.define('EMBREE_ISA_AVX', 'avx2' not in spec.target),
-            self.define('EMBREE_ISA_AVX2', 'avx512' not in spec.target),
-            self.define('EMBREE_ISA_AVX512SKX', True),
         ]
 
-        if spec.satisfies('%gcc@:7'):
-            # remove unsupported -mprefer-vector-width=256, otherwise copied
-            # from common/cmake/gnu.cmake
-            args.append('-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd'
-                        ' -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt'
-                        ' -mbmi -mbmi2')
+        if spec.satisfies('target=x86_64:') or spec.satisfies('target=x86:'):
+            args.extend([
+                # code selection and defines controlling namespace names are based on
+                # defines controlled by compiler flags, so disable ISAs below compiler
+                # flags chosen by spack
+                self.define('EMBREE_ISA_SSE2', 'sse4_2' not in spec.target),
+                self.define('EMBREE_ISA_SSE42', 'avx' not in spec.target),
+                self.define('EMBREE_ISA_AVX', 'avx2' not in spec.target),
+                self.define('EMBREE_ISA_AVX2', 'avx512' not in spec.target),
+                self.define('EMBREE_ISA_AVX512SKX', True),
+            ])
+
+            if spec.satisfies('%gcc@:7'):
+                # remove unsupported -mprefer-vector-width=256, otherwise copied
+                # from common/cmake/gnu.cmake
+                args.append('-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd'
+                            ' -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt'
+                            ' -mbmi -mbmi2')
 
         return args
