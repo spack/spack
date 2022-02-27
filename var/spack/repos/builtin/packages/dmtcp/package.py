@@ -13,7 +13,7 @@ class Dmtcp(AutotoolsPackage):
 
     homepage = "http://dmtcp.sourceforge.net/"
     url      = "https://sourceforge.net/projects/dmtcp/files/2.6.0/dmtcp-2.6.0.tar.gz/download"
-    git      = "https://github.com/dmtcp/dmtcp.git" 
+    git      = "https://github.com/dmtcp/dmtcp.git"
 
     version('master', branch='master')
     version('2.6.0', sha256='3ed62a86dd0cb9c828b93ee8c7c852d6f9c96a0efa48bcfe867521adf7bced68')
