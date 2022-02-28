@@ -171,13 +171,9 @@ class Superlu(CMakePackage):
 
         return config_args
 
-    def run_superlu_test(self, test_dir, exe):
-        self.run_test(os.environ['CC'],
-                      options=['-I{0}'.format(self.prefix.include),
-                               '-L{0}'.format(self.prefix.lib),
-                               '-L{0}'.format(self.spec['blas'].prefix.lib),
-                               join_path(test_dir, 'superlu.c'), '-o', exe,
-                               '-lsuperlu', '-lopenblas'],
+    def run_superlu_test(self, test_dir, exe, args):
+        self.run_test('make',
+                      options=args,
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
@@ -202,17 +198,11 @@ class Superlu(CMakePackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              self.examples_src_dir)
+        exe = 'superlu'
 
-        if not os.path.exists(test_dir):
-            tty.warn('Skipping superlu test: missing required {0}'.format(test_dir))
+        if not os.path.isfile(join_path(test_dir, '{0}.c'.format(exe))):
+            tty.warn('Skipping superlu test:'
+                     'missing file {0}.c'.format(exe))
             return
 
-        #self.run_superlu_test(test_dir, 'superlu')
-        #return
-
-        with working_dir(test_dir, create=False):
-            make(*args, parallel=False)
-            self.run_test('./superlu',
-                          purpose='Smoke test for superlu',
-                          work_dir='.')
-            make('clean')
+        self.run_superlu_test(test_dir, exe, args)
