@@ -17,7 +17,7 @@ class PyNbclassic(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    # TODO: replace this after the concretizer learns how to concretize separate build deps
+    # TODO: replace this after concretizer learns how to concretize separate build deps
     depends_on('py-jupyter-packaging11', when='@0.3.3:', type='build')
     # depends_on('py-jupyter-packaging@0.9:1', when='@0.3.3:', type='build')
     depends_on('py-jupyter-server@1.8:1', type=('build', 'run'))
