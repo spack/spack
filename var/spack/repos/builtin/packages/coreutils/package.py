@@ -32,7 +32,7 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
           sha256='5878894375a8fda98150783430b30c0b7104899dc5522034ebcaf8c961183b7e')
 
     build_directory = 'spack-build'
-    executables = [r'^ls$']
+    executables = [r'^md5sum$']
 
     def configure_args(self):
         spec = self.spec
