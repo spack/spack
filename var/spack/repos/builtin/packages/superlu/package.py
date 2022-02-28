@@ -136,9 +136,9 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format('cc'),
-            'FORTRAN    = {0}'.format('fc'),
-            'LOADER     = {0}'.format('cc'),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
@@ -162,9 +162,9 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format(env['CC']),
+            'FORTRAN    = {0}'.format(env['FC']),
+            'LOADER     = {0}'.format(env['CC']),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
