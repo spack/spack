@@ -17,7 +17,7 @@ class PyCiSdr(PythonPackage):
 
     version('0.0.0', sha256='a1387f39ccd55cce034e2c01000a0a337b3729d8a5010b42c5381d8c820fa4bb')
 
-    depends_on('python@3.6:',           type=('build', 'run'))
+    depends_on('python@3.6:3',          type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
     depends_on('py-torch',              type=('build', 'run'))
     depends_on('py-numpy',              type=('build', 'run'))
