@@ -53,7 +53,7 @@ class RPackage(PackageBase):
         if self.cran:
             return (
                 'https://cloud.r-project.org/src/contrib/'
-                + self.cran + '_' + str(list(self.versions)[0]) + '.tar.gz'
+                + self.cran + '_' + str(0) + '.tar.gz'
             )
 
     @property
