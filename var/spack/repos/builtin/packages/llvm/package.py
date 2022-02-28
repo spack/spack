@@ -354,7 +354,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch('llvm13-thread.patch', when='@13: %fj')
 
     # avoid build failed with Fujitsu compiler
-    patch('llvm13-fujitsu.patch', when='@13.0.0 %fj')
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
