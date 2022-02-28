@@ -37,6 +37,10 @@ class NetcdfCxx4(AutotoolsPackage):
 
     conflicts('~shared', when='~static')
 
+    patch('https://github.com/Unidata/netcdf-cxx4/commit/e7cc5bab02cf089dc79616456a0a951fee979fe9.patch',
+          sha256='4ddf6db9dc0c5f754cb3d68b1dbef8c385cf499f6e5df8fbccae3749336ba84a',
+          when='@:4.3.1 platform=darwin')
+
     force_autoreconf = True
 
     def flag_handler(self, name, flags):
@@ -45,13 +49,8 @@ class NetcdfCxx4(AutotoolsPackage):
         elif name == 'cppflags':
             flags.append('-I' + self.spec['netcdf-c'].prefix.include)
         elif name == 'ldflags':
-            # We need to specify LDFLAGS to get correct dependency_libs
-            # in libnetcdf_c++.la, so packages that use libtool for linking
-            # can correctly link to all the dependencies even when the
-            # building takes place outside of Spack environment, i.e.
-            # without Spack's compiler wrappers.
-            config_flags = [self.spec['netcdf-c'].libs.search_flags]
-            # On macOS, we also need to add this to ldflags
+            # On macOS, we need to explicitly add the linker flags
+            # for the netcdf-c library.
             if self.spec.satisfies("platform=darwin"):
                 flags = [self.spec['netcdf-c'].libs.search_flags, 
                          self.spec['netcdf-c'].libs.link_flags] + flags
@@ -73,8 +72,7 @@ class NetcdfCxx4(AutotoolsPackage):
         netcdf_c_spec = self.spec['netcdf-c']
         if '+mpi' in netcdf_c_spec or '+parallel-netcdf' in netcdf_c_spec:
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
-            config_args.append('FC=%s' % self.spec['mpi'].mpifc)
-            config_args.append('F77=%s' % self.spec['mpi'].mpif77)
+            config_args.append('CXX=%s' % self.spec['mpi'].mpicxx)
 
         if '+static' in self.spec:
             config_args.append('--enable-static')
@@ -97,15 +95,3 @@ class NetcdfCxx4(AutotoolsPackage):
             config_args.append('--disable-doxygen')
 
         return config_args
-
-    @when('@:4.3.1')
-    def build(self, spec, prefix):
-        if spec.satisfies("platform=darwin"):
-            # If on macos, rename the file "VERSION" so it doesn't collide with the
-            # c++ include file (named "version"). Note this collision occurs since macos
-            # uses a case-insensitive file system.
-            #
-            # Unidata has fixed this in their development track:
-            #   https://github.com/Unidata/netcdf-cxx4/commit/41c0233cb964a3ee1d4e5db5448cd28d617925fb
-            os.rename('VERSION', 'config.VERSION')
-        super(NetcdfCxx4, self).build(spec, prefix)
