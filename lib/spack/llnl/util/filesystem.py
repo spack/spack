@@ -927,7 +927,7 @@ def traverse_tree(source_root, dest_root, rel_path='', follow_nonexisting=True,
                 yield t
 
         # Treat as a file.
-        elif not ignore(os.path.join(rel_path, f)):
+        elif not ignore(rel_child):
             yield (source_child, dest_child)
 
     if order == 'post':
