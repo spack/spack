@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -24,7 +25,7 @@ class NetcdfCxx4(AutotoolsPackage):
     variant('static', default=True, description='Enable building static libraries')
     variant('shared', default=True, description='Enable shared library')
     variant('pic', default=True, description='Produce position-independent code (for shared libs)')
-    variant('doxygen', default=True, description='Enable doxygen docs')
+    variant('doc', default=False, description='Enable doxygen docs')
 
     depends_on('netcdf-c')
 
@@ -32,7 +33,7 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
-    depends_on('doxygen', when='+doxygen', type='build')
+    depends_on('doxygen', when='+doc', type='build')
 
     conflicts('~shared', when='~static')
 
@@ -43,7 +44,17 @@ class NetcdfCxx4(AutotoolsPackage):
             flags.append(self.compiler.cc_pic_flag)
         elif name == 'cppflags':
             flags.append('-I' + self.spec['netcdf-c'].prefix.include)
-
+        elif name == 'ldflags':
+            # We need to specify LDFLAGS to get correct dependency_libs
+            # in libnetcdf_c++.la, so packages that use libtool for linking
+            # can correctly link to all the dependencies even when the
+            # building takes place outside of Spack environment, i.e.
+            # without Spack's compiler wrappers.
+            config_flags = [self.spec['netcdf-c'].libs.search_flags]
+            # On macOS, we also need to add this to ldflags
+            if self.spec.satisfies("platform=darwin"):
+                flags = [self.spec['netcdf-c'].libs.search_flags, 
+                         self.spec['netcdf-c'].libs.link_flags] + flags
         return (None, None, flags)
 
     @property
@@ -55,6 +66,15 @@ class NetcdfCxx4(AutotoolsPackage):
 
     def configure_args(self):
         config_args = []
+
+        # We need to build with MPI wrappers if either of the parallel I/O
+        # features is enabled in netcdf-c:
+        # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
+        netcdf_c_spec = self.spec['netcdf-c']
+        if '+mpi' in netcdf_c_spec or '+parallel-netcdf' in netcdf_c_spec:
+            config_args.append('CC=%s' % self.spec['mpi'].mpicc)
+            config_args.append('FC=%s' % self.spec['mpi'].mpifc)
+            config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         if '+static' in self.spec:
             config_args.append('--enable-static')
@@ -71,9 +91,21 @@ class NetcdfCxx4(AutotoolsPackage):
         else:
             config_args.append('--without-pic')
 
-        if '+doxygen' in self.spec:
+        if '+doc' in self.spec:
             config_args.append('--enable-doxygen')
         else:
             config_args.append('--disable-doxygen')
 
         return config_args
+
+    @when('@:4.3.1')
+    def build(self, spec, prefix):
+        if spec.satisfies("platform=darwin"):
+            # If on macos, rename the file "VERSION" so it doesn't collide with the
+            # c++ include file (named "version"). Note this collision occurs since macos
+            # uses a case-insensitive file system.
+            #
+            # Unidata has fixed this in their development track:
+            #   https://github.com/Unidata/netcdf-cxx4/commit/41c0233cb964a3ee1d4e5db5448cd28d617925fb
+            os.rename('VERSION', 'config.VERSION')
+        super(NetcdfCxx4, self).build(spec, prefix)
