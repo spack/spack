@@ -136,9 +136,9 @@ class Superlu(CMakePackage):
             'ARCH       = ar',
             'ARCHFLAGS  = cr',
             'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
-            'CC         = {0}'.format(self.compiler.cc),
-            'FORTRAN    = {0}'.format(self.compiler.fc),
-            'LOADER     = {0}'.format(self.compiler.cc),
+            'CC         = {0}'.format('cc'),
+            'FORTRAN    = {0}'.format('fc'),
+            'LOADER     = {0}'.format('cc'),
             'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
             'NOOPTS     = -O0'
         ])
@@ -207,8 +207,8 @@ class Superlu(CMakePackage):
             tty.warn('Skipping superlu test: missing required {0}'.format(test_dir))
             return
 
-        self.run_superlu_test(test_dir, 'superlu')
-        return
+        #self.run_superlu_test(test_dir, 'superlu')
+        #return
 
         with working_dir(test_dir, create=False):
             make(*args, parallel=False)
