@@ -1823,6 +1823,10 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
+    def process_hash_bit_prefix(self, bits):
+        """Get the first <bits> bits of the DAG hash as an integer type."""
+        return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
+
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
 
@@ -4737,14 +4741,18 @@ class Spec(object):
         self._dunder_hash = None
 
     def __hash__(self):
-        # If the spec is concrete, we leverage the DAG hash and just use
-        # a 64-bit prefix of it. The DAG hash has the advantage that it's
-        # computed once per concrete spec, and it's saved -- so if we
-        # read concrete specs we don't need to recompute the whole hash.
-        # This is good for large, unchanging specs.
+        # If the spec is concrete, we leverage the process hash and just use
+        # a 64-bit prefix of it. The process hash has the advantage that it's
+        # computed once per concrete spec, and it's saved -- so if we read
+        # concrete specs we don't need to recompute the whole hash. This is
+        # good for large, unchanging specs.
+        #
+        # We use the process hash instead of the DAG hash here because the DAG
+        # hash includes the package hash, which can cause infinite recursion,
+        # and which isn't defined unless the spec has a known package.
         if self.concrete:
             if not self._dunder_hash:
-                self._dunder_hash = self.dag_hash_bit_prefix(64)
+                self._dunder_hash = self.process_hash_bit_prefix(64)
             return self._dunder_hash
 
         # This is the normal hash for lazy_lexicographic_ordering. It's
