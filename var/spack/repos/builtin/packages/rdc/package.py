@@ -45,8 +45,9 @@ class Rdc(CMakePackage):
     for ver in ['3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
                 '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0']:
         depends_on('rocm-smi-lib@' + ver, type=('build', 'link'), when='@' + ver)
+
     for ver in ['5.0.0']:
-        depends_on('hsa-rocr-dev@' + ver,  when='@'+ver)
+        depends_on('hsa-rocr-dev@' + ver,  when='@' + ver)
 
     def patch(self):
         filter_file(
