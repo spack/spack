@@ -842,7 +842,8 @@ def can_access(file_name):
     return os.access(file_name, os.R_OK | os.W_OK)
 
 
-def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
+def traverse_tree(source_root, dest_root, rel_path='', follow_nonexisting=True,
+                  follow_links=False, order='pre', ignore=None):
     """Traverse two filesystem trees simultaneously.
 
     Walks the LinkTree directory in pre or post order.  Yields each
@@ -874,16 +875,13 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             ``src`` that do not exit in ``dest``. Default is True
         follow_links (bool): Whether to descend into symlinks in ``src``
     """
-    follow_nonexisting = kwargs.get('follow_nonexisting', True)
-    follow_links = kwargs.get('follow_links', False)
-
     # Yield in pre or post order?
-    order = kwargs.get('order', 'pre')
     if order not in ('pre', 'post'):
         raise ValueError("Order must be 'pre' or 'post'.")
 
     # List of relative paths to ignore under the src root.
-    ignore = kwargs.get('ignore', None) or (lambda filename: False)
+    if ignore is None:
+        ignore = lambda filename: False
 
     # Don't descend into ignored directories
     if ignore(rel_path):
@@ -922,7 +920,10 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
                 if not symlink_dir_realpath.startswith(canonical_real_source_path):
                     continue
 
-            for t in traverse_tree(source_root, dest_root, rel_child, **kwargs):
+            for t in traverse_tree(source_root, dest_root, rel_child,
+                                   follow_nonexisting=follow_nonexisting,
+                                   follow_links=follow_links, order=order,
+                                   ignore=ignore):
                 yield t
 
         # Treat as a file.
