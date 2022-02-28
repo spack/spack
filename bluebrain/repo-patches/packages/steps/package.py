@@ -40,6 +40,7 @@ class Steps(CMakePackage):
     depends_on("mpi", when="+mpi")
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
+    depends_on("pkg-config", type="build")
     depends_on("py-cmake-format", type="build", when="+codechecks")
     depends_on("py-cython")
     depends_on("py-h5py", type="test")
@@ -111,9 +112,9 @@ class Steps(CMakePackage):
             args.append("-DENABLE_CODECOVERAGE:BOOL=True")
 
         if "+distmesh" in spec:
-            args.append("-DUSE_DISTRIBUTED_MESH:BOOL=True")
+            args.append("-DSTEPS_USE_DIST_MESH:BOOL=True")
         else:
-            args.append("-DUSE_DISTRIBUTED_MESH:BOOL=False")
+            args.append("-DSTEPS_USE_DIST_MESH:BOOL=False")
 
         if "+stochtest" in spec:
             args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=True")
