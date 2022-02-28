@@ -51,7 +51,7 @@ class NetcdfCxx4(AutotoolsPackage):
             # On macOS, we need to explicitly add the linker flags
             # for the netcdf-c library.
             if self.spec.satisfies("platform=darwin"):
-                flags = [self.spec['netcdf-c'].libs.search_flags, 
+                flags = [self.spec['netcdf-c'].libs.search_flags,
                          self.spec['netcdf-c'].libs.link_flags] + flags
         return (None, None, flags)
 
