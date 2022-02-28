@@ -911,6 +911,8 @@ def traverse_tree(source_root, dest_root, rel_path='', follow_nonexisting=True,
             # When a symlink, ensure it's inside the prefix.
             if os.path.islink(source_child):
                 if not follow_links:
+                    # When not following symlinks, yield it "as a symlink".
+                    yield (source_child, dest_child)
                     continue
 
                 # isdir already made sure the symlink exists
