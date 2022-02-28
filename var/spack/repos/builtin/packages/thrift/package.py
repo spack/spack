@@ -17,8 +17,9 @@ class Thrift(Package):
     """
 
     homepage = "https://thrift.apache.org"
-    url      = "http://apache.mirrors.ionfish.org/thrift/0.11.0/thrift-0.11.0.tar.gz"
+    url      = "https://dlcdn.apache.org/thrift/0.16.0/thrift-0.16.0.tar.gz"
 
+    version('0.16.0', sha256='f460b5c1ca30d8918ff95ea3eb6291b3951cf518553566088f3f2be8981f6209')
     version('0.13.0', sha256='7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179')
     version('0.12.0', sha256='c336099532b765a6815173f62df0ed897528a9d551837d627c1f87fadad90428')
     version('0.11.0', sha256='c4ad38b6cb4a3498310d405a91fef37b9a8e79a50cd0968148ee2524d2fa60c2')
@@ -73,6 +74,7 @@ class Thrift(Package):
         options.append('--enable-tests=no')
 
         options.append('--with-nodejs=no')
+        options.append('--with-ruby=no')
         options.append('--with-c=%s' % ('yes' if '+c' in spec else 'no'))
         options.append('--with-python=%s' %
                        ('yes' if '+python' in spec else 'no'))
