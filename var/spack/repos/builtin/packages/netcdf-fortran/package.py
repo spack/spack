@@ -62,7 +62,6 @@ class NetcdfFortran(AutotoolsPackage):
     patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
-        config_flags = None
 
         if name == 'cflags':
             if '+pic' in self.spec:
