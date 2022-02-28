@@ -62,8 +62,8 @@ class LinkTree(object):
 
     def find_dir_conflicts(self, dest_root, ignore):
         conflicts = []
-        kwargs = {'follow_nonexisting': False, 'ignore': ignore}
-        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore,
+                                       follow_links=True, follow_nonexisting=False):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
                     conflicts.append("File blocks directory: %s" % dest)
