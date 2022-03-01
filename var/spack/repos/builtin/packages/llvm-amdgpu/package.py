@@ -72,10 +72,6 @@ class LlvmAmdgpu(CMakePackage):
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
 
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
-
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
@@ -115,7 +111,8 @@ class LlvmAmdgpu(CMakePackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # LLVM-amdgpu is always based off of a pre-release version of LLVM.
         # Set the version suffix to denote this fact for downstream projects.
-        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=amdgpu')
+        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=git')
+        env.append_flags('CFLAGS', '-DLLVM_VERSION_SUFFIX=git')
 
     def cmake_args(self):
         llvm_projects = [
