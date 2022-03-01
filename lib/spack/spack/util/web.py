@@ -643,7 +643,7 @@ def find_versions_of_archive(
     # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
     matched = set()
-    for url in archive_urls + sorted(links):
+    for url in sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
@@ -651,9 +651,7 @@ def find_versions_of_archive(
                     continue
                 versions[ver] = url
                 # prevent this version from getting overwritten
-                if url in archive_urls:
-                    matched.add(ver)
-                elif reference_package is not None:
+                if reference_package is not None:
                     if url == reference_package.url_for_version(ver):
                         matched.add(ver)
                 else:
@@ -664,6 +662,11 @@ def find_versions_of_archive(
                         matched.add(ver)
             except spack.url.UndetectableVersionError:
                 continue
+
+    for url in archive_urls:
+        ver = spack.url.parse_version(url)
+        if ver not in versions:
+            versions[ver] = url
 
     return versions
 
