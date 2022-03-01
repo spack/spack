@@ -4272,7 +4272,7 @@ class Spec(object):
 
         out = ""
         for d, dep_spec in self.traverse_edges(
-                order='pre', cover=cover, depth=True, deptypes=deptypes):
+                order='pre', cover=cover, depth=True, deptype=deptypes):
             node = dep_spec.spec
 
             if prefix is not None:
