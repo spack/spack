@@ -73,7 +73,9 @@ def checksum(parser, args):
         url_dict = new_dict
     elif args.preferred:
         version = preferred_version(pkg)
-        url_dict = dict([(version, url_dict.get(version, pkg.url_for_version(version)))])
+        url_dict = dict(
+            [(version, url_dict.get(version, pkg.url_for_version(version)))]
+        )
 
     if not url_dict:
         tty.die("Could not find any versions for {0}".format(pkg.name))
