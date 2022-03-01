@@ -12,6 +12,7 @@ class PyNeurora(PythonPackage):
     homepage = "https://github.com/ZitongLu1996/NeuroRA"
     pypi     = "neurora/neurora-1.1.5.16.tar.gz"
 
+    version('1.1.6.1', sha256='97b2d1287f273a8db11dcaa623fc906b47ee7c4459e264a42b131e6a4f332916')
     version('1.1.5.16', sha256='5ae296a5baf658b67e9754a172f5fb321c2077007455f93db6bb2aaeb3e23cd7')
 
     depends_on('py-setuptools', type='build')
