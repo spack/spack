@@ -97,6 +97,12 @@ class Patch(object):
             'working_dir': self.working_dir,
         }
 
+    def __eq__(self, other):
+        return self.sha256 == other.sha256
+
+    def __hash__(self):
+        return hash(self.sha256)
+
 
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository.
