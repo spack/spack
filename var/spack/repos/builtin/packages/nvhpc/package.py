@@ -90,7 +90,7 @@ class Nvhpc(Package):
 
     maintainers = ['samcmill']
     tags = ['e4s']
-   
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
@@ -216,8 +216,8 @@ class Nvhpc(Package):
             self.spec.cuda_home = cuda_prefix
             self.spec.nvcc = join_path(cuda_prefix.bin, 'nvcc')
             self.spec.math_libs_path = math_prefix
-            self.spec.math_libs = [ 'cublas', 'cufft', 'curand', 'cusolver',
-                                    'cusparse', 'cutensor', 'metis', 'nvblas' ]
+            self.spec.math_libs = ['cublas', 'cufft', 'curand', 'cusolver',
+                                   'cusparse', 'cutensor', 'metis', 'nvblas']
 
     @property
     def libs(self):
