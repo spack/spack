@@ -255,9 +255,9 @@ class Nvhpc(Package):
                     filtered_libs.append(lib)
             # Make sure to keep this list consistent with self.math_libs above
             # (in setup_dependent_package)
-            math_libs_l = [ 'cublas', 'cufft', 'curand', 'cusolver',
-                            'cusparse', 'cutensor', 'metis', 'nvblas' ]
-            static_libs_l = [ 'metis' ]
+            math_libs_l = ['cublas', 'cufft', 'curand', 'cusolver',
+                           'cusparse', 'cutensor', 'metis', 'nvblas']
+            static_libs_l = ['metis']
             math_libs = LibraryList('')
             for lib in math_libs_l:
                 if lib in static_libs_l:
