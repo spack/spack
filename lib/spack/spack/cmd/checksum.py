@@ -56,33 +56,27 @@ def checksum(parser, args):
     # Get the package we're going to generate checksums for
     pkg = spack.repo.get(args.package)
 
-    url_dict = {}
+    # Otherwise, see what versions we can find online
+    url_dict = pkg.fetch_remote_versions()
     if args.versions:
+        new_dict = {}
         # If the user asked for specific versions, use those
         for version in args.versions:
             version = ver(version)
             if not isinstance(version, Version):
                 tty.die("Cannot generate checksums for version lists or "
                         "version ranges. Use unambiguous versions.")
-            url_dict[version] = pkg.url_for_version(version)
+            if version in url_dict:
+                new_dict[version] = url_dict[version]
+            else:
+                new_dict[version] = pkg.url_for_version(version)
+        url_dict = new_dict
     elif args.preferred:
         version = preferred_version(pkg)
-        url_dict = dict([(version, pkg.url_for_version(version))])
-    else:
-        # Otherwise, see what versions we can find online
-        url_dict = pkg.fetch_remote_versions()
-        if not url_dict:
-            tty.die("Could not find any versions for {0}".format(pkg.name))
+        url_dict = dict([(version, url_dict.get(version, pkg.url_for_version(version)))])
 
-        # And ensure the specified version URLs take precedence, if available
-        try:
-            explicit_dict = {}
-            for v in pkg.versions:
-                if not v.isdevelop():
-                    explicit_dict[v] = pkg.url_for_version(v)
-            url_dict.update(explicit_dict)
-        except spack.package.NoURLError:
-            pass
+    if not url_dict:
+        tty.die("Could not find any versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage,
