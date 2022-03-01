@@ -19,7 +19,7 @@ class PyGosam(Package):
     extends('python')
 
     version('2.1.1', url="https://github.com/gudrunhe/gosam/releases/download/2.1.1/gosam-2.1.1-4b98559.tar.gz",
-                     sha256="4a2b9160d51e3532025b9579a4d17d0e0f8a755b8481aeb8271c1f58eb97ab01")
+            sha256="4a2b9160d51e3532025b9579a4d17d0e0f8a755b8481aeb8271c1f58eb97ab01")
     version('2.0.4', sha256='faf621c70f66d9dffc16ac5cce66258067f39f686d722a4867eeb759fcde4f44',
             url='https://gosam.hepforge.org/downloads/?f=gosam-2.0.4-6d9f1cba.tar.gz')
     version('2.0.3', tag='v2.0.3', commit='4146ab23a06b7c57c10fb36df60758d34aa58387')
@@ -39,10 +39,7 @@ class PyGosam(Package):
         env.prepend_path('LD_LIBRARY_PATH', gosam_contrib_lib_dir)
 
     def build(self, spec, prefix):
-        py = which('python')
         python('-s', 'setup.py', '--no-user-cfg', 'build')
 
     def install(self, spec, prefix):
-        py = which('python')
         python('-s', 'setup.py', '--no-user-cfg', 'install', '--prefix=' + prefix)
-
