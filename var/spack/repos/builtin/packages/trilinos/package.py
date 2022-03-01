@@ -114,12 +114,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('minitensor',   default=False, description='Compile with MiniTensor')
     variant('muelu',        default=True, description='Compile with Muelu')
     variant('nox',          default=False, description='Compile with NOX')
+    variant('panzer',       default=True, description='Compile with Panzer')
     variant('piro',         default=False, description='Compile with Piro')
     variant('phalanx',      default=False, description='Compile with Phalanx')
     variant('rol',          default=False, description='Compile with ROL')
     variant('rythmos',      default=False, description='Compile with Rythmos')
-    variant('sacado',       default=True, description='Compile with Sacado')
-    variant('stk',          default=False, description='Compile with STK')
+    variant('sacado',       default=True,  description='Compile with Sacado')
+    variant('stk',          default=True,  description='Compile with STK')
     variant('shards',       default=False, description='Compile with Shards')
     variant('shylu',        default=False, description='Compile with ShyLU')
     variant('stokhos',      default=False, description='Compile with Stokhos')
@@ -508,7 +509,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('MueLu'),
             define_trilinos_enable('NOX'),
             define_trilinos_enable('Pamgen', False),
-            define_trilinos_enable('Panzer', False),
+            define_trilinos_enable('Panzer'),
             define_trilinos_enable('Pike', False),
             define_trilinos_enable('Piro'),
             define_trilinos_enable('Phalanx'),
