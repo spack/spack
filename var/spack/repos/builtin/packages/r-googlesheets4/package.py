@@ -12,13 +12,12 @@ class RGooglesheets4(RPackage):
     Interact with Google Sheets through the Sheets API v4
     <https://developers.google.com/sheets/api>. "API" is an acronym for
     "application programming interface"; the Sheets API allows users to
-    interact with Google Sheets programmatically, instead of via a web
-    browser. The "v4" refers to the fact that the Sheets API is currently at
-    version 4. This package can read and write both the metadata and the cell
-    data in a Sheet."""
+    interact with Google Sheets programmatically, instead of via a web browser.
+    The "v4" refers to the fact that the Sheets API is currently at version 4.
+    This package can read and write both the metadata and the cell data in a
+    Sheet."""
 
-    homepage = "https://github.com/tidyverse/googlesheets4"
-    cran     = "googlesheets4"
+    cran = "googlesheets4"
 
     version('1.0.0', sha256='0a107d76aac99d6db48d97ce55810c1412b2197f457b8476f676169a36c7cc7a')
 

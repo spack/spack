@@ -291,11 +291,11 @@ env:
     assert 'depb: Executing phase:' in out
     assert 'a: Executing phase:' in out
 
-    depb = spack.repo.path.get_pkg_class('depb')
-    assert depb.installed, 'Expected depb to be installed'
+    depb = spack.store.db.query_one('depb', installed=True)
+    assert depb, 'Expected depb to be installed'
 
-    a = spack.repo.path.get_pkg_class('a')
-    assert a.installed, 'Expected a to be installed'
+    a = spack.store.db.query_one('a', installed=True)
+    assert a, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():

@@ -109,6 +109,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('mpich@3.4.1:', when='@2.0: ^mpich')
     depends_on('openmpi@4.1.0:', when='@2.0: ^openmpi')
+    depends_on('lanl-cmake-modules', when='@2.1.1:')
 
     conflicts('%gcc@:8', when='@2.1:')
 
@@ -130,18 +131,19 @@ class Flecsi(CMakePackage, CudaPackage):
     # FleCSI@2: no longer supports flecstan
     conflicts('+flecstan', when='@2.0:')
     # FleCSI@2: integrates cinch and no longer depends on external installs
+    #   Except for lanl-cmake-modules as of 2.1.1: but that has no submodule
     conflicts('+external_cinch', when='@2.0:')
-    # Current FleCSI@:1.9 releases do not support kokkos, omp, or cuda
-    conflicts('+kokkos', when='@:1.9')
-    conflicts('+openmp', when='@:1.9')
-    conflicts('+cuda', when='@:1.9')
+    # Current FleCSI@:1.4 releases do not support kokkos, omp, or cuda
+    conflicts('+kokkos', when='@:1.4.99')
+    conflicts('+openmp', when='@:1.4.99')
+    conflicts('+cuda', when='@:1.4.99')
     # Unit tests require flog support
     conflicts('+unit_tests', when='~flog')
     # Disallow conduit=none when using legion as a backend
     conflicts('^legion conduit=none', when='backend=legion')
     # Due to overhauls of Legion and Gasnet spackages
-    #   flecsi@:1.9 can no longer be built with a usable legion
-    conflicts('backend=legion', when='@:1.9')
+    #   flecsi@:1.4 can no longer be built with a usable legion
+    conflicts('backend=legion', when='@:1.4.99')
 
     def cmake_args(self):
         spec = self.spec

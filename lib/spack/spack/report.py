@@ -171,7 +171,13 @@ class InfoCollector(object):
                 value = None
                 try:
                     value = do_fn(instance, *args, **kwargs)
-                    package['result'] = 'success'
+
+                    externals = kwargs.get('externals', False)
+                    skip_externals = pkg.spec.external and not externals
+                    if do_fn.__name__ == 'do_test' and skip_externals:
+                        package['result'] = 'skipped'
+                    else:
+                        package['result'] = 'success'
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache

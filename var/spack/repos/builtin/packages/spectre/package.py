@@ -29,6 +29,7 @@ class Spectre(CMakePackage):
     generator = 'Ninja'
 
     version('develop', branch='develop')
+    version('2022.02.17', sha256='08de42d8cd70a5d45582301a656bea09a02e2187e30c73648b4e034226596f8b')
     version('2022.02.08', sha256='996275536c990a6d49cd61f207c04ad771a1449506f38507afc35f95b29d4cf1')
     version('2022.01.03', sha256='872a0d152c19864ad543ddcc585ce30baaad4185c2617c13463d780175cbde5f')
     version('2021.12.15', sha256='4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c')
@@ -123,6 +124,11 @@ class Spectre(CMakePackage):
     # - Shared libs builds on macOS don't work before
     #   https://github.com/sxs-collaboration/spectre/pull/2680
     conflicts('+shared', when='@:2022.01.03 platform=darwin')
+    # - Blaze with `BLAZE_BLAS_MODE` enabled doesn't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/3806 because it
+    #   doesn't find the BLAS header. Also, we haven't tested Blaze with BLAS
+    #   kernels before then.
+    conflicts('^blaze+blas', when='@:2022.02.17')
 
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
@@ -179,6 +185,11 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch',
         sha256='29ad44594ecfd6442a64d2cb57ed2d712cb8d93707c6bceea8030a9a2682b7ed',
         when='@:2022.01.03 +shared')
+    # - Fix an issue with Boost pre v1.67
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/b229e939f15362aca892d4480a9182daf88305d4.patch',
+        sha256='06a41506d3652b5cb9127ae0e7e9b506f013bde695e478621a1540f46ed1e5bb',
+        when='@2022.02.08 ^boost@:1.66')
 
     def cmake_args(self):
         args = [

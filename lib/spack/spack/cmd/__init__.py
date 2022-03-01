@@ -154,7 +154,6 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
-    reuse = kwargs.get('reuse', False)
 
     try:
         sargs = args
@@ -163,7 +162,7 @@ def parse_specs(args, **kwargs):
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
-                spec.concretize(tests=tests, reuse=reuse)  # implies normalize
+                spec.concretize(tests=tests)  # implies normalize
             elif normalize:
                 spec.normalize(tests=tests)
 

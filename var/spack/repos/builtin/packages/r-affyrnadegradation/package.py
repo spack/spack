@@ -8,7 +8,7 @@ from spack import *
 
 class RAffyrnadegradation(RPackage):
     """Analyze and correct probe positional bias in microarray data due to RNA
-       degradation
+       degradation.
 
        The package helps with the assessment and correction of RNA degradation
        effects in Affymetrix 3' expression arrays. The parameter d gives a
@@ -16,9 +16,9 @@ class RAffyrnadegradation(RPackage):
        probe positional bias, and thus improves comparability of samples that
        are affected by RNA degradation."""
 
-    homepage = "https://bioconductor.org/packages/AffyRNADegradation"
-    git      = "https://git.bioconductor.org/packages/AffyRNADegradation.git"
+    bioc  = "AffyRNADegradation"
 
+    version('1.40.0', commit='8539a91ee464d692a267bb17c91dc1ef9a231f41')
     version('1.36.0', commit='89662b93076659db2967a526899184c12c156bc5')
     version('1.30.0', commit='620c464fb09248e1c7a122828eab59a4fb778cc1')
     version('1.28.0', commit='aff91d78fa9e76edaa3ef6a9a43b98b86cc44c24')

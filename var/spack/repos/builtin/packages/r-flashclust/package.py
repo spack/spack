@@ -7,11 +7,9 @@ from spack import *
 
 
 class RFlashclust(RPackage):
-    """flashClust: Implementation of optimal hierarchical clustering"""
+    """Implementation of optimal hierarchical clustering."""
 
-    homepage = "https://cloud.r-project.org/package=flashClust"
-    url      = "https://cloud.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/flashClust"
+    cran = "flashClust"
 
     version('1.01-2', sha256='48a7849bb86530465ff3fbfac1c273f0df4b846e67d5eee87187d250c8bf9450')
 

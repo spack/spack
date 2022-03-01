@@ -7,16 +7,15 @@ from spack import *
 
 
 class RServr(RPackage):
-    """A Simple HTTP Server to Serve Static Files or Dynamic Documents
+    """A Simple HTTP Server to Serve Static Files or Dynamic Documents.
 
     Start an HTTP server in R to serve static files, or dynamic documents that
     can be converted to HTML files (e.g., R Markdown) under a given
     directory."""
 
-    homepage = "https://github.com/yihui/servr"
-    url      = "https://cloud.r-project.org/src/contrib/servr_0.21.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/servr"
+    cran = "servr"
 
+    version('0.24', sha256='d94e1d31802ce6bbab7a5838ff94cbca8cd998237d834ff25fedf7514f41a087')
     version('0.21', sha256='3fc0da063dd04b796a49ce62bf8e69d5854679520da90cc92ee3fc0a0b2ad389')
 
     depends_on('r@3.0.0:', type=('build', 'run'))

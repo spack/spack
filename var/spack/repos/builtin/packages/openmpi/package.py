@@ -238,7 +238,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
-    variant('gpfs', default=True, description='Enable GPFS support (if present)')
+    variant('gpfs', default=False, description='Enable GPFS support')
     variant('singularity', default=False,
             description="Build support for the Singularity container")
     variant('lustre', default=False,
@@ -620,11 +620,6 @@ class Openmpi(AutotoolsPackage):
         perl = which('perl')
         perl('autogen.pl')
 
-    def setup_build_environment(self, env):
-        if '~gpfs' in self.spec:
-            env.set('ac_cv_header_gpfs_h', 'no')
-            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
-
     def configure_args(self):
         spec = self.spec
         config_args = [
@@ -733,6 +728,11 @@ class Openmpi(AutotoolsPackage):
 
         if '~romio' in spec:
             config_args.append('--disable-io-romio')
+
+        if '+gpfs' in spec:
+            config_args.append('--with-gpfs')
+        else:
+            config_args.append('--with-gpfs=no')
 
         # SQLite3 support
         if spec.satisfies('@1.7.3:1'):

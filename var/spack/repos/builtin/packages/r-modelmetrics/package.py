@@ -7,15 +7,13 @@ from spack import *
 
 
 class RModelmetrics(RPackage):
-    """Rapid Calculation of Model Metrics
+    """Rapid Calculation of Model Metrics.
 
     Collection of metrics for evaluating models written in C++ using 'Rcpp'.
     Popular metrics include area under the curve, log loss, root mean square
     error, etc."""
 
-    homepage = "https://cloud.r-project.org/package=ModelMetrics"
-    url      = "https://cloud.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ModelMetrics"
+    cran = "ModelMetrics"
 
     version('1.2.2.2', sha256='5e06f1926aebca5654e1329c66ef19b04058376b2277ebb16e3bf8c208d73457')
     version('1.2.2', sha256='66d6fc75658287fdbae4d437b51d26781e138b8baa558345fb9e5a2df86a0d95')
@@ -24,4 +22,4 @@ class RModelmetrics(RPackage):
 
     depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-data-table', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-data-table', type=('build', 'run'), when='@1.2.0:')

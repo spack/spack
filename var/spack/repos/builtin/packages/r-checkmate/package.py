@@ -7,15 +7,13 @@ from spack import *
 
 
 class RCheckmate(RPackage):
-    """Fast and Versatile Argument Checks
+    """Fast and Versatile Argument Checks.
 
-    Tests and assertions to perform frequent argument checks.
-    A substantial part of the package was written in C to
-    minimize any worries about execution time overhead."""
+    Tests and assertions to perform frequent argument checks.  A substantial
+    part of the package was written in C to minimize any worries about
+    execution time overhead."""
 
-    homepage = "https://cloud.r-project.org/package=checkmate"
-    url      = "https://cloud.r-project.org/src/contrib/checkmate_1.8.4.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/checkmate"
+    cran = "checkmate"
 
     version('2.0.0', sha256='0dc25b0e20c04836359df1885d099c6e4ad8ae0e585a9e4107f7ea945d9c6fa4')
     version('1.9.4', sha256='faa25754b757fe483b876f5d07b73f76f69a1baa971420892fadec4af4bbad21')

@@ -35,6 +35,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('13.0.1', sha256='09c50d558bd975c41157364421820228df66632802a4a6a7c9c17f86a7340802')
     version('13.0.0', sha256='a1131358f1f9f819df73fa6bff505f2c49d176e9eef0a3aedd1fdbce3b4630e8')
     version('12.0.1', sha256='66b64aa301244975a4aea489f402f205cde2f53dd722dad9e7b77a0459b4c8df')
     version('12.0.0', sha256='8e6c99e482bb16a450165176c2d881804976a2d770e0445af4375e78a1fbf19c')
@@ -346,7 +347,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Add LLVM_VERSION_SUFFIX
     # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:13.0.0')
+    patch('llvm-version-suffix-macro.patch', when='@:13.0.1')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -475,6 +476,11 @@ class Llvm(CMakePackage, CudaPackage):
         if '+flang' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'flang')
         return result
+
+    @property
+    def libs(self):
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
 
     @run_before('cmake')
     def codesign_check(self):
@@ -721,9 +727,10 @@ class Llvm(CMakePackage, CudaPackage):
         if not kwargs.get('output'):
             kwargs['output'] = str
         ret = lc(*args, **kwargs)
-        if kwargs.get('output') == "list":
+        if kwargs.get('result') == "list":
             return ret.split()
-        return ret
+        else:
+            return ret
 
 
 def get_llvm_targets_to_build(spec):

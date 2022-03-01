@@ -77,7 +77,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('python', default=False, description='Build PyTrilinos wrappers')
     variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('wrapper', default=False, description="Use nvcc-wrapper for CUDA build")
+    variant('uvm', default=False, when='@13.2: +cuda', description='Turn on UVM for CUDA build')
+    variant('wrapper', default=False, description='Use nvcc-wrapper for CUDA build')
 
     # TPLs (alphabet order)
     variant('adios2',       default=False, description='Enable ADIOS2')
@@ -285,13 +286,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('@:13.0.1 +cuda', when='^cuda@11:')
     # Build hangs with CUDA 11.6 (see #28439)
     conflicts('+cuda +stokhos', when='^cuda@11.6:')
+    # Cuda UVM must be enabled prior to 13.2
+    # See https://github.com/spack/spack/issues/28869
+    conflicts('~uvm', when='@:13.1 +cuda')
 
     # stokhos fails on xl/xl_r
     conflicts('+stokhos', when='%xl')
     conflicts('+stokhos', when='%xl_r')
-
-    # Fortran mangling fails on Apple M1 (see spack/spack#25900)
-    conflicts('@:13.0.1 +fortran', when='target=m1')
 
     # ###################### Dependencies ##########################
 
@@ -527,7 +528,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
-            define_tpl_enable('Cholmod', False),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
             define_from_variant('EpetraExt_BUILD_EXPERIMENTAL',
                                 'epetraextexperimental'),
@@ -687,6 +687,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define('PNetCDF_ROOT', spec['parallel-netcdf'].prefix),
             ])
 
+        options.append(define_tpl_enable('Cholmod', False))
+
+        if spec.satisfies('platform=darwin'):
+            # Don't let TriBITS define `libdl` as an absolute path to
+            # the MacOSX{nn.n}.sdk since that breaks at every xcode update
+            options.append(define_tpl_enable('DLlib', False))
+
         # ################# Explicit template instantiation #################
 
         complex_s = spec.variants['complex'].value
@@ -736,8 +743,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                                   else 'OpenMP'),
             ])
             if '+cuda' in spec:
-                # See https://github.com/spack/spack/issues/28869
-                use_uvm = (spec.version < Version(13.2))
+                use_uvm = '+uvm' in spec
                 options.extend([
                     define_kok_enable('CUDA_UVM', use_uvm),
                     define_kok_enable('CUDA_LAMBDA', True),

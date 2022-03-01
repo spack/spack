@@ -7,13 +7,12 @@ from spack import *
 
 
 class RBiomUtils(RPackage):
-    """Provides utilities to facilitate import, export and computation with
-    the BIOM (Biological Observation Matrix) format (https://biom-format.org/).
-    """
+    """Utilities for the BIOM (Biological Observation Matrix) Format.
 
-    homepage = "https://github.com/braithwaite/BIOM.utils/"
-    url      = "https://cloud.r-project.org/src/contrib/BIOM.utils_0.9.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/biom/"
+    Provides utilities to facilitate import, export and computation with the
+    BIOM (Biological Observation Matrix) format (https://biom-format.org/)."""
+
+    cran = "BIOM.utils"
 
     version('0.9', sha256='e7024469fb38e275aa78fbfcce15b9a7661317f632a7e9b8124695e076839375')
 

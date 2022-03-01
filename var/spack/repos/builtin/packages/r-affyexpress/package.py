@@ -7,14 +7,13 @@ from spack import *
 
 
 class RAffyexpress(RPackage):
-    """Affymetrix Quality Assessment and Analysis Tool
+    """Affymetrix Quality Assessment and Analysis Tool.
 
        The purpose of this package is to provide a comprehensive and easy-to-
        use tool for quality assessment and to identify differentially expressed
        genes in the Affymetrix gene expression data."""
 
-    homepage = "https://bioconductor.org/packages/AffyExpress"
-    git      = "https://git.bioconductor.org/packages/AffyExpress.git"
+    bioc = "AffyExpress"
 
     version('1.56.0', commit='e07085833de2bbf81537410cad526d39f8a82478')
     version('1.50.0', commit='8b98703b63396df9692afb0e15b594658125cc96')

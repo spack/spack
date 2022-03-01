@@ -7,12 +7,12 @@ from spack import *
 
 
 class RUrca(RPackage):
-    """Unit root and cointegration tests encountered in applied econometric
+    """Unit Root and Cointegration Tests for Time Series Data.
+
+    Unit root and cointegration tests encountered in applied econometric
     analysis are implemented."""
 
-    homepage = "https://cloud.r-project.org/package=urca"
-    url      = "https://cloud.r-project.org/src/contrib/urca_1.3-0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/urca"
+    cran = "urca"
 
     version('1.3-0', sha256='621cc82398e25b58b4a16edf000ed0a1484d9a0bc458f734e97b6f371cc76aaa')
 

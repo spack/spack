@@ -23,6 +23,10 @@ class Rhash(MakefilePackage):
     patch('https://github.com/rhash/RHash/commit/4dc506066cf1727b021e6352535a8bb315c3f8dc.patch?full_index=1',
           when='@1.4.2', sha256='3fbfe4603d2ec5228fd198fc87ff3ee281e1f68d252c1afceaa15cba76e9b6b4')
 
+    # Intel 20xx.yy.z works just fine.  Un-block it from the configure script
+    # https://github.com/rhash/RHash/pull/197
+    patch('rhash-intel20.patch')
+
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb
 

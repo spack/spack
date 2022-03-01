@@ -7,14 +7,14 @@ from spack import *
 
 
 class RA4(RPackage):
-    """Automated Affymetrix Array Analysis Umbrella Package
+    """Automated Affymetrix Array Analysis Umbrella Package.
 
     Umbrella package is available for the entire Automated Affymetrix Array
     Analysis suite of package."""
 
-    homepage = "https://bioconductor.org/packages/a4"
-    git      = "https://git.bioconductor.org/packages/a4.git"
+    bioc = "a4"
 
+    version('1.42.0', commit='fc26809e2bce7cd50d99d6f6dd5f85c38342fdea')
     version('1.38.0', commit='5b7a9087bab10c55e24707e96e48046995236c94')
     version('1.32.0', commit='03770d4e53be4eed1bd0ab8f8cddba66854b4712')
     version('1.30.0', commit='771e01ae3aaac1c4db12f781c41d90fa7191b64d')

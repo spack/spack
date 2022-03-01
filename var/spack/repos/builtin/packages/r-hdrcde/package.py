@@ -5,7 +5,9 @@
 
 
 class RHdrcde(RPackage):
-    """Computation of highest density regions in one and two
+    """Highest Density Regions and Conditional Density Estimation.
+
+    Computation of highest density regions in one and two
     dimensions, kernel estimation of univariate density functions
     conditional on one covariate,and multimodal regression."""
 

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RColorspace(RPackage):
-    """A Toolbox for Manipulating and Assessing Colors and Palettes
+    """A Toolbox for Manipulating and Assessing Colors and Palettes.
 
     Carries out mapping between assorted color spaces including RGB, HSV, HLS,
     CIEXYZ, CIELUV, HCL (polar CIELUV), CIELAB, and polar CIELAB. Qualitative,
@@ -25,7 +25,6 @@ class RColorspace(RPackage):
     scientific paper: Zeileis et al. (2020, Journal of Statistical Software,
     <doi:10.18637/jss.v096.i01>)."""
 
-    homepage = "https://colorspace.R-Forge.R-project.org"
     cran = "colorspace"
 
     version('2.0-2', sha256='b891cd2ec129ed5f116429345947bcaadc33969758a108521eb0cf36bd12183a')

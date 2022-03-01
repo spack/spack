@@ -1,3 +1,17 @@
+Fixes for IBM XL and Cray CCE builds:
+
+* Correct path to the fallback configuration used to handle mangling for
+  C++/Fortran compatibility (CCE, XL)
+
+* Change logic for detecting recursive fortran flags to (a) Include XL
+(qrecur), and (b) Be explicit, since not every compiler will correctly reject
+an incorrect option (ALL)
+
+NOTE: This patch has been accepted upstream
+(see https://github.com/Reference-LAPACK/lapack/pull/621)
+
+##############################################################################
+
 diff -Naur a/CBLAS/CMakeLists.txt b/CBLAS/CMakeLists.txt
 --- a/CBLAS/CMakeLists.txt	2021-03-25 12:25:15.000000000 -0600
 +++ b/CBLAS/CMakeLists.txt	2021-09-01 16:27:23.561355382 -0600

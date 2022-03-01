@@ -155,14 +155,17 @@ config:
 
   # The concretization algorithm to use in Spack. Options are:
   #
-  #   'original': Spack's original greedy, fixed-point concretizer. This
-  #       algorithm can make decisions too early and will not backtrack
-  #       sufficiently for many specs.
-  #
   #   'clingo': Uses a logic solver under the hood to solve DAGs with full
   #       backtracking and optimization for user preferences. Spack will
   #       try to bootstrap the logic solver, if not already available.
   #
+  #   'original': Spack's original greedy, fixed-point concretizer. This
+  #       algorithm can make decisions too early and will not backtrack
+  #       sufficiently for many specs. This will soon be deprecated in
+  #       favor of clingo.
+  #
+  # See `concretizer.yaml` for more settings you can fine-tune when
+  # using clingo.
   concretizer: clingo
 
 

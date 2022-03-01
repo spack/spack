@@ -12,6 +12,8 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Find Utilities are the basic directory searching
        utilities of the GNU operating system."""
 
+    tags = ['core-packages']
+
     homepage = "https://www.gnu.org/software/findutils/"
     gnu_mirror_path = "findutils/findutils-4.8.0.tar.xz"
 

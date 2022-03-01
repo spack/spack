@@ -5,7 +5,9 @@
 
 
 class RFda(RPackage):
-    """These functions were developed to support functional data
+    """Functional Data Analysis.
+
+    These functions were developed to support functional data
     analysis as described in Ramsay, J. O. and Silverman, B. W. (2005)
     Functional Data Analysis. New York: Springer and in Ramsay, J. O.,
     Hooker, Giles, and Graves, Spencer (2009). """

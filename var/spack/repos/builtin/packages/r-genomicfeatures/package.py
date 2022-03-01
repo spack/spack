@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGenomicfeatures(RPackage):
-    """Conveniently import and query gene models
+    """Conveniently import and query gene models.
 
        A set of tools and methods for making and manipulating transcript
        centric annotations. With these tools the user can easily download the
@@ -18,9 +18,9 @@ class RGenomicfeatures(RPackage):
        exons, cds and genes. Flexible methods are provided for extracting the
        desired features in a convenient format."""
 
-    homepage = "https://bioconductor.org/packages/GenomicFeatures"
-    git      = "https://git.bioconductor.org/packages/GenomicFeatures.git"
+    bioc = "GenomicFeatures"
 
+    version('1.46.4', commit='d3ab6fd069624904ce7fcdf75dad884473f97975')
     version('1.42.1', commit='2e82891974138b0e976799d64a8938f0be61284d')
     version('1.36.4', commit='28082ec465c91ccaec6881ff348b380edac1b555')
     version('1.34.8', commit='c798b3bb111f4de30632303540074ec1875c1387')
@@ -30,28 +30,31 @@ class RGenomicfeatures(RPackage):
 
     depends_on('r-biocgenerics@0.1.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.47:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.17.29:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.29:', type=('build', 'run'), when='@1.32.3:')
     depends_on('r-iranges@2.9.19:', type=('build', 'run'))
-    depends_on('r-iranges@2.11.16:', when='@1.30.3:', type=('build', 'run'))
-    depends_on('r-iranges@2.13.23:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-iranges@2.11.16:', type=('build', 'run'), when='@1.30.3:')
+    depends_on('r-iranges@2.13.23:', type=('build', 'run'), when='@1.32.3:')
     depends_on('r-genomeinfodb@1.11.4:', type=('build', 'run'))
-    depends_on('r-genomeinfodb@1.13.1:', when='@1.30.3:', type=('build', 'run'))
-    depends_on('r-genomeinfodb@1.15.4:', when='@1.32.3:', type=('build', 'run'))
-    depends_on('r-genomeinfodb@1.25.7:', when='@1.42.1:', type=('build', 'run'))
+    depends_on('r-genomeinfodb@1.13.1:', type=('build', 'run'), when='@1.30.3:')
+    depends_on('r-genomeinfodb@1.15.4:', type=('build', 'run'), when='@1.32.3:')
+    depends_on('r-genomeinfodb@1.25.7:', type=('build', 'run'), when='@1.42.1:')
     depends_on('r-genomicranges@1.27.6:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.29.14:', when='@1.30.3:', type=('build', 'run'))
-    depends_on('r-genomicranges@1.31.17:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-genomicranges@1.29.14:', type=('build', 'run'), when='@1.30.3:')
+    depends_on('r-genomicranges@1.31.17:', type=('build', 'run'), when='@1.32.3:')
     depends_on('r-annotationdbi@1.33.15:', type=('build', 'run'))
-    depends_on('r-annotationdbi@1.41.4:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-annotationdbi@1.41.4:', type=('build', 'run'), when='@1.32.3:')
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-rsqlite@2.0:', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r-xvector@0.19.7:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-xvector@0.19.7:', type=('build', 'run'), when='@1.32.3:')
     depends_on('r-biostrings@2.23.3:', type=('build', 'run'))
-    depends_on('r-biostrings@2.47.6:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.6:', type=('build', 'run'), when='@1.32.3:')
+    depends_on('r-biocio', type=('build', 'run'), when='@1.46.4:')
     depends_on('r-rtracklayer@1.29.24:', type=('build', 'run'))
-    depends_on('r-rtracklayer@1.39.7:', when='@1.32.3:', type=('build', 'run'))
+    depends_on('r-rtracklayer@1.39.7:', type=('build', 'run'), when='@1.32.3:')
+    depends_on('r-rtracklayer@1.51.5:', type=('build', 'run'), when='@1.46.4:')
     depends_on('r-biomart@2.17.1:', type=('build', 'run'))
     depends_on('r-biobase@2.15.1:', type=('build', 'run'))
-    depends_on('r-rmysql', when='@1.30.3', type=('build', 'run'))
+
+    depends_on('r-rmysql', type=('build', 'run'), when='@1.30.3')

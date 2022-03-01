@@ -97,7 +97,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
 
-    conflicts("+shared", when="+cuda_native")
+    # Can build +shared+cuda after @1.7:
+    conflicts("+shared", when="@:1.6 +cuda_native")
+    conflicts("+cuda~cuda_native~kokkos", msg="Cannot have +cuda without a cuda device")
 
     conflicts("+cuda", when="cuda_arch=none",
               msg="vtk-m +cuda requires that cuda_arch be set")

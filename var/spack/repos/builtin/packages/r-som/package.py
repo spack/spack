@@ -7,11 +7,11 @@ from spack import *
 
 
 class RSom(RPackage):
-    """Self-Organizing Map (with application in gene clustering)."""
+    """Self-Organizing Map.
 
-    homepage = "https://cloud.r-project.org/package=som"
-    url      = "https://cloud.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/som"
+    Self-Organizing Map (with application in gene clustering)."""
+
+    cran = "som"
 
     version('0.3-5.1', sha256='a6f4c0e5b36656b7a8ea144b057e3d7642a8b71972da387a7133f3dd65507fb9')
     version('0.3-5', sha256='f7672afaaffcf41a8b2dd50e4c76b3a640ea2ad099f18b5dfcf00389abf6ba07')

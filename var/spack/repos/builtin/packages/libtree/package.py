@@ -15,6 +15,7 @@ class Libtree(MakefilePackage):
     maintainers = ['haampie']
 
     version('master', branch='master')
+    version('3.0.3', sha256='7e4589b617775cb3a2b4b8fe03f80b81e43ef16046d680f1517ce52d7be9893f')
     version('3.0.2', sha256='f07c9cf3394cacd1eab15d42b97b9b6787d8bd3b7f6746fe0f39e7d951eebaac')
     version('3.0.1', sha256='20d3cd66f5c74058de9dd594af8ffd639c795d27ab435c588a3cd43911c1604f')
     version('3.0.0', sha256='6f7b069a8e5d86741e18a4c8a7e835ac530ae012dfc9509e00ffa694aa6818b1')

@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAnnotationhub(RPackage):
-    """Client to access AnnotationHub resources
+    """Client to access AnnotationHub resources.
 
        This package provides a client for the Bioconductor AnnotationHub web
        resource. The AnnotationHub web resource provides a central location
@@ -18,9 +18,9 @@ class RAnnotationhub(RPackage):
        cache of files retrieved by the user, helping with quick and
        reproducible access."""
 
-    homepage = "https://bioconductor.org/packages/AnnotationHub"
-    git      = "https://git.bioconductor.org/packages/AnnotationHub.git"
+    bioc = "AnnotationHub"
 
+    version('3.2.1', commit='ad1dfe86f0b0ea4711cc9cdb89e073e8794ec9aa')
     version('2.22.0', commit='3ab7dceebbc31ac14ca931f66c662cf9538b7d0a')
     version('2.16.1', commit='f8cefaae603b782e1c1ad277a3fb89d44e3aa1ed')
     version('2.14.5', commit='993a98ce3de04a0bbddcbde5b1ab2a9550275a12')
@@ -29,16 +29,17 @@ class RAnnotationhub(RPackage):
     version('2.8.3', commit='8aa9c64262a8d708d2bf1c82f82dfc3d7d4ccc0c')
 
     depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
-    depends_on('r-biocfilecache@1.5.1:', when='@2.16.1:', type=('build', 'run'))
+    depends_on('r-biocfilecache@1.5.1:', type=('build', 'run'), when='@2.16.1:')
     depends_on('r-rsqlite', type=('build', 'run'))
-    depends_on('r-biocmanager', when='@2.14.5:', type=('build', 'run'))
-    depends_on('r-biocversion', when='@2.22.0:', type=('build', 'run'))
-    depends_on('r-curl', when='@2.10.1:', type=('build', 'run'))
-    depends_on('r-rappdirs', when='@2.16.1:', type=('build', 'run'))
+    depends_on('r-biocmanager', type=('build', 'run'), when='@2.14.5:')
+    depends_on('r-biocversion', type=('build', 'run'), when='@2.22.0:')
+    depends_on('r-curl', type=('build', 'run'), when='@2.10.1:')
+    depends_on('r-rappdirs', type=('build', 'run'), when='@2.16.1:')
     depends_on('r-annotationdbi@1.31.19:', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-interactivedisplaybase', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-yaml', type=('build', 'run'))
-    depends_on('r-dplyr', when='@2.16.1:', type=('build', 'run'))
-    depends_on('r-biocinstaller', when='@:2.16.1', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'), when='@2.16.1:')
+
+    depends_on('r-biocinstaller', type=('build', 'run'), when='@:2.16.1')
