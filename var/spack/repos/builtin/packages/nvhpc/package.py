@@ -113,6 +113,7 @@ class Nvhpc(Package):
     provides('blas',        when='+blas')
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
+    # TODO: TEST THIS THOROUGHLY
     provides('cuda',        when='+cuda')
 
     def install(self, spec, prefix):
@@ -158,9 +159,13 @@ class Nvhpc(Package):
             cuda_prefix = Prefix(join_path(self.prefix,
                                            'Linux_%s' % self.spec.target.family,
                                            self.version, 'cuda'))
+            math_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'math_libs'))
             env.prepend_path('CUDA_HOME', cuda_prefix)
             env.prepend_path('PATH', cuda_prefix.bin)
             env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
+            env.prepend_path('LD_LIBRARY_PATH', math_prefix.lib64)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         prefix = Prefix(join_path(self.prefix,
@@ -181,9 +186,13 @@ class Nvhpc(Package):
             cuda_prefix = Prefix(join_path(self.prefix,
                                            'Linux_%s' % self.spec.target.family,
                                            self.version, 'cuda'))
+            math_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'math_libs'))
             env.prepend_path('CUDA_HOME', cuda_prefix)
             env.prepend_path('PATH', cuda_prefix.bin)
             env.prepend_path('LD_LIBRARY_PATH', cuda_prefix.lib64)
+            env.prepend_path('LD_LIBRARY_PATH', math_prefix.lib64)
             env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -201,8 +210,14 @@ class Nvhpc(Package):
             cuda_prefix = Prefix(join_path(self.prefix,
                                            'Linux_%s' % self.spec.target.family,
                                            self.version, 'cuda'))
+            math_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'math_libs'))
             self.spec.cuda_home = cuda_prefix
             self.spec.nvcc = join_path(cuda_prefix.bin, 'nvcc')
+            self.spec.math_libs_path = math_prefix
+            self.spec.math_libs = [ 'cublas', 'cufft', 'curand', 'cusolver',
+                                    'cusparse', 'cutensor', 'metis', 'nvblas' ]
 
     @property
     def libs(self):
@@ -225,6 +240,9 @@ class Nvhpc(Package):
             cuda_prefix = Prefix(join_path(self.prefix,
                                            'Linux_%s' % self.spec.target.family,
                                            self.version, 'cuda'))
+            math_prefix = Prefix(join_path(self.prefix,
+                                           'Linux_%s' % self.spec.target.family,
+                                           self.version, 'math_libs'))
             cuda_libs = find_libraries('libcudart', root=cuda_prefix,
                                        shared=True, recursive=True)
             filtered_libs = []
@@ -235,6 +253,21 @@ class Nvhpc(Package):
                 parts = lib.split(os.sep)
                 if 'compat' not in parts and 'stubs' not in parts:
                     filtered_libs.append(lib)
-            return pfxlibs + LibraryList(filtered_libs)
+            # Make sure to keep this list consistent with self.math_libs above
+            # (in setup_dependent_package)
+            math_libs_l = [ 'cublas', 'cufft', 'curand', 'cusolver',
+                            'cusparse', 'cutensor', 'metis', 'nvblas' ]
+            static_libs_l = [ 'metis' ]
+            math_libs = LibraryList('')
+            for lib in math_libs_l:
+                if lib in static_libs_l:
+                    lib = find_libraries(lib, root=math_prefix,
+                                         shared=False, recursive=True)
+                else:
+                    lib = find_libraries(lib, root=math_prefix,
+                                         shared=True, recursive=True)
+                # Compound assignment operation += isn't supported yet
+                math_libs = math_libs + lib
+            return pfxlibs + LibraryList(filtered_libs) + math_libs
         else:
             return pfxlibs
