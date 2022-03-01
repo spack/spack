@@ -75,12 +75,6 @@ class Paraview(CMakePackage, CudaPackage):
                         ' "default" lets the build_edition make the decision.'
                         ' "on" or "off" will always override the build_edition.')
 
-    # The ninja generator has problems with XL and CCE
-    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-    variant('generator', default='ninja', multi=False,
-            values=('ninja', 'unix_makefiles'),
-            description='CMake generator.')
-
     conflicts('+adios2', when='@:5.10 ~mpi')
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -112,10 +106,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.3:', type='build')
 
-    # The ninja generator has problems with XL and CCE
-    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-    depends_on('ninja', type='build', when='generator=ninja')
-    depends_on('gmake', type='build', when='generator=unix_makefiles')
+    depends_on('ninja', type='build')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -313,19 +304,15 @@ class Paraview(CMakePackage, CudaPackage):
                                                              '_paraview.zip'))
                     env.prepend_path('PYTHONPATH', join_path(pv_pydir,
                                                              '_vtk.zip'))
-    # The ninja generator has problems with XL and CCE
-    # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-    @property
-    def generator(self):
-      """Choose cmake generator for Paraview."""
-      spec = self.spec
-      if spec.variants['generator'].value == 'unix_makefiles':
-        return "Unix Makefiles"
-      return "Ninja"
-
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         spec = self.spec
+
+        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+        if ('%xl' in spec or '%xl_r' in spec or '%cce' in spec):
+            generator = 'Unix Makefiles'
+        else:
+            generator = 'Ninja'
 
         def variant_bool(feature, on='ON', off='OFF'):
             """Ternary for spec variant to ON/OFF string"""
