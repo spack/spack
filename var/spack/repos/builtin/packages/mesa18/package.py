@@ -71,10 +71,6 @@ class Mesa18(AutotoolsPackage):
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')
 
-    # llvm-amdgpu is not compatible with swr
-    for swr_value in _SWR_ENABLED_VALUES:
-        conflicts('llvm-amdgpu', when='+llvm swr={0}'.format(swr_value))
-
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
 

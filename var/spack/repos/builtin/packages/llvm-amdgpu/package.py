@@ -112,6 +112,11 @@ class LlvmAmdgpu(CMakePackage):
         when='@master +rocm-device-libs'
     )
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # LLVM-amdgpu is always based off of a pre-release version of LLVM.
+        # Set the version suffix to denote this fact for downstream projects.
+        env.append_flags('CXXFLAGS', '-DLLVM_VERSION_SUFFIX=amdgpu')
+
     def cmake_args(self):
         llvm_projects = [
             'clang',
