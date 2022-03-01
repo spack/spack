@@ -81,7 +81,7 @@ class PyPyqt5(SIPPackage):
             '--confirm-license',
             '--qmake', self.spec['qt'].prefix.bin.qmake,
             '--target-dir', join_path(python_platlib, 'PyQt5'),
-            '--jobs', str(inspect.getmodule(self).make_jobs),
+            '--jobs', str(make_jobs),
         ]
         if '+qsci_api' in self.spec:
             args.extend(['--api-dir', self.prefix.share.qsci])
