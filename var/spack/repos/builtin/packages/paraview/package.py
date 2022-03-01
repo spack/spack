@@ -219,6 +219,14 @@ class Paraview(CMakePackage, CudaPackage):
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
 
+    @property
+    def generator(self):
+        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+        if self.spec.satisfies('%cce') or self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+            return "Unix Makefiles"
+        else:
+            return "Ninja"
+
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
@@ -307,12 +315,6 @@ class Paraview(CMakePackage, CudaPackage):
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         spec = self.spec
-
-        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-        if ('%xl' in spec or '%xl_r' in spec or '%cce' in spec):
-            generator = 'Unix Makefiles'
-        else:
-            generator = 'Ninja'
 
         def variant_bool(feature, on='ON', off='OFF'):
             """Ternary for spec variant to ON/OFF string"""
