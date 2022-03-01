@@ -222,7 +222,7 @@ class Paraview(CMakePackage, CudaPackage):
     @property
     def generator(self):
         # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
-        if self.spec.satisfies('%cce') or self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+        if self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
             return "Unix Makefiles"
         else:
             return "Ninja"
@@ -312,6 +312,7 @@ class Paraview(CMakePackage, CudaPackage):
                                                              '_paraview.zip'))
                     env.prepend_path('PYTHONPATH', join_path(pv_pydir,
                                                              '_vtk.zip'))
+
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         spec = self.spec
