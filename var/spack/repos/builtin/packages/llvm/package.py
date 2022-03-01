@@ -204,8 +204,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libelf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
-    # ncurses dependency
+    # llvm-config --system-libs libraries.
     depends_on("ncurses+termlib")
+    depends_on("zlib")
+    depends_on("libxml2")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
