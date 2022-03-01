@@ -225,7 +225,7 @@ class Eccodes(CMakePackage):
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
-    patch('openjpeg_jasper.patch', when='@:2.16')
+    patch('openjpeg_jasper.patch', when='@:2.15')
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
     patch('cmake_install_rpath.patch', when='@:2.10')
