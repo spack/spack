@@ -29,8 +29,6 @@ class PyGosam(Package):
     depends_on('gosam-contrib', type='link')
     depends_on('python@2.7.0:2.7', type=('build', 'run'), when='@:2.0.4')
     depends_on('python@3:', type=('build', 'run'), when='@2.1.1:')
-    # pip silently replaces distutils with setuptools
-    depends_on('py-setuptools', type='build')
 
     phases = ['build', 'install']
 
