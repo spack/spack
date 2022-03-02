@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
     version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
     version('0.5.2', commit='662ad76dee1f501f648a8bec9a490cb5881789e9')
     version('0.5.1', commit='6789bbb55824e68e428c2df1009d647af81f9cf1')
@@ -68,6 +69,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
     depends_on('magma@2.5.4:', when='@0.4:+rocm')
     depends_on('magma@2.6.1:', when='@0.4.6:+rocm')
+
+    # MAGMA v2.6.2 was not released when v0.5.4 was released, but we need
+    # commits from master branch. The most recent tested commit is
+    # 5959b8783e45f1809812ed96ae762f38ee701972
+    depends_on('magma@master', when='@0.5.4:')
 
     depends_on('raja+openmp', when='+raja')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
