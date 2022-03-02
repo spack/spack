@@ -77,3 +77,7 @@ class NetcdfCxx4(AutotoolsPackage):
             config_args.append('CC={0}'.format(self.spec['mpi'].mpicc))
 
         return config_args
+
+    def check(self):
+        with working_dir(self.build_directory):
+            make('check', parallel=False)
