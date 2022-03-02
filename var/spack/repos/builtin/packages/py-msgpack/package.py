@@ -9,7 +9,9 @@ class PyMsgpack(PythonPackage):
 
     homepage = "https://msgpack.org/"
     pypi = "msgpack/msgpack-1.0.0.tar.gz"
+    git = "https://github.com/msgpack/msgpack-python"
 
+    version('1.0.3', sha256='51fdc7fb93615286428ee7758cecc2f374d5ff363bdd884c7ea622a7a327a81e')
     version('1.0.2', sha256='fae04496f5bc150eefad4e9571d1a76c55d021325dcd484ce45065ebbdd00984')
     version('1.0.1', sha256='7033215267a0e9f60f4a5e4fb2228a932c404f237817caff8dc3115d9e7cd975')
     version('1.0.0', sha256='9534d5cc480d4aff720233411a1f765be90885750b07df772380b34c10ecb5c0')
