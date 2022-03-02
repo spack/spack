@@ -45,8 +45,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('docs', default=False,
-            description='Builds with support for building documentation')
 
     # Variants related to BLAS
     variant('openmp_blas', default=False,
@@ -116,9 +114,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     generator = 'Ninja'
     depends_on('ninja', type='build')
     depends_on('cmake@3.17.0:', type='build')
-
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
