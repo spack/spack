@@ -41,8 +41,6 @@ class NetcdfCxx4(AutotoolsPackage):
             flags.append(self.compiler.cc_pic_flag)
         if name == 'cxxflags' and '+pic' in self.spec:
             flags.append(self.compiler.cxx_pic_flag)
-        elif name == 'cppflags':
-            flags.append('-I' + self.spec['netcdf-c'].prefix.include)
         elif name == 'ldlibs':
             # Address the underlinking problem reported in
             # https://github.com/Unidata/netcdf-cxx4/issues/86, which also
