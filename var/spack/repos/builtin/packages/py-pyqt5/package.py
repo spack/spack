@@ -18,9 +18,9 @@ class PyPyqt5(SIPPackage):
     sip_module = 'PyQt5.sip'
 
     version('5.15.6', sha256='80343bcab95ffba619f2ed2467fd828ffeb0a251ad7225be5fc06dcc333af452')
-    version('5.13.1', sha256='54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af')
-    version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
-    version('5.12.3', sha256='0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110')
+    version('5.13.1', sha256='54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af', deprecated=True)
+    version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9', deprecated=True)
+    version('5.12.3', sha256='0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110', deprecated=True)
 
     # API files can be installed regardless if Qscintilla is installed or not
     variant('qsci_api', default=False, description='Install PyQt API file for QScintilla')
