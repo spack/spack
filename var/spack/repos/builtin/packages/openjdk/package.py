@@ -28,6 +28,9 @@ _versions = {
         'Linux-x86_64': ('6c714ded7d881ca54970ec949e283f43d673a142fda1de79b646ddd619da9c0c', 'https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz'),
         'Linux-aarch64': ('1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe', 'https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz'),
     },
+    '11.0.14.1_1': {
+        'Linux-x86_64': ('43fb84f8063ad9bf6b6d694a67b8f64c8827552b920ec5ce794dfe5602edffe7', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.14.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.14.1_1.tar.gz'),
+    },
     '11.0.12_7': {
         'Linux-x86_64': ('8770f600fc3b89bf331213c7aa21f8eedd9ca5d96036d1cd48cb2748a3dbefd2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.12_7.tar.gz'),
         'Linux-aarch64': ('105bdc12fcd54c551e8e8ac96bc82412467244c32063689c41cee29ceb7452a2', 'https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.12%2B7/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz'),
