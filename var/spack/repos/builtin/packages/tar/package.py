@@ -17,7 +17,7 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r'^tar$']
 
-    tag = ['core-packages']
+    tags = ['core-packages']
 
     version('1.34', sha256='03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed')
     version('1.32', sha256='b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c')
