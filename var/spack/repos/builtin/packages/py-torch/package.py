@@ -205,6 +205,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
     patch('detect_omp_of_fujitsu_compiler.patch', when='%fj')
+    patch('fj-ssl2.patch', when="^fujitsu-ssl2")
 
     # Fix compilation of +distributed~tensorpipe
     # https://github.com/pytorch/pytorch/issues/68002
@@ -371,6 +372,9 @@ class PyTorch(PythonPackage, CudaPackage):
         elif self.spec['blas'].name == 'veclibfort':
             env.set('BLAS', 'vecLib')
             env.set('WITH_BLAS', 'veclib')
+        elif self.spec['blas'].name == 'fujitsu-ssl2':
+            env.set('BLAS', 'SSL2')
+            env.set('WITH_BLAS', 'ssl2')
         else:
             env.set('BLAS', 'Generic')
             env.set('WITH_BLAS', 'generic')
