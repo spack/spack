@@ -19,7 +19,7 @@ class Starpu(AutotoolsPackage):
     coherency over the differents processing units of the machine, and
     over a cluster when using distributed computing. Various data
     structures are supported mainline (vectors, dense matrices,
-    CSR/BCSR/COO sparse matrices, …), but application-specific data
+    CSR/BCSR/COO sparse matrices, ...), but application-specific data
     structures can also be supported.
     """
 
