@@ -157,7 +157,7 @@ def parse_specs(args, **kwargs):
 
     sargs = args
     if not isinstance(args, six.string_types):
-        sargs = ' '.join(spack.util.string.quote(args))
+        sargs = ' '.join(args)
     specs = spack.spec.parse(sargs)
     for spec in specs:
         if concretize:
