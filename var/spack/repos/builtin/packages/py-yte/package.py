@@ -16,11 +16,7 @@ class PyYte(PythonPackage):
     maintainers = ['marcusboden']
     version('1.2.0', '0368f220bb96fb3290bbd5a90e3d218af483d0d3e5abf9b08b24e29b150f151e')
 
-    # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
-    # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
     depends_on('python@3.7:', type=('build', 'run'))
-#    depends_on('py-setuptools', type='build')
     depends_on('py-poetry', type='build')
 
     depends_on('py-plac@1.3.4:1', type=('build', 'run'))
