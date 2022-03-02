@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import itertools
+import os
 
 from spack.package import *
 
