@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform
 import os
-import subprocess
+
 
 class Starpu(AutotoolsPackage):
     """StarPU runtime system
@@ -95,7 +95,8 @@ class Starpu(AutotoolsPackage):
             '--disable-mlr',
         ]
 
-        # add missing lib for simgrid static compilation, already fixed since StarPU 1.2.1
+        # add missing lib for simgrid static compilation,
+        # already fixed since StarPU 1.2.1
         if spec.satisfies('+fxt'):
             mf = FileFilter('configure')
             mf.filter('libfxt.a -lrt', 'libfxt.a -lrt -lbfd')
