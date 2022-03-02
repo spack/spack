@@ -231,7 +231,8 @@ with '-Wl,-commons,use_dylibs' and without
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if (spack_compiler.cc and
+                        os.path.dirname(spack_compiler.cc) == path):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -250,72 +251,72 @@ with '-Wl,-commons,use_dylibs' and without
 
         results = []
         for exe in exes:
-            variants = ''
+            variants = []
             output = Executable(exe)(output=str, error=str)
             if re.search(r'--with-hwloc-prefix=embedded', output):
-                variants += '~hwloc'
+                variants.append('~hwloc')
 
             if re.search(r'--with-pm=hydra', output):
-                variants += '+hydra'
+                variants.append('+hydra')
             else:
-                variants += '~hydra'
+                variants.append('~hydra')
 
             match = re.search(r'--(\S+)-romio', output)
             if match and is_enabled(match.group(1)):
-                variants += '+romio'
+                variants.append('+romio')
             elif match and is_disabled(match.group(1)):
-                variants += '~romio'
+                variants.append('~romio')
 
             if re.search(r'--with-ibverbs', output):
-                variants += '+verbs'
+                variants.append('+verbs')
             elif re.search(r'--without-ibverbs', output):
-                variants += '~verbs'
+                variants.append('~verbs')
 
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+wrapperrpath'
+                variants.append('+wrapperrpath')
             match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
             if match and is_disabled(match.group(1)):
-                variants += '~wrapperrpath'
+                variants.append('~wrapperrpath')
 
             if re.search(r'--disable-fortran', output):
-                variants += '~fortran'
+                variants.append('~fortran')
 
             match = re.search(r'--with-slurm=(\S+)', output)
             if match and is_enabled(match.group(1)):
-                variants += '+slurm'
+                variants.append('+slurm')
 
             if re.search(r'--enable-libxml2', output):
-                variants += '+libxml2'
+                variants.append('+libxml2')
             elif re.search(r'--disable-libxml2', output):
-                variants += '~libxml2'
+                variants.append('~libxml2')
 
             if re.search(r'--with-thread-package=argobots', output):
-                variants += '+argobots'
+                variants.append('+argobots')
 
             if re.search(r'--with-pmi=no', output):
-                variants += ' pmi=off'
+                variants.append('pmi=off')
             elif re.search(r'--with-pmi=simple', output):
-                variants += ' pmi=pmi'
+                variants.append('pmi=pmi')
             elif re.search(r'--with-pmi=pmi2/simple', output):
-                variants += ' pmi=pmi2'
+                variants.append('pmi=pmi2')
             elif re.search(r'--with-pmix', output):
-                variants += ' pmi=pmix'
+                variants.append('pmi=pmix')
 
             match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                variants += ' device=' + match.group(1)
+                variants.append('device=' + match.group(1))
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
-                variants += ' netmod=' + match.group(1)
+                variants.append('netmod=' + match.group(1))
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
                 os.path.dirname(match.group(1)))
             if compiler_spec:
-                variants += '%' + str(compiler_spec)
-            results.append(variants)
+                variants.append('%' + str(compiler_spec))
+            results.append(' '.join(variants))
         return results
 
     def setup_build_environment(self, env):

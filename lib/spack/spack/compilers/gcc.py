@@ -23,10 +23,10 @@ class Gcc(spack.compiler.Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['gfortran']
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
+    # MacPorts builds gcc versions with prefixes and -mp-X or -mp-X.Y suffixes.
     # Homebrew and Linuxbrew may build gcc with -X, -X.Y suffixes.
     # Old compatibility versions may contain XY suffixes.
-    suffixes = [r'-mp-\d+\.\d+', r'-\d+\.\d+', r'-\d+', r'\d\d']
+    suffixes = [r'-mp-\d+(?:\.\d+)?', r'-\d+(?:\.\d+)?', r'\d\d']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'gcc/gcc',
