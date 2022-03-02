@@ -62,13 +62,16 @@ class NetcdfCxx4(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        # We need to build with MPI wrappers if either of the parallel I/O
-        # features is enabled in netcdf-c:
-        # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
-        netcdf_c_spec = self.spec['netcdf-c']
-        if '+mpi' in netcdf_c_spec or '+parallel-netcdf' in netcdf_c_spec:
+        if self.spec.satisfies('^hdf5+mpi'):
+            # The package itself does not need the MPI libraries but includes
+            # <hdf5.h> (in the C code only), which requires <mpi.h> when HDF5 is
+            # built with the MPI support. Using the MPI wrapper introduces
+            # overlinking to MPI libraries and we would prefer not to use it but
+            # it is the only reliable way to provide the compiler with the
+            # correct path to <mpi.h>. For example, <mpi.h> of a MacPorts-built
+            # MPICH might reside in /opt/local/include/mpich-gcc10, which Spack
+            # does not know about and cannot inject with its compiler wrapper.
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
-            config_args.append('CXX=%s' % self.spec['mpi'].mpicxx)
 
         if '+static' in self.spec:
             config_args.append('--enable-static')
