@@ -40,6 +40,13 @@ das = {
                     'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
                     'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
                 }
+            ],
+            'patches': [
+                {
+                    'when': '@2.23.0:',
+                    'files': ['grib2/tables/1'],
+                    'fn': lambda f: os.remove(f)
+                }
             ]
         },
         'mpim': {
@@ -59,10 +66,16 @@ das = {
             'copies': [
                 {
                     'when': '@2.20:',
+                    'files': ['boot.def']
+                }
+            ],
+            'patches': [
+                {
+                    'when': '@2.20:',
                     'files': ['boot.def'],
-                    'regex':
+                    'fn': lambda f: filter_file(
                         r'(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)',
-                    'repl': r'\11\2'
+                        r'\11\2', f, backup=False)
                 }
             ]
         }
@@ -425,9 +438,13 @@ class Eccodes(CMakePackage):
                         cp_dst_path = join_path(center_placement_path, f)
                         copy(cp_src_path, cp_dst_path)
 
-                        if 'regex' in cp:
-                            filter_file(cp['regex'], cp['repl'],
-                                        cp_dst_path, backup=False)
+                # Patch the definitions/samples:
+                for patch in das_dict[center].get('patches', ()):
+                    if 'when' in patch and patch['when'] not in self.spec:
+                        continue
+
+                    for f in patch['files']:
+                        patch['fn'](join_path(center_placement_path, f))
 
     def create_memfs_view(self):
         pass
