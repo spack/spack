@@ -7,7 +7,12 @@ import subprocess
 
 
 class Fxt(AutotoolsPackage):
-    """This library provides efficient support for recording traces"""
+    """Fast User/Kernel Tracing
+
+    FxT stands for both FKT (Fast Kernel Tracing) and FUT (Fast User
+    Tracing). This library provides efficient support for recording
+    traces.
+    """
 
     homepage = "http://savannah.nongnu.org/projects/fkt"
     url = "http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.14.tar.gz"
