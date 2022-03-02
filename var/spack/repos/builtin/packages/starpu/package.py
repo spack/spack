@@ -68,8 +68,6 @@ class Starpu(AutotoolsPackage):
     variant('simgrid', default=False, description='Enable SimGrid support')
     variant('simgridmc', default=False, description='Enable SimGrid model checker support')
     variant('examples', default=True, description='Enable Examples')
-    variant('nmad', default=False, description='Enable StarPU-MPI implementation on top of NewMadeleine')
-    variant('poti', default=False, description='Enable the use of poti paje traces')
 
     depends_on("pkg-config", type='build')
     depends_on("hwloc")
@@ -80,12 +78,7 @@ class Starpu(AutotoolsPackage):
     depends_on("simgrid", when='+simgrid')
     depends_on("simgrid+smpi", when='+simgrid+mpi')
     depends_on("simgrid+mc", when='+simgridmc')
-    depends_on("nmad+mpi+pioman", when='+nmad')
-    depends_on("poti", when='+poti')
 
-    conflicts('+nmad', when="@1.1", msg="nmad is not available with branch 1.1")
-    conflicts('+nmad', when="@1.2", msg="nmad is not available with branch 1.2")
-    conflicts('+poti', when='~fxt', msg="Poti needs fxt")
     conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI require to disable shared library")
 
     def autoreconf(self, spec, prefix):
@@ -130,8 +123,6 @@ class Starpu(AutotoolsPackage):
 
             "--disable-mpi"       if '~mpi'  in spec else "--enable-mpi",
             "--without-mpicc"     if '~mpi'  in spec else "--with-mpicc=%s" % mpicc,
-            "--enable-nmad"       if '+nmad' in spec else "",
-            "--enable-poti"       if '+poti' in spec else "",
 
             "--with-hwloc=%s"     % spec['hwloc'].prefix,
         ])
