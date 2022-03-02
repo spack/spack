@@ -7,7 +7,7 @@ from spack import *
 
 
 class Prophecy4f(MakefilePackage):
-    """Prophecy4f is a Monte Carlo integrator for Higgs decays H → WW/ZZ → 4 fermions"""
+    """Prophecy4f is a Monte Carlo integrator for Higgs decays H -> WW/ZZ -> 4 fermions"""
 
     homepage = "https://prophecy4f.hepforge.org/"
     url      = "https://prophecy4f.hepforge.org/downloads/?f=Prophecy4f-3.0.2.tar.gz"
