@@ -151,7 +151,7 @@ class TestSpecSyntax(object):
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
         spec = shlex.split(str(spec))
-        lex_output = sp.SpecLexer().lex(spec)
+        lex_output = list(sp.SpecLexer().lex(spec))
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type in (sp.ID, sp.VAL, sp.VER):
