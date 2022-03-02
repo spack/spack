@@ -55,6 +55,24 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     assert h in output
 
 
+def test_spec_parse_dependency_variant_value():
+    """Verify that we can provide multiple key=value variants to multiple separate
+    packages within a spec string."""
+    output = spec('multivalue-variant fee=barbaz ^ a foobar=baz')
+
+    assert 'fee=barbaz' in output
+    assert 'foobar=baz' in output
+
+
+def test_spec_parse_cflags_quoting():
+    """Verify that compiler flags can be provided to a spec from the command line."""
+    output = spec('--yaml', 'gcc cflags="-Os -pipe" cxxflags="-flto -Os"')
+    gh_flagged = spack.spec.Spec.from_yaml(output)
+
+    assert ['-Os', '-pipe'] == gh_flagged.compiler_flags['cflags']
+    assert ['-flto', '-Os'] == gh_flagged.compiler_flags['cxxflags']
+
+
 def test_spec_yaml():
     output = spec('--yaml', 'mpileaks')
 
