@@ -45,6 +45,7 @@ class Sparrow(CMakePackage):
     depends_on("eigen@3.3.2:")
     depends_on("boost+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("py-pybind11@2.6.2")
+    depends_on("py-pip", type="build")
     depends_on("yaml-cpp")
     depends_on("cereal")
     depends_on("googletest")
@@ -53,8 +54,8 @@ class Sparrow(CMakePackage):
         os.rmdir("dev")
         os.rename("deps/dev", "dev")
         filter_file(
-            r"set_target_properties\(SparrowApp PROPERTIES OUTPUT_NAME sparrow\)",
-            'set_target_properties(SparrowApp PROPERTIES OUTPUT_NAME sparrow SUFFIX ".exe")',
+            r"SparrowApp PROPERTIES OUTPUT_NAME sparrow",
+            'SparrowApp PROPERTIES OUTPUT_NAME sparrow SUFFIX ".exe"',
             "src/Sparrow/CMakeLists.txt",
         )
         filter_file(
@@ -64,8 +65,6 @@ class Sparrow(CMakePackage):
         )
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
             self.define("SCINE_BUILD_PYTHON_BINDINGS", True),
             self.define("SCINE_BUILD_TESTS", self.run_tests),
