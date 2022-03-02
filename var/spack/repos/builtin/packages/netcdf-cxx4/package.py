@@ -52,10 +52,29 @@ class NetcdfCxx4(AutotoolsPackage):
 
     @property
     def libs(self):
-        shared = True
-        return find_libraries(
-            'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
+        libraries = ['libnetcdf_c++4']
+
+        query_parameters = self.spec.last_query.extra_parameters
+
+        if 'shared' in query_parameters:
+            shared = True
+        elif 'static' in query_parameters:
+            shared = False
+        else:
+            shared = '+shared' in self.spec
+
+        libs = find_libraries(
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
+
+        if libs:
+            return libs
+
+        msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+        raise spack.error.NoLibrariesError(
+            msg.format('shared' if shared else 'static',
+                       self.spec.name,
+                       self.spec.prefix))
 
     @when('@4.3.1:+shared')
     @on_package_attributes(run_tests=True)
