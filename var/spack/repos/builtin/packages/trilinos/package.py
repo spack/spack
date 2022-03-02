@@ -114,7 +114,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('minitensor',   default=False, description='Compile with MiniTensor')
     variant('muelu',        default=True, description='Compile with Muelu')
     variant('nox',          default=False, description='Compile with NOX')
-    variant('panzer',       default=True, description='Compile with Panzer')
+    variant('panzer',       default=False, description='Compile with Panzer')
     variant('piro',         default=False, description='Compile with Piro')
     variant('phalanx',      default=False, description='Compile with Phalanx')
     variant('rol',          default=False, description='Compile with ROL')
