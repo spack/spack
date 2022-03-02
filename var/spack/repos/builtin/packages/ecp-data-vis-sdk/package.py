@@ -129,12 +129,17 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
 
     depends_on('py-cinemasci', when='+cinema')
 
-    dav_sdk_depends_on('paraview +mpi +python3 +kits',
+    dav_sdk_depends_on('paraview+mpi+python3+kits+shared',
                        when='+paraview',
-                       propagate=['hdf5', 'adios2'] + cuda_arch_variants)
-    # Want +shared when not using cuda
-    depends_on('paraview ~shared +cuda', when='+paraview +cuda')
-    depends_on('paraview +shared ~cuda', when='+paraview ~cuda')
+                       propagate=['hdf5', 'adios2'])
+    # ParaView needs @5.11: in order to use cuda and be compatible with other
+    # SDK packages.
+    depends_on('paraview +cuda', when='+paraview +cuda ^paraview@5.11:')
+    for cuda_arch in cuda_arch_variants:
+        depends_on('paraview {0}'.format(cuda_arch),
+                   when='+paraview {0} ^paraview@5.11:'.format(cuda_arch))
+    depends_on('paraview ~cuda', when='+paraview ~cuda')
+    conflicts('paraview@master')
 
     dav_sdk_depends_on('visit', when='+visit')
 
