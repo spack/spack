@@ -13,6 +13,9 @@ class Snakemake(PythonPackage):
     pypi = "snakemake/snakemake-6.12.3.tar.gz"
     maintainers = ['marcusboden']
 
+    version('7.0.2', sha256='d988ea1914203452dc93200c0d54f283f806b109934534cc4448f9359fa185c8')
+    version('6.15.5', sha256='e3297898f96c358b2c1a883aeb0f3540f983943cd564511510b9112a37fcf1f4')
+    version('6.15.1', sha256='a219601d57037f565ead9963e6bd8d04d3bdd985d172371e54197dcbdba79865')
     version('6.15.1', sha256='a219601d57037f565ead9963e6bd8d04d3bdd985d172371e54197dcbdba79865')
     version('6.13.1', sha256='22f57dcd8b1ca8a30aaa45c5d2c0f56d381d4731abd0988f24f9de46b7d9827c')
     version('6.12.3', sha256='af86af9a540da3dceb05dad1040f1d3d733e6a695f8b3f8c30f8cf3bc6570a88')
@@ -23,6 +26,11 @@ class Snakemake(PythonPackage):
     depends_on('py-wrapt', type=('build', 'run'))
 
     depends_on('python@3.3:3.6', when='@:5')
+
+    with when('@7:'):
+        depends_on('py-yte', type=('build', 'run'))
+        depends_on('py-jinja2', type=('build', 'run'))
+        depends_on('py-retry', type=('build', 'run'))
 
     with when('@6:'):
         depends_on('python@3.5:')
