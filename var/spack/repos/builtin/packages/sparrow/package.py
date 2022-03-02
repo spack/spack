@@ -53,11 +53,12 @@ class Sparrow(CMakePackage):
     def patch(self):
         os.rmdir("dev")
         os.rename("deps/dev", "dev")
-        filter_file(
-            r"SparrowApp PROPERTIES OUTPUT_NAME sparrow",
-            'SparrowApp PROPERTIES OUTPUT_NAME sparrow SUFFIX ".exe"',
-            "src/Sparrow/CMakeLists.txt",
-        )
+        if self.spec.satisfies("platform=darwin"):
+            filter_file(
+                r"SparrowApp PROPERTIES OUTPUT_NAME sparrow",
+                'SparrowApp PROPERTIES OUTPUT_NAME sparrow SUFFIX ".exe"',
+                "src/Sparrow/CMakeLists.txt",
+            )
         filter_file(
             r"MAKE_CXX_STANDARD 14 PARENT_SCOPE",
             "MAKE_CXX_STANDARD 17 PARENT_SCOPE",
