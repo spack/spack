@@ -59,7 +59,6 @@ class NetcdfCxx4(AutotoolsPackage):
 
     def configure_args(self):
         config_args = self.enable_or_disable('shared')
-        config_args += self.with_or_without('pic')
 
         if '+doc' in self.spec:
             config_args.append('--enable-doxygen')
