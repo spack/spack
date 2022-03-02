@@ -377,8 +377,7 @@ class URLFetchStrategy(FetchStrategy):
             curl_args = ['--stderr', '-', '-s', '-f', '-I', url]
             _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
             return curl.returncode == 0
-        else:
-            return False
+        return False
 
     def _fetch_from_url(self, url):
         if spack.config.get('config:url_fetch_method') == 'curl':
