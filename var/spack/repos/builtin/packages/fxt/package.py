@@ -12,13 +12,13 @@ class Fxt(AutotoolsPackage):
 
     maintainers = ['nfurmento', 'sthibaul']
 
-    version('0.3.14', '317d8d93175cd9f27ec43b8390b6d29dc66114f06aa74f2329847d49baaaebf2',
+    version('0.3.14', sha256='317d8d93175cd9f27ec43b8390b6d29dc66114f06aa74f2329847d49baaaebf2',
             url="http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.14.tar.gz")
-    version('0.3.5', '6d5ad611be66576a1f1a6a6ca9a8ad42',
+    version('0.3.5', sha256='3c0b33c82a01c4fb710c53ee9fc2c803314beba6fb60c397e13e874811e34a22',
             url="http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.5.tar.gz")
-    version('0.3.4', '1c1c1cb8087a1e009a5fcf3a42583c3d',
+    version('0.3.4', sha256='fcd35a5278ac0f10eba12fed4fa436dce79559897fde5b8176d5eee9081970f7',
             url="http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.4.tar.gz")
-    version('0.3.3', '52055550a21655a30f0381e618081776',
+    version('0.3.3', sha256='3f6fea5211cc242a54496e6242365c99522a5039916789cdbe25a58d05d6a626'
             url="http://download.savannah.nongnu.org/releases/fkt/fxt-0.3.3.tar.gz")
 
     variant('moreparams', default=False, description='Increase the value of FXT_MAX_PARAMS (to allow longer task names).')
