@@ -57,6 +57,23 @@ class NetcdfCxx4(AutotoolsPackage):
             'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
         )
 
+    @when('@4.3.1:+shared')
+    @on_package_attributes(run_tests=True)
+    def patch(self):
+        # We enable the filter tests only when the tests are requested by the
+        # user. This, however, has a side effect: an extra file 'libh5bzip2.so'
+        # gets installed (note that the file has .so extension even on darwin).
+        # It's unclear whether that is intended but given the description of the
+        # configure option --disable-filter-testing (Do not run filter test and
+        # example; requires shared libraries and netCDF-4), we currently assume
+        # that the file is not really meant for the installation. To make all
+        # installations consistent and independent of whether the shared
+        # libraries or the tests are requested, we prevent installation of
+        # 'libh5bzip2.so':
+        filter_file(r'(^\s*)lib(_LTLIBRARIES\s*)(=\s*libh5bzip2\.la\s*$)',
+                    r'\1noinst\2+\3', join_path(self.stage.source_path,
+                                                'plugins', 'Makefile.in'))
+
     def configure_args(self):
         config_args = self.enable_or_disable('shared')
 
@@ -65,16 +82,23 @@ class NetcdfCxx4(AutotoolsPackage):
         else:
             config_args.append('--disable-doxygen')
 
-        if self.spec.satisfies('^hdf5+mpi'):
-            # The package itself does not need the MPI libraries but includes
-            # <hdf5.h> (in the C code only), which requires <mpi.h> when HDF5 is
-            # built with the MPI support. Using the MPI wrapper introduces
-            # overlinking to MPI libraries and we would prefer not to use it but
-            # it is the only reliable way to provide the compiler with the
-            # correct path to <mpi.h>. For example, <mpi.h> of a MacPorts-built
-            # MPICH might reside in /opt/local/include/mpich-gcc10, which Spack
-            # does not know about and cannot inject with its compiler wrapper.
-            config_args.append('CC={0}'.format(self.spec['mpi'].mpicc))
+        if self.spec.satisfies('@4.3.1:'):
+            if self.run_tests and '+shared' in self.spec:
+                config_args.append('--enable-filter-testing')
+                if self.spec.satisfies('^hdf5+mpi'):
+                    # The package itself does not need the MPI libraries but
+                    # includes <hdf5.h> in the filter test C code, which
+                    # requires <mpi.h> when HDF5 is built with the MPI support.
+                    # Using the MPI wrapper introduces overlinking to MPI
+                    # libraries and we would prefer not to use it but it is the
+                    # only reliable way to provide the compiler with the correct
+                    # path to <mpi.h>. For example, <mpi.h> of a MacPorts-built
+                    # MPICH might reside in /opt/local/include/mpich-gcc10,
+                    # which Spack does not know about and cannot inject with its
+                    # compiler wrapper.
+                    config_args.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            else:
+                config_args.append('--disable-filter-testing')
 
         return config_args
 
