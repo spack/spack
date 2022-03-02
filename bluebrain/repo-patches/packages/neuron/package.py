@@ -93,6 +93,8 @@ class Neuron(CMakePackage):
             description="Perform additional code checks like "
                         "formatting or static analysis")
 
+    variant("caliper", default=False, description="Add LLNL/Caliper support")
+
     # Build with `ninja` instead of `make`
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -121,8 +123,10 @@ class Neuron(CMakePackage):
     depends_on("py-numpy",    when="+python", type=("build", "run"))
     depends_on("py-cython",   when="+rx3d", type="build")
     depends_on("tau",         when="+profile")
-    depends_on("coreneuron+legacy-unit", when="+coreneuron+legacy-unit")
-    depends_on("coreneuron~legacy-unit", when="+coreneuron~legacy-unit")
+    depends_on("coreneuron+legacy-unit~caliper", when="+coreneuron+legacy-unit~caliper")
+    depends_on("coreneuron~legacy-unit~caliper", when="+coreneuron~legacy-unit~caliper")
+    depends_on("coreneuron+legacy-unit+caliper", when="+coreneuron+legacy-unit+caliper")
+    depends_on("coreneuron~legacy-unit+caliper", when="+coreneuron~legacy-unit+caliper")
     depends_on("py-pytest-cov", when="+tests@8:")
 
     conflicts("+cmake",   when="@0:7.8.0b,2018-10")
@@ -183,6 +187,9 @@ class Neuron(CMakePackage):
         compilation_flags = ' '.join(compilation_flags)
         args.append("-DCMAKE_C_FLAGS=" + compilation_flags)
         args.append("-DCMAKE_CXX_FLAGS=" + compilation_flags)
+        if "+caliper" in self.spec:
+            args.append('-DNRN_ENABLE_PROFILING=ON')
+            args.append('-DNRN_PROFILER=caliper')
         return args
 
     # Create symlink in share/nrn/lib for the python libraries
