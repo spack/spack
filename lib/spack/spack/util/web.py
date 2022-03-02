@@ -27,6 +27,7 @@ from llnl.util.filesystem import mkdirp
 import spack.config
 import spack.error
 import spack.url
+import spack.util.azure_blob as azure_blob_util
 import spack.util.crypto
 import spack.util.gcs as gcs_util
 import spack.util.s3 as s3_util
@@ -79,6 +80,12 @@ def uses_ssl(parsed_url):
         tty.debug("(uses_ssl) GCS Blob is https")
         return True
 
+    elif parsed_url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(parsed_url)
+        if azureblob.is_https():
+            tty.debug("(uses_ssl) Azure blob is https")
+            return True
+
     return False
 
 
@@ -111,7 +118,13 @@ def read_from_url(url, accept_content_type=None):
             if not __UNABLE_TO_VERIFY_SSL:
                 context = ssl._create_unverified_context()
 
-    req = Request(url_util.format(url))
+    if url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(url)
+        azure_url_sas = azureblob.azure_url_sas()
+        tty.debug("(read_from_url) azure_url_sas = %s" % (azure_url_sas))
+        req = Request(azureblob.azure_url_sas())
+    else:
+        req = Request(url_util.format(url))
     content_type = None
     is_web_url = url.scheme in ('http', 'https')
     if accept_content_type and is_web_url:
@@ -207,6 +220,12 @@ def push_to_url(
         if not keep_original:
             os.remove(local_file_path)
 
+    elif remote_url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(remote_url)
+        azureblob.azure_upload_to_blob(local_file_path)
+        if not keep_original:
+            os.remove(local_file_path)
+
     else:
         raise NotImplementedError(
             'Unrecognized URL scheme: {SCHEME}'.format(
@@ -234,6 +253,10 @@ def url_exists(url):
     elif url.scheme == 'gs':
         gcs = gcs_util.GCSBlob(url)
         return gcs.exists()
+
+    elif url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(url)
+        return azureblob.azure_blob_exists()
 
     # otherwise, just try to "read" from the URL, and assume that *any*
     # non-throwing response contains the resource represented by the URL
@@ -305,6 +328,11 @@ def remove_url(url, recursive=False):
         else:
             blob = gcs_util.GCSBlob(url)
             blob.delete_blob()
+        return
+
+    elif url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(url)
+        azureblob.azure_delete_blob()
         return
 
     # Don't even try for other URL schemes.
@@ -389,6 +417,10 @@ def list_url(url, recursive=False):
     elif url.scheme == 'gs':
         gcs = gcs_util.GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
+
+    elif url.scheme == 'azure':
+        azureblob = azure_blob_util.AzureBlob(url)
+        return azureblob.azure_list_blobs()
 
 
 def spider(root_urls, depth=0, concurrency=32):
