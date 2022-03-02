@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import platform
 import os
+import platform
 
 
 class Starpu(AutotoolsPackage):
@@ -119,8 +119,10 @@ class Starpu(AutotoolsPackage):
             "--%s-fortran"        % ('enable' if '+fortran'  in spec else 'disable'),
             "--%s-openmp"         % ('enable' if '+openmp'   in spec else 'disable'),
 
-            "--%s-opencl"         % ('disable' if '~opencl' in spec or '+simgrid' in spec else 'enable'),
-            "--%s-cuda"           % ('disable' if '~cuda'   in spec or '+simgrid' in spec else 'enable'),
+            "--%s-opencl"         % ('disable' if '~opencl' in spec
+                                     or '+simgrid' in spec else 'enable'),
+            "--%s-cuda"           % ('disable' if '~cuda'   in spec
+                                     or '+simgrid' in spec else 'enable'),
 
             "--disable-mpi"       if '~mpi'  in spec else "--enable-mpi",
             "--without-mpicc"     if '~mpi'  in spec else "--with-mpicc=%s" % mpicc,
@@ -130,7 +132,7 @@ class Starpu(AutotoolsPackage):
 
         if spec.satisfies('+fxt'):
             config_args.append("--with-fxt=%s" % spec['fxt'].prefix)
-            if spec.satisfies('@1.2:') or spec.satisfies('@svn-1.2') or spec.satisfies('@svn-trunk') or spec.satisfies('@git-1.2'):
+            if spec.satisfies('@1.2:') or spec.satisfies('@git-1.2'):
                 config_args.append("--enable-paje-codelet-details")
 
         if spec.satisfies('+simgrid'):

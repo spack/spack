@@ -28,7 +28,8 @@ class Fxt(AutotoolsPackage):
     def patch(self):
         # Increase the value of FXT_MAX_PARAMS (to allow longer task names)
         if '+moreparams' in self.spec:
-            filter_file('#define FXT_MAX_PARAMS.*', '#define FXT_MAX_PARAMS 16', 'tools/fxt.h')
+            filter_file('#define FXT_MAX_PARAMS.*',
+                        '#define FXT_MAX_PARAMS 16', 'tools/fxt.h')
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):
@@ -36,7 +37,8 @@ class Fxt(AutotoolsPackage):
                 subprocess.call(['libtoolize', '--copy', '--force'], shell=False)
                 subprocess.check_call("./autogen.sh")
             else:
-                raise RuntimeError('Neither configure nor autogen.sh script exist. FxT Cannot configure.')
+                raise RuntimeError('Neither configure nor autogen.sh script exist.\
+                FxT Cannot configure.')
 
     def configure_args(self):
         args = []
