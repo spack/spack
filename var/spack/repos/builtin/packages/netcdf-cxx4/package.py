@@ -28,10 +28,6 @@ class NetcdfCxx4(AutotoolsPackage):
 
     depends_on('netcdf-c')
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
     depends_on('doxygen', when='+doc', type='build')
 
     conflicts('~shared', when='~static')
@@ -39,8 +35,6 @@ class NetcdfCxx4(AutotoolsPackage):
     patch('https://github.com/Unidata/netcdf-cxx4/commit/e7cc5bab02cf089dc79616456a0a951fee979fe9.patch',
           sha256='4ddf6db9dc0c5f754cb3d68b1dbef8c385cf499f6e5df8fbccae3749336ba84a',
           when='@:4.3.1 platform=darwin')
-
-    force_autoreconf = True
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and '+pic' in self.spec:
