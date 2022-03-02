@@ -34,7 +34,7 @@ class Sparrow(CMakePackage):
 
 
     depends_on('eigen@3.3.2:')
-    depends_on('boost+filesystem+program_options@1.65.0:')
+    depends_on('boost+filesystem+program_options cxxstd=17 @1.65.0:')
     depends_on('py-pybind11@2.6.2')
     depends_on('yaml-cpp')
     depends_on('cereal')
@@ -46,6 +46,9 @@ class Sparrow(CMakePackage):
         filter_file(r'set_target_properties\(SparrowApp PROPERTIES OUTPUT_NAME sparrow\)',
                     'set_target_properties(SparrowApp PROPERTIES OUTPUT_NAME sparrow SUFFIX ".exe")',
                     'src/Sparrow/CMakeLists.txt')
+        filter_file(r'MAKE_CXX_STANDARD 14 PARENT_SCOPE',
+                     'MAKE_CXX_STANDARD 17 PARENT_SCOPE',
+                     'dev/cmake/ComponentSetup.cmake')
 
     def cmake_args(self):
         spec = self.spec
