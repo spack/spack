@@ -60,7 +60,14 @@ class NetcdfCxx4(AutotoolsPackage):
         )
 
     def configure_args(self):
-        config_args = []
+        config_args = self.enable_or_disable('static')
+        config_args += self.enable_or_disable('shared')
+        config_args += self.with_or_without('pic')
+
+        if '+doc' in self.spec:
+            config_args.append('--enable-doxygen')
+        else:
+            config_args.append('--disable-doxygen')
 
         if self.spec.satisfies('^hdf5+mpi'):
             # The package itself does not need the MPI libraries but includes
@@ -71,26 +78,6 @@ class NetcdfCxx4(AutotoolsPackage):
             # correct path to <mpi.h>. For example, <mpi.h> of a MacPorts-built
             # MPICH might reside in /opt/local/include/mpich-gcc10, which Spack
             # does not know about and cannot inject with its compiler wrapper.
-            config_args.append('CC=%s' % self.spec['mpi'].mpicc)
-
-        if '+static' in self.spec:
-            config_args.append('--enable-static')
-        else:
-            config_args.append('--disable-static')
-
-        if '+shared' in self.spec:
-            config_args.append('--enable-shared')
-        else:
-            config_args.append('--disable-shared')
-
-        if '+pic' in self.spec:
-            config_args.append('--with-pic')
-        else:
-            config_args.append('--without-pic')
-
-        if '+doc' in self.spec:
-            config_args.append('--enable-doxygen')
-        else:
-            config_args.append('--disable-doxygen')
+            config_args.append('CC={0}'.format(self.spec['mpi'].mpicc))
 
         return config_args
