@@ -16,9 +16,11 @@ class RocmValidationSuite(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
     url      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-4.5.0.tar.gz"
+    git      = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='develop')
     version('4.5.2', sha256='e2a128395367a60a17d4d0f62daee7d34358c75332ed582243b18da409589ab8')
     version('4.5.0', sha256='54181dd5a132a7f4a34a9316d8c00d78343ec45c069c586134ce4e61e68747f5')
     version('4.3.1', sha256='779a3b0afb53277e41cf863185e87f95d9b2bbb748fcb062cbb428d0b510fb69')
@@ -51,7 +53,7 @@ class RocmValidationSuite(CMakePackage):
         build_env.set("HIPCC_PATH", spec['hip'].prefix)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('hip-rocclr@' + ver, when='@' + ver)
         depends_on('rocminfo@' + ver, when='@' + ver)

@@ -92,8 +92,11 @@ class RocmOpenmpExtras(Package):
 
     homepage = tools_url + "/aomp"
     url = tools_url + "/aomp/archive/rocm-4.5.0.tar.gz"
+    git = "https://github.com/ROCm-Developer-Tools/aomp.git"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+
+    version('master', branch='aomp-epsdb')
     version('4.5.2', sha256=versions_dict['4.5.2']['aomp'])
     version('4.5.0', sha256=versions_dict['4.5.0']['aomp'])
     version('4.3.1', sha256=versions_dict['4.3.1']['aomp'])
@@ -112,6 +115,45 @@ class RocmOpenmpExtras(Package):
     depends_on('awk', type='build')
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
+
+    # Master
+    depends_on('hsakmt-roct@master', when='@master')
+    depends_on('comgr@master', when='@master')
+    depends_on('hsa-rocr-dev@master', when='@master')
+    depends_on('llvm-amdgpu@master ~openmp', when='@master')
+
+    resource(
+        name='rocm-device-libs',
+        git='https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git',
+        branch='amd-stg-open',
+        destination='rocm-openmp-extras',
+        placement='rocm-device-libs',
+        when='@master')
+
+    resource(
+        name='flang',
+        git='https://github.com/ROCm-Developer-Tools/flang.git',
+        branch='aomp-epsdb',
+        destination='rocm-openmp-extras',
+        placement='flang',
+        when='@master')
+
+    resource(
+        name='aomp-extras',
+        git='https://github.com/ROCm-Developer-Tools/aomp-extras.git',
+        branch='aomp-epsdb',
+        destination='rocm-openmp-extras',
+        placement='aomp-extras',
+        when='@master')
+
+    resource(
+        name='llvm-project',
+        git='https://github.com/RadeonOpenCompute/llvm-project',
+        branch='amd-stg-open',
+        destination='rocm-openmp-extras',
+        placement='llvm-project',
+        when='@master')
+    # End master
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1',
                 '4.5.0', '4.5.2']:
@@ -224,10 +266,16 @@ class RocmOpenmpExtras(Package):
                 aomp_extras.format(src) + '/libm/CMakeLists.txt')
 
         # Openmp adjustments
-        if self.spec.version >= Version('4.5.0'):
+        if (self.spec.version >= Version('4.5.0') and
+            self.spec.version < Version('master')):
             filter_file(
                 '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
                 libomptarget.format(src) + '/deviceRTLs/libm/CMakeLists.txt')
+
+        if self.spec.version >= Version('master'):
+            filter_file(
+                '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
+                libomptarget.format(src) + '/libm/CMakeLists.txt')
 
         filter_file(
             '-nogpulib', '-nogpulib -nogpuinc',

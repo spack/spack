@@ -20,7 +20,6 @@ class LlvmAmdgpu(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
-
     version('4.5.2', sha256='36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f')
     version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
     version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
@@ -36,17 +35,12 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('rocm-device-libs', default=True, description='Build ROCm device libs as external LLVM project instead of a standalone spack package.')
-    variant('openmp', default=True, description='Enable OpenMP')
+    variant('openmp', default=False, description='Enable OpenMP')
     variant(
-        'llvm_dylib',
+        "llvm_dylib",
         default=False,
-        description='Build LLVM shared library, containing all '
-        'components in a single shared library',
-    )
-    variant(
-        'link_llvm_dylib',
-        default=False,
-        description='Link LLVM tools against the LLVM shared library',
+        description="Build LLVM shared library, containing all "
+        "components in a single shared library",
     )
 
     provides('libllvm@11', when='@3.5:3.8')
@@ -70,11 +64,7 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
-    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
-
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
+    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:4.5.2')
 
     conflicts('^cmake@3.19.0')
 
@@ -120,7 +110,7 @@ class LlvmAmdgpu(CMakePackage):
             'compiler-rt'
         ]
         args = []
-        if self.spec.satisfies('@4.3.0:4.5.0'):
+        if self.spec.satisfies('@4.3.0:'):
             llvm_projects.append('libcxx')
             llvm_projects.append('libcxxabi')
 
@@ -154,10 +144,7 @@ class LlvmAmdgpu(CMakePackage):
             ])
 
         if '+llvm_dylib' in self.spec:
-            args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
-
-        if '+link_llvm_dylib' in self.spec:
-            args.append("-DLLVM_LINK_LLVM_DYLIB:Bool=ON")
+            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":

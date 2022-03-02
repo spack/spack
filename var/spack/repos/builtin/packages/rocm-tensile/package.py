@@ -16,6 +16,7 @@ class RocmTensile(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
+    version('master', branch='master')
     version('4.5.2', sha256='da20256224749c0a8b44aaede25fbcd66cfeac483081af5d22f1d1fcf49dffc1')
     version('4.5.0', sha256='26a27659c864b5372ca4407671c6e8d4be3bbc05c64fc18762ad570cd3b3af1f')
     version('4.3.1', sha256='6fce0ac22051a454fe984283766eb473dc50752cd30bad05acb3dbde6ef4f8b1')
@@ -44,7 +45,7 @@ class RocmTensile(CMakePackage):
     depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-cmake@' + ver, type='build',  when='@' + ver)
         depends_on('hip@' + ver,                       when='@' + ver)
         depends_on('comgr@' + ver,                     when='@' + ver)
@@ -55,7 +56,8 @@ class RocmTensile(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
 
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0',
+                '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = 'Tensile/Source'

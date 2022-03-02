@@ -19,7 +19,7 @@ class Hip(CMakePackage):
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.5.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
-    version('master', branch='master')
+    version('master', branch='develop')
     version('4.5.2', sha256='c2113dc3c421b8084cd507d91b6fbc0170765a464b71fb0d96bb875df368f160')
     version('4.5.0', sha256='4026f31fb4f8050e9aa9d4294f29c3410bfb38422dbbae4236ccd65fed4d55b2')
     version('4.3.1', sha256='955311193819f487f9a2d64bffe07c4b8c3a0dc644dc3ad984f7c66a325bdd6f')
@@ -43,7 +43,7 @@ class Hip(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1']:
         depends_on('hip-rocclr@' + ver, when='@' + ver)
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -96,6 +96,30 @@ class Hip(CMakePackage):
             placement='rocclr',
             when='@{0}'.format(d_version)
         )
+    resource(
+        name='rocclr',
+        placement='rocclr',
+        git='https://github.com/ROCm-Developer-Tools/ROCclr.git',
+        branch='develop',
+        when='@master'
+    )
+
+    resource(
+        name='opencl',
+        placement='opencl',
+        git='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git',
+        branch='develop',
+        when='@master'
+    )
+
+    resource(
+        name='hipamd',
+        placement='hipamd',
+        git='https://github.com/ROCm-Developer-Tools/hipamd.git',
+        branch='develop',
+        when='@master'
+    )
+
     # Note: the ROCm ecosystem expects `lib/` and `bin/` folders with symlinks
     # in the parent directory of the package, which is incompatible with spack.
     # In hipcc the ROCM_PATH variable is used to point to the parent directory
