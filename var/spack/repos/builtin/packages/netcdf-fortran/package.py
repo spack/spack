@@ -62,7 +62,6 @@ class NetcdfFortran(AutotoolsPackage):
     patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
-
         if name == 'cflags':
             if '+pic' in self.spec:
                 flags.append(self.compiler.cc_pic_flag)
@@ -81,7 +80,10 @@ class NetcdfFortran(AutotoolsPackage):
                 # files with lowercase names.
                 flags.append('-ef')
 
-        return (None, None, flags)
+        # Note that cflags and fflags should be added by the compiler wrapper
+        # and not on the command line to avoid overriding the default
+        # compilation flags set by the configure script:
+        return flags, None, None
 
     @property
     def libs(self):
