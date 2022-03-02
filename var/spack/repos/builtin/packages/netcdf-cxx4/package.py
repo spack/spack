@@ -19,10 +19,10 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.3.1', sha256='6a1189a181eed043b5859e15d5c080c30d0e107406fbb212c8fb9814e90f3445')
     version('4.3.0', sha256='e34fbc6aba243ec82c23e9ee99db2430555ada849c54c1f3ab081b0ddd0f5f30')
 
-    # Usually the configure automatically inserts the pic flags, but we can
-    # force its usage with this variant.
     variant('static', default=True, description='Enable building static libraries')
     variant('shared', default=True, description='Enable shared library')
+    # Usually the configure automatically inserts the pic flags, but we can
+    # force its usage with this variant.
     variant('pic', default=True, description='Produce position-independent code (for shared libs)')
     variant('doc', default=False, description='Enable doxygen docs')
 
@@ -32,6 +32,7 @@ class NetcdfCxx4(AutotoolsPackage):
 
     conflicts('~shared', when='~static')
 
+    # See https://github.com/Unidata/netcdf-cxx4/issues/109
     patch('https://github.com/Unidata/netcdf-cxx4/commit/e7cc5bab02cf089dc79616456a0a951fee979fe9.patch',
           sha256='4ddf6db9dc0c5f754cb3d68b1dbef8c385cf499f6e5df8fbccae3749336ba84a',
           when='@:4.3.1 platform=darwin')
