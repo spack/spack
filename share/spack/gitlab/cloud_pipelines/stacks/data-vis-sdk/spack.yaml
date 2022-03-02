@@ -39,7 +39,7 @@ spack:
           +vtkm
           +zfp
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/data-vis-sdk" }
+  mirrors: { "mirror": "s3://spack-binaries-prs/glr-testing/data-vis-sdk" }
 
   gitlab-ci:
     image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
@@ -53,13 +53,13 @@ spack:
     mappings:
       - match: [llvm]
         runner-attributes:
-          tags: ["spack", "public", "huge", "x86_64"]
+          tags: ["glr-testing"]
       - match: [vtk-h, vtk-m, paraview, vtk]
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: ["glr-testing"]
       - match: ['@:']
         runner-attributes:
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["glr-testing"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
@@ -68,9 +68,3 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       tags: ["spack", "public", "medium", "x86_64"]
-
-  cdash:
-    build-group: Data and Vis SDK
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure

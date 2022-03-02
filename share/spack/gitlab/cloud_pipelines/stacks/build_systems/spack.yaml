@@ -26,7 +26,7 @@ spack:
         - - $default_specs
         - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/build_systems" }
+  mirrors: { "mirror": "s3://spack-binaries-prs/glr-testing/build_systems" }
 
   gitlab-ci:
     script:
@@ -41,7 +41,7 @@ spack:
       - match: [ 'os=ubuntu18.04' ]
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [ "" ] }
-          tags: [ "spack", "public", "large", "x86_64" ]
+          tags: [ "glr-testing" ]
 
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
@@ -51,9 +51,3 @@ spack:
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
-
-  cdash:
-    build-group: Build tests for different build systems
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure

@@ -20,7 +20,7 @@ spack:
   definitions:
     #- compilers: ['%gcc@8.3.1', '%clang@10.0.0']
     - compilers: ['%gcc@7.5.0']
-    
+
     # Note skipping spot since no spack package for it
     - radiuss:
       - ascent  # ^conduit@0.6.0
@@ -51,7 +51,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries-develop/radiuss"
+    mirror: "s3://spack-binaries-prs/glr-testing/radiuss"
 
   specs:
   - matrix:
@@ -70,10 +70,10 @@ spack:
     mappings:
       - match: [ascent, axom, sundials, umpire, vtk-h, vtk-m]
         runner-attributes:
-          tags: ["spack", "public", "xlarge", "x86_64"]
+          tags: ["glr-testing"]
       - match: ['os=ubuntu18.04']
         runner-attributes:
-          tags: ["spack", "public", "large", "x86_64"]
+          tags: ["glr-testing"]
     temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
     service-job-attributes:
       before_script:
@@ -81,9 +81,3 @@ spack:
         - spack --version
       image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]
-
-  cdash:
-    build-group: RADIUSS
-    url: https://cdash.spack.io
-    project: Spack Testing
-    site: Cloud Gitlab Infrastructure
