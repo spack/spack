@@ -257,6 +257,49 @@ def _search_duplicate_specs_in_externals(error_cls):
     return errors
 
 
+@config_packages
+def _search_for_deprecated_versions_in_externals(error_cls):
+    """Search for non-buildable externals having deprecated versions."""
+    import spack.config
+
+    errors = []
+    packages_yaml = spack.config.get('packages')
+
+    for name, pkg_config in packages_yaml.items():
+        # No externals can be declared under all
+        if name == 'all' or 'externals' not in pkg_config:
+            continue
+
+        # If the spec is buildable we have no issues, since Spack
+        # can install non-deprecated versions
+        is_buildable = pkg_config.get('buildable', True)
+        if is_buildable:
+            continue
+
+        # This external is "buildable: false", thus a candidate for the check
+        current_externals = pkg_config['externals']
+        header_msg = ('The external spec "{0}" is not buildable and contains '
+                      'deprecated versions. This can cause unexpected optimal '
+                      'configurations from clingo.'.format(name))
+        deprecated_specs = []
+        for entry in current_externals:
+            current_spec = spack.spec.Spec(entry['spec'])
+            is_deprecated = current_spec.package.versions.get(
+                current_spec.version, {}
+            ).get('deprecated', False)
+            if is_deprecated:
+                deprecated_specs.append(current_spec)
+
+        if deprecated_specs:
+            details = [
+                '"{0}" is a deprecated version, consider removing it'.format(s)
+                for s in deprecated_specs
+            ]
+            errors.append(error_cls(summary=header_msg, details=details))
+
+    return errors
+
+
 #: Sanity checks on package directives
 package_directives = AuditClass(
     group='packages',

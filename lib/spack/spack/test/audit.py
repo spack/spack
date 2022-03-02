@@ -78,7 +78,15 @@ _double_compiler_definition = [
             {"spec": "mpileaks@1.0.0", "prefix": "/"},
             {"spec": "mpileaks@1.0.0", "prefix": "/usr"},
         ]}
-    }, 'CFG-PACKAGES')
+    }, 'CFG-PACKAGES'),
+    # Non-buildable externals with deprecated versions
+    ('packages', {
+        "openssl": {
+            "buildable": False,
+            "externals": [
+                {"spec": "openssl@1.0.2k", "prefix": "/usr"},
+            ]}
+    }, 'CFG-PACKAGES'),
 ])
 def test_config_audits(config_section, data, failing_check):
     with spack.config.override(config_section, data):
