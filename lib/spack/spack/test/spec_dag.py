@@ -974,7 +974,6 @@ class TestSpecDag(object):
             canonical_deptype(('foo',))
 
     def test_invalid_literal_spec(self):
-
         # Can't give type 'build' to a top-level spec
         with pytest.raises(spack.spec.SpecParseError):
             Spec.from_literal({'foo:build': None})
@@ -982,3 +981,11 @@ class TestSpecDag(object):
         # Can't use more than one ':' separator
         with pytest.raises(KeyError):
             Spec.from_literal({'foo': {'bar:build:link': None}})
+
+    def test_spec_tree_respect_deptypes(self):
+        # Version-test-root uses version-test-pkg as a build dependency
+        s = Spec('version-test-root').concretized()
+        out = s.tree(deptypes='all')
+        assert 'version-test-pkg' in out
+        out = s.tree(deptypes=('link', 'run'))
+        assert 'version-test-pkg' not in out
