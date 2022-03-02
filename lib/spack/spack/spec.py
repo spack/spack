@@ -5019,42 +5019,39 @@ class SpecLexer(spack.parse.Lexer):
                     "BEGIN_PHASE",
                     [
                         # '^': dependency, or "AND":
-                        (r"\^", lambda scanner, val: self.token(DEP, val)),
+                        (r"\^", DEP),
                         # '@': begin a Version, VersionRange, or VersionList:
-                        (r"\@", lambda scanner, val: self.token(AT, val)),
+                        (r"\@", AT),
                         # VersionRange syntax:
-                        (r"\:", lambda scanner, val: self.token(COLON, val)),
+                        (r"\:", COLON),
                         # VersionList syntax:
-                        (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                        (r"\,", COMMA),
                         # variant syntax:
-                        (r"\+", lambda scanner, val: self.token(ON, val)),
-                        (r"\-", lambda scanner, val: self.token(OFF, val)),
-                        (r"\~", lambda scanner, val: self.token(OFF, val)),
+                        (r"\+", ON),
+                        (r"\-", OFF),
+                        (r"\~", OFF),
                         # Compiler dependency syntax:
-                        (r"\%", lambda scanner, val: self.token(PCT, val)),
+                        (r"\%", PCT),
                         # This is *not* used in version string parsing.
-                        (r"\=", lambda scanner, val: self.token(EQ, val)),
+                        (r"\=", EQ),
                         # Filenames match before identifiers, so no initial filename
                         # component is parsed as a spec (e.g., in subdir/spec.yaml)
-                        (
-                            filename_reg,
-                            lambda scanner, v: self.token(FILE, v),
-                        ),
+                        (filename_reg, FILE),
                         # Hash match after filename. No valid filename can be a hash
                         # (files end w/.yaml), but a hash can match a filename prefix.
-                        (r"/", lambda scanner, val: self.token(HASH, val)),
+                        (r"/", HASH),
                         # Identifiers match after filenames and hashes.
-                        (spec_id_re, lambda scanner, val: self.token(ID, val)),
+                        (spec_id_re, ID),
                         # Gobble up all remaining whitespace between tokens.
-                        (r"\s+", lambda scanner, val: None),
+                        (r"\s+", None),
                     ],
                     {"EQUALS_PHASE": [EQ]},
                 ),
                 (
                     "EQUALS_PHASE",
                     [
-                        (r"[\S].*", lambda scanner, val: self.token(VAL, val)),
-                        (r"\s+", lambda scanner, val: None),
+                        (r"[\S].*", VAL),
+                        (r"\s+", None),
                     ],
                     {"BEGIN_PHASE": [VAL]},
                 ),

@@ -43,7 +43,7 @@ class Token(object):
         return (self.type == other.type) and (self.value == other.value)
 
 
-_Lexicon = List['Tuple[str, Callable]']
+_Lexicon = List['Tuple[str, Any]']
 _Switches = Dict[str, List]
 
 
@@ -58,7 +58,15 @@ class Lexer(object):
         self.switchbook = {}  # type: Dict[str, _Switches]
         self.mode = lexicon_and_mode_switches[0][0]
         for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
-            self.scanners[mode_name] = re.Scanner(lexicon)  # type: ignore[attr-defined]
+
+            # Convert the static description of the token id into a callback that
+            # executes self.token(...) when the pattern is recognized.
+            transformed_lexicon = []
+            for pattern, maybe_tok in lexicon:
+                callback = self._transform_token_callback(maybe_tok)
+                transformed_lexicon.append((pattern, callback))
+
+            self.scanners[mode_name] = re.Scanner(transformed_lexicon)  # type: ignore[attr-defined] # noqa: E501
             self.switchbook[mode_name] = mode_switches_dict
 
     def token(self, type, value=''):
@@ -67,6 +75,12 @@ class Lexer(object):
         return Token(type, value,
                      cur_scanner.match.start(0),
                      cur_scanner.match.end(0))
+
+    def _transform_token_callback(self, tok):
+        if tok is None:
+            return lambda scanner, val: None
+        else:
+            return lambda scanner, val: self.token(tok, val)
 
     def lex_word(self, word):
         # type: (str) -> Iterable[Token]
