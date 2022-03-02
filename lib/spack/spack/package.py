@@ -1182,7 +1182,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         name = next(iter(self.extendees))
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptypes=('link', 'run')):
+        for dep in self.spec.traverse(deptype=('link', 'run')):
             if name == dep.name:
                 return dep
 
