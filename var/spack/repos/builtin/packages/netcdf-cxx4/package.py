@@ -49,7 +49,11 @@ class NetcdfCxx4(AutotoolsPackage):
             if self.spec.satisfies("platform=darwin"):
                 flags = [self.spec['netcdf-c'].libs.search_flags,
                          self.spec['netcdf-c'].libs.link_flags] + flags
-        return (None, None, flags)
+
+        # Note that cflags and cxxflags should be added by the compiler wrapper
+        # and not on the command line to avoid overriding the default
+        # compilation flags set by the configure script:
+        return flags, None, None
 
     @property
     def libs(self):
