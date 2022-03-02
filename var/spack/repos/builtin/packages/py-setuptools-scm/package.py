@@ -14,7 +14,7 @@ class PySetuptoolsScm(PythonPackage):
 
     version('6.3.2',  sha256='a49aa8081eeb3514eb9728fa5040f2eaa962d6c6f4ec9c32f6c1fba88f88a0f2')
     version('6.0.1',  sha256='d1925a69cb07e9b29416a275b9fadb009a23c148ace905b2fb220649a6c18e92')
-    version('5.0.2', sha256='83a0cedd3449e3946307811a4c7b9d89c4b5fd464a2fb5eeccd0a5bb158ae5c8')
+    version('5.0.2',  sha256='83a0cedd3449e3946307811a4c7b9d89c4b5fd464a2fb5eeccd0a5bb158ae5c8')
     version('4.1.2',  sha256='a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8')
     version('3.5.0',  sha256='5bdf21a05792903cafe7ae0c9501182ab52497614fa6b1750d9dbae7b60c1a87')
     version('3.3.3',  sha256='bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5')
