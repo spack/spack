@@ -146,7 +146,7 @@ class Rust(Package):
             'powerpc64le-unknown-linux-gnu': 'b15baef702cbd6f0ea2bef7bf98ca7ce5644f2beb219028e8a12e7053da4c849',
             'aarch64-unknown-linux-gnu':     'ce557516593e4526709b0f33c2e1d7c932b3ddf76af94c2417d8d667921ce90c',
             'x86_64-apple-darwin':           'd0044680fc132a721481b130a0a4282a444867f423efdb890fe13e447966412f'
-	},
+        },
         '1.51.0': {
             'x86_64-unknown-linux-gnu':      '9e125977aa13f012a68fdc6663629c685745091ae244f0587dd55ea4e3a3e42f',
             'powerpc64le-unknown-linux-gnu': '7362f561104d7be4836507d3a53cd39444efcdf065813d559beb1f54ce9f7680',
