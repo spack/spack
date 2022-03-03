@@ -18,6 +18,7 @@ class Onednn(CMakePackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('2.5.2',  sha256='11d50235afa03571dc70bb6d96a98bfb5d9b53e8c00cc2bfbde78588bd01f6a3')
     version('2.1-rc', sha256='13d293e7368a8fdd8dd3c11c73352cf5f564398658dd027ce0acde947440b4cb')
     version('2.0',    sha256='922b42c3ea7a7122a77c61568dc4512aa8130c264c0489283c989919d1f59a6d')
     version('1.8.1',  sha256='1883ccfb037bd31f916203a38e877899fc27ae10bc9ebad686f78d189ba506a7')
