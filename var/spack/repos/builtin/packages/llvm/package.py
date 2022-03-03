@@ -204,8 +204,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libelf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
-    # ncurses dependency
+    # llvm-config --system-libs libraries.
     depends_on("ncurses+termlib")
+    depends_on("zlib")
+    depends_on("libxml2")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
@@ -344,10 +346,6 @@ class Llvm(CMakePackage, CudaPackage):
     patch('no_cyclades9.patch', when='@6:9')
 
     patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
-
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:13.0.1')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:

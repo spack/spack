@@ -106,7 +106,6 @@ class Paraview(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.3:', type='build')
 
-    generator = 'Ninja'
     depends_on('ninja', type='build')
 
     # Workaround for
@@ -219,6 +218,14 @@ class Paraview(CMakePackage, CudaPackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
+
+    @property
+    def generator(self):
+        # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
+        if self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+            return "Unix Makefiles"
+        else:
+            return "Ninja"
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
