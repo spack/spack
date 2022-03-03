@@ -32,6 +32,7 @@ class Libdrm(Package):
     depends_on('docbook-xsl', type='build')
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
+    depends_on('meson', type='build', when='@2.4.101:')
 
     def url_for_version(self, version):
         if version <= Version('2.4.100'):
