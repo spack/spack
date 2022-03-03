@@ -65,15 +65,16 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('magma+cuda', when='+cuda')
     depends_on('magma+rocm', when='+rocm')
-    depends_on('magma@2.5.4:', when='@0.4:+cuda')
-    depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
-    depends_on('magma@2.5.4:', when='@0.4:+rocm')
-    depends_on('magma@2.6.1:', when='@0.4.6:+rocm')
 
-    # MAGMA v2.6.2 was not released when v0.5.4 was released, but we need
-    # commits from master branch. The most recent tested commit is
-    # 5959b8783e45f1809812ed96ae762f38ee701972
-    depends_on('magma@master', when='@0.5.4:')
+    # Depends on Magma when +rocm or +cuda
+    magma_ver_constraints = (
+        ('2.5.4', '0.4'),
+        ('2.6.1', '0.4.6'),
+        ('2.6.2rc1', '0.5.4'),
+    )
+    for (magma_v, hiop_v) in magma_ver_constraints:
+        depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
+        depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
 
     depends_on('raja+openmp', when='+raja')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')
