@@ -57,12 +57,12 @@ class Miopentensile(CMakePackage):
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
         args = [
-             self.define('TENSILE_USE_MSGPACK', 'ON'),
-             self.define('COMPILER', 'hipcc'),
-             self.define('TENSILE_USE_LLVM' , 'OFF'),
-             self.define('CODE_OBJECT_VERSION', 'V3'),
-             self.define('TENSILE_LIBRARY_FORMAT', 'msgpack'),
-             self.define('MIOPEN_TENSILE_SRC', 'asm_full')
+            self.define('TENSILE_USE_MSGPACK', 'ON'),
+            self.define('COMPILER', 'hipcc'),
+            self.define('TENSILE_USE_LLVM', 'OFF'),
+            self.define('CODE_OBJECT_VERSION', 'V3'),
+            self.define('TENSILE_LIBRARY_FORMAT', 'msgpack'),
+            self.define('MIOPEN_TENSILE_SRC', 'asm_full')
         ]
         args.append(self.define('Tensile_ARCHITECTURE', arch))
 
