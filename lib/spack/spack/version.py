@@ -1090,13 +1090,15 @@ class CommitLookup(object):
             # We may later design a custom error to re-raise
             self.fetcher.git('cat-file', '-e', '%s^{commit}' % commit)
 
+
+            # Lookup of commits to spack versions
+            commit_to_version = {}
+
+            ### Associate tags with versions
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
                 "for-each-ref", "--sort=creatordate", "--format",
                 "%(objectname) %(refname)", "refs/tags", output=str).split('\n')
-
-            # Lookup of commits to spack versions
-            commit_to_version = {}
 
             for entry in tag_info:
                 if not entry:
@@ -1112,6 +1114,35 @@ class CommitLookup(object):
                 else:
                     # try to parse tag to copare versions spack does not know
                     match = SEMVER_REGEX.match(tag)
+                    if match:
+                        semver = match.groupdict()['semver']
+                        commit_to_version[tag_commit] = semver
+
+            ### Associate commits on the tip of branches with versions
+            branch_info = self.fetcher.git(
+                'for-each-ref', '--formaat', '%(objectname) %(refname)', 'refs/branches',
+                output=str).split('\n')
+
+            for entry in branch_info:
+                if not entry:
+                    continue
+                branch_commit, branch = entry.split()
+                branch = branch.replace('refs/branches/', '', 1)
+
+                # For each branch, try to match to a version
+                for v, v_args in self.pkg.versions.items():
+                    # If a known version has this branch, we've found it
+                    v_branch = v_args.get('branch', None)
+                    if v_branch:
+                        commit_to_version[branch_commit] = v.string
+                        break
+                    # If the branch name matches a known version, found it
+                    if v.string == branch or 'v' + v.string == branch:
+                        commit_to_version[branch_commit] = v.string
+                        break
+                else:
+                    # If the branch matches semver, use that
+                    match = SEMVER_REGEX.match(branch)
                     if match:
                         semver = match.groupdict()['semver']
                         commit_to_version[tag_commit] = semver
