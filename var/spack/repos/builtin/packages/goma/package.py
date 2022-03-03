@@ -71,10 +71,10 @@ class Goma(CMakePackage):
 
         # Configure optional libraries
         args.append(self.define_from_variant('ENABLE_ARPACK', 'arpack-ng'))
+        args.append(self.define_from_variant('ENABLE_METIS', 'metis'))
         args.append(self.define_from_variant('ENABLE_OMEGA_H', 'omega-h'))
         args.append(self.define_from_variant('ENABLE_PETSC', 'petsc'))
         args.append(self.define_from_variant('ENABLE_SPARSE', 'sparse'))
-        args.append(self.define_from_variant('ENABLE_METIS', 'metis'))
         args.append(self.define_from_variant('ENABLE_UMFPACK', 'suite-sparse'))
 
         return args
