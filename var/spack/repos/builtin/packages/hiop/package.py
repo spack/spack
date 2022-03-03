@@ -70,7 +70,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     magma_ver_constraints = (
         ('2.5.4', '0.4'),
         ('2.6.1', '0.4.6'),
-        ('2.6.2rc1', '0.5.4'),
+        ('2.6.2', '0.5.4'),
     )
     for (magma_v, hiop_v) in magma_ver_constraints:
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
