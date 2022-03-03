@@ -105,7 +105,7 @@ class RocmOpenmpExtras(Package):
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
 
     depends_on('cmake@3:', type='build')
-    depends_on('mesa~llvm@21:', type=('build', 'link'))
+    depends_on('gl@4.5:', type=('build', 'link'))
     depends_on('py-setuptools', type='build')
     depends_on('python@3:', type='build')
     depends_on('perl-data-dumper', type='build')
