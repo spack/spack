@@ -98,7 +98,7 @@ class PyNumpy(PythonPackage):
     depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')
     depends_on('py-cython@0.29.21:2', when='@1.19.1:', type='build')
-    depends_on('py-cython@0.29.24:2', when='@1.21.2:', type='build')
+    depends_on('py-cython@0.29.23:2', when='@1.21.2:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 

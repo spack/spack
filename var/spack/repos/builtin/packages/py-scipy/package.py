@@ -48,12 +48,13 @@ class PyScipy(PythonPackage):
     version('0.15.1', sha256='a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a')
     version('0.15.0', sha256='0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1')
 
-    depends_on('python@2.6:2.8,3.2:', when='@:0.17.999', type=('build', 'link', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.18:1.2.999', type=('build', 'link', 'run'))
-    depends_on('python@3.5:', when='@1.3:1.4.999', type=('build', 'link', 'run'))
-    depends_on('python@3.6:', when='@1.5:1.5.999', type=('build', 'link', 'run'))
-    depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
-    depends_on('python@3.7:3.9.999', when='@1.6.2:', type=('build', 'link', 'run'))
+    # depends_on('python@2.6:2.8,3.2:', when='@:0.17.999', type=('build', 'link', 'run'))
+    # depends_on('python@2.7:2.8,3.4:', when='@0.18:1.2.999', type=('build', 'link', 'run'))
+    # depends_on('python@3.5:', when='@1.3:1.4.999', type=('build', 'link', 'run'))
+    # depends_on('python@3.6:', when='@1.5:1.5.999', type=('build', 'link', 'run'))
+    # depends_on('python@3.7:', when='@1.6:1.6.1', type=('build', 'link', 'run'))
+    # depends_on('python@3.7:3.9.999', when='@1.6.2:', type=('build', 'link', 'run'))
+
     depends_on('py-setuptools', when='@:1.6.1', type='build')
     depends_on('py-setuptools@:51.0.0', when='@1.6.2:', type='build')
     depends_on('py-pybind11@2.2.4:', when='@1.4.0', type=('build', 'link'))
@@ -71,7 +72,7 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.16.5:1.22+blas+lapack', when='@1.6.2:', type=('build', 'link', 'run'))
     depends_on('py-cython@0.29.18:2', when='@1.7:', type='build')
     depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
-    depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:', type=('build', 'link'))
+    depends_on('py-pythran@0.9.12', when='@1.7.2:', type=('build', 'link'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see

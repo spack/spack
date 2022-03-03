@@ -34,10 +34,13 @@ class PyCython(PythonPackage):
     version('0.23.4',  sha256='fec42fecee35d6cc02887f1eef4e4952c97402ed2800bfe41bbd9ed1a0730d8e')
     version('0.21.2',  sha256='b01af23102143515e6138a4d5e185c2cfa588e0df61c0827de4257bac3393679')
 
-    # depends_on('python@2.6:2.8,3.3:', when='@0.23:', type=('build', 'link', 'run'))
-    # depends_on('python@:2', when='@:0.22', type=('build', 'link', 'run'))
+    depends_on('python@2.6:2.8,3.3:', when='@0.23:', type=('build', 'link', 'run'))
+    depends_on('python@:2', when='@:0.22', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('gdb@7.2:', type='test')
+
+    # Python 3.10 needs at least 0.29.28, otherwise linker errors
+    conflicts('python@3.10:', when='@:0.29.28')
 
     @property
     def command(self):
