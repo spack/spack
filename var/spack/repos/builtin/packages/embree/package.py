@@ -47,6 +47,11 @@ class Embree(CMakePackage):
         ]
 
         if spec.satisfies('target=x86_64:') or spec.satisfies('target=x86:'):
+            # during the 3.12 cycle AVX512SKX was renamed to AVX512,
+            # but for compatibility, the old name is still supported
+            avx512_suffix = ''
+            if spec.satisfies('@:3.12'):
+                avx512_suffix = 'SKX'
             args.extend([
                 # code selection and defines controlling namespace names are based on
                 # defines controlled by compiler flags, so disable ISAs below compiler
@@ -55,14 +60,14 @@ class Embree(CMakePackage):
                 self.define('EMBREE_ISA_SSE42', 'avx' not in spec.target),
                 self.define('EMBREE_ISA_AVX', 'avx2' not in spec.target),
                 self.define('EMBREE_ISA_AVX2', 'avx512' not in spec.target),
-                self.define('EMBREE_ISA_AVX512SKX', True),
+                self.define('EMBREE_ISA_AVX512{0}'.format(avx512_suffix), True),
             ])
 
             if spec.satisfies('%gcc@:7'):
                 # remove unsupported -mprefer-vector-width=256, otherwise copied
                 # from common/cmake/gnu.cmake
-                args.append('-DFLAGS_AVX512SKX=-mavx512f -mavx512dq -mavx512cd'
+                args.append('-DFLAGS_AVX512{0}=-mavx512f -mavx512dq -mavx512cd'
                             ' -mavx512bw -mavx512vl -mf16c -mavx2 -mfma -mlzcnt'
-                            ' -mbmi -mbmi2')
+                            ' -mbmi -mbmi2'.format(avx512_suffix))
 
         return args
