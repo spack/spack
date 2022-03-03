@@ -1817,9 +1817,11 @@ class Environment(object):
         roots = d['roots']
         self.concretized_user_specs = [Spec(r['spec']) for r in roots]
         self.concretized_order = [r['hash'] for r in roots]
-        json_specs_by_hash = d['concrete_specs']
+        json_specs_by_hash = collections.OrderedDict()
+        for lockfile_key in sorted(d['concrete_specs']):
+            json_specs_by_hash[lockfile_key] = d['concrete_specs'][lockfile_key]
 
-        specs_by_hash = {}
+        specs_by_hash = collections.OrderedDict()
 
         for lockfile_key, node_dict in json_specs_by_hash.items():
             specs_by_hash[lockfile_key] = Spec.from_node_dict(node_dict)

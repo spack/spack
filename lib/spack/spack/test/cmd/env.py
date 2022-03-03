@@ -2868,15 +2868,23 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
 def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_mockery):
     """Make sure that when we read a legacy environment lock file with a hash
     conflict (one from before we switched to full hash), the behavior as to
-    which of the conflicting specs we pick is deterministic.  When we read
-    the lockfile, we process root specs in the order they appear in 'roots',
-    so we expect the dependencies of the last root in that list to be the
-    ones that appear in the environment before we forcefully re-concretize
-    the environment.  After we force reconcretization, we should see all
-    the dependencies again."""
+    which of the conflicting specs we pick is deterministic and reproducible.
+    When we read the lockfile, we (somewhat arbitrarily) process specs in
+    alphabetical order of their lockfile key.  Consequently, when reading an
+    old lockfile where two specs have a dag hash conflict we expect to keep the
+    second one we encounter.  After we force reconcretization, we should both of
+    the specs that originally conflicted present in the environment again."""
     legacy_lockfile_path = os.path.join(
         spack.paths.test_path, 'data', 'legacy_env', 'spack.lock'
     )
+
+    # In the legacy lockfile, we have two conflicting specs that differ only
+    # in a build-only dependency.  The lockfile keys and conflicting specs
+    # are:
+    #     wci7a3a -> dttop ^dtbuild1@0.5
+    #     5zg6wxw -> dttop ^dtbuild1@1.0
+    # So when we initially read the legacy lockfile, we expect to have kept
+    # the version of dttop that depends on dtbuild1@0.5
 
     env('create', 'test', legacy_lockfile_path)
     test = ev.read('test')
@@ -2888,7 +2896,7 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
 
     single_root = next(iter(test.specs_by_hash.values()))
 
-    assert single_root['dtbuild1'].version == Version('1.0')
+    assert single_root['dtbuild1'].version == Version('0.5')
 
     # Now forcefully reconcretize
     with ev.read('test'):
