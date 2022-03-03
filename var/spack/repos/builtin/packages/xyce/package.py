@@ -52,12 +52,14 @@ class Xyce(CMakePackage):
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-numpy', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-pycompadre+trilinos', type=('build', 'link', 'run'), when='+pymi')
     depends_on('py-pip', type='run', when='+pymi')
-    depends_on('py-pybind11@2.6.1:', when='+pymi')
+    depends_on('py-pybind11@2.6.1:', type=('build', 'link'), when='+pymi')
 
     # Xyce is built against an older version of Trilinos unlikely to be
     # used for any other purpose.
-    depends_on('trilinos@12.12.1 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=all')
+    depends_on('trilinos@13.2.0 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=long')
 
     # Propagate variants to trilinos:
     for _variant in ('mpi',):
@@ -67,10 +69,6 @@ class Xyce(CMakePackage):
     # The default settings for various Trilinos variants would require the
     # installation of many more packages than are needed for Xyce.
     depends_on('trilinos~float~ifpack2~ml~muelu~zoltan2')
-
-    # ensures trilinos built with same cxxstd as Xyce (which Xyce was tested against)
-    for cxxstd_ in cxxstd_choices:
-        depends_on('trilinos cxxstd={0}'.format(cxxstd_), when='cxxstd={0}'.format(cxxstd_))
 
     def cmake_args(self):
         spec = self.spec
