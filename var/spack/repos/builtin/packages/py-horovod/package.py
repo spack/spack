@@ -17,6 +17,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     maintainers = ['adamjstewart', 'aweits', 'tgaddair']
 
     version('master', branch='master', submodules=True)
+    version('0.23.0', tag='v0.23.0', submodules=True)
     version('0.21.3', tag='v0.21.3', submodules=True)
     version('0.21.2', tag='v0.21.2', submodules=True)
     version('0.21.1', tag='v0.21.1', submodules=True)
@@ -108,6 +109,11 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     # https://github.com/horovod/horovod/pull/1835
     patch('fma.patch', when='@0.19.0:0.19.1')
+
+    # This patch modifies Eigen to enable the compilation on aarch64 system.
+    # See the following URL for more detail:
+    # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
+    patch('eigen.patch', when='@0.21: target=aarch64:')
 
     @property
     def import_modules(self):
