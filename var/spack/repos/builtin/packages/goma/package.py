@@ -20,95 +20,61 @@ class Goma(CMakePackage):
     version('main', branch='main')
     version('develop', branch='develop')
 
-    variant('MDE', default=27, description="Set internal maximum DOF per element")
-    variant('MAX_PROB_VAR', default=15, description="Set internal maximum number of active equations")
-    variant('MAX_CONC', default=4, description="Set internal maximum number of species")
-    variant('MAX_EXTERNAL_FIELD', default=4, description="Set internal maximum number of external fields")
+    # Problem size variants
+    variant('max_conc', default='4', values=('4', '8', '10', '15', '20'),
+            description="Set internal maximum number of species")
+    variant('max_external_field', default='4', values=('4', '8', '10', '15', '20'),
+            description="Set internal maximum number of external fields")
+    variant('max_prob_var', default='15', values=('10', '15', '20', '25', '28', '34', '40', '46', '64'),
+            description="Set internal maximum number of active equations")
+    variant('mde', default='27', values=('8', '9', '10', '16', '20', '27', '54'),
+            description="Set internal maximum DOF per element")
 
-    variant('sparse', default=True, description="Build with legacy sparse solver")
-    variant('metis', default=True, description="Build with metis decomposition")
-    variant('petsc', default=True, description="Build with PETSc solver support")
-    variant('omega-h', default=True, description="Build with Omega_h support")
-    variant('suite-sparse', default=True, description="Build with UMFPACK support")
+    # Floating point checks
+    variant('check_finite', default=True, description="Enable finite computation check")
+    variant('fpe', default=False, description="Enable floating point exception")
+
+    # Optional third party libraries
     variant('arpack-ng', default=True, description="Build with ARPACK support")
+    variant('metis', default=True, description="Build with metis decomposition")
+    variant('omega-h', default=True, description="Build with Omega_h support")
+    variant('petsc', default=True, description="Build with PETSc solver support")
+    variant('sparse', default=True, description="Build with legacy sparse solver")
+    variant('suite-sparse', default=True, description="Build with UMFPACK support")
 
+    # Required dependencies
     depends_on('mpi')
-    depends_on('sparse', when='+sparse')
-    depends_on('metis', when='+metis')
-    depends_on('trilinos+mpi+epetra+aztec+amesos+stratimikos+teko+mumps+superlu-dist~exodus')
-    depends_on('petsc+hypre~exodusii+mpi', when='+petsc')
-    depends_on('omega-h+mpi', when='+omega-h')
-    depends_on('suite-sparse', when='+suite-sparse')
-    depends_on('arpack-ng', when='+arpack-ng')
     depends_on('seacas+applications')
+    depends_on('trilinos+mpi+epetra+aztec+amesos+stratimikos+teko+mumps+superlu-dist+ml~exodus')
+
+    # Optional dependencies
+    depends_on('arpack-ng', when='+arpack-ng')
+    depends_on('metis', when='+metis')
+    depends_on('omega-h+mpi', when='+omega-h')
+    depends_on('petsc+hypre+mpi~exodusii', when='+petsc')
+    depends_on('sparse', when='+sparse')
+    depends_on('suite-sparse', when='+suite-sparse')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = []
-        args.extend([
-            '-DMDE=%s' % spec.variants['MDE'].value,
-            '-DMAX_CONC=%s' % spec.variants['MAX_CONC'].value,
-            '-DMAX_PROB_VAR=%s' % spec.variants['MAX_PROB_VAR'].value,
-            '-DMAX_EXTERNAL_FIELD=%s' % spec.variants['MAX_EXTERNAL_FIELD'].value
-        ])
 
-        args.extend([
-            '-DTrilinos_DIR=%s' % spec['trilinos'].prefix
-        ])
+        # Problem sizes
+        args.append(self.define_from_variant('MAX_CONC', 'max_conc'))
+        args.append(
+            self.define_from_variant('MAX_EXTERNAL_FIELD', 'max_external_field'))
+        args.append(self.define_from_variant('MAX_PROB_VAR', 'max_prob_var'))
+        args.append(self.define_from_variant('MDE', 'mde'))
 
-        if '+petsc' in spec:
-            args.extend([
-                '-DENABLE_PETSC=ON'
-            ])
-        else:
-            args.extend([
-                '-DENABLE_PETSC=OFF'
-            ])
+        # Floating point error checks
+        args.append(self.define_from_variant('CHECK_FINITE', 'check_finite'))
+        args.append(self.define_from_variant('FP_EXCEPT', 'fpe'))
 
-        if '+metis' in spec:
-            args.extend([
-                '-DMETIS_PREFIX=%s' % spec['metis'].prefix
-            ])
-        else:
-            args.extend([
-                '-DENABLE_METIS=OFF'
-            ])
-
-        if '+suite-sparse' in spec:
-            args.extend([
-                '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix
-            ])
-        else:
-            args.extend([
-                '-DENABLE_UMFPACK=OFF'
-            ])
-
-        if '+sparse' in spec:
-            args.extend([
-                '-DSparse_PREFIX=%s' % spec['sparse'].prefix
-            ])
-        else:
-            args.extend([
-                '-DENABLE_SPARSE=OFF'
-            ])
-
-        if '+omega-h' in spec:
-            args.extend([
-                '-DOmega_h_DIR=%s' % spec['omega-h'].prefix
-            ])
-        else:
-            args.extend([
-                '-DENABLE_OMEGA_H=OFF'
-            ])
-
-        if '+arpack-ng' in spec:
-            args.extend([
-                '-DARPACK_PREFIX=%s' % spec['arpack-ng'].prefix
-            ])
-        else:
-            args.extend([
-                '-DENABLE_ARPACK=OFF'
-            ])
+        # Configure optional libraries
+        args.append(self.define_from_variant('ENABLE_ARPACK', 'arpack-ng'))
+        args.append(self.define_from_variant('ENABLE_OMEGA_H', 'omega-h'))
+        args.append(self.define_from_variant('ENABLE_PETSC', 'petsc'))
+        args.append(self.define_from_variant('ENABLE_SPARSE', 'sparse'))
+        args.append(self.define_from_variant('ENABLE_METIS', 'metis'))
+        args.append(self.define_from_variant('ENABLE_UMFPACK', 'suite-sparse'))
 
         return args
