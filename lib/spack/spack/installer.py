@@ -632,9 +632,14 @@ class TermTitle(object):
         # Counters used for showing status information in the terminal title
         self.pkg_num = 0
         self.pkg_count = pkg_count
+        self.pkg_ids = set()
 
-    def next_pkg(self):
-        self.pkg_num += 1
+    def next_pkg(self, pkg):
+        pkg_id = package_id(pkg)
+
+        if pkg_id not in self.pkg_ids:
+            self.pkg_num += 1
+            self.pkg_ids.add(pkg_id)
 
     def set(self, text):
         if not spack.config.get('config:terminal_title', False):
@@ -1500,8 +1505,6 @@ class PackageInstaller(object):
         term_title = TermTitle(len(self.build_pq))
 
         while self.build_pq:
-            term_title.next_pkg()
-
             task = self._pop_task()
             if task is None:
                 continue
@@ -1511,6 +1514,7 @@ class PackageInstaller(object):
             keep_prefix = install_args.get('keep_prefix')
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
+            term_title.next_pkg(pkg)
             term_title.set('Processing {0}'.format(pkg.name))
             tty.debug('Processing {0}: task={1}'.format(pkg_id, task))
             # Ensure that the current spec has NO uninstalled dependencies,
