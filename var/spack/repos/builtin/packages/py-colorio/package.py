@@ -16,7 +16,7 @@ class PyColorio(PythonPackage):
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-flit-core@3.2:3.7', type='build')
+    depends_on('py-flit-core@3.2:3.6', type='build')
     depends_on('py-numpy@1.20:', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-npx', type=('build', 'run'))
