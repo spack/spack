@@ -38,6 +38,7 @@ class Nss(MakefilePackage):
         # We cannot use nss_build_all because this will try to build nspr.
         targets = ['all', 'latest']
 
+        targets.append('CCC={}'.format(spack_cxx))
         targets.append('USE_64=1')
         targets.append('BUILD_OPT=1')
 
