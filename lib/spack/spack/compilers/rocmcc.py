@@ -28,10 +28,10 @@ class Rocmcc(spack.compilers.clang.Clang):
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'rocmcc/clang',
-                      'cxx': 'rocmcc/clang++',
-                      'f77': 'rocmcc/flang',
-                      'fc': 'rocmcc/flang'}
+        link_paths = {'cc': 'rocmcc/amdclang',
+                      'cxx': 'rocmcc/amdclang++',
+                      'f77': 'rocmcc/amdflang',
+                      'fc': 'rocmcc/amdflang'}
 
         return link_paths
 
