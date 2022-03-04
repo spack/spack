@@ -146,18 +146,25 @@ class PyNumpy(PythonPackage):
         # This will essentially check the system gcc compiler unless a gcc
         # module is already loaded.
         if self.spec.satisfies('%intel') and name == 'cflags':
-            p1 = subprocess.Popen(
-                [self.compiler.cc, '-v'],
-                stderr=subprocess.PIPE
-            )
-            p2 = subprocess.Popen(
-                ['grep', 'compatibility'],
-                stdin=p1.stderr,
-                stdout=subprocess.PIPE
-            )
-            p1.stderr.close()
-            out, err = p2.communicate()
-            gcc_version = Version(out.split()[5].decode('utf-8'))
+            if "platform=cray" in self.spec:
+                gcc_version = Version(spack.compiler.get_compiler_version_output('gcc', '-dumpversion'))
+                # Note that this only returns the major versions on some systems,
+                # to be on the safe side add a guard here to prevent versions <6
+                if gcc_version < Version('6'):
+                    raise InstallError("Cannot determine minor version of gcc on Cray")
+            else:
+                p1 = subprocess.Popen(
+                    [self.compiler.cc, '-v'],
+                    stderr=subprocess.PIPE
+                )
+                p2 = subprocess.Popen(
+                    ['grep', 'compatibility'],
+                    stdin=p1.stderr,
+                    stdout=subprocess.PIPE
+                )
+                p1.stderr.close()
+                out, err = p2.communicate()
+                gcc_version = Version(out.split()[5].decode('utf-8'))
             if gcc_version < Version('4.8'):
                 raise InstallError('The GCC version that the Intel compiler '
                                    'uses must be >= 4.8. The GCC in use is '
