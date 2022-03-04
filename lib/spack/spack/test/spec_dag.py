@@ -31,7 +31,7 @@ def saved_deps():
 
 
 @pytest.fixture()
-def set_dependency(saved_deps):
+def set_dependency(saved_deps, monkeypatch):
     """Returns a function that alters the dependency information
     for a package in the ``saved_deps`` fixture.
     """
@@ -48,7 +48,7 @@ def set_dependency(saved_deps):
 
         cond = Spec(pkg.name)
         dependency = Dependency(pkg, spec, type=deptypes)
-        pkg.dependencies[spec.name] = {cond: dependency}
+        monkeypatch.setitem(pkg.dependencies, spec.name, {cond: dependency})
     return _mock
 
 
