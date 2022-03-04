@@ -120,7 +120,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('lhapdf', activation_value='prefix'))
         args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
         args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
-        args.extend(self.enable_or_disable('blackhat', activation_value='prefix')_
+        args.extend(self.enable_or_disable('blackhat', activation_value='prefix'))
         args.extend(self.enable_or_disable('ufo'))
         
         if self.spec.satisfies('+mpi'):
