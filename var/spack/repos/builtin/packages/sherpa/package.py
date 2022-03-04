@@ -105,7 +105,7 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-hepevtsize=200000')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         args.extend(self.enable_or_disable('mpi'))
-        args.extend(self.enable_or_disable('pyext', variant='python')
+        args.extend(self.enable_or_disable('pyext', variant='python'))
         args.extend(self.enable_or_disable('analysis'))
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
