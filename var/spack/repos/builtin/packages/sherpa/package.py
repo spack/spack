@@ -110,7 +110,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
         args.extend(self.enable_or_disable('pythia'))
-        hepmc_root=lambda x: self.spec['hepmc'].prefix
+        hepmc_root = lambda x: self.spec['hepmc'].prefix
         args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
         args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
         args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
