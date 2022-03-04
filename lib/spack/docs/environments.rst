@@ -716,8 +716,7 @@ Spack Environments can define filesystem views of their software,
 which are maintained as packages and can be installed and uninstalled from
 the Environment. Filesystem views provide an access point for packages
 from the filesystem for users who want to access those packages
-directly. For more information on filesystem views, see the section
-:ref:`filesystem-views`.
+directly.
 
 Spack Environment managed views are updated every time the environment
 is written out to the lock file ``spack.lock``, so the concrete
@@ -759,8 +758,7 @@ directories.
          link: all
          link_type: symlink
 
-For more information on using view projections, see the section on
-:ref:`adding_projections_to_views`. The default for the ``select`` and
+The default for the ``select`` and
 ``exclude`` values is to select everything and exclude nothing. The
 default projection is the default view projection (``{}``). The ``link``
 attribute allows the following values:

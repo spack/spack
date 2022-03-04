@@ -377,8 +377,7 @@ version of python a set of python extensions is associated with. Likewise, the
 most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
-naming convention for module files. This uses the projections format
-covered in :ref:`adding_projections_to_views`.
+naming convention for module files.
 
 .. code-block:: yaml
 
@@ -540,8 +539,7 @@ configuration:
 
 #. The configuration is for an :ref:`environment <environments>` and
    will never be applied outside the environment,
-#. The environment in question is configured to use a :ref:`view
-   <filesystem-views>`,
+#. The environment in question is configured to use a view,
 #. The :ref:`environment view is configured
    <configuring_environment_views>` with a projection that ensures
    every package is linked to a unique directory,

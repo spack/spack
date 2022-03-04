@@ -54,8 +54,9 @@ or refer to the full manual below.
    features
    getting_started
    basic_usage
-   workflows
    Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
+   replace_conda_homebrew
+   travis_ci
    known_issues
 
 .. toctree::
