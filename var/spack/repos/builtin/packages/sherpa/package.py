@@ -61,7 +61,7 @@ class Sherpa(AutotoolsPackage):
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('blackhat',   default=False, description='Enable BLACKHAT support')
     variant('ufo',        default=False, description='Enable UFO support')
-    
+
     variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
@@ -110,7 +110,8 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
         args.extend(self.enable_or_disable('pythia'))
-        args.extend(self.enable_or_disable('hepmc2', activation_value=lambda x: self.spec['hepmc'].prefix))
+        hepmc_root=lambda x: self.spec['hepmc'].prefix
+        args.extend(self.enable_or_disable('hepmc2', activation_value=hepmc_root))
         args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
         args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
         args.extend(self.enable_or_disable('fastjet', activation_value='prefix'))
@@ -122,7 +123,7 @@ class Sherpa(AutotoolsPackage):
         args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
         args.extend(self.enable_or_disable('blackhat', activation_value='prefix'))
         args.extend(self.enable_or_disable('ufo'))
-        
+
         if self.spec.satisfies('+mpi'):
             args.append('CC=' + self.spec['mpi'].mpicc)
             args.append('MPICXX=' + self.spec['mpi'].mpicxx)
@@ -130,6 +131,9 @@ class Sherpa(AutotoolsPackage):
             args.append('FC=' + self.spec['mpi'].mpifc)
 
         if self.spec.satisfies('+cms'):
-            CMSARCHFLAG='-m64' if platform.machine() == 'x86_64' else ''
-            args.append('CXXFLAGS=-fuse-cxa-atexit {0} -O2 -std=c++0x'.format(CMSARCHFLAG))
+            if platform.machine() == 'x86_64':
+                args.append('CXXFLAGS=-fuse-cxa-atexit -m64 -O2 -std=c++0x')
+            else:
+                args.append('CXXFLAGS=-fuse-cxa-atexit -O2 -std=c++0x')
+
         return args
