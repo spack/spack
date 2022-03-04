@@ -22,7 +22,7 @@ class Mvapich2(AutotoolsPackage):
     executables = ['^mpiname$']
 
     # Prefer the latest stable release
-    version('2.3.7', sha256='4b6ad2c8c270e1fabcd073c49edb6bf95af93780f4a487bc48404a8ca384f34e')
+    version('2.3.7', sha256='c39a4492f4be50df6100785748ba2894e23ce450a94128181d516da5757751ae')
     version('2.3.6', sha256='b3a62f2a05407191b856485f99da05f5e769d6381cd63e2fcb83ee98fc46a249')
     version('2.3.5', sha256='f9f467fec5fc981a89a7beee0374347b10c683023c76880f92a1a0ad4b961a8c')
     version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
