@@ -7,7 +7,8 @@ from spack import *
 
 
 class Ftjam(AutotoolsPackage):
-    """Jam is a small open-source build tool that can be used as a replacement for Make."""
+    """Jam is a small open-source build tool that
+       can be used as a replacement for Make."""
 
     homepage = "https://freetype.org/jam/"
     url      = "https://sourceforge.net/projects/freetype/files/ftjam/2.5.2/ftjam-2.5.2.tar.gz"
