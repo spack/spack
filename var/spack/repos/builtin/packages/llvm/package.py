@@ -238,6 +238,8 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@:5.0", when="@8:")
     # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
     conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
 
     # When these versions are concretized, but not explicitly with +libcxx, these
     # conflicts will enable clingo to set ~libcxx, making the build successful:
@@ -346,6 +348,13 @@ class Llvm(CMakePackage, CudaPackage):
     patch('no_cyclades9.patch', when='@6:9')
 
     patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
+
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13 %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
