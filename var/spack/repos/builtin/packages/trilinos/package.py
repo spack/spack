@@ -127,7 +127,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('stratimikos',  default=False, description='Compile with Stratimikos')
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
-    variant('thyra',        default=False, description='Compile with Thyra')
+    variant('thyra',        default=True, description='Compile with Thyra')
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
     variant('zoltan',       default=False, description='Compile with Zoltan')
