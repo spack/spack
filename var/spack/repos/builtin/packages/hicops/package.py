@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,7 +47,8 @@ class Hicops(CMakePackage):
     variant('shdpeaks', default='80',
             description='Maximum shared b- or y-ions allowed.')
     variant('cxx_std', default='14',
-            description='C++ standard.')
+            description='C++ standard', values=('14', '17'),
+            multi=False)
 
     depends_on('py-numpy')
     depends_on('py-python-dateutil')
