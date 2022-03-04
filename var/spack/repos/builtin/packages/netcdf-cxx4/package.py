@@ -22,8 +22,6 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.3.0', sha256='e34fbc6aba243ec82c23e9ee99db2430555ada849c54c1f3ab081b0ddd0f5f30')
 
     variant('shared', default=True, description='Enable shared library')
-    # Usually the configure automatically inserts the pic flags, but we can
-    # force its usage with this variant.
     variant('pic', default=True, description='Produce position-independent code (for shared libs)')
     variant('doc', default=False, description='Enable doxygen docs')
 
@@ -127,9 +125,10 @@ class NetcdfCxx4(AutotoolsPackage):
         # autoreconf and introduce additional dependencies. We do not generate a
         # patch for the configure script because the patched string contains the
         # version and we would need a patch file for each supported version of
-        # the library. We do not do implement a patch method because writing a
-        # robust regexp seems to be more difficult that simply renaming the file
-        # if exists.
+        # the library. We do not implement the patching with filter_file in the
+        # patch method because writing a robust regexp seems to be more
+        # difficult that simply renaming the file if exists. It also looks like
+        # we can simply remove the file since it is not used anywhere.
         if not self.spec.satisfies('@:4.3.1 platform=darwin'):
             return
 
