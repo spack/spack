@@ -386,23 +386,23 @@ def test_environment_status(capsys, tmpdir):
 
 def test_env_status_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
-    install_mockery
+    install_mockery, tmpdir
 ):
-    with ev.create('test'):
+    env_dir = str(tmpdir)
+    with ev.Environment(env_dir):
         install('trivial-install-test-package')
 
-        # switch to a new repo that doesn't include the installed package
-        # test that Spack detects the missing package and warns the user
-        new_repo = MockPackageMultiRepo()
-        with spack.repo.use_repositories(new_repo):
+    # switch to a new repo that doesn't include the installed package
+    # test that Spack detects the missing package and warns the user
+    with spack.repo.use_repositories(MockPackageMultiRepo()):
+        with ev.Environment(env_dir):
             output = env('status')
-            assert 'In environment test' in output
-            assert 'Environment test includes out of date' in output
+            assert 'includes out of date packages or repos' in output
 
-        # Test that the warning goes away when it's fixed
+    # Test that the warning goes away when it's fixed
+    with ev.Environment(env_dir):
         output = env('status')
-        assert 'In environment test' in output
-        assert 'Environment test includes out of date' not in output
+        assert 'includes out of date packages or repos' not in output
 
 
 def test_env_activate_broken_view(
