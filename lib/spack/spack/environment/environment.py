@@ -498,9 +498,9 @@ class ViewDescriptor(object):
 
         specs = specs_unique
 
-        # Filter installed specs
+        # Filter selected, installed specs
         with spack.store.db.read_transaction():
-            specs = [s for s in specs if s.package.installed]
+            specs = [s for s in specs if s in self and s.package.installed]
 
         return specs
 
