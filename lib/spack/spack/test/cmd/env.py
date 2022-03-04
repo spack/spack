@@ -1962,6 +1962,37 @@ env:
                                  (spec.version, spec.compiler.name)))
 
 
+def test_view_link_run(tmpdir, mock_fetch, mock_packages, mock_archive,
+                       install_mockery):
+    yaml = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    envdir = str(tmpdir)
+    with open(yaml, 'w') as f:
+        f.write("""
+spack:
+  specs:
+  - dttop
+
+  view:
+    combinatorial:
+      root: %s
+      link: run
+      projections:
+        all: '{name}'""" % viewdir)
+
+    with ev.Environment(envdir):
+        install()
+
+    # make sure transient run type deps are in the view
+    for pkg in ('dtrun1', 'dtrun3'):
+        assert os.path.exists(os.path.join(viewdir, pkg))
+
+    # and non-run-type deps are not.
+    for pkg in ('dtlink1', 'dtlink2', 'dtlink3', 'dtlink4', 'dtlink5'
+                'dtbuild1', 'dtbuild2', 'dtbuild3'):
+        assert not os.path.exists(os.path.join(viewdir, pkg))
+
+
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
 def test_view_link_type(link_type, tmpdir, mock_fetch, mock_packages, mock_archive,
                         install_mockery):
