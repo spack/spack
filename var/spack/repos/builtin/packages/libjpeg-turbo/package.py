@@ -41,9 +41,13 @@ class LibjpegTurbo(Package):
     depends_on('libtool', type='build', when='@1.3.1:1.5.3')
     depends_on('cmake', type='build', when='@1.5.90:')
 
+    variant('shared', default=True, description='Build shared libraries')
+    variant('static', default=True, description='Build static libraries')
+
     @property
     def libs(self):
-        return find_libraries('libjpeg*', root=self.prefix, recursive=True)
+        shared = '+shared' in self.spec
+        return find_libraries('libjpeg*', root=self.prefix, shared=shared, recursive=True)
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('@1.5.90:'):
@@ -72,9 +76,15 @@ class LibjpegTurbo(Package):
     def install(self, spec, prefix):
         cmake_args = [
             '-GUnix Makefiles',
-            '-DENABLE_SHARED=ON',
-            '-DENABLE_STATIC=ON'
             ]
+        if self.spec.satisfies('+shared'):
+            cmake_args.append('-DENABLE_SHARED=ON')
+        else:
+            cmake_args.append('-DENABLE_SHARED=OFF')
+        if self.spec.satisfies('+static'):
+            cmake_args.append('-DENABLE_STATIC=ON')
+        else:
+            cmake_args.append('-DENABLE_STATIC=OFF')
         if hasattr(self, 'cmake_flag_args'):
             cmake_args.extend(self.cmake_flag_args)
         cmake_args.extend(std_cmake_args)
