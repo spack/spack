@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 from spack import *
 
 
@@ -61,6 +63,8 @@ class Sherpa(AutotoolsPackage):
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
     variant('blackhat',   default=False, description='Enable BLACKHAT support')
     variant('ufo',        default=False, description='Enable UFO support')
+    variant('hztool',     default=False, description='Enable HZTOOL support')
+    variant('cernlib',    default=False, description='Enable CERNLIB support')
 
     variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
 
