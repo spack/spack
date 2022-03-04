@@ -23,4 +23,4 @@ class Starlight(CMakePackage):
     version('300', sha256='e754212f173fb42a96611b3519cb386c772429e690f3e088396bd103c2cf9348',
             url='https://starlight.hepforge.org/downloads?f=starlight_r300.tar')
 
-    patch('starlight-r3xx.patch', when='@300:')
+    patch('https://gitlab.cern.ch/sft/lcgcmake/-/raw/master/generators/patches/starlight-r313.patch', sha256='c70f70fd7c96dc0417f9254d25b584222abcb2c452e1e6dd4b8cfb0b64bf10e0', when='@300:', level=0)
