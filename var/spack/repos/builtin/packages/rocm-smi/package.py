@@ -13,8 +13,7 @@ class RocmSmi(MakefilePackage):
     """This tool exposes functionality for clock and temperature
        management of your ROCm enabled system
 
-       Note: According to its README, after ROCm 3.9, this project
-             moved to
+       Note: After ROCm 3.9, this project moved to
              https://github.com/RadeonOpenCompute/rocm_smi_lib/tree/master/python_smi_tools
              The spack package is called: rocm-smi-lib"""
 
