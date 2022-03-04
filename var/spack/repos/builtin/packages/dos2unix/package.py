@@ -19,6 +19,10 @@ class Dos2unix(MakefilePackage):
 
     depends_on('gettext')
 
+    tags = ['build-tools']
+
+    executables = [r'^dos2unix$']
+
     @property
     def build_targets(self):
         targets = [
@@ -29,3 +33,9 @@ class Dos2unix(MakefilePackage):
 
     def install(self, spec, prefix):
         make('prefix={0}'.format(prefix), 'install')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'^dos2unix\s+([\d\.]+)', output)
+        return match.group(1) if match else None
