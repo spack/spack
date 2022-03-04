@@ -7,7 +7,7 @@ from spack import *
 
 
 class RNonnest2(RPackage):
-    """Tests of Non-Nested Models:
+    """Tests of Non-Nested Models.
 
     Testing non-nested models via theory supplied by Vuong (1989)
     <doi:10.2307/1912557>. Includes tests of model distinguishability and of
@@ -16,7 +16,7 @@ class RNonnest2(RPackage):
     and BIC. This material is partially based on work supported by the National
     Science Foundation under Grant Number SES-1061334."""
 
-    cran     = "nonnest2"
+    cran = "nonnest2"
 
     version('0.5-5', sha256='027f510e322122fc75c936251a95ddd392f96047ac86e0fae6cf8f883ac7aab5')
 

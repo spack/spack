@@ -24,7 +24,7 @@ try:
     # There may be a better way to detect this
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
-    clingo = None
+    clingo = None  # type: ignore
     clingo_cffi = False
 
 import llnl.util.lang
@@ -1316,16 +1316,26 @@ class SpackSolverSetup(object):
 
         for spec in specs:
             for dep in spec.traverse():
-                if dep.versions.concrete:
-                    # Concrete versions used in abstract specs from cli. They
-                    # all have idx equal to 0, which is the best possible. In
-                    # any case they will be used due to being set from the cli.
-                    self.declared_versions[dep.name].append(DeclaredVersion(
-                        version=dep.version,
-                        idx=0,
-                        origin=version_provenance.spec
-                    ))
-                    self.possible_versions[dep.name].add(dep.version)
+                if not dep.versions.concrete:
+                    continue
+
+                known_versions = self.possible_versions[dep.name]
+                if (not dep.version.is_commit and
+                    any(v.satisfies(dep.version) for v in known_versions)):
+                    # some version we know about satisfies this constraint, so we
+                    # should use that one. e.g, if the user asks for qt@5 and we
+                    # know about qt@5.5.
+                    continue
+
+                # if there is a concrete version on the CLI *that we know nothing
+                # about*, add it to the known versions. Use idx=0, which is the
+                # best possible, so they're guaranteed to be used preferentially.
+                self.declared_versions[dep.name].append(DeclaredVersion(
+                    version=dep.version,
+                    idx=0,
+                    origin=version_provenance.spec
+                ))
+                self.possible_versions[dep.name].add(dep.version)
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.

@@ -19,7 +19,6 @@ class RCurl(RPackage):
     more-user-friendly web client see the 'httr' package which builds on this
     package with http specific tools and logic."""
 
-    homepage = "https://github.com/jeroen/curl"
     cran = "curl"
 
     version('4.3.2', sha256='90b1facb4be8b6315bb3d272ba2dd90b88973f6ea1ab7f439550230f8500a568')

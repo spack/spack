@@ -528,7 +528,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
-            define_tpl_enable('Cholmod', False),
             define_from_variant('EpetraExt_BUILD_BTF', 'epetraextbtf'),
             define_from_variant('EpetraExt_BUILD_EXPERIMENTAL',
                                 'epetraextexperimental'),
@@ -687,6 +686,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define('TPL_Netcdf_PARALLEL', True),
                 define('PNetCDF_ROOT', spec['parallel-netcdf'].prefix),
             ])
+
+        options.append(define_tpl_enable('Cholmod', False))
+
+        if spec.satisfies('platform=darwin'):
+            # Don't let TriBITS define `libdl` as an absolute path to
+            # the MacOSX{nn.n}.sdk since that breaks at every xcode update
+            options.append(define_tpl_enable('DLlib', False))
 
         # ################# Explicit template instantiation #################
 

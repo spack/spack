@@ -12,9 +12,9 @@ class RCtc(RPackage):
        Tools for export and import classification trees and clusters to other
        programs"""
 
-    homepage = "https://bioconductor.org/packages/ctc"
-    git      = "https://git.bioconductor.org/packages/ctc.git"
+    bioc = "ctc"
 
+    version('1.68.0', commit='c2733534ef9d948e07ea654d1998a67ed8f7a98a')
     version('1.64.0', commit='35dbe620a21056b8f69890e6f9a7c320528d8621')
     version('1.58.0', commit='c41df03ac149db20c5e337142142d61cfb9b43fb')
     version('1.56.0', commit='cbd5befdda4630799f8fe0d868d83b094e3d352f')

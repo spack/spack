@@ -101,9 +101,13 @@ class PyPandas(PythonPackage):
 
     @property
     def import_modules(self):
-        modules = super(PythonPackage, self).import_modules
+        modules = super(__class__, self).import_modules
 
-        ignored_imports = ["pandas.tests", "pandas.plotting._matplotlib"]
+        ignored_imports = [
+            "pandas.tests",
+            "pandas.plotting._matplotlib",
+            "pandas.core._numba.kernels"
+        ]
 
         return [i for i in modules
                 if not any(map(i.startswith, ignored_imports))]

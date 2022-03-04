@@ -7,11 +7,13 @@ from spack import *
 
 
 class RReams(RPackage):
-    """reams: Resampling-Based Adaptive Model Selection"""
+    """Resampling-Based Adaptive Model Selection.
 
-    homepage = "https://cloud.r-project.org/package=reams"
-    url      = "https://cloud.r-project.org/src/contrib/reams_0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/reams"
+    Resampling methods for adaptive linear model selection.  These can be
+    thought of as extensions of the Akaike information criterion that account
+    for searching among candidate models."""
+
+    cran = "reams"
 
     version('0.1', sha256='ac24ea875b24bd18152afd87538b1f807f442cf2bd1c6ac1a365cf543c88181e')
 

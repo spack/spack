@@ -7,12 +7,11 @@ from spack import *
 
 
 class RMvtnorm(RPackage):
-    """Multivariate Normal and t Distributions
+    """Multivariate Normal and t Distributions.
 
     Computes multivariate normal and t probabilities, quantiles, random
     deviates and densities."""
 
-    homepage = "https://mvtnorm.r-forge.r-project.org/"
     cran = "mvtnorm"
 
     version('1.1-3', sha256='ff4e302139ba631280fc9c4a2ab168596bfd09e17a805974199b043697c02448')
@@ -22,5 +21,5 @@ class RMvtnorm(RPackage):
     version('1.0-6', sha256='4a015b57b645b520151b213eb04b7331598c06442a3f652c7dc149425bd2e444')
     version('1.0-5', sha256='d00f9f758f0d0d4b999f259223485dc55d23cbec09004014816f180045ac81dd')
 
-    depends_on('r@1.9.0:', when='@:1.0-8', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@1.0-9:', type=('build', 'run'))
+    depends_on('r@1.9.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@1.0-9:')
