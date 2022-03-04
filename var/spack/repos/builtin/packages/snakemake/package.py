@@ -28,7 +28,7 @@ class Snakemake(PythonPackage):
 
     with when('@7:'):
         depends_on('python@3.7:')
-        depends_on('py-yte', type=('build', 'run'))
+        depends_on('py-yte@1', type=('build', 'run'))
         depends_on('py-jinja2@3', type=('build', 'run'))
         depends_on('py-retry', type=('build', 'run'))
 
