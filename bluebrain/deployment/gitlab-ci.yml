@@ -141,6 +141,7 @@ setup_spack:
             all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
         module_roots:
           tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
+        source_cache: $DEPLOYMENT_ROOT/cache
       EOF
     # Create an empty database if not present yet (ensures this can be used
     # as an "upstream" later)
