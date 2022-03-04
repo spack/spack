@@ -59,6 +59,10 @@ class Sherpa(AutotoolsPackage):
     variant('lhapdf',     default=True, description='Enable LHAPDF support')
     variant('gzip',       default=False, description='Enable gzip support')
     variant('pythia',     default=True, description='Enable fragmentation/decay interface to Pythia')
+    variant('blackhat',   default=False, description='Enable BLACKHAT support')
+    variant('ufo',        default=False, description='Enable UFO support')
+    
+    variant('cms',        default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
 
@@ -83,6 +87,7 @@ class Sherpa(AutotoolsPackage):
     depends_on('lhapdf',    when='+lhapdf')
     depends_on('gzip',      when='+gzip')
     depends_on('pythia6',   when='+pythia')
+    depends_on('blackhat',  when='+blackhat')
 
     for std in _cxxstd_values:
         depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
@@ -100,30 +105,31 @@ class Sherpa(AutotoolsPackage):
         args.append('--enable-hepevtsize=200000')
         args.append('--with-sqlite3=' + self.spec['sqlite'].prefix)
         args.extend(self.enable_or_disable('mpi'))
-        if self.spec.satisfies('+python'):
-            args.append('--enable-pyext')
+        args.extend(self.enable_or_disable('pyext', variant='python')
         args.extend(self.enable_or_disable('analysis'))
         args.extend(self.enable_or_disable('lhole'))
         args.extend(self.enable_or_disable('gzip'))
         args.extend(self.enable_or_disable('pythia'))
-        if self.spec.satisfies('+hepmc2'):
-            args.append('--enable-hepmc2=' + self.spec['hepmc'].prefix)
-        if self.spec.satisfies('+hepmc3'):
-            args.append('--enable-hepmc3=' + self.spec['hepmc3'].prefix)
-        if self.spec.satisfies('+rivet'):
-            args.append('--enable-rivet=' + self.spec['rivet'].prefix)
-        if self.spec.satisfies('+fastjet'):
-            args.append('--enable-fastjet=' + self.spec['fastjet'].prefix)
-        if self.spec.satisfies('+openloops'):
-            args.append('--enable-openloops=' + self.spec['openloops'].prefix)
-        if self.spec.satisfies('+recola'):
-            args.append('--enable-recola=' + self.spec['recola'].prefix)
-        if self.spec.satisfies('+root'):
-            args.append('--enable-root=' + self.spec['root'].prefix)
-        if self.spec.satisfies('+lhapdf'):
-            args.append('--enable-lhapdf=' + self.spec['lhapdf'].prefix)
-        if self.spec.satisfies('+hztool'):
-            args.append('--enable-hztool=' + self.spec['hztool'].prefix)
-        if self.spec.satisfies('+cernlib'):
-            args.append('--enable-cernlib=' + self.spec['cernlib'].prefix)
+        args.extend(self.enable_or_disable('hepmc2', activation_value=lambda x: self.spec['hepmc'].prefix))
+        args.extend(self.enable_or_disable('hepmc3', activation_value='prefix'))
+        args.extend(self.enable_or_disable('rivet', activation_value='prefix'))
+        args.extend(self.enable_or_disable('fastjet', activation_value='prefix'))
+        args.extend(self.enable_or_disable('openloops', activation_value='prefix'))
+        args.extend(self.enable_or_disable('recola', activation_value='prefix'))
+        args.extend(self.enable_or_disable('root', activation_value='prefix'))
+        args.extend(self.enable_or_disable('lhapdf', activation_value='prefix'))
+        args.extend(self.enable_or_disable('hztool', activation_value='prefix'))
+        args.extend(self.enable_or_disable('cernlib', activation_value='prefix'))
+        args.extend(self.enable_or_disable('blackhat', activation_value='prefix')_
+        args.extend(self.enable_or_disable('ufo'))
+        
+        if self.spec.satisfies('+mpi'):
+            args.append('CC=' + self.spec['mpi'].mpicc)
+            args.append('MPICXX=' + self.spec['mpi'].mpicxx)
+            args.append('CXX=' + self.spec['mpi'].mpicxx)
+            args.append('FC=' + self.spec['mpi'].mpifc)
+
+        if self.spec.satisfies('+cms'):
+            CMSARCHFLAG='-m64' if platform.machine() == 'x86_64' else ''
+            args.append('CXXFLAGS=-fuse-cxa-atexit {0} -O2 -std=c++0x'.format(CMSARCHFLAG))
         return args
