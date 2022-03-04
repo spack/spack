@@ -19,8 +19,6 @@ class Dos2unix(MakefilePackage):
 
     depends_on('gettext')
 
-    tags = ['build-tools']
-
     executables = [r'^dos2unix$']
 
     @property
