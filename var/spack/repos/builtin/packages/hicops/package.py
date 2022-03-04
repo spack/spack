@@ -35,17 +35,21 @@ class Hicops(CMakePackage):
     variant('progress', default=True,
             description='Display HiCOPS progress marks.')
     variant('seqlen', default='60',
-            description='Allowed maximum peptide sequence length.')
+            description='Allowed maximum peptide sequence length.', 
+            values=int, multi=False)
     variant('qalen', default='100',
             description='Maximum number of top K peaks to keep when '
-                        'spectrum preprocess.')
+                        'spectrum preprocess.', values=int,
+            multi=False)
     variant('qchunk', default='10000',
             description='Max size of each batch extracted from the '
-                        'dataset.')
+                        'dataset.', values=int, multi=False)
     variant('hyperscore', default='100',
-            description='Maximum allowed hyperscore computed.')
+            description='Maximum allowed hyperscore computed.',
+            values=int, multi=False)
     variant('shdpeaks', default='80',
-            description='Maximum shared b- or y-ions allowed.')
+            description='Maximum shared b- or y-ions allowed.', 
+            values=int, multi=False)
     variant('cxx_std', default='14',
             description='C++ standard', values=('14', '17'),
             multi=False)
