@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack import *
 
 
@@ -28,11 +30,6 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('netcdf-c')
 
     depends_on('doxygen', when='+doc', type='build')
-
-    # See https://github.com/Unidata/netcdf-cxx4/issues/109
-    patch('https://github.com/Unidata/netcdf-cxx4/commit/e7cc5bab02cf089dc79616456a0a951fee979fe9.patch',
-          sha256='4ddf6db9dc0c5f754cb3d68b1dbef8c385cf499f6e5df8fbccae3749336ba84a',
-          when='@:4.3.1 platform=darwin')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and '+pic' in self.spec:
@@ -120,6 +117,26 @@ class NetcdfCxx4(AutotoolsPackage):
                 config_args.append('--disable-filter-testing')
 
         return config_args
+
+    @run_after('configure')
+    def rename_version(self):
+        # See https://github.com/Unidata/netcdf-cxx4/issues/109
+        # The issue is fixed upstream:
+        #   https://github.com/Unidata/netcdf-cxx4/commit/e7cc5bab02cf089dc79616456a0a951fee979fe9
+        # We do not apply the upstream patch because we want to avoid running
+        # autoreconf and introduce additional dependencies. We do not generate a
+        # patch for the configure script because the patched string contains the
+        # version and we would need a patch file for each supported version of
+        # the library. We do not do implement a patch method because writing a
+        # robust regexp seems to be more difficult that simply renaming the file
+        # if exists.
+        if not self.spec.satisfies('@:4.3.1 platform=darwin'):
+            return
+
+        with working_dir(self.build_directory):
+            fname = 'VERSION'
+            if os.path.exists(fname):
+                os.rename(fname, '{0}.txt'.format(fname))
 
     def check(self):
         with working_dir(self.build_directory):
