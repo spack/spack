@@ -566,10 +566,6 @@ class PyclingoDriver(object):
             setup.setup(self, specs)
         timer.phase("setup")
 
-        # If we're only doing setup, just return an empty solve result
-        if setup_only:
-            return Result(specs)
-
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
         parent_dir = os.path.dirname(__file__)
@@ -587,6 +583,10 @@ class PyclingoDriver(object):
 
             path = os.path.join(parent_dir, 'concretize.lp')
             parse_files([path], visit)
+
+        # If we're only doing setup, just return an empty solve result
+        if setup_only:
+            return Result(specs)
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))

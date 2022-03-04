@@ -101,6 +101,9 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
+    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/5455
+    conflicts('llvm@13.0.0:', when='@:21.3.1 +llvm')
+
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
 
