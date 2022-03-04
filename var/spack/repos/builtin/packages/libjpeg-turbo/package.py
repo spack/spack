@@ -70,7 +70,11 @@ class LibjpegTurbo(Package):
 
     @when('@1.5.90:')
     def install(self, spec, prefix):
-        cmake_args = ['-GUnix Makefiles']
+        cmake_args = [
+            '-GUnix Makefiles',
+            '-DENABLE_SHARED=ON',
+            '-DENABLE_STATIC=ON'
+            ]
         if hasattr(self, 'cmake_flag_args'):
             cmake_args.extend(self.cmake_flag_args)
         cmake_args.extend(std_cmake_args)
