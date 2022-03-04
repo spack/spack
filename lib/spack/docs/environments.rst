@@ -767,8 +767,8 @@ attribute allows the following values:
 
 #. ``link: all`` include root specs with their transient run and link type
    dependencies (default);
-#. ``link: run`` include root specs with their transient run type dependences;
-#. ``link: roots`` includes the root specs without their dependencies.
+#. ``link: run`` include root specs with their transient run type dependencies;
+#. ``link: roots`` include root specs without their dependencies.
 
 The ``link_type`` defaults to ``symlink`` but can also take the value
 of ``hardlink`` or ``copy``.
