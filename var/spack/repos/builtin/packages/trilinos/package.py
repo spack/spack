@@ -127,6 +127,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant('stratimikos',  default=False, description='Compile with Stratimikos')
     variant('teko',         default=False, description='Compile with Teko')
     variant('tempus',       default=False, description='Compile with Tempus')
+    variant('thyra',        default=False, description='Compile with Thyra')
     variant('tpetra',       default=True, description='Compile with Tpetra')
     variant('trilinoscouplings', default=False, description='Compile with TrilinosCouplings')
     variant('zoltan',       default=False, description='Compile with Zoltan')
@@ -194,6 +195,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     with when('+teko'):
         conflicts('~stratimikos')
         conflicts('@:12 gotype=long')
+    with when('+piro'):
+        conflicts('~stratimikos')
+        conflicts('~nox')
 
     # Tpetra stack
     with when('~kokkos'):
@@ -223,6 +227,24 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     with when('+scorec'):
         conflicts('~mpi')
         conflicts('~stk')
+
+    # Panzer is not gen-2 library
+    with when('+panzer'):
+        conflicts('~intrepid2')
+        conflicts('~mpi')
+        conflicts('~phalanx')
+        conflicts('~sacado')
+        conflicts('~tpetra')
+        conflicts('~thyra')
+        conflicts('~zoltan')
+        conflicts('~nox')
+        conflicts('~rythmos')
+        conflicts('~piro')
+        conflicts('~stratimikos')
+        conflicts('~stk')
+        conflicts('~ml')
+        conflicts('~ifpack')
+        conflicts('~aztec')
 
     # Known requirements from tribits dependencies
     conflicts('+aztec', when='~fortran')
@@ -525,6 +547,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
+            define_trilinos_enable('Thyra'),
             define_trilinos_enable('Tpetra'),
             define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
@@ -578,7 +601,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             # Thyra is NOT enabled at this point!" leading to eventual build
             # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
             # off.
-            options.append(define_trilinos_enable('Thyra', True))
+            #options.append(define_trilinos_enable('Thyra', True))
 
             # Add thyra adapters based on package enables
             options.extend(
