@@ -52,14 +52,17 @@ class Xyce(CMakePackage):
 
     variant('pymi', default=False, description='Enable Python Model Interpreter for Xyce')
     depends_on('python@3:', type=('build', 'link', 'run'), when='+pymi')
-    depends_on('py-numpy', type=('build', 'link', 'run'), when='+pymi')
+    depends_on('py-numba@0.48.0:', type=('build', 'link', 'run'), when='+pymi')
     depends_on('py-pycompadre+trilinos', type=('build', 'link', 'run'), when='+pymi')
     depends_on('py-pip', type='run', when='+pymi')
     depends_on('py-pybind11@2.6.1:', type=('build', 'link'), when='+pymi')
 
-    # Xyce is built against an older version of Trilinos unlikely to be
-    # used for any other purpose.
-    depends_on('trilinos@13.2.0 +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings gotype=long')
+    depends_on('trilinos +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+hdf5+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings')
+    # tested versions of Trilinos for everything up to 7.4.0
+    depends_on('trilinos@12.12.1:13.2.0', when='@:7.4.0')
+    depends_on('trilinos gotype=all cxxstd=11', when='^trilinos@:12.15')
+    # pymi requires Kokkos/KokkosKernels >= 3.3, Trilinos 13.2 onward
+    depends_on('trilinos@13.2.0:', when='+pymi')
 
     # Propagate variants to trilinos:
     for _variant in ('mpi',):
