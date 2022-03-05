@@ -27,6 +27,7 @@ class PythonDev(BundlePackage):
     depends_on('py-jinja2-cli', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-mariadb', type=('build', 'run'))
     depends_on('py-mock', type=('build', 'run'))
     depends_on('py-mypy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
