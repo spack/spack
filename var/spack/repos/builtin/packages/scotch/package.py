@@ -6,15 +6,18 @@
 from spack import *
 
 
-class Scotch(Package):
+class Scotch(CMakePackage):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
 
     homepage = "https://gitlab.inria.fr/scotch/scotch"
     git      = "https://gitlab.inria.fr/scotch/scotch.git"
-    url      = "https://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
+    url      = "https://gitlab.inria.fr/scotch/scotch/-/archive/v7.0.1/scotch-v7.0.1.tar.gz"
     list_url = "https://gforge.inria.fr/frs/?group_id=248"
 
+    version('7.0.1', sha256='0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed')
+    version('6.1.3', sha256='4e54f056199e6c23d46581d448fcfe2285987e5554a0aa527f7931684ef2809e')
+    version('6.1.2', sha256='9c2c75c75f716914a2bd1c15dffac0e29a2f8069b2df1ad2b6207c984b699450')
     version('6.1.1', sha256='39052f59ff474a4a69cefc25cf3caf8429400889deba010ee6403ca188f8b311')
     version('6.1.0', sha256='a3bc3fa3b243fcb52f8d68de4272562a0328afb18a96f535724d284e36730485')
     version('6.0.10', sha256='fd8b707b8200823312a1571d97d3776ff3dfd3280cfa4b6e38987153cea5dbda')
@@ -95,6 +98,7 @@ class Scotch(Package):
 
         return scotchlibs + zlibs
 
+    @when('@:6.9.99')
     def patch(self):
         self.configure()
 
@@ -102,6 +106,7 @@ class Scotch(Package):
     # file that contains all of the configuration variables and their desired
     # values for the installation.  This function writes this file based on
     # the given installation variants.
+    @when('@:6.9.99')
     def configure(self):
         makefile_inc = []
         cflags = [
@@ -215,6 +220,7 @@ class Scotch(Package):
             with open('Makefile.inc', 'w') as fh:
                 fh.write('\n'.join(makefile_inc))
 
+    @when('@:6.9.99')
     def install(self, spec, prefix):
         targets = ['scotch']
         if '+mpi' in self.spec:
@@ -262,3 +268,32 @@ class Scotch(Package):
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
         install_tree('man/man1', prefix.share.man.man1)
+
+    @when("@:6.9.99")
+    def cmake(self, spec, prefix):
+        self.configure()
+
+    @when("@:6.9.99")
+    def build(self, spec, prefix):
+        pass
+
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define_from_variant('BUILD_LIBSCOTCHMETIS', 'metis'),
+            self.define_from_variant('INSTALL_METIS_HEADERS', 'metis'),
+            self.define_from_variant('BUILD_LIBESMUMPS', 'esmumps'),
+        ]
+
+        if '+mpi' in spec:
+            args.append('-DBUILD_PTSCOTCH=ON')
+            # TODO check if MPI_THREAD_MULTIPLE is supported?
+        else:
+            args.append('-DBUILD_PTSCOTCH=OFF')
+
+        # TODO should we enable/disable THREADS?
+
+        if '+int64' in spec:
+            args.append('-DINTSIZE=64')
+
+        return args
