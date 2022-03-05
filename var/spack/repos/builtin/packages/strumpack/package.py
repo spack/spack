@@ -20,7 +20,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.3.1.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ['e4s']
