@@ -93,7 +93,7 @@ class Sherpa(AutotoolsPackage):
     depends_on('gzip',      when='+gzip')
     depends_on('pythia6',   when='+pythia')
     depends_on('blackhat',  when='+blackhat')
-    depends_on('cernlib',   when='+cernlib')
+    # depends_on('cernlib',   when='+cernlib')
 
     for std in _cxxstd_values:
         depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
