@@ -283,6 +283,7 @@ class Scotch(CMakePackage):
             self.define_from_variant('BUILD_LIBSCOTCHMETIS', 'metis'),
             self.define_from_variant('INSTALL_METIS_HEADERS', 'metis'),
             self.define_from_variant('BUILD_LIBESMUMPS', 'esmumps'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
 
         if '+mpi' in spec:
