@@ -19,9 +19,15 @@ class PyJupytext(PythonPackage):
     version('1.13.6', sha256='c6c25918ddb6403d0d8504e08d35f6efc447baf0dbeb6a28b73adf39e866a0c4')
     version('1.13.0', sha256='fb220af65d2bd32d01c779b0e935c4c2b71e3f5f2f01bf1bab10d5f23fe121d4')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-setuptools@40.8.0:', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
     depends_on('py-mdit-py-plugins', type=('build', 'run'))
     depends_on('py-markdown-it-py@1.0:1', type=('build', 'run'))
+    # todo: in order to use jupytext as a jupyterlab extension,
+    # some additional dependencies need to be added (and checked):
+    # depends_on('py-jupyterlab@3.0.0:3', type=('build', 'run'))
+    # depends_on('py-jupyter-packaging')
