@@ -47,10 +47,14 @@ class Ispc(CMakePackage):
 
     patch('don-t-assume-that-ncurses-zlib-are-system-libraries.patch',
           when='@1.14.0:1.14',
-          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
+          sha256='08cad761b6938fbb38a90b9dc2da1d85bf3cc77b0487cc31642a7a8549d52cab')
+
+    patch('don-t-assume-that-ncurses-zlib-are-system-libraries-apple.patch',
+          when='@1.14:',
+          sha256='df7ad8a0fe3892c703a13a3d23e6587aaabbd600d3866836c32a2c22e3b2a0e9')
 
     patch('fix-linking-against-llvm-10.patch', when='@1.13.0:1.13',
-          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
+          sha256='5ac4c25c871f08c62fe84ac6804f606d4080491c5676f9385b30f148c68b6c8a')
 
     def patch(self):
         with open("check-m32.c", "w") as f:
@@ -62,6 +66,8 @@ class Ispc(CMakePackage):
 
     def cmake_args(self):
         args = []
+        # let CMake find NCurses, as ncurses it also in spec of llvm
+        args.append('-DCURSES_NEED_NCURSES=TRUE')
         args.append('-DARM_ENABLED=FALSE')
         args.append('-DISPC_NO_DUMPS=ON')  # otherwise, LLVM needs patching
         args.append('-DISPC_INCLUDE_EXAMPLES=OFF')
