@@ -42,6 +42,7 @@ class Embree(CMakePackage):
         args = [
             '-DBUILD_TESTING=OFF',
             '-DEMBREE_TUTORIALS=OFF',
+            '-DEMBREE_TBB_ROOT={0}'.format(spec['tbb'].prefix),
             '-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=ON',
             self.define_from_variant('EMBREE_ISPC_SUPPORT', 'ispc'),
         ]
