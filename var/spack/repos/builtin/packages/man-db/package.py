@@ -17,8 +17,17 @@ class ManDb(AutotoolsPackage):
 
     version('2.7.6.1', sha256='dd913662e341fc01e6721878b6cbe1001886cc3bfa6632b095937bba3238c779')
 
-    depends_on('autoconf')
-    depends_on('automake')
+    # When not using views, it is easy to go over the default limit
+    # of 128 directories in MANPATH when doing spack installation.
+    # The following variant allows to increase the limit
+    # in order to avoid an error when using man.
+    variant('maxdirs', default='1024', values=('128', '1024'),
+            description="Compile time definition of the maximum number of manual page"
+                        " hierarchies expected in the manpath.")
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('pkgconf', type='build')
     depends_on('gettext')
     depends_on('libpipeline')
     depends_on('flex')
@@ -38,3 +47,8 @@ class ManDb(AutotoolsPackage):
             '--with-systemdtmpfilesdir={0}/tmp'.format(self.prefix)
         ]
         return args
+
+    def patch(self):
+        filter_file(r'\#define MAXDIRS 128',
+                    '#define MAXDIRS %s' % self.spec.variants['maxdirs'].value,
+                    'include/manconfig.h.in')
