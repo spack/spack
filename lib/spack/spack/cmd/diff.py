@@ -4,26 +4,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import argparse
+import os
 import sys
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cprint, get_color_when
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.solver.asp as asp
+import spack.spec
 import spack.util.environment
 import spack.util.spack_json as sjson
 
-description = "compare two specs"
+description = "compare two specs or lock files"
 section = "basic"
 level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(
-        subparser, ['specs'])
+    subparser.add_argument(
+        'args',
+        nargs=argparse.REMAINDER, help='two specs or environment lock files')
 
     subparser.add_argument(
         '--json',
@@ -55,39 +58,38 @@ def compare_specs(a, b, to_string=False, color=None):
     the differences, intersection, and names for a pair of specs a and b.
 
     Arguments:
-        a (spack.spec.Spec): the first spec to compare
-        b (spack.spec.Spec): the second spec to compare
-        a_name (str): the name of spec a
-        b_name (str): the name of spec b
+        a (spack.spec.Spec or list): the first spec to compare
+        b (spack.spec.Spec or list): the second spec to compare
         to_string (bool): return an object that can be json dumped
-        color (bool): whether to format the names for the console
     """
-    if color is None:
-        color = get_color_when()
 
     # Prepare a solver setup to parse differences
     setup = asp.SpackSolverSetup()
 
-    a_facts = set(t for t in setup.spec_clauses(a, body=True, expand_hashes=True))
-    b_facts = set(t for t in setup.spec_clauses(b, body=True, expand_hashes=True))
+    a = [a] if isinstance(a, spack.spec.Spec) else a
+    b = [b] if isinstance(b, spack.spec.Spec) else b
+
+    a_facts, b_facts = [], []
+    for s in a:
+        a_facts.extend(
+            setup.spec_clauses(s, body=True, transitive=True, expand_hashes=True))
+    for s in b:
+        b_facts.extend(
+            setup.spec_clauses(s, body=True, transitive=True, expand_hashes=True))
+
+    a_facts = set(a_facts)
+    b_facts = set(b_facts)
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))
     spec1_not_spec2 = sorted(a_facts.difference(b_facts))
     spec2_not_spec1 = sorted(b_facts.difference(a_facts))
 
-    # Format the spec names to be colored
-    fmt = "{name}{@version}{/hash}"
-    a_name = a.format(fmt, color=color)
-    b_name = b.format(fmt, color=color)
-
     # We want to show what is the same, and then difference for each
     return {
         "intersect": flatten(intersect) if to_string else intersect,
         "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
         "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name,
-        "b_name": b_name,
     }
 
 
@@ -116,9 +118,6 @@ def print_difference(c, attributes="all", out=None):
 
     A = c['b_not_a']
     B = c['a_not_b']
-
-    cprint("@R{--- %s}" % c["a_name"])  # bright red
-    cprint("@G{+++ %s}" % c["b_name"])  # bright green
 
     # Cut out early if we don't have any differences!
     if not A and not B:
@@ -174,24 +173,58 @@ def print_difference(c, attributes="all", out=None):
             cprint("@G{+  %s}" % addition.pop(0))
 
 
+def print_header(a, b):
+    cprint("@R{--- %s}" % a)
+    cprint("@G{+++ %s}" % b)
+
+
+def _is_environment_comparison(args):
+    is_lock = lambda p: os.path.isfile(p) and '.lock' in os.path.basename(p)
+    return len(args) == 2 and is_lock(args[0]) and is_lock(args[1])
+
+
 def diff(parser, args):
-    env = ev.active_environment()
+    color = False if args.dump_json else get_color_when()
 
-    if len(args.specs) != 2:
-        tty.die("You must provide two specs to diff.")
-
-    specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
-             for spec in spack.cmd.parse_specs(args.specs)]
+    # Try to read environment lock files
+    if _is_environment_comparison(args.args):
+        mode = 'env'
+        env_a = ev.Environment('.', init_file=args.args[0], with_view=False)
+        env_b = ev.Environment('.', init_file=args.args[1], with_view=False)
+        specs = [
+            [s for _, s in env_a.concretized_specs()],
+            [s for _, s in env_b.concretized_specs()]
+        ]
+    else:
+        mode = 'specs'
+        env = ev.active_environment()
+        specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
+                 for spec in spack.cmd.parse_specs(args.args)]
+        # note that len(args.args) != len(specs) necessarily.
+        if len(specs) != 2:
+            tty.die("You must provide two specs or two environment lock files to diff.")
 
     # Calculate the comparison (c)
-    color = False if args.dump_json else get_color_when()
     c = compare_specs(specs[0], specs[1], to_string=True, color=color)
 
     # Default to all attributes
     attributes = args.attribute or ["all"]
 
+    # JSON output
     if args.dump_json:
         print(sjson.dump(c))
-    else:
-        tty.warn("This interface is subject to change.\n")
-        print_difference(c, attributes)
+        return
+
+    # Text output
+    if mode == 'env':
+        print_header(
+            os.path.abspath(os.path.realpath(args.args[0])),
+            os.path.abspath(os.path.realpath(args.args[1])))
+
+    elif mode == 'specs':
+        fmt = "{name}{@version}{/hash}"
+        print_header(
+            specs[0].format(fmt, color=color),
+            specs[1].format(fmt, color=color))
+
+    print_difference(c, attributes)

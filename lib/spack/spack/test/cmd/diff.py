@@ -3,11 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import pytest
 
 import spack.cmd.diff
 import spack.config
+import spack.environment as ev
 import spack.main
+import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 
@@ -64,9 +68,6 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     assert not result['a_not_b']
     assert not result['b_not_a']
 
-    assert 'mpileaks' in result['a_name']
-    assert 'mpileaks' in result['b_name']
-
     # spot check attributes in the intersection to ensure they describe the spec
     assert "intersect" in result
     assert all(["node", dep] in result["intersect"] for dep in (
@@ -110,3 +111,24 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     assert ['hash', 'mpileaks %s' % no_debug_hash] in result['b_not_a']
     assert ['variant_value', 'mpileaks debug False'] in result['b_not_a']
+
+
+def test_environment_lock_files(tmpdir, mock_packages, config):
+    env_a_dir = str(tmpdir.ensure('env_a', dir=True))
+    env_a = ev.Environment(env_a_dir, with_view=False)
+    env_a.add('zlib@1.2.11')
+    env_a.concretize()
+    env_a.write()
+    env_a_lock = os.path.join(env_a_dir, 'spack.lock')
+
+    env_b_dir = str(tmpdir.ensure('env_b', dir=True))
+    env_b = ev.Environment(env_b_dir, with_view=False)
+    env_b.add('zlib@1.2.8')
+    env_b.concretize()
+    env_b.write()
+    env_b_lock = os.path.join(env_b_dir, 'spack.lock')
+
+    out = diff_cmd(env_a_lock, env_b_lock)
+
+    assert '-  zlib 1.2.11' in out
+    assert '+  zlib 1.2.8' in out
