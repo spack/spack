@@ -29,6 +29,6 @@ class PyJupytext(PythonPackage):
     # todo: in order to use jupytext as a jupyterlab extension,
     # some additional dependencies need to be added (and checked):
     depends_on('py-jupyterlab@3', type=('build', 'run'))
-    # TODO: replace this after concretizer learns how to concretize separate build deps  
-    depends_on('py-jupyter-packaging7', type='build')                                    
+    # TODO: replace this after concretizer learns how to concretize separate build deps
+    depends_on('py-jupyter-packaging7', type='build')
     # depends_on('py-jupyter-packaging@0.7.9:0.7', type='build')```
