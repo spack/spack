@@ -40,6 +40,8 @@ class Ispc(CMakePackage):
     depends_on('ncurses', type='link')
     depends_on('zlib', type='link')
     depends_on('llvm+clang')
+    depends_on('llvm targets=arm,aarch64', when='target=aarch64:')
+    depends_on('llvm targets=arm,aarch64', when='target=arm:')
     depends_on('llvm@:12', when='@:1.16')
     depends_on('llvm@11:', when='@1.16.0:')
     depends_on('llvm@10:11', when='@1.15.0:1.15')
@@ -65,14 +67,18 @@ class Ispc(CMakePackage):
             filter_file('bit 32 64', 'bit 64', 'cmake/GenerateBuiltins.cmake')
 
     def cmake_args(self):
+        spec = self.spec
         args = []
         # let CMake find NCurses, as ncurses it also in spec of llvm
         args.append('-DCURSES_NEED_NCURSES=TRUE')
-        args.append('-DARM_ENABLED=FALSE')
         args.append('-DISPC_NO_DUMPS=ON')  # otherwise, LLVM needs patching
         args.append('-DISPC_INCLUDE_EXAMPLES=OFF')
         args.append('-DISPC_INCLUDE_TESTS=OFF')
         args.append('-DISPC_INCLUDE_UTILS=OFF')
+        if spec.satisfies('target=x86_64:') or spec.satisfies('target=x86:'):
+            args.append('-DARM_ENABLED=OFF')
+        elif spec.satisfies('target=aarch64:'):
+            args.append('-DARM_ENABLED=ON')
         return args
 
     @classmethod
