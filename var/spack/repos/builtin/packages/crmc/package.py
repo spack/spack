@@ -31,16 +31,20 @@ class Crmc(CMakePackage):
     depends_on('hepmc')
     depends_on('boost')
     depends_on('root')
-    
+
     patch('crmc-1.6.0.patch', when='@1.6.0', level=0)
     patch('crmc-1.5.6.patch', when='@1.5.6:1.5.7', level=0)
 
     def cmake_args(self):
-        args = ['-D__PYTHIA__=ON', '-D__SIBYLL__=ON', '-D__PHOJET__=ON', '-D__DPMJET__=ON', '-D__QGSJETII04__=ON', 
-                '-DCMAKE_CXX_FLAGS=-std=c++' + self.spec['root'].variants['cxxstd'].value]
+        args = ['-D__PYTHIA__=ON',
+                '-D__SIBYLL__=ON',
+                '-D__PHOJET__=ON',
+                '-D__DPMJET__=ON',
+                '-D__QGSJETII04__=ON',
+                '-DCMAKE_CXX_FLAGS=-std=c++' +
+                self.spec['root'].variants['cxxstd'].value]
         if self.spec.satisfies('@1.6.0:'):
             args.append('-D__HIJING__=ON')
-        
         if self.spec.satisfies('%gcc@9:'):
             args.append('-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch')
         return args
