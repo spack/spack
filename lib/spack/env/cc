@@ -241,28 +241,28 @@ case "$command" in
         mode=cpp
         debug_flags="-g"
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc|amdclang)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         debug_flags="-g"
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|dpcpp|pgc++|nvc++|xlc++|xlc++_r|FCC|amdclang++)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         debug_flags="-g"
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt|amdflang)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         debug_flags="-g"
         ;;
-    f77|xlf|xlf_r|pgf77)
+    f77|xlf|xlf_r|pgf77|amdflang)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
