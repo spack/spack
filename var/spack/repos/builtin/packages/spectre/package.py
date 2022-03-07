@@ -200,6 +200,7 @@ class Spectre(CMakePackage):
             self.define('Python_EXECUTABLE', self.spec['python'].command.path),
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('BUILD_DOCS', 'doc'),
             self.define('USE_GIT_HOOKS', False),
             self.define('USE_IWYU', False),
             self.define_from_variant('USE_FORMALINE', 'formaline'),
