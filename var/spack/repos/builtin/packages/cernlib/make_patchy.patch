@@ -1,0 +1,10 @@
+--- make_patchy	2005-12-14 11:36:18.000000000 -0500
++++ make_patchy.new	2018-07-20 13:41:02.359571472 -0400
+@@ -16,6 +16,7 @@
+ # *          93/11/18 hardcode /cern in ASIS directory                 *
+ # *                                                                    *
+ # **********************************************************************
++  unalias rm
+   if ( $?PATCHY_VERSION == 0 ) set PATCHY_VERSION=4.15
+ 
+   if ( $?CERNLIB_KERNLIB == 0 ) then

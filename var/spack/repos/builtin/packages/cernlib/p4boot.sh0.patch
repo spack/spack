@@ -1,0 +1,8 @@
+--- p4boot.sh0	2005-12-14 11:08:40.000000000 -0500
++++ p4boot.sh0.new	2018-07-20 14:19:29.700290980 -0400
+@@ -1,4 +1,5 @@
+ #!/bin/csh  -v
++unalias rm
+ # Installation Jobs
+  
+  set  ORIG =   $HOME/patchy        # origin directory for step jinst3/4
