@@ -41,7 +41,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('ncurses+termlib')
 
     # Internal options
-    variant('llvm', default=True, description="Enable LLVM.")
+    variant('llvm', default=False, description="Enable LLVM.")
     _SWR_ENABLED_VALUES = ('avx', 'avx2', 'knl', 'skx')
     variant('swr', values=any_combination_of(*_SWR_ENABLED_VALUES),
             description="Enable the SWR driver.")
