@@ -126,12 +126,14 @@ class Esmf(MakefilePackage):
         # C++ compilers are being used to build the ESMF library.
         if self.compiler.name == 'gcc':
             os.environ['ESMF_COMPILER'] = 'gfortran'
-            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(
+                self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'intel':
             os.environ['ESMF_COMPILER'] = 'intel'
         elif self.compiler.name in ['clang', 'apple-clang']:
             os.environ['ESMF_COMPILER'] = 'gfortranclang'
-            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(
+                self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'nag':
             os.environ['ESMF_COMPILER'] = 'nag'
         elif self.compiler.name == 'pgi':
@@ -156,8 +158,17 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ['ESMF_BOPT'] = 'O'
 
-        if self.compiler.name in ['gcc', 'clang', 'apple-clang'] and gfortran_major_version>=10:
+        if self.compiler.name in ['gcc', 'clang', 'apple-clang'] and \
+                gfortran_major_version >= 10:
             os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
+
+        #######
+        # OS  #
+        #######
+
+        # ESMF_OS must be set for Cray systems
+        if 'platform=cray' in self.spec:
+            os.environ['ESMF_OS'] = 'Unicos'
 
         #######
         # MPI #

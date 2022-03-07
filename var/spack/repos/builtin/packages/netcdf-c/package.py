@@ -68,10 +68,9 @@ class NetcdfC(AutotoolsPackage):
     # variant('cdmremote', default=False,
     #         description='Enable CDM Remote support')
 
-    # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
-    depends_on('autoconf', type='build', when='@4.7.0')
-    depends_on('automake', type='build', when='@4.7.0')
-    depends_on('libtool', type='build', when='@4.7.0')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     depends_on("m4", type='build')
     depends_on("hdf~netcdf", when='+hdf4')
@@ -119,8 +118,7 @@ class NetcdfC(AutotoolsPackage):
 
     @property
     def force_autoreconf(self):
-        # The patch for 4.7.0 touches configure.ac.
-        return self.spec.satisfies('@4.7.0')
+        True
 
     def configure_args(self):
         cflags = []
