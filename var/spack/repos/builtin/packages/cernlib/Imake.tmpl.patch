@@ -1,0 +1,11 @@
+--- Imake.tmpl	2015-09-01 12:37:17.017505846 -0400
++++ Imake.tmpl.new	2015-08-31 13:35:34.543525941 -0400
+@@ -485,7 +485,7 @@
+ #if HasLargeTmp || SystemV4
+ #define ArCmd ArCmdBase cq
+ #else
+-#define ArCmd ArCmdBase clq
++#define ArCmd ArCmdBase cq
+ #endif
+ #endif
+ #ifndef ArAddCmd
