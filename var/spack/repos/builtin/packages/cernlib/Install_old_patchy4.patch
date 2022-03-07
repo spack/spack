@@ -1,0 +1,13 @@
+--- Install_old_patchy4	2008-03-03 06:35:53.000000000 -0500
++++ Install_old_patchy4.new	2018-07-20 14:24:00.441555732 -0400
+@@ -27,6 +27,10 @@
+ cd $CERN/patchy_install
+ tar -zxvf $CERN/patchy4.tar.gz >> $CERN_ROOT/build/log/$logfile 2>&1
+ export CERNLIB_KERNLIB=$CERN_ROOT/lib/libpacklib.a
++# patch the patchy scripts
++patch < $CERN/make_patchy.patch
++patch < $CERN/p4boot.sh0.patch
++patch < $CERN/rceta.sh.patch
+ ./make_patchy >> $CERN_ROOT/build/log/$logfile 2>&1
+ mv patchy ../
+ cd ../

@@ -97,9 +97,10 @@ class Cernlib(Package):
         with working_dir(join_path(src, '2005/src/geant321/miface')):
             patch('-N', '-l', '-p1', 'gmicap.F', '-i', join_path(patches, 'gmicap.F.patch'))
         with working_dir(join_path(src, 'patchy_install')):
-            patch('-N', '-l', '-p1', 'make_patchy', '-i', join_path(patches, 'make_patchy.patch'))
-            patch('-N', '-l', '-p1', 'p4boot.sh0', '-i', join_path(patches, 'p4boot.sh0.patch'))
-            patch('-N', '-l', '-p1', 'rceta.sh', '-i', join_path(patches, 'rceta.sh.patch'))
+            copy(join_path(patches, 'make_patchy.patch'), src)
+            copy(join_path(patches, 'p4boot.sh0.patch'), src)
+            copy(join_path(patches, 'rceta.sh.patch'), src)
+            patch('-N', '-l', '-p1', 'Install_old_patchy4', '-i', join_path(patches, 'Install_old_patchy4.patch'))
 
         # Scripts should exit on error
         files = glob.glob('Install_*')
