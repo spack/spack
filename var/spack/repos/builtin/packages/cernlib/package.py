@@ -20,11 +20,10 @@ class Cernlib(Package):
     tags = ['hep']
 
     versions = {
-        '2020.12.11':
-            (
-                '99486b6dbfb3a93803420719e0ea74a15735ee817277b0be0695b075ea136714',
-                '991cc960bf90f1a8f7d61279554bedaae9c17737d5862607414f193953db6384'
-            )
+        '2020.12.11': (
+            '99486b6dbfb3a93803420719e0ea74a15735ee817277b0be0695b075ea136714',
+            '991cc960bf90f1a8f7d61279554bedaae9c17737d5862607414f193953db6384'
+        )
     }
 
     for v in versions:
