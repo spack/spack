@@ -1189,7 +1189,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = []
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptypes=('link', 'run')):
+        for dep in self.spec.traverse(deptype=('link', 'run')):
             if dep.name in self.extendees:
                 deps.append(dep)
 
@@ -1813,13 +1813,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
-        if self.spec.external and not externals:
-            with open(self.test_log_file, 'w') as ofd:
-                ofd.write('Testing package {0}\n'
-                          .format(self.test_suite.test_pkg_id(self.spec)))
-            return
-
-        kwargs = {'dirty': dirty, 'fake': False, 'context': 'test'}
+        kwargs = {
+            'dirty': dirty, 'fake': False, 'context': 'test',
+            'externals': externals
+        }
+        if tty.is_verbose():
+            kwargs['verbose'] = True
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
@@ -2644,11 +2643,25 @@ def has_test_method(pkg):
     )
 
 
+def print_test_message(logger, msg, verbose):
+    if verbose:
+        with logger.force_echo():
+            print(msg)
+    else:
+        print(msg)
+
+
 def test_process(pkg, kwargs):
-    with tty.log.log_output(pkg.test_log_file) as logger:
+    verbose = kwargs.get('verbose', False)
+    externals = kwargs.get('externals', False)
+    with tty.log.log_output(pkg.test_log_file, verbose) as logger:
         with logger.force_echo():
             tty.msg('Testing package {0}'
                     .format(pkg.test_suite.test_pkg_id(pkg.spec)))
+
+        if pkg.spec.external and not externals:
+            print_test_message(logger, 'Skipped external package', verbose)
+            return
 
         # use debug print levels for log file to record commands
         old_debug = tty.is_debug()
@@ -2730,6 +2743,8 @@ def test_process(pkg, kwargs):
             # non-pass-only methods
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
+            else:
+                print_test_message(logger, 'No tests to run',  verbose)
 
 
 inject_flags = PackageBase.inject_flags
