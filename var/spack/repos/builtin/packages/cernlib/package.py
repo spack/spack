@@ -87,10 +87,10 @@ class Cernlib(Package):
         patches = self.package_dir
         patch = which('patch')
         with working_dir(join_path(src, '2005/src/packlib/cspack/sysreq')):
-            patch('-N', '-l', '-p1', join_path(patches, 'serror.c.patch'))
-            patch('-N', '-l', '-p1', join_path(patches, 'socket.c.patch'))
+            patch('-N', '-l', '-p1', 'serror.c', '-i', join_path(patches, 'serror.c.patch'))
+            patch('-N', '-l', '-p1', 'socket.c', '-i', join_path(patches, 'socket.c.patch'))
         with working_dir(join_path(src, '2005/src/packlib/kernlib/kernbit/z268')):
-            patch('-N', '-l', '-p1', join_path(patches, 'systems.c.patch'))
+            patch('-N', '-l', '-p1', 'systems.c', '-i', join_path(patches, 'systems.c.patch'))
 
         # Scripts should exit on error
         files = glob.glob('Install_*')
