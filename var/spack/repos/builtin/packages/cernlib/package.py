@@ -79,6 +79,8 @@ class Cernlib(Package):
         # Unpack cernlib src
         filter_file(r'#!/bin/bash', '#!/bin/bash -ue', './Install_cernlib_src')
         filter_file(r'./Install_cernlib_src', '#./Install_cernlib_src', './Install_cernlib')
+        filter_file(r'./Install_old_patchy4', '#./Install_old_patchy4', './Install_cernlib')
+        filter_file(r'./Install_cernlib_patchy', '#./Install_cernlib_patchy', './Install_cernlib')
         install_cernlib_src = Executable('./Install_cernlib_src')
         install_cernlib_src()
 
@@ -96,11 +98,6 @@ class Cernlib(Package):
             patch('-N', '-l', '-p1', 'systems.c', '-i', join_path(patches, 'systems.c.patch'))
         with working_dir(join_path(src, '2005/src/geant321/miface')):
             patch('-N', '-l', '-p1', 'gmicap.F', '-i', join_path(patches, 'gmicap.F.patch'))
-        with working_dir(join_path(src, 'patchy_install')):
-            copy(join_path(patches, 'make_patchy.patch'), src)
-            copy(join_path(patches, 'p4boot.sh0.patch'), src)
-            copy(join_path(patches, 'rceta.sh.patch'), src)
-            patch('-N', '-l', '-p1', 'Install_old_patchy4', '-i', join_path(patches, 'Install_old_patchy4.patch'))
 
         # Scripts should exit on error
         files = glob.glob('Install_*')
