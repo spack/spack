@@ -71,6 +71,7 @@ class Thepeg(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('zlib',     type='build')
 
     variant('hepmc', default='2', values=('2', '3'), description='HepMC interface to build ')
 
@@ -78,6 +79,7 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-gsl=' + self.spec['gsl'].prefix, '--without-javagui']
+        args += ['--with-zlib=' + self.spec['zlib'].prefix]
 
         if self.spec.satisfies('@:1.8'):
             args += ['--with-LHAPDF=' + self.spec['lhapdf'].prefix]
