@@ -88,6 +88,7 @@ class Cernlib(Package):
         patch = which('patch')
         with working_dir(join_path(src, '2005/src/config')):
             patch('-N', '-l', '-p1', 'Imake.tmpl', '-i', join_path(patches, 'Imake.tmpl.patch'))
+            patch('-N', '-l', '-p1', 'linux-lp64.cf', '-i', join_path(patches, 'linux-lp64.cf.patch'))
         with working_dir(join_path(src, '2005/src/packlib/cspack/sysreq')):
             patch('-N', '-l', '-p1', 'serror.c', '-i', join_path(patches, 'serror.c.patch'))
             patch('-N', '-l', '-p1', 'socket.c', '-i', join_path(patches, 'socket.c.patch'))

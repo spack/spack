@@ -1,0 +1,20 @@
+--- linux-lp64.cf.original	2020-06-05 16:39:46.596198400 -0400
++++ linux-lp64.cf.patched	2020-06-08 21:03:49.299758978 -0400
+@@ -139,7 +139,7 @@
+ # undef DefaultCCOptions
+ # undef OptimizedCDebugFlags
+ # undef StandardDefines
+-# define DefaultCCOptions	-fPIC
++# define DefaultCCOptions	-fPIC -fcommon
+ # define OptimizedCDebugFlags	-O1 -fomit-frame-pointer
+ # define f2cFortran	        YES
+ # define XargsCmd		xargs
+@@ -154,7 +154,7 @@
+ #   define CERNLIB_GFORTRAN
+ #  elif defined(GCC4)
+ #   define FortranCmd		gfortran
+-#   define DefaultFCOptions	-fno-automatic -fno-second-underscore -fPIC
++#   define DefaultFCOptions	-fno-automatic -fno-second-underscore -fPIC -fallow-invalid-boz -fallow-argument-mismatch -fcommon
+ #   define CernlibSystem	        -DCERNLIB_LINUX -DCERNLIB_UNIX -DCERNLIB_LNX -DCERNLIB_QMGLIBC -DCERNLIB_QMLXIA64 -DCERNLIB_GFORTRAN -DCERNLIB_GCC4
+ #   define CERNLIB_GCC4
+ #   define CERNLIB_GFORTRAN
