@@ -33,6 +33,8 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('master', branch='master')
+    version('1.0.3', branch='1.0.3', tag='1.0.3')
+    version('1.0.2', tag='1.0.2')
     version('1.0.1.1', tag='1.0.1.1')
     version('1.0.1', tag='1.0.1')
     version('1.0.0', branch='1.0.0')
@@ -40,15 +42,22 @@ class Survey(CMakePackage):
     variant('mpi', default=False,
             description="Enable mpi, build MPI data collector")
 
+    variant('tls_model', default='implicit',
+            description='The TLS model to build with',
+            values=('implicit', 'explicit'))
+
     # must have cmake at 3.12 or greater to find python3
     depends_on('cmake@3.12:', type='build')
 
     # for collectors
-    depends_on("libmonitor@2021.04.27+commrank", type=('build', 'link', 'run'))
+    depends_on("libmonitor@2021.04.27+commrank", type=('build', 'link', 'run'), when='@:1.0.2')
+    depends_on('libmonitor@2021.11.08+commrank', type=('build', 'link', 'run'), when='@1.0.3:')
 
     depends_on("papi@5:", type=('build', 'link', 'run'))
     depends_on("gotcha@master", type=('build', 'link', 'run'))
-    depends_on("llvm-openmp@9.0.0", type=('build', 'link', 'run'))
+    depends_on("llvm-openmp@9.0.0", type=('build', 'link', 'run'), when='@:1.0.2')
+    depends_on('llvm-openmp@12.0.1', type=('build', 'link', 'run'), when='@1.0.3:')
+
 
     # MPI Installation
     depends_on("mpi", when="+mpi")
@@ -74,11 +83,16 @@ class Survey(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        if 'tls_model=implicit' in spec:
+            spack_tls_model = "implicit"
+        else:
+            spack_tls_model = "explicit"
+
         # Add in paths for finding package config files that tell us
         # where to find these packages
         cmake_args = [
             '-DCMAKE_VERBOSE_MAKEFILE=ON',
-            '-DTLS_MODEL=implicit',
+            '-DTLS_MODEL=%s' % spack_tls_model,
             '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
             '-DPAPI_DIR=%s' % spec['papi'].prefix,
             '-DLIBIOMP_DIR=%s' % spec['llvm-openmp'].prefix,
