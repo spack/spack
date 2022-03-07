@@ -1072,3 +1072,48 @@ def test_synthetic_construction_bootstrapping(mock_packages, config):
     assert len(root.dependencies()) == 1
     assert root.dependencies()[0].name == 'b'
     assert root.name == 'b'
+
+
+def test_addition_of_different_deptypes_in_multiple_calls(mock_packages, config):
+    # Construct the following spec:
+    #
+    #  b@2.0
+    #    | build,link,run
+    #  b@1.0
+    #
+    # with three calls and check we always have a single edge
+    root = Spec('b@2.0').concretized()
+    bootstrap = Spec('b@1.0').concretized()
+
+    for current_deptype in ('build', 'link', 'run'):
+        root.add_dependency_edge(bootstrap, deptype=current_deptype)
+
+        # Check edges in dependencies
+        assert len(root.edges_to_dependencies()) == 1
+        forward_edge = root.edges_to_dependencies(deptype=current_deptype)[0]
+        assert current_deptype in forward_edge.deptypes
+        assert id(forward_edge.parent) == id(root)
+        assert id(forward_edge.spec) == id(bootstrap)
+
+        # Check edges from dependents
+        assert len(bootstrap.edges_from_dependents()) == 1
+        backward_edge = bootstrap.edges_from_dependents(deptype=current_deptype)[0]
+        assert current_deptype in backward_edge.deptypes
+        assert id(backward_edge.parent) == id(root)
+        assert id(backward_edge.spec) == id(bootstrap)
+
+
+@pytest.mark.parametrize('c1_deptypes,c2_deptypes', [
+    ('link', ('build', 'link')),
+    (('link', 'run'), ('build', 'link'))
+])
+def test_adding_same_deptype_with_the_same_name_raises(
+        mock_packages, config, c1_deptypes, c2_deptypes
+):
+    p = Spec('b@2.0').concretized()
+    c1 = Spec('b@1.0').concretized()
+    c2 = Spec('b@2.0').concretized()
+
+    p.add_dependency_edge(c1, deptype=c1_deptypes)
+    with pytest.raises(spack.error.SpackError):
+        p.add_dependency_edge(c2, deptype=c2_deptypes)

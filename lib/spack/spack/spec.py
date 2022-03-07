@@ -697,6 +697,9 @@ class DependencySpec(object):
                                 self.deptypes,
                                 self.spec.name if self.spec else None)
 
+    def canonical(self):
+        return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
+
 
 _valid_compiler_flags = [
     'cflags', 'cxxflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
@@ -1442,10 +1445,21 @@ class Spec(object):
             dependency_spec (Spec): spec of the dependency
             deptype (str or tuple): dependency types
         """
+        deptype = dp.canonical_deptype(deptype)
+
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
+            if any(d in edge.deptypes for d in deptype):
+                msg = ('cannot add a dependency on "{0.spec}" of {1} type '
+                       'when the "{0.parent}" has the edge {0!s} already')
+                raise spack.error.SpecError(msg.format(edge, deptype))
+
+        for edge in selected:
             if id(dependency_spec) == id(edge.spec):
+                # If we are here, it means the edge object was previously added to
+                # both the parent and the child. When we update this object they'll
+                # both see the deptype modification.
                 edge.add_type(deptype)
                 return
 
