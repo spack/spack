@@ -11,18 +11,25 @@ from spack.version import ver
 
 class Cce(Compiler):
     """Cray compiler environment compiler."""
+    def __init__(self, *args, **kwargs):
+        super(Cce, self).__init__(*args, **kwargs)
+        # For old cray compilers on module based systems we replace
+        # ``version_argument`` with the old value. Cannot be a property
+        # as the new value is used in classmethods for path-based detection
+        if not self.is_clang_based:
+            self.version_argument = '-V'
 
     # Subclasses use possible names of C compiler
-    cc_names = ["cc"]
+    cc_names = ["craycc", "cc"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ["CC"]
+    cxx_names = ["crayCC", "CC"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ["ftn"]
+    f77_names = ["crayftn", "ftn"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ["ftn"]
+    fc_names = ["crayftn", "ftn"]
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r"-mp-\d\.\d"]
@@ -30,24 +37,26 @@ class Cce(Compiler):
     PrgEnv = "PrgEnv-cray"
     PrgEnv_compiler = "cce"
 
-    link_paths = {
-        "cc": os.path.join("cce", "cc"),
-        "cxx": os.path.join("cce", "case-insensitive", "CC"),
-        "f77": os.path.join("cce", "ftn"),
-        "fc": os.path.join("cce", "ftn"),
-    }
+    @property
+    def link_paths(self):
+        if self.PrgEnv in self.modules:
+            # Old module-based interface to cray compilers
+            return {"cc": "cce/cc",
+                    "cxx": "cce/case-insensitive/CC",
+                    "f77": "cce/ftn",
+                    "fc": "cce/ftn"}
+
+        return {"cc": "cce/craycc",
+                "cxx": "cce/case-insensitive/crayCC",
+                "f77": "cce/crayftn",
+                "fc": "cce/crayftn"}
 
     @property
     def is_clang_based(self):
         version = self._real_version or self.version
         return version >= ver("9.0") and "classic" not in str(version)
 
-    @property
-    def version_argument(self):
-        if self.is_clang_based:
-            return "--version"
-        return "-V"
-
+    version_argument = "--version"
     version_regex = r"[Vv]ersion.*?(\d+(\.\d+)+)"
 
     @property

@@ -12,6 +12,7 @@ import archspec.cpu
 import llnl.util.tty as tty
 
 import spack.target
+import spack.version
 from spack.operating_systems.cray_backend import CrayBackend
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.paths import build_env_path
@@ -30,6 +31,9 @@ _craype_name_to_target_name = {
     "interlagos": "bulldozer",
     "abudhabi": "piledriver",
 }
+
+_ex_craype_dir = '/opt/cray/pe/cpe'
+_xc_craype_dir = '/opt/cray/pe/cdt'
 
 
 def _target_name_from_craype_target_name(name):
@@ -110,18 +114,48 @@ class Cray(Platform):
             env.prepend_path("LD_LIBRARY_PATH", os.environ["CRAY_LD_LIBRARY_PATH"])
 
     @classmethod
+    def craype_type_and_version(cls):
+        if os.path.isdir(_ex_craype_dir):
+            craype_dir = _ex_craype_dir
+            craype_type = 'EX'
+        elif os.path.isdir(_xc_craype_dir):
+            craype_dir = _xc_craype_dir
+            craype_type = 'XC'
+        else:
+            return (None, None)
+
+        # Take the default version from known symlink path
+        default_path = os.path.join(craype_dir, 'default')
+        if os.path.islink(default_path):
+            version = spack.version.Version(os.readlink(default_path))
+            return (craype_type, version)
+
+        # If no default version, sort available versions and return latest
+        versions_available = [spack.version.Version(v)
+                              for v in os.listdir(craype_dir)]
+        versions_available.sort(reverse=True)
+        return (craype_type, versions_available[0])
+
+    @classmethod
     def detect(cls):
         """
-        Detect whether this system is a Cray machine.
+        Detect whether this system requires CrayPE module support.
 
-        We detect the Cray platform based on the availability through `module`
-        of the Cray programming environment. If this environment is available,
-        we can use it to find compilers, target modules, etc. If the Cray
-        programming environment is not available via modules, then we will
-        treat it as a standard linux system, as the Cray compiler wrappers
-        and other components of the Cray programming environment are
-        irrelevant without module support.
+        Systems with newer CrayPE (21.10 for EX systems, future work for CS and
+        XC systems) have compilers and MPI wrappers that can be used directly
+        by path. These systems are considered ``linux`` platforms.
+
+        For systems running an older CrayPE, we detect the Cray platform based
+        on the availability through `module` of the Cray programming
+        environment. If this environment is available, we can use it to find
+        compilers, target modules, etc. If the Cray programming environment is
+        not available via modules, then we will treat it as a standard linux
+        system, as the Cray compiler wrappers and other components of the Cray
+        programming environment are irrelevant without module support.
         """
+        craype_type, craype_version = cls.craype_type_and_version()
+        if craype_type == "EX" and craype_version >= spack.version.Version("21.10"):
+            return False
         return "opt/cray" in os.environ.get("MODULEPATH", "")
 
     def _default_target_from_env(self):
