@@ -8,7 +8,7 @@ from spack import *
 
 class PyWsproto(PythonPackage):
     """This repository contains a pure-Python implementation of
-    a WebSocket protocol stack. It’s written from the ground up
+    a WebSocket protocol stack. It's written from the ground up
     to be embeddable in whatever program you choose to use,
     ensuring that you can communicate via WebSockets, as
     defined in RFC6455, regardless of your programming
