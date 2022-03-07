@@ -1,0 +1,48 @@
+--- CMakeLists.txt.orig 2016-03-16 14:55:32.231292396 +0100
++++ CMakeLists.txt      2016-03-16 15:14:59.813670164 +0100
+@@ -69,16 +69,16 @@
+ ENDIF("${isSystemDir}" STREQUAL "-1")
+
+ ## check for c++11 support
+-include(CheckCXXCompilerFlag)
+-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+-if(COMPILER_SUPPORTS_CXX11)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+-elseif(COMPILER_SUPPORTS_CXX0X)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+-else()
+-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please consider updating your C++ compiler.")
+-endif()
++#include(CheckCXXCompilerFlag)
++#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
++#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
++#if(COMPILER_SUPPORTS_CXX11)
++#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
++#elseif(COMPILER_SUPPORTS_CXX0X)
++#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
++#else()
++#        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please consider updating your C++ compiler.")
++#endif()
+
+ ## find packages
+ SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules" CACHE PATH "Module Path" FORCE)
+
+--- src/CRMCtrapfpe.c.orig	2019-08-07 16:24:29.088860303 +0200
++++ src/CRMCtrapfpe.c		2019-08-07 16:25:23.293306947 +0200
+@@ -3,6 +3,8 @@
+ 
+ // skip compilation on MacOSX platform
+ #ifndef __APPLE__
++// skip compilation on ARM platform
++#ifndef __aarch64__
+ 
+ //
+ // from: http://www.fortran-2000.com/ArnaudRecipes/CompilerTricks.html
+@@ -37,4 +39,6 @@
+ 
+ #endif
+ 
++#endif
++
+ #endif

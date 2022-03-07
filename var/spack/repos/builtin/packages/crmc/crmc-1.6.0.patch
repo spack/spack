@@ -1,0 +1,78 @@
+--- CMakeLists.txt.orig 2016-03-16 14:55:32.231292396 +0100
++++ CMakeLists.txt      2016-03-16 15:14:59.813670164 +0100
+@@ -69,16 +69,16 @@
+ ENDIF("${isSystemDir}" STREQUAL "-1")
+
+ ## check for c++11 support
+-include(CheckCXXCompilerFlag)
+-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+-if(COMPILER_SUPPORTS_CXX11)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+-elseif(COMPILER_SUPPORTS_CXX0X)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+-else()
+-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please consider updating your C++ compiler.")
+-endif()
++#include(CheckCXXCompilerFlag)
++#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
++#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
++#if(COMPILER_SUPPORTS_CXX11)
++#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
++#elseif(COMPILER_SUPPORTS_CXX0X)
++#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
++#else()
++#        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please consider updating your C++ compiler.")
++#endif()
+
+ ## find packages
+ SET (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules" CACHE PATH "Module Path" FORCE)
+
+
+
+--- src/CRMCtrapfpe.c.orig	2019-08-07 15:28:46.364745824 +0200
++++ src/CRMCtrapfpe.c		2019-08-07 15:24:27.137816174 +0200
+@@ -3,6 +3,7 @@
+ 
+ // skip compilation on MacOSX platform
+ #ifndef __APPLE__
++#ifndef __aarch64__
+ 
+ //
+ // from: http://www.fortran-2000.com/ArnaudRecipes/CompilerTricks.html
+@@ -37,4 +38,6 @@
+ 
+ #endif
+ 
++#endif
++
+ #endif
+--- src/epos/epos-sem.f.orig	2020-07-02 09:05:36.107997329 +0200
++++ src/epos/epos-sem.f	2020-07-02 09:07:00.605316804 +0200
+@@ -109,7 +109,7 @@
+       end
+ 
+ c-----------------------------------------------------------------------
+-      function ffsig(t,qt,x1,x2)    !former psjy
++      function ffsigepos(t,qt,x1,x2)    !former psjy
+ c-----------------------------------------------------------------------
+       include 'epos.incsem'
+       include 'epos.inc'
+@@ -125,7 +125,7 @@
+       dv2= pifpartone(x2,qt, 2,2,1)+pifpartone(x2,qt, 2,2,2)
+       sea2=pifpartone(x2,qt,-1,2,1)+pifpartone(x2,qt,-1,2,2)
+ 
+-      ffsig= ffborn(s,t,  g1*g2                                  !gg
++      ffsigepos= ffborn(s,t,  g1*g2                                !gg
+ 
+      *  ,(uv1+dv1+2.*naflav*sea1)*g2+g1*(uv2+dv2+2.*naflav*sea2)   !gq
+ 
+@@ -672,7 +672,7 @@
+           aa=1.-4.*qq/sh
+           aa=max(1e-10,aa)
+           t=sh/2.*(1.-sqrt(aa))               !formula in parton-parton cms
+-          ft=ffsig(t,qq,sngl(xx1),sngl(xx2))
++          ft=ffsigepos(t,qq,sngl(xx1),sngl(xx2))
+           fx=fx+wgss(ig1,i1)*ft/sh**2
+         enddo
+         enddo
