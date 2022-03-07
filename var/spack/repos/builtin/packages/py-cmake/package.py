@@ -27,5 +27,17 @@ class PyCmake(PythonPackage):
     depends_on('cmake@3.21.4', type=('build', 'link', 'run'), when='@3.21.4')
     depends_on('cmake@3.18.0', type=('build', 'link', 'run'), when='@3.18.0')
 
+    # see:
+    #   https://github.com/scikit-build/cmake-python-distributions/issues/227
+    #   https://github.com/spack/spack/pull/28760#issuecomment-1029362288
+    for v in ['3.22.2', '3.21.4', '3.18.0']:
+        resource(name='cmake-src',
+                 git='https://gitlab.kitware.com/cmake/cmake.git',
+                 commit='v{0}'.format(v), when='@{0}'.format(v),
+                 destination='cmake-src', placement='cmake-src')
+
     def install_options(self, spec, prefix):
-        return ['-DBUILD_CMAKE_FROM_SOURCE=OFF']
+        return [
+            '-DBUILD_CMAKE_FROM_SOURCE=ON',
+            '-DCMakeProject_SOURCE_DIR=cmake-src'
+        ]
