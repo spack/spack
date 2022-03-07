@@ -129,13 +129,13 @@ class Esmf(MakefilePackage):
         if self.compiler.name == 'gcc':
             os.environ['ESMF_COMPILER'] = 'gfortran'
             gfortran_major_version = int(spack.compiler.get_compiler_version_output(
-                                    self.compiler.fc, '-dumpversion').split('.')[0])
+                self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'intel':
             os.environ['ESMF_COMPILER'] = 'intel'
         elif self.compiler.name in ['clang', 'apple-clang']:
             os.environ['ESMF_COMPILER'] = 'gfortranclang'
             gfortran_major_version = int(spack.compiler.get_compiler_version_output(
-                                    self.compiler.fc, '-dumpversion').split('.')[0])
+                self.compiler.fc, '-dumpversion').split('.')[0])
         elif self.compiler.name == 'nag':
             os.environ['ESMF_COMPILER'] = 'nag'
         elif self.compiler.name == 'pgi':
@@ -161,7 +161,7 @@ class Esmf(MakefilePackage):
             os.environ['ESMF_BOPT'] = 'O'
 
         if self.compiler.name in ['gcc', 'clang', 'apple-clang'] and \
-            gfortran_major_version >= 10:
+                gfortran_major_version >= 10:
             os.environ['ESMF_F90COMPILEOPTS'] = '-fallow-argument-mismatch'
 
         #######
@@ -170,7 +170,7 @@ class Esmf(MakefilePackage):
 
         # ESMF_OS must be set for Cray systems
         if 'platform=cray' in self.spec:
-            os.environ['ESMF_OS']='Unicos'
+            os.environ['ESMF_OS'] = 'Unicos'
 
         #######
         # MPI #
