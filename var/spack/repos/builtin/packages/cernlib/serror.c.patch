@@ -1,0 +1,22 @@
+--- serror.c.original	2020-11-01 16:38:40.207541766 -0500
++++ serror.c.fixed	2020-11-01 16:41:24.189302848 -0500
+@@ -176,15 +176,19 @@
+         }
+         else {
+ #if !defined(vms)
++/*
+                 if ((n>0) && (n<sys_nerr)) {
+                         return((char*)sys_errlist[n]);
+                 }
+                 else {
++*/
+                         (void) sprintf(buf,"%s: %d\n",
+  sys_serrlist[SEMAXERR+1-SEBASEOFF],
+                             n);
+                         return(buf);
++/*
+                 }
++*/
+ #else /* vms */
+ /*
+  * There are (were) some bugs is DEC C compilers (/OPT), just check

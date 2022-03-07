@@ -1,0 +1,20 @@
+--- systems.c.original	2020-11-01 17:57:19.636331673 -0500
++++ systems.c.fixed	2020-11-01 19:10:37.929602329 -0500
+@@ -131,7 +131,7 @@
+ #endif /* hpux */
+ 
+ 	if ( (ps=(FILE *)popen(command,"r"))==NULL ) {
+-		fprintf(stderr,"systems(): popen(): %s\n",sys_errlist[errno] );
++		fprintf(stderr,"systems(): popen(): %s\n",strerror(errno) );
+ 		*rc= -errno;
+ 		*chars=0        ;
+                 *l=0        ;
+@@ -141,7 +141,7 @@
+ 	rcode = fread(buf, 1, buflen , ps );
+ 	if ( rcode < 0 ) {
+ 		fprintf(stderr,"systems(): pipe fread(): %s\n",
+-                                                       sys_errlist[errno] );
++                                                       strerror(errno) );
+ 		buf[0]='\n';
+ 		*rc= -errno;
+                 *chars=0        ;

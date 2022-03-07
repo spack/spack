@@ -1,0 +1,13 @@
+--- /home/marki/Desktop/socket.c.original	2020-11-01 17:22:02.392620683 -0500
++++ /home/marki/Desktop/socket.c.fixed	2020-11-01 17:37:12.446629643 -0500
+@@ -415,7 +415,10 @@
+ s_errmsg()                              /* return last error message    */
+ {
+ #if !defined(vms)
++/*
+         return((char*)sys_errlist[errno]);
++*/
++        return((char*)sys_serrlist[errno]);
+ #else /* vms */
+ #if defined(MULTINET) && (MULTINET == 1)
+         return(vms_errno_string());
