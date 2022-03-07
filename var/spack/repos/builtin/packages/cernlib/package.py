@@ -94,6 +94,8 @@ class Cernlib(Package):
             patch('-N', '-l', '-p1', 'socket.c', '-i', join_path(patches, 'socket.c.patch'))
         with working_dir(join_path(src, '2005/src/packlib/kernlib/kernbit/z268')):
             patch('-N', '-l', '-p1', 'systems.c', '-i', join_path(patches, 'systems.c.patch'))
+        with working_dir(join_path(src, '2005/src/geant321/miface')):
+            patch('-N', '-l', '-p1', 'gmicap.F', '-i', join_path(patches, 'gmicap.F.patch'))
 
         # Scripts should exit on error
         files = glob.glob('Install_*')

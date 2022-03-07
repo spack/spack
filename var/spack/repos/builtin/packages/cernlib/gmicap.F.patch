@@ -1,0 +1,11 @@
+--- gmicap.F.original	2021-07-02 15:46:55.144253766 -0400
++++ gmicap.F.patched	2021-07-02 15:47:11.993050855 -0400
+@@ -42,7 +42,7 @@
+ *                                         T    He3
+      +                               -1 ,-1  , 47/
+ *                                              alpha
+-      SAVE
++C      SAVE
+ C first check, if ZEBRA still in order
+       IF(LD(LMAG1).NE.NMAGIC.OR.LD(LMAG2).NE.NMAGIC) THEN
+          WRITE(6,*) ' CALOR: ZEBRA banks screwed up --> STOP'
