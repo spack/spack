@@ -1940,8 +1940,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 fsys.copy(src_path, dest_path)
 
     @contextlib.contextmanager
-    def _setup_test(self):
-        tty.debug('Initializing stand-alone test tracking')
+    def _setup_test(self, verbose, externals):
         self.test_failures = []
         if self.test_suite:
             self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
@@ -1953,7 +1952,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             pkg_id = self.spec.format('{name}-{version}-{hash:7}')
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
-        with tty.log.log_output(self.test_log_file) as logger:
+        with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
                 tty.msg('Testing package {0}'.format(pkg_id))
 
@@ -1962,12 +1961,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.set_debug(True)
 
             try:
-                yield
-
-                # If we collected errors, raise them in batch here
-                if self.test_failures:
-                    raise TestFailure(self.test_failures)
-
+                yield logger
             finally:
                 # reset debug level
                 tty.set_debug(old_debug)
@@ -1983,21 +1977,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        if self.spec.external and not externals:
-            with open(self.test_log_file, 'w') as ofd:
-                ofd.write('Testing package {0}\n'
-                          .format(self.test_suite.test_pkg_id(self.spec)))
-            return
-
-        with self._setup_test():
-            kwargs = {
-                'dirty': dirty, 'fake': False, 'context': 'test',
-                'externals': externals
-            }
-            if tty.is_verbose():
-                kwargs['verbose'] = True
-            spack.build_environment.start_build_process(
-                self, test_process, kwargs)
+        kwargs = {
+            'dirty': dirty, 'fake': False, 'context': 'test',
+            'externals': externals
+        }
+        if tty.is_verbose():
+            kwargs['verbose'] = True
+        spack.build_environment.start_build_process(
+            self, test_process, kwargs)
 
     def test(self):
         # Defer tests to virtual and concrete packages
@@ -2752,6 +2739,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if self.build_time_test_callbacks is None:
             return
 
+        # Log running install-time tests to the build log
+        tty.msg('Running install-time tests')
+
         for name in self.build_time_test_callbacks:
             try:
                 fn = getattr(self, name)
@@ -2775,8 +2765,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Log running install-time tests to the build log
         tty.msg('Running install-time tests')
 
-        # Ensure capture of output for tests that use run_test
-        with self._setup_test():
+        # Ensure capture run_test outputs
+        with self._setup_test(tty.is_verbose(), False):
             for name in self.install_time_test_callbacks:
                 try:
                     fn = getattr(self, name)
@@ -2784,16 +2774,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     msg = 'RUN-TESTS: method not implemented [{0}]'
                     tty.warn(msg.format(name))
                 else:
-                    tty.msg('RUN-TESTS: install-time tests [{0}]'
-                            .format(name))
+                    tty.debug('RUN-TESTS: install-time tests [{0}]'
+                              .format(name))
                     try:
                         fn()
                     except BaseException as exc:
                         self.test_failures.append((exc, str(exc)))
 
-        # Make sure the build log contains the failure(s)
-        for _, msg in self.test_failures:
-            tty.msg(msg)
+        # Raise any collected failures here
+        if self.test_failures:
+            # Make sure the build log contains the failure(s)
+            for _, msg in self.test_failures:
+                tty.msg(msg)
+            raise TestFailure(self.test_failures)
 
 
 def has_test_method(pkg):
@@ -2818,13 +2811,21 @@ def has_test_method(pkg):
 def print_test_message(logger, msg, verbose):
     if verbose:
         with logger.force_echo():
-            print(msg)
+            tty.msg(msg)
     else:
-        print(msg)
+        tty.msg(msg)
 
 
 def test_process(pkg, kwargs):
-    with pkg._setup_test():
+    verbose = kwargs.get('verbose', False)
+    externals = kwargs.get('externals', False)
+
+    with pkg._setup_test(verbose, externals) as logger:
+        if pkg.spec.external and not externals:
+            print_test_message(
+                logger, 'Skipped tests for external package', verbose)
+            return
+
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
         v_names = list(set([vspec.name
@@ -2885,7 +2886,16 @@ def test_process(pkg, kwargs):
 
                     # Run the tests
                     ran_actual_test_function = True
-                    test_fn(pkg)
+                    if verbose:
+                        with logger.force_echo():
+                            test_fn(pkg)
+                    else:
+                        test_fn(pkg)
+
+            # If fail-fast was on, we error out above
+            # If we collect errors, raise them in batch here
+            if pkg.test_failures:
+                raise TestFailure(pkg.test_failures)
 
         finally:
             # flag the package as having been tested (i.e., ran one or more
@@ -2893,7 +2903,7 @@ def test_process(pkg, kwargs):
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
             else:
-                print_test_message(logger, 'No tests to run',  verbose)
+                print_test_message(logger, 'No tests to run', verbose)
 
 
 inject_flags = PackageBase.inject_flags
