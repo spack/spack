@@ -34,7 +34,7 @@ class Libzmq(AutotoolsPackage):
     variant("drafts", default=False,
             description="Build and install draft classes and methods")
 
-    variant("docs", default=True,
+    variant("docs", default=False,
             description="Build documentation")
 
     variant("libbsd", when='@4.3.3:', default=(sys.platform != 'darwin'),
