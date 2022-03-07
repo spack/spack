@@ -32,7 +32,7 @@ class Amdscalapack(ScalapackBase):
         'build_type',
         default='Release',
         description='CMake build type',
-        values=('Release', 'RelWithDebInfo'))
+        values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant(
         'ilp64',
         default=False,
