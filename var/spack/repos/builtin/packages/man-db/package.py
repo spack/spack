@@ -21,8 +21,10 @@ class ManDb(AutotoolsPackage):
 
     depends_on('pkgconf', type='build')
     depends_on('gettext')
-    depends_on('libpipeline')
-    depends_on('libpipeline@1.5.0:', when='@2.10.1')
+    depends_on('libpipeline@1.5.0:', when='@2.8.0:')
+    depends_on('libpipeline@1.4.0:', when='@2.7.1:')
+    depends_on('libpipeline@1.3.0:', when='@2.6.7:')
+    depends_on('libpipeline@1.1.0:', when='@2.6.0:')
     depends_on('flex')
     depends_on('gdbm')
     depends_on('groff', type=('build', 'link', 'run'))
