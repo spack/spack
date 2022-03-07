@@ -16,7 +16,6 @@ class PyQuart(PythonPackage):
     version('0.16.3', sha256='16521d8cf062461b158433d820fff509f98fb997ae6c28740eda061d9cba7d5e')
 
     depends_on('python@3.7:',           type=('build', 'run'))
-    depends_on('py-setuptools',         type='build')
     depends_on('py-poetry-core@1:',     type='build')
     depends_on('py-aiofiles',           type=('build', 'run'))
     depends_on('py-blinker',            type=('build', 'run'))
