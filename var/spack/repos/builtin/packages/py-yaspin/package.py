@@ -17,4 +17,4 @@ class PyYaspin(PythonPackage):
     depends_on('python@3.6.2:3',       type=('build', 'run'))
     depends_on('py-poetry-core@1:',    type='build')
     depends_on('py-termcolor@1.1.0:1', type=('build', 'run'))
-    depends_on('py-dataclasses@0.8:0', type=('build', 'run'), when='^python@3.6')
+    depends_on('py-dataclasses@0.8',   type=('build', 'run'), when='^python@3.6')
