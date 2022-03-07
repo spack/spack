@@ -9,7 +9,8 @@ import tarfile
 
 
 class Cernlib(Package):
-    """The CERN Program Library is a large collection of general purpose libraries and modules """
+    """The CERN Program Library is a large collection ofi
+    general purpose libraries and modules."""
 
     homepage = "https://www.zeuthen.desy.de/linear_collider/cernlib/new/cernlib_2005.html"
     url      = "https://www-zeuthen.desy.de/linear_collider/cernlib/new/cernlib-2005-all-new.tgz"
@@ -77,27 +78,42 @@ class Cernlib(Package):
              'cernlib.2005.corr.tgz')
 
         # Unpack cernlib src
-        filter_file(r'#!/bin/bash', '#!/bin/bash -ue', './Install_cernlib_src')
-        filter_file(r'./Install_cernlib_src', '#./Install_cernlib_src', './Install_cernlib')
-        filter_file(r'./Install_old_patchy4', '#./Install_old_patchy4', './Install_cernlib')
-        filter_file(r'./Install_cernlib_patchy', '#./Install_cernlib_patchy', './Install_cernlib')
+        filter_file(
+            r'#!/bin/bash',
+            '#!/bin/bash -ue',
+            './Install_cernlib_src')
+        filter_file(
+            r'./Install_cernlib_src',
+            '#./Install_cernlib_src',
+            './Install_cernlib')
+        filter_file(
+            r'./Install_old_patchy4',
+            '#./Install_old_patchy4',
+            './Install_cernlib')
+        filter_file(
+            r'./Install_cernlib_patchy',
+            '#./Install_cernlib_patchy',
+            './Install_cernlib')
         install_cernlib_src = Executable('./Install_cernlib_src')
         install_cernlib_src()
+
+        def patch(target_file, patch_file):
+            which('patch')('-N', '-l', '-p1', target_file,
+                           '-i', join_path(patches, patch_file))
 
         # Apply patches
         src = self.stage.source_path
         patches = self.package_dir
-        patch = which('patch')
         with working_dir(join_path(src, '2005/src/config')):
-            patch('-N', '-l', '-p1', 'Imake.tmpl', '-i', join_path(patches, 'Imake.tmpl.patch'))
-            patch('-N', '-l', '-p1', 'linux-lp64.cf', '-i', join_path(patches, 'linux-lp64.cf.patch'))
+            patch('Imake.tmpl', 'Imake.tmpl.patch')
+            patch('linux-lp64.cf', 'linux-lp64.cf.patch')
         with working_dir(join_path(src, '2005/src/packlib/cspack/sysreq')):
-            patch('-N', '-l', '-p1', 'serror.c', '-i', join_path(patches, 'serror.c.patch'))
-            patch('-N', '-l', '-p1', 'socket.c', '-i', join_path(patches, 'socket.c.patch'))
+            patch('serror.c', 'serror.c.patch')
+            patch('socket.c', 'socket.c.patch')
         with working_dir(join_path(src, '2005/src/packlib/kernlib/kernbit/z268')):
-            patch('-N', '-l', '-p1', 'systems.c', '-i', join_path(patches, 'systems.c.patch'))
+            patch('systems.c', 'systems.c.patch')
         with working_dir(join_path(src, '2005/src/geant321/miface')):
-            patch('-N', '-l', '-p1', 'gmicap.F', '-i', join_path(patches, 'gmicap.F.patch'))
+            patch('gmicap.F', 'gmicap.F.patch')
 
         # Scripts should exit on error
         files = glob.glob('Install_*')
@@ -119,13 +135,16 @@ class Cernlib(Package):
                 symlink(lapack_lib, cernlib_dir)
 
         # Install (i.e. build) cernlib
-        filter_file(r'./Install_cernlib_test', '#./Install_cernlib_test', './Install_cernlib')
+        filter_file(
+            r'./Install_cernlib_test',
+            '#./Install_cernlib_test',
+            './Install_cernlib')
         install_cernlib = Executable('./Install_cernlib')
         install_cernlib()
 
     def install(self, spec, prefix):
         # Install tree to final location
-        level='2005'
+        level = '2005'
         for dir in ['bin', 'lib', 'include']:
             install_tree(join_path(level, dir),
                          join_path(prefix, dir))
