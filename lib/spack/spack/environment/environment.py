@@ -1817,20 +1817,38 @@ class Environment(object):
         roots = d['roots']
         self.concretized_user_specs = [Spec(r['spec']) for r in roots]
         self.concretized_order = [r['hash'] for r in roots]
-        json_specs_by_hash = collections.OrderedDict()
-        for lockfile_key in sorted(d['concrete_specs']):
-            json_specs_by_hash[lockfile_key] = d['concrete_specs'][lockfile_key]
+        json_specs_by_hash = d['concrete_specs']
 
-        specs_by_hash = collections.OrderedDict()
+        # Track specs by their lockfile key.  Currently spack uses the finest
+        # grained hash as the lockfile key, while older formats used the build
+        # hash or a previous incarnation of the DAG hash (one that did not
+        # include build deps or package hash).
+        specs_by_hash = {}
 
+        # Track specs by their DAG hash, allows handling DAG hash collisions
+        first_seen = {}
+
+        # First pass: Put each spec in the map ignoring dependencies
         for lockfile_key, node_dict in json_specs_by_hash.items():
             specs_by_hash[lockfile_key] = Spec.from_node_dict(node_dict)
 
+        # Second pass: For each spec, get its dependencies from the node dict
+        # and add them to the spec
         for lockfile_key, node_dict in json_specs_by_hash.items():
             for _, dep_hash, deptypes, _ in (
                     Spec.dependencies_from_node_dict(node_dict)):
                 specs_by_hash[lockfile_key]._add_dependency(
                     specs_by_hash[dep_hash], deptypes)
+
+        # Traverse the root specs one at a time in the order they appear.
+        # The first time we see each DAG hash, that's the one we want to
+        # keep.  This is only required as long as we support older lockfile
+        # formats where the mapping from DAG hash to lockfile key is possibly
+        # one-to-many.
+        for lockfile_key in self.concretized_order:
+            for s in specs_by_hash[lockfile_key].traverse():
+                if s.dag_hash() not in first_seen:
+                    first_seen[s.dag_hash()] = s
 
         # Now make sure concretized_order and our internal specs dict
         # contains the keys used by modern spack (i.e. the dag_hash
@@ -1838,10 +1856,8 @@ class Environment(object):
         self.concretized_order = [specs_by_hash[h_key].dag_hash()
                                   for h_key in self.concretized_order]
 
-        for _, env_spec in specs_by_hash.items():
-            spec_dag_hash = env_spec.dag_hash()
-            if spec_dag_hash in self.concretized_order:
-                self.specs_by_hash[spec_dag_hash] = env_spec
+        for spec_dag_hash in self.concretized_order:
+            self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
     def write(self, regenerate=True):
         """Writes an in-memory environment to its location on disk.

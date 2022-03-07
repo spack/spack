@@ -2866,32 +2866,29 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
 
 
 def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_mockery):
-    """Make sure that when we read a legacy environment lock file with a hash
-    conflict (one from before we switched to full hash), the behavior as to
-    which of the conflicting specs we pick is deterministic and reproducible.
-    When we read the lockfile, we (somewhat arbitrarily) process specs in
-    alphabetical order of their lockfile key.  Consequently, when reading an
-    old lockfile where two specs have a dag hash conflict we expect to keep the
-    second one we encounter.  After we force reconcretization, we should both of
-    the specs that originally conflicted present in the environment again."""
+    """In legacy lockfiles there is possibly a one-to-many relationship between
+    DAG hash lockfile keys.  In the case of DAG hash conflicts, we always keep
+    the spec associated with whichever root spec came first in "roots".  After
+    we force reconcretization, there should no longer be conflicts, i.e. all
+    specs that originally conflicted should be present in the environment
+    again."""
     legacy_lockfile_path = os.path.join(
         spack.paths.test_path, 'data', 'legacy_env', 'spack.lock'
     )
 
-    # In the legacy lockfile, we have two conflicting specs that differ only
-    # in a build-only dependency.  The lockfile keys and conflicting specs
-    # are:
-    #     wci7a3a -> dttop ^dtbuild1@0.5
-    #     5zg6wxw -> dttop ^dtbuild1@1.0
-    # So when we initially read the legacy lockfile, we expect to have kept
-    # the version of dttop that depends on dtbuild1@0.5
+    # The order of the root specs in this environment is:
+    #     [
+    #         wci7a3a -> dttop ^dtbuild1@0.5,
+    #         5zg6wxw -> dttop ^dtbuild1@1.0
+    #     ]
+    # So in the legacy lockfile we have two versions of dttop with the same DAG
+    # hash (in the past DAG hash did not take build deps into account).  Make
+    # sure we keep the correct instance of each spec, i.e. the one that appeared
+    # first.
 
     env('create', 'test', legacy_lockfile_path)
     test = ev.read('test')
 
-    # Before we forcefully reconcretize, we expect there will be only a
-    # single actual spec in the environment, and it should depend on
-    # dtbuild1@1.0, since that root appears last in the list.
     assert len(test.specs_by_hash) == 1
 
     single_root = next(iter(test.specs_by_hash.values()))
