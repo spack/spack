@@ -2,22 +2,29 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 
 from spack import *
 
 
 class PyTess(PythonPackage):
-    """A module for calculating and analyzing Voronoi tessellations"""
+    """A 3D cell-bases Laguerre tesselation library based on voro++
+    Internal mirror of: https://github.com/wackywendell/tess
+    """
 
-    homepage = "https://github.com/wackywendell/tess"
-    url = "https://pypi.io/packages/source/t/tess/tess-0.3.0.tar.gz"
+    homepage = "https://bbpgitlab.epfl.ch/nse/mirrors/tess"
+    git      = "git@bbpgitlab.epfl.ch:nse/mirrors/tess.git"
 
-    version('0.3.1', sha256='e48734ebe2bb096461d6ddafdda2792650400af1d7a90c98cef53bd6364916d2')
-    version('0.3.0', sha256='68105859bf10c04bf2df73450f1f800fa842d1323be65a81ca447f2528fa5ad6')
+    version("develop", branch="master")
+    version("0.3.2", tag="tess-v0.3.2")
 
-    depends_on('py-cython', type='build')
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools@42.0:", type="build")
+    depends_on("py-cython@0.29:0.999", type="build")
 
-    def patch(self):
-        os.unlink("tess/_voro.cpp")
+    depends_on("py-pytest", type="test")
+    depends_on("py-numpy", type="test")
+    depends_on("py-scipy", type="test")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        python("-m", "pytest", "tests")
