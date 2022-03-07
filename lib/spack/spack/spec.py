@@ -812,24 +812,8 @@ class _EdgeMap(Mapping):
             edge (DependencySpec): edge to be added
         """
         key = edge.spec.name if self.store_by_child else edge.parent.name
-
         current_list = self.edges.setdefault(key, [])
-
-        # The list of edges is empty, just append the edge
-        if not current_list:
-            current_list.append(edge)
-            return
-
-        # If there's something in the list, check if we need to update an
-        # already existing entry.
-        for dep in current_list:
-            if edge.spec == dep.spec and edge.parent == dep.parent:
-                dep.add_type(edge.deptypes)
-                break
-        else:
-            current_list.append(edge)
-
-        # Keep the list sorted
+        current_list.append(edge)
         current_list.sort(key=_sort_by_dep_types)
 
     def __str__(self):
@@ -1458,6 +1442,13 @@ class Spec(object):
             dependency_spec (Spec): spec of the dependency
             deptype (str or tuple): dependency types
         """
+        # Check if we need to update edges that are already present
+        selected = self._dependencies.select(child=dependency_spec.name)
+        for edge in selected:
+            if id(dependency_spec) == id(edge.spec):
+                edge.add_type(deptype)
+                return
+
         edge = DependencySpec(self, dependency_spec, deptype)
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
