@@ -70,8 +70,12 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     # This is already fixed in upstream but not in 4.2.0 rocm release
-    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:')
+    patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:4.5.2')
 
+    # Add LLVM_VERSION_SUFFIX
+    # https://reviews.llvm.org/D115818
+    patch('llvm-version-suffix-macro.patch', when='@:4.3.2')
+    patch('remove-cyclades-inclusion-in-sanitizer.patch', when='@4.2.0:4.5.2')
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
