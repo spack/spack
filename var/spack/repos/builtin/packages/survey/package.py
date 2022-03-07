@@ -58,7 +58,6 @@ class Survey(CMakePackage):
     depends_on("llvm-openmp@9.0.0", type=('build', 'link', 'run'), when='@:1.0.2')
     depends_on('llvm-openmp@12.0.1', type=('build', 'link', 'run'), when='@1.0.3:')
 
-
     # MPI Installation
     depends_on("mpi", when="+mpi")
 
