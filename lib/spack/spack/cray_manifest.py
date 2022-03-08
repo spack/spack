@@ -14,6 +14,10 @@ import spack.cmd
 import spack.hash_types as hash_types
 from spack.schema.cray_manifest import schema as manifest_schema
 
+#: Cray systems can store a Spack-compatible description of system
+#: packages here.
+default_path = '/opt/cray/pe/cpe-descriptive-manifest/'
+
 
 def compiler_from_entry(entry):
     compiler_name = entry['name']

@@ -120,19 +120,33 @@ def external_find(args):
 
 
 def external_read_cray_manifest(args):
+    manifest_files = []
     if args.file:
-        paths = [args.file]
-    elif args.directory:
-        directory = args.directory
-        paths = []
-        for fname in os.listdir(directory):
-            paths.append(os.path.join(directory, fname))
+        manifest_files.append(args.file)
+
+    manifest_dirs = []
+    if args.directory:
+        manifest_dirs.append(args.directory)
+
+    if os.path.isdir(cray_manifest.default_path):
+        tty.debug(
+            "Cray manifest path {0} exists: collecting all files to read."
+            .format(cray_manifest.default_path))
+        manifest_dirs.append(cray_manifest.default_path)
     else:
+        tty.debug("Default Cray manifest directory {0} does not exist."
+                  .format(cray_manifest.default_path))
+
+    for directory in manifest_dirs:
+        for fname in os.listdir(directory):
+            manifest_files.append(os.path.join(directory, fname))
+
+    if not manifest_files:
         raise ValueError(
-            "No --file specified, and no manifest found at {0}"
+            "--file/--directory not specified, and no manifest found at {0}"
             .format(cray_manifest.default_path))
 
-    for path in paths:
+    for path in manifest_files:
         try:
             cray_manifest.read(path, not args.dry_run)
         except (AssertionError, spack.error.SpackError):
