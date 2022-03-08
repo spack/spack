@@ -27,7 +27,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     # See brew scripts for groff for guidance:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/groff.rb
     # Seems troublesome...netpbm requires groff?
-    variant('pdf', default=True, description='Build the `gropdf` executable.')
+    variant('pdf', default=False, description='Build the `gropdf` executable.')
     variant('x', default=False, description='Enable set of graphical options')
     variant('uchardet', default=True,
             description='Builds preconv with uchardet library for '

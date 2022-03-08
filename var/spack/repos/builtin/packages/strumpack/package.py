@@ -20,7 +20,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.1.0.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/refs/tags/v6.3.1.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     tags = ['e4s']
@@ -30,6 +30,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('6.3.1', sha256='3f1de435aeb850c06d841655c3bc426565eb0cc0a7314b76586c2c709b03fb61')
     version('6.3.0', sha256='47dec831684894b7ed77c66b8a23e172b388c83580cfaf91f921564fa0b46d41')
     version('6.2.1', sha256='52d63ab8f565266a9b1b5f3596afd00fc3b70296179b53a1e5b99405defeca22')
     version('6.2.0', sha256='d8443fc66b399b8f2615ad9dd0e599c2e2b6836620cca5d9c4d7a9cde9c5a860')
