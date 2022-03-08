@@ -247,6 +247,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('~aztec')
 
     # Known requirements from tribits dependencies
+    conflicts('~thyra', when='+stratimikos')
     conflicts('+aztec', when='~fortran')
     conflicts('+basker', when='~amesos2')
     conflicts('+ifpack2', when='~belos')
@@ -605,7 +606,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             # Thyra is NOT enabled at this point!" leading to eventual build
             # errors if using MueLu because `Xpetra_ENABLE_Thyra` is set to
             # off.
-            # options.append(define_trilinos_enable('Thyra', True))
 
             # Add thyra adapters based on package enables
             options.extend(
