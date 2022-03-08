@@ -10,7 +10,7 @@ class PyControl(PythonPackage):
     """The Python Control Systems Library is a Python module that implements
     basic operations for analysis and design of feedback control systems."""
 
-    homepage = "http://python-control.org/"
+    homepage = "https://python-control.org/"
     pypi     = "control/control-0.9.1.tar.gz"
 
     maintainers = ['haralmha']
