@@ -667,8 +667,7 @@ class DependencySpec(object):
     def __init__(self, parent, spec, deptypes):
         self.parent = parent
         self.spec = spec
-        deptypes = dp.canonical_deptype(deptypes)
-        self.deptypes = tuple(sorted(set(deptypes)))
+        self.deptypes = dp.canonical_deptype(deptypes)
 
     def update_deptypes(self, deptypes):
         deptypes = set(deptypes)
