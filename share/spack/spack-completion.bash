@@ -1035,7 +1035,7 @@ _spack_external_list() {
 }
 
 _spack_external_read_cray_manifest() {
-    SPACK_COMPREPLY="-h --help --file"
+    SPACK_COMPREPLY="-h --help --file --directory --dry-run"
 }
 
 _spack_fetch() {
