@@ -84,6 +84,10 @@ class Cp2k(MakefilePackage, CudaPackage):
         depends_on('fftw+openmp', when='^fftw')
         depends_on('amdfftw+openmp', when='^amdfftw')
         depends_on('openblas threads=openmp', when='^openblas')
+        # The Cray compiler wrappers will automatically add libsci_mp with
+        # -fopenmp. Since CP2K unconditionally links blas/lapack/scalapack
+        # we have to be consistent.
+        depends_on('cray-libsci+openmp', when='^cray-libsci')
 
     with when('smm=libxsmm'):
         depends_on('libxsmm@1.17:~header-only', when='@9.1:')
