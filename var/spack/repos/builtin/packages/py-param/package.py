@@ -12,7 +12,7 @@ class PyParam(PythonPackage):
     documentation strings, default values, etc., each of which is inherited from
     parent classes if not specified in a subclass."""
 
-    homepage = "http://param.holoviz.org/"
+    homepage = "https://param.holoviz.org/"
     pypi     = "param/param-1.12.0.tar.gz"
 
     maintainers = ['haralmha']
