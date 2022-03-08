@@ -36,7 +36,7 @@ class Cereal(CMakePackage):
     # fixed in HEAD but not released yet
     patch("LockGuard-default-ctor.patch", when="@:1.3.0")
 
-    depends_on('cmake@2.6.2:', when="@:1.3.0", type='build')
+    depends_on('cmake@2.6.2:', type='build')
     depends_on('cmake@3.6.0:', when="@1.3.0:", type='build')
 
     def cmake_args(self):
