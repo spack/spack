@@ -127,6 +127,7 @@ def test_log_output_with_filter(capfd, tmpdir):
 
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
 def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
+    # TODO, avoid noisy output in CI: https://github.com/spack/spack/pull/27659
     echo = which('echo')
 
     # this is split into two tests because capfd interferes with the

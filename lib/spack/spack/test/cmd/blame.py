@@ -70,6 +70,7 @@ def test_blame_json(mock_packages):
 
 def test_blame_by_git(mock_packages, capfd):
     """Sanity check the blame command to make sure it works."""
+    # TODO, avoid noisy output in CI: https://github.com/spack/spack/pull/27659
     with capfd.disabled():
         out = blame('--git', 'mpich')
     assert 'class Mpich' in out
