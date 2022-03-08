@@ -58,7 +58,10 @@ def setup_parser(subparser):
     )
 
     read_cray_manifest = sp.add_parser(
-        'read-cray-manifest', help="read a spack.json file"
+        'read-cray-manifest', help=(
+            "consume a Spack-compatible description of externally-installed "
+            "packages, including dependency relationships"
+        )
     )
     read_cray_manifest.add_argument(
         '--file', default=None,
@@ -75,6 +78,10 @@ def external_find(args):
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
         args.tags = ['core-packages', 'build-tools']
+        # If the user calls 'spack external find' with no arguments, and
+        # this system has a description of installed packages, then we should
+        # consume it automatically.
+        _collect_and_consume_cray_manifest_files()
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all and args.tags:
@@ -120,13 +127,22 @@ def external_find(args):
 
 
 def external_read_cray_manifest(args):
+    _collect_and_consume_cray_manifest_files(
+        manifest_file=args.file,
+        manifest_directory=args.directory,
+        dry_run=args.dry_run
+    )
+
+def _collect_and_consume_cray_manifest_files(
+    manifest_file=None, manifest_directory=None, dry_run=False):
+
     manifest_files = []
-    if args.file:
-        manifest_files.append(args.file)
+    if manifest_file:
+        manifest_files.append(manifest_file)
 
     manifest_dirs = []
-    if args.directory:
-        manifest_dirs.append(args.directory)
+    if manifest_directory:
+        manifest_dirs.append(manifest_directory)
 
     if os.path.isdir(cray_manifest.default_path):
         tty.debug(
@@ -148,7 +164,7 @@ def external_read_cray_manifest(args):
 
     for path in manifest_files:
         try:
-            cray_manifest.read(path, not args.dry_run)
+            cray_manifest.read(path, not dry_run)
         except (AssertionError, spack.error.SpackError):
             # TODO: the AssertionError comes from class_for_compiler_name
             # and should be transformed into a SpackError
