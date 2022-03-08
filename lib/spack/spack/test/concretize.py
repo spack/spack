@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import sys
 
 import jinja2
@@ -333,7 +332,6 @@ class TestConcretize(object):
         assert s[a].version == ver(b)
 
     def test_concretize_two_virtuals(self):
-
         """Test a package with multiple virtual dependencies."""
         Spec('hypre').concretize()
 
@@ -1170,7 +1168,6 @@ class TestConcretize(object):
         # concretize a dev version
         dev_spec = Spec(dev_spec_str).concretized(reuse=True)
         assert dev_spec.dag_hash() is not s.dag_hash()
-
 
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
