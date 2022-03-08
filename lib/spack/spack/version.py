@@ -167,7 +167,7 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string', 'commit_lookup']
+    __slots__ = ['version', 'separators', 'string', 'is_commit', 'commit_lookup']
 
     def __init__(self, string):
         if not isinstance(string, str):
@@ -189,6 +189,8 @@ class Version(object):
         )
         self.separators = tuple(m[2] for m in segments)
 
+        self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
+
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
 
@@ -204,15 +206,6 @@ class Version(object):
                 return prev_tuple + dist_suffix
 
         return self.version
-
-    @property
-    def is_commit(self):
-        """
-        Determine if the original string is referencing a commit.
-        """
-        if self.string in infinity_versions:
-            return False
-        return COMMIT_VERSION.match(self.string) is not None
 
     @property
     def dotted(self):
