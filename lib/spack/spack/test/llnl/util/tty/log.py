@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 import pytest
 
-import llnl.util.tty.log as log
 import llnl.util.lang as lang
+import llnl.util.tty.log as log
 import llnl.util.tty.pty as pty
 
 from spack.util.executable import which
