@@ -1139,42 +1139,37 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
-    def test_reuse_does_not_overwrite_root_dev_specs(self, tmpdir, mock_packages, install_mockery, mock_fetch):
-        with tmpdir.as_cwd():
-            # potential parameters
-            package_name = 'dev-build-test-install'
-            package_version = '0.0.0'
-            # have to setup paths to get concretization to work
-            dev_path = '%s/%s' % (tmpdir.strpath, package_name)
-            os.makedirs(dev_path)
-            spec_str = package_name
-            dev_spec_str = '%s@%s dev_path=%s' % (package_name,
-                                                  package_version, dev_path)
-            # concretize and install a non-dev version
-            s = Spec(spec_str).concretized()
-            s.package.do_install(fake=True)
-            # concretize a dev version
-            dev_spec = Spec(dev_spec_str).concretized(reuse=True)
-            assert dev_spec.dag_hash() is not s.dag_hash()
+    def test_reuse_does_not_overwrite_root_dev_specs(
+            self, tmpdir, mock_packages, install_mockery, mock_fetch):
+        # potential parameters
+        package_name = 'dev-build-test-install'
+        package_version = '0.0.0'
+        spec_str = package_name
+        dev_spec_str = '%s@%s dev_path=/fake' % (package_name,
+                                                 package_version)
+        # concretize and install a non-dev version
+        s = Spec(spec_str).concretized()
+        s.package.do_install(fake=True)
+        # concretize a dev version
+        dev_spec = Spec(dev_spec_str).concretized(reuse=True)
+        assert dev_spec.dag_hash() is not s.dag_hash()
 
-    def test_reuse_does_not_overwrite_dependent_dev_specs(self, tmpdir, mock_packages, install_mockery, mock_fetch):
-        with tmpdir.as_cwd():
-            # potential parameters
-            root_spec = 'dev-build-test-dependent'
-            package_name = 'dev-build-test-install'
-            package_version = '0.0.0'
-            # have to setup paths to get concretization to work
-            dev_path = '%s/%s' % (tmpdir.strpath, package_name)
-            os.makedirs(dev_path)
-            spec_str = root_spec
-            dev_spec_str = '%s ^%s@%s dev_path=%s' % (root_spec, package_name,
-                                                      package_version, dev_path)
-            # concretize and install a non-dev version
-            s = Spec(spec_str).concretized()
-            s.package.do_install(fake=True)
-            # concretize a dev version
-            dev_spec = Spec(dev_spec_str).concretized(reuse=True)
-            assert dev_spec.dag_hash() is not s.dag_hash()
+    def test_reuse_does_not_overwrite_dependent_dev_specs(
+            self, tmpdir, mock_packages, install_mockery, mock_fetch):
+        # potential parameters
+        root_spec = 'dev-build-test-dependent'
+        package_name = 'dev-build-test-install'
+        package_version = '0.0.0'
+
+        spec_str = root_spec
+        dev_spec_str = '%s ^%s@%s dev_path=/fake' % (root_spec, package_name,
+                                                     package_version)
+        # concretize and install a non-dev version
+        s = Spec(spec_str).concretized()
+        s.package.do_install(fake=True)
+        # concretize a dev version
+        dev_spec = Spec(dev_spec_str).concretized(reuse=True)
+        assert dev_spec.dag_hash() is not s.dag_hash()
 
 
     @pytest.mark.regression('20292')
