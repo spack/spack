@@ -133,8 +133,9 @@ def external_read_cray_manifest(args):
         dry_run=args.dry_run
     )
 
+
 def _collect_and_consume_cray_manifest_files(
-    manifest_file=None, manifest_directory=None, dry_run=False):
+        manifest_file=None, manifest_directory=None, dry_run=False):
 
     manifest_files = []
     if manifest_file:
