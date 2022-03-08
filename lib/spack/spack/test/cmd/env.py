@@ -1983,7 +1983,7 @@ spack:
     with ev.Environment(envdir):
         install()
 
-    # make sure transient run type deps are in the view
+    # make sure transitive run type deps are in the view
     for pkg in ('dtrun1', 'dtrun3'):
         assert os.path.exists(os.path.join(viewdir, pkg))
 

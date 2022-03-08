@@ -740,7 +740,7 @@ file snippet we define a view named ``mpis``, rooted at
 version, and compiler name to determine the path for a given
 package. This view selects all packages that depend on MPI, and
 excludes those built with the PGI compiler at version 18.5.
-The root specs with their (transient) link and run type dependencies
+The root specs with their (transitive) link and run type dependencies
 will be put in the view due to the  ``link: all`` option,
 and the files in the view will be symlinks to the spack install
 directories.
@@ -765,9 +765,9 @@ For more information on using view projections, see the section on
 default projection is the default view projection (``{}``). The ``link``
 attribute allows the following values:
 
-#. ``link: all`` include root specs with their transient run and link type
+#. ``link: all`` include root specs with their transitive run and link type
    dependencies (default);
-#. ``link: run`` include root specs with their transient run type dependencies;
+#. ``link: run`` include root specs with their transitive run type dependencies;
 #. ``link: roots`` include root specs without their dependencies.
 
 The ``link_type`` defaults to ``symlink`` but can also take the value
