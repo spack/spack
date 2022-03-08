@@ -57,25 +57,31 @@ def checksum(parser, args):
     pkg = spack.repo.get(args.package)
 
     # Otherwise, see what versions we can find online
-    url_dict = pkg.fetch_remote_versions()
-    if args.versions:
+    url_dict = None
+    versions = args.versions
+    if (not versions) and args.preferred:
+        versions = [preferred_version(pkg)]
+
+    if versions:
         new_dict = {}
-        # If the user asked for specific versions, use those
-        for version in args.versions:
+        for version in versions:
             version = ver(version)
             if not isinstance(version, Version):
                 tty.die("Cannot generate checksums for version lists or "
                         "version ranges. Use unambiguous versions.")
+            url = pkg.find_valid_url_for_version(version)
+            if url is not None:
+                new_dict[version] = url
+                continue
+            # if we get here, it's because no valid url was provided by the package
+            # do expensive fallback to try to recover
+            if url_dict is None:
+                url_dict = pkg.fetch_remote_versions()
             if version in url_dict:
                 new_dict[version] = url_dict[version]
-            else:
-                new_dict[version] = pkg.url_for_version(version)
         url_dict = new_dict
-    elif args.preferred:
-        version = preferred_version(pkg)
-        url_dict = dict(
-            [(version, url_dict.get(version, pkg.url_for_version(version)))]
-        )
+    else:
+        url_dict = pkg.fetch_remote_versions()
 
     if not url_dict:
         tty.die("Could not find any versions for {0}".format(pkg.name))

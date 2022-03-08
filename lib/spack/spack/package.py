@@ -973,6 +973,79 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
+    def urls_for_version(self, version):
+        """Returns all URLs derived from version_urls(), url, urls, and
+        list_url (if it contains a version) in a package in that order.
+
+        version: class Version
+            The version for which a URL is sought.
+        use_list_url: bool
+            Whether to use list_url over url field
+
+        See Class Version (version.py)
+        """
+        if not isinstance(version, Version):
+            version = Version(version)
+
+        urls = []
+
+        # If we have a specific URL for this version, don't extrapolate.
+        version_urls = self.version_urls()
+        if version in version_urls:
+            urls.append(version_urls[version])
+
+        # if there is a custom url_for_version, use it
+        if self.url_for_version is not Package.url_for_version:
+            urls.append(self.url_for_version(version))
+
+        def sub_and_add(u):
+            if u is None:
+                return
+            # skip the url if there is no version to replace
+            try:
+                spack.url.parse_version(u)
+            except spack.url.UndetectableVersionError:
+                return
+            nu = spack.url.substitute_version(u, self.url_version(version))
+
+            urls.append(nu)
+        # If no specific URL, use the default, class-level URL
+        sub_and_add(getattr(self, 'url', None))
+        pkg_urls = getattr(self, 'urls', [None])
+        for u in pkg_urls:
+            sub_and_add(u)
+
+        sub_and_add(getattr(self, 'list_url', None))
+
+        # if no exact match AND no class-level default, use the nearest URL
+        if not urls:
+            default_url = self.nearest_url(version)
+
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+            urls.append(default_url)
+
+        return urls
+
+    def find_valid_url_for_version(self, version):
+        """Returns a URL from which the specified version of this package
+        may be downloaded after testing whether the url is valid. Will try
+        url, urls, and list_url before failing.
+
+        version: class Version
+            The version for which a URL is sought.
+
+        See Class Version (version.py)
+        """
+        urls = self.urls_for_version(version)
+
+        for u in urls:
+            if spack.util.web.url_exists(u):
+                return u
+
+        return None
+
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
@@ -1298,7 +1371,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property  # type: ignore[misc]
+    @property  # type: ignore
     @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
@@ -2561,6 +2634,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.all_urls:
             return {}
 
+        tty.debug("in fetch_remote_versions")
         try:
             return spack.util.web.find_versions_of_archive(
                 self.all_urls,

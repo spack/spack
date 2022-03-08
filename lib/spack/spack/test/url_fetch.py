@@ -31,7 +31,15 @@ def checksum_type(request):
 @pytest.fixture
 def pkg_factory():
     Pkg = collections.namedtuple(
-        'Pkg', ['url_for_version', 'urls', 'url', 'versions', 'fetch_options']
+        "Pkg", [
+            "url_for_version",
+            "urls_for_version",
+            "find_valid_url_for_version",
+            "urls",
+            "url",
+            "versions",
+            "fetch_options",
+        ]
     )
 
     def factory(url, urls, fetch_options={}):
@@ -40,8 +48,16 @@ def pkg_factory():
             main_url = url or urls[0]
             return spack.url.substitute_version(main_url, v)
 
+        def fn_urls(v):
+            urls_loc = urls or [url]
+            return [spack.url.substitute_version(main_url, v) for main_url in urls_loc]
+
         return Pkg(
-            url_for_version=fn, url=url, urls=urls,
+            find_valid_url_for_version=fn,
+            url_for_version=fn,
+            urls_for_version=fn_urls,
+            url=url,
+            urls=(urls,),
             versions=collections.defaultdict(dict),
             fetch_options=fetch_options
         )
