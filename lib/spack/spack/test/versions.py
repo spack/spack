@@ -630,6 +630,14 @@ def test_version_wrong_idx_type():
         v['0:']
 
 
+@pytest.mark.regression('29170')
+def test_version_range_satisfies_means_nonempty_intersection():
+    x = VersionRange('3.7.0', '3')
+    y = VersionRange('3.6.0', '3.6.0')
+    assert not x.satisfies(y)
+    assert not y.satisfies(x)
+
+
 @pytest.mark.regression('26482')
 def test_version_list_with_range_included_in_concrete_version_interpreted_as_range():
     # Note: this test only tests whether we can construct a version list of a range

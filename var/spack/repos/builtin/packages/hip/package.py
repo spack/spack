@@ -38,7 +38,7 @@ class Hip(CMakePackage):
 
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
-    depends_on('mesa~llvm@21:')
+    depends_on('gl@4.5:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1']:

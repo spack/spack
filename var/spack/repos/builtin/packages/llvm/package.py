@@ -204,8 +204,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libelf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
-    # ncurses dependency
+    # llvm-config --system-libs libraries.
     depends_on("ncurses+termlib")
+    depends_on("zlib")
+    depends_on("libxml2")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
@@ -236,6 +238,8 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@:5.0", when="@8:")
     # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
     conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
 
     # When these versions are concretized, but not explicitly with +libcxx, these
     # conflicts will enable clingo to set ~libcxx, making the build successful:
@@ -345,9 +349,12 @@ class Llvm(CMakePackage, CudaPackage):
 
     patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
 
-    # Add LLVM_VERSION_SUFFIX
-    # https://reviews.llvm.org/D115818
-    patch('llvm-version-suffix-macro.patch', when='@:13.0.1')
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13 %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:

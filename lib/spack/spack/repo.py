@@ -7,6 +7,7 @@ import abc
 import contextlib
 import errno
 import functools
+import importlib
 import inspect
 import itertools
 import os
@@ -1099,7 +1100,12 @@ class Repo(object):
                                         % (self.namespace, namespace))
 
         class_name = nm.mod_to_class(pkg_name)
-        module = self._get_pkg_module(pkg_name)
+
+        fullname = "{0}.{1}".format(self.full_namespace, pkg_name)
+        try:
+            module = importlib.import_module(fullname)
+        except ImportError:
+            raise UnknownPackageError(pkg_name)
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):

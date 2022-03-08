@@ -44,7 +44,7 @@ class Mesa(MesonPackage):
     depends_on('zlib@1.2.3:')
 
     # Internal options
-    variant('llvm', default=True, description="Enable LLVM.")
+    variant('llvm', default=False, description="Enable LLVM.")
     _SWR_AUTO_VALUE = 'auto'
     _SWR_ENABLED_VALUES = (_SWR_AUTO_VALUE, 'avx', 'avx2', 'knl', 'skx')
     _SWR_DISABLED_VALUES = ('none',)
