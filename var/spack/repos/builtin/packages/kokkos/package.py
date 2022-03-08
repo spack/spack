@@ -331,7 +331,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     def build_tests(self):
         """Build test."""
-        cmake_path = join_path(self.install_test_root,
+        cmake_path = join_path(self.test_suite.current_test_cache_dir,
                                self.test_script_relative_path, 'out')
         cmake_bin = self.cmake_bin(set=False)
 
@@ -341,8 +341,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path,
                       cmake_bin]
-
-        tty.msg(type(cmake_args))
  
         if not self.run_test(cmake_bin,
                              options=cmake_args,
@@ -358,7 +356,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     def run_tests(self):
         """Run test."""
         reason = 'Checking ability to execute.'
-        run_path = join_path(self.install_test_root,
+        run_path = join_path(self.test_suite.current_test_cache_dir,
                              self.test_script_relative_path, 'out')
         self.run_test('make',
                       options=[run_path, 'test'],
@@ -366,7 +364,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         # Skip if unsupported version
-        cmake_path = join_path(self.install_test_root,
+        cmake_path = join_path(self.test_suite.current_test_cache_dir,
                                self.test_script_relative_path, 'out')
         if not os.path.exists(cmake_path):
             print('Skipping smoke tests: {0} is missing'.format(cmake_path))
