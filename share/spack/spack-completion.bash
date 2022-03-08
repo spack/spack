@@ -1793,7 +1793,7 @@ _spack_unit_test() {
     then
         SPACK_COMPREPLY="-h --help -H --pytest-help -l --list -L --list-long -N --list-names --extension -s -k --showlocals"
     else
-        _tests
+        _unit_tests
     fi
 }
 
