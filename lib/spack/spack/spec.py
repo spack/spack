@@ -837,7 +837,7 @@ class _EdgeMap(Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, deptypes='all'):
+    def select(self, parent=None, child=None, deptypes=dp.all_deptypes):
         """Select a list of edges and return them.
 
         If an edge:
@@ -845,10 +845,13 @@ class _EdgeMap(Mapping):
         - Matches the parent and/or child name, if passed
         then it is selected.
 
+        The deptypes argument needs to be canonical, since the method won't
+        convert it for performance reason.
+
         Args:
             parent (str): name of the parent package
             child (str): name of the child package
-            deptypes: allowed dependency types
+            deptypes (tuple): allowed dependency types in canonical form
 
         Returns:
             List of DependencySpec objects
@@ -856,7 +859,6 @@ class _EdgeMap(Mapping):
         if not deptypes:
             return []
 
-        deptypes = dp.canonical_deptype(deptypes)
         # Start from all the edges we store
         selected = (d for d in itertools.chain.from_iterable(self.values()))
 
@@ -1305,6 +1307,7 @@ class Spec(object):
             name (str): filter dependents by package name
             deptype (str or tuple): allowed dependency types
         """
+        deptype = dp.canonical_deptype(deptype)
         return [
             d for d in
             self._dependents.select(parent=name, deptypes=deptype)
@@ -1318,6 +1321,7 @@ class Spec(object):
             name (str): filter dependencies by package name
             deptype (str or tuple): allowed dependency types
         """
+        deptype = dp.canonical_deptype(deptype)
         return [
             d for d in
             self._dependencies.select(child=name, deptypes=deptype)
@@ -1352,6 +1356,7 @@ class Spec(object):
         """
         _sort_fn = lambda x: (x.spec.name,) + _sort_by_dep_types(x)
         _group_fn = lambda x: x.spec.name
+        deptype = dp.canonical_deptype(deptype)
         selected_edges = self._dependencies.select(deptypes=deptype)
         result = {}
         for key, group in itertools.groupby(
