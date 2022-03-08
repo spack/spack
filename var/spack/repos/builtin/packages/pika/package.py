@@ -45,6 +45,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('examples', default=False, description='Build and install examples')
     variant('mpi', default=False, description='Enable MPI support')
+    variant('apex', default=False, description='Enable APEX support', when='@0.2.0:')
 
     # Build dependencies
     depends_on('git', type='build')
@@ -64,6 +65,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda@11:', when='+cuda')
+    depends_on('apex', when='+apex')
 
     for cxxstd in cxxstds:
         depends_on(
@@ -90,6 +92,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('PIKA_WITH_CUDA', 'cuda'),
             self.define_from_variant('PIKA_WITH_HIP', 'rocm'),
             self.define_from_variant('PIKA_WITH_MPI', 'mpi'),
+            self.define_from_variant('PIKA_WITH_APEX', 'apex'),
             self.define('PIKA_WITH_TESTS', self.run_tests),
             self.define_from_variant(
                 'PIKA_WITH_GENERIC_CONTEXT_COROUTINES', 'generic_coroutines'),
