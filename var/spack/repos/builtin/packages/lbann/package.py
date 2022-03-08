@@ -197,9 +197,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat ~python', when='@0.94:0 +conduit')
-    depends_on('conduit@0.5.0:0.6 +hdf5~hdf5_compat ~python', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat~fortran~parmetis ~python', when='@:0.90,0.99:')
+    # Note that conduit defaults to +fortran +parmetis +python, none of which are
+    # necessary by LBANN: you may want to disable those options in your
+    # packages.yaml
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0 +conduit')
+    depends_on('conduit@0.5.0:0.6 +hdf5', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
