@@ -24,11 +24,13 @@ class Spectre(CMakePackage):
     url = "https://github.com/sxs-collaboration/spectre/archive/v2021.12.15.tar.gz"
     git = "https://github.com/sxs-collaboration/spectre.git"
 
-    maintainers = ['nilsleiffischer']
+    maintainers = ['nilsvu']
 
     generator = 'Ninja'
 
     version('develop', branch='develop')
+    version('2022.02.17', sha256='4bc2949453a35699090efc2bb71b8bd2b951909e0f02d0f8c8af255d1668e63f')
+    version('2022.02.08', sha256='996275536c990a6d49cd61f207c04ad771a1449506f38507afc35f95b29d4cf1')
     version('2022.01.03', sha256='872a0d152c19864ad543ddcc585ce30baaad4185c2617c13463d780175cbde5f')
     version('2021.12.15', sha256='4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c')
 
@@ -47,10 +49,18 @@ class Spectre(CMakePackage):
             description="Executables to install")
     variant('python', default=False, description="Build Python bindings")
     variant('doc', default=False, description="Build documentation")
-    # TODO: support installation of executables with shared libs
-    # variant('shared',
-    #         default=False,
-    #         description="Build shared libraries instead of static")
+    # Build type and debug symbols:
+    # - Both Debug and Release builds have debug symbols enabled by default in
+    #   the SpECTRE build system, so we can view backtraces, etc., when
+    #   production code fails.
+    variant('build_type', values=('Debug', 'Release'),
+            default='Release', description='CMake build type')
+    # - Allow disabling debug symbols to reduce memory usage and executable size
+    variant('debug_symbols', default=True,
+            description="Build with debug symbols")
+    variant('shared',
+            default=False,
+            description="Build shared libraries instead of static")
     variant('memory_allocator',
             values=('system', 'jemalloc'),
             multi=False,
@@ -107,8 +117,20 @@ class Spectre(CMakePackage):
     # Docs
     with when('+doc'):
         depends_on('doxygen', type='build')
+        depends_on('perl', type='build', when="@2022.03.07:")
         depends_on('py-beautifulsoup4', type='build')
         depends_on('py-pybtex', type='build')
+        depends_on('py-nbconvert', type='build', when="@2022.03.07:")
+
+    # Incompatibilities
+    # - Shared libs builds on macOS don't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/2680
+    conflicts('+shared', when='@:2022.01.03 platform=darwin')
+    # - Blaze with `BLAZE_BLAS_MODE` enabled doesn't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/3806 because it
+    #   doesn't find the BLAS header. Also, we haven't tested Blaze with BLAS
+    #   kernels before then.
+    conflicts('^blaze+blas', when='@:2022.02.17')
 
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
@@ -155,21 +177,37 @@ class Spectre(CMakePackage):
         'https://github.com/sxs-collaboration/spectre/commit/1b61e62a27b02b658cc6a74c4d46af1f5b5d0a4d.patch',
         sha256='07be176ca4dda74a2dd8e71c31dab638a9f3567c3a58eb7fddbfde001646fb8c',
         when='@:2022.01.03')
+    # - Backport fix for PCH builds with Spack
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/4bb3f25f905f83d8295a28a8036f6971dc4e75a2.patch',
+        sha256='cd39217614a40f080d812e20220044aa8b26b9413324a7cd7a304e2378a2b426',
+        when='@:2022.01.03')
+    # - Backport installation of shared libs
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/b7c54a2a20c6d62aae6b1c97e3468d4cd39ed6ad.patch',
+        sha256='29ad44594ecfd6442a64d2cb57ed2d712cb8d93707c6bceea8030a9a2682b7ed',
+        when='@:2022.01.03 +shared')
+    # - Fix an issue with Boost pre v1.67
+    patch(
+        'https://github.com/sxs-collaboration/spectre/commit/b229e939f15362aca892d4480a9182daf88305d4.patch',
+        sha256='06a41506d3652b5cb9127ae0e7e9b506f013bde695e478621a1540f46ed1e5bb',
+        when='@2022.02.08 ^boost@:1.66')
 
     def cmake_args(self):
         args = [
             self.define('CHARM_ROOT', self.spec['charmpp'].prefix),
-            # self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('Python_EXECUTABLE', self.spec['python'].command.path),
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('BUILD_DOCS', 'doc'),
             self.define('USE_GIT_HOOKS', False),
             self.define('USE_IWYU', False),
             self.define_from_variant('USE_FORMALINE', 'formaline'),
             self.define_from_variant('MEMORY_ALLOCATOR').upper(),
             self.define_from_variant('ENABLE_PROFILING', 'profiling'),
-            # TODO: Fix PCH builds to reduce compile time
-            self.define('USE_PCH', False),
+            self.define('USE_PCH', True),
+            self.define_from_variant('DEBUG_SYMBOLS'),
         ]
         # Allow for more time on slower machines
         if self.run_tests:

@@ -7,14 +7,13 @@ from spack import *
 
 
 class RYaqcaffy(RPackage):
-    """Affymetrix expression data quality control and reproducibility analysis
+    """Affymetrix expression data quality control and reproducibility analysis.
 
        Quality control of Affymetrix GeneChip expression data and
        reproducibility analysis of human whole genome chips with the MAQC
        reference datasets."""
 
-    homepage = "https://bioconductor.org/packages/yaqcaffy"
-    git      = "https://git.bioconductor.org/packages/yaqcaffy.git"
+    bioc = "yaqcaffy"
 
     version('1.50.0', commit='b32e6b947ca9c4ab7163cfddc084a1bc0a34780e')
     version('1.44.0', commit='00898f3ec9ac0beadbcf57bda3d3c1c99fb0c3c0')

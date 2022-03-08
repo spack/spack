@@ -16,7 +16,9 @@ class Libdc1394(AutotoolsPackage):
 
     version('2.2.6', sha256='2b905fc9aa4eec6bdcf6a2ae5f5ba021232739f5be047dec8fe8dd6049c10fed')
 
+    depends_on('pkgconfig', type='build')
     depends_on('libusb')
+    depends_on('libraw1394')
 
     def configure_args(self):
         args = []

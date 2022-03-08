@@ -17,4 +17,4 @@ class PyPlac(PythonPackage):
     version('1.1.3', sha256='398cb947c60c4c25e275e1f1dadf027e7096858fb260b8ece3b33bcff90d985f')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
+    depends_on('py-argparse', when='^python@:2.6,3.0:3.1', type=('build', 'run'))

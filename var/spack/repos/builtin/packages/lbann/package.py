@@ -52,11 +52,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('distconv', default=False,
             description='Builds with support for spatial, filter, or channel '
             'distributed convolutions')
-    variant('docs', default=False, description='Builds with support for building documentation')
     variant('dtype', default='float',
             description='Type for floating point representation of weights',
             values=('float', 'double'))
-    variant('extras', default=False, description='Add python modules for LBANN related tools')
     variant('fft', default=False, description='Support for FFT operations')
     variant('half', default=False,
             description='Builds with support for FP16 precision data types')
@@ -91,7 +89,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
-    conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
 
     conflicts('~vision', when='@0.91:0.101')
     conflicts('~numpy', when='@0.91:0.101')
@@ -106,7 +103,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0: ~doc', type='build', when='@0.103:')
+    depends_on('cmake@3.17.0: ~doc', type='build', when='@:0.102')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -188,19 +186,23 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc
-    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add +powerpc
+    # When using a GCC compiler
+    depends_on('opencv@4.1.0: +powerpc', when='+vision %gcc arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0 +conduit')
-    depends_on('conduit@0.5.0:0.6 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
-    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    # Note that conduit defaults to +fortran +parmetis +python, none of which are
+    # necessary by LBANN: you may want to disable those options in your
+    # packages.yaml
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0 +conduit')
+    depends_on('conduit@0.5.0:0.6 +hdf5', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
@@ -213,23 +215,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
-    depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
-    depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1')
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
 
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
-
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-    depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
     depends_on('catch2', type=('build', 'test'))
@@ -323,6 +312,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -408,6 +401,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
                         arch_str, cxxflags_str)
                 )
+
+        # IF IBM ESSL is used it needs help finding the proper LAPACK libraries
+        if self.spec.satisfies('^essl'):
+            args.extend([
+                '-DLAPACK_LIBRARIES=%s;-llapack;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names),
+                '-DBLAS_LIBRARIES=%s;-lblas' %
+                ';'.join('-l{0}'.format(lib) for lib in self.spec['essl'].libs.names)])
 
         return args
 

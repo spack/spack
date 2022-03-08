@@ -110,6 +110,7 @@ class Vtk(CMakePackage):
     depends_on('glew')
     # set hl variant explicitly, similar to issue #7145
     depends_on('hdf5+hl')
+    depends_on('hdf5@1.10:', when='@9.1:')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')

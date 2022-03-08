@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycompatible(RPackage):
-    """Affymetrix GeneChip software compatibility
+    """Affymetrix GeneChip software compatibility.
 
        This package provides an interface to Affymetrix chip annotation and
        sample attribute files. The package allows an easy way for users to
@@ -16,9 +16,9 @@ class RAffycompatible(RPackage):
        (GCOS) and GeneChip Command Console (AGCC)-compatible sample annotation
        files."""
 
-    homepage = "https://bioconductor.org/packages/AffyCompatible"
-    git      = "https://git.bioconductor.org/packages/AffyCompatible.git"
+    bioc = "AffyCompatible"
 
+    version('1.54.0', commit='fde7d86ccdb03c13c4838c18ac25477ffe6e0fe5')
     version('1.50.0', commit='3b12d12bd6d1a9f0d45e012817231d137d47089e')
     version('1.44.0', commit='98a27fbe880551fd32a5febb6c7bde0807eac476')
     version('1.42.0', commit='699303cc20f292591e2faa12e211c588efb9eaa8')

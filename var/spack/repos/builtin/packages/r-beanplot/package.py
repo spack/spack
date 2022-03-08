@@ -7,11 +7,11 @@ from spack import *
 
 
 class RBeanplot(RPackage):
-    """Plots univariate comparison graphs, an alternative to
-       boxplot/stripchart/violin plot."""
+    """Visualization via Beanplots (like Boxplot/Stripchart/Violin Plot).
 
-    homepage = "https://cloud.r-project.org/package=beanplot"
-    url      = "https://cloud.r-project.org/src/contrib/beanplot_1.2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/beanplot"
+    Plots univariate comparison graphs, an alternative to
+    boxplot/stripchart/violin plot."""
+
+    cran = "beanplot"
 
     version('1.2', sha256='49da299139a47171c5b4ccdea79ffbbc152894e05d552e676f135147c0c9b372')

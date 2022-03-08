@@ -231,31 +231,11 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch):
-    """Tests SystemExit path for_try_install_from_binary_cache.
-
-       This test does not make sense.  We tell spack there is a mirror
-       with a binary for this spec and then expect it to die because there
-       are no mirrors configured."""
-    # def _mirrors_for_spec(spec, full_hash_match=False):
-    #     spec = spack.spec.Spec('mpi').concretized()
-    #     return [{
-    #         'mirror_url': 'notused',
-    #         'spec': spec,
-    #     }]
-
+    """Test return false when no match exists in the mirror"""
     spec = spack.spec.Spec('mpich')
     spec.concretize()
-
-    # monkeypatch.setattr(
-    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
-
-    # with pytest.raises(SystemExit):
-    #     inst._try_install_from_binary_cache(spec.package, False, False)
     result = inst._try_install_from_binary_cache(spec.package, False, False)
     assert(not result)
-
-    # captured = capsys.readouterr()
-    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -1272,3 +1252,14 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     # Make sure that `remove` was called on the database after an unsuccessful
     # attempt to restore the backup.
     assert fake_db.called
+
+
+def test_term_status_line():
+    # Smoke test for TermStatusLine; to actually test output it would be great
+    # to pass a StringIO instance, but we use tty.msg() internally which does not
+    # accept that. `with log_output(buf)` doesn't really work because it trims output
+    # and we actually want to test for escape sequences etc.
+    x = inst.TermStatusLine(enabled=True)
+    x.add("a")
+    x.add("b")
+    x.clear()

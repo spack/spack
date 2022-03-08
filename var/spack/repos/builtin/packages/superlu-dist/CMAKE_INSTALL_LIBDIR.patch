@@ -1,0 +1,59 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2b2fdf2..f89cf4c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -456,15 +456,6 @@ endif()
+ #target_compile_features(SuperLU_DIST PUBLIC cxx_std_11)
+ 
+ # Generate various configure files with proper definitions
+-# configure_file(${CMAKE_SOURCE_DIR}/make.inc.in ${CMAKE_BINARY_DIR}/make.inc)
+-configure_file(${SuperLU_DIST_SOURCE_DIR}/make.inc.in ${SuperLU_DIST_SOURCE_DIR}/make.inc)
+-
+-configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_BINARY_DIR}/SRC/superlu_dist_config.h)
+-configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h)
+-
+-# Following is to configure a file for FORTRAN code
+-configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_BINARY_DIR}/FORTRAN/superlu_dist_config.h)
+-
+ 
+ # Add pkg-config support
+ if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
+@@ -476,4 +467,13 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/superlu_dist.pc.in ${CMAKE_CURRENT_BI
+ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/superlu_dist.pc
+ 	DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+ 
++# configure_file(${CMAKE_SOURCE_DIR}/make.inc.in ${CMAKE_BINARY_DIR}/make.inc)
++configure_file(${SuperLU_DIST_SOURCE_DIR}/make.inc.in ${SuperLU_DIST_SOURCE_DIR}/make.inc)
++
++configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_BINARY_DIR}/SRC/superlu_dist_config.h)
++configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h)
++
++# Following is to configure a file for FORTRAN code
++configure_file(${SuperLU_DIST_SOURCE_DIR}/SRC/superlu_dist_config.h.in ${SuperLU_DIST_BINARY_DIR}/FORTRAN/superlu_dist_config.h)
++
+ #message("MPI_Fortran_LINK_FLAGS '${MPI_Fortran_LINK_FLAGS}'")
+diff --git a/make.inc.in b/make.inc.in
+index 0beb461..860c0bf 100644
+--- a/make.inc.in
++++ b/make.inc.in
+@@ -18,7 +18,8 @@
+ #
+ SuperLUroot = ${CMAKE_INSTALL_PREFIX}
+ #DSUPERLULIB = $(SuperLUroot)/SRC/${PROJECT_NAME_LIB_EXPORT}
+-DSUPERLULIB = $(SuperLUroot)/@CMAKE_INSTALL_LIBDIR@/${PROJECT_NAME_LIB_EXPORT}
++#DSUPERLULIB = $(SuperLUroot)/@CMAKE_INSTALL_LIBDIR@/${PROJECT_NAME_LIB_EXPORT}
++DSUPERLULIB = @pkgconfig_libdir@/${PROJECT_NAME_LIB_EXPORT}
+ INCLUDEDIR  = $(SuperLUroot)/@CMAKE_INSTALL_INCLUDEDIR@
+ 
+ XSDK_INDEX_SIZE = @XSDK_INDEX_SIZE@
+@@ -29,7 +30,8 @@ HAVE_CUDA       = @HAVE_CUDA@
+ 
+ XSDK_ENABLE_Fortran = @XSDK_ENABLE_Fortran@
+ ifeq ($(XSDK_ENABLE_Fortran),ON)
+-  DFORTRANLIB = $(SuperLUroot)/@CMAKE_INSTALL_LIBDIR@/${PROJECT_NAME_LIB_FORTRAN}
++#  DFORTRANLIB = $(SuperLUroot)/@CMAKE_INSTALL_LIBDIR@/${PROJECT_NAME_LIB_FORTRAN}
++  DFORTRANLIB = @pkgconfig_libdir@/${PROJECT_NAME_LIB_FORTRAN}
+   LIBS = $(DFORTRANLIB) $(DSUPERLULIB) ${BLAS_LIB_EXPORT} -lm
+   LIBS += ${EXTRA_FLIB_EXPORT}
+ else
+

@@ -37,7 +37,9 @@ class CrayLibsci(Package):
         'cce': 'CRAY',
         'intel': 'INTEL',
         'clang': 'ALLINEA',
-        'aocc': 'AOCC'
+        'aocc': 'AOCC',
+        'nvhpc': 'NVIDIA',
+        'rocmcc': 'AMD'
     }
 
     @property

@@ -373,3 +373,11 @@ def test_fetch_options(mock_packages, config):
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == '00000000000000000000000000000012'
     assert fetcher.extra_options == {'cookie': 'baz'}
+
+
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        spack.package.has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured

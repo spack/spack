@@ -41,8 +41,17 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope('packages'),
         help="configuration scope to modify")
+    find_parser.add_argument(
+        '--all', action='store_true',
+        help="search for all packages that Spack knows about"
+    )
     spack.cmd.common.arguments.add_common_arguments(find_parser, ['tags'])
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
+    find_parser.epilog = (
+        'The search is by default on packages tagged with the "build-tools" or '
+        '"core-packages" tags. Use the --all option to search for every possible '
+        'package Spack knows how to find.'
+    )
 
     sp.add_parser(
         'list', help='list detectable packages, by repository and name'
@@ -63,6 +72,14 @@ def setup_parser(subparser):
 
 
 def external_find(args):
+    # If the user didn't specify anything, search for build tools by default
+    if not args.tags and not args.all and not args.packages:
+        args.tags = ['core-packages', 'build-tools']
+
+    # If the user specified both --all and --tag, then --all has precedence
+    if args.all and args.tags:
+        args.tags = []
+
     # Construct the list of possible packages to be detected
     packages_to_check = []
 
@@ -79,9 +96,10 @@ def external_find(args):
         # Since tags are cached it's much faster to construct what we need
         # to search directly, rather than filtering after the fact
         packages_to_check = [
-            spack.repo.get(pkg) for pkg in
-            spack.repo.path.packages_with_tags(*args.tags)
+            spack.repo.get(pkg) for tag in args.tags for pkg in
+            spack.repo.path.packages_with_tags(tag)
         ]
+        packages_to_check = list(set(packages_to_check))
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not packages_to_check:

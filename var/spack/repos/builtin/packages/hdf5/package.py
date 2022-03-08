@@ -108,6 +108,8 @@ class Hdf5(CMakePackage):
     conflicts('+java', when='@:1.9')
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
+    # Fortran cannot be built with shared
+    conflicts('+fortran', when='+shared@:1.8')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -161,6 +163,14 @@ class Hdf5(CMakePackage):
           sha256='0e20187cda3980a4fdff410da92358b63de7ebef2df1d7a425371af78e50f666')
 
     patch('fortran-kinds.patch', when='@1.10.7')
+
+    # This patch may only be needed with GCC11.2 on macOS, but it's valid for
+    # any of the head HDF5 versions as of 12/2021. Since it's impossible to
+    # tell what Fortran version is part of a mixed apple-clang toolchain on
+    # macOS (which is the norm), and this might be an issue for other compilers
+    # as well, we just apply it to all platforms.
+    # See https://github.com/HDFGroup/hdf5/issues/1157
+    patch('fortran-kinds-2.patch', when='@1.10.8,1.12.1')
 
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a

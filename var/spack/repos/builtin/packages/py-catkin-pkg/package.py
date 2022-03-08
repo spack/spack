@@ -16,4 +16,4 @@ class PyCatkinPkg(PythonPackage):
     depends_on('py-docutils', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
-    depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
+    depends_on('py-argparse', when='^python@:2.6,3.0:3.1', type=('build', 'run'))

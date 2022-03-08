@@ -33,6 +33,7 @@ class Libnetworkit(CMakePackage):
     variant('doc', default=False, description='Enables the build with sphinx documentation')
 
     depends_on('libtlx')
+    depends_on('llvm-openmp', when='%apple-clang')
     depends_on('py-sphinx', when='+doc', type='build')
 
     patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1:8.1')

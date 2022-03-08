@@ -33,7 +33,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on('python', type='build')
+    depends_on('python@:3.8', type='build')  # https://github.com/spack/spack/issues/28219
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('libxml2')
     depends_on('zlib')
@@ -41,8 +41,9 @@ class Mesa18(AutotoolsPackage):
     depends_on('ncurses+termlib')
 
     # Internal options
-    variant('llvm', default=True, description="Enable LLVM.")
-    variant('swr', values=any_combination_of('avx', 'avx2', 'knl', 'skx'),
+    variant('llvm', default=False, description="Enable LLVM.")
+    _SWR_ENABLED_VALUES = ('avx', 'avx2', 'knl', 'skx')
+    variant('swr', values=any_combination_of(*_SWR_ENABLED_VALUES),
             description="Enable the SWR driver.")
     # conflicts('~llvm', when='~swr=none')
 
@@ -61,7 +62,7 @@ class Mesa18(AutotoolsPackage):
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('llvm@6:10', when='+llvm')
+    depends_on('libllvm@6:10', when='+llvm')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -138,8 +139,8 @@ class Mesa18(AutotoolsPackage):
 
         if '+llvm' in spec:
             args.append('--enable-llvm')
-            args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
-            if '+llvm_dylib' in spec['llvm']:
+            args.append('--with-llvm-prefix=%s' % spec['libllvm'].prefix)
+            if '+llvm_dylib' in spec['libllvm']:
                 args.append('--enable-llvm-shared-libs')
             else:
                 args.append('--disable-llvm-shared-libs')

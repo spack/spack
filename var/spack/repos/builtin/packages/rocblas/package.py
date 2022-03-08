@@ -51,7 +51,17 @@ class Rocblas(CMakePackage):
     conflicts('tensile_architecture=gfx1012', when='@:4.2.1')
     conflicts('tensile_architecture=gfx1030', when='@:4.2.1')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.16.8:', type='build', when='@4.2.0:')
+    depends_on('cmake@3.8:', type='build', when='@3.9.0:')
+    depends_on('cmake@3.5:', type='build')
+
+    depends_on('googletest@1.10.0:', type='test')
+    depends_on('netlib-lapack@3.7.1:', type='test')
+
+    def check(self):
+        if '@4.2.0:' in self.spec:
+            exe = join_path(self.build_directory, 'clients', 'staging', 'rocblas-test')
+            self.run_test(exe, options=['--gtest_filter=*quick*-*known_bug*'])
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
@@ -69,7 +79,7 @@ class Rocblas(CMakePackage):
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
 
-    depends_on('python', type='build')
+    depends_on('python@3.6:', type='build')
     depends_on('py-virtualenv', type='build')
     depends_on('perl-file-which', type='build')
     depends_on('py-pyyaml', type='build')
@@ -99,6 +109,8 @@ class Rocblas(CMakePackage):
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-Fix-compilation-error-with-StringRef-to-basic-string.patch', when='@:3.8')
+    patch('0002-Fix-rocblas-clients-blas.patch', when='@4.2.0:4.3.1')
+    patch('0003-Fix-rocblas-gentest.patch', when='@4.2.0:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -117,7 +129,8 @@ class Rocblas(CMakePackage):
     def cmake_args(self):
         tensile = join_path(self.stage.source_path, 'Tensile')
         args = [
-            self.define('BUILD_CLIENTS_TESTS', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS',
+                        self.run_tests and '@4.2.0:' in self.spec),
             self.define('BUILD_CLIENTS_BENCHMARKS', 'OFF'),
             self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
             self.define('RUN_HEADER_TESTING', 'OFF'),
@@ -126,11 +139,10 @@ class Rocblas(CMakePackage):
             self.define('Tensile_COMPILER', 'hipcc'),
             self.define('Tensile_LOGIC', 'asm_full'),
             self.define('Tensile_CODE_OBJECT_VERSION', 'V3'),
-            self.define(
-                'BUILD_WITH_TENSILE_HOST',
-                'ON' if '@3.7.0:' in self.spec else 'OFF'
-            )
+            self.define('BUILD_WITH_TENSILE_HOST', '@3.7.0:' in self.spec)
         ]
+        if self.run_tests:
+            args.append(self.define('LINK_BLIS', 'OFF'))
 
         if '@3.7.0:' in self.spec:
             args.append(self.define('Tensile_LIBRARY_FORMAT', 'msgpack'))

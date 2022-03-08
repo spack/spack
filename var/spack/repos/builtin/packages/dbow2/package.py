@@ -16,7 +16,7 @@ class Dbow2(CMakePackage):
     version('shinsumicco', git='https://github.com/shinsumicco/DBoW2.git', branch='master')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+core+features2d+highgui+imgproc')
+    depends_on('opencv+calib3d+features2d+highgui+imgproc')
     depends_on('boost')
     depends_on('dlib')
     depends_on('eigen', type='link')

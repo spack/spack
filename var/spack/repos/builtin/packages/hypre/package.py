@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.24.0', sha256='f480e61fc25bf533fc201fdf79ec440be79bb8117650627d1f25151e8be2fdb5')
     version('2.23.0', sha256='8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2')
     version('2.22.1', sha256='c1e7761b907c2ee0098091b69797e9be977bff8b7fd0479dc20cad42f45c4084')
     version('2.22.0', sha256='2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5')
@@ -68,6 +69,11 @@ class Hypre(AutotoolsPackage, CudaPackage):
     variant('unified-memory', default=False, description='Use unified memory')
     variant('fortran', default=True,
             description='Enables fortran bindings')
+    variant('gptune', default=False,
+            description='Add the GPTune hookup code')
+
+    # Patch to add gptune hookup codes
+    patch('ij_gptune.patch', when='+gptune@2.19.0')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -88,6 +94,7 @@ class Hypre(AutotoolsPackage, CudaPackage):
 
     conflicts('+cuda', when='+int64')
     conflicts('+unified-memory', when='~cuda')
+    conflicts('+gptune', when='~mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -228,6 +235,10 @@ class Hypre(AutotoolsPackage, CudaPackage):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+            if '+gptune' in self.spec:
+                make("test")
+                self.run_test('mkdir', options=['-p', self.prefix.bin])
+                self.run_test('cp', options=['test/ij', self.prefix.bin + '/.'])
 
     extra_install_tests = join_path('src', 'examples')
 

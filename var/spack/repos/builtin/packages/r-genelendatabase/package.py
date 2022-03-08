@@ -7,14 +7,14 @@ from spack import *
 
 
 class RGenelendatabase(RPackage):
-    """Lengths of mRNA transcripts for a number of genomes
+    """Lengths of mRNA transcripts for a number of genomes.
 
        Length of mRNA transcripts for a number of genomes and gene ID formats,
        largely based on UCSC table browser"""
 
-    homepage = "https://bioconductor.org/packages/geneLenDataBase"
-    git      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
+    bioc = "geneLenDataBase"
 
+    version('1.30.0', commit='b3cc755f1ffcbb2eacd9ea45e11f39f1639782b1')
     version('1.26.0', commit='2724715ae23a6647d1c0c6e934720aad9377d65e')
     version('1.20.0', commit='70a1abed00ee68f7bfa07c42c011f9edae9915e4')
     version('1.18.0', commit='77db87e5a4819bf94761fabef0d2ff741a1c5d07')

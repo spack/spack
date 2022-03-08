@@ -23,6 +23,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.10.2', tag='v1.10.2', submodules=True)
     version('1.10.1', tag='v1.10.1', submodules=True)
     version('1.10.0', tag='v1.10.0', submodules=True)
     version('1.9.1', tag='v1.9.1', submodules=True)
@@ -100,14 +101,18 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-future', when='@1.1: ^python@:2', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='^python@:3.4', type=('build', 'run'))
-    depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11@2.6.2', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.3.0', when='@1.1:1.7', type=('build', 'link', 'run'))
     depends_on('py-pybind11@2.2.4', when='@:1.0', type=('build', 'link', 'run'))
     depends_on('py-dataclasses', when='@1.7: ^python@3.6', type=('build', 'run'))
     depends_on('py-tqdm', type='run')
-    depends_on('py-protobuf', type=('build', 'run'))
-    depends_on('protobuf')
+    # https://github.com/onnx/onnx#prerequisites
+    depends_on('py-numpy@1.16.6:', type=('build', 'run'))
+    depends_on('py-protobuf@3.12.2:', when='@1.10:', type=('build', 'run'))
+    depends_on('py-protobuf@:3.14', when='@:1.9', type=('build', 'run'))
+    depends_on('protobuf@3.12.2:', when='@1.10:')
+    depends_on('protobuf@:3.14', when='@:1.9')
+    depends_on('py-typing-extensions@3.6.2.1:', when='@1.7:', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')
     depends_on('eigen')
@@ -139,7 +144,6 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('magma', when='+magma')
     depends_on('nccl', when='+nccl')
     depends_on('numactl', when='+numa')
-    depends_on('py-numpy', when='+numpy', type=('build', 'run'))
     depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('valgrind', when='+valgrind')
     # https://github.com/pytorch/pytorch/issues/60332
@@ -205,12 +209,18 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @property
     def libs(self):
-        root = join_path(python_platlib, 'torch', 'lib')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'lib'
+        )
         return find_libraries('libtorch', root)
 
     @property
     def headers(self):
-        root = join_path(python_platlib, 'torch', 'include')
+        # TODO: why doesn't `python_platlib` work here?
+        root = join_path(
+            self.prefix, self.spec['python'].package.platlib, 'torch', 'include'
+        )
         headers = find_all_headers(root)
         headers.directories = [root]
         return headers

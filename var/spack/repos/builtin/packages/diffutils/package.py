@@ -12,6 +12,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU Diffutils is a package of several programs related to finding
     differences between files."""
 
+    tags = ['core-packages']
+
     executables = [r'^diff$']
 
     homepage = "https://www.gnu.org/software/diffutils/"

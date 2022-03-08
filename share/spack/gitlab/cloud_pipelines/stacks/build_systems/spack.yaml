@@ -13,6 +13,7 @@ spack:
     - default_specs:
       - lz4  # MakefilePackage
       - mpich~fortran  # AutotoolsPackage
+      - tut  # WafPackage
       - py-setuptools  # PythonPackage
       - openjpeg  # CMakePackage
       - r-rcpp  # RPackage

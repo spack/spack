@@ -17,7 +17,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
     url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2"
     git = "https://github.com/genesis-release-r-ccs/genesis-2.0.git"
 
-    version("master", branch="master", deprecated=True)
+    version("master", branch="master")
     version(
         "1.6.0",
         sha256="d0185a5464ed4231f6ee81f6dcaa15935a99fa30b96658d2b7c25d7fbc5b38e9",
