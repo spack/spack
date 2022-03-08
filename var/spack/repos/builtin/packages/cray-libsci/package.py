@@ -30,7 +30,7 @@ class CrayLibsci(Package):
 
     provides("blas")
     provides("lapack")
-    provides("scalapack")
+    provides("scalapack", when="+mpi")
 
     canonical_names = {
         'gcc': 'GNU',
