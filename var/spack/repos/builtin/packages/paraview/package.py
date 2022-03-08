@@ -92,6 +92,9 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts('build_edition=core', when='@:5.7')
     # before 5.3.0, ParaView didn't have VTK-m
     conflicts('use_vtkm=on', when='@:5.3')
+    # paraview@5.9.0 is recommended when using the xl compiler
+    # See https://gitlab.kitware.com/paraview/paraview/-/merge_requests/4433
+    conflicts('paraview@:5.8', when='%xl_r', msg='Use paraview@5.9.0 with %xl_r. Earlier versions are not able to build with xl.')
 
     # We only support one single Architecture
     for _arch, _other_arch in itertools.permutations(CudaPackage.cuda_arch_values, 2):
@@ -218,6 +221,10 @@ class Paraview(CMakePackage, CudaPackage):
     # Fix IOADIOS2 module to work with kits
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8653
     patch('vtk-adios2-module-no-kit.patch', when='@5.8:5.10')
+
+    # Patch for paraview 5.9.0%xl_r
+    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/7591
+    patch('xlc-compilation-pv590.patch', when='@5.9.0%xl_r')
 
     @property
     def generator(self):

@@ -12,7 +12,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
     homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
 
     tags = ['ecp']
-    maintainers = ['chuckatkins']
+    maintainers = ['chuckatkins', 'kwryankrattiger']
 
     version('1.0')
 
@@ -100,7 +100,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage):
                        when='+adios2',
                        propagate=['hdf5', 'sz', 'zfp'])
 
-    dav_sdk_depends_on('darshan-runtime+mpi', when='+darshan')
+    dav_sdk_depends_on('darshan-runtime+mpi',
+                       when='+darshan',
+                       propagate=['hdf5'])
     dav_sdk_depends_on('darshan-util', when='+darshan')
 
     dav_sdk_depends_on('faodel+shared+mpi network=libfabric',

@@ -188,6 +188,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
+        # Special case for llvm-amdgpu
+        if self.spec.name == 'llvm-amdgpu':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'rocmcc'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
