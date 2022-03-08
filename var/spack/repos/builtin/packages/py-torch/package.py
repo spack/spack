@@ -207,6 +207,9 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch',
           sha256='e69e41b5c171bfb00d1b5d4ee55dd5e4c8975483230274af4ab461acd37e40b8', when='@1.10.0+distributed~tensorpipe')
 
+    # To search blas library to GENERIC_BLAS_LIBRARIES environment variable
+    patch('generic_blas.patch', when='@1.6:')
+
     @property
     def libs(self):
         # TODO: why doesn't `python_platlib` work here?
@@ -365,6 +368,7 @@ class PyTorch(PythonPackage, CudaPackage):
         else:
             env.set('BLAS', 'Generic')
             env.set('WITH_BLAS', 'generic')
+            env.set('GENERIC_BLAS_LIBRARIES', ';'.join(self.spec['blas'].libs.names))
 
         # Don't use vendored third-party libraries when possible
         env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
