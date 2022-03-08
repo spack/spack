@@ -837,7 +837,7 @@ class _EdgeMap(Mapping):
 
         return clone
 
-    def select(self, parent=None, child=None, dependency_types='all'):
+    def select(self, parent=None, child=None, deptypes='all'):
         """Select a list of edges and return them.
 
         If an edge:
@@ -848,15 +848,15 @@ class _EdgeMap(Mapping):
         Args:
             parent (str): name of the parent package
             child (str): name of the child package
-            dependency_types: allowed dependency types
+            deptypes: allowed dependency types
 
         Returns:
             List of DependencySpec objects
         """
-        if not dependency_types:
+        if not deptypes:
             return []
 
-        dependency_types = dp.canonical_deptype(dependency_types)
+        deptypes = dp.canonical_deptype(deptypes)
         # Start from all the edges we store
         selected = (d for d in itertools.chain.from_iterable(self.values()))
 
@@ -869,11 +869,11 @@ class _EdgeMap(Mapping):
             selected = (d for d in selected if d.spec.name == child)
 
         # Filter by allowed dependency types
-        if dependency_types:
+        if deptypes:
             selected = (
                 dep for dep in selected
                 if not dep.deptypes or
-                any(d in dependency_types for d in dep.deptypes)
+                any(d in deptypes for d in dep.deptypes)
             )
 
         return list(selected)
@@ -1307,7 +1307,7 @@ class Spec(object):
         """
         return [
             d for d in
-            self._dependents.select(parent=name, dependency_types=deptype)
+            self._dependents.select(parent=name, deptypes=deptype)
         ]
 
     def edges_to_dependencies(self, name=None, deptype='all'):
@@ -1320,7 +1320,7 @@ class Spec(object):
         """
         return [
             d for d in
-            self._dependencies.select(child=name, dependency_types=deptype)
+            self._dependencies.select(child=name, deptypes=deptype)
         ]
 
     def dependencies(self, name=None, deptype='all'):
@@ -1352,7 +1352,7 @@ class Spec(object):
         """
         _sort_fn = lambda x: (x.spec.name,) + _sort_by_dep_types(x)
         _group_fn = lambda x: x.spec.name
-        selected_edges = self._dependencies.select(dependency_types=deptype)
+        selected_edges = self._dependencies.select(deptypes=deptype)
         result = {}
         for key, group in itertools.groupby(
                 sorted(selected_edges, key=_sort_fn), key=_group_fn
