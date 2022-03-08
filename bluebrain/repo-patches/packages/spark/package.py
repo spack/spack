@@ -1,61 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
-#
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import re
-
 from spack import *
+from spack.pkg.builtin.spark import Spark as BuiltinSpark
 
 
-class Spark(Package):
-    """Apache Spark is a fast and general engine
-    for large-scale data processing.
-    """
+class Spark(BuiltinSpark):
+    __doc__ = BuiltinSpark.__doc__
 
-    homepage = "https://spark.apache.org"
-    url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    url = "https://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-3.2.0.tgz"
 
-    variant('hadoop', default=True,
-            description='Build with Hadoop')
+    version('3.2.1', sha256='224e058cb0c6fb68b39896427a3ccd11ae2246e9bf465b5e29e4fb192d39a59c')
+    version('3.1.3', sha256='2411de04bec186b8651b27a5f16e4b511103c3c1e3f20fbb98b1f8804e61b77f')
 
-    depends_on('java', type=('build', 'run'), when=('@3.0.0:'))
-    depends_on('java@8', type=('build', 'run'), when=('@:2.4.99'))
-    depends_on('hadoop@:2.999', when='+hadoop', type=('build', 'run'))
-
-    version('3.1.2', sha256='3a79e324d12f46de44d042641d9340ba03f8ccb3db6f2496a9ccb65431dbb593')
-    version('3.1.1', sha256='4e0846207bf10311de43451bc99309086fce7990aaf54bf3038608b1981afbe7')
-    version('3.0.0', sha256='98f6b92e5c476d7abb93cc179c2616aa5dc897da25753bd197e20ef54a28d945')
-
-    patch("spark-daemon-quote-log.patch")
+    depends_on('hadoop@3.3:', when='@3.2:+hadoop', type=('build', 'run'))
 
     def url_for_version(self, version):
+        hadoop_version = 'hadoop3.2'
         url = "http://archive.apache.org/dist/spark/spark-{0}/spark-{0}-bin-{1}.tgz"
-        return url.format(version, 'hadoop2.7')
+        return url.format(version, hadoop_version)
 
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('conf')
-        install_dir('jars')
-        install_dir('python')
-        install_dir('R')
-        install_dir('sbin')
-        install_dir('yarn')
-
-        # required for spark to recognize binary distribution
-        install('RELEASE', prefix)
-
-    def setup_run_environment(self, env):
-        hadoop = self.spec['hadoop'].command
-        hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
-        hadoop_classpath = hadoop('classpath', output=str)
-
-        # Remove whitespaces, as they can compromise syntax in
-        # module files
-        hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
-
-        env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
+    patch("spark-daemon-quote-log.patch")

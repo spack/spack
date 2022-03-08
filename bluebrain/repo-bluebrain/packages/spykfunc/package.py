@@ -19,15 +19,7 @@ class Spykfunc(PythonPackage):
     version('0.17.1', tag='v0.17.1', submodules=True, get_full_repo=True)
     version('0.17.0', tag='v0.17.0', submodules=True, get_full_repo=True)
     version('0.16.99', tag='v0.16.99', submodules=True, get_full_repo=True)
-    version('0.16.1', tag='v0.16.1', submodules=True, get_full_repo=True)
-    version('0.16.0', tag='v0.16.0', submodules=True, get_full_repo=True)
     version('0.15.9', tag='v0.15.9', submodules=True, get_full_repo=True)
-    version('0.15.7', tag='v0.15.7', submodules=True, get_full_repo=True)
-    version('0.15.6', tag='v0.15.6', submodules=True, get_full_repo=True)
-    version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
-    version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
-    version('0.15.1', tag='v0.15.1', submodules=True, get_full_repo=True)
-    version('0.15.0', tag='v0.15.0', submodules=True, get_full_repo=True)
     # versions 0.13.2-0.14.x require legacy mvdtool+python
     version('0.13.1', tag='v0.13.1', submodules=True, get_full_repo=True)
     version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
@@ -44,7 +36,8 @@ class Spykfunc(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('spark+hadoop@3.0.0:', type='run')
-    depends_on('hadoop@:2.999', type='run')
+    depends_on('hadoop@:2.999', type='run', when='@:0.17.1')
+    depends_on('hadoop@3:', type='run', when='@0.17.2:')
 
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
