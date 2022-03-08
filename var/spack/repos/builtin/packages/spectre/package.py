@@ -117,8 +117,10 @@ class Spectre(CMakePackage):
     # Docs
     with when('+doc'):
         depends_on('doxygen', type='build')
+        depends_on('perl', type='build', when="@2022.03.07:")
         depends_on('py-beautifulsoup4', type='build')
         depends_on('py-pybtex', type='build')
+        depends_on('py-nbconvert', type='build', when="@2022.03.07:")
 
     # Incompatibilities
     # - Shared libs builds on macOS don't work before
@@ -198,6 +200,7 @@ class Spectre(CMakePackage):
             self.define('Python_EXECUTABLE', self.spec['python'].command.path),
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('BUILD_DOCS', 'doc'),
             self.define('USE_GIT_HOOKS', False),
             self.define('USE_IWYU', False),
             self.define_from_variant('USE_FORMALINE', 'formaline'),
