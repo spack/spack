@@ -1137,32 +1137,37 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
-    def test_reuse_does_not_overwrite_root_dev_specs(
-            self, mock_packages, install_mockery, mock_fetch):
-        # potential parameters
-        package_name = 'dev-build-test-install'
-        dev_spec_str = '%s dev_path=/fake' % package_name
-        # concretize and install a non-dev version
-        s = Spec(package_name).concretized()
-        s.package.do_install(fake=True)
-        # concretize a dev version
-        with spack.config.override("concretizer:reuse", True):
-            dev_spec = Spec(dev_spec_str).concretized()
-        assert dev_spec.dag_hash() != s.dag_hash()
+    @pytest.mark.parametrize('dev_first,spec', [
+        (True, 'dev-build-test-install'),
+        (True, 'dev-build-test-dependent'),
+        (False, 'dev-build-test-install'),
+        (False, 'dev-build-test-dependent')
+    ])
+    def test_reuse_does_not_overwrite_dev_specs(
+            self, dev_first, spec, tmpdir, mock_packages, install_mockery, mock_fetch):
+        """Test that reuse does not mix dev specs with non-dev specs.
 
-    def test_reuse_does_not_overwrite_dependent_dev_specs(
-            self, mock_packages, install_mockery, mock_fetch):
-        # potential parameters
-        root_spec = 'dev-build-test-dependent'
-        dependency_spec = 'dev-build-test-install'
-        dev_spec_str = '%s ^%s dev_path=/fake' % (root_spec, dependency_spec)
+        Tests for either order (dev specs are not reused for non-dev, and
+        non-dev specs are not reused for dev specs)
+        Tests for a spec in which the root is developed and a spec in
+        which a dep is developed."""
+        # dev and non-dev specs that are otherwise identical
+        spec = Spec(spec).normalized()  # ensure dependencies present
+        dev_spec = spec.copy()
+        dev_constraint = 'dev_path=%s' % tmpdir.strpath
+        dev_spec['dev-build-test-install'].constrain(dev_constraint)
+
+        # run the test in both orders
+        first_spec = dev_spec if dev_first else spec
+        second_spec = spec if dev_first else dev_spec
+
         # concretize and install a non-dev version
-        s = Spec(root_spec).concretized()
-        s.package.do_install(fake=True)
+        first_spec.concretize()
+        first_spec.package.do_install(fake=True)
         # concretize a dev version
         with spack.config.override("concretizer:reuse", True):
-            dev_spec = Spec(dev_spec_str).concretized()
-        assert dev_spec.dag_hash() != s.dag_hash()
+            second_spec.concretize()
+        assert first_spec.dag_hash() != second_spec.dag_hash()
 
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
