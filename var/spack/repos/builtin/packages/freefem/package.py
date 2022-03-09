@@ -19,7 +19,7 @@ class Freefem(AutotoolsPackage):
 
     maintainers = ['corentin-dev']
 
-    version('4.10',  sha256='acc6d8e6ca9ca7a579178d6b0d0ce3b2a5c5f43832d1b9e3142175443c59747c')
+    version('4.10',  sha256='b60a4a2b4b7a2c4c9753d9a2f5bf4735ddf81e26df39843c674cddce70fde588')
     version('4.9',   sha256='299ba2b73dfff578b7890f693c1e835680bf55eba87263cabd60d81909e1e0e4')
     version('4.8',   sha256='499b1ca24d45088226a238412ea1492d9cc3eb6088866904145511469780180d')
     version('4.7-1', sha256='60d84424d20b5f6abaee638dc423480fc76f9c389bba1a2f23fd984e39a3fb96')
