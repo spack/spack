@@ -1371,7 +1371,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @memoized
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
