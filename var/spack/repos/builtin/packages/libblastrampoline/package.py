@@ -15,6 +15,7 @@ class Libblastrampoline(MakefilePackage):
 
     maintainers = ['haampie', 'giordano']
 
+    version('5.0.2', sha256='2e96fa62957719351da3e4dff8cd0949449073708f5564dae0a224a556432356')
     version('5.0.1', sha256='1066b4d157276e41ca66ca94f0f8c2900c221b49da2df3c410e6f8bf1ce9b488')
     # v5.0.0 contains a bug, fixed in v5.0.1, which causes segmentation faults
     version('5.0.0', sha256='20f434add7d9ae4503bb7a61e320ad1aea8e8371f53b1e32dc691e4701080658', deprecated=True)
