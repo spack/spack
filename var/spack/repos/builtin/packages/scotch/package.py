@@ -100,7 +100,7 @@ class Scotch(CMakePackage):
 
         return scotchlibs + zlibs
 
-    @when('@:6.9.99')
+    @when('@:6')
     def patch(self):
         self.configure()
 
@@ -108,7 +108,7 @@ class Scotch(CMakePackage):
     # file that contains all of the configuration variables and their desired
     # values for the installation.  This function writes this file based on
     # the given installation variants.
-    @when('@:6.9.99')
+    @when('@:6')
     def configure(self):
         makefile_inc = []
         cflags = [
@@ -222,7 +222,7 @@ class Scotch(CMakePackage):
             with open('Makefile.inc', 'w') as fh:
                 fh.write('\n'.join(makefile_inc))
 
-    @when('@:6.9.99')
+    @when('@:6')
     def install(self, spec, prefix):
         targets = ['scotch']
         if '+mpi' in self.spec:
@@ -271,11 +271,11 @@ class Scotch(CMakePackage):
         install_tree('include', prefix.include)
         install_tree('man/man1', prefix.share.man.man1)
 
-    @when("@:6.9.99")
+    @when("@:6")
     def cmake(self, spec, prefix):
         self.configure()
 
-    @when("@:6.9.99")
+    @when("@:6")
     def build(self, spec, prefix):
         pass
 
