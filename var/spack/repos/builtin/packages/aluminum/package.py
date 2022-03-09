@@ -81,6 +81,9 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
+            if spec.satisfies('%cce') and spec.satisfies('^cuda+allow-unsupported-compilers'):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
+
         if spec.satisfies('@0.5:'):
             args.extend([
                 '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
