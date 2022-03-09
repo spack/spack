@@ -20,12 +20,12 @@ class Freefem(AutotoolsPackage):
     maintainers = ['corentin-dev']
 
     version('4.10',  sha256='b60a4a2b4b7a2c4c9753d9a2f5bf4735ddf81e26df39843c674cddce70fde588')
-    version('4.9',   sha256='299ba2b73dfff578b7890f693c1e835680bf55eba87263cabd60d81909e1e0e4')
-    version('4.8',   sha256='499b1ca24d45088226a238412ea1492d9cc3eb6088866904145511469780180d')
-    version('4.7-1', sha256='60d84424d20b5f6abaee638dc423480fc76f9c389bba1a2f23fd984e39a3fb96')
-    version('4.7',   sha256='c1797b642e9c3d543eaad4949d26ce1e986f531ee9be14fff606ea525ada9206')
-    version('4.6',   sha256='6c09af8e189fc02214b0e664b679b49832c134e29cf1ede3cab29cf754f6078f')
-    version('4.5',   sha256='5b2d4125c312da8fbedd49a72e742f18f35e0ae100c82fb493067dfad5d51432')
+    version('4.9',   sha256='1f90a7b0790d78de07794e056b2d3943e4a738da4961ba67fbb815f7583b8018')
+    version('4.8',   sha256='538437691c07ad151ea15857db4c253ef58090c7953c72ebe3b5a4a020efde55')
+    version('4.7-1', sha256='9a34d46441c7fb23b423daa245c739298f84fbf735d264edac89b6362a7358a3')
+    version('4.7',   sha256='2e0913090aa324aa2d5bc787a4030d9f90c6bd33d475a835cb9273629bd81dce')
+    version('4.6',   sha256='c5ebae617f55c18b7c0b3e307b82060b925ef2dd1b936c4ac9d58296caf40f4e')
+    version('4.5',   sha256='3863636f99537605070a18a6e77a0e8df6888d088968172fe5b2b1efd1ff190f')
 
     variant('mpi', default=False,
             description='Activate MPI support')
