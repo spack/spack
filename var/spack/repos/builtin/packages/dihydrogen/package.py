@@ -167,7 +167,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
 
-            if spec.satisfies('%cce') and spec.satisfies('^cuda+allow-unsupported-compilers'):
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
                 args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if '+cuda' in spec or '+distconv' in spec:
