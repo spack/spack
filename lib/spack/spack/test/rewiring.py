@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import filecmp
 import os
 
 import pytest
@@ -20,7 +21,6 @@ def test_rewire(mock_fetch, install_mockery, transitive):
     spec.package.do_install(force=True)
     dep.package.do_install(force=True)
     spliced_spec = spec.splice(dep, transitive=transitive)
-    assert spec is not spliced_spec
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
     spack.rewiring.rewire(spliced_spec)
@@ -36,17 +36,10 @@ def test_rewire(mock_fetch, install_mockery, transitive):
     # check the file in the prefix has the correct paths
     for node in spliced_spec.traverse(root=True):
         text_file_path = os.path.join(node.prefix, node.name)
-        text = ''
         with open(text_file_path, 'r') as f:
             text = f.read()
-        for modded_spec in node.traverse(root=True):
-            assert modded_spec.prefix in text
-        # test install manifest
-        spack.store.layout.ensure_installed(node)
-        manifest_file_path = os.path.join(node.prefix,
-                                          spack.store.layout.metadata_dir,
-                                          spack.store.layout.manifest_file_name)
-        assert os.path.exists(manifest_file_path)
+            for modded_spec in node.traverse(root=True):
+                assert modded_spec.prefix in text
 
 
 @pytest.mark.parametrize('transitive', [True, False])
@@ -56,7 +49,6 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     spec.package.do_install(force=True)
     dep.package.do_install(force=True)
     spliced_spec = spec.splice(dep, transitive=transitive)
-    assert spec is not spliced_spec
     assert spec.dag_hash() != spliced_spec.dag_hash()
 
     spack.rewiring.rewire(spliced_spec)
@@ -77,9 +69,39 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
         for dep in node.traverse(root=True):
             bin_file_path = os.path.join(dep.prefix.bin, bin_names[dep.name])
             assert text_in_bin(dep.prefix, bin_file_path)
-        # test install manifest
+
+
+def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
+    # check for spec.json and install_manifest.json and that they are new
+    # for a simple case.
+    spec = Spec('quux').concretized()
+    dep = Spec('garply cflags=-g').concretized()
+    spec.package.do_install(force=True)
+    dep.package.do_install(force=True)
+    spliced_spec = spec.splice(dep, transitive=True)
+    spack.rewiring.rewire(spliced_spec)
+
+    # test install manifests
+    for node in spliced_spec.traverse(root=True):
         spack.store.layout.ensure_installed(node)
         manifest_file_path = os.path.join(node.prefix,
                                           spack.store.layout.metadata_dir,
                                           spack.store.layout.manifest_file_name)
         assert os.path.exists(manifest_file_path)
+        orig_node = spec[node.name]
+        orig_manifest_file_path = os.path.join(orig_node.prefix,
+                                               spack.store.layout.metadata_dir,
+                                               spack.store.layout.manifest_file_name)
+        assert os.path.exists(orig_manifest_file_path)
+        assert not filecmp.cmp(orig_manifest_file_path, manifest_file_path,
+                               shallow=False)
+        specfile_path = os.path.join(node.prefix,
+                                     spack.store.layout.metadata_dir,
+                                     spack.store.layout.spec_file_name)
+        assert os.path.exists(specfile_path)
+        orig_specfile_path = os.path.join(orig_node.prefix,
+                                          spack.store.layout.metadata_dir,
+                                          spack.store.layout.spec_file_name)
+        assert os.path.exists(orig_specfile_path)
+        assert not filecmp.cmp(orig_specfile_path, specfile_path,
+                               shallow=False)
