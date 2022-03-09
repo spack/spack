@@ -111,7 +111,7 @@ class PyNumpy(PythonPackage):
     depends_on('lapack', when='+lapack')
 
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
-    depends_on('py-pytest', when='@1.15:', type='test')
+    depends_on('py-pytest', when='@1.15:', type=('build', 'test'))
     depends_on('py-hypothesis', when='@1.19:', type='test')
 
     # Allows you to specify order of BLAS/LAPACK preference
