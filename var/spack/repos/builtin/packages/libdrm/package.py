@@ -27,12 +27,24 @@ class Libdrm(Package):
     version('2.4.59',  sha256='ed9d03a92c2d80e6310cc350db3430620f1659ae084a07c6824cee7bc81ae8fa')
     version('2.4.33',  sha256='bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4')
 
+    variant('docs', default=False, description="Build man pages")
+
     depends_on('pkgconfig', type='build')
-    depends_on('docbook-xml', type='build')
-    depends_on('docbook-xsl', type='build')
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
-    depends_on('meson', type='build', when='@2.4.101:')
+
+    # 2.4.90 is the first version to use meson.
+    depends_on('meson', type='build', when='@2.4.90:')
+
+    # >= 2.4.104 uses reStructuredText for man pages.
+    with when('@2.4.104: +docs'):
+        depends_on('py-docutils', type='build')
+
+    # < 2.4.104 uses docbook for man pages.
+    with when('@:2.4.103 +docs'):
+        depends_on('docbook-xml', type='build')
+        depends_on('docbook-xsl', type='build')
+        depends_on('libxslt', type='build')
 
     def url_for_version(self, version):
         if version <= Version('2.4.100'):
@@ -41,8 +53,9 @@ class Libdrm(Package):
             return self.list_url + 'libdrm-%s.tar.xz' % version
 
     def meson_args(self):
-        args = []
-        return args
+        return [
+            '-Dman-pages=' + ('true' if '+docs' in self.spec else 'false')
+        ]
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -55,7 +68,7 @@ class Libdrm(Package):
                 ninja('test')
             ninja('install')
 
-    @when('@:2.4.100')
+    @when('@:2.4.89')
     def configure_args(self):
         args = []
         args.append('--enable-static')
@@ -69,7 +82,7 @@ class Libdrm(Package):
             args.append('CFLAGS=-fcommon')
         return args
 
-    @when('@:2.4.100')
+    @when('@:2.4.89')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
