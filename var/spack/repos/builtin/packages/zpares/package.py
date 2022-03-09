@@ -18,11 +18,10 @@ class Zpares(MakefilePackage):
     variant('mpi', default=False, description='Activates MPI support')
     variant('mumps', default=False, description='Activates MUMPS support')
 
-    conflicts('+mumps', when='~mpi')
-
-    depends_on('parmetis', when='+mumps')
-    depends_on('mumps', when='+mumps+mpi')
+    depends_on('mumps+mpi', when='+mumps+mpi')
+    depends_on('mumps~mpi', when='+mumps~mpi')
     depends_on('lapack')
+    depends_on('blas')
     depends_on('mpi', when='+mpi')
 
     def edit(self, spec, prefix):
@@ -35,18 +34,17 @@ class Zpares(MakefilePackage):
         if '+mpi' in self.spec:
             targets.append('USE_MPI=1')
             targets.append('FC={0}'.format(self.spec['mpi'].mpifc))
-            if '+mumps' in self.spec:
-                targets.append('USE_MUMPS=1')
-                targets.append('FFLAG={0}'.format(self.compiler.openmp_flag))
-                targets.append('LFFLAG={0}'.format(self.compiler.openmp_flag))
-                targets.append('MUMPS_DIR={0}'.format(self.spec['mumps'].prefix))
-                libs = self.spec['parmetis'].libs + self.spec['metis'].libs
-                targets.append('MUMPS_DEPEND_LIBS={0}'.format(libs.ld_flags))
-            else:
-                targets.append('USE_MUMPS=0')
         else:
             targets.append('USE_MPI=0')
             targets.append('FC={0}'.format(self.compiler.fc))
+
+        if '+mumps' in self.spec:
+            targets.append('USE_MUMPS=1')
+            targets.append('FFLAG={0}'.format(self.compiler.openmp_flag))
+            targets.append('LFFLAG={0}'.format(self.compiler.openmp_flag))
+            targets.append('MUMPS_DIR={0}'.format(self.spec['mumps'].prefix))
+        else:
+            targets.append('USE_MUMPS=0')
 
         targets.append('BLAS={0}'.format(self.spec['blas'].libs.link_flags))
         targets.append('LAPACK={0}'.format(self.spec['lapack'].libs.link_flags))
