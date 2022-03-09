@@ -35,10 +35,8 @@
 # - E203: white space around slice operators can be required, ignore : warn
 # - W503: see above, already ignored for line-breaks
 #
-# F821: generates an error on mypy comments with error codes like # ignore[misc]
-#
 [flake8]
-ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405,F821
+ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405
 max-line-length = 88
 
 # F4: Import
