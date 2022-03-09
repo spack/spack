@@ -2634,7 +2634,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.all_urls:
             return {}
 
-        tty.debug("in fetch_remote_versions")
         try:
             return spack.util.web.find_versions_of_archive(
                 self.all_urls,
