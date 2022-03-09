@@ -362,8 +362,10 @@ def ci_rebuild(args):
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
     spack_info_file = os.path.join(repro_dir, 'spack_info.txt')
-    with open(spack_info_file, 'w') as fd:
-        fd.write('\n{0}\n'.format(spack_info))
+    with open(spack_info_file, 'wb') as fd:
+        fd.write(b'\n')
+        fd.write(spack_info.encode('utf8'))
+        fd.write(b'\n')
 
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a full hash match already
