@@ -16,6 +16,7 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.lang import dedupe
 
 import spack.bootstrap
 import spack.compilers
@@ -474,7 +475,7 @@ class ViewDescriptor(object):
     def specs_for_view(self, concretized_specs):
         """
         From the list of concretized user specs in the environment, flatten
-        the dags, and filter installed specs, remove duplicates on dag hash.
+        the dags, and filter selected, installed specs, remove duplicates on dag hash.
         """
         specs = []
 
@@ -487,16 +488,7 @@ class ViewDescriptor(object):
                 specs.append(s)
 
         # De-dupe by dag hash
-        hashes = set()
-        specs_unique = []
-        for s in specs:
-            hash = s.dag_hash()
-            if hash in hashes:
-                continue
-            hashes.add(hash)
-            specs_unique.append(s)
-
-        specs = specs_unique
+        specs = dedupe(specs, key=lambda s: s.dag_hash())
 
         # Filter selected, installed specs
         with spack.store.db.read_transaction():
