@@ -132,6 +132,7 @@ def get_version():
     the real spack release number (e.g., 0.13.3).
 
     """
+    version = spack.spack_version
     git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
         git = exe.which("git")
@@ -144,9 +145,9 @@ def get_version():
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
                 if match:
                     v, n, commit = match.groups()
-                    return "%s-%s-%s" % (v, n, commit)
+                    version += " (git %s-%s-%s)" % (v, n, commit)
 
-    return spack.spack_version
+    return version
 
 
 def index_commands():

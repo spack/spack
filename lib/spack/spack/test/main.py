@@ -39,7 +39,7 @@ echo v0.13.3-912-g3519a1762
     fs.set_executable(git)
 
     os.environ["PATH"] = str(tmpdir)
-    assert "0.13.3-912-3519a1762" == get_version()
+    assert spack.spack_version + " (git 0.13.3-912-3519a1762)" == get_version()
 
 
 def test_get_version_no_repo(tmpdir, monkeypatch):
