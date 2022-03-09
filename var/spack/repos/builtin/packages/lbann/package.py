@@ -103,8 +103,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
     conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
+    depends_on('cmake@3.17.0:', type='build')
     depends_on('cmake@3.21.0:', type='build', when='@0.103:')
-    depends_on('cmake@3.17.0:', type='build', when='@:0.102')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
