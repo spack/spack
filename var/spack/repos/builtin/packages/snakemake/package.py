@@ -24,16 +24,16 @@ class Snakemake(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-wrapt', type=('build', 'run'))
 
-    depends_on('python@3.3:3.6', when='@:5')
+    depends_on('python@3.3:3.6', when='@:5', type=('build', 'run'))
 
     with when('@7:'):
-        depends_on('python@3.7:')
+        depends_on('python@3.7:', type=('build', 'run'))
         depends_on('py-yte', type=('build', 'run'))
         depends_on('py-jinja2@3', type=('build', 'run'))
         depends_on('py-retry', type=('build', 'run'))
 
     with when('@6:'):
-        depends_on('python@3.5:')
+        depends_on('python@3.5:', type=('build', 'run'))
         depends_on('py-pyyaml', type=('build', 'run'))
         depends_on('py-configargparse', type=('build', 'run'))
         depends_on('py-appdirs', type=('build', 'run'))
