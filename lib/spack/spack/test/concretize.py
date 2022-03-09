@@ -1137,22 +1137,21 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
-    @pytest.mark.parametrize('dev_first,spec', [
-        (True, 'dev-build-test-install'),
-        (True, 'dev-build-test-dependent'),
-        (False, 'dev-build-test-install'),
-        (False, 'dev-build-test-dependent')
-    ])
+    @pytest.mark.parametrize('dev_first', [True, False])
+    @pytest.mark.parametrize('spec', [
+        'dev-build-test-install', 'dev-build-test-dependent ^dev-build-test-install'])
+    @pytest.mark.parametrize('mock_db', [True, False])
     def test_reuse_does_not_overwrite_dev_specs(
-            self, dev_first, spec, tmpdir, mock_packages, install_mockery, mock_fetch):
+            self, dev_first, spec, mock_db, tmpdir, monkeypatch):
         """Test that reuse does not mix dev specs with non-dev specs.
 
         Tests for either order (dev specs are not reused for non-dev, and
         non-dev specs are not reused for dev specs)
         Tests for a spec in which the root is developed and a spec in
-        which a dep is developed."""
+        which a dep is developed.
+        Tests for both reuse from database and reuse from buildcache"""
         # dev and non-dev specs that are otherwise identical
-        spec = Spec(spec).normalized()  # ensure dependencies present
+        spec = Spec(spec)
         dev_spec = spec.copy()
         dev_constraint = 'dev_path=%s' % tmpdir.strpath
         dev_spec['dev-build-test-install'].constrain(dev_constraint)
@@ -1161,10 +1160,19 @@ class TestConcretize(object):
         first_spec = dev_spec if dev_first else spec
         second_spec = spec if dev_first else dev_spec
 
-        # concretize and install a non-dev version
+        # concretize and setup spack to reuse in the appropriate manner
         first_spec.concretize()
-        first_spec.package.do_install(fake=True)
-        # concretize a dev version
+
+        def mock_fn(*args, **kwargs):
+            return [first_spec]
+
+        if mock_db:
+            monkeypatch.setattr(spack.store.db, 'query', mock_fn)
+        else:
+            monkeypatch.setattr(
+                spack.binary_distribution, 'update_cache_and_get_specs', mock_fn)
+
+        # concretize and ensure we did not reuse
         with spack.config.override("concretizer:reuse", True):
             second_spec.concretize()
         assert first_spec.dag_hash() != second_spec.dag_hash()
