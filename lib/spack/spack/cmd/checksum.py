@@ -57,13 +57,13 @@ def checksum(parser, args):
     pkg = spack.repo.get(args.package)
 
     # Otherwise, see what versions we can find online
-    url_dict = None
+    url_dict = {}
     versions = args.versions
     if (not versions) and args.preferred:
         versions = [preferred_version(pkg)]
 
     if versions:
-        new_dict = {}
+        remote_versions = None
         for version in versions:
             version = ver(version)
             if not isinstance(version, Version):
@@ -71,15 +71,14 @@ def checksum(parser, args):
                         "version ranges. Use unambiguous versions.")
             url = pkg.find_valid_url_for_version(version)
             if url is not None:
-                new_dict[version] = url
+                url_dict[version] = url
                 continue
             # if we get here, it's because no valid url was provided by the package
             # do expensive fallback to try to recover
-            if url_dict is None:
-                url_dict = pkg.fetch_remote_versions()
-            if version in url_dict:
-                new_dict[version] = url_dict[version]
-        url_dict = new_dict
+            if remote_versions is None:
+                remote_versions = pkg.fetch_remote_versions()
+            if version in remote_versions:
+                url_dict[version] = remote_versions[version]
     else:
         url_dict = pkg.fetch_remote_versions()
 
