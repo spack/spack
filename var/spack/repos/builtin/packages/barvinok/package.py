@@ -18,8 +18,12 @@ class Barvinok(AutotoolsPackage):
     variant('pet', default=False, description="Enable pet support (Generate polyhedral model from c code)")
 
     depends_on('gmp')
+    depends_on('ntl')
     depends_on('llvm +clang', when='+pet')
     depends_on('libyaml', when='+pet')
+
+    def setup_build_environment(self, env):
+        env.set('CFLAGS', '-pthread')
 
     def configure_args(self):
         spec = self.spec
