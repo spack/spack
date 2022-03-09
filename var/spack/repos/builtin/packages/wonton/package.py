@@ -50,7 +50,7 @@ class Wonton(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('flecsi', when='+flecsi')
 
-    depends_on('jali@1.1.6', when='wonton@3.2.1: +jali')
+    depends_on('jali@1.1.6', when='wonton@1.3.2: +jali')
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
 
