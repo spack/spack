@@ -12,26 +12,29 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     portable applications targeting all major HPC platforms."""
 
     homepage = "https://github.com/kokkos/kokkos"
-    git = "https://github.com/kokkos/kokkos.git"
-    url      = "https://github.com/kokkos/kokkos/archive/3.4.01.tar.gz"
+    git      = "https://github.com/kokkos/kokkos.git"
+    url      = "https://github.com/kokkos/kokkos/archive/3.5.00.tar.gz"
 
     tags = ['e4s']
 
     test_requires_compiler = True
 
-    maintainers = ['DavidPoliakoff', 'jciesko']
+    maintainers = ['janciesko', 'crtrott']
 
     version('master',  branch='master')
     version('develop', branch='develop')
+    version('3.5.00', sha256='748f06aed63b1e77e3653cd2f896ef0d2c64cb2e2d896d9e5a57fec3ff0244ff')
     version('3.4.01', sha256='146d5e233228e75ef59ca497e8f5872d9b272cb93e8e9cdfe05ad34a23f483d1')
     version('3.4.00', sha256='2e4438f9e4767442d8a55e65d000cc9cde92277d415ab4913a96cd3ad901d317')
     version('3.3.01', sha256='4919b00bb7b6eb80f6c335a32f98ebe262229d82e72d3bae6dd91aaf3d234c37')
+    version('3.3.00', sha256='170b9deaa1943185e928f8fcb812cd4593a07ed7d220607467e8f0419e147295')
+    version('3.2.01', sha256='9e27a3d8f81559845e190d60f277d84d6f558412a3df3301d9545e91373bcaf1')
     version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')
     version('3.1.01', sha256='ff5024ebe8570887d00246e2793667e0d796b08c77a8227fe271127d36eec9dd')
     version('3.1.00', sha256="b935c9b780e7330bcb80809992caa2b66fd387e3a1c261c955d622dae857d878")
     version('3.0.00', sha256="c00613d0194a4fbd0726719bbed8b0404ed06275f310189b3493f5739042a92b")
 
-    depends_on("cmake@3.10:", type='build')
+    depends_on("cmake@3.16:", type='build')
 
     devices_variants = {
         'cuda': [False, 'Whether to build CUDA backend'],
@@ -43,6 +46,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+
+    # https://github.com/spack/spack/issues/29052
+    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -130,6 +136,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "72": 'volta72',
         "75": 'turing75',
         "80": 'ampere80',
+        "86": 'ampere86',
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
@@ -137,7 +144,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     amdgpu_arch_map = {
         'gfx900': 'vega900',
         'gfx906': 'vega906',
-        'gfx908': 'vega908'
+        'gfx908': 'vega908',
+        'gfx90a': 'vega90A'
     }
     amd_support_conflict_msg = (
         '{0} is not supported; '

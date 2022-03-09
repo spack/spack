@@ -7,13 +7,13 @@ from spack import *
 
 
 class RAgilp(RPackage):
-    """Agilent expression array processing package
+    """Agilent expression array processing package.
 
        More about what it does (maybe more than one line)."""
 
-    homepage = "https://bioconductor.org/packages/agilp"
-    git      = "https://git.bioconductor.org/packages/agilp.git"
+    bioc = "agilp"
 
+    version('3.26.0', commit='3170fe2b1cc459d5e2ca7f61a127aac17cd66a96')
     version('3.22.0', commit='7d089d576752e0526f15a1007e94436089954313')
     version('3.16.0', commit='2900d6066317f21d076b3a043b16f32eca168c47')
     version('3.14.0', commit='8feb047d70216013462ea7806e9227d192b60c61')

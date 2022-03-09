@@ -65,6 +65,7 @@ class Ffmpeg(AutotoolsPackage):
     variant('openssl', default=False, description='needed for https support')
     variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
+    variant('libx264', default=False, description='H.264 encoding')
 
     depends_on('alsa-lib', when='platform=linux')
     depends_on('libiconv')
@@ -92,6 +93,7 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('snappy', when='+libsnappy')
     depends_on('speex', when='+libspeex')
     depends_on('xz', when='+lzma')
+    depends_on('x264', when='+libx264')
 
     # TODO: enable when libxml2 header issue is resolved
     # conflicts('+libxml2', when='@:3')
@@ -162,15 +164,19 @@ class Ffmpeg(AutotoolsPackage):
 
         variant_opts = [
             'bzlib',
+            'gpl',
             'libmp3lame',
             'libopenjpeg',
             'libopus',
             'libspeex',
             'libvorbis',
             'libvpx',
+            'libx264',
             'avresample',
+            'nonfree',
             'openssl',
             'shared',
+            'version3',
         ]
 
         if spec.satisfies('@2.0:'):

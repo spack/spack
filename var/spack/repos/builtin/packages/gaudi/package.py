@@ -16,6 +16,10 @@ class Gaudi(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('36.4', sha256='1a5c27cdc21ec136b47f5805406c92268163393c821107a24dbb47bd88e4b97d')
+    version('36.3', sha256='9ac228d8609416afe4dea6445c6b3ccebac6fab1e46121fcc3a056e24a5d6640')
+    version('36.2', sha256='a1b4bb597941a7a5b8d60382674f0b4ca5349c540471cd3d4454efbe7b9a09b9')
+    version('36.1', sha256='9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9')
     version('36.0', sha256='8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830')
     version('35.0', sha256='c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6')
     version('34.0', sha256='28fc4abb5a6b08da5a6b1300451c7e8487f918b055939877219d454abf7668ae')
@@ -23,8 +27,8 @@ class Gaudi(CMakePackage):
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
     version('32.2', sha256='e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e')
-    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e', deprecated=True)
-    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230', deprecated=True)
+    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
+    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
 
     maintainers = ['drbenmorgan', "vvolkl"]
 
@@ -62,7 +66,8 @@ class Gaudi(CMakePackage):
     depends_on('zlib')
 
     # todo: this should be a test dependency only,
-    depends_on('py-nose', when="@35.0", type=('build', 'run'))
+    depends_on('py-nose', when="@35.0:36.1", type=('build', 'run'))
+    depends_on('py-pytest', when='@36.2:', type=('build', 'run'))
 
     # Adding these dependencies triggers the build of most optional components
     depends_on('cppgsl', when='+optional')

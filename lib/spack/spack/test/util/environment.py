@@ -22,6 +22,8 @@ def prepare_environment_for_tests():
 def test_is_system_path():
     assert(envutil.is_system_path('/usr/bin'))
     assert(not envutil.is_system_path('/nonsense_path/bin'))
+    assert(not envutil.is_system_path(''))
+    assert(not envutil.is_system_path(None))
 
 
 test_paths = ['/usr/bin',

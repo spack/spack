@@ -71,6 +71,12 @@ class Apex(CMakePackage):
     conflicts('+jemalloc', when='+gperftools')
     conflicts('+plugins', when='~activeharmony')
 
+    # Patches
+
+    # This patch ensures that the missing dependency_tree.hpp header is
+    # installed
+    patch('install-includes.patch', when='@2.3.2:2.4.1')
+
     def cmake_args(self):
         args = []
         spec = self.spec

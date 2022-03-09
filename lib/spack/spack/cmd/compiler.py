@@ -120,7 +120,7 @@ def compiler_info(args):
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
 
     if not compilers:
-        tty.error("No compilers match spec %s" % cspec)
+        tty.die("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
             print(str(c.spec) + ":")

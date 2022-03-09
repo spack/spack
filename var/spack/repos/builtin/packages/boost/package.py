@@ -261,7 +261,8 @@ class Boost(Package):
           working_dir='libs/system', level=1)
 
     # Change the method for version analysis when using Fujitsu compiler.
-    patch('fujitsu_version_analysis.patch', when='@1.67.0:%fj')
+    patch('fujitsu_version_analysis.patch', when='@1.67.0:1.76.0%fj')
+    patch('fujitsu_version_analysis-1.77.patch', when='@1.77.0:%fj')
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
@@ -309,6 +310,10 @@ class Boost(Package):
           sha256="93f4aad8f88d1437e50d95a2d066390ef3753b99ef5de24f7a46bc083bd6df06",
           when="@1.77.0",
           working_dir="tools/build")
+
+    # Fix issues with PTHREAD_STACK_MIN not being a DEFINED constant in newer glibc
+    # See https://github.com/spack/spack/issues/28273
+    patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler

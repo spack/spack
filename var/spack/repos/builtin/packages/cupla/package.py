@@ -20,7 +20,7 @@ class Cupla(Package):
     version('master', branch='master')
     version('0.3.0', sha256='035512517167967697e73544c788453de5e3f0bc4e8d4864b41b2e287365cbaf')
 
-    depends_on('alpaka@0.6.0:')
+    depends_on('alpaka@0.6.0:0.7')
 
     def install(self, spec, prefix):
         install_tree('include', self.prefix.include)

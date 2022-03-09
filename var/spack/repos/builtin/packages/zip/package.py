@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 
 class Zip(MakefilePackage):
     """Zip is a compression and file packaging/archive utility."""
@@ -26,6 +28,14 @@ class Zip(MakefilePackage):
     patch('08-hardening-build-fix-1.patch')
     patch('09-hardening-build-fix-2.patch')
     patch('10-remove-build-date.patch')
+
+    executables = ['^zip$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'This is Zip (\S+)', output)
+        return match.group(1) if match else None
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/zip{0}.tar.gz'.format(version.joined)

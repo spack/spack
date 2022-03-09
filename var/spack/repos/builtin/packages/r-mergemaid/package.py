@@ -20,8 +20,7 @@ class RMergemaid(RPackage):
        from 'modelOutcome' to graphically display the results and cross-
        validate associations of gene expression data with survival."""
 
-    homepage = "https://bioconductor.org/packages/MergeMaid"
-    git      = "https://git.bioconductor.org/packages/MergeMaid.git"
+    bioc = "MergeMaid"
 
     version('2.56.0', commit='c510d1d85bb39476e8397b24c4bc127780a17686')
     version('2.54.0', commit='8e79bd2bd06b25138b3c5107681c89d714a3b194')

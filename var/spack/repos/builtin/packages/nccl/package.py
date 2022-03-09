@@ -45,10 +45,19 @@ class Nccl(MakefilePackage, CudaPackage):
     patch('so_reuseport.patch', when='@2.3.7-1:2.4.8-1')
 
     conflicts('~cuda', msg='NCCL requires CUDA')
+    conflicts('cuda_arch=none',
+              msg='Must specify CUDA compute capabilities of your GPU, see '
+              'https://developer.nvidia.com/cuda-gpus')
 
     @property
     def build_targets(self):
-        return ['CUDA_HOME={0}'.format(self.spec['cuda'].prefix)]
+        cuda_arch = self.spec.variants['cuda_arch'].value
+        cuda_gencode = ' '.join(self.cuda_flags(cuda_arch))
+
+        return [
+            'CUDA_HOME={0}'.format(self.spec['cuda'].prefix),
+            'NVCC_GENCODE={0}'.format(cuda_gencode),
+        ]
 
     @property
     def install_targets(self):

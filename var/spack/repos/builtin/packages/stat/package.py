@@ -22,7 +22,7 @@ class Stat(AutotoolsPackage):
     version('4.0.1', sha256='ae3fbd6946003fb16233d82d40285780a9a802da5fe30d09adb8a8b2a2cc4ad6',
             url='https://github.com/LLNL/STAT/files/2489327/stat-4.0.1.tar.gz')
     version('4.0.0', sha256='1c4f62686645f6dc1d9ef890acc9c2839c150789dc220718775878feb41bdabf',
-            url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz', deprecated=True)
+            url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
     version('3.0.1', sha256='540916ffb92026ca7aa825a2320095a89b9b4fd3426ee7657b44ac710618947e',
             url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip',
             deprecated=True)

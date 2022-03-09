@@ -42,7 +42,8 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             ' Put/Get and IPC RMA functionality')
     variant('rccl', default=False, description='Builds with support for NCCL communication lib')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.21.0:', type='build', when='@1.0.1:')
+    depends_on('cmake@3.17.0:', type='build', when='@:1.0.0')
     depends_on('mpi')
     depends_on('nccl@2.7.0-0:', when='+nccl')
     depends_on('hwloc@1.11:')
@@ -67,6 +68,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:

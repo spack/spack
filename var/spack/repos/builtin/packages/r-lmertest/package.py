@@ -7,18 +7,16 @@ from spack import *
 
 
 class RLmertest(RPackage):
-    """Tests in Linear Mixed Effects Models
+    """Tests in Linear Mixed Effects Models.
 
     Provides p-values in type I, II or III anova and summary tables for lmer
     model fits (cf. lme4) via Satterthwaite's degrees of freedom method. A
     Kenward-Roger method is also available via the pbkrtest package. Model
     selection methods include step, drop1 and anova-like tables for random
     effects (ranova). Methods for Least-Square means (LS-means) and tests of
-    linear contrasts of fixed effects are also available.
-    """
+    linear contrasts of fixed effects are also available."""
 
-    homepage = "https://github.com/runehaubo/lmerTestR"
-    cran     = "lmerTest"
+    cran = "lmerTest"
 
     version('3.1-3', sha256='35aa75e9f5f2871398ff56a482b013e6828135ef04916ced7d1d7e35257ea8fd')
 

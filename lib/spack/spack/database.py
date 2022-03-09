@@ -38,6 +38,7 @@ except ImportError:
     pass
 
 import llnl.util.filesystem as fs
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
@@ -51,12 +52,6 @@ from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
 from spack.version import Version
-
-
-@contextlib.contextmanager
-def nullcontext(*args, **kwargs):
-    yield
-
 
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
@@ -404,8 +399,8 @@ class Database(object):
             self._write_transaction_impl = lk.WriteTransaction
             self._read_transaction_impl = lk.ReadTransaction
         else:
-            self._write_transaction_impl = nullcontext
-            self._read_transaction_impl = nullcontext
+            self._write_transaction_impl = lang.nullcontext
+            self._read_transaction_impl = lang.nullcontext
 
         self._record_fields = record_fields
 
@@ -734,7 +729,10 @@ class Database(object):
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise CorruptDatabaseError("error parsing database:", str(e))
+            raise six.raise_from(
+                CorruptDatabaseError("error parsing database:", str(e)),
+                e,
+            )
 
         if fdata is None:
             return
@@ -937,22 +935,15 @@ class Database(object):
                 tty.debug(
                     'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                 try:
-                    layout = spack.store.layout
-                    if entry.spec.external:
-                        layout = None
-                        install_check = True
-                    else:
-                        install_check = layout.check_installed(entry.spec)
-
-                    if install_check:
-                        kwargs = {
-                            'spec': entry.spec,
-                            'directory_layout': layout,
-                            'explicit': entry.explicit,
-                            'installation_time': entry.installation_time  # noqa: E501
-                        }
-                        self._add(**kwargs)
-                        processed_specs.add(entry.spec)
+                    layout = None if entry.spec.external else spack.store.layout
+                    kwargs = {
+                        'spec': entry.spec,
+                        'directory_layout': layout,
+                        'explicit': entry.explicit,
+                        'installation_time': entry.installation_time  # noqa: E501
+                    }
+                    self._add(**kwargs)
+                    processed_specs.add(entry.spec)
                 except Exception as e:
                     # Something went wrong, so the spec was not restored
                     # from old data
@@ -1096,24 +1087,28 @@ class Database(object):
                 }
                 self._add(dep, directory_layout, **extra_args)
 
-        if key not in self._data:
-            installed = bool(spec.external)
-            path = None
-            if not spec.external and directory_layout:
-                path = directory_layout.path_for_spec(spec)
-                if path in self._installed_prefixes:
-                    raise Exception("Install prefix collision.")
-                try:
-                    directory_layout.check_installed(spec)
-                    installed = True
-                except DirectoryLayoutError as e:
-                    tty.warn(
-                        'Dependency missing: may be deprecated or corrupted:',
-                        path, str(e))
+        # Make sure the directory layout agrees whether the spec is installed
+        if not spec.external and directory_layout:
+            path = directory_layout.path_for_spec(spec)
+            installed = False
+            try:
+                directory_layout.ensure_installed(spec)
+                installed = True
                 self._installed_prefixes.add(path)
-            elif spec.external_path:
-                path = spec.external_path
+            except DirectoryLayoutError as e:
+                msg = ("{0} is being {1} in the database with prefix {2}, "
+                       "but this directory does not contain an installation of "
+                       "the spec, due to: {3}")
+                action = "updated" if key in self._data else "registered"
+                tty.warn(msg.format(spec.short_spec, action, path, str(e)))
+        elif spec.external_path:
+            path = spec.external_path
+            installed = True
+        else:
+            path = None
+            installed = True
 
+        if key not in self._data:
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
             extra_args = {
@@ -1141,9 +1136,8 @@ class Database(object):
             new_spec._full_hash = spec._full_hash
 
         else:
-            # If it is already there, mark it as installed and update
-            # installation time
-            self._data[key].installed = True
+            # It is already in the database
+            self._data[key].installed = installed
             self._data[key].installation_time = _now()
 
         self._data[key].explicit = explicit
@@ -1210,7 +1204,7 @@ class Database(object):
 
         # This install prefix is now free for other specs to use, even if the
         # spec is only marked uninstalled.
-        if not rec.spec.external:
+        if not rec.spec.external and rec.installed:
             self._installed_prefixes.remove(rec.path)
 
         if rec.ref_count > 0:

@@ -103,7 +103,6 @@ class MockPackageMultiRepo(object):
         return False
 
     def repo_for_pkg(self, name):
-        import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
 

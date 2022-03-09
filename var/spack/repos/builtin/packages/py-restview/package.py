@@ -12,7 +12,7 @@ class PyRestview(PythonPackage):
     homepage = "https://mg.pov.lt/restview/"
     pypi = "restview/restview-2.6.1.tar.gz"
 
-    version('2.6.1', sha256='14d261ee0edf30e0ebc1eb320428ef4898e97422b00337863556966b851fb5af', deprecated=True)
+    version('2.6.1', sha256='14d261ee0edf30e0ebc1eb320428ef4898e97422b00337863556966b851fb5af')
 
     depends_on('python@2.7:2.8,3.3:3.5')
     depends_on('py-setuptools', type='build')

@@ -35,6 +35,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('13.0.1', sha256='09c50d558bd975c41157364421820228df66632802a4a6a7c9c17f86a7340802')
     version('13.0.0', sha256='a1131358f1f9f819df73fa6bff505f2c49d176e9eef0a3aedd1fdbce3b4630e8')
     version('12.0.1', sha256='66b64aa301244975a4aea489f402f205cde2f53dd722dad9e7b77a0459b4c8df')
     version('12.0.0', sha256='8e6c99e482bb16a450165176c2d881804976a2d770e0445af4375e78a1fbf19c')
@@ -54,16 +55,16 @@ class Llvm(CMakePackage, CudaPackage):
     version('5.0.2', sha256='fe87aa11558c08856739bfd9bd971263a28657663cb0c3a0af01b94f03b0b795')
     version('5.0.1', sha256='84ca454abf262579814a2a2b846569f6e0cb3e16dc33ca3642b4f1dff6fbafd3')
     version('5.0.0', sha256='1f1843315657a4371d8ca37f01265fa9aae17dbcf46d2d0a95c1fdb3c6a4bab6')
-    version('4.0.1', sha256='cd664fb3eec3208c08fb61189c00c9118c290b3be5adb3215a97b24255618be5', deprecated=True)
-    version('4.0.0', sha256='28ca4b2fc434cb1f558e8865386c233c2a6134437249b8b3765ae745ffa56a34', deprecated=True)
-    version('3.9.1', sha256='f5b6922a5c65f9232f83d89831191f2c3ccf4f41fdd8c63e6645bbf578c4ab92', deprecated=True)
-    version('3.9.0', sha256='9c6563a72c8b5b79941c773937d997dd2b1b5b3f640136d02719ec19f35e0333', deprecated=True)
-    version('3.8.1', sha256='69360f0648fde0dc3d3c4b339624613f3bc2a89c4858933bc3871a250ad02826', deprecated=True)
-    version('3.8.0', sha256='b5cc5974cc2fd4e9e49e1bbd0700f872501a8678bd9694fa2b36c65c026df1d1', deprecated=True)
-    version('3.7.1', sha256='d2cb0eb9b8eb21e07605bfe5e7a5c6c5f5f8c2efdac01ec1da6ffacaabe4195a', deprecated=True)
-    version('3.7.0', sha256='dc00bc230be2006fb87b84f6fe4800ca28bc98e6692811a98195da53c9cb28c6', deprecated=True)
-    version('3.6.2', sha256='f75d703a388ba01d607f9cf96180863a5e4a106827ade17b221d43e6db20778a', deprecated=True)
-    version('3.5.1', sha256='5d739684170d5b2b304e4fb521532d5c8281492f71e1a8568187bfa38eb5909d', deprecated=True)
+    version('4.0.1', sha256='cd664fb3eec3208c08fb61189c00c9118c290b3be5adb3215a97b24255618be5')
+    version('4.0.0', sha256='28ca4b2fc434cb1f558e8865386c233c2a6134437249b8b3765ae745ffa56a34')
+    version('3.9.1', sha256='f5b6922a5c65f9232f83d89831191f2c3ccf4f41fdd8c63e6645bbf578c4ab92')
+    version('3.9.0', sha256='9c6563a72c8b5b79941c773937d997dd2b1b5b3f640136d02719ec19f35e0333')
+    version('3.8.1', sha256='69360f0648fde0dc3d3c4b339624613f3bc2a89c4858933bc3871a250ad02826')
+    version('3.8.0', sha256='b5cc5974cc2fd4e9e49e1bbd0700f872501a8678bd9694fa2b36c65c026df1d1')
+    version('3.7.1', sha256='d2cb0eb9b8eb21e07605bfe5e7a5c6c5f5f8c2efdac01ec1da6ffacaabe4195a')
+    version('3.7.0', sha256='dc00bc230be2006fb87b84f6fe4800ca28bc98e6692811a98195da53c9cb28c6')
+    version('3.6.2', sha256='f75d703a388ba01d607f9cf96180863a5e4a106827ade17b221d43e6db20778a')
+    version('3.5.1', sha256='5d739684170d5b2b304e4fb521532d5c8281492f71e1a8568187bfa38eb5909d')
     # fmt: on
 
     # NOTE: The debug version of LLVM is an order of magnitude larger than
@@ -203,8 +204,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libelf", when="+cuda")  # libomptarget
     depends_on("libffi", when="+cuda")  # libomptarget
 
-    # ncurses dependency
+    # llvm-config --system-libs libraries.
     depends_on("ncurses+termlib")
+    depends_on("zlib")
+    depends_on("libxml2")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
@@ -235,6 +238,8 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("%gcc@:5.0", when="@8:")
     # clang/lib: a lambda parameter cannot shadow an explicitly captured entity
     conflicts("%clang@8:", when="@:4")
+    # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
+    conflicts('%gcc@8.4:8.4.9', when='@12: target=aarch64:')
 
     # When these versions are concretized, but not explicitly with +libcxx, these
     # conflicts will enable clingo to set ~libcxx, making the build successful:
@@ -310,7 +315,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch('sanitizer-ipc_perm_mode.patch', when="@5:9+compiler-rt%gcc@9:")
 
     # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
-    patch('missing-includes.patch', when='@8:9')
+    patch('missing-includes.patch', when='@8')
 
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
@@ -341,6 +346,15 @@ class Llvm(CMakePackage, CudaPackage):
     # https://reviews.llvm.org/D102059
     patch('no_cyclades.patch', when='@10:12.0.0')
     patch('no_cyclades9.patch', when='@6:9')
+
+    patch('llvm-gcc11.patch', when='@9:11%gcc@11:')
+
+    # add -lpthread to build OpenMP libraries with Fujitsu compiler
+    patch('llvm12-thread.patch', when='@12 %fj')
+    patch('llvm13-thread.patch', when='@13 %fj')
+
+    # avoid build failed with Fujitsu compiler
+    patch('llvm13-fujitsu.patch', when='@13 %fj')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -469,6 +483,11 @@ class Llvm(CMakePackage, CudaPackage):
         if '+flang' in self.spec:
             result = os.path.join(self.spec.prefix.bin, 'flang')
         return result
+
+    @property
+    def libs(self):
+        return LibraryList(self.llvm_config("--libfiles", "all",
+                                            result="list"))
 
     @run_before('cmake')
     def codesign_check(self):
@@ -709,6 +728,16 @@ class Llvm(CMakePackage, CudaPackage):
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
+
+    def llvm_config(self, *args, **kwargs):
+        lc = Executable(self.prefix.bin.join('llvm-config'))
+        if not kwargs.get('output'):
+            kwargs['output'] = str
+        ret = lc(*args, **kwargs)
+        if kwargs.get('result') == "list":
+            return ret.split()
+        else:
+            return ret
 
 
 def get_llvm_targets_to_build(spec):

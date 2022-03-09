@@ -57,6 +57,8 @@ class Libgit2(CMakePackage):
     variant('ssh', default=True, description='Enable SSH support')
     variant('curl', default=False, description='Enable libcurl support (only supported through v0.27)')
 
+    variant('mmap', default=True, description='Enable mmap support', when='@1.1.1:')
+
     # Build Dependencies
     depends_on('cmake@2.8:', type='build', when="@:0.28")
     depends_on('cmake@3.5:', type='build', when="@0.99:")
@@ -70,6 +72,11 @@ class Libgit2(CMakePackage):
     depends_on('curl', when='+curl')
 
     conflicts('+curl', when='@0.28:')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' and not self.spec.variants.get('mmap', False):
+            flags.append('-DNO_MMAP')
+        return (flags, None, None)
 
     def cmake_args(self):
         args = []

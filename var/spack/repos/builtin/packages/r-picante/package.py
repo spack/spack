@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPicante(RPackage):
-    """R tools for integrating phylogenies and ecology
+    """R tools for integrating phylogenies and ecology.
 
     Functions for phylocom integration, community analyses, null-models, traits
     and evolution. Implements numerous ecophylogenetic approaches including
@@ -18,9 +18,7 @@ class RPicante(RPackage):
     functionality and methods are provided by Kembel et al. (2010)
     <doi:10.1093/bioinformatics/btq166>."""
 
-    homepage = "https://cloud.r-project.org/package=picante"
-    url      = "https://cloud.r-project.org/src/contrib/picante_1.6-2.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/picante"
+    cran = "picante"
 
     version('1.8.2', sha256='56565ca7f7c37f49c961372a816724967c21a4f5025cd69b8b671122bfdc4aa7')
     version('1.8', sha256='81a6308dbb53c9cdab30c1f9ac727abee76314351823b3a2142c21ed8e1498ad')

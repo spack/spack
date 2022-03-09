@@ -14,10 +14,10 @@ class Ambari(PythonPackage):
     homepage = "https://cwiki.apache.org/confluence/display/AMBARI/Ambari"
     url      = "https://github.com/apache/ambari/archive/release-2.7.5.tar.gz"
 
-    version('2.7.5', sha256='f8c8687b7a61b633b92f83b1c104fd75b1e13836cd8a0e0df6db7b483b23a354', deprecated=True)
-    version('2.7.4', sha256='d6796c7ea913d39c93dad52b4cb74ef411a7dce4ebf68f11b12718117f2c01a4', deprecated=True)
-    version('2.7.3', sha256='30fe72e60fa6b62fe032bd193ebd0cef20b65c54b57cad92f6f44daabd3771cf', deprecated=True)
-    version('2.7.1', sha256='ea4eb28f377ce9d0b9b7648f2020dda4be974c6d9a22ebaafbf1bc97890e4e42', deprecated=True)
+    version('2.7.5', sha256='f8c8687b7a61b633b92f83b1c104fd75b1e13836cd8a0e0df6db7b483b23a354')
+    version('2.7.4', sha256='d6796c7ea913d39c93dad52b4cb74ef411a7dce4ebf68f11b12718117f2c01a4')
+    version('2.7.3', sha256='30fe72e60fa6b62fe032bd193ebd0cef20b65c54b57cad92f6f44daabd3771cf')
+    version('2.7.1', sha256='ea4eb28f377ce9d0b9b7648f2020dda4be974c6d9a22ebaafbf1bc97890e4e42')
 
     depends_on('python@:2.7', type=('build', 'run'))
     depends_on('py-setuptools@:44', type='build')

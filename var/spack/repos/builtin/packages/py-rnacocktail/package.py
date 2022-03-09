@@ -13,7 +13,7 @@ class PyRnacocktail(PythonPackage):
     homepage = "https://bioinform.github.io/rnacocktail/"
     url      = "https://github.com/bioinform/rnacocktail/archive/v0.2.2.tar.gz"
 
-    version('0.2.2', sha256='34aa0d1d7bd9d80303fe7dac5acc0519f7c1ed986397692588343d82ce45c7a5', deprecated=True)
+    version('0.2.2', sha256='34aa0d1d7bd9d80303fe7dac5acc0519f7c1ed986397692588343d82ce45c7a5')
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

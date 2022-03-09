@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.environment import EnvironmentModifications
 
 
 class Conda4aarch64(Package):
@@ -22,3 +23,7 @@ class Conda4aarch64(Package):
         conda_script = self.stage.archive_file
         bash = which('bash')
         bash(conda_script, '-b', '-f', '-p', self.prefix)
+
+    def setup_run_environment(self, env):
+        filename = self.prefix.etc.join('profile.d').join('conda.sh')
+        env.extend(EnvironmentModifications.from_sourcing_file(filename))
