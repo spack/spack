@@ -50,13 +50,13 @@ class Wonton(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('flecsi', when='+flecsi')
 
-    depends_on('jali@1.1.6', when='wonton@1.3.2: +jali')
+    depends_on('jali@1.1.6', when='@1.3.2: +jali')
     depends_on('jali +mstk', when='+jali')
     depends_on('mpi', when='+jali')
 
     depends_on('thrust@1.8.3', when='+thrust')
 
-    depends_on('boost', when='wonton@:1.2.10 ~thrust')
+    depends_on('boost', when='@:1.2.10 ~thrust')
 
     # CUDA library
     depends_on('cuda', when='+cuda')
