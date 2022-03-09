@@ -9,12 +9,13 @@ from spack import *
 class Barvinok(AutotoolsPackage):
     """barvinok is a library for counting the number of integer points in parametric and
     non-parametric polytopes."""
-
+    
+    maintainers = ['vmiheer']
     homepage = "https://barvinok.gforge.inria.fr"
     url      = "http://barvinok.gforge.inria.fr/barvinok-0.41.5.tar.bz2"
 
     version('0.41.5', sha256='e70493318fe76c0c202f98d7861bdf5dda8c4d79c21024af2e04b009ffa79734')
-    variant('pet', default=False, description="Enable an X toolkit")
+    variant('pet', default=False, description="Enable an pet support (Generate polyhedral model from c code)")
 
     depends_on('gmp')
     depends_on('llvm +clang', when='+pet')
