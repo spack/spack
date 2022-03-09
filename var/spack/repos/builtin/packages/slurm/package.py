@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+import re
 
 
 class Slurm(AutotoolsPackage):
@@ -77,6 +77,14 @@ class Slurm(AutotoolsPackage):
     depends_on('http-parser', when='+restd')
     depends_on('libyaml', when='+restd')
     depends_on('libjwt', when='+restd')
+
+    executables = ['^srun$', '^salloc$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str).rstrip()
+        match = re.search(r'slurm\s*([0-9.]+)', output)
+        return match.group(1) if match else None
 
     def flag_handler(self, name, flags):
         wrapper_flags = None

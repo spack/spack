@@ -5,7 +5,9 @@
 
 
 class RRainbow(RPackage):
-    """Visualizing functional data and identifying functional outliers."""
+    """Bagplots, Boxplots and Rainbow Plots for Functional Data.
+
+    Visualizing functional data and identifying functional outliers."""
 
     cran = 'rainbow'
 

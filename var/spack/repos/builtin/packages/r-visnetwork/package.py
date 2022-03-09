@@ -7,15 +7,14 @@ from spack import *
 
 
 class RVisnetwork(RPackage):
-    """Network Visualization using 'vis.js' Library
+    """Network Visualization using 'vis.js' Library.
 
     Provides an R interface to the 'vis.js' JavaScript charting library. It
     allows an interactive visualization of networks."""
 
-    homepage = "https://github.com/datastorm-open/visNetwork"
-    url      = "https://cloud.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/visNetwork"
+    cran = "visNetwork"
 
+    version('2.1.0', sha256='a2b91e7fbbd9d08a9929a5b2c891d9c0bca5977ad772fa37510d96656af1152f')
     version('2.0.9', sha256='5e0b3dc3a91e66e0a359433f03cc856d04b981b0f9ad228d8fa9c96b7fcaa420')
     version('2.0.7', sha256='15ad01636a3a19e1901be6743052805a5b6a9ac1240fb3dab765252b1e865128')
     version('2.0.6', sha256='ec2478e6a2af446569ef2d5210a2bc6b2600bcb7fd9908cef8f8c80b01e9c8aa')

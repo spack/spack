@@ -34,8 +34,10 @@ class Rocrand(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
+    depends_on('cmake@3.10.2:', type='build', when='@4.5.0:')
     depends_on('cmake@3.5.1:', type='build')
-    depends_on('numactl', when='@3.7.0:')
+
+    depends_on('googletest@1.10.0:', type='test')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2']:
@@ -88,7 +90,7 @@ class Rocrand(CMakePackage):
     def cmake_args(self):
         args = [
             self.define('BUILD_BENCHMARK', 'OFF'),
-            self.define('BUILD_TEST', 'OFF')
+            self.define('BUILD_TEST', self.run_tests)
         ]
 
         if self.spec.satisfies('^cmake@3.21.0:3.21.2'):

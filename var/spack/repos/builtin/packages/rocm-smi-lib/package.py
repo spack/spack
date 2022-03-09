@@ -40,6 +40,8 @@ class RocmSmiLib(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('python@3:', type=('build', 'run'), when='@3.9.0:')
 
+    patch('disable_pdf_generation_with_doxygen_and_latex.patch', when='@4.5.2:')
+
     def cmake_args(self):
         return [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared')

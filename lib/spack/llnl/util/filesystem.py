@@ -1638,12 +1638,18 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the library
-    if shared is True:
-        suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+    if shared:
+        # Used on both Linux and macOS
+        suffixes = ['so']
+        if sys.platform == 'darwin':
+            # Only used on macOS
+            suffixes.append('dylib')
     else:
-        suffix = 'a'
+        suffixes = ['a']
+
     # List of libraries we are searching with suffixes
-    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
+    libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries
+                 for suffix in suffixes]
 
     if not recursive:
         # If not recursive, look for the libraries directly in root

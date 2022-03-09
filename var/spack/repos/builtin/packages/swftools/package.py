@@ -25,6 +25,12 @@ class Swftools(AutotoolsPackage):
           sha256='6a995dfd674c5954f5b967e3d45d6845a186872fcaa4223d725902fd4d679f1b',
           level=0)
 
+    # The patches below are needed for swftools to compile on newer GCC
+    # versions. These are derived from:
+    # https://aur.archlinux.org/packages/swftools/#comment-839523
+    patch('extern.patch', level=0, when='%gcc@10:')
+    patch('pointer_compare.patch', level=0, when='%gcc@11:')
+
     depends_on('giflib')
     depends_on('lame')
     depends_on('poppler')

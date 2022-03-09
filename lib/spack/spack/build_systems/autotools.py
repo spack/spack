@@ -15,8 +15,10 @@ from llnl.util.filesystem import force_remove, working_dir
 
 from spack.build_environment import InstallError
 from spack.directives import depends_on
+from spack.operating_systems.mac_os import macos_version
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+from spack.version import Version
 
 
 class AutotoolsPackage(PackageBase):
@@ -414,6 +416,13 @@ To resolve this problem, please try the following:
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
+
+    def setup_build_environment(self, env):
+        if (self.spec.platform == 'darwin'
+                and macos_version() >= Version('11')):
+            # Many configure files rely on matching '10.*' for macOS version
+            # detection and fail to add flags if it shows as version 11.
+            env.set('MACOSX_DEPLOYMENT_TARGET', '10.16')
 
     def build(self, spec, prefix):
         """Makes the build targets specified by

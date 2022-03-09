@@ -75,6 +75,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPIF90', join_path(dir, 'mpif90'))
         env.set('MPIFC', join_path(dir, 'mpifc'))
 
+        env.set('I_MPI_ROOT', self.component_path)
+
     @property
     def headers(self):
         include_path = join_path(self.component_path, 'include')

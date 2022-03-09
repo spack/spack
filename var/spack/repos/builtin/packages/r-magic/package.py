@@ -7,14 +7,20 @@ from spack import *
 
 
 class RMagic(RPackage):
-    """A collection of efficient, vectorized algorithms for the creation and
+    """Create and Investigate Magic Squares.
+
+    A collection of efficient, vectorized algorithms for the creation and
     investigation of magic squares and hypercubes, including a variety of
     functions for the manipulation and analysis of arbitrarily dimensioned
-    arrays."""
+    arrays. The package includes methods for creating normal magic squares of
+    any order greater than 2. The ultimate intention is for the package to be a
+    computerized embodiment all magic square knowledge, including direct
+    numerical verification of properties of magic squares (such as recent
+    results on the determinant of odd-ordered semimagic squares). Some
+    antimagic functionality is included. The package also serves as a rebuttal
+    to the often-heard comment "I thought R was just for statistics"."""
 
-    homepage = "https://cloud.r-project.org/package=magic"
-    url      = "https://cloud.r-project.org/src/contrib/magic_1.5-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/magic"
+    cran = "magic"
 
     version('1.5-9', sha256='fa1d5ef2d39e880f262d31b77006a2a7e76ea38e306aae4356e682b90d6cd56a')
     version('1.5-8', sha256='7f8bc26e05003168e9d2dadf64eb9a34b51bc41beba482208874803dee7d6c20')

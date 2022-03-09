@@ -7,15 +7,15 @@ from spack import *
 
 
 class RSeqlogo(RPackage):
-    """Sequence logos for DNA sequence alignments
+    """Sequence logos for DNA sequence alignments.
 
        seqLogo takes the position weight matrix of a DNA sequence motif and
        plots the corresponding sequence logo as introduced by Schneider and
        Stephens (1990)."""
 
-    homepage = "https://bioconductor.org/packages/seqLogo"
-    git      = "https://git.bioconductor.org/packages/seqLogo.git"
+    bioc = "seqLogo"
 
+    version('1.60.0', commit='4115c8e1d01accb8c8cc1cf96f23359466827e16')
     version('1.56.0', commit='169260c43fc58dc75becb3b7842cac3d0038a8d5')
     version('1.50.0', commit='57986221c90c3920f9829756c4b3ee566dc1e14d')
     version('1.48.0', commit='dde85582e7fd0c08c5b8bc73f9aed8f23b727d9d')

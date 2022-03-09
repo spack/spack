@@ -68,6 +68,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             '-DALUMINUM_ENABLE_ROCM:BOOL=%s' % ('+rocm' in spec)]
 
         if '+cuda' in spec:
+            if self.spec.satisfies('%clang'):
+                for flag in self.spec.compiler_flags['cxxflags']:
+                    if 'gcc-toolchain' in flag:
+                        args.append('-DCMAKE_CUDA_FLAGS=-Xcompiler={0}'.format(flag))
             if spec.satisfies('^cuda@11.0:'):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
@@ -76,6 +80,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if spec.satisfies('@0.5:'):
             args.extend([

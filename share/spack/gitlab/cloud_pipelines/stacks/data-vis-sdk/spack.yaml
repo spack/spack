@@ -10,6 +10,9 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
+    conduit:
+      version:
+        - "0.7.2"
     mesa:
       variants: ~glx +osmesa
     paraview:

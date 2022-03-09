@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPopgenome(RPackage):
-    """An Efficient Swiss Army Knife for Population Genomic Analyses
+    """An Efficient Swiss Army Knife for Population Genomic Analyses.
 
     Provides efficient tools for population genomics data analysis, able to
     process individual loci, large sets of loci, or whole genomes. PopGenome
@@ -16,9 +16,7 @@ class RPopgenome(RPackage):
     algorithms by other researchers. PopGenome is optimized for speed via  the
     seamless integration of C code."""
 
-    homepage = "https://popgenome.weebly.com"
-    url      = "https://cloud.r-project.org/src/contrib/PopGenome_2.6.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/PopGenome"
+    cran = "PopGenome"
 
     version('2.7.5', sha256='d627b8ac87b4db6038d7349b2df20648d2fcfd48e2dafcd7f4731d1b607cbc75')
     version('2.7.1', sha256='a84903b151528fa026ccaba42ada22cd89babbc1824afd40269b7204e488a5fa')

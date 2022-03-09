@@ -12,6 +12,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU Diffutils is a package of several programs related to finding
     differences between files."""
 
+    tags = ['core-packages']
+
     executables = [r'^diff$']
 
     homepage = "https://www.gnu.org/software/diffutils/"
@@ -24,6 +26,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     patch('nvhpc.patch', when='@3.7 %nvhpc')
+
+    conflicts('%nvhpc', when='@:3.6,3.8:')
 
     depends_on('iconv')
 

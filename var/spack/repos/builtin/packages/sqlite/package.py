@@ -15,6 +15,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.37.2', sha256='4089a8d9b467537b3f246f217b84cd76e00b1d1a971fe5aca1e30e230e46b2d8')
     version('3.37.1', sha256='40f22a13bf38bbcd4c7ac79bcfb42a72d5aa40930c1f3f822e30ccce295f0f2e')
     version('3.37.0', sha256='731a4651d4d4b36fc7d21db586b2de4dd00af31fd54fb5a9a4b7f492057479f7')
     version('3.36.0', sha256='bd90c3eb96bee996206b83be7065c9ce19aef38c3f4fb53073ada0d0b69bbce3')
@@ -137,7 +138,9 @@ class Sqlite(AutotoolsPackage):
             ''.join(['%02d' % v for v in full_version[1:]])
         # See https://www.sqlite.org/chronology.html for version -> year
         # correspondence.
-        if version >= Version('3.34.1'):
+        if version >= Version('3.37.2'):
+            year = '2022'
+        elif version >= Version('3.34.1'):
             year = '2021'
         elif version >= Version('3.31.0'):
             year = '2020'
