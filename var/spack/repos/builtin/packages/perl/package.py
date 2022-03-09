@@ -120,6 +120,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant('threads', default=True,
             description='Build perl with threads support')
 
+    variant('versioned-bin', default=False,
+            description='For perl after 5.35.0, only generate versioned binaries.')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
@@ -242,6 +245,24 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     def install(self, spec, prefix):
         make('install')
+
+        # before this version generates all binaries
+        if spec.version <= Version('5.34.0') or "+versioned-bin" in spec:
+            return
+
+        # After perl 5.35.0 they stopped creating executables without versions
+        bindir = os.path.join(prefix, 'bin')
+        for binary in os.listdir(bindir):
+
+            # We only want to create binaries that are suffixed with version
+            if not binary.endswith(str(spec.version)):
+                continue
+            without_version = binary.replace(str(spec.version), '')
+            without_version = os.path.join(bindir, without_version)
+
+            # and those that do not already exist
+            if not os.path.exists(without_version):
+                os.link(os.path.join(bindir, binary), without_version)
 
     @run_after('install')
     def install_cpanm(self):
