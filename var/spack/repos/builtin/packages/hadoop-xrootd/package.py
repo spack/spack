@@ -20,6 +20,7 @@ class HadoopXrootd(MavenPackage):
     depends_on('xrootd')
 
     def build_args(self):
+        xrootd_prefix = self.spec['xrootd'].prefix
         return [
-                '-Dxrootd.include.path={0}/include/xrootd'.format(self.spec['xrootd'].prefix)
-                ]
+            '-Dxrootd.include.path={0}/include/xrootd'.format(xrootd_prefix)
+        ]
