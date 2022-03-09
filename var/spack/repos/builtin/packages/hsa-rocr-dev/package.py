@@ -63,6 +63,8 @@ class HsaRocrDev(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        # hsa-rocr-dev wants the directory containing the header files, but
+        # libelf adds an extra path (include/libelf) compared to elfutils
         libelf_include = os.path.dirname(
             find_headers('libelf', spec['elf'].prefix.include, recursive=True)[0])
 
