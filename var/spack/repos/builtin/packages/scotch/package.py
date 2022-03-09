@@ -285,14 +285,9 @@ class Scotch(CMakePackage):
             self.define_from_variant('BUILD_LIBSCOTCHMETIS', 'metis'),
             self.define_from_variant('INSTALL_METIS_HEADERS', 'metis'),
             self.define_from_variant('BUILD_LIBESMUMPS', 'esmumps'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_PTSCOTCH', 'mpi')
         ]
-
-        if '+mpi' in spec:
-            args.append('-DBUILD_PTSCOTCH=ON')
-            # TODO check if MPI_THREAD_MULTIPLE is supported?
-        else:
-            args.append('-DBUILD_PTSCOTCH=OFF')
 
         # TODO should we enable/disable THREADS?
 
