@@ -56,7 +56,6 @@ def checksum(parser, args):
     # Get the package we're going to generate checksums for
     pkg = spack.repo.get(args.package)
 
-    # Otherwise, see what versions we can find online
     url_dict = {}
     versions = args.versions
     if (not versions) and args.preferred:

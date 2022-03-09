@@ -33,7 +33,7 @@ def pkg_factory():
     Pkg = collections.namedtuple(
         "Pkg", [
             "url_for_version",
-            "urls_for_version",
+            "all_urls_for_version",
             "find_valid_url_for_version",
             "urls",
             "url",
@@ -50,12 +50,12 @@ def pkg_factory():
 
         def fn_urls(v):
             urls_loc = urls or [url]
-            return [spack.url.substitute_version(main_url, v) for main_url in urls_loc]
+            return [spack.url.substitute_version(u, v) for u in urls_loc]
 
         return Pkg(
             find_valid_url_for_version=fn,
             url_for_version=fn,
-            urls_for_version=fn_urls,
+            all_urls_for_version=fn_urls,
             url=url,
             urls=(urls,),
             versions=collections.defaultdict(dict),

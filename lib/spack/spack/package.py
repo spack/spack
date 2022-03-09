@@ -973,7 +973,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.url.substitute_version(
             default_url, self.url_version(version))
 
-    def urls_for_version(self, version):
+    def all_urls_for_version(self, version):
         """Returns all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
@@ -995,8 +995,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             urls.append(version_urls[version])
 
         # if there is a custom url_for_version, use it
-        if self.url_for_version is not Package.url_for_version:
-            urls.append(self.url_for_version(version))
+        u = self.url_for_version(version)
+        if u not in urls:
+            urls.append(u)
 
         def sub_and_add(u):
             if u is None:
@@ -1038,7 +1039,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         See Class Version (version.py)
         """
-        urls = self.urls_for_version(version)
+        urls = self.all_urls_for_version(version)
 
         for u in urls:
             if spack.util.web.url_exists(u):
