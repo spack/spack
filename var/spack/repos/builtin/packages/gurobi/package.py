@@ -20,11 +20,12 @@ class Gurobi(Package):
     # to set up a mirror, see
     # https://spack.readthedocs.io/en/latest/mirrors.html
 
-    homepage = "https://www.gurobi.com/index"
+    homepage = "https://www.gurobi.com"
     manual_download = True
 
     maintainers = ['glennpj']
 
+    version('9.5.1', sha256='fa82859d33f08fb8aeb9da66b0fbd91718ed573c534f571aa52372c9deb891da')
     version('9.1.2', sha256='7f60bd675f79476bb2b32cd632aa1d470f8246f2b033b7652d8de86f6e7e429b')
     version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
 
@@ -35,9 +36,7 @@ class Gurobi(Package):
     license_url      = 'http://www.gurobi.com/downloads/download-center'
 
     extends('python')
-    depends_on('python@2.7,3.6:', type=('build', 'run'))
-    depends_on('py-pip', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on('python@2.7,3.6:')
 
     def url_for_version(self, version):
         return "file://{0}/gurobi{1}_linux64.tar.gz".format(os.getcwd(), version)
@@ -58,5 +57,5 @@ class Gurobi(Package):
     @run_after('install')
     def gurobipy(self):
         with working_dir('linux64'):
-            args = std_pip_args + ['--prefix=' + self.prefix, '.']
-            pip(*args)
+            python = which('python')
+            python('setup.py', 'install', '--prefix={0}'.format(self.prefix))

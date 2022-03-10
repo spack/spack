@@ -29,7 +29,8 @@ class Spectre(CMakePackage):
     generator = 'Ninja'
 
     version('develop', branch='develop')
-    version('2022.02.17', sha256='08de42d8cd70a5d45582301a656bea09a02e2187e30c73648b4e034226596f8b')
+    version('2022.03.07', sha256='41b2dea4d4a91313987fbad5252cad4a7e1cb3dcef5fbad0a09ea942423f5013')
+    version('2022.02.17', sha256='4bc2949453a35699090efc2bb71b8bd2b951909e0f02d0f8c8af255d1668e63f')
     version('2022.02.08', sha256='996275536c990a6d49cd61f207c04ad771a1449506f38507afc35f95b29d4cf1')
     version('2022.01.03', sha256='872a0d152c19864ad543ddcc585ce30baaad4185c2617c13463d780175cbde5f')
     version('2021.12.15', sha256='4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c')
@@ -117,13 +118,20 @@ class Spectre(CMakePackage):
     # Docs
     with when('+doc'):
         depends_on('doxygen', type='build')
+        depends_on('perl', type='build', when="@2022.03.07:")
         depends_on('py-beautifulsoup4', type='build')
         depends_on('py-pybtex', type='build')
+        depends_on('py-nbconvert', type='build', when="@2022.03.07:")
 
     # Incompatibilities
     # - Shared libs builds on macOS don't work before
     #   https://github.com/sxs-collaboration/spectre/pull/2680
     conflicts('+shared', when='@:2022.01.03 platform=darwin')
+    # - Blaze with `BLAZE_BLAS_MODE` enabled doesn't work before
+    #   https://github.com/sxs-collaboration/spectre/pull/3806 because it
+    #   doesn't find the BLAS header. Also, we haven't tested Blaze with BLAS
+    #   kernels before then.
+    conflicts('^blaze+blas', when='@:2022.02.17')
 
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
@@ -193,6 +201,7 @@ class Spectre(CMakePackage):
             self.define('Python_EXECUTABLE', self.spec['python'].command.path),
             self.define_from_variant('BUILD_PYTHON_BINDINGS', 'python'),
             self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('BUILD_DOCS', 'doc'),
             self.define('USE_GIT_HOOKS', False),
             self.define('USE_IWYU', False),
             self.define_from_variant('USE_FORMALINE', 'formaline'),

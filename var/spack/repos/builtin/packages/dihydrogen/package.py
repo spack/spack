@@ -45,8 +45,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('docs', default=False,
-            description='Builds with support for building documentation')
 
     # Variants related to BLAS
     variant('openmp_blas', default=False,
@@ -117,9 +115,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('ninja', type='build')
     depends_on('cmake@3.17.0:', type='build')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # TODO: Debug linker errors when NVSHMEM is built with UCX
@@ -171,6 +166,10 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ";".join(archs)
                 args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+
+            if (spec.satisfies('%cce') and
+                spec.satisfies('^cuda+allow-unsupported-compilers')):
+                args.append('-DCMAKE_CUDA_FLAGS=-allow-unsupported-compiler')
 
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(

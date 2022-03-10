@@ -291,11 +291,11 @@ env:
     assert 'depb: Executing phase:' in out
     assert 'a: Executing phase:' in out
 
-    depb = spack.repo.path.get_pkg_class('depb')
-    assert depb.installed, 'Expected depb to be installed'
+    depb = spack.store.db.query_one('depb', installed=True)
+    assert depb, 'Expected depb to be installed'
 
-    a = spack.repo.path.get_pkg_class('a')
-    assert a.installed, 'Expected a to be installed'
+    a = spack.store.db.query_one('a', installed=True)
+    assert a, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():
@@ -386,23 +386,23 @@ def test_environment_status(capsys, tmpdir):
 
 def test_env_status_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
-    install_mockery
+    install_mockery, tmpdir
 ):
-    with ev.create('test'):
+    env_dir = str(tmpdir)
+    with ev.Environment(env_dir):
         install('trivial-install-test-package')
 
-        # switch to a new repo that doesn't include the installed package
-        # test that Spack detects the missing package and warns the user
-        new_repo = MockPackageMultiRepo()
-        with spack.repo.use_repositories(new_repo):
+    # switch to a new repo that doesn't include the installed package
+    # test that Spack detects the missing package and warns the user
+    with spack.repo.use_repositories(MockPackageMultiRepo()):
+        with ev.Environment(env_dir):
             output = env('status')
-            assert 'In environment test' in output
-            assert 'Environment test includes out of date' in output
+            assert 'includes out of date packages or repos' in output
 
-        # Test that the warning goes away when it's fixed
+    # Test that the warning goes away when it's fixed
+    with ev.Environment(env_dir):
         output = env('status')
-        assert 'In environment test' in output
-        assert 'Environment test includes out of date' not in output
+        assert 'includes out of date packages or repos' not in output
 
 
 def test_env_activate_broken_view(
@@ -1960,6 +1960,37 @@ env:
                 assert not os.path.exists(
                     os.path.join(viewdir, spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
+
+
+def test_view_link_run(tmpdir, mock_fetch, mock_packages, mock_archive,
+                       install_mockery):
+    yaml = str(tmpdir.join('spack.yaml'))
+    viewdir = str(tmpdir.join('view'))
+    envdir = str(tmpdir)
+    with open(yaml, 'w') as f:
+        f.write("""
+spack:
+  specs:
+  - dttop
+
+  view:
+    combinatorial:
+      root: %s
+      link: run
+      projections:
+        all: '{name}'""" % viewdir)
+
+    with ev.Environment(envdir):
+        install()
+
+    # make sure transitive run type deps are in the view
+    for pkg in ('dtrun1', 'dtrun3'):
+        assert os.path.exists(os.path.join(viewdir, pkg))
+
+    # and non-run-type deps are not.
+    for pkg in ('dtlink1', 'dtlink2', 'dtlink3', 'dtlink4', 'dtlink5'
+                'dtbuild1', 'dtbuild2', 'dtbuild3'):
+        assert not os.path.exists(os.path.join(viewdir, pkg))
 
 
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])

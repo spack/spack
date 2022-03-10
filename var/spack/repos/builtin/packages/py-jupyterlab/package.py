@@ -14,7 +14,9 @@ class PyJupyterlab(PythonPackage):
     # Skip 'jupyterlab.tests' packages
     import_modules = ['jupyterlab', 'jupyterlab.handlers']
 
+    version('3.2.9', sha256='65ddc34e5da1a764606e38c4f70cf9d4ac1c05182813cf0ab2dfea312c701124')
     version('3.2.1', sha256='54466941bcd9b52f23373a32038fbb4e50fd652d4536df6179b53e1ffb8ef431')
+    version('3.1.19', sha256='8853a6fa16179ae24b6277541b1619593e0e99da10b380cd72f391b549f59705')
     version('3.1.18', sha256='a43733acc3729557fc4758cff55652e52896e42c64c1f12540656ae7f298b806')
     version('3.1.14', sha256='13174cb6076dd5da6f1b85725ccfcc9518d8f98e86b8b644fc89b1dfaeda63a9')
     version('3.0.18', sha256='0e4bb4b89014607a16658b54f13df2f0af14f3c286109a0e14d5a46cbbe28caf')
