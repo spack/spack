@@ -43,6 +43,9 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     for arch in CudaPackage.cuda_arch_values:
         depends_on('hypre+unified-memory+cuda cuda_arch=%s' % arch,
                    when='+cuda+hypre cuda_arch=%s' % arch)
+    for arch in ROCmPackage.amdgpu_targets:
+        depends_on('hypre+rocm amdgpu_target=%s' % arch,
+                   when='+rocm+hypre amdgpu_target=%s' % arch)
     depends_on('masa', when='+masa')
     depends_on('mpi', when='+mpi')
     depends_on('netcdf-c', when='+netcdf')
