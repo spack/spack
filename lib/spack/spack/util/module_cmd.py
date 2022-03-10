@@ -7,111 +7,52 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
-import json
 import os
-import platform
 import re
 import subprocess
 import sys
 
 import llnl.util.tty as tty
 
-import spack
-
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
-py_cmd = 'import os;import json;print(json.dumps(dict(os.environ)))'
+
+# This awk script is a posix alternative to `env -0`
+awk_cmd = r"""awk 'BEGIN{for(name in ENVIRON) printf "%s", name"="ENVIRON[name]"\0"}'"""
 
 
 def module(*args, **kwargs):
     module_cmd = kwargs.get('module_template', 'module ' + ' '.join(args))
 
     if args[0] in module_change_commands:
-        use_env_null = platform.system().lower() == 'linux'
-        if use_env_null:
-            module_cmd += ' >/dev/null 2>&1; /usr/bin/env -0'
+        # Suppress module output
+        module_cmd += r' >/dev/null 2>&1; ' + awk_cmd
+        module_p = subprocess.Popen(
+            module_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            executable="/bin/bash")
 
-            module_p  = subprocess.Popen(module_cmd,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT,
-                                         shell=True,
-                                         executable="/bin/bash")
+        # In Python 3, keys and values of `environ` are byte strings.
+        environ = {}
+        output = module_p.communicate()[0]
 
-            env_dict = {}
-            output = module_p.communicate()[0]
-
-            # Loop over each environment variable key=value byte string
-            for entry in output.strip(b'\0').split(b'\0'):
-                # Split variable name and value
-                parts = entry.split(b'=', 1)
-                if len(parts) != 2:
-                    continue
-
-                # We'd really like to just pass byte strings to os.environ,
-                # but Python 3 does not allow that :( In Python 2, strings
-                # are byte strings, so we can just pass the raw data.
-                if sys.version_info >= (3, 0):
-                    key = parts[0].decode()
-                    value = parts[1].decode()
-                else:
-                    key = parts[0]
-                    value = parts[1]
-
-                env_dict[key] = value
-        else:
-            # Do the module manipulation, then output the environment in JSON
-            # and read the JSON back in the parent process to update os.environ
-            # For python, we use the same python running the Spack process, because
-            # we can guarantee its existence. We have to do some LD_LIBRARY_PATH
-            # shenanigans to ensure python will run.
-
-            # LD_LIBRARY_PATH under which Spack ran
-            os.environ['SPACK_LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
-
-            # suppress output from module function
-            module_cmd += ' >/dev/null 2>&1;'
-
-            # Capture the new LD_LIBRARY_PATH after `module` was run
-            module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH="$LD_LIBRARY_PATH";'
-
-            # Set LD_LIBRARY_PATH to value at Spack startup time to ensure that
-            # python executable finds its libraries
-            module_cmd += 'LD_LIBRARY_PATH="$SPACK_LD_LIBRARY_PATH" '
-
-            # Execute the python command
-            module_cmd += '%s -E -c "%s";' % (sys.executable, py_cmd)
-
-            # If LD_LIBRARY_PATH was set after `module`, dump the old value because
-            # we have since corrupted it to ensure python would run.
-            # dump SPACKIGNORE as a placeholder for parsing if LD_LIBRARY_PATH null
-            module_cmd += 'echo "${SPACK_NEW_LD_LIBRARY_PATH:-SPACKIGNORE}"'
-
-            module_p  = subprocess.Popen(module_cmd,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT,
-                                         shell=True,
-                                         executable="/bin/bash")
-
-            # Cray modules spit out warnings that we cannot supress.
-            # This hack skips to the last output (the environment)
-            env_out = str(module_p.communicate()[0].decode()).strip().split('\n')
-
-            # The environment dumped as json
-            env_json = env_out[-2]
-            # Either the uncorrupted $LD_LIBRARY_PATH or SPACKIGNORE
-            new_ld_library_path = env_out[-1]
-            env_dict = json.loads(env_json)
-
-            # Override restored LD_LIBRARY_PATH with pre-python value
-            if new_ld_library_path == 'SPACKIGNORE':
-                env_dict.pop('LD_LIBRARY_PATH', None)
-            else:
-                env_dict['LD_LIBRARY_PATH'] = new_ld_library_path
+        # Loop over each environment variable key=value byte string
+        for entry in output.strip(b'\0').split(b'\0'):
+            # Split variable name and value
+            parts = entry.split(b'=', 1)
+            if len(parts) != 2:
+                continue
+            environ[parts[0]] = parts[1]
 
         # Update os.environ with new dict
         os.environ.clear()
-        os.environ.update(env_dict)
+        if sys.version_info >= (3, 2):
+            os.environb.update(environ)
+        else:
+            os.environ.update(environ)
 
     else:
         # Simply execute commands that don't change state and return output
