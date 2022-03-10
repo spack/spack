@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -143,7 +143,7 @@ class Precice(CMakePackage):
             python_include = spec['python'].headers.directories[0]
             numpy_include = join_path(
                 spec['py-numpy'].prefix,
-                spec['python'].package.site_packages_dir,
+                spec['python'].package.platlib,
                 'numpy', 'core', 'include')
             if xsdk_mode:
                 cmake_args.append('-DTPL_ENABLE_PYTHON:BOOL=ON')

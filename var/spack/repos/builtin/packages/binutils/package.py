@@ -1,7 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import re
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
@@ -12,6 +13,11 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['alalazo']
 
+    tags = ['build-tools', 'core-packages']
+
+    executables = ['^nm$', '^readelf$']
+
+    version('2.38', sha256='070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8')
     version('2.37', sha256='67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4')
     version('2.36.1', sha256='5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3')
     version('2.35.2', sha256='cfa7644dbecf4591e136eb407c1c1da16578bd2b03f0c2e8acdceba194bb9d61')
@@ -79,6 +85,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts('~ld', '+gold')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU (nm|readelf).* (\S+)', output)
+        return Version(match.group(2)).dotted.up_to(3) if match else None
 
     def setup_build_environment(self, env):
 

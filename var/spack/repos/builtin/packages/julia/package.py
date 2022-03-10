@@ -1,215 +1,218 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import os
 
 from spack import *
+from spack.version import ver
 
 
-class Julia(Package):
+def get_best_target(microarch, compiler_name, compiler_version):
+    for compiler_entry in microarch.compilers[compiler_name]:
+        if compiler_version.satisfies(ver(compiler_entry["versions"])):
+            return compiler_entry.get("name", microarch.name)
+    raise InstallError("Could not find a target architecture")
+
+
+class Julia(MakefilePackage):
     """The Julia Language: A fresh approach to technical computing"""
 
     homepage = "https://julialang.org"
-    url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
+    url      = "https://github.com/JuliaLang/julia/releases/download/v1.7.0/julia-1.7.0.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
-    maintainers = ['glennpj', 'vchuravy']
+    maintainers = ['glennpj', 'vchuravy', 'haampie']
 
     version('master', branch='master')
-    version('1.7.0', sha256='d40d83944f8e1709de1d6f7544e1a6721e091f70ba06b44c25b89bdba754dfa6', preferred=True)
-    version('1.6.4', sha256='954578b973fdb891c88fa1eedd931129e215ab928ecc416dd0bdf6c70549d2fc')
-    version('1.6.3', sha256='29aad934582fb4c6dd9f9dd558ad649921f43bc7320eab54407fdf6dd3270a33')
-    version('1.6.2', sha256='01241120515cb9435b96179cf301fbd2c24d4405f252588108d13ceac0f41c0a')
-    version('1.6.1', sha256='71d8e40611361370654e8934c407b2dec04944cf3917c5ecb6482d6b85ed767f')
-    version('1.6.0', sha256='1b05f42c9368bc2349c47363b7ddc175a2da3cd162d52b6e24c4f5d4d6e1232c')
-    version('1.5.4', sha256='dbfb8cd544b223eff70f538da7bb9d5b6f76fd0b00dd2385e6254e74ad4e892f')
-    version('1.5.3', sha256='fb69337ca037576758547c7eed9ae8f153a9c052318327b6b7f1917408c14d91')
-    version('1.5.2', sha256='850aed3fe39057488ec633f29af705f5ada87e3058fd65e48ad26f91b713a19a')
-    version('1.5.1', sha256='1d0debfccfc7cd07047aa862dd2b1a96f7438932da1f5feff6c1033a63f9b1d4')
-    version('1.5.0', sha256='4a6ffadc8dd04ca0b7fdef6ae203d0af38185e57b78f7c0b972c4707354a6d1b')
-    version('1.4.2', sha256='948c70801d5cce81eeb7f764b51b4bfbb2dc0b1b9effc2cb9fc8f8cf6c90a334')
-    version('1.4.1', sha256='b21585db55673ac0668c163678fcf2aad11eb7c64bb2aa03a43046115fab1553')
-    version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
-    version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
-    version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
-    version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
-    version('1.0.0', sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1')
-    version('0.6.2', sha256='1e34c13091c9ddb47cf87a51566d94a06613f3db3c483b8f63b276e416dd621b')
-    version('0.5.2', sha256='f5ef56d79ed55eacba9fe968bb175317be3f61668ef93e747d76607678cc01dd')
-    version('0.5.1', sha256='533b6427a1b01bd38ea0601f58a32d15bf403f491b8415e9ce4305b8bc83bb21')
-    version('0.5.0', sha256='732478536b6dccecbf56e541eef0aed04de0e6d63ae631b136e033dda2e418a9')
-    version('0.4.7', sha256='d658d5bd5fb79b19f3c01cadb9aba8622ca8a12a4b687acc7d99c21413623570')
-    version('0.4.6', sha256='4c23c9fc72398014bd39327c2f7efd3a301884567d4cb2a89105c984d4d633ba')
-    version('0.4.5', sha256='cbf361c23a77e7647040e8070371691083e92aa93c8a318afcc495ad1c3a71d9')
-    version('0.4.3', sha256='2b9df25a8f58df8e43038ec30bae195dfb160abdf925f3fa193b59d40e4113c5')
+    version('1.7.2', sha256='0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef')
+    version('1.7.1', sha256='17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e')
+    version('1.7.0', sha256='8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4')
+    version('1.6.5', sha256='b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb')
+    version('1.6.4', sha256='a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4')
 
-    variant('cxx', default=False, description='Prepare for Julia Cxx package')
-    variant('mkl', default=False, description='Use Intel MKL')
+    # We've deprecated these versions, so that we can remove them in Spack 0.18
+    # They are still available in Spack 0.17. Julia 0.17.0 is the first version that
+    # can be built enitrely from Spack packages, without a network connection during
+    # the build.
+    for v in [
+        '1.6.3', '1.6.2', '1.6.1', '1.6.0', '1.5.4', '1.5.3', '1.5.2', '1.5.1', '1.5.0',
+        '1.4.2', '1.4.1', '1.4.0', '1.3.1', '1.2.0', '1.1.1', '1.0.0', '0.6.2', '0.5.2',
+        '0.5.1', '0.5.0', '0.4.7', '0.4.6', '0.4.5', '0.4.3'
+    ]:
+        version(v, deprecated=True)
 
-    patch('gc.patch', when='@0.4:0.4.5')
-    patch('openblas.patch', when='@0.4:0.4.5')
-    patch('armgcc.patch', when='@1.0.0:1.1.1 %gcc@:5.9 target=aarch64:')
+    variant('precompile', default=True, description='Improve julia startup time')
+    variant('openlibm', default=True, description='Use openlibm instead of libm')
 
-    # Build-time dependencies:
-    # depends_on('awk')
-    depends_on('m4', type='build')
-    # depends_on('pkgconfig')
-    # Python only needed to build LLVM?
-    depends_on('python@2.7:2.8', type='build', when='@:1.1')
-    depends_on('python@2.7:', type='build', when='@1.2:')
-    depends_on('cmake@2.8:', type='build', when='@1.0:')
-    depends_on('cmake@:3.11', type='build', when='@:1.4')
-    depends_on('git', type='build', when='@master')
+    # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
+    # but also so that llvm-config --libfiles gives only the dylib. Without
+    # it it also gives static libraries, and breaks Julia's build.
+    depends_on('llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib ~internal_unwind')
+    depends_on('libuv')
 
-    # Combined build-time and run-time dependencies:
-    # (Yes, these are run-time dependencies used by Julia's package manager.)
-    depends_on('cmake @2.8:', type=('build', 'run'), when='@:0.6')
-    depends_on('curl', when='@:0.5.0')
-    depends_on('git', type=('build', 'run'), when='@:0.4')
-    depends_on('openssl@:1.0', when='@:0.5.0')
-    depends_on('mkl', when='+mkl')
+    with when('@1.7.0:1.7'):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
+        # openlibm.so.3, (todo: complete this list for upperbounds...)
+        depends_on('llvm@12.0.1')
+        depends_on('libuv@1.42.0')
+        depends_on('mbedtls@2.24.0:2.24')
+        depends_on('openlibm@0.7.0:0.7', when='+openlibm')
+        depends_on('libblastrampoline@3.0.0:3')
 
-    # Run-time dependencies:
-    # depends_on('arpack')
-    # depends_on('fftw +float')
-    # depends_on('gmp')
-    # depends_on('libgit')
-    # depends_on('mpfr')
-    # depends_on('openblas')
-    # depends_on('pcre2')
+    with when('@1.6.0:1.6'):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
+        # openlibm.so.3, (todo: complete this list for upperbounds...)
+        depends_on('llvm@11.0.1')
+        depends_on('libuv@1.39.0')
+        depends_on('mbedtls@2.24.0:2.24')
+        depends_on('openlibm@0.7.0:0.7', when='+openlibm')
 
-    # ARPACK: Requires BLAS and LAPACK; needs to use the same version
-    # as Julia.
+    # Patches for llvm
+    depends_on('llvm', patches='llvm7-symver-jlprefix.patch')
+    depends_on('llvm', when='^llvm@11.0.1', patches=patch(
+        'https://raw.githubusercontent.com/spack/patches/0b543955683a903d711a3e95ff29a4ce3951ca13/julia/llvm-11.0.1-julia-1.6.patch',
+        sha256='8866ee0595272b826b72d173301a2e625855e80680a84af837f1ed6db4657f42'))
+    depends_on('llvm', when='^llvm@12.0.1', patches=patch(
+        'https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch',
+        sha256='10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4'))
+    depends_on('llvm', when='^llvm@13.0.0', patches=patch(
+        'https://github.com/JuliaLang/llvm-project/compare/d7b669b3a30345cfcdb2fde2af6f48aa4b94845d...6ced34d2b63487a88184c3c468ceda166d10abba.patch',
+        sha256='92f022176ab85ded517a9b7aa04df47e19a5def88f291e0c31100128823166c1'))
 
-    # BLAS and LAPACK: Julia prefers 64-bit versions on 64-bit
-    # systems. OpenBLAS has an option for this; make it available as
-    # variant.
+    # Patches for libuv
+    depends_on('libuv', when='^libuv@1.39.0', patches=patch(
+        'https://raw.githubusercontent.com/spack/patches/b59ca193423c4c388254f528afabb906b5373162/julia/libuv-1.39.0.patch',
+        sha256='f7c1e7341e89dc35dfd85435ba35833beaef575b997c3f978c27d0dbf805149b'))
+    depends_on('libuv', when='^libuv@1.42.0', patches=patch(
+        'https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch',
+        sha256='d9252fbe67ac8f15e15653f0f6b00dffa07ae1a42f013d4329d17d8b492b7cdb'))
 
-    # FFTW: Something doesn't work when using a pre-installed FFTW
-    # library; need to investigate.
+    # patchelf 0.13 is required because the rpath patch uses --add-rpath
+    depends_on('patchelf@0.13:', type='build')
+    depends_on('perl', type='build')
+    depends_on('libwhich', type='build')
 
-    # GMP, MPFR: Something doesn't work when using a pre-installed
-    # FFTW library; need to investigate.
+    depends_on('blas')  # note: for now openblas is fixed...
+    depends_on('curl tls=mbedtls +nghttp2 +libssh2')
+    depends_on('dsfmt@2.2.4:')  # apparently 2.2.3->2.2.4 breaks API
+    depends_on('gmp')
+    depends_on('lapack')  # note: for now openblas is fixed...
+    depends_on('libblastrampoline', when='@1.7.0:')
+    depends_on('libgit2')
+    depends_on('libssh2 crypto=mbedtls')
+    depends_on('mbedtls libs=shared')
+    depends_on('mpfr')
+    depends_on('nghttp2')
+    depends_on('openblas +ilp64 symbol_suffix=64_')
+    depends_on('openlibm', when='+openlibm')
+    depends_on('p7zip')
+    depends_on('pcre2')
+    depends_on('suite-sparse +pic')
+    depends_on('unwind')
+    depends_on('utf8proc')
+    depends_on('zlib +shared +pic +optimize')
 
-    # LLVM: Julia works only with specific versions, and might require
-    # patches. Thus we let Julia install its own LLVM.
+    # Patches for julia
+    patch('julia-1.6-system-libwhich-and-p7zip-symlink.patch', when='@1.6.0:1.6')
+    patch('use-add-rpath.patch')
 
-    # Other possible dependencies:
-    # USE_SYSTEM_OPENLIBM=0
-    # USE_SYSTEM_OPENSPECFUN=0
-    # USE_SYSTEM_DSFMT=0
-    # USE_SYSTEM_SUITESPARSE=0
-    # USE_SYSTEM_UTF8PROC=0
-    # USE_SYSTEM_LIBGIT2=0
+    # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
+    patch('fix-gfortran.patch', when='@1.7.0:1.7.1')
 
-    conflicts('+cxx', when='@:0.6', msg='Variant cxx requires Julia >= 1.0.0')
-
-    conflicts('@:0.7.0', when='target=aarch64:')
-
-    # GCC conflicts
-    conflicts('@:0.5.1', when='%gcc@8:', msg='Julia <= 0.5.1 needs GCC <= 7')
-
-    # Building recent versions of Julia with Intel is untested and unsupported
-    # by the Julia project, https://github.com/JuliaLang/julia/issues/23407.
-    conflicts('@0.6:', when='%intel',
-              msg='Only Julia <= 0.5.x can be built with the Intel compiler.')
-    conflicts('%intel', when='~mkl',
-              msg='Building with the Intel compiler requires the mkl variant '
-              '(+mkl)')
+    def patch(self):
+        # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
+        # touches the main Makefile, so we reset the a/m-time to doc/_build's.
+        f = os.path.join("doc", "_build", "html", "en", "index.html")
+        if os.path.exists(f):
+            time = (os.path.getatime(f), os.path.getmtime(f))
+            os.utime(os.path.join("base", "Makefile"), time)
 
     def setup_build_environment(self, env):
-        # The julia build can have trouble with finding GCC libraries with the
-        # spack compiler.
-        if self.compiler.name == 'gcc':
-            gcc_base = os.path.split(os.path.split(self.compiler.cc)[0])[0]
-            env.prepend_path('LD_LIBRARY_PATH', join_path(gcc_base, 'lib64'))
-
-    def install(self, spec, prefix):
-        # Julia needs git tags
-        if os.path.isfile('.git/shallow'):
-            git = which('git')
-            git('fetch', '--unshallow')
-        # Explicitly setting CC, CXX, or FC breaks building libuv, one
-        # of Julia's dependencies. This might be a Darwin-specific
-        # problem. Given how Spack sets up compilers, Julia should
-        # still use Spack's compilers, even if we don't specify them
-        # explicitly. Potential options are
-        # 'CC=cc',
-        # 'CXX=c++',
-        # 'FC=fc',
-        # 'USE_SYSTEM_ARPACK=1',
-        # 'override USE_SYSTEM_CURL=1',
-        # 'USE_SYSTEM_FFTW=1',
-        # 'USE_SYSTEM_GMP=1',
-        # 'USE_SYSTEM_MPFR=1',
-        # 'USE_SYSTEM_PCRE=1',
-        options = [
-            'prefix={0}'.format(prefix)
+        # this is a bit ridiculous, but we are setting runtime linker paths to
+        # dependencies so that libwhich can locate them.
+        if (
+            self.spec.satisfies('platform=linux') or
+            self.spec.satisfies('platform=cray')
+        ):
+            linker_var = 'LD_LIBRARY_PATH'
+        elif self.spec.satisfies('platform=darwin'):
+            linker_var = 'DYLD_FALLBACK_LIBRARY_PATH'
+        else:
+            return
+        pkgs = [
+            'curl', 'dsfmt', 'gmp', 'libgit2', 'libssh2', 'libunwind', 'mbedtls',
+            'mpfr', 'nghttp2', 'openblas', 'openlibm', 'pcre2', 'suite-sparse',
+            'utf8proc', 'zlib'
         ]
-        if '@:0.5.0' in spec:
-            options += [
-                'override USE_SYSTEM_CURL=1'
-            ]
+        if self.spec.satisfies('@1.7.0:'):
+            pkgs.append('libblastrampoline')
+        for pkg in pkgs:
+            for dir in self.spec[pkg].libs.directories:
+                env.prepend_path(linker_var, dir)
 
-        if '+cxx' in spec:
-            options += [
-                'BUILD_LLVM_CLANG=1',
-                'LLVM_ASSERTIONS=1',
-                'USE_LLVM_SHLIB=1'
-            ]
-        if spec.target.family == 'aarch64':
-            options += [
-                'JULIA_CPU_TARGET=generic',
-                'MARCH=armv8-a+crc'
-            ]
+    def edit(self, spec, prefix):
+        # TODO: use a search query for blas / lapack?
+        libblas = os.path.splitext(spec['blas'].libs.basenames[0])[0]
+        liblapack = os.path.splitext(spec['lapack'].libs.basenames[0])[0]
 
-        if spec.target.family == 'x86_64' or spec.target.family == 'x86':
-            if spec.target == 'x86_64':
-                options += [
-                    'JULIA_CPU_TARGET=generic'
-                ]
-            else:
-                target_str = str(spec.target).replace('_', '-')
-                if target_str == "zen":
-                    target_str = "znver1"
-                if target_str == "zen2":
-                    target_str = "znver2"
-                if target_str == "zen3":
-                    if spec.satisfies('@1.7.0:'):
-                        target_str = "znver3"
-                    else:
-                        # The LLVM in @1.6.4 doesn't support znver3.
-                        target_str = "znver2"
-                options += [
-                    'JULIA_CPU_TARGET={0}'.format(target_str)
-                ]
+        # Host compiler target name
+        march = get_best_target(spec.target, spec.compiler.name, spec.compiler.version)
 
-        if '%intel' in spec:
-            options += [
-                'USEICC=1',
-                'USEIFC=1',
-                'USE_INTEL_LIBM=1'
-            ]
+        # LLVM compatible name for the JIT
+        julia_cpu_target = get_best_target(spec.target, 'clang', spec['llvm'].version)
 
-        if '+mkl' in spec:
-            options += [
-                'USE_INTEL_MKL=1',
-            ]
+        options = [
+            'prefix:={0}'.format(prefix),
+            'MARCH:={0}'.format(march),
+            'JULIA_CPU_TARGET:={0}'.format(julia_cpu_target),
+            'USE_BINARYBUILDER:=0',
+            'VERBOSE:=1',
+
+            # Spack managed dependencies
+            'USE_SYSTEM_BLAS:=1',
+            'USE_SYSTEM_CSL:=1',
+            'USE_SYSTEM_CURL:=1',
+            'USE_SYSTEM_DSFMT:=1',
+            'USE_SYSTEM_GMP:=1',
+            'USE_SYSTEM_LAPACK:=1',
+            'USE_SYSTEM_LIBBLASTRAMPOLINE:=1',
+            'USE_SYSTEM_LIBGIT2:=1',
+            'USE_SYSTEM_LIBSSH2:=1',
+            'USE_SYSTEM_LIBSUITESPARSE:=1',  # @1.7:
+            'USE_SYSTEM_SUITESPARSE:=1',  # @:1.6
+            'USE_SYSTEM_LIBUNWIND:=1',
+            'USE_SYSTEM_LIBUV:=1',
+            'USE_SYSTEM_LIBWHICH:=1',
+            'USE_SYSTEM_LLVM:=1',
+            'USE_SYSTEM_MBEDTLS:=1',
+            'USE_SYSTEM_MPFR:=1',
+            'USE_SYSTEM_P7ZIP:=1',
+            'USE_SYSTEM_PATCHELF:=1',
+            'USE_SYSTEM_PCRE:=1',
+            'USE_SYSTEM_UTF8PROC:=1',
+            'USE_SYSTEM_ZLIB:=1',
+
+            # todo: ilp depends on arch
+            'USE_BLAS64:=1',
+            'LIBBLASNAME:={0}'.format(libblas),
+            'LIBLAPACKNAME:={0}'.format(liblapack),
+            'override LIBUV:={0}'.format(spec['libuv'].libs.libraries[0]),
+            'override LIBUV_INC:={0}'.format(spec['libuv'].headers.directories[0]),
+            'override USE_LLVM_SHLIB:=1',
+            # make rebuilds a bit faster for now, not sure if this should be kept
+            'JULIA_PRECOMPILE:={0}'.format(
+                '1' if spec.variants['precompile'].value else '0'),
+        ]
+
+        # libm or openlibm?
+        if spec.variants['openlibm'].value:
+            options.append('USE_SYSTEM_LIBM=0')
+            options.append('USE_SYSTEM_OPENLIBM=1')
+        else:
+            options.append('USE_SYSTEM_LIBM=1')
+            options.append('USE_SYSTEM_OPENLIBM=0')
+
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
-
-        make()
-        make('install')
-
-        # Julia's package manager needs a certificate
-        if '@:0.5.0' in spec:
-            cacert_dir = join_path(prefix, 'etc', 'curl')
-            mkdirp(cacert_dir)
-            cacert_file = join_path(cacert_dir, 'cacert.pem')
-            curl = which('curl')
-            curl('--create-dirs',
-                 '--output', cacert_file,
-                 'https://curl.haxx.se/ca/cacert.pem')

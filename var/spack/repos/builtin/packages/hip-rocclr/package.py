@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,26 +26,28 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+    version('4.5.2', sha256='6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1')
+    version('4.5.0', sha256='ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
     version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79')
     version('4.3.0', sha256='8a86b4f2a1b1c7ac628262e5b11b07ff42a224e62e594a4e0683aeb616062538')
     version('4.2.0', sha256='c57525af32c59becf56fd83cdd61f5320a95024d9baa7fb729a01e7a9fcdfd78')
-    version('4.1.0', sha256='9eb1d88cfc9474979aaf29b99bcf9d3769a0f7f1f8f10660941aabf83d9eeb0c')
-    version('4.0.0', sha256='8db502d0f607834e3b882f939d33e8abe2f9b55ddafaf1b0c2cd29a0425ed76a')
-    version('3.10.0', sha256='d1ac02840c2dcb3d5fa3008fe9e313767ebe6d1dcf978a924341834ec96ebfe2')
-    version('3.9.0', sha256='d248958672ae35ab7f9fbd83827ccf352e2756dfa7819f6b614ace2e1a9a064e')
-    version('3.8.0', sha256='10d8aa6f5af7b51813015da603c4e75edc863c3530793f6ed9769ca345c08ed6')
-    version('3.7.0', sha256='a49f464bb2eab6317e87e3cc249aba3b2517a34fbdfe50175f0437f69a219adc')
-    version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1')
+    version('4.1.0', sha256='9eb1d88cfc9474979aaf29b99bcf9d3769a0f7f1f8f10660941aabf83d9eeb0c', deprecated=True)
+    version('4.0.0', sha256='8db502d0f607834e3b882f939d33e8abe2f9b55ddafaf1b0c2cd29a0425ed76a', deprecated=True)
+    version('3.10.0', sha256='d1ac02840c2dcb3d5fa3008fe9e313767ebe6d1dcf978a924341834ec96ebfe2', deprecated=True)
+    version('3.9.0', sha256='d248958672ae35ab7f9fbd83827ccf352e2756dfa7819f6b614ace2e1a9a064e', deprecated=True)
+    version('3.8.0', sha256='10d8aa6f5af7b51813015da603c4e75edc863c3530793f6ed9769ca345c08ed6', deprecated=True)
+    version('3.7.0', sha256='a49f464bb2eab6317e87e3cc249aba3b2517a34fbdfe50175f0437f69a219adc', deprecated=True)
+    version('3.5.0', sha256='87c1ee9f02b8aa487b628c543f058198767c474cec3d21700596a73c028959e1', deprecated=True)
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('mesa18~llvm@18.3: swr=none', type='link')
+    depends_on('gl@4.5:', type='link')
     depends_on('libelf', type='link', when="@3.7.0:3.8.0")
     depends_on('numactl', type='link', when="@3.7.0:")
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', 'master']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -64,6 +66,8 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ('4.5.2',  '96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d'),
+        ('4.5.0',  '3a163aed24619b3faf5e8ba17325bdcedd1667a904ea20914ac6bdd33fcdbca8'),
         ('4.3.1',  '7f98f7d4707b4392f8aa7017aaca9e27cb20263428a1a81fb7ec7c552e60c4ca'),
         ('4.3.0',  'd37bddcc6835b6c0fecdf4d02c204ac1d312076f3eef2b1faded1c4c1bc651e9'),
         ('4.2.0',  '18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730'),
@@ -93,6 +97,12 @@ class HipRocclr(CMakePackage):
         when='@master'
     )
 
+    @property
+    def install_targets(self):
+        if self.spec.satisfies('@4.5.0:'):
+            return []
+        return ['install']
+
     @run_after('install')
     def deploy_missing_files(self):
         if '@3.5.0' in self.spec:
@@ -104,7 +114,7 @@ class HipRocclr(CMakePackage):
                                   'amdrocclr_staticTargets.cmake')
             filter_file(self.build_directory, self.prefix.lib, cmakefile)
             install(cmakefile, self.prefix.lib)
-        else:
+        elif self.spec.satisfies('@3.7.0:4.3.2'):
             path = join_path(self.prefix.lib,
                              'cmake/rocclr/ROCclrConfig.cmake')
             filter_file(self.build_directory, self.prefix, path)

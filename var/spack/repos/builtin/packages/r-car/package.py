@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,11 @@ from spack import *
 
 
 class RCar(RPackage):
-    """Companion to Applied Regression
+    """Companion to Applied Regression.
 
-    Functions and Datasets to Accompany J. Fox and S. Weisberg, An R
-    Companion to Applied Regression, Second Edition, Sage, 2011."""
+    Functions and Datasets to Accompany J. Fox and S. Weisberg, An R Companion
+    to Applied Regression, Second Edition, Sage, 2011."""
 
-    homepage = "https://r-forge.r-project.org/projects/car/"
     cran = "car"
 
     version('3.0-12', sha256='b899a6efae3842a90a2349d381dbcf4b4ed36bd03108ebe7380e81120e457302')
@@ -23,17 +22,17 @@ class RCar(RPackage):
     version('2.1-4', sha256='fd39cf1750cb560a66623fea3fa9e6a94fc24e3dc36367aff24df7d0743edb28')
     version('2.1-2', sha256='8cc3e57f172c8782a08960b508906d3201596a21f4b6c1dab8d4e59353093652')
 
-    depends_on('r@3.2.0:', when='@:3.0-2', type=('build', 'run'))
-    depends_on('r@3.5.0:', when='@3.0-3:', type=('build', 'run'))
-    depends_on('r-cardata@3.0-0:', when='@3.0:', type=('build', 'run'))
-    depends_on('r-abind', when='@3.0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', type=('build', 'run'), when='@3.0-3:')
+    depends_on('r-cardata@3.0-0:', type=('build', 'run'), when='@3.0:')
+    depends_on('r-abind', type=('build', 'run'), when='@3.0:')
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
     depends_on('r-nnet', type=('build', 'run'))
     depends_on('r-pbkrtest@0.4-4:', type=('build', 'run'))
     depends_on('r-quantreg', type=('build', 'run'))
-    depends_on('r-maptools', when='@3.0:', type=('build', 'run'))
-    depends_on('r-rio', when='@3.0:3.0-11', type=('build', 'run'))
-    depends_on('r-lme4@1.1-27.1:', when='@3.0-11:', type=('build', 'run'))
-    depends_on('r-lme4', when='@3.0:', type=('build', 'run'))
-    depends_on('r-nlme', when='@3.0:', type=('build', 'run'))
+    depends_on('r-maptools', type=('build', 'run'), when='@3.0:')
+    depends_on('r-rio', type=('build', 'run'), when='@3.0:3.0-11')
+    depends_on('r-lme4@1.1-27.1:', type=('build', 'run'), when='@3.0-11:')
+    depends_on('r-lme4', type=('build', 'run'), when='@3.0:')
+    depends_on('r-nlme', type=('build', 'run'), when='@3.0:')

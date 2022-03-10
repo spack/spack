@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -333,3 +333,8 @@ def test_find_loaded(database, working_env):
     output = find('--loaded')
     expected = find()
     assert output == expected
+
+
+def test_bootstrap_deprecated():
+    output = find('--bootstrap')
+    assert "`spack find --bootstrap` is deprecated" in output

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class MochiMargo(AutotoolsPackage):
     maintainers = ['carns', 'mdorier', 'fbudin69500', 'chuckatkins']
 
     version('main', branch='main')
+    version('0.9.7', sha256='ab45c5594f10d7d8cf8e67529b3972f7174b4ee5e3fbcd8446658490a884c5e2')
     version('0.9.6', sha256='fa339cc9621542fb398bb9fcd6b081d3578c75c3f398f3e6b05033f24ea63e33')
     version('0.9.5', sha256='b5c52477a82aa44a079f876cbb8166d0bce5a07a92bcf8a0c76670b245e728a3')
     version('0.9.4', sha256='4292e083c8375ab07bc6dd0b3b1ea2ce9c9dd864c27ac7f07c6913dcccecc746')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class CrayLibsci(Package):
 
     provides("blas")
     provides("lapack")
-    provides("scalapack")
+    provides("scalapack", when="+mpi")
 
     canonical_names = {
         'gcc': 'GNU',
@@ -38,7 +38,8 @@ class CrayLibsci(Package):
         'intel': 'INTEL',
         'clang': 'ALLINEA',
         'aocc': 'AOCC',
-        'nvhpc': 'NVIDIA'
+        'nvhpc': 'NVIDIA',
+        'rocmcc': 'AMD'
     }
 
     @property

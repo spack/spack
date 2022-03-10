@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.16.4', sha256='229cce22bdcfedb1fe827d306ed1afca9737786cdc3f0562b74a1966c1243caf')
+    version('3.16.3', sha256='eff44c7e7f12991dc7d2b627c477807a215ce16c2ce8a1c78aa8237ddacf6ca5')
     version('3.16.2', sha256='7ab257ae150d4837ac8d3872a1d206997962578785ec2427639ceac46d131bbc')
     version('3.16.1', sha256='909cf7bce7b6a0ddb2580a1ac9502aa01631ec4105c716594c1804f0ee1ea06a')
     version('3.16.0', sha256='5aaad7deea127a4790c8aa95c42fd9451ab10b5d6c68b226b92d4853002f438d')
@@ -424,7 +426,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('superlu-dist', 'superlu_dist', True, True),
                 ('scotch', 'ptscotch', True, True),
                 ('suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,camd,amd, \
-                suitesparseconfig', 'suitesparse', True, True),
+                suitesparseconfig,spqr', 'suitesparse', True, True),
                 ('hdf5:hl,fortran', 'hdf5', True, True),
                 'zlib',
                 'mumps',

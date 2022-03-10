@@ -1,18 +1,20 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import json
 import os
-import platform
 import re
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import get_filetype, path_contains_subdirectory
 from llnl.util.lang import match_predicate
 
 from spack import *
+from spack.build_environment import dso_suffix
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -25,11 +27,13 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ['adamjstewart', 'skosukhin']
+    maintainers = ['adamjstewart', 'skosukhin', 'scheibelp', 'varioustoxins']
 
+    version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea', preferred=True)
+    version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e', preferred=True)
+    version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
     version('3.9.8',  sha256='7447fb8bb270942d620dd24faa7814b1383b61fa99029a240025fd81c1db8283')
     version('3.9.7',  sha256='a838d3f9360d157040142b715db34f0218e535333696a5569dc6f854604eb9d1')
     version('3.9.6',  sha256='d0a35182e19e416fc8eae25a3dcd4d02d4997333e4ad1f2eee6010aadc3fe866')
@@ -96,7 +100,7 @@ class Python(AutotoolsPackage):
     version('3.4.3',  sha256='8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147')
     version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
     version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
-    version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
+    version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103', deprecated=True)
     version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
     version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
     version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
@@ -154,12 +158,13 @@ class Python(AutotoolsPackage):
     variant('nis',      default=False, description='Build nis module')
     variant('zlib',     default=True,  description='Build zlib module')
     variant('bz2',      default=True,  description='Build bz2 module')
-    variant('lzma',     default=True,  description='Build lzma module')
+    variant('lzma',     default=True,  description='Build lzma module', when='@3.3:')
     variant('pyexpat',  default=True,  description='Build pyexpat module')
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
     variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
+    variant('ensurepip', default=True, description='Build ensurepip module', when='@2.7.9:2,3.4:')
 
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('gettext +libxml2', when='+libxml2')
@@ -219,7 +224,8 @@ class Python(AutotoolsPackage):
 
     # Ensure that distutils chooses correct compiler option for RPATH on fj:
     patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
-    patch('fj-rpath-3.1.patch', when='@3.1:3  %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3.9.7,3.10.0  %fj')
+    patch('fj-rpath-3.9.patch', when='@3.9.8:3.9,3.10.1:  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -247,6 +253,9 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
+    conflicts('@:2.7', when='platform=darwin target=aarch64:',
+              msg='Python 2.7 is too old for Apple Silicon')
+
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
 
@@ -271,8 +280,15 @@ class Python(AutotoolsPackage):
         python = Executable(exes[0])
 
         variants = ''
+        for exe in exes:
+            if os.path.basename(exe) == 'python':
+                variants += '+pythoncmd'
+                break
+        else:
+            variants += '~pythoncmd'
+
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
-                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+                       'zlib', 'bz2', 'ctypes', 'uuid']:
             try:
                 python('-c', 'import ' + module, error=os.devnull)
                 variants += '+' + module
@@ -294,7 +310,23 @@ class Python(AutotoolsPackage):
         except ProcessError:
             variants += '~pyexpat'
 
-        # Some modules changed names in Python 3
+        # Some modules are version-dependent
+        if Version(version_str) >= Version('3.3'):
+            try:
+                python('-c', 'import lzma', error=os.devnull)
+                variants += '+lzma'
+            except ProcessError:
+                variants += '~lzma'
+
+        if Version(version_str) in ver('2.7.9:2,3.4:'):
+            # The ensurepip module is always available, but won't work if built with
+            # --without-ensurepip. A more reliable check to see if the package was built
+            # with --with-ensurepip is to check for the presence of a pip executable.
+            if glob.glob(os.path.join(os.path.dirname(exes[0]), 'pip*')):
+                variants += '+ensurepip'
+            else:
+                variants += '~ensurepip'
+
         if Version(version_str) >= Version('3'):
             try:
                 python('-c', 'import tkinter', error=os.devnull)
@@ -387,11 +419,13 @@ class Python(AutotoolsPackage):
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
 
-        # Need this to allow python build to find the Python installation.
-        env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
-
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+        # avoid build error on fugaku
+        if spec.satisfies('@3.10.0 arch=linux-rhel8-a64fx'):
+            if spec.satisfies('%gcc') or spec.satisfies('%fj'):
+                env.unset('LC_ALL')
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
@@ -463,8 +497,11 @@ class Python(AutotoolsPackage):
                 raise ValueError(
                     '+ucs4 variant not compatible with Python 3.3 and beyond')
 
-        if spec.satisfies('@3:'):
-            config_args.append('--without-ensurepip')
+        if spec.satisfies('@2.7.9:2,3.4:'):
+            if '+ensurepip' in spec:
+                config_args.append('--with-ensurepip=install')
+            else:
+                config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -499,7 +536,7 @@ class Python(AutotoolsPackage):
             ])
 
         # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies('@3.2: +sqlite3'):
+        if spec.satisfies('@3.2: +sqlite3 ^sqlite+dynamic_extensions'):
             config_args.append('--enable-loadable-sqlite-extensions')
 
         if spec.satisfies('%oneapi'):
@@ -641,6 +678,10 @@ class Python(AutotoolsPackage):
                 else:
                     self.command('-c', 'import Tix')
 
+            # Ensure that ensurepip module works
+            if '+ensurepip' in spec:
+                self.command('-c', 'import ensurepip')
+
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -706,50 +747,80 @@ class Python(AutotoolsPackage):
     def config_vars(self):
         """Return a set of variable definitions associated with a Python installation.
 
-        Wrapper around various ``distutils.sysconfig`` functions.
+        Wrapper around various ``sysconfig`` functions. To see these variables on the
+        command line, run:
+
+        .. code-block:: console
+
+           $ python -m sysconfig
 
         Returns:
             dict: variable definitions
         """
-        # TODO: distutils is deprecated in Python 3.10 and will be removed in
-        # Python 3.12, find a different way to access this information.
-        # Also, calling the python executable disallows us from cross-compiling,
-        # so we want to try to avoid that if possible.
         cmd = """
 import json
-from distutils.sysconfig import (
+from sysconfig import (
     get_config_vars,
     get_config_h_filename,
     get_makefile_filename,
-    get_python_inc,
-    get_python_lib,
+    get_paths,
 )
 
 config = get_config_vars()
 config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
-config['python_inc'] = {}
-config['python_lib'] = {}
-
-for plat_specific in [True, False]:
-    plat_key = str(plat_specific).lower()
-    config['python_inc'][plat_key] = get_python_inc(plat_specific, prefix='')
-    config['python_lib'][plat_key] = {}
-    for standard_lib in [True, False]:
-        lib_key = str(standard_lib).lower()
-        config['python_lib'][plat_key][lib_key] = get_python_lib(
-            plat_specific, standard_lib, prefix=''
-        )
+config.update(get_paths())
 
 %s
 """ % self.print_string("json.dumps(config)")
 
         dag_hash = self.spec.dag_hash()
+
         if dag_hash not in self._config_vars:
+            # Default config vars
+            version = self.version.up_to(2)
+            config = {
+                # get_config_vars
+                'CC': 'cc',
+                'CXX': 'c++',
+                'INCLUDEPY': self.prefix.include.join('python{}').format(version),
+                'LIBDEST': self.prefix.lib.join('python{}').format(version),
+                'LIBDIR': self.prefix.lib,
+                'LIBPL': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').format(version, sys.platform),
+                'LDLIBRARY': 'libpython{}.{}'.format(version, dso_suffix),
+                'LIBRARY': 'libpython{}.a'.format(version),
+                'LDSHARED': 'cc',
+                'LDCXXSHARED': 'c++',
+                'PYTHONFRAMEWORKPREFIX': '/System/Library/Frameworks',
+                'base': self.prefix,
+                'installed_base': self.prefix,
+                'installed_platbase': self.prefix,
+                'platbase': self.prefix,
+                'prefix': self.prefix,
+                # get_config_h_filename
+                'config_h_filename': self.prefix.include.join('python{}').join(
+                    'pyconfig.h').format(version),
+                # get_makefile_filename
+                'makefile_filename': self.prefix.lib.join('python{0}').join(
+                    'config-{0}-{1}').Makefile.format(version, sys.platform),
+                # get_paths
+                'data': self.prefix,
+                'include': self.prefix.include.join('python{}'.format(version)),
+                'platinclude': self.prefix.include64.join('python{}'.format(version)),
+                'platlib': self.prefix.lib64.join(
+                    'python{}'.format(version)).join('site-packages'),
+                'platstdlib': self.prefix.lib64.join('python{}'.format(version)),
+                'purelib': self.prefix.lib.join(
+                    'python{}'.format(version)).join('site-packages'),
+                'scripts': self.prefix.bin,
+                'stdlib': self.prefix.lib.join('python{}'.format(version)),
+            }
+
             try:
-                config = json.loads(self.command('-c', cmd, output=str))
+                config.update(json.loads(self.command('-c', cmd, output=str)))
             except (ProcessError, RuntimeError):
-                config = {}
+                pass
             self._config_vars[dag_hash] = config
         return self._config_vars[dag_hash]
 
@@ -777,14 +848,9 @@ for plat_specific in [True, False]:
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed. Fall back on
-        ``spec['python'].prefix`` if that doesn't work."""
-
-        if 'prefix' in self.config_vars:
-            prefix = self.config_vars['prefix']
-        else:
-            prefix = self.prefix
-        return Prefix(prefix)
+        determine exactly where it is installed.
+        """
+        return Prefix(self.config_vars['prefix'])
 
     @property
     def libs(self):
@@ -839,14 +905,9 @@ for plat_specific in [True, False]:
 
     @property
     def headers(self):
-        if 'config_h_filename' in self.config_vars:
-            config_h = self.config_vars['config_h_filename']
+        config_h = self.config_vars['config_h_filename']
 
-            if not os.path.exists(config_h):
-                includepy = self.config_vars['INCLUDEPY']
-                msg = 'Unable to locate {0} headers in {1}'
-                raise RuntimeError(msg.format(self.name, includepy))
-
+        if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
             headers = find_headers(
@@ -856,80 +917,68 @@ for plat_specific in [True, False]:
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
+    # https://docs.python.org/3/library/sysconfig.html#installation-paths
+
     @property
-    def python_include_dir(self):
-        """Directory for the include files.
+    def platlib(self):
+        """Directory for site-specific, platform-specific files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/OS/Python version. Examples include:
 
-            ``include/pythonX.Y``
-
-        However, some systems append a ``m`` to the end of this path.
+        * ``lib/pythonX.Y/site-packages`` on most POSIX systems
+        * ``lib64/pythonX.Y/site-packages`` on RHEL/CentOS/Fedora with system Python
+        * ``lib/pythonX/dist-packages`` on Debian/Ubuntu with system Python
+        * ``lib/python/site-packages`` on macOS with framework Python
+        * ``Lib/site-packages`` on Windows
 
         Returns:
-            str: include files directory
+            str: platform-specific site-packages directory
         """
-        try:
-            return self.config_vars['python_inc']['false']
-        except KeyError:
-            return os.path.join('include', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['platlib'].replace(
+            self.config_vars['platbase'] + os.sep, ''
+        )
 
     @property
-    def python_lib_dir(self):
-        """Directory for the standard library.
+    def purelib(self):
+        """Directory for site-specific, non-platform-specific files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/OS/Python version. Examples include:
 
-            ``lib/pythonX.Y``
-
-        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
-
-            ``lib64/pythonX.Y``
-
-        On Debian/Ubuntu, when using the system Python, this will look like:
-
-            ``lib/pythonX``
+        * ``lib/pythonX.Y/site-packages`` on most POSIX systems
+        * ``lib/pythonX/dist-packages`` on Debian/Ubuntu with system Python
+        * ``lib/python/site-packages`` on macOS with framework Python
+        * ``Lib/site-packages`` on Windows
 
         Returns:
-            str: standard library directory
+            str: platform-independent site-packages directory
         """
-        try:
-            return self.config_vars['python_lib']['false']['true']
-        except KeyError:
-            return os.path.join('lib', 'python{0}'.format(self.version.up_to(2)))
+        return self.config_vars['purelib'].replace(
+            self.config_vars['base'] + os.sep, ''
+        )
 
     @property
-    def site_packages_dir(self):
-        """Directory where third-party extensions should be installed.
+    def include(self):
+        """Directory for non-platform-specific header files.
 
-        On most systems, and for Spack-installed Python, this will look like:
+        Exact directory depends on platform/Python version/ABI flags. Examples include:
 
-            ``lib/pythonX.Y/site-packages``
-
-        On RHEL/CentOS/Fedora, when using the system Python, this will look like:
-
-            ``lib64/pythonX.Y/site-packages``
-
-        On Debian/Ubuntu, when using the system Python, this will look like:
-
-            ``lib/pythonX/dist-packages``
+        * ``include/pythonX.Y`` on most POSIX systems
+        * ``include/pythonX.Yd`` for debug builds
+        * ``include/pythonX.Ym`` for malloc builds
+        * ``include/pythonX.Yu`` for wide unicode builds
+        * ``include`` on macOS with framework Python
+        * ``Include`` on Windows
 
         Returns:
-            str: site-packages directory
+            str: platform-independent header file directory
         """
-        try:
-            return self.config_vars['python_lib']['true']['false']
-        except KeyError:
-            return self.default_site_packages_dir
-
-    @property
-    def default_site_packages_dir(self):
-        python_dir = 'python{0}'.format(self.version.up_to(2))
-        return os.path.join('lib', python_dir, 'site-packages')
+        return self.config_vars['include'].replace(
+            self.config_vars['installed_base'] + os.sep, ''
+        )
 
     @property
     def easy_install_file(self):
-        return join_path(self.site_packages_dir, "easy-install.pth")
+        return join_path(self.purelib, "easy-install.pth")
 
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', os.pathsep.join(
@@ -949,10 +998,28 @@ for plat_specific in [True, False]:
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
-        for d in dependent_spec.traverse(deptype=('build', 'run', 'test'), root=True):
-            if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, self.site_packages_dir))
+        # Add installation prefix to PYTHONPATH, needed to run import tests
+        prefixes = set()
+        if dependent_spec.package.extends(self.spec):
+            prefixes.add(dependent_spec.prefix)
+
+        # Add direct build/run/test dependencies to PYTHONPATH,
+        # needed to build the package and to run import tests
+        for direct_dep in dependent_spec.dependencies(deptype=('build', 'run', 'test')):
+            if direct_dep.package.extends(self.spec):
+                prefixes.add(direct_dep.prefix)
+
+                # Add recursive run dependencies of all direct dependencies,
+                # needed by direct dependencies at run-time
+                for indirect_dep in direct_dep.traverse(deptype='run'):
+                    if indirect_dep.package.extends(self.spec):
+                        prefixes.add(indirect_dep.prefix)
+
+        for prefix in prefixes:
+            # Packages may be installed in platform-specific or platform-independent
+            # site-packages directories
+            for directory in {self.platlib, self.purelib}:
+                env.prepend_path('PYTHONPATH', os.path.join(prefix, directory))
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -1015,29 +1082,27 @@ for plat_specific in [True, False]:
         """
         for d in dependent_spec.traverse(deptype=('run'), root=True):
             if d.package.extends(self.spec):
-                env.prepend_path('PYTHONPATH', join_path(
-                    d.prefix, self.site_packages_dir))
+                # Packages may be installed in platform-specific or platform-independent
+                # site-packages directories
+                for directory in {self.platlib, self.purelib}:
+                    env.prepend_path(
+                        'PYTHONPATH', os.path.join(d.prefix, directory)
+                    )
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods."""
 
         module.python = self.command
-        module.setup_py = Executable(
-            self.command.path + ' setup.py --no-user-cfg')
 
-        # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = join_path(dependent_spec.prefix,
-                                          self.python_lib_dir)
-        module.python_include_dir = join_path(dependent_spec.prefix,
-                                              self.python_include_dir)
-        module.site_packages_dir = join_path(dependent_spec.prefix,
-                                             self.site_packages_dir)
+        module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
+        module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
         self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
-            mkdirp(module.site_packages_dir)
+            mkdirp(module.python_platlib)
+            mkdirp(module.python_purelib)
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.

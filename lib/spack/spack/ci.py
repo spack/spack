@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1113,6 +1113,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
         if pr_mirror_url:
             output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
+
+        spack_stack_name = os.environ.get('SPACK_CI_STACK_NAME', None)
+        if spack_stack_name:
+            output_object['variables']['SPACK_CI_STACK_NAME'] = spack_stack_name
 
         sorted_output = {}
         for output_key, output_value in sorted(output_object.items()):

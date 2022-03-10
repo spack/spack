@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,8 @@ def test_fetch(
         secure,
         mock_hg_repository,
         config,
-        mutable_mock_repo
+        mutable_mock_repo,
+        monkeypatch
 ):
     """Tries to:
 
@@ -47,7 +48,7 @@ def test_fetch(
     spec = Spec('hg-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('hg')] = t.args
+    monkeypatch.setitem(pkg.versions, ver('hg'), t.args)
 
     # Enter the stage directory and check some properties
     with pkg.stage:

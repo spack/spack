@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,12 @@ class Ccache(CMakePackage):
     url      = "https://github.com/ccache/ccache/releases/download/v4.2.1/ccache-4.2.1.tar.gz"
     maintainers = ['haampie']
 
+    tags = ['build-tools']
+
     executables = ['^ccache$']
 
+    version('4.5.1', sha256='f0d3cff5d555d6868f14a7d05696f0370074e475304fd5aa152b98f892364981')
+    version('4.5',   sha256='8f1c6495a06ae0a9ff311c9d43096233702a2045c476ca1ae393b434abf1f528')
     version('4.4.2', sha256='357a2ac55497b39ad6885c14b00cda6cf21d1851c6290f4288e62972665de417')
     version('4.4.1', sha256='e20632f040a7d50bc622c10b2ab4c7a4a5dc2730c18492543d49ce4cf51b4c54')
     version('4.4',   sha256='61a993d62216aff35722a8d0e8ffef9b677fc3f6accd8944ffc2a6db98fb3142')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -97,9 +97,6 @@ class Axom(CachedCMakePackage, CudaPackage):
     depends_on("conduit~python", when="~python")
     depends_on("conduit+hdf5", when="+hdf5")
     depends_on("conduit~hdf5", when="~hdf5")
-
-    # HDF5 needs to be the same as Conduit's
-    depends_on("hdf5@1.8.19:1.8~cxx~fortran", when="+hdf5")
 
     depends_on("lua", when="+lua")
 

@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -705,7 +705,8 @@ as follows:
 
 #. The following special strings are considered larger than any other
    numeric or non-numeric version component, and satisfy the following
-   order between themselves: ``develop > main > master > head > trunk``.
+   order between themselves:
+   ``develop > main > master > head > trunk > stable``.
 
 #. Numbers are ordered numerically, are less than special strings, and
    larger than other non-numeric components.
@@ -1440,6 +1441,32 @@ be present on specs that otherwise satisfy the spec listed as the
 The ``when`` clause follows the same syntax and accepts the same
 values as the ``when`` argument of
 :py:func:`spack.directives.depends_on`
+
+^^^^^^^^^^^^^^^
+Sticky Variants
+^^^^^^^^^^^^^^^
+
+The variant directive can be marked as ``sticky`` by setting to ``True`` the
+corresponding argument:
+
+.. code-block:: python
+
+   variant('bar', default=False, sticky=True)
+
+A ``sticky`` variant differs from a regular one in that it is always set
+to either:
+
+#. An explicit value appearing in a spec literal or
+#. Its default value
+
+The concretizer thus is not free to pick an alternate value to work
+around conflicts, but will error out instead.
+Setting this property on a variant is useful in cases where the
+variant allows some dangerous or controversial options (e.g. using unsupported versions
+of a compiler for a library) and the packager wants to ensure that
+allowing these options is done on purpose by the user, rather than
+automatically by the solver.
+
 
 ^^^^^^^^^^^^^^^^^^^
 Overriding Variants
@@ -2443,6 +2470,24 @@ Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
 
+A package can only extend one other package at a time.  To support packages
+that may extend one of a list of other packages, Spack supports multiple
+``extends`` directives as long as at most one of them is selected as
+a dependency during concretization.  For example, a lua package could extend
+either lua or luajit, but not both:
+
+.. code-block:: python
+
+   class LuaLpeg(Package):
+       ...
+       variant('use_lua', default=True)
+       extends('lua', when='+use_lua')
+       extends('lua-luajit', when='~use_lua')
+       ...
+
+Now, a user can install, and activate, the ``lua-lpeg`` package for either
+lua or luajit.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2832,7 +2877,7 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-See the :ref:`concretization-preferences` section for more details.
+See the :ref:`package-preferences` section for more details.
 
 
 .. _group_when_spec:

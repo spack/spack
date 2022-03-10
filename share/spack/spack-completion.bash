@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -123,7 +123,7 @@ _bash_completion_spack() {
     # If the cursor is in the middle of the line, like:
     #     `spack -d [] install`
     # COMP_WORDS will not contain the empty character, so we have to add it.
-    if [[ "${COMP_LINE:$COMP_POINT:1}" == " " ]]
+    if [[ "${COMP_LINE:$COMP_POINT-1:1}" == " " ]]
     then
         cur=""
     fi
@@ -208,10 +208,10 @@ _repos() {
     SPACK_COMPREPLY="$SPACK_REPOS"
 }
 
-_tests() {
+_unit_tests() {
     if [[ -z "${SPACK_TESTS:-}" ]]
     then
-        SPACK_TESTS="$(spack test -l)"
+        SPACK_TESTS="$(spack unit-test -l)"
     fi
     SPACK_COMPREPLY="$SPACK_TESTS"
 }
@@ -335,7 +335,7 @@ _spacktivate() {
 _spack() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --show-cores --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
+        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --show-cores --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
@@ -709,7 +709,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help --reuse -f --force --test"
+    SPACK_COMPREPLY="-h --help -f --force --test -U --fresh --reuse"
 }
 
 _spack_config() {
@@ -870,7 +870,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs --reuse -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1024,7 +1024,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --scope -t --tag"
+        SPACK_COMPREPLY="-h --help --not-buildable --scope --all -t --tag"
     else
         _all_packages
     fi
@@ -1166,7 +1166,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --reuse --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1444,7 +1444,7 @@ _spack_pkg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="add list diff added changed removed"
+        SPACK_COMPREPLY="add list diff added changed removed source hash"
     fi
 }
 
@@ -1499,6 +1499,24 @@ _spack_pkg_removed() {
         SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_pkg_source() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -c --canonical"
+    else
+        _all_packages
+    fi
+}
+
+_spack_pkg_hash() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
     fi
 }
 
@@ -1634,7 +1652,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status --reuse -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats"
+        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1643,7 +1661,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status --reuse -y --yaml -j --json -c --cover -N --namespaces --hash-type -t --types"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces --hash-type -t --types -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1688,7 +1706,7 @@ _spack_test() {
 _spack_test_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --clean --dirty"
+        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --externals --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --clean --dirty"
     else
         _installed_packages
     fi
@@ -1775,7 +1793,7 @@ _spack_unit_test() {
     then
         SPACK_COMPREPLY="-h --help -H --pytest-help -l --list -L --list-long -N --list-names --extension -s -k --showlocals"
     else
-        _tests
+        _unit_tests
     fi
 }
 

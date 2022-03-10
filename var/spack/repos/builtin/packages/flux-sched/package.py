@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,8 @@ class FluxSched(AutotoolsPackage):
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
     depends_on("boost+graph@1.53.0,1.59.0:")
-    depends_on("py-pyyaml")
+    depends_on("py-pyyaml@3.10:", type=('build', 'run'))
+    depends_on("py-jsonschema@2.3:", type=('build', 'run'))
     depends_on("libedit")
     depends_on("libxml2@2.9.1:")
     # pin yaml-cpp to 0.6.3 due to issue #886

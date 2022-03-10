@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Openssh(AutotoolsPackage):
     homepage = "https://www.openssh.com/"
     url      = "https://mirrors.sonic.net/pub/OpenBSD/OpenSSH/portable/openssh-8.7p1.tar.gz"
 
+    tags = ['core-packages']
+
+    version('8.8p1', sha256='4590890ea9bb9ace4f71ae331785a3a5823232435161960ed5fc86588f331fe9')
     version('8.7p1', sha256='7ca34b8bb24ae9e50f33792b7091b3841d7e1b440ff57bc9fabddf01e2ed1e24')
     version('8.6p1', sha256='c3e6e4da1621762c850d03b47eed1e48dff4cc9608ddeb547202a234df8ed7ae')
     version('8.5p1', sha256='f52f3f41d429aa9918e38cf200af225ccdd8e66f052da572870c89737646ec25')

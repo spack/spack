@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,10 @@ class Poamsa(MakefilePackage):
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/poamsa/poamsa/{0}/poaV{1}.tar.gz"
         return url.format(version.dotted, version.up_to(1))
+
+    def edit(self, spec, prefix):
+        filter_file(r'^(char \*Program_name;)', 'extern \\1', 'black_flag.h')
+        filter_file(r'^(char \*Program_version;)', 'extern \\1', 'black_flag.h')
 
     def build(self, spec, prefix):
         make('poa')

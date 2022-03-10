@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['ashermancinelli', 'CameronRutherford']
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version('0.5.4', commit='a37a7a677884e95d1c0ad37936aef3778fc91c3e')
     version('0.5.3', commit='698e8d0fdc0ff9975d8714339ff8c782b70d85f9')
     version('0.5.2', commit='662ad76dee1f501f648a8bec9a490cb5881789e9')
     version('0.5.1', commit='6789bbb55824e68e428c2df1009d647af81f9cf1')
@@ -64,10 +65,16 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('magma+cuda', when='+cuda')
     depends_on('magma+rocm', when='+rocm')
-    depends_on('magma@2.5.4:', when='@0.4:+cuda')
-    depends_on('magma@2.6.1:', when='@0.4.6:+cuda')
-    depends_on('magma@2.5.4:', when='@0.4:+rocm')
-    depends_on('magma@2.6.1:', when='@0.4.6:+rocm')
+
+    # Depends on Magma when +rocm or +cuda
+    magma_ver_constraints = (
+        ('2.5.4', '0.4'),
+        ('2.6.1', '0.4.6'),
+        ('2.6.2', '0.5.4'),
+    )
+    for (magma_v, hiop_v) in magma_ver_constraints:
+        depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
+        depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
 
     depends_on('raja+openmp', when='+raja')
     depends_on('raja@0.14.0:', when='@0.5.0:+raja')

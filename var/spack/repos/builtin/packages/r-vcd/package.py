@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,19 +7,18 @@ from spack import *
 
 
 class RVcd(RPackage):
-    """Visualizing Categorical Data
+    """Visualizing Categorical Data.
 
-    Visualization techniques, data sets, summary and inference procedures
-    aimed particularly at categorical data. Special emphasis is given to highly
+    Visualization techniques, data sets, summary and inference procedures aimed
+    particularly at categorical data. Special emphasis is given to highly
     extensible grid graphics. The package was package was originally inspired
     by the book "Visualizing Categorical Data" by Michael Friendly and is now
     the main support package for a new book, "Discrete Data Analysis with R" by
     Michael Friendly and David Meyer (2015)."""
 
-    homepage = "https://cloud.r-project.org/package=vcd"
-    url      = "https://cloud.r-project.org/src/contrib/vcd_1.4-1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/vcd"
+    cran = "vcd"
 
+    version('1.4-9', sha256='a5b420ad5ff1a27fa92f98099a8b43f2dded7e5f60297b3e4d947ad6f039568f')
     version('1.4-8', sha256='236fcb183152f6e9d131eeb3931d5a064a5ff79be91e4533df9148fd2ff41e0c')
     version('1.4-4', sha256='a561adf120b5ce41b66e0c0c321542fcddc772eb12b3d7020d86e9cd014ce9d2')
     version('1.4-3', sha256='17ce89927421d9cd01285b6093eeaaecb1e7252388007f66d3b9222e58cc5f15')

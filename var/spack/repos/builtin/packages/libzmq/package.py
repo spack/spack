@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
 class Libzmq(AutotoolsPackage):
@@ -34,6 +34,13 @@ class Libzmq(AutotoolsPackage):
     variant("drafts", default=False,
             description="Build and install draft classes and methods")
 
+    variant("docs", default=False,
+            description="Build documentation")
+
+    variant("libbsd", when='@4.3.3:', default=(sys.platform != 'darwin'),
+            description="Use strlcpy from libbsd " +
+                        "(will use own implementation if false)")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -41,11 +48,10 @@ class Libzmq(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
-    depends_on('docbook-xml', type='build')
-    depends_on('docbook-xsl', type='build')
+    depends_on('docbook-xml', type='build', when='+docs')
+    depends_on('docbook-xsl', type='build', when='+docs')
 
-    depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
-    depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
+    depends_on('libbsd', when='+libbsd')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
@@ -68,9 +74,12 @@ class Libzmq(AutotoolsPackage):
         config_args = []
 
         config_args.extend(self.enable_or_disable("drafts"))
+        config_args.extend(self.enable_or_disable("libbsd"))
 
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')
+        if '~docs' in self.spec:
+            config_args.append('--without-docs')
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")

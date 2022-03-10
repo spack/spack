@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,8 +54,6 @@ class PyPillowBase(PythonPackage):
     conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
     conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
 
-    phases = ['build_ext', 'install']
-
     def patch(self):
         """Patch setup.py to provide library and include directories
         for dependencies."""
@@ -95,11 +93,6 @@ class PyPillowBase(PythonPackage):
     def setup_build_environment(self, env):
         env.set('MAX_CONCURRENCY', str(make_jobs))
 
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)
-
 
 class PyPillow(PyPillowBase):
     """Pillow is a fork of the Python Imaging Library (PIL). It adds image
@@ -110,6 +103,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version('9.0.0', sha256='ee6e2963e92762923956fe5d3479b1fdc3b76c83f290aad131a2f98c3df0593e')
     version('8.4.0', sha256='b8e2f83c56e141920c39464b852de3719dfbfb6e3c99a2d8da0edf4fb33176ed')
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
@@ -124,6 +118,7 @@ class PyPillow(PyPillowBase):
     version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     for ver in [
+        '9.0.0',
         '8.4.0', '8.0.0',
         '7.2.0', '7.0.0',
         '6.2.2', '6.2.1', '6.2.0', '6.0.0',

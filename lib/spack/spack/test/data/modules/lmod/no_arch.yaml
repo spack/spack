@@ -2,5 +2,7 @@ enable:
   - lmod
 arch_folder: false
 lmod:
+  all:
+    autoload: none
   core_compilers:
     - 'clang@3.3'

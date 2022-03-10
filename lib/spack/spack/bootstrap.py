@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment
+import spack.util.environment
 import spack.util.executable
 import spack.util.path
 
@@ -65,30 +66,17 @@ def _try_import_from_store(module, query_spec, query_info=None):
     """
     # If it is a string assume it's one of the root specs by this module
     if isinstance(query_spec, six.string_types):
-        bincache_platform = spack.platforms.real_host()
-        if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.linux.Linux()
-            with spack.platforms.use_platform(bincache_platform):
-                query_spec = str(spack.spec.Spec(query_spec))
-
         # We have to run as part of this python interpreter
         query_spec += ' ^' + spec_for_current_python()
 
     installed_specs = spack.store.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        python_spec = candidate_spec['python']
-        lib_spd = python_spec.package.default_site_packages_dir
-        lib64_spd = lib_spd.replace('lib/', 'lib64/')
-        lib_debian_derivative = os.path.join(
-            'lib', 'python{0}'.format(python_spec.version.up_to(1)), 'dist-packages'
-        )
-
-        module_paths = [
-            os.path.join(candidate_spec.prefix, lib_debian_derivative),
-            os.path.join(candidate_spec.prefix, lib_spd),
-            os.path.join(candidate_spec.prefix, lib64_spd)
-        ]
+        pkg = candidate_spec['python'].package
+        module_paths = {
+            os.path.join(candidate_spec.prefix, pkg.purelib),
+            os.path.join(candidate_spec.prefix, pkg.platlib),
+        }
         sys.path.extend(module_paths)
 
         try:
@@ -238,10 +226,6 @@ class _BuildcacheBootstrapper(object):
         abstract_spec = spack.spec.Spec(abstract_spec_str)
         # On Cray we want to use Linux binaries if available from mirrors
         bincache_platform = spack.platforms.real_host()
-        if str(bincache_platform) == 'cray':
-            bincache_platform = spack.platforms.Linux()
-            with spack.platforms.use_platform(bincache_platform):
-                abstract_spec = spack.spec.Spec(abstract_spec_str)
         return abstract_spec, bincache_platform
 
     def _read_metadata(self, package_name):
@@ -379,9 +363,6 @@ class _SourceBootstrapper(object):
         # Try to build and install from sources
         with spack_python_interpreter():
             # Add hint to use frontend operating system on Cray
-            if str(spack.platforms.host()) == 'cray':
-                abstract_spec_str += ' os=fe'
-
             concrete_spec = spack.spec.Spec(
                 abstract_spec_str + ' ^' + spec_for_current_python()
             )
@@ -412,10 +393,6 @@ class _SourceBootstrapper(object):
         # If we compile code from sources detecting a few build tools
         # might reduce compilation time by a fair amount
         _add_externals_if_missing()
-
-        # Add hint to use frontend operating system on Cray
-        if str(spack.platforms.host()) == 'cray':
-            abstract_spec_str += ' os=fe'
 
         concrete_spec = spack.spec.Spec(abstract_spec_str)
         if concrete_spec.name == 'patchelf':
@@ -579,7 +556,9 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                         root=True, order='post', deptype=('link', 'run')
                 ):
                     env_mods.extend(
-                        spack.user_environment.environment_modifications_for_spec(dep)
+                        spack.user_environment.environment_modifications_for_spec(
+                            dep, set_package_py_globals=False
+                        )
                     )
                 cmd.add_default_envmod(env_mods)
                 return cmd
@@ -671,21 +650,26 @@ def _ensure_bootstrap_configuration():
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
     with spack.environment.no_active_environment():
-        with spack.platforms.use_platform(spack.platforms.real_host()):
-            with spack.repo.use_repositories(spack.paths.packages_path):
-                with spack.store.use_store(bootstrap_store_path):
-                    # Default configuration scopes excluding command line
-                    # and builtin but accounting for platform specific scopes
-                    config_scopes = _bootstrap_config_scopes()
-                    with spack.config.use_configuration(*config_scopes):
-                        # We may need to compile code from sources, so ensure we have
-                        # compilers for the current platform before switching parts.
-                        _add_compilers_if_missing()
-                        spack.config.set('bootstrap', user_configuration['bootstrap'])
-                        spack.config.set('config', user_configuration['config'])
-                        with spack.modules.disable_modules():
-                            with spack_python_interpreter():
-                                yield
+        with spack.platforms.prevent_cray_detection():
+            with spack.platforms.use_platform(spack.platforms.real_host()):
+                with spack.repo.use_repositories(spack.paths.packages_path):
+                    with spack.store.use_store(bootstrap_store_path):
+                        # Default configuration scopes excluding command line
+                        # and builtin but accounting for platform specific scopes
+                        config_scopes = _bootstrap_config_scopes()
+                        with spack.config.use_configuration(*config_scopes):
+                            # We may need to compile code from sources, so ensure we
+                            # have compilers for the current platform
+                            _add_compilers_if_missing()
+                            spack.config.set(
+                                'bootstrap', user_configuration['bootstrap']
+                            )
+                            spack.config.set(
+                                'config', user_configuration['config']
+                            )
+                            with spack.modules.disable_modules():
+                                with spack_python_interpreter():
+                                    yield
 
 
 def _read_and_sanitize_configuration():

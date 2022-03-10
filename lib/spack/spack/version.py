@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ SEMVER_REGEX = re.compile(".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
                           "(?:[+][0-9A-Za-z-]+)?)")
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
+infinity_versions = ['develop', 'main', 'master', 'head', 'trunk', 'stable']
 
 iv_min_len = min(len(s) for s in infinity_versions)
 
@@ -167,7 +167,7 @@ class VersionStrComponent(object):
 
 class Version(object):
     """Class to represent versions"""
-    __slots__ = ['version', 'separators', 'string', 'commit_lookup']
+    __slots__ = ['version', 'separators', 'string', 'is_commit', 'commit_lookup']
 
     def __init__(self, string):
         if not isinstance(string, str):
@@ -189,6 +189,8 @@ class Version(object):
         )
         self.separators = tuple(m[2] for m in segments)
 
+        self.is_commit = len(self.string) == 40 and COMMIT_VERSION.match(self.string)
+
     def _cmp(self, other_lookups=None):
         commit_lookup = self.commit_lookup or other_lookups
 
@@ -204,15 +206,6 @@ class Version(object):
                 return prev_tuple + dist_suffix
 
         return self.version
-
-    @property
-    def is_commit(self):
-        """
-        Determine if the original string is referencing a commit.
-        """
-        if self.string in infinity_versions:
-            return False
-        return COMMIT_VERSION.match(self.string) is not None
 
     @property
     def dotted(self):
@@ -586,35 +579,23 @@ class VersionRange(object):
 
     @coerced
     def satisfies(self, other):
-        """A VersionRange satisfies another if some version in this range
-        would satisfy some version in the other range.  To do this it must
-        either:
-
-        a) Overlap with the other range
-        b) The start of this range satisfies the end of the other range.
-
-        This is essentially the same as overlaps(), but overlaps assumes
-        that its arguments are specific.  That is, 4.7 is interpreted as
-        4.7.0.0.0.0... .  This function assumes that 4.7 would be satisfied
-        by 4.7.3.5, etc.
-
-        Rationale:
-
-        If a user asks for gcc@4.5:4.7, and a package is only compatible with
-        gcc@4.7.3:4.8, then that package should be able to build under the
-        constraints.  Just using overlaps() would not work here.
-
-        Note that we don't need to check whether the end of this range
-        would satisfy the start of the other range, because overlaps()
-        already covers that case.
-
-        Note further that overlaps() is a symmetric operation, while
-        satisfies() is not.
         """
-        return (self.overlaps(other) or
-                # if either self.start or other.end are None, then this can't
-                # satisfy, or overlaps() would've taken care of it.
-                self.start and other.end and self.start.satisfies(other.end))
+        x.satisfies(y) in general means that x and y have a
+        non-zero intersection. For VersionRange this means they overlap.
+
+        `satisfies` is a commutative binary operator, meaning that
+        x.satisfies(y) if and only if y.satisfies(x).
+
+        Note: in some cases we have the keyword x.satisfies(y, strict=True)
+        to mean strict set inclusion, which is not commutative. However, this
+        lacks in VersionRange for unknown reasons.
+
+        Examples
+        - 1:3 satisfies 2:4, as their intersection is 2:3.
+        - 1:2 does not satisfy 3:4, as their intersection is empty.
+        - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
+        """
+        return self.overlaps(other)
 
     @coerced
     def overlaps(self, other):

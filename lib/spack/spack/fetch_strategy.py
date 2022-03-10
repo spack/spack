@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1437,13 +1437,7 @@ class GCSFetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            import spack.util.s3 as s3_util
-            s3 = s3_util.create_s3_session(self.url,
-                                           connection=s3_util.get_mirror_connection(parsed_url), url_type="fetch")  # noqa: E501
-
-            headers = s3.get_object(Bucket=parsed_url.netloc,
-                                    Key=parsed_url.path.lstrip("/"))
-            stream = headers["Body"]
+            _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)

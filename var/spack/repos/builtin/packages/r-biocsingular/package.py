@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RBiocsingular(RPackage):
-    """Singular Value Decomposition for Bioconductor Packages
+    """Singular Value Decomposition for Bioconductor Packages.
 
        Implements exact and approximate methods for singular value
        decomposition and principal components analysis, in a framework that
@@ -15,9 +15,9 @@ class RBiocsingular(RPackage):
        workflows. Where possible, parallelization is achieved using the
        BiocParallel framework."""
 
-    homepage = "https://bioconductor.org/packages/BiocSingular"
-    git      = "https://git.bioconductor.org/packages/BiocSingular.git"
+    bioc = "BiocSingular"
 
+    version('1.10.0', commit='6615ae8cb124aba6507447c1081bd2eba655e57d')
     version('1.6.0', commit='11baf1080d6f791439cd5d97357589d6451643d9')
     version('1.0.0', commit='d2b091c072d0312698c9bb6611eb1bdf8aebf833')
 
@@ -26,6 +26,7 @@ class RBiocsingular(RPackage):
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-delayedarray', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-scaledmatrix', type=('build', 'run'), when='@1.10.0:')
     depends_on('r-irlba', type=('build', 'run'))
     depends_on('r-rsvd', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))

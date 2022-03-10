@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,10 @@ class GoBootstrap(Package):
     provides('golang@:1.4-bootstrap-20171003')
 
     depends_on('git', type=('build', 'link', 'run'))
+
+    conflicts('os=monterey', msg="go-bootstrap won't build on new macOS")
+    conflicts('target=aarch64:', when='platform=darwin',
+              msg='Go bootstrap is too old for Apple Silicon')
 
     def patch(self):
         if self.spec.satisfies('@:1.4.3'):

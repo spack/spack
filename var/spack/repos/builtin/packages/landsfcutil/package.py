@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,3 +27,9 @@ class Landsfcutil(CMakePackage):
             env.set('LANDSFCUTIL_LIB' + suffix, lib[0])
             env.set('LANDSFCUTIL_INC' + suffix,
                     join_path(self.prefix, 'include_' + suffix))
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%fj'):
+            if name == 'fflags':
+                flags.append('-Free')
+        return (None, None, flags)

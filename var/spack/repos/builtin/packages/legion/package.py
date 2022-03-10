@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,6 +61,13 @@ class Legion(CMakePackage):
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
+
+    # A C++ standard variant to work-around some odd behaviors with apple-clang
+    # but this might be helpful for other use cases down the road.  Legion's
+    # current development policy is C++11 or greater so we capture that aspect
+    # here.
+    cpp_stds = ["11", "14", "17", "20"]
+    variant('cxxstd', default="11", values=cpp_stds, multi=False)
 
     # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
@@ -201,7 +208,10 @@ class Legion(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
-        options = []
+        from_variant = self.define_from_variant
+        options = [
+            from_variant("CMAKE_CXX_STANDARD", "cxxstd")
+        ]
 
         if 'network=gasnet' in spec:
             options.append('-DLegion_NETWORKS=gasnetex')

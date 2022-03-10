@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     maintainers = ['glennpj']
 
+    version('4.1.2', sha256='2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af')
     version('4.1.1', sha256='515e03265752257d0b7036f380f82e42b46ed8473f54f25c7b67ed25bbbdd364')
     version('4.1.0', sha256='e8e68959d7282ca147360fc9644ada9bd161bab781bab14d33b8999a95182781')
     version('4.0.5', sha256='0a3ee079aa772e131fe5435311ab627fcbccb5a50cabc54292e6f62046f1ffef')
@@ -68,7 +69,7 @@ class R(AutotoolsPackage):
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
     depends_on('bzip2')
-    depends_on('curl')
+    depends_on('curl+libidn2')
     depends_on('icu4c')
     depends_on('java')
     depends_on('ncurses')

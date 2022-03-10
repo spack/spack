@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Z3(CMakePackage):
     homepage = "https://github.com/Z3Prover/z3/wiki"
     url      = "https://github.com/Z3Prover/z3/archive/z3-4.5.0.tar.gz"
 
+    version('4.8.14', sha256='96a1f49a7701120cc38bfa63c02ff93be4d64c7926cea41977dedec7d87a1364')
     version('4.8.9', sha256='c9fd04b9b33be74fffaac3ec2bc2c320d1a4cc32e395203c55126b12a14ff3f4')
     version('4.8.8', sha256='6962facdcdea287c5eeb1583debe33ee23043144d0e5308344e6a8ee4503bcff')
     version('4.8.7', sha256='8c1c49a1eccf5d8b952dadadba3552b0eac67482b8a29eaad62aa7343a0732c3')

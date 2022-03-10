@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class PyTensorflowProbability(Package):
             url='https://github.com/tensorflow/probability/archive/0.8.0.tar.gz')
 
     extends('python')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-six@1.10.0:', type=('build', 'run'))
@@ -78,7 +80,7 @@ class PyTensorflowProbability(Package):
         with working_dir(join_path('bazel-bin',
                                    'pip_pkg.runfiles',
                                    'tensorflow_probability')):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
 
         remove_linked_tree(self.tmp_path)

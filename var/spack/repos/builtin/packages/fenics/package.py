@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -100,8 +100,8 @@ class Fenics(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono@1.68.0', when='@:2018')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
-    depends_on('hdf5+hl', when='+hdf5~petsc')
+    depends_on('hdf5@:1.10+hl+fortran', when='+hdf5+petsc')
+    depends_on('hdf5@:1.10+hl', when='+hdf5~petsc')
     depends_on('metis+real64', when='+parmetis')
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
@@ -117,12 +117,14 @@ class Fenics(CMakePackage):
     depends_on('py-pybind11@2.2.4', type=('build', 'run'))
     depends_on('cmake@3.17.3:', type='build')
 
+    depends_on('py-pip', when='+python', type='build')
+    depends_on('py-wheel', when='+python', type='build')
     depends_on('py-setuptools', type='build', when='+python')
     depends_on('py-pkgconfig', type=('build', 'run'), when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     def cmake_args(self):
-        return [
+        args = [
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('DOLFIN_SKIP_BUILD_TESTS', True),
             self.define_from_variant('DOLFIN_ENABLE_OPENMP', 'openmp'),
@@ -146,6 +148,12 @@ class Fenics(CMakePackage):
             self.define_from_variant('DOLFIN_ENABLE_ZLIB', 'zlib'),
         ]
 
+        if '+python' in self.spec:
+            args.append(self.define(
+                'PYTHON_EXECUTABLE', self.spec['python'].command.path))
+
+        return args
+
     # set environment for bulding python interface
     def setup_build_environment(self, env):
         env.set('DOLFIN_DIR', self.prefix)
@@ -158,5 +166,5 @@ class Fenics(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             with working_dir('python'):
-                setup_py('install', '--single-version-externally-managed',
-                         '--root=/', '--prefix={0}'.format(self.prefix))
+                args = std_pip_args + ['--prefix=' + self.prefix, '.']
+                pip(*args)

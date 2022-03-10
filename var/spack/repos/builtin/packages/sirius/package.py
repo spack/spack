@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,26 +29,26 @@ class Sirius(CMakePackage, CudaPackage):
     version('7.2.3', sha256='6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906')
     version('7.2.1', sha256='01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7')
     version('7.2.0', sha256='537800459db8a7553d7aa251c19f3a31f911930194b068bc5bca2dfb2c9b71db')
-    version('7.0.2', sha256='ee613607ce3be0b2c3f69b560b2415ce1b0e015179002aa90739430dbfaa0389')
-    version('7.0.1', sha256='cca11433f86e7f4921f7956d6589f27bf0fd5539f3e8f96e66a3a6f274888595')
-    version('7.0.0', sha256='da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99')
-    version('6.5.7', sha256='d886c3066163c43666ebac2ea50351df03907b5686671e514a75f131ba51b43c')
-    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae')
-    version('6.5.5', sha256='0b23d3a8512682eea67aec57271031c65f465b61853a165015b38f7477651dd1')
-    version('6.5.4', sha256='5f731926b882a567d117afa5e0ed33291f1db887fce52f371ba51f014209b85d')
-    version('6.5.3', sha256='eae0c303f332425a8c792d4455dca62557931b28a5df8b4c242652d5ffddd580')
-    version('6.5.2', sha256='c18adc45b069ebae03f94eeeeed031ee99b3d8171fa6ee73c7c6fb1e42397fe7')
-    version('6.5.1', sha256='599dd0fa25a4e83db2a359257a125e855d4259188cf5b0065b8e7e66378eacf3')
-    version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc')
-    version('6.4.4', sha256='1c5de9565781847658c3cc11edcb404e6e6d1c5a9dfc81e977de7a9a7a162c8a')
-    version('6.4.3', sha256='4d1effeadb84b3e1efd7d9ac88018ef567aa2e0aa72e1112f0abf2e493e2a189')
-    version('6.4.2', sha256='40b9b66deebb6538fc0f4cd802554d0d763ea6426b9b2f0e8db8dc617e494479')
-    version('6.4.1', sha256='86f25c71517952a63e92e0a9bcf66d27e4afb2b0d67cf84af480f116b8e7f53c')
-    version('6.4.0', sha256='bc61758b71dd2996e2ff515b8c3560b2c69c00931cb2811a163a31bcfea4436e')
-    version('6.3.4', sha256='8839e988b4bb6ef99b6180f7fba03a5537e31fce51bb3e4c2298b513d6a07e0a')
-    version('6.3.3', sha256='7ba30a4e5c9a545433251211454ec0d59b74ba8941346057bc7de11e7f6886f7')
-    version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5')
-    version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
+    version('7.0.2', sha256='ee613607ce3be0b2c3f69b560b2415ce1b0e015179002aa90739430dbfaa0389', deprecated=True)
+    version('7.0.1', sha256='cca11433f86e7f4921f7956d6589f27bf0fd5539f3e8f96e66a3a6f274888595', deprecated=True)
+    version('7.0.0', sha256='da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99', deprecated=True)
+    version('6.5.7', sha256='d886c3066163c43666ebac2ea50351df03907b5686671e514a75f131ba51b43c', deprecated=True)
+    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae', deprecated=True)
+    version('6.5.5', sha256='0b23d3a8512682eea67aec57271031c65f465b61853a165015b38f7477651dd1', deprecated=True)
+    version('6.5.4', sha256='5f731926b882a567d117afa5e0ed33291f1db887fce52f371ba51f014209b85d', deprecated=True)
+    version('6.5.3', sha256='eae0c303f332425a8c792d4455dca62557931b28a5df8b4c242652d5ffddd580', deprecated=True)
+    version('6.5.2', sha256='c18adc45b069ebae03f94eeeeed031ee99b3d8171fa6ee73c7c6fb1e42397fe7', deprecated=True)
+    version('6.5.1', sha256='599dd0fa25a4e83db2a359257a125e855d4259188cf5b0065b8e7e66378eacf3', deprecated=True)
+    version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc', deprecated=True)
+    version('6.4.4', sha256='1c5de9565781847658c3cc11edcb404e6e6d1c5a9dfc81e977de7a9a7a162c8a', deprecated=True)
+    version('6.4.3', sha256='4d1effeadb84b3e1efd7d9ac88018ef567aa2e0aa72e1112f0abf2e493e2a189', deprecated=True)
+    version('6.4.2', sha256='40b9b66deebb6538fc0f4cd802554d0d763ea6426b9b2f0e8db8dc617e494479', deprecated=True)
+    version('6.4.1', sha256='86f25c71517952a63e92e0a9bcf66d27e4afb2b0d67cf84af480f116b8e7f53c', deprecated=True)
+    version('6.4.0', sha256='bc61758b71dd2996e2ff515b8c3560b2c69c00931cb2811a163a31bcfea4436e', deprecated=True)
+    version('6.3.4', sha256='8839e988b4bb6ef99b6180f7fba03a5537e31fce51bb3e4c2298b513d6a07e0a', deprecated=True)
+    version('6.3.3', sha256='7ba30a4e5c9a545433251211454ec0d59b74ba8941346057bc7de11e7f6886f7', deprecated=True)
+    version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5', deprecated=True)
+    version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb', deprecated=True)
 
     amdgpu_targets = (
         'gfx701', 'gfx801', 'gfx802', 'gfx803',
@@ -71,7 +71,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets, when='+rocm')
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -80,7 +80,6 @@ class Sirius(CMakePackage, CudaPackage):
     variant('single_precision', default=False, description="Use single precision arithmetics")
     variant('profiler', default=True, description="Use internal profiler to measure execution time")
 
-    depends_on('python', type=('build', 'run'))
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
@@ -90,6 +89,10 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spglib')
     depends_on('hdf5+hl')
     depends_on('pkgconfig', type='build')
+
+    # Python module
+    depends_on('python', when='+python', type=('build', 'run'))
+    depends_on('python', when='@:6', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('py-scipy', when='+python', type=('build', 'run'))
     depends_on('py-h5py', when='+python', type=('build', 'run'))
@@ -98,6 +101,8 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('py-mpi4py', when='+python', type=('build', 'run'))
     depends_on('py-voluptuous', when='+python', type=('build', 'run'))
     depends_on('py-pybind11', when='+python', type=('build', 'run'))
+    extends('python', when='+python')
+
     depends_on('magma', when='+magma')
     depends_on('boost cxxstd=14 +filesystem', when='+boost_filesystem')
 
@@ -126,8 +131,6 @@ class Sirius(CMakePackage, CudaPackage):
     # FindHIP cmake script only works for < 4.1
     depends_on('hip@:4.0', when='@:7.2.0 +rocm')
 
-    extends('python', when='+python')
-
     conflicts('+shared', when='@6.3.0:6.4')
     conflicts('+boost_filesystem', when='~apps')
     conflicts('^libxc@5.0.0')  # known to produce incorrect results
@@ -141,6 +144,10 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+
+    depends_on('eigen@3.4.0:', when='@7.4: +tests')
+
+    depends_on('costa+shared', when='@7.4:')
 
     # TODO:
     # add support for CRAY_LIBSCI, testing

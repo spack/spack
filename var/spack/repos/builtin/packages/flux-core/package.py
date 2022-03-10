@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,23 +20,27 @@ class FluxCore(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('0.35.0', sha256='28094c77d0a0d34f8fd71c9b397ae25dd7a4b138aad83f02e75c5a182c76b32b')
+    version('0.34.0', sha256='e045b0a4f38d1a08280c2acc7f6e03a06e3715282ff84d9a0d1037b86e0aae33')
+    version('0.33.0', sha256='b6f07fb6c0fc36bf300852d71df527778c46517bf61e26c7f54c6978898df2f1')
+    version('0.32.0', sha256='fabe4450ce805db547de2675afebc077e4f833d86e00a8c0dd4cd0727b374e30')
     version('0.31.0', sha256='a18251de2ca3522484cacfa986df934ba8f98c54586e18940ce5d2c6147a8a7f')
     version('0.30.0', sha256='e51fde4464140367ae4bc1b44f960675ea0a6f58eede3a561cacd8a11ca3e776')
     version('0.29.0', sha256='c13b40e82d66356e75208a689a495ca01f0a013e2e45ac8ea202ed8224987323')
     version('0.28.0', sha256='9a784def7186b0036091bd8d6d8fe5bc3425ab2927e1465e1c9ad266631c285d')
-    version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a')
-    version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1')
-    version('0.25.0', sha256='3c97e21eaec51e8aa0eaee6aa8eb23246650d102a6b6a5c9943cd69e3c8e1008')
-    version('0.24.0', sha256='fb7e0f9a44d84144a8eaf8f42a5d7e64a4a847861d0ddc2ad8fc4908b5a9190e')
-    version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7')
-    version('0.22.0', sha256='1dd0b737199b8a40f245e6a4e1b3b28770f0ecf2f483d284232080b8b252521f')
-    version('0.21.0', sha256='cc1b7a46d7c1c1a3e99e8861bba0dde89a97351eabd6f1b264788bd76e64c329')
-    version('0.20.0', sha256='2970b9b1c389fc4a381f9e605921ce0eb6aa9339387ea741978bcffb4bd81b6f')
-    version('0.19.0', sha256='f45328a37d989c308c46639a9ed771f47b11184422cf5604249919fbd320d6f5')
-    version('0.18.0', sha256='9784bbca94177a32dbbc99728e8925bf894f3aebaa316961d6ea85df32d59545')
-    version('0.17.0', sha256='3f8c6cb72982028f86a96c0098cacd3a6e9de359fa1cf077380c835a20e7b7f7')
-    version('0.16.0', sha256='1582f7fb4d2313127418c34de7c9ce4f5fef00622d19cedca7bed929f4709f10')
-    version('0.15.0', sha256='51bc2eae69501f802459fc82f191eb5e8ae0b4f7e9e77ac18543a850cc8445f5')
+    version('0.27.0', sha256='abd46d38081ba6b501adb1c111374b39d6ae72ac1aec9fbbf31943a856541d3a', deprecated=True)
+    version('0.26.0', sha256='58bfd4742c59364b13cd83214e8f70735952d01793800b149cae056fddfeeff1', deprecated=True)
+    version('0.25.0', sha256='3c97e21eaec51e8aa0eaee6aa8eb23246650d102a6b6a5c9943cd69e3c8e1008', deprecated=True)
+    version('0.24.0', sha256='fb7e0f9a44d84144a8eaf8f42a5d7e64a4a847861d0ddc2ad8fc4908b5a9190e', deprecated=True)
+    version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7', deprecated=True)
+    version('0.22.0', sha256='1dd0b737199b8a40f245e6a4e1b3b28770f0ecf2f483d284232080b8b252521f', deprecated=True)
+    version('0.21.0', sha256='cc1b7a46d7c1c1a3e99e8861bba0dde89a97351eabd6f1b264788bd76e64c329', deprecated=True)
+    version('0.20.0', sha256='2970b9b1c389fc4a381f9e605921ce0eb6aa9339387ea741978bcffb4bd81b6f', deprecated=True)
+    version('0.19.0', sha256='f45328a37d989c308c46639a9ed771f47b11184422cf5604249919fbd320d6f5', deprecated=True)
+    version('0.18.0', sha256='9784bbca94177a32dbbc99728e8925bf894f3aebaa316961d6ea85df32d59545', deprecated=True)
+    version('0.17.0', sha256='3f8c6cb72982028f86a96c0098cacd3a6e9de359fa1cf077380c835a20e7b7f7', deprecated=True)
+    version('0.16.0', sha256='1582f7fb4d2313127418c34de7c9ce4f5fef00622d19cedca7bed929f4709f10', deprecated=True)
+    version('0.15.0', sha256='51bc2eae69501f802459fc82f191eb5e8ae0b4f7e9e77ac18543a850cc8445f5', deprecated=True)
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
@@ -45,6 +49,7 @@ class FluxCore(AutotoolsPackage):
     variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
+    depends_on("ncurses@6.2", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")
@@ -54,14 +59,15 @@ class FluxCore(AutotoolsPackage):
     # explicit flux-core version is given. See issue #10000 for details
     depends_on("lua", type=('build', 'run', 'link'))
     depends_on("lua@5.1:5.2", when="@:0.17.0")
-    depends_on("lua@5.1:5.3", when="@0.18.0:,master")
+    depends_on("lua@5.1:5.3", when="@0.18.0:")
     depends_on("lua-luaposix")
     # `link` dependency on python due to Flux's `pymod` module
-    depends_on("python@3.6:", type=('build', 'run', 'link'))
-    depends_on("py-cffi", type=('build', 'run'))
-    depends_on("py-six", type=('build', 'run'))
-    depends_on("py-pyyaml")
-    depends_on("py-jsonschema")
+    depends_on("python@3.6:", when='@0.17:', type=('build', 'link', 'run'))
+    depends_on("python@2.7:", type=('build', 'link', 'run'))
+    depends_on("py-cffi@1.1:", type=('build', 'run'))
+    depends_on("py-six@1.9:", when='@:0.24', type=('build', 'run'))
+    depends_on("py-pyyaml@3.10:", type=('build', 'run'))
+    depends_on("py-jsonschema@2.3:", type=('build', 'run'))
     depends_on("jansson")
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
@@ -69,6 +75,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("lz4")
 
     depends_on("asciidoc", type='build', when="+docs")
+    depends_on("py-docutils", type='build', when="@0.32.0:")
 
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
@@ -87,7 +94,7 @@ class FluxCore(AutotoolsPackage):
     def url_for_version(self, version):
         '''
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
-        (https://github.com/flux-framework/rfc/blob/master/spec_1.adoc).
+        (https://flux-framework.readthedocs.io/projects/flux-rfc/en/latest/spec_1.html).
         This model requires a repository fork for every stable release that has
         patch releases.  For example, 0.8.0 and 0.9.0 are both tags within the
         main repository, but 0.8.1 and 0.9.5 would be releases on the v0.8 and
@@ -159,10 +166,6 @@ class FluxCore(AutotoolsPackage):
         env.prepend_path(
             'FLUX_CONNECTOR_PATH',
             self.prefix.lib.flux.connectors
-        )
-        env.set_path(
-            'FLUX_PMI_LIBRARY_PATH',
-            os.path.join(self.prefix.lib.flux, "libpmi.so")
         )
 
     def configure_args(self):

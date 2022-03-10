@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     maintainers = ['hppritcha']
 
     # Current
+    version('1.12.0', sha256='93e994de2d1a4df32381ea92ba4c98a249010d1720eb0f6110dc72c9a7d25db6')
     version('1.11.2', sha256='deebf86a5344fc2bd9e55449f88c650c4514928592807c9bc6fe4190e516c6df')
     version('1.11.1', sha256='29338cad18858517f96b46ff83bdd259a5899e274792cebd269717c660aa86fd')
     version('1.11.0', sha256='b7189b69fe0e16e3c03784ef674e45687a9c520750bd74a45125c460ede37647')
@@ -81,6 +82,8 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description="Compile with Device Memory support")
     variant('cm', default=False,
             description="Compile with IB Connection Manager support")
+    variant('backtrace-detail', default=False,
+            description="Enable using BFD support for detailed backtrace")
 
     depends_on('numactl')
     depends_on('rdma-core')
@@ -96,6 +99,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
     depends_on('binutils+ld', when='%aocc', type='build')
+    depends_on('binutils+ld', when='+backtrace-detail')
 
     configure_abs_path = 'contrib/configure-release'
 
@@ -132,6 +136,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
+        config_args.extend(self.enable_or_disable('backtrace-detail'))
         config_args.extend(self.with_or_without('pic'))
         config_args.extend(self.with_or_without('rc'))
         config_args.extend(self.with_or_without('ud'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1345,7 +1345,7 @@ class TestConcretize(object):
         ('mpich~debug', True)
     ])
     def test_concrete_specs_are_not_modified_on_reuse(
-            self, mutable_database, spec_str, expect_installed
+            self, mutable_database, spec_str, expect_installed, config
     ):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('Original concretizer cannot reuse specs')
@@ -1354,6 +1354,38 @@ class TestConcretize(object):
         # when reused specs are added to the mix. This prevents things
         # like additional constraints being added to concrete specs in
         # the answer set produced by clingo.
-        s = spack.spec.Spec(spec_str).concretized(reuse=True)
+        with spack.config.override("concretizer:reuse", True):
+            s = spack.spec.Spec(spec_str).concretized()
         assert s.package.installed is expect_installed
         assert s.satisfies(spec_str, strict=True)
+
+    @pytest.mark.regression('26721,19736')
+    def test_sticky_variant_in_package(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot use sticky variants')
+
+        # Here we test that a sticky variant cannot be changed from its default value
+        # by the ASP solver if not set explicitly. The package used in the test needs
+        # to have +allow-gcc set to be concretized with %gcc and clingo is not allowed
+        # to change the default ~allow-gcc
+        with pytest.raises(spack.error.SpackError):
+            spack.spec.Spec('sticky-variant %gcc').concretized()
+
+        s = spack.spec.Spec('sticky-variant+allow-gcc %gcc').concretized()
+        assert s.satisfies('%gcc') and s.satisfies('+allow-gcc')
+
+        s = spack.spec.Spec('sticky-variant %clang').concretized()
+        assert s.satisfies('%clang') and s.satisfies('~allow-gcc')
+
+    def test_do_not_invent_new_concrete_versions_unless_necessary(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                "Original concretizer doesn't resolve concrete versions to known ones"
+            )
+
+        # ensure we select a known satisfying version rather than creating
+        # a new '2.7' version.
+        assert ver("2.7.11") == Spec("python@2.7").concretized().version
+
+        # Here there is no known satisfying version - use the one on the spec.
+        assert ver("2.7.21") == Spec("python@2.7.21").concretized().version

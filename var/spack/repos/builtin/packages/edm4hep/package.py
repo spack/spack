@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,8 @@ class Edm4hep(CMakePackage):
     depends_on('root@6.08:')
     depends_on('podio@0.14:', when='@0.4:')
     depends_on('podio@0.13.0:0.13', when='@:0.3')
+    depends_on('py-jinja2', type='build')
+    depends_on('py-pyyaml', type='build')
 
     depends_on('hepmc@:2', type='test', when='@:0.4.0')
     depends_on('hepmc3', type='test', when='@0.4.1:')

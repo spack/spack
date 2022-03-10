@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,10 +7,12 @@ from spack import *
 
 
 class RPackrat(RPackage):
-    """Manage the R packages your project depends on in an isolated, portable,
-    and reproducible way."""
+    """A Dependency Management System for Projects and their R Package
+    Dependencies.
 
-    homepage = "https://github.com/rstudio/packrat/"
+    Manage the R packages your project depends on in an isolated, portable, and
+    reproducible way."""
+
     cran = "packrat"
 
     version('0.7.0', sha256='e8bce1fd78f28f3a7bf56e65a2ae2c6802e69bf55466c24e1d1a4b8a5f83dcc2')

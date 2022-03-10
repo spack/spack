@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -628,6 +628,14 @@ def test_version_wrong_idx_type():
     v = Version('1.1')
     with pytest.raises(TypeError):
         v['0:']
+
+
+@pytest.mark.regression('29170')
+def test_version_range_satisfies_means_nonempty_intersection():
+    x = VersionRange('3.7.0', '3')
+    y = VersionRange('3.6.0', '3.6.0')
+    assert not x.satisfies(y)
+    assert not y.satisfies(x)
 
 
 @pytest.mark.regression('26482')

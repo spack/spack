@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -188,6 +188,10 @@ class LmodConfiguration(BaseConfiguration):
         if self.spec.name == 'llvm':
             provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
             provides['compiler'].name = 'clang'
+        # Special case for llvm-amdgpu
+        if self.spec.name == 'llvm-amdgpu':
+            provides['compiler'] = spack.spec.CompilerSpec(str(self.spec))
+            provides['compiler'].name = 'rocmcc'
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:

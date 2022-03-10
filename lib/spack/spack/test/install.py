@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -151,7 +151,9 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     assert os.path.exists(spec.prefix)
 
 
-def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
+def test_dont_add_patches_to_installed_package(
+        install_mockery, mock_fetch, monkeypatch
+):
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
@@ -160,9 +162,11 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
     dependent = Spec('dependent-install ^/' + dependency_hash)
     dependent.concretize()
 
-    dependency.package.patches['dependency-install'] = [
+    monkeypatch.setitem(dependency.package.patches, 'dependency-install', [
         spack.patch.UrlPatch(
-            dependent.package, 'file://fake.patch', sha256='unused-hash')]
+            dependent.package, 'file://fake.patch', sha256='unused-hash'
+        )
+    ])
 
     assert dependent['dependency-install'] == dependency
 
@@ -308,52 +312,43 @@ def test_installed_upstream(install_upstream, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_partial_install_keep_prefix(install_mockery, mock_fetch):
+def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
 
     # Normally the stage should start unset, but other tests set it
     pkg._stage = None
-    remove_prefix = spack.package.Package.remove_prefix
-    try:
-        # If remove_prefix is called at any point in this test, that is an
-        # error
-        pkg.succeed = False  # make the build fail
-        spack.package.Package.remove_prefix = mock_remove_prefix
-        with pytest.raises(spack.build_environment.ChildError):
-            pkg.do_install(keep_prefix=True)
-        assert os.path.exists(pkg.prefix)
 
-        # must clear failure markings for the package before re-installing it
-        spack.store.db.clear_failure(spec, True)
-
-        pkg.succeed = True   # make the build succeed
-        pkg.stage = MockStage(pkg.stage)
+    # If remove_prefix is called at any point in this test, that is an
+    # error
+    pkg.succeed = False  # make the build fail
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
+    with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install(keep_prefix=True)
-        assert pkg.installed
-        assert not pkg.stage.test_destroyed
+    assert os.path.exists(pkg.prefix)
 
-    finally:
-        spack.package.Package.remove_prefix = remove_prefix
+    # must clear failure markings for the package before re-installing it
+    spack.store.db.clear_failure(spec, True)
+
+    pkg.succeed = True   # make the build succeed
+    pkg.stage = MockStage(pkg.stage)
+    pkg.do_install(keep_prefix=True)
+    assert pkg.installed
+    assert not pkg.stage.test_destroyed
 
 
-def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
+def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypatch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    remove_prefix = spack.package.Package.remove_prefix
-    try:
-        spack.package.Package.remove_prefix = mock_remove_prefix
+    monkeypatch.setattr(spack.package.Package, 'remove_prefix', mock_remove_prefix)
 
-        pkg.succeed = True
-        pkg.do_install()
-        assert pkg.installed
+    pkg.succeed = True
+    pkg.do_install()
+    assert pkg.installed
 
-        # If Package.install is called after this point, it will fail
-        pkg.succeed = False
-        pkg.do_install()
-
-    finally:
-        spack.package.Package.remove_prefix = remove_prefix
+    # If Package.install is called after this point, it will fail
+    pkg.succeed = False
+    pkg.do_install()
 
 
 def test_install_prefix_collision_fails(config, mock_fetch, mock_packages, tmpdir):

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class RDirichletmultinomial(RPackage):
     """Dirichlet-Multinomial Mixture Model Machine Learning for Microbiome
-       Data
+       Data.
 
        Dirichlet-multinomial mixture models can be used to describe variability
        in microbial metagenomic data. This package is an interface to code
@@ -16,9 +16,9 @@ class RDirichletmultinomial(RPackage):
        7(2): 1-15, as discussed further in the man page for this package,
        ?DirichletMultinomial."""
 
-    homepage = "https://bioconductor.org/packages/DirichletMultinomial"
-    git      = "https://git.bioconductor.org/packages/DirichletMultinomial.git"
+    bioc = "DirichletMultinomial"
 
+    version('1.36.0', commit='926baff6c75cb498945c5895f25cc143c907a357')
     version('1.32.0', commit='6949abab2462b2c09f7a0ca5b5cbf0c95a40ad16')
     version('1.26.0', commit='7daa84948020811bb8a27d2e633fccfdcdd1018f')
     version('1.24.1', commit='50195d9b1986852da29100e77f6f09df5d6e2a35')

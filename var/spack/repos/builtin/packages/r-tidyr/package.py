@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTidyr(RPackage):
-    """Tidy Messy Data
+    """Tidy Messy Data.
 
     Tools to help to create tidy data, where each column is a variable, each
     row is an observation, and each cell contains a single value. 'tidyr'
@@ -17,7 +17,6 @@ class RTidyr(RPackage):
     It also includes tools for working with missing values (both implicit and
     explicit)."""
 
-    homepage = "https://github.com/hadley/tidyr"
     cran = "tidyr"
 
     version('1.1.4', sha256='0b0c98be98a433e15a2550f60330b31a58529a9c58bc2abd7bff6462ab761241')
@@ -29,21 +28,21 @@ class RTidyr(RPackage):
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
-    depends_on('r-dplyr@0.8.2:', when='@1.1.2:', type=('build', 'run'))
-    depends_on('r-ellipsis@0.1.0:', when='@1.1.2:', type=('build', 'run'))
+    depends_on('r-dplyr@0.8.2:', type=('build', 'run'), when='@1.1.2:')
+    depends_on('r-ellipsis@0.1.0:', type=('build', 'run'), when='@1.1.2:')
     depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-lifecycle', when='@1.1.2:', type=('build', 'run'))
+    depends_on('r-lifecycle', type=('build', 'run'), when='@1.1.2:')
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-tibble@2.1.1:', when='@1.1.2:', type=('build', 'run'))
+    depends_on('r-tibble@2.1.1:', type=('build', 'run'), when='@1.1.2:')
     depends_on('r-tidyselect@0.2.5:', type=('build', 'run'))
-    depends_on('r-tidyselect@1.1.0:', when='@1.1.2:', type=('build', 'run'))
-    depends_on('r-vctrs@0.3.0:', when='@1.1.2:', type=('build', 'run'))
-    depends_on('r-vctrs@0.3.6:', when='@1.1.3:', type=('build', 'run'))
-    depends_on('r-cpp11@0.2.1:', when='@1.1.2:', type=('build', 'run'))
-    depends_on('r-cpp11@0.2.6:', when='@1.1.3:', type=('build', 'run'))
+    depends_on('r-tidyselect@1.1.0:', type=('build', 'run'), when='@1.1.2:')
+    depends_on('r-vctrs@0.3.0:', type=('build', 'run'), when='@1.1.2:')
+    depends_on('r-vctrs@0.3.6:', type=('build', 'run'), when='@1.1.3:')
+    depends_on('r-cpp11@0.2.1:', type=('build', 'run'), when='@1.1.2:')
+    depends_on('r-cpp11@0.2.6:', type=('build', 'run'), when='@1.1.3:')
 
-    depends_on('r-stringi', when='@:0.8.3', type=('build', 'run'))
-    depends_on('r-rcpp', when='@:0.8.3', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'), when='@:0.8.3')
+    depends_on('r-rcpp', type=('build', 'run'), when='@:0.8.3')

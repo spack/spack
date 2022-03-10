@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,3 +14,6 @@ class PyBackportsSslMatchHostname(PythonPackage):
     py_namespace = 'backports'
 
     version('3.5.0.1', sha256='502ad98707319f4a51fa2ca1c677bd659008d27ded9f6380c79e8932e38dcdf2')
+
+    # pip silently replaces distutils with setuptools
+    depends_on('py-setuptools', type='build')

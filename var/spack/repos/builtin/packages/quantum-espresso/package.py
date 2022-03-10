@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class QuantumEspresso(CMakePackage):
     url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
-    maintainers = ['ye-luo']
+    maintainers = ['ye-luo', 'danielecesarini']
 
     version('develop', branch='develop')
     version('7.0', sha256='85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee')

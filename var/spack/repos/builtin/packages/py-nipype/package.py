@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,5 +40,3 @@ class PyNipype(PythonPackage):
     depends_on('py-filelock@3:', type=('build', 'run'))
     depends_on('py-etelemetry@0.2:', when='@1.5:', type=('build', 'run'))
     depends_on('py-etelemetry', type=('build', 'run'))
-
-    depends_on('py-sphinxcontrib-napoleon', type='test')

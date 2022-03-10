@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,12 @@ class Nwchem(Package):
 
     variant('openmp', default=False, description='Enables OpenMP support')
     variant('mpipr', default=False, description='Enables ARMCI with progress rank')
+
+    # This patch is for the modification of the build system (e.g. compiler flags) and
+    # Fortran syntax to enable the compilation with Fujitsu compilers. The modification
+    # will be merged to the next release of NWChem (see https://github.com/nwchemgit/nwchem/issues/347
+    # for more detail.
+    patch('fj.patch', when='@7.0.2 %fj')
 
     depends_on('blas')
     depends_on('lapack')

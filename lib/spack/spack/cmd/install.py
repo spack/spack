@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -78,7 +78,7 @@ the dependencies"""
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['jobs', 'reuse'])
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
@@ -181,6 +181,8 @@ packages. If neither are chosen, don't run tests for any packages."""
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
+
+    spack.cmd.common.arguments.add_concretizer_args(subparser)
 
 
 def default_log_file(spec):
@@ -339,7 +341,7 @@ environment variables:
 
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests, reuse=args.reuse)
+                    concretized_specs = env.concretize(tests=tests)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -397,9 +399,7 @@ environment variables:
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests, reuse=args.reuse
-        )
+        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

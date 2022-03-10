@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,7 @@ from contextlib import contextmanager
 from typing import List  # novm
 
 import ruamel.yaml as yaml
+import six
 from ruamel.yaml.error import MarkedYAMLError
 from six import iteritems
 
@@ -52,6 +53,7 @@ import spack.platforms
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.compilers
+import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.env
 import spack.schema.mirrors
@@ -68,6 +70,7 @@ from spack.util.cpus import cpus_available
 #: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
+    'concretizer': spack.schema.concretizer.schema,
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
@@ -100,7 +103,7 @@ config_defaults = {
         'dirty': False,
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
-        'concretizer': 'original',
+        'concretizer': 'clingo',
     }
 }
 
@@ -975,7 +978,7 @@ def validate(data, schema, filename=None):
             line_number = e.instance.lc.line + 1
         else:
             line_number = None
-        raise ConfigFormatError(e, data, filename, line_number)
+        raise six.raise_from(ConfigFormatError(e, data, filename, line_number), e)
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
     return test_data

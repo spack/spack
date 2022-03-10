@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.3.5.tar.gz"
 
+    version('5.4.1', sha256='93034a1a9fe0876307136dcde7e98e9086e199de76f1c47da822e7d4de987fa8')
     version('5.4.0', sha256='c613414683e462da7c152c131cebf34f937e79b30571424060dd673368bbf627')
     version('5.3.5', sha256='e5d665fdb7043043f0799ae3dbe3b37e5b200d1ab7a6f7b2a4e463fd89507fa4')
     version('5.3.3', sha256='27e7749ac05006bf8e81a457c865402bb72a42bf3bc673da49de1020f0f32011')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -562,7 +562,7 @@ def _urlopen(req, *args, **kwargs):
 
 
 def find_versions_of_archive(
-        archive_urls, list_url=None, list_depth=0, concurrency=32
+    archive_urls, list_url=None, list_depth=0, concurrency=32, reference_package=None
 ):
     """Scrape web pages for new versions of a tarball.
 
@@ -577,6 +577,10 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
+        reference_package (spack.package.Package or None): a spack package
+            used as a reference for url detection.  Uses the url_for_version
+            method on the package to produce reference urls which, if found,
+            are preferred.
     """
     if not isinstance(archive_urls, (list, tuple)):
         archive_urls = [archive_urls]
@@ -638,11 +642,26 @@ def find_versions_of_archive(
     # Walk through archive_url links first.
     # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
+    matched = set()
     for url in archive_urls + sorted(links):
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
+                if ver in matched:
+                    continue
                 versions[ver] = url
+                # prevent this version from getting overwritten
+                if url in archive_urls:
+                    matched.add(ver)
+                elif reference_package is not None:
+                    if url == reference_package.url_for_version(ver):
+                        matched.add(ver)
+                else:
+                    extrapolated_urls = [
+                        spack.url.substitute_version(u, ver) for u in archive_urls
+                    ]
+                    if url in extrapolated_urls:
+                        matched.add(ver)
             except spack.url.UndetectableVersionError:
                 continue
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -195,22 +195,42 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
-@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
-def test_from_list_url_unspecified(mock_packages, config, _fetch_method):
-    """Test non-specific URLs from the url-list-test package."""
-    with spack.config.override('config:url_fetch_method', _fetch_method):
-        pkg = spack.repo.get('url-list-test')
+@pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
+@pytest.mark.parametrize("requested_version,tarball,digest", [
+    # This version is in the web data path (test/data/web/4.html), but not in the
+    # url-list-test package. We expect Spack to generate a URL with the new version.
+    ("4.5.0", "foo-4.5.0.tar.gz", None),
+    # This version is in web data path and not in the package file, BUT the 2.0.0b2
+    # version in the package file satisfies 2.0.0, so Spack will use the known version.
+    # TODO: this is *probably* not what the user wants, but it's here as an example
+    # TODO: for that reason. We can't express "exactly 2.0.0" right now, and we don't
+    # TODO: have special cases that would make 2.0.0b2 less than 2.0.0. We should
+    # TODO: probably revisit this in our versioning scheme.
+    ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+])
+def test_new_version_from_list_url(
+        mock_packages, config, _fetch_method, requested_version, tarball, digest
+):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip(
+            "Original concretizer doesn't resolve concrete versions to known ones"
+        )
 
-        spec = Spec('url-list-test @2.0.0').concretized()
+    """Test non-specific URLs from the url-list-test package."""
+    with spack.config.override("config:url_fetch_method", _fetch_method):
+        pkg = spack.repo.get("url-list-test")
+
+        spec = Spec("url-list-test @%s" % requested_version).concretized()
         pkg = spack.repo.get(spec)
         fetch_strategy = fs.from_list_url(pkg)
+
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
-        assert fetch_strategy.digest is None
+        assert os.path.basename(fetch_strategy.url) == tarball
+        assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
-        pkg.fetch_options = {'timeout': 60}
+        pkg.fetch_options = {"timeout": 60}
         fetch_strategy = fs.from_list_url(pkg)
-        assert fetch_strategy.extra_options == {'timeout': 60}
+        assert fetch_strategy.extra_options == {"timeout": 60}
 
 
 def test_nosource_from_list_url(mock_packages, config):

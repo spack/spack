@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -139,6 +139,9 @@ class Graphviz(AutotoolsPackage):
         bash('./autogen.sh', 'NOCONFIG')
 
     def setup_build_environment(self, env):
+        # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
+        super(Graphviz, self).setup_build_environment(env)
+
         if '+quartz' in self.spec:
             env.set('OBJC', self.compiler.cc)
 

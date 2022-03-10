@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import abc
 import contextlib
 import errno
 import functools
+import importlib
 import inspect
 import itertools
 import os
@@ -18,18 +19,13 @@ import traceback
 import types
 from typing import Dict  # novm
 
-import six
-
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
-
 import ruamel.yaml as yaml
+import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.compat import Mapping
 
 import spack.caches
 import spack.config
@@ -1104,7 +1100,12 @@ class Repo(object):
                                         % (self.namespace, namespace))
 
         class_name = nm.mod_to_class(pkg_name)
-        module = self._get_pkg_module(pkg_name)
+
+        fullname = "{0}.{1}".format(self.full_namespace, pkg_name)
+        try:
+            module = importlib.import_module(fullname)
+        except ImportError:
+            raise UnknownPackageError(pkg_name)
 
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):

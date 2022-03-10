@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,14 +7,13 @@ from spack import *
 
 
 class RConquer(RPackage):
-    """Convolution-Type Smoothed Quantile Regression
+    """Convolution-Type Smoothed Quantile Regression.
 
     Fast and accurate convolution-type smoothed quantile regression.
     Implemented using Barzilai-Borwein gradient descent with a Huber regression
     warm start. Construct confidence intervals for regression coefficients
     using multiplier bootstrap."""
 
-    homepage = "https://github.com/XiaoouPan/conquer"
     cran = "conquer"
 
     version('1.2.1', sha256='1354f90f962a2124e155227cdc0ed2c6e54682f1e08934c49a827e51dc112f45')
@@ -24,5 +23,5 @@ class RConquer(RPackage):
     depends_on('r-rcpp@1.0.3:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-matrixstats', type=('build', 'run'))
-    depends_on('r-caret', when='@1.2:', type=('build', 'run'))
+    depends_on('r-caret', type=('build', 'run'), when='@1.2:')
     depends_on('r-rcpparmadillo@0.9.850.1.0:', type=('build', 'run'))

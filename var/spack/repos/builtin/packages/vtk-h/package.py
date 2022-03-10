@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,18 +73,18 @@ class VtkH(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m~tbb+openmp", when="+openmp")
-    depends_on("vtk-m~tbb~openmp", when="~openmp")
+    depends_on("vtk-m@:1.6~tbb+openmp", when="+openmp")
+    depends_on("vtk-m@:1.6~tbb~openmp", when="~openmp")
 
     for _arch in CudaPackage.cuda_arch_values:
-        depends_on("vtk-m+cuda~tbb+openmp cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
-        depends_on("vtk-m+cuda~tbb~openmp cuda_arch={0}".format(_arch), when="+cuda~openmp cuda_arch={0}".format(_arch))
+        depends_on("vtk-m@:1.6+cuda~tbb+openmp cuda_arch={0}".format(_arch), when="+cuda+openmp cuda_arch={0}".format(_arch))
+        depends_on("vtk-m@:1.6+cuda~tbb~openmp cuda_arch={0}".format(_arch), when="+cuda~openmp cuda_arch={0}".format(_arch))
 
-    depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m@:1.6~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m@:1.6~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m@:1.6+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m@:1.6+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -94,8 +94,8 @@ class VtkH(Package, CudaPackage):
                           "-DBUILD_TESTING=OFF"]
 
             # shared vs static libs logic
-            # force static when building with cuda
-            if "+cuda" in spec:
+            # force static when building with CUDA <= 1.6
+            if "+cuda" in spec and spec["vtk-m"].satisfies('@:1.6'):
                 cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
             else:
                 if "+shared" in spec:

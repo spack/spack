@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ def activate_header(env, shell, prompt=None):
         #
     else:
         if 'color' in os.getenv('TERM', '') and prompt:
-            prompt = colorize('@G{%s} ' % prompt, color=True)
+            prompt = colorize('@G{%s}' % prompt, color=True)
 
         cmds += 'export SPACK_ENV=%s;\n' % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
@@ -73,7 +73,7 @@ def deactivate_header(shell):
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
         cmds += 'fi;\n'
-        cmds += 'unalias despacktivate;\n'
+        cmds += 'alias despacktivate > /dev/null 2>&1 && unalias despacktivate;\n'
         cmds += 'if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n'
         cmds += '    if [ "$SPACK_OLD_PS1" = \'$$$$\' ]; then\n'
         cmds += '        unset PS1; export PS1;\n'

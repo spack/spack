@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,6 +93,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
+    depends_on('cmake@3.14:', type='build', when='%clang')
     depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
@@ -102,7 +103,7 @@ class Tau(Package):
     depends_on('libdwarf', when='+libdwarf')
     depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
-    depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
+    depends_on('binutils+libiberty+headers+plugins', when='+binutils')
     # Build errors with Python 3.9
     depends_on('python@2.7:3.8', when='+python')
     depends_on('libunwind', when='+libunwind')
@@ -115,6 +116,7 @@ class Tau(Package):
     depends_on('rocprofiler-dev', when='+rocprofiler')
     depends_on('roctracer-dev', when='+roctracer')
     depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('java', type='run') # for paraprof
 
     # Elf only required from 2.28.1 on
     conflicts('+elf', when='@:2.28.0')

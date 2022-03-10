@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,11 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version('main', branch='main')
     version('master', branch='main', deprecated=True)  # For compatibility
+    version('17.1.0', commit='0d9c3a6da022da48d6401e10c273896a1f775a9e', submodules=True)
+    version('17.0.0', commit='ccbf4c7d4ec3698bac4db9687fab2455a3f9c203', submodules=True)
+    version('16.0.0', commit='9bd86921155e708189417b5a8019add10fd5b273', submodules=True)
     version('15.1.0', commit='a96e6db7de6075e85b6d5346bc89845eeb89b324', submodules=True)
+    version('15.0.1', commit='b9469b8914f6a1bc47af0998eb7c9e8e20e4debc', submodules=True)
     version('15.0.0', commit='0fef9e0831a90e946745390882aac871b211eaac', submodules=True)
     version('14.1.0', commit='e883ab6acfe5033509ad1c27e8e2ba980dfa59f6', submodules=True)
     version('14.0.0', commit='f902bef81b60133994315c13f7d32d60048c79d8', submodules=True)
@@ -113,7 +117,8 @@ class Acts(CMakePackage, CudaPackage):
 
     # Variants that affect the core Acts library
     variant('benchmarks', default=False, description='Build the performance benchmarks', when='@0.16:')
-    variant('examples', default=False, description='Build the examples', when='@0.23: +digitization +fatras +identification +json +tgeo')
+    variant('examples', default=False, description='Build the examples', when='@0.23:16 +digitization +fatras +identification +json +tgeo')
+    variant('examples', default=False, description='Build the examples', when='@17: +fatras +identification +json +tgeo')
     variant('integration_tests', default=False, description='Build the integration tests')
     variant('unit_tests', default=False, description='Build the unit tests')
     variant('log_failure_threshold', default='MAX', description='Log level above which examples should auto-crash')
@@ -121,7 +126,7 @@ class Acts(CMakePackage, CudaPackage):
     # Variants that enable / disable Acts plugins
     variant('autodiff', default=False, description='Build the auto-differentiation plugin', when='@1.2:')
     variant('dd4hep', default=False, description='Build the DD4hep plugin', when='+tgeo')
-    variant('digitization', default=False, description='Build the geometric digitization plugin')
+    variant('digitization', default=False, description='Build the geometric digitization plugin', when='@:16')
     variant('fatras', default=False, description='Build the FAst TRAcking Simulation package', when='@0.16:')
     variant('fatras_geant4', default=False, description='Build Geant4 Fatras package')
     variant('identification', default=False, description='Build the Identification plugin')
@@ -142,7 +147,8 @@ class Acts(CMakePackage, CudaPackage):
     # Build dependencies
     # FIXME: Use spack's vecmem package once there is one
     # (https://github.com/acts-project/acts/pull/998)
-    depends_on('autodiff @0.5.11:', when='@1.2: +autodiff')
+    depends_on('autodiff @0.6:', when='@17: +autodiff')
+    depends_on('autodiff @0.5.11:0.5.99', when='@1.2:16 +autodiff')
     depends_on('boost @1.62:1.69 +program_options +test', when='@:0.10.3')
     depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
     depends_on('cmake @3.14:', type='build')
@@ -199,7 +205,6 @@ class Acts(CMakePackage, CudaPackage):
             cmake_variant("BENCHMARKS", "benchmarks"),
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
-            plugin_cmake_variant("DIGITIZATION", "digitization"),
             cmake_variant("EXAMPLES", "examples"),
             example_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("GEANT4", "geant4"),
@@ -237,5 +242,8 @@ class Acts(CMakePackage, CudaPackage):
             args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
         elif spec.satisfies('@0.14.0: +json'):
             args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
+
+        if spec.satisfies('@:16'):
+            args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
 
         return args

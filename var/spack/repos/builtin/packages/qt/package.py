@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ import sys
 import llnl.util.tty as tty
 
 from spack import *
+from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None
-LINUX_VERSION = Version(platform.release()) if platform.system() == 'Linux' else None
+LINUX_VERSION = kernel_version() if platform.system() == 'Linux' else None
 
 
 class Qt(Package):
@@ -29,6 +30,7 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.15.3', sha256='b7412734698a87f4a0ae20751bab32b1b07fdc351476ad8e35328dbe10efdedb')
     version('5.15.2', sha256='3a530d1b243b5dec00bc54937455471aaa3e56849d2593edb8ded07228202240')
     version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8', deprecated=True)
@@ -131,6 +133,8 @@ class Qt(Package):
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
     patch('qt514-isystem.patch', when='@5.14.2')
+    # https://bugreports.qt.io/browse/QTBUG-84037
+    patch('qt514-quick3d-assimp.patch', when='@5.14:5')
     # https://bugreports.qt.io/browse/QTBUG-90395
     patch('https://src.fedoraproject.org/rpms/qt5-qtbase/raw/6ae41be8260f0f5403367eb01f7cd8319779674a/f/qt5-qtbase-gcc11.patch',
           sha256='9378afd071ad5c0ec8f7aef48421e4b9fab02f24c856bee9c0951143941913c5',
@@ -144,8 +148,14 @@ class Qt(Package):
           sha256='84b099109d08adf177adf9d3542b6215ec3e42138041d523860dbfdcb59fdaae',
           working_dir='qtwebsockets',
           when='@5.14: %gcc@11:')
+    # https://github.com/microsoft/vcpkg/issues/21055
+    patch('qt5-macos12.patch',
+          working_dir='qtbase',
+          when='@5.14: %apple-clang@13:')
+
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
     conflicts('%gcc@11:', when='@5.8')
+    conflicts('%apple-clang@13:', when='@:5.13')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -173,6 +183,7 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
     depends_on("gl", when='@4:+opengl')
+    depends_on("assimp@5.0.0:5", when='@5.14:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -246,6 +257,8 @@ class Qt(Package):
     else:
         conflicts('platform=darwin', when='@:4.8.6',
                   msg="QT 4 for macOS is only patched for 4.8.7")
+        conflicts('target=aarch64:', when='@:5.15.3',
+                  msg='Apple Silicon requires a very new version of qt')
 
     use_xcode = True
 
@@ -253,12 +266,13 @@ class Qt(Package):
     compiler_mapping = {'intel': ('icc',),
                         'apple-clang': ('clang-libc++', 'clang'),
                         'clang': ('clang-libc++', 'clang'),
+                        'fj': ('clang',),
                         'gcc': ('g++',)}
     platform_mapping = {'darwin': ('macx'), 'cray': ('linux')}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url.replace('http:', 'https:')
+        url = self.list_url
 
         if version < Version('5.12') and version.up_to(2) != Version('5.9'):
             # As of 28 April 2021:
@@ -286,7 +300,10 @@ class Qt(Package):
             url += 'x11-'
 
         if version >= Version('5.10.0'):
-            url += 'src-'
+            if version >= Version('5.15.3'):
+                url += 'opensource-src-'
+            else:
+                url += 'src-'
         elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
@@ -478,6 +495,21 @@ class Qt(Package):
         os.unlink(join_path(self.stage.source_path,
                             'qtscript/src/3rdparty/javascriptcore/version'))
 
+    @when('@4: %fj')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        conf = os.path.join(mkspec_dir, 'common', 'clang.conf')
+
+        # Fix qmake compilers in the default mkspec
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = fcc', conf)
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = FCC', conf)
+
+        if self.spec.satisfies('@4'):
+            conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
     @property
     def common_config_args(self):
         spec = self.spec
@@ -552,6 +584,12 @@ class Qt(Package):
                 # but qt-5.6.3 does not recognize this option
                 '-no-nis',
             ])
+
+        if '+opengl' in spec:
+            if version >= Version('5.14'):
+                use_spack_dep('assimp')
+            else:
+                config_args.append('-no-assimp')
 
         # COMPONENTS
 
@@ -705,6 +743,12 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        if spec.satisfies('platform=darwin target=aarch64:'):
+            # https://www.qt.io/blog/qt-on-apple-silicon
+            # Not currently working for qt@5
+            config_args.extend(['-device-option',
+                                'QMAKE_APPLE_DEVICE_ARCHS=arm64'])
 
         configure(*config_args)
 

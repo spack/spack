@@ -1,11 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
-import sys
 
 from spack import *
 
@@ -19,6 +18,8 @@ class Git(AutotoolsPackage):
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
 
+    tags = ['build-tools']
+
     executables = ['^git$']
 
     # In order to add new versions here, add a new list entry with:
@@ -29,9 +30,39 @@ class Git(AutotoolsPackage):
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
     releases = [
         {
-            'version': '2.29.2',
-            'sha256': '869a121e1d75e4c28213df03d204156a17f02fce2dc77be9795b327830f54195',
-            'sha256_manpages': '68b258e6d590cb78e02c0df741bbaeab94cbbac6d25de9da4fb3882ee098307b'
+            'version': '2.35.1',
+            'sha256': '9845a37dd01f9faaa7d8aa2078399d3aea91b43819a5efea6e2877b0af09bd43',
+            'sha256_manpages': 'd90da8b28fe0088519e0dc3c9f4bc85e429c7d6ccbaadcfe94aed47fb9c95504',
+        },
+        {
+            'version': '2.35.0',
+            'sha256': 'c1d0adc777a457a3d9b2759024f173b34e61be96f7480ac5bc44216617834412',
+            'sha256_manpages': 'c0408a1c944c8e481d7f507bd90a7ee43c34617a1a7af2d76a1898dcf44fa430',
+        },
+        {
+            'version': '2.34.1',
+            'sha256': 'fc4eb5ecb9299db91cdd156c06cdeb41833f53adc5631ddf8c0cb13eaa2911c1',
+            'sha256_manpages': '220f1ed68582caeddf79c4db15e4eaa4808ec01fd11889e19232f0a74d7f31b0',
+        },
+        {
+            'version': '2.34.0',
+            'sha256': '0ce6222bfd31938b29360150286b51c77c643fa97740b1d35b6d1ceef8b0ecd7',
+            'sha256_manpages': 'fe66a69244def488306c3e05c1362ea53d8626d2a7e57cd7311df2dab1ef8356',
+        },
+        {
+            'version': '2.33.1',
+            'sha256': '02047f8dc8934d57ff5e02aadd8a2fe8e0bcf94a7158da375e48086cc46fce1d',
+            'sha256_manpages': '292b08ca1b79422ff478a6221980099c5e3c0a38aba39d952063eedb68e27d93',
+        },
+        {
+            'version': '2.33.0',
+            'sha256': '02d909d0bba560d3a1008bd00dd577621ffb57401b09175fab2bf6da0e9704ae',
+            'sha256_manpages': 'ba9cd0f29a3632a3b78f8ed2389f0780aa6e8fcbe258259d7c584920d19ed1f7',
+        },
+        {
+            'version': '2.32.0',
+            'sha256': '6038f06d396ba9dab2eee541c7db6e7f9f847f181ec62f3d8441893f8c469398',
+            'sha256_manpages': 'b5533c40ea1688231c0e2df51cc0d1c0272e17fe78a45ba6e60cb8f61fa4a53c',
         },
         {
             'version': '2.31.1',
@@ -52,6 +83,11 @@ class Git(AutotoolsPackage):
             'version': '2.30.0',
             'sha256': 'd24c4fa2a658318c2e66e25ab67cc30038a35696d2d39e6b12ceccf024de1e5e',
             'sha256_manpages': 'e23035ae232c9a5eda57db258bc3b7f1c1060cfd66920f92c7d388b6439773a6'
+        },
+        {
+            'version': '2.29.2',
+            'sha256': '869a121e1d75e4c28213df03d204156a17f02fce2dc77be9795b327830f54195',
+            'sha256_manpages': '68b258e6d590cb78e02c0df741bbaeab94cbbac6d25de9da4fb3882ee098307b'
         },
         {
             'version': '2.29.0',
@@ -337,7 +373,7 @@ class Git(AutotoolsPackage):
 
     @run_after('configure')
     def filter_rt(self):
-        if sys.platform == 'darwin':
+        if self.spec.satisfies('platform=darwin'):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
 
@@ -350,11 +386,19 @@ class Git(AutotoolsPackage):
             args.append('NO_GETTEXT=1')
         make(*args)
 
+        if spec.satisfies('platform=darwin'):
+            with working_dir('contrib/credential/osxkeychain'):
+                make()
+
     def install(self, spec, prefix):
         args = ["install"]
         if '~nls' in self.spec:
             args.append('NO_GETTEXT=1')
         make(*args)
+
+        if spec.satisfies('platform=darwin'):
+            install('contrib/credential/osxkeychain/git-credential-osxkeychain',
+                    join_path(prefix, "libexec", "git-core"))
 
     @run_after('install')
     def install_completions(self):

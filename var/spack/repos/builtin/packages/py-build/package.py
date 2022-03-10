@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,3 +24,7 @@ class PyBuild(PythonPackage):
     depends_on('py-colorama', when='platform=windows', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.22:', when='^python@:3.7', type=('build', 'run'))
     depends_on('py-virtualenv@20.0.35:', when='+virtualenv', type=('build', 'run'))
+
+    # https://github.com/pypa/build/issues/266
+    # https://github.com/pypa/build/issues/406
+    patch('isolation.patch', when='@0.7.0')

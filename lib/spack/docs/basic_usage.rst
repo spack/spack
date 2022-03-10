@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -194,9 +194,9 @@ Reusing installed dependencies
 
 .. warning::
 
-   The ``--reuse`` option described here is experimental, and it will
-   likely be replaced with a different option and configuration settings
-   in the next Spack release.
+   The ``--reuse`` option described here will become the default installation
+   method in the next Spack version, and you will be able to get the current
+   behavior by using ``spack install --fresh``.
 
 By default, when you run ``spack install``, Spack tries to build a new
 version of the package you asked for, along with updated versions of
@@ -215,6 +215,9 @@ is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
 the ``mpich`` will be build with the installed versions, if possible.
 You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
 will be reused and what will be built before you install.
+
+You can configure Spack to use the ``--reuse`` behavior by default in
+``concretizer.yaml``.
 
 .. _cmd-spack-uninstall:
 
@@ -1280,7 +1283,7 @@ Normally users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
 values will be detected automatically.  If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
-target), see :ref:`concretization-preferences`.
+target), see :ref:`package-preferences`.
 
 .. admonition:: Cray machines
 

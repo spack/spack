@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ def saved_deps():
 
 
 @pytest.fixture()
-def set_dependency(saved_deps):
+def set_dependency(saved_deps, monkeypatch):
     """Returns a function that alters the dependency information
     for a package in the ``saved_deps`` fixture.
     """
@@ -48,7 +48,7 @@ def set_dependency(saved_deps):
 
         cond = Spec(pkg.name)
         dependency = Dependency(pkg, spec, type=deptypes)
-        pkg.dependencies[spec.name] = {cond: dependency}
+        monkeypatch.setitem(pkg.dependencies, spec.name, {cond: dependency})
     return _mock
 
 
@@ -974,7 +974,6 @@ class TestSpecDag(object):
             canonical_deptype(('foo',))
 
     def test_invalid_literal_spec(self):
-
         # Can't give type 'build' to a top-level spec
         with pytest.raises(spack.spec.SpecParseError):
             Spec.from_literal({'foo:build': None})
@@ -982,3 +981,11 @@ class TestSpecDag(object):
         # Can't use more than one ':' separator
         with pytest.raises(KeyError):
             Spec.from_literal({'foo': {'bar:build:link': None}})
+
+    def test_spec_tree_respect_deptypes(self):
+        # Version-test-root uses version-test-pkg as a build dependency
+        s = Spec('version-test-root').concretized()
+        out = s.tree(deptypes='all')
+        assert 'version-test-pkg' in out
+        out = s.tree(deptypes=('link', 'run'))
+        assert 'version-test-pkg' not in out

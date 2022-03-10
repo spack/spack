@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     variant('mpi',    default=True, description='Build with MPI support (without MPI is experimental).')
     variant('openmp', default=True, description='Build with OpenMP support.')
     variant('shared', default=True, description='Build shared library')
+
+    # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
+    depends_on('cmake', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('blas')
@@ -72,28 +75,32 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
 
-    examples_src_dir = 'examples'
-
     @run_after('install')
     def cache_test_sources(self):
+        if self.spec.satisfies('@2020.10.00'):
+            return
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies('@master'):
-            self.cache_extra_test_sources([self.examples_src_dir])
+        self.cache_extra_test_sources(['examples'])
 
     def test(self):
-        if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
-            print('Skipping: stand-alone tests only run on master with +mpi')
+        if self.spec.satisfies('@2020.10.00') or '+mpi' not in self.spec:
+            print('Skipping: stand-alone tests')
             return
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        test_bld_dir = join_path(test_dir, 'build')
-        with working_dir(test_bld_dir, create=True):
-            cmake('..')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'build')
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+            prefixes = ';'.join([self.spec['blaspp'].prefix,
+                                 self.spec['lapackpp'].prefix,
+                                 self.spec['mpi'].prefix,
+                                 ])
+            self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH=' + prefixes, '..'])
             make()
             test_args = ['-n', '4', './ex05_blas']
-            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
-            if mpiexe_f:
-                self.run_test(mpiexe_f.command, test_args,
-                              purpose='SLATE smoke test')
+            mpi_path = self.spec['mpi'].prefix.bin
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec', path=mpi_path)
+            self.run_test(mpiexe_f.command, test_args,
+                          purpose='SLATE smoke test')
             make('clean')

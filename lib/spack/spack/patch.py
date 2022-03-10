@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,6 +96,12 @@ class Patch(object):
             'level': self.level,
             'working_dir': self.working_dir,
         }
+
+    def __eq__(self, other):
+        return self.sha256 == other.sha256
+
+    def __hash__(self):
+        return hash(self.sha256)
 
 
 class FilePatch(Patch):

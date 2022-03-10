@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -103,16 +103,8 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 
 @pytest.mark.regression('26189')
 def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
-    # Mock the command line scope
     expected_dir = '/tmp/test'
-    internal_scope = spack.config.InternalConfigScope(
-        name='command_line', data={
-            'config': {
-                'test_stage': expected_dir
-            }
-        }
-    )
-    spack.config.config.push_scope(internal_scope)
+    spack.config.set("config:test_stage", expected_dir, scope="command_line")
 
     assert spack.config.get('config:test_stage') == expected_dir
     with spack.bootstrap.ensure_bootstrap_configuration():

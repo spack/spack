@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,10 +22,7 @@ class PyImageioFfmpeg(PythonPackage):
     version('0.4.3', sha256='f826260a3207b872f1a4ba87ec0c8e02c00afba4fd03348a59049bdd8215841e')
 
     depends_on('python@3.4:', type=('build', 'run'))
+    depends_on('py-pip@19:', type='build')
     # Needs setuptools at runtime so that `import pkg_resources` succeeds
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('ffmpeg', type='run')
-
-    def patch(self):
-        filter_file('setup_requires=["pip>19"]', 'setup_requires=[]',
-                    'setup.py', string=True)

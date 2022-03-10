@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -238,7 +238,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
-    variant('gpfs', default=True, description='Enable GPFS support (if present)')
+    variant('gpfs', default=False, description='Enable GPFS support')
     variant('singularity', default=False,
             description="Build support for the Singularity container")
     variant('lustre', default=False,
@@ -272,10 +272,10 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
-    depends_on('autoconf', type='build', when='@master')
-    depends_on('automake', type='build', when='@master')
-    depends_on('libtool',  type='build', when='@master')
-    depends_on('m4',       type='build', when='@master')
+    depends_on('autoconf @2.69:',   type='build', when='@master')
+    depends_on('automake @1.13.4:', type='build', when='@master')
+    depends_on('libtool @2.4.2:',   type='build', when='@master')
+    depends_on('m4',                type='build', when='@master')
     depends_on('pandoc', type='build', when='@master')
 
     depends_on('perl',     type='build')
@@ -352,7 +352,7 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
@@ -620,11 +620,6 @@ class Openmpi(AutotoolsPackage):
         perl = which('perl')
         perl('autogen.pl')
 
-    def setup_build_environment(self, env):
-        if '~gpfs' in self.spec:
-            env.set('ac_cv_header_gpfs_h', 'no')
-            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
-
     def configure_args(self):
         spec = self.spec
         config_args = [
@@ -733,6 +728,11 @@ class Openmpi(AutotoolsPackage):
 
         if '~romio' in spec:
             config_args.append('--disable-io-romio')
+
+        if '+gpfs' in spec:
+            config_args.append('--with-gpfs')
+        else:
+            config_args.append('--with-gpfs=no')
 
         # SQLite3 support
         if spec.satisfies('@1.7.3:1'):

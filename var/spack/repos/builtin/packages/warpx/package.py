@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,14 +17,17 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.12.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.03.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
-    tags = ['e4s']
+    tags = ['e4s', 'ecp']
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
+    version('22.02', sha256='d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42')
+    version('22.01', sha256='e465ffadabb7dc360c63c4d3862dc08082b5b0e77923d3fb05570408748b0d28')
     # 22.01+ requires C++17 or newer
     version('21.12', sha256='847c98aac20c73d94c823378803c82be9a14139f1c14ea483757229b452ce4c1')
     version('21.11', sha256='ce60377771c732033a77351cd3500b24b5d14b54a5adc7a622767b9251c10d0b')
@@ -85,27 +88,36 @@ class Warpx(CMakePackage):
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
-    depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('llvm-openmp', when='%apple-clang compute=omp')
+    depends_on('cmake@3.18.0:', type='build', when='@22.01:')
     depends_on('mpi', when='+mpi')
+    with when('compute=cuda'):
+        depends_on('cuda@9.2.88:')
+        depends_on('cuda@11.0:', when='@22.01:')
+    with when('compute=hip'):
+        depends_on('rocfft', when='+psatd')
+        depends_on('rocprim')
+        depends_on('rocrand')
+    with when('compute=noacc'):
+        with when('+psatd'):
+            depends_on('fftw@3: ~mpi', when='~mpi')
+            depends_on('fftw@3: +mpi', when='+mpi')
+            depends_on('pkgconfig', type='build')
+    with when('compute=omp'):
+        depends_on('llvm-openmp', when='%apple-clang')
+        with when('+psatd'):
+            depends_on('fftw@3: +openmp')
+            depends_on('fftw ~mpi', when='~mpi')
+            depends_on('fftw +mpi', when='+mpi')
+            depends_on('pkgconfig', type='build')
     with when('+psatd dims=rz'):
         depends_on('lapackpp')
         depends_on('blaspp')
         depends_on('blaspp +cuda', when='compute=cuda')
-    with when('+psatd compute=omp'):
-        depends_on('fftw@3: +openmp')
-        depends_on('fftw ~mpi', when='~mpi')
-        depends_on('fftw +mpi', when='+mpi')
-        depends_on('pkgconfig', type='build')
     with when('+openpmd'):
         depends_on('openpmd-api@0.13.1:')
         depends_on('openpmd-api@0.14.2:', when='@21.09:')
         depends_on('openpmd-api ~mpi', when='~mpi')
         depends_on('openpmd-api +mpi', when='+mpi')
-    with when('compute=hip'):
-        depends_on('rocfft', when='+psatd')
-        depends_on('rocprim')
-        depends_on('rocrand')
 
     conflicts('dims=1', when='@:21.12',
               msg='WarpX 1D support starts in 22.01+')
@@ -164,17 +176,20 @@ class Warpx(CMakePackage):
     examples_src_dir = 'Examples/Physics_applications/laser_acceleration/'
 
     def _get_input_options(self, post_install):
+        spec = self.spec
         examples_dir = join_path(
             self.install_test_root if post_install else self.stage.source_path,
             self.examples_src_dir)
-        dims = self.spec.variants['dims'].value
+        dims = spec.variants['dims'].value
         inputs_nD = {'1': 'inputs_1d', '2': 'inputs_2d', '3': 'inputs_3d',
-                     'rz': 'inputs_2d_rz'}
+                     'rz': 'inputs_rz'}
+        if spec.satisfies('@:21.12'):
+            inputs_nD['rz'] = 'inputs_2d_rz'
         inputs = join_path(examples_dir, inputs_nD[dims])
 
         cli_args = [inputs, "max_step=50", "diag1.intervals=10"]
         # test openPMD output if compiled in
-        if '+openpmd' in self.spec:
+        if '+openpmd' in spec:
             cli_args.append('diag1.format=openpmd')
         return cli_args
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,11 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ['adamjstewart', 'aweits']
     import_modules = ['tensorflow']
 
+    version('2.7.0',  sha256='bb124905c7fdacd81e7c842b287c169bbf377d29c74c9dacc04f96c9793747bb')
+    version('2.6.2',  sha256='e68c1d346fc3d529653530ca346b2c62f5b31bd4fcca7ffc9c65bb39ab2f6ed3')
+    version('2.6.1',  sha256='8e457f617bc2eb43de2a51900e7922b60a8107e2524b2576438f1acccee1d043')
+    version('2.6.0',  sha256='41b32eeaddcbc02b0583660bcf508469550e4cd0f86b22d2abe72dfebeacde0f')
+    version('2.5.0',  sha256='233875ea27fc357f6b714b2a0de5f6ff124b50c1ee9b3b41f9e726e9e677b86c')
     version('2.4.1',  sha256='f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0')
     version('2.4.0',  sha256='26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae')
     version('2.3.2',  sha256='21a703d2e68cd0677f6f9ce329198c24fd8203125599d791af9f1de61aadf31f')
@@ -111,7 +116,8 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@3.1.0:3',  type='build', when='@2.3:')
+    depends_on('bazel@3.7.2:4.99.0',  type='build', when='@2.7:')
+    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3:2.6')
     depends_on('bazel@2.0.0',         type='build', when='@2.2.0:2.2')
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
@@ -134,42 +140,56 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('bazel@0.1.1',         type='build', when='@0.5:0.6')
 
     depends_on('swig', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-future', type='build', when='^python@:2')
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
-    depends_on('py-absl-py@0.10:0', type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-absl-py@0.4:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-absl-py@0.10:0', type=('build', 'run'), when='@2.4.0:2.6')
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:2.3')
     depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:1.11')
-    depends_on('py-astunparse@1.6.3:1.6', type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-astunparse@1.6.0:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-astunparse@1.6.3:1.6', type=('build', 'run'), when='@2.4.0:2.6')
     depends_on('py-astunparse@1.6.3', type=('build', 'run'), when='@2.2:2.3')
     depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:2.1')
     depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
     depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
+    depends_on('py-libclang@9.0.1:', type=('build', 'run'), when='@2.7:')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
-    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:')
+    depends_on('py-gast@0.2.1:0.4', type=('build', 'run'), when='@2.7:')
+    depends_on('py-gast@0.4.0', type=('build', 'run'), when='@2.5:2.6')
+    depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:2.4')
     depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:1.14')
-    depends_on('py-google-pasta@0.2:0', type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-google-pasta@0.1.1:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-google-pasta@0.2:0', type=('build', 'run'), when='@2.4.0:2.6')
     depends_on('py-google-pasta@0.1.8:', type=('build', 'run'), when='@2.1:2.3')
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:2.0')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
     # propagate the mpi variant setting for h5py/hdf5 to avoid unexpected crashes
-    depends_on('py-h5py@2.10.0:2.10+mpi', type=('build', 'run'), when='@2.2:+mpi')
-    depends_on('py-h5py@2.10.0:2.10~mpi', type=('build', 'run'), when='@2.2:~mpi')
+    depends_on('py-h5py@2.9:+mpi', type=('build', 'run'), when='@2.7:+mpi')
+    depends_on('py-h5py@2.9:~mpi', type=('build', 'run'), when='@2.7:~mpi')
+    depends_on('py-h5py@3.1+mpi', type=('build', 'run'), when='@2.5:2.6+mpi')
+    depends_on('py-h5py@3.1~mpi', type=('build', 'run'), when='@2.5:2.6~mpi')
+    depends_on('py-h5py@2.10+mpi', type=('build', 'run'), when='@2.2:2.4+mpi')
+    depends_on('py-h5py@2.10~mpi', type=('build', 'run'), when='@2.2:2.4~mpi')
     depends_on('hdf5+mpi', type='build', when='@2.2:+mpi')
     depends_on('hdf5~mpi', type='build', when='@2.2:~mpi')
     depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
     depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11')
-    depends_on('py-keras-preprocessing@1.1.2:1.1', type=('build', 'run'), when='@2.4:')
+    depends_on('py-keras-preprocessing@1.1.1:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-keras-preprocessing@1.1.2:1.1', type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-keras-preprocessing@1.1.1:1', type=('build', 'run'), when='@2.3.0:2.3')
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:2.2')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:2.0')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11.0:1.11')
     # https://github.com/tensorflow/tensorflow/issues/40688
-    depends_on('py-numpy@1.19.2:1.19',  type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-numpy@1.14.5:',      type=('build', 'run'), when='@2.7:')
+    depends_on('py-numpy@1.19.2:1.19',  type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-numpy@1.16.0:1.18',  type=('build', 'run'), when='@1.13.2,1.15:2.3')
     depends_on('py-numpy@1.14.5:1.18',  type=('build', 'run'), when='@1.12.1,1.14.0')
     depends_on('py-numpy@1.13.3:1.14.5', type=('build', 'run'), when='@1.10.0:1.10.1')
@@ -179,8 +199,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-numpy@1.10.1:',       type=('build', 'run'), when='@0.7.1:0.7 platform=darwin')
     depends_on('py-numpy@1.8.2:',        type=('build', 'run'), when='@0.6:0.10')
     depends_on('py-numpy@1.9.2:',        type=('build', 'run'), when='@0.5.0')
-    depends_on('py-opt-einsum@3.3.0:3.3', type=('build', 'run'), when='@2.4.0:')
-    depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:2.3')
+    depends_on('py-opt-einsum@3.3.0:3.3', type=('build', 'run'), when='@2.4.0:2.6')
+    depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:2.3,2.7:')
     depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.3:')
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'), when='@2.1:2.2')
     depends_on('py-protobuf@3.6.1:', type=('build', 'run'), when='@1.12:2.0')
@@ -193,30 +213,43 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0', type=('build', 'run'), when='@0.11.0')
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
-    depends_on('protobuf')
-    depends_on('flatbuffers+python@1.12.0:1.12', type=('build', 'run'), when='@2.4.0:')
+    depends_on('protobuf@:3.12', when='@:2.4')
+    depends_on('protobuf@:3.17')
+    depends_on('flatbuffers+python@1.12:2', type=('build', 'run'), when='@2.7:')
+    depends_on('flatbuffers+python@1.12', type=('build', 'run'), when='@2.4:2.6')
+
     # tensorboard
-    # tensorflow-estimator
-    depends_on('py-termcolor@1.1.0:1.1', type=('build', 'run'), when='@2.4.0:')
-    depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:2.3')
-    depends_on('py-wrapt@1.12.1:1.12', type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-tensorboard@2.5.0:2.5', type=('build', 'run'), when='@2.5')
+    depends_on('py-tensorboard@2.6.0:2.6', type=('build', 'run'), when='@2.6')
+    depends_on('py-tensorboard@2.7.0:2.7', type=('build', 'run'), when='@2.7')
+
+    depends_on('py-termcolor@1.1.0:1.1', type=('build', 'run'), when='@2.4:2.6')
+    depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:2.3,2.7:')
+    depends_on('py-wrapt@1.11.0:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-wrapt@1.12.1:1.12', type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-wrapt@1.11.1:', type=('build', 'run'), when='@1.12.1,1.14:2.3')
+    depends_on('py-wheel@0.32:0', type=('build', 'run'), when='@2.7:')
+    depends_on('py-wheel@0.35:0', type=('build', 'run'), when='@2.4:2.6 ^python@3:')
     depends_on('py-wheel', type=('build', 'run'), when='@0.6:2.3')
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6:2.3 ^python@3:')
-    depends_on('py-wheel@0.35:0', type=('build', 'run'), when='@2.4.0: ^python@3:')
     depends_on('py-mock@2.0.0:', type=('build', 'run'), when='@0.10: ^python@:2')
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
-    depends_on('py-six@1.15.0:1.15', type=('build', 'run'), when='@2.4.0:')
-    depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:2.3')
+    depends_on('py-six@1.15.0:1.15', type=('build', 'run'), when='@2.4:2.6')
+    depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:2.3,2.7:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
     depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2')
     depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
-    depends_on('py-typing-extensions@3.7.4:3.7', type=('build', 'run'), when='@2.4.0:')
+    depends_on('py-typing-extensions@3.6.6:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-typing-extensions@3.7.4:3.7', type=('build', 'run'), when='@2.4.0:2.6')
+
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:2.3')
-        depends_on('py-grpcio@1.32.0:1.32', type=('build', 'run'), when='@2.4:')
+        depends_on('py-grpcio@1.32.0:1.32', type=('build', 'run'), when='@2.4.0:2.4')
+        depends_on('py-grpcio@1.34.0:1.34', type=('build', 'run'), when='@2.5.0:2.5')
+        depends_on('py-grpcio@1.37.0:1', type=('build', 'run'), when='@2.6.0:2.6')
+        depends_on('py-grpcio@1.24.3:1', type=('build', 'run'), when='@2.7.0:')
 
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
@@ -224,13 +257,18 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cuda@:10.2', when='+cuda @:2.3')
-    depends_on('cuda@:11.1', when='+cuda @2.4.0:')
+    depends_on('cuda@:11.4', when='+cuda @2.4:')
     depends_on('cudnn', when='+cuda')
+    depends_on('cudnn@:6', when='@0.5:0.6 +cuda')
+    depends_on('cudnn@:7', when='@0.7:2.2 +cuda')
     # depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
     depends_on('mpi', when='+mpi')
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
+
+    # TODO: add support for tensorflow-io-gcs-filesystem
+    # depends_on('tensorflow-io-gcs-filesystem
 
     # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
@@ -300,6 +338,20 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.4.patch', when='@1.4:1.8')
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
+    # needed for protobuf-3.16 and greater
+    patch('example_parsing.patch', when='^protobuf@3.16:')
+
+    # allow linker to be found in PATH
+    # https://github.com/tensorflow/tensorflow/issues/39263
+    patch('null_linker_bin_path.patch', when='@2.5:')
+
+    # Reset import order to that of 2.4. Part of
+    # https://bugs.gentoo.org/800824#c3 From the patch:
+    # When tensorflow and python protobuf use the same instance of libprotobuf,
+    # pywrap_tensorflow must be imported before anything else that would import
+    # protobuf definitions.
+    patch('0008-Fix-protobuf-errors-when-using-system-protobuf.patch', when='@2.5:2.6')
+
     phases = ['configure', 'build', 'install']
 
     # https://www.tensorflow.org/install/source
@@ -310,7 +362,7 @@ class PyTensorflow(Package, CudaPackage):
         env.set('PYTHON_BIN_PATH', spec['python'].command.path)
 
         # Please input the desired Python library path to use
-        env.set('PYTHON_LIB_PATH', site_packages_dir)
+        env.set('PYTHON_LIB_PATH', python_platlib)
 
         # Ensure swig is in PATH or set SWIG_PATH
         env.set('SWIG_PATH', spec['swig'].prefix.bin.swig)
@@ -553,9 +605,10 @@ class PyTensorflow(Package, CudaPackage):
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
-        # NOTE: INCLUDEDIR is not just relevant to protobuf
-        # see third_party/systemlibs/jsoncpp.BUILD
-        env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
+        if spec.satisfies('@:2.3'):
+            # NOTE: INCLUDEDIR is not just relevant to protobuf
+            # see third_party/systemlibs/jsoncpp.BUILD
+            env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
     def patch(self):
         if self.spec.satisfies('@2.3.0:'):
@@ -563,19 +616,30 @@ class PyTensorflow(Package, CudaPackage):
                         'deps = protodeps,',
                         'tensorflow/core/platform/default/build_config.bzl',
                         string=True)
-        if self.spec.satisfies('@2.4.0:'):
+        if self.spec.satisfies('@2.4.0:2.5'):
             text = '''
 def protobuf_deps():
     pass
 '''
             with open('third_party/systemlibs/protobuf_deps.bzl', 'w') as f:
                 f.write(text)
+
+            if self.spec.satisfies('@2.5.0'):
+                file_to_patch = 'tensorflow/workspace2.bzl'
+            else:
+                file_to_patch = 'tensorflow/workspace.bzl'
+
             filter_file(
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
                 '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
-                'tensorflow/workspace.bzl',
+                file_to_patch,
                 string=True)
+
+        # Set protobuf path
+        filter_file(r'(^build:linux --define=PROTOBUF_INCLUDE_PATH=).*',
+                    r'\1{0}'.format(self.spec['protobuf'].prefix.include),
+                    '.bazelrc')
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
@@ -591,72 +655,114 @@ def protobuf_deps():
 
         # make sure xla is actually turned off
         if spec.satisfies('~xla'):
-            filter_file(r'--define with_xla_support=true',
-                        r'--define with_xla_support=false',
-                        '.tf_configure.bazelrc')
+            filter_file(
+                r'--define with_xla_support=true',
+                r'--define with_xla_support=false',
+                '.tf_configure.bazelrc')
 
         if spec.satisfies('@1.5.0: ~android'):
             # env variable is somehow ignored -> brute force
             # TODO: find a better solution
-            filter_file(r'if workspace_has_any_android_rule\(\)',
-                        r'if True',
-                        'configure.py')
+            filter_file(
+                r'if workspace_has_any_android_rule\(\)',
+                r'if True',
+                'configure.py')
 
         # version dependent fixes
         if spec.satisfies('@1.3.0:1.5.0'):
             # checksum for protobuf that bazel downloads (@github) changed
-            filter_file(r'sha256 = "6d43b9d223ce09e5d4ce8b0060cb8a7513577a35a64c7e3dad10f0703bf3ad93"',
-                        r'sha256 = "e5fdeee6b28cf6c38d61243adff06628baa434a22b5ebb7432d2a7fbabbdb13d"',
-                        'tensorflow/workspace.bzl')
+            filter_file(
+                r'sha256 = "6d43b9d223ce09e5d4ce8b0060cb8a7513577a35a64c7e3dad10f0703bf3ad93"',
+                r'sha256 = "e5fdeee6b28cf6c38d61243adff06628baa434a22b5ebb7432d2a7fbabbdb13d"',
+                'tensorflow/workspace.bzl')
+
             # starting with tensorflow 1.3, tensorboard becomes a dependency
-            # (...but is not really needed? Tensorboard should depend on
-            # tensorflow, not the other way!)
             # -> remove from list of required packages
-            filter_file(r"'tensorflow-tensorboard",
-                        r"#'tensorflow-tensorboard",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"'tensorflow-tensorboard",
+                r"#'tensorflow-tensorboard",
+                'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@1.5.0: ~gcp'):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
             # installing gcp support
             # https://github.com/tensorflow/tensorflow/issues/20677#issuecomment-404634519
-            filter_file(r'--define with_gcp_support=true',
-                        r'--define with_gcp_support=false',
-                        '.tf_configure.bazelrc')
-        if spec.satisfies('@1.6.0:'):
+            filter_file(
+                r'--define with_gcp_support=true',
+                r'--define with_gcp_support=false',
+                '.tf_configure.bazelrc')
+
+        if spec.satisfies('@1.6.0:2.1'):
             # tensorboard name changed
-            filter_file(r"'tensorboard >=",
-                        r"#'tensorboard >=",
-                        'tensorflow/tools/pip_package/setup.py')
+            # there are no corresponding versions of these in spack
+            filter_file(
+                r"(^\s*)'tensorboard (>=|~=)",
+                r"\1#'tensorboard \2",
+                'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@1.8.0: ~opencl'):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
             # generation somehow the wrong PYTHONPATH is used...
             # set --distinct_host_configuration=false as a workaround
             # https://github.com/tensorflow/tensorflow/issues/22395#issuecomment-431229451
-            filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
-                        'build --action_env TF_NEED_OPENCL_SYCL="0"\n'
-                        'build --distinct_host_configuration=false\n'
-                        'build --action_env PYTHONPATH="{0}"'.format(
-                            env['PYTHONPATH']),
-                        '.tf_configure.bazelrc')
-        if spec.satisfies('@1.13.1'):
+            with open('.tf_configure.bazelrc', mode='a') as f:
+                f.write('build --distinct_host_configuration=false\n')
+                f.write('build --action_env PYTHONPATH="{0}"\n'.format(
+                    env['PYTHONPATH']))
+
+        if spec.satisfies('@1.13.1:'):
             # tensorflow_estimator is an API for tensorflow
             # tensorflow-estimator imports tensorflow during build, so
             # tensorflow has to be set up first
-            filter_file(r"'tensorflow_estimator >=",
-                        r"#'tensorflow_estimator >=",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"(^\s*)'tensorflow_estimator (>=|~=)",
+                r"\1#'tensorflow_estimator \2",
+                'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.5'):
+            filter_file(
+                r"(^\s*)'keras-nightly (>=|~=)",
+                r"\1#'keras-nightly \2",
+                'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.6:'):
+            filter_file(
+                r"(^\s*)'keras (>=|~=)",
+                r"\1#'keras \2",
+                'tensorflow/tools/pip_package/setup.py')
+
+        if spec.satisfies('@2.6'):
+            filter_file(
+                r"(^\s*)'clang (>=|~=)",
+                r"\1#'clang \2",
+                'tensorflow/tools/pip_package/setup.py')
+
+        # TODO: add support for tensorflow-io-gcs-filesystem
+        if spec.satisfies('@2.7:'):
+            filter_file(
+                r"(^\s*)'tensorflow-io-gcs-filesystem (>=|~=)",
+                r"\1#'tensorflow-io-gcs-filesystem \2",
+                'tensorflow/tools/pip_package/setup.py')
+
         if spec.satisfies('@2.0.0:'):
             # now it depends on the nightly versions...
-            filter_file(r"'tf-estimator-nightly >=",
-                        r"#'tf-estimator-nightly >=",
-                        'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
-                        'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"'tb-nightly >=",
-                        r"#'tb-nightly >=",
-                        'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'tb-nightly (>=|~=)",
+                r"pass #REQUIRED_PACKAGES[i] = 'tb-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'tensorflow-estimator-2.0-preview",
+                r"pass #REQUIRED_PACKAGES[i] = 'tensorflow-estimator-2.0-preview",
+                'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'tf-estimator-nightly (>=|~=)",
+                r"pass #REQUIRED_PACKAGES[i] = 'tf-estimator-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
+            filter_file(
+                r"REQUIRED_PACKAGES\[i\] = 'keras-nightly (>=|~=)",
+                r"pass #REQUIRED_PACKAGES[i] = 'keras-nightly \1",
+                'tensorflow/tools/pip_package/setup.py')
 
         if spec.satisfies('@1.13.1 +nccl'):
             filter_file(
@@ -672,23 +778,23 @@ def protobuf_deps():
 
         # see tensorflow issue #31187 on github
         if spec.satisfies('@2.0.0:2.0'):
-            filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
-                        '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
-                        'tensorflow/lite/experimental/ruy/platform.h')
+            filter_file(
+                r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
+                '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
+                'tensorflow/lite/experimental/ruy/platform.h')
 
         if spec.satisfies('+cuda'):
             libs = spec['cuda'].libs.directories
             libs.extend(spec['cudnn'].libs.directories)
             if '+nccl' in spec:
                 libs.extend(spec['nccl'].libs.directories)
+
             if '+tensorrt' in spec:
                 libs.extend(spec['tensorrt'].libs.directories)
             slibs = ':'.join(libs)
 
-            filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
-                        'build --action_env TF_NEED_OPENCL_SYCL="0"\n'
-                        'build --action_env LD_LIBRARY_PATH="' + slibs + '"',
-                        '.tf_configure.bazelrc')
+            with open('.tf_configure.bazelrc', mode='a') as f:
+                f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
 
         filter_file('build:opt --copt=-march=native', '',
                     '.tf_configure.bazelrc')
@@ -787,9 +893,8 @@ def protobuf_deps():
         tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
-
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
         remove_linked_tree(tmp_path)
 
     def test(self):

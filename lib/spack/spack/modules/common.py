@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -191,7 +191,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get('autoload', 'none')
+    autoload_strategy = spec_configuration.get('autoload', 'direct')
     spec_configuration['autoload'] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites

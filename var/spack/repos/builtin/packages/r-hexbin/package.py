@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,14 +8,12 @@ from spack import *
 
 
 class RHexbin(RPackage):
-    """Hexagonal Binning Routines
+    """Hexagonal Binning Routines.
 
-    Binning and plotting functions for hexagonal bins. Now uses and relies
-    on grid graphics and formal (S4) classes and methods."""
+    Binning and plotting functions for hexagonal bins. Now uses and relies on
+    grid graphics and formal (S4) classes and methods."""
 
-    homepage = "https://github.com/edzer/hexbin"
-    url      = "https://cloud.r-project.org/src/contrib/hexbin_1.27.1.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/hexbin"
+    cran = "hexbin"
 
     version('1.28.2', sha256='6241f8d3a6c6be2c1c693c3ddb99554bc103e3c6cf602d0c2787c0ce6fd1702d')
     version('1.27.3', sha256='7ea422a76542c2fc2840df601af1b7803aa96df4fee6d51dec456ac36940c191')

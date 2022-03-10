@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class PyGrpcio(PythonPackage):
     homepage = "https://grpc.io/"
     pypi = "grpcio/grpcio-1.32.0.tar.gz"
 
+    version('1.43.0', sha256='735d9a437c262ab039d02defddcb9f8f545d7009ae61c0114e19dda3843febe5')
     version('1.42.0', sha256='4a8f2c7490fe3696e0cdd566e2f099fb91b51bc75446125175c55581c2f7bc11')
     version('1.39.0', sha256='57974361a459d6fe04c9ae0af1845974606612249f467bbd2062d963cb90f407')
     version('1.38.1', sha256='1f79d8a24261e3c12ec3a6c25945ff799ae09874fd24815bc17c2dc37715ef6c')
@@ -32,8 +33,9 @@ class PyGrpcio(PythonPackage):
     version('1.25.0', sha256='c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4')
     version('1.16.0', sha256='d99db0b39b490d2469a8ef74197d5f211fa740fc9581dccecbb76c56d080fce1')
 
-    depends_on('python@3.5:', when='@1.30:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('python@3.6:', when='@1.42:', type=('build', 'link', 'run'))
+    depends_on('python@3.5:', when='@1.30:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-six@1.5.2:', type=('build', 'run'))
     depends_on('py-futures@2.2.0:', when='^python@:3.1', type=('build', 'run'))
@@ -60,8 +62,7 @@ class PyGrpcio(PythonPackage):
             env.prepend_path('CPATH', query.headers.directories[0])
 
     def patch(self):
-        if self.spec.satisfies('%fj'):
-            filter_file("-std=gnu99", "", "setup.py")
+        filter_file("-std=gnu99", "", "setup.py")
 
         # use the spack packages
         filter_file(r'(\s+SSL_INCLUDE = ).*',

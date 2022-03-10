@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class PyYarl(PythonPackage):
     depends_on('py-idna@2.0:', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='@1.7.2: ^python@:3.7')
 
-    @run_before('build')
+    @run_before('install')
     def fix_cython(self):
         if self.spec.satisfies('@1.7.2:'):
             pyxfile = 'yarl/_quoting_c'

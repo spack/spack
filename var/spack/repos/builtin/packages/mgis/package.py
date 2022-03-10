@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,10 @@ class Mgis(CMakePackage):
     depends_on('tfel@rliv-3.3', when="@rliv-1.1")
     depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
-    depends_on('boost+python+numpy', when='+python')
+    depends_on('boost+python+numpy', when='+python',
+               type=('build', 'link', 'run'))
+    depends_on('py-numpy', when='+python',
+               type=('build', 'link', 'run'))
     extends('python', when='+python')
 
     def patch(self):

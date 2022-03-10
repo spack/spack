@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,7 +95,7 @@ class Adios2(CMakePackage):
     depends_on('libzmq', when='+dataman')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
 
     depends_on('c-blosc', when='@2.4: +blosc')

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU Diffutils is a package of several programs related to finding
     differences between files."""
 
+    tags = ['core-packages']
+
     executables = [r'^diff$']
 
     homepage = "https://www.gnu.org/software/diffutils/"
@@ -24,6 +26,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     patch('nvhpc.patch', when='@3.7 %nvhpc')
+
+    conflicts('%nvhpc', when='@:3.6,3.8:')
 
     depends_on('iconv')
 
