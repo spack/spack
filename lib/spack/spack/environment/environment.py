@@ -44,7 +44,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.filesystem_view import (
-    YamlFilesystemView,
+    SimpleFilesystemView,
     inverse_view_func_parser,
     view_func_parser,
 )
@@ -444,18 +444,16 @@ class ViewDescriptor(object):
                 rooted at that path. Default None. This should only be used to
                 regenerate the view, and cannot be used to access specs.
         """
-        root = self._current_root
-        if new:
-            root = new
+        root = new if new else self._current_root
         if not root:
             # This can only be hit if we write a future bug
             msg = ("Attempting to get nonexistent view from environment. "
                    "View root is at %s" % self.root)
             raise SpackEnvironmentViewError(msg)
-        return YamlFilesystemView(root, spack.store.layout,
-                                  ignore_conflicts=True,
-                                  projections=self.projections,
-                                  link=self.link_type)
+        return SimpleFilesystemView(root, spack.store.layout,
+                                    ignore_conflicts=True,
+                                    projections=self.projections,
+                                    link=self.link_type)
 
     def __contains__(self, spec):
         """Is the spec described by the view descriptor

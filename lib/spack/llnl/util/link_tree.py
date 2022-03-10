@@ -10,6 +10,7 @@ from __future__ import print_function
 import filecmp
 import os
 import shutil
+from collections import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
@@ -28,6 +29,246 @@ def remove_link(src, dest):
     # conflicting file
     if filecmp.cmp(src, dest, shallow=True):
         os.remove(dest)
+
+
+class MergeConflict:
+    """
+    The invariant here is that src_a and src_b are both mapped
+    to dst:
+
+        project(src_a) == project(src_b) == dst
+    """
+    def __init__(self, dst, src_a=None, src_b=None):
+        self.dst = dst
+        self.src_a = src_a
+        self.src_b = src_b
+
+
+class SourceMergeVisitor(object):
+    """
+    Visitor that produces actions:
+    - An ordered list of directories to create in dst
+    - A list of files to link in dst
+    - A list of merge conflicts in dst/
+    """
+    def __init__(self, ignore=None):
+        self.ignore = ignore if ignore is not None else lambda f: False
+
+        # When mapping <src root> to <dst root>/<projection>, we need
+        # to prepend the <projection> bit to the relative path in the
+        # destination dir.
+        self.projection = ''
+
+        # When a file blocks another file, the conflict can sometimes
+        # be resolved / ignored (e.g. <prefix>/LICENSE or
+        # or <site-packages>/<namespace>/__init__.py conflicts can be
+        # ignored).
+        self.file_conflicts = []
+
+        # When we have to create a dir where a file is, or a file
+        # where a dir is, we have fatal errors, listed here.
+        self.fatal_conflicts = []
+
+        # What directories we have to make; this is an ordered set,
+        # so that we have a fast lookup and can run mkdir in order.
+        self.directories = OrderedDict()
+
+        # Files to link. Maps dst_rel to (src_rel, src_root)
+        self.files = OrderedDict()
+
+    def before_visit_dir(self, root, rel_path, depth):
+        """
+        Register a directory if dst / rel_path is not blocked by a file or ignored.
+        """
+        proj_rel_path = os.path.join(self.projection, rel_path)
+
+        if self.ignore(rel_path):
+            # Don't recurse when dir is ignored.
+            return False
+        elif proj_rel_path in self.files:
+            # Can't create a dir where a file is.
+            src_a_root, src_a_relpath = self.files[proj_rel_path]
+            self.fatal_conflicts.append(MergeConflict(
+                dst=proj_rel_path,
+                src_a=os.path.join(src_a_root, src_a_relpath),
+                src_b=os.path.join(root, rel_path)))
+            return False
+        elif proj_rel_path in self.directories:
+            # No new directory, carry on.
+            return True
+        else:
+            # Register new directory.
+            self.directories[proj_rel_path] = (root, rel_path)
+            return True
+
+    def after_visit_dir(self, root, rel_path, depth):
+        pass
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        """
+        Replace symlinked dirs with actual directories when possible in low depths,
+        otherwise handle it as a file (i.e. we link to the symlink).
+
+        Transforming symlinks into dirs makes it more likely we can merge directories,
+        e.g. when <prefix>/lib -> <prefix>/subdir/lib.
+
+        We only do this when the symlink is pointing into a subdirectory from the
+        symlink's directory, to avoid potential infinite recursion; and only at a
+        constant level of nesting, to avoid potential exponential blowups in file
+        duplication.
+        """
+        if self.ignore(rel_path):
+            return False
+
+        # Only follow symlinked dirs in <prefix>/**/**/*
+        if depth > 1:
+            handle_as_dir = False
+        else:
+            # Only follow symlinked dirs when pointing deeper
+            src = os.path.join(root, rel_path)
+            real_parent = os.path.realpath(os.path.dirname(src))
+            real_child = os.path.realpath(src)
+            handle_as_dir = real_child.startswith(real_parent)
+
+        if handle_as_dir:
+            return self.before_visit_dir(root, rel_path, depth)
+
+        self.visit_file(root, rel_path, depth)
+        return False
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        pass
+
+    def visit_file(self, root, rel_path, depth):
+        proj_rel_path = os.path.join(self.projection, rel_path)
+
+        if self.ignore(rel_path):
+            pass
+        elif proj_rel_path in self.directories:
+            # Can't create a file where a dir is; fatal error
+            src_a_root, src_a_relpath = self.directories[proj_rel_path]
+            self.fatal_conflicts.append(MergeConflict(
+                dst=proj_rel_path,
+                src_a=os.path.join(src_a_root, src_a_relpath),
+                src_b=os.path.join(root, rel_path)))
+        elif proj_rel_path in self.files:
+            # In some cases we can resolve file-file conflicts
+            src_a_root, src_a_relpath = self.files[proj_rel_path]
+            self.file_conflicts.append(MergeConflict(
+                dst=proj_rel_path,
+                src_a=os.path.join(src_a_root, src_a_relpath),
+                src_b=os.path.join(root, rel_path)))
+        else:
+            # Otherwise register this file to be linked.
+            self.files[proj_rel_path] = (root, rel_path)
+
+    def set_projection(self, projection):
+        self.projection = os.path.normpath(projection)
+
+        # Todo, is this how to check in general for empty projection?
+        if self.projection == '.':
+            self.projection = ''
+            return
+
+        # If there is a projection, we'll also create the directories
+        # it consists of, and check whether that's causing conflicts.
+        path = ''
+        for part in self.projection.split(os.sep):
+            path = os.path.join(path, part)
+            if path not in self.files:
+                self.directories[path] = ('<projection>', path)
+            else:
+                # Can't create a dir where a file is.
+                src_a_root, src_a_relpath = self.files[path]
+                self.fatal_conflicts.append(MergeConflict(
+                    dst=path,
+                    src_a=os.path.join(src_a_root, src_a_relpath),
+                    src_b=os.path.join('<projection>', path)))
+
+
+class DestinationMergeVisitor(object):
+    """DestinatinoMergeVisitor takes a SourceMergeVisitor
+    and:
+
+    a. registers additional conflicts when merging
+       to the destination prefix
+    b. removes redundant mkdir operations when
+       directories already exist in the destination
+       prefix.
+
+    This also makes sure that symlinked directories
+    in the target prefix will never be merged with
+    directories in the sources directories.
+    """
+    def __init__(self, source_merge_visitor):
+        self.src = source_merge_visitor
+
+    def before_visit_dir(self, root, rel_path, depth):
+        # If destination dir is a file in a src dir, add a conflict,
+        # and don't traverse deeper
+        if rel_path in self.src.files:
+            src_a_root, src_a_relpath = self.src.files[rel_path]
+            self.src.fatal_conflicts.append(MergeConflict(
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path)))
+            return False
+
+        # If destination dir was also a src dir, remove the mkdir
+        # action, and traverse deeper.
+        if rel_path in self.src.directories:
+            del self.src.directories[rel_path]
+            return True
+
+        # If the destination dir does not appear in the src dir,
+        # don't descend into it.
+        return False
+
+    def after_visit_dir(self, root, rel_path, depth):
+        pass
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        """
+        Symlinked directories in the destination prefix should
+        be seen as files; we should not accidentally merge
+        source dir with a symlinked dest dir.
+        """
+        # Always conflict
+        if rel_path in self.src.directories:
+            src_a_root, src_a_relpath = self.src.directories[rel_path]
+            self.src.fatal_conflicts.append(MergeConflict(
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path)))
+
+        if rel_path in self.src.files:
+            src_a_root, src_a_relpath = self.src.files[rel_path]
+            self.src.fatal_conflicts.append(MergeConflict(
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path)))
+
+        # Never descend into symlinked target dirs.
+        return False
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        pass
+
+    def visit_file(self, root, rel_path, depth):
+        # Can't merge a file if target already exists
+        if rel_path in self.src.directories:
+            src_a_root, src_a_relpath = self.src.directories[rel_path]
+            self.src.fatal_conflicts.append(MergeConflict(
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path)))
+
+        elif rel_path in self.src.files:
+            src_a_root, src_a_relpath = self.src.files[rel_path]
+            self.src.fatal_conflicts.append(MergeConflict(
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path)))
 
 
 class LinkTree(object):
@@ -138,7 +379,7 @@ class LinkTree(object):
         conflict = self.find_conflict(
             dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts)
         if conflict:
-            raise MergeConflictError(conflict)
+            raise OldMergeConflictError(conflict)
 
         self.merge_directories(dest_root, ignore)
         existing = []
@@ -170,7 +411,24 @@ class LinkTree(object):
 
 
 class MergeConflictError(Exception):
+    pass
 
+
+class OldMergeConflictError(MergeConflictError):
     def __init__(self, path):
         super(MergeConflictError, self).__init__(
             "Package merge blocked by file: %s" % path)
+
+
+class MergeConflictSummary(MergeConflictError):
+    def __init__(self, conflicts):
+        """
+        A human-readable summary of file system view merge conflicts (showing only the
+        first 3 issues.)
+        """
+        msg = "{0} fatal error(s) when merging prefixes:\n".format(len(conflicts))
+        # show the first 3 merge conflicts.
+        for conflict in conflicts[:3]:
+            msg += "    `{0}` and `{1}` both project to `{2}`".format(
+                conflict.src_a, conflict.src_b, conflict.dst)
+        super(MergeConflictSummary, self).__init__(msg)
