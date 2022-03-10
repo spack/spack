@@ -50,7 +50,7 @@ def module(*args, **kwargs):
         # Update os.environ with new dict
         os.environ.clear()
         if sys.version_info >= (3, 2):
-            os.environb.update(environ)
+            os.environb.update(environ)  # novermin
         else:
             os.environ.update(environ)
 
