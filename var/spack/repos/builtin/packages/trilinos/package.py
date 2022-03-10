@@ -537,7 +537,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_trilinos_enable('Amesos'),
             define_trilinos_enable('Amesos2'),
             define_trilinos_enable('Anasazi'),
-            define_trilinos_enable('AztecOO', 'aztec'),
             define_trilinos_enable('Belos'),
             define_trilinos_enable('Epetra'),
             define_trilinos_enable('EpetraExt'),
@@ -589,6 +588,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             define_from_variant('Amesos2_ENABLE_Basker', 'basker'),
             define_from_variant('Amesos2_ENABLE_LAPACK', 'amesos2'),
         ])
+
+        if '+aztec' in spec and '+triutils' in spec:
+            options.extend([
+                define_trilinos_enable('AztecOO', 'aztec'),
+            ])
 
         if '+dtk' in spec:
             options.extend([
