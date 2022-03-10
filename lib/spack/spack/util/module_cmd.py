@@ -39,7 +39,9 @@ def module(*args):
                                          executable="/bin/bash")
 
             env_dict = {}
-            for entry in module_p.communicate()[0].strip(b'\0').split(b'\0'):
+            output = module_p.communicate()[0]
+            print(output)
+            for entry in output.strip(b'\0').split(b'\0'):
                 key, value = entry.split(b'=', 1)
                 # We'd really like to just pass byte strings to os.environ,
                 # but Python 3 does not allow that :( In Python 2, strings
