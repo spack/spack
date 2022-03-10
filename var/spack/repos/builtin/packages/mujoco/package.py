@@ -45,7 +45,7 @@ class Mujoco(Package):
             url = "https://github.com/deepmind/mujoco/releases/download/{0}/mujoco-{0}-{1}-x86_64.tar.gz"
             url_version = version
 
-        return url.format(version, system_map[platform.system()])
+        return url.format(url_version, system_map[platform.system()])
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)
