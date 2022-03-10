@@ -32,7 +32,10 @@ class Freefem(AutotoolsPackage):
     variant('petsc', default=False,
             description='Compile with PETSc/SLEPc')
 
-    depends_on('perl-digest-md5') # TODO: /usr/bin/perl: symbol lookup error: /opt/spack/opt/spack/linux-centos7-x86_64_v3/gcc-4.8.5/perl-digest-md5-2.55-6wubccl3jfe3bx7ufpiagioptxfxuikp/lib/perl5/x86_64-linux-thread-multi/auto/Digest/MD5/MD5.so: undefined symbol: Perl_xs_handshake
+    # In CentOS: sudo yum -y install perl-Digest-MD5
+    # In Ubuntu: sudo apt-get install -y libdigest-perl-md5-perl
+    # In Arch:   sudo pacman -S extra/perl-crypt-passwdmd5
+    #depends_on('perl-digest-md5') # TODO: /usr/bin/perl: symbol lookup error: /opt/spack/opt/spack/linux-centos7-x86_64_v3/gcc-4.8.5/perl-digest-md5-2.55-6wubccl3jfe3bx7ufpiagioptxfxuikp/lib/perl5/x86_64-linux-thread-multi/auto/Digest/MD5/MD5.so: undefined symbol: Perl_xs_handshake
     depends_on('mpi', when='+mpi')
     depends_on('slepc', when='+petsc')
 
