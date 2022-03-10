@@ -685,9 +685,9 @@ class IntelPackage(PackageBase):
             # packages.yaml), specificially to provide the 'iomp5' libs.
 
         elif '%gcc' in self.spec:
-            gcc = Executable(self.compiler.cc)
-            omp_lib_path = gcc(
-                '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
+            with self.compiler.compiler_environment():
+                omp_lib_path = Executable(self.compiler.cc)(
+                    '--print-file-name', 'libgomp.%s' % dso_suffix, output=str)
             omp_libs = LibraryList(omp_lib_path.strip())
 
         if len(omp_libs) < 1:
@@ -728,8 +728,9 @@ class IntelPackage(PackageBase):
 
         # TODO: clang(?)
         gcc = self._gcc_executable     # must be gcc, not self.compiler.cc
-        cxx_lib_path = gcc(
-            '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
+        with self.compiler.compiler_environment():
+            cxx_lib_path = gcc(
+                '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
         libs = tbb_lib + LibraryList(cxx_lib_path.rstrip())
         debug_print(libs)
@@ -739,8 +740,9 @@ class IntelPackage(PackageBase):
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
         gcc = self._gcc_executable
-        matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
-                            gcc('--version', output=str), re.I | re.M)
+        with self.compiler.compiler_environment():
+            matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
+                                gcc('--version', output=str), re.I | re.M)
         abi = ''
         if sys.platform == 'darwin':
             pass
