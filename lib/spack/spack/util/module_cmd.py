@@ -22,15 +22,15 @@ import spack
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
 py_cmd = 'import os;import json;print(json.dumps(dict(os.environ)))'
-_cmd_template = "'module ' + ' '.join(args) + ' 2>&1'"
 
 
-def module(*args):
-    module_cmd = eval(_cmd_template)  # So we can monkeypatch for testing
+def module(*args, **kwargs):
+    module_cmd = kwargs.get('module_template', 'module ' + ' '.join(args))
+
     if args[0] in module_change_commands:
         use_env_null = platform.system().lower() == 'linux'
         if use_env_null:
-            module_cmd += ' >/dev/null && /usr/bin/env -0'
+            module_cmd += ' >/dev/null 2>&1 && /usr/bin/env -0'
 
             module_p  = subprocess.Popen(module_cmd,
                                          stdout=subprocess.PIPE,
@@ -61,7 +61,7 @@ def module(*args):
             os.environ['SPACK_LD_LIBRARY_PATH'] = spack.main.spack_ld_library_path
 
             # suppress output from module function
-            module_cmd += ' >/dev/null;'
+            module_cmd += ' >/dev/null 2>&1;'
 
             # Capture the new LD_LIBRARY_PATH after `module` was run
             module_cmd += 'export SPACK_NEW_LD_LIBRARY_PATH="$LD_LIBRARY_PATH";'
