@@ -967,3 +967,12 @@ def nullcontext(*args, **kwargs):
 
 class UnhashableArguments(TypeError):
     """Raise when an @memoized function receives unhashable arg or kwarg values."""
+
+
+def enum(**kwargs):
+    """Return an enum-like class.
+
+    Args:
+        **kwargs: explicit dictionary of enums
+    """
+    return type('Enum', (object,), kwargs)
