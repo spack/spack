@@ -18,6 +18,9 @@ class Patchelf(AutotoolsPackage):
 
     maintainers = ['haampie']
 
+    version('0.14.5', sha256='113ada3f1ace08f0a7224aa8500f1fa6b08320d8f7df05ff58585286ec5faa6f')
+    version('0.14.3', sha256='8fabf4210499744ced101612cd5c9fd12b94af67a16297cb5d3ff682c007ffdb')
+    version('0.14.2', sha256='3dbced63d02076221397d3fa45ef6cf6776e7c6d45ea5c4e86c91604dfc87a80')
     version('0.14.1', sha256='7a1506caf6873a2b60e7bebc35e1671fa232ee075642b074106b0d0636417466')
     version('0.14',   sha256='a31f2bff841dffa896317d3837bc2877c1f79da0744d88e459662d8e7fe7897c')
     version('0.13.1', sha256='08c0237e89be74d61ddf8f6ff218439cdd62af572d568fb38913b53e222831de')
