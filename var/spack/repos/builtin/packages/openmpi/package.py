@@ -233,7 +233,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('pmix', default=False, description='Enable PMIx support')
+    variant('pmix', default=False, when='@:3', description='Enable PMIx support')
     variant('wrapper-rpath', default=True,
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
@@ -318,6 +318,10 @@ class Openmpi(AutotoolsPackage):
     depends_on('slurm', when='schedulers=slurm')
     depends_on('pmix', when='+pmix')
     depends_on('libevent', when='+pmix')
+
+    # PMIx is required for OpenMPI 4; omitting will use an internal copy
+    # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
+    depends_on('pmix', when='@4:')
 
     depends_on('openssh', type='run')
 
@@ -650,8 +654,6 @@ class Openmpi(AutotoolsPackage):
                     spec['slurm'].prefix))
             else:
                 config_args.extend(self.with_or_without('pmi'))
-            if spec.satisfies('+pmix'):
-                config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
@@ -706,8 +708,9 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
-        # external libevent
-        if spec.satisfies('@4.0.0:') or spec.satisfies('+pmix'):
+        # external libevent/pmix
+        if spec.satisfies('@4:') or spec.satisfies('+pmix'):
+            config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
         if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
