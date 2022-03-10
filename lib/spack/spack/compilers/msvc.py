@@ -19,6 +19,7 @@ avail_fc_version = set()  # type: Set[str]
 fc_path = dict()  # type: Dict[str, str]
 
 fortran_mapping = {
+    '2022.0.3': '19.29.30141',
     '2021.3.0': '19.29.30133',
     '2021.2.1': '19.28.29913',
     '2021.2.0': '19.28.29334',
