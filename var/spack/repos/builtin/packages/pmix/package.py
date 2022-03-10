@@ -64,8 +64,8 @@ class Pmix(AutotoolsPackage):
             default=False,
             description='Build manpages')
 
-    depends_on('libevent@2.0.20:2.0.22,2.1.8')
-    depends_on('hwloc@1.11.0:1.11,2.0.1:', when='@3.0.0:')
+    depends_on('libevent@2.0.20:')
+    depends_on('hwloc@1.11:1,2:', when='@3:')
     depends_on("m4", type=("build"), when="@master")
     depends_on("autoconf", type=("build"), when="@master")
     depends_on("automake", type=("build"), when="@master")
@@ -75,7 +75,7 @@ class Pmix(AutotoolsPackage):
     depends_on('jansson@2.11:', when="+restful")
     depends_on('pandoc', type='build', when='+docs')
 
-    conflicts('@:3.9.9', when='+restful')
+    conflicts('@:3', when='+restful')
 
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
