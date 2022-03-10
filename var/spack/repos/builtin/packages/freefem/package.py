@@ -46,7 +46,9 @@ class Freefem(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        options = ['--disable-mkl',
+        options = ['--disable-mkl',                   
+                   '--enable-download',
+                   '--enable-optim',
                    'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
                    'FFLAGS=%s' % ' '.join(spec.compiler_flags['fflags']),
                    'CXXFLAGS=%s' % ' '.join(spec.compiler_flags['cxxflags'])]
