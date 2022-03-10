@@ -30,7 +30,7 @@ def module(*args, **kwargs):
     if args[0] in module_change_commands:
         use_env_null = platform.system().lower() == 'linux'
         if use_env_null:
-            module_cmd += ' >/dev/null 2>&1 && /usr/bin/env -0'
+            module_cmd += ' >/dev/null 2>&1; /usr/bin/env -0'
 
             module_p  = subprocess.Popen(module_cmd,
                                          stdout=subprocess.PIPE,
@@ -40,15 +40,24 @@ def module(*args, **kwargs):
 
             env_dict = {}
             output = module_p.communicate()[0]
-            print(output)
+
+            # Loop over each environment variable key=value byte string
             for entry in output.strip(b'\0').split(b'\0'):
-                key, value = entry.split(b'=', 1)
+                # Split variable name and value
+                parts = entry.split(b'=', 1)
+                if len(parts) != 2:
+                    continue
+
                 # We'd really like to just pass byte strings to os.environ,
                 # but Python 3 does not allow that :( In Python 2, strings
                 # are byte strings, so we can just pass the raw data.
                 if sys.version_info >= (3, 0):
-                    key = key.decode()
-                    value = value.decode()
+                    key = parts[0].decode()
+                    value = parts[1].decode()
+                else:
+                    key = parts[0]
+                    value = parts[1]
+
                 env_dict[key] = value
         else:
             # Do the module manipulation, then output the environment in JSON
