@@ -29,11 +29,6 @@ class Amdscalapack(ScalapackBase):
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 
     variant(
-        'build_type',
-        default='Release',
-        description='CMake build type',
-        values=('Release', 'RelWithDebInfo'))
-    variant(
         'ilp64',
         default=False,
         description='Build with ILP64 support')

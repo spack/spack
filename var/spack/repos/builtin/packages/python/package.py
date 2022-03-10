@@ -253,6 +253,9 @@ class Python(AutotoolsPackage):
 
     conflicts('%nvhpc')
 
+    conflicts('@:2.7', when='platform=darwin target=aarch64:',
+              msg='Python 2.7 is too old for Apple Silicon')
+
     # Used to cache various attributes that are expensive to compute
     _config_vars = {}
 

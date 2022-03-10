@@ -7,15 +7,13 @@ from spack import *
 
 
 class RRcppprogress(RPackage):
-    """An Interruptible Progress Bar with OpenMP Support for C++ in R Packages
+    """An Interruptible Progress Bar with OpenMP Support for C++ in R Packages.
 
     Allows to display a progress bar in the R console for long running
-    computations taking place in c++ code, and support for interrupting
-    those computations even in multithreaded code, typically using OpenMP."""
+    computations taking place in c++ code, and support for interrupting those
+    computations even in multithreaded code, typically using OpenMP."""
 
-    homepage = "https://cloud.r-project.org/package=RcppProgress"
-    url      = "https://cloud.r-project.org/src/contrib/RcppProgress_0.3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppProgress"
+    cran = "RcppProgress"
 
     version('0.4.2', sha256='b1624b21b7aeb1dafb30f092b2a4bef4c3504efd2d6b00b2cdf55dc9df194b48')
     version('0.4.1', sha256='11764105922f763d4c75c502599ec7dcc2fd629a029964caf53f98b41d0c607a')
@@ -25,4 +23,4 @@ class RRcppprogress(RPackage):
     version('0.2',   sha256='ca32624739058f1b5aab18b09dc4c613ecfd18a3ace39f3b97790232db829481')
     version('0.1',   sha256='04f71d3391b7dfab997afadf7ffdd87b88037f7fbc751bea544ad2a65e2872bf')
 
-    depends_on('r-rcpp@0.9.4:', when='@:0.4', type=('build', 'run'))
+    depends_on('r-rcpp@0.9.4:', type=('build', 'run'), when='@:0.4')

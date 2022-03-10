@@ -7,18 +7,17 @@ from spack import *
 
 
 class RMultcomp(RPackage):
-    """Simultaneous Inference in General Parametric Models
+    """Simultaneous Inference in General Parametric Models.
 
-    Simultaneous tests and confidence intervals for general linear
-    hypotheses in parametric models, including linear, generalized linear,
-    linear mixed effects, and survival models. The package includes demos
-    reproducing analyzes presented in the book "Multiple Comparisons Using R"
-    (Bretz, Hothorn, Westfall, 2010, CRC Press)."""
+    Simultaneous tests and confidence intervals for general linear hypotheses
+    in parametric models, including linear, generalized linear, linear mixed
+    effects, and survival models. The package includes demos reproducing
+    analyzes presented in the book "Multiple Comparisons Using R" (Bretz,
+    Hothorn, Westfall, 2010, CRC Press)."""
 
-    homepage = "https://multcomp.r-forge.r-project.org/"
-    url      = "https://cloud.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/multcomp"
+    cran = "multcomp"
 
+    version('1.4-18', sha256='107a5e65cfff158b271d7386240dc8672d8cf45313f016e0ed83767faf7c2806')
     version('1.4-15', sha256='9927607efb3eb84ac3d25d82daf2faef6a69e05a334b163ce43fd31c14b19bce')
     version('1.4-10', sha256='29bcc635c0262e304551b139cd9ee655ab25a908d9693e1cacabfc2a936df5cf')
     version('1.4-8', sha256='a20876619312310e9523d67e9090af501383ce49dc6113c6b4ca30f9c943a73a')

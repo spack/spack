@@ -42,7 +42,8 @@ _compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
     'clang': 'llvm+clang',
-    'oneapi': 'intel-oneapi-compilers'
+    'oneapi': 'intel-oneapi-compilers',
+    'rocmcc': 'llvm-amdgpu'
 }
 
 
