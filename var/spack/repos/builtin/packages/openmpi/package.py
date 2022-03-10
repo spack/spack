@@ -233,7 +233,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('pmix', default=False, when='@:3', description='Enable PMIx support')
+    variant('pmix', default=False, when='@2:3', description='Enable PMIx support')
     variant('wrapper-rpath', default=True,
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
@@ -321,7 +321,7 @@ class Openmpi(AutotoolsPackage):
 
     # PMIx is required for OpenMPI 4; omitting will use an internal copy
     # Vendored version: depends_on('pmix@3.2.3', when='@4.1.2')
-    depends_on('pmix', when='@4:')
+    depends_on('pmix@3.2:', when='@4:')
 
     depends_on('openssh', type='run')
 
@@ -329,8 +329,6 @@ class Openmpi(AutotoolsPackage):
     conflicts('+cuda', when='@:1.6')
     # PMI support was added in 1.5.5
     conflicts('+pmi', when='@:1.5.4')
-    # PMIx support was added in 2.0.0
-    conflicts('+pmix', when='@:1')
     # RPATH support in the wrappers was added in 1.7.4
     conflicts('+wrapper-rpath', when='@:1.7.3')
 
