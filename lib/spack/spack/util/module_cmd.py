@@ -19,7 +19,8 @@ import llnl.util.tty as tty
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
 
 # This awk script is a posix alternative to `env -0`
-awk_cmd = r"""awk 'BEGIN{for(name in ENVIRON) printf "%s", name"="ENVIRON[name]"\0"}'"""
+awk_cmd = (r"""awk 'BEGIN{for(name in ENVIRON)"""
+           r"""printf("%s=%s%c", name, ENVIRON[name], 0)}'""")
 
 
 def module(*args, **kwargs):
