@@ -52,8 +52,6 @@ class Mujoco(Package):
 
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', prefix.include)
-        if self.spec.version == Version('2.1.0'):
-            # In 2.1.0 the libraries are in the bin-folder
-            env.prepend_path('LD_LIBRARY_PATH', prefix.bin)
-            if platform.system() == 'Darwin':
-                env.prepend_path('DYLD_LIBRARY_PATH', prefix.bin)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.bin)
+        if platform.system() == 'Darwin':
+            env.prepend_path('DYLD_LIBRARY_PATH', prefix.bin)
