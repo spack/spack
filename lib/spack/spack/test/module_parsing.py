@@ -8,6 +8,7 @@ import os
 import pytest
 
 import spack
+import spack.util.module_cmd
 from spack.util.module_cmd import (
     get_path_args_from_module_line,
     get_path_from_module_contents,
@@ -21,30 +22,26 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv LDFLAGS -L/path/to/lib',
                      'prepend-path PATH /path/to/bin']
 
-_test_template = "'. %s 2>&1' % args[1]"
 
-
-def test_module_function_change_env(tmpdir, working_env, monkeypatch):
-    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
+def test_module_function_change_env(tmpdir, working_env):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
 
     os.environ['NOT_AFFECTED'] = "NOT_AFFECTED"
-    module('load', src_file)
+    module('load', src_file, module_template='. {0} 2>&1'.format(src_file))
 
     assert os.environ['TEST_MODULE_ENV_VAR'] == 'TEST_SUCCESS'
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
 
 
-def test_module_function_no_change(tmpdir, monkeypatch):
-    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
+def test_module_function_no_change(tmpdir):
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('echo TEST_MODULE_FUNCTION_PRINT')
 
     old_env = os.environ.copy()
-    text = module('show', src_file)
+    text = module('show', src_file, module_template='. {0} 2>&1'.format(src_file))
 
     assert text == 'TEST_MODULE_FUNCTION_PRINT\n'
     assert os.environ == old_env
