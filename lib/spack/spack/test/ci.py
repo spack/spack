@@ -44,7 +44,7 @@ def tmp_scope():
 def test_urlencode_string():
     s = 'Spack Test Project'
 
-    s_enc = ci.url_encode_string(s)
+    s_enc = ci._url_encode_string(s)
 
     assert(s_enc == 'Spack+Test+Project')
 
