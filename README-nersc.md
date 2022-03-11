@@ -8,8 +8,8 @@ This repo includes a patch to support having a central Spack instance, this is i
 upstream develop, use:
 
 ```
-patch --dry-run -t -c -p1 < nersc-patch || echo "error!"
-patch -t -c -p1 < nersc-patch || echo "error!"
+patch --dry-run -t -p1 < nersc-patch || echo "error!"
+patch -t -p1 < nersc-patch || echo "error!"
 ```
 
 The workflow for package development at NERSC is:

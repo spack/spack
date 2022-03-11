@@ -300,11 +300,15 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    if isinstance(group, six.string_types):
-        gid = grp.getgrnam(group).gr_gid
-    else:
-        gid = group
-    os.chown(path, -1, gid)
+    # sleak: setting the group according to the gid of the package fails
+    #        when the package is provided by a different user, such as
+    #        when a central, shared Spack instance is used. So don't do it.
+    return
+    #if isinstance(group, six.string_types):
+    #    gid = grp.getgrnam(group).gr_gid
+    #else:
+    #    gid = group
+    #os.chown(path, -1, gid)
 
 
 def chmod_x(entry, perms):
