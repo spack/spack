@@ -59,17 +59,10 @@ class CrayMpich(Package):
                 return os.path.dirname(os.path.normpath(libdir))
 
     def setup_run_environment(self, env):
-        if(self.spec.satisfies('@:8.1.6')):
-            env.set('MPICC', spack_cc)
-            env.set('MPICXX', spack_cxx)
-            env.set('MPIF77', spack_fc)
-            env.set('MPIF90', spack_fc)
-        else:
-            # cray-mpich 8.1.7: features MPI compiler wrappers
-            env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
-            env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
-            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        env.set('MPICC', spack_cc)
+        env.set('MPICXX', spack_cxx)
+        env.set('MPIF77', spack_fc)
+        env.set('MPIF90', spack_fc)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
@@ -81,17 +74,10 @@ class CrayMpich(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
-        if(spec.satisfies('@:8.1.6')):
-            spec.mpicc = spack_cc
-            spec.mpicxx = spack_cxx
-            spec.mpifc = spack_fc
-            spec.mpif77 = spack_f77
-        else:
-            # cray-mpich 8.1.7: features MPI compiler wrappers
-            spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
-            spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
-            spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
-            spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        spec.mpicc = spack_cc
+        spec.mpicxx = spack_cxx
+        spec.mpifc = spack_fc
+        spec.mpif77 = spack_f77
 
     def install(self, spec, prefix):
         raise InstallError(
