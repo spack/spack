@@ -18,6 +18,7 @@ The workflow for package development at NERSC is:
 - checkout a new branch from `nersc-develop`
 - edit and test the package
 - commit and push the changes, and make an MR to `nersc-develop`
-- once merged, make another MR from `nersc-deveop` to the upstream Spack `develop`.
-  This MR should have only the changes from your branch 
+- once merged, make another MR from `nersc-develop` to the upstream Spack `develop`.
+  This MR should have only the changes from your branch, so you might need to 
+  cherry-pick 
 
