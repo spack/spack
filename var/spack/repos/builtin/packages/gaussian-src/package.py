@@ -36,6 +36,7 @@ class GaussianSrc(Package):
     patch('16-C.01-replace-deprecated-pgf77-with-pgfortran.patch', when='@16-C.01')
     patch('16-C.01-fix-building-c-code-with-pgcc.patch', when='@16-C.01')
     patch('16-C.01-fix-shebangs.patch', when='@16-C.01')
+    patch('16-C.01-fix-gau-machine.patch', when='@16-C.01')
 
     @property
     def g_name(self):
@@ -51,7 +52,7 @@ class GaussianSrc(Package):
     def install(self, spec, prefix):
         # Spacks strips the single dir inside the tarball, but Gaussian
         # needs it -> move them back
-        files = os.listdir()
+        files = os.listdir('.')
         mkdirp(self.g_name)
         for f in files:
             os.rename(f, join_path(self.g_name, f))
@@ -75,6 +76,7 @@ class GaussianSrc(Package):
 
             exes = [
                 self.g_name,
+                'gau-machine',
                 'gauopt',
                 'gauoptl',
                 'ghelp',
