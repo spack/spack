@@ -14,7 +14,7 @@ class PyPytestParallel(PythonPackage):
 
     version('0.1.1', sha256='9aac3fc199a168c0a8559b60249d9eb254de7af58c12cee0310b54d4affdbfab')
 
-    depends_on('python@3.6:',    type=('build', 'run'))
+    depends_on('python@3.7:',    type=('build', 'run'))
     depends_on('py-setuptools',  type='build')
     depends_on('py-pytest@3.0:', type=('build', 'run'))
     depends_on('py-tblib',       type=('build', 'run'))
