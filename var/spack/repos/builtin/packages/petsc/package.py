@@ -415,6 +415,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
+        direct_dependencies = [x.name for x in spec.dependencies()]
         for library in (
                 ('cuda', 'cuda', False, False),
                 ('hip', 'hip', True, False),
@@ -465,7 +466,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 useinc = True
                 uselib = True
 
-            library_requested = spacklibname.split(':')[0] in spec.dependencies_dict()
+            library_requested = spacklibname.split(':')[0] in direct_dependencies
             options.append(
                 '--with-{library}={value}'.format(
                     library=petsclibname,
