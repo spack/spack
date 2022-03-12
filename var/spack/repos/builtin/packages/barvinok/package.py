@@ -9,7 +9,7 @@ from spack import *
 class Barvinok(AutotoolsPackage):
     """barvinok is a library for counting the number of integer points in parametric and
     non-parametric polytopes."""
-    
+
     maintainers = ['vmiheer']
     homepage = "https://barvinok.gforge.inria.fr"
     url      = "http://barvinok.gforge.inria.fr/barvinok-0.41.5.tar.bz2"
