@@ -1002,15 +1002,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, 'url', getattr(self, 'urls', [None])[0])
+            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
+
                 # if there are NO URLs to go by, then we can't do anything
                 if not default_url:
                     raise NoURLError(self.__class__)
-            urls.append(default_url)
+            urls.append(
+                spack.url.substitute_version(
+                    default_url, self.url_version(version)
+                )
+            )
 
         return urls
 
