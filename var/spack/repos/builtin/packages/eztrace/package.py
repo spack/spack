@@ -34,15 +34,13 @@ class Eztrace(Package):
     depends_on('cmake@3.1:', type='build', when="@2.0:")
     depends_on('otf2', when="@2.0:")
 
-
     def url_for_version(self, version):
         url = "https://gitlab.com/eztrace/eztrace/-/archive/{0}/eztrace-{1}.tar.gz"
         return url.format(version, version)
 
-
-    # Since eztrace 2.0, the build system uses CMake
     @when('@2.0:')
     def install(self, spec, prefix):
+    # Since eztrace 2.0, the build system uses CMake
         spec = self.spec
         args = [
             "-DCMAKE_INSTALL_PREFIX=$prefix",
