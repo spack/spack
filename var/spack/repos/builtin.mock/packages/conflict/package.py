@@ -23,5 +23,5 @@ class Conflict(Package):
         make()
         make("install")
 
-    def setup_environment(self, senv, renv):
-        renv.set('FOOBAR', self.name)
+    def setup_run_environment(self, env):
+        env.set('FOOBAR', self.name)
