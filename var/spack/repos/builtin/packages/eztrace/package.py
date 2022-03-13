@@ -40,7 +40,7 @@ class Eztrace(Package):
 
     @when('@2.0:')
     def install(self, spec, prefix):
-    # Since eztrace 2.0, the build system uses CMake
+        # Since eztrace 2.0, the build system uses CMake
         spec = self.spec
         args = [
             "-DCMAKE_INSTALL_PREFIX=$prefix",
