@@ -443,7 +443,7 @@ class Python(AutotoolsPackage):
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
-        link_deps = spec.dependencies('link')
+        link_deps = spec.dependencies(deptype='link')
 
         if link_deps:
             # Header files are often included assuming they reside in a
