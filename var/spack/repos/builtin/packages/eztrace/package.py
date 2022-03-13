@@ -24,11 +24,11 @@ class Eztrace(Package):
     depends_on('binutils')
 
 # eztrace 1.x dependencies
-    depends_on('autoconf@2.71', type='build', when="@:2.0")
-    depends_on('automake', type='build', when="@:2.0")
-    depends_on('libtool', type='build', when="@:2.0")
+    depends_on('autoconf@2.71', type='build', when="@:1")
+    depends_on('automake', type='build', when="@:1")
+    depends_on('libtool', type='build', when="@:1")
     # Does not work on Darwin due to MAP_POPULATE
-    conflicts('platform=darwin', when='@:2.0')
+    conflicts('platform=darwin', when='@:1')
 
 # eztrace 2.x dependencies
     depends_on('cmake@3.1:', type='build', when="@2.0:")
@@ -64,7 +64,7 @@ class Eztrace(Package):
             make('install')
 
     # Until eztrace 2.0, the build system uses autoconf
-    @when('@:1.99')
+    @when('@:1')
     def install(self, spec, prefix):
         if self.spec.satisfies('%fj'):
             env.set('LDFLAGS', '--linkfortran')
@@ -76,7 +76,7 @@ class Eztrace(Package):
         make()
         make("install")
 
-    @when('@:1.99')
+    @when('@:1')
     def patch(self):
         filter_file(
             '"DEFAULT_OUTFILE"',
@@ -85,7 +85,7 @@ class Eztrace(Package):
             string=True
         )
 
-    @when('@:1.99')
+    @when('@:1')
     def fix_libtool(self):
         if self.spec.satisfies('%fj'):
             libtools = ['extlib/gtg/libtool',
