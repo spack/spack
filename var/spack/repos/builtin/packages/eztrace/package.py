@@ -19,18 +19,19 @@ class Eztrace(Package):
     version('1.1-13', sha256='6144d04fb62b3ccad41af0268cd921161f168d0cca3f6c210c448bb0b07be7e0')
     version('1.1-10', sha256='63d1af2db38b04efa817614574f381e7536e12db06a2c75375d1795adda3d1d8')
 
+    # dependencies for eztrace 1.x and 2.x
     depends_on('mpi')
     depends_on('opari2')
     depends_on('binutils')
 
-# eztrace 1.x dependencies
+    # eztrace 1.x dependencies
     depends_on('autoconf@2.71', type='build', when="@:1")
     depends_on('automake', type='build', when="@:1")
     depends_on('libtool', type='build', when="@:1")
     # Does not work on Darwin due to MAP_POPULATE
     conflicts('platform=darwin', when='@:1')
 
-# eztrace 2.x dependencies
+    # eztrace 2.x dependencies
     depends_on('cmake@3.1:', type='build', when="@2.0:")
     depends_on('otf2', when="@2.0:")
 
