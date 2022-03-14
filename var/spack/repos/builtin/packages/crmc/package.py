@@ -26,8 +26,12 @@ class Crmc(CMakePackage):
     depends_on('boost')
     depends_on('root')
 
-    patch('crmc-1.6.0.patch', when='@1.6.0', level=0)
-    patch('crmc-1.5.6.patch', when='@1.5.6:1.5.7', level=0)
+    patch('https://gitlab.cern.ch/sft/lcgcmake/-/raw/master/generators/patches/crmc-1.6.0.patch',
+          sha256='af07d9abbf8883dfbf54959f0e971e1429c5a1c43a602afa25dc790ba9758f15',
+          when='@1.6.0', level=0)
+    patch('https://gitlab.cern.ch/sft/lcgcmake/-/raw/master/generators/patches/crmc-1.5.6.patch',
+          sha256='fcf767b821cca404569d558f748acb83f692d5b4aca6fd6c8473fcf06c734cf6',
+          when='@1.5.6:1.5.7', level=0)
 
     def cmake_args(self):
         args = ['-D__PYTHIA__=ON',
