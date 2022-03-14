@@ -3773,7 +3773,7 @@ class Spec(object):
 
         return changed
 
-    def _dup_deps(self, other, deptypes, caches):
+    def _dup_deps(self, other, deptypes):
         def spid(spec):
             return id(spec)
 
