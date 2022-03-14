@@ -21,5 +21,5 @@ class Tbl2asn(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('../linux.tbl2asn', prefix.bin.tbl2asn)
+        install('../linux64.tbl2asn', prefix.bin.tbl2asn)
         chmod(prefix.bin.tbl2asn, 0o775)
