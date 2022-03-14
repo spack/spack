@@ -8,8 +8,8 @@ from spack import *
 
 
 class RocmCmake(CMakePackage):
-    """ROCM cmake modules provides cmake modules for common build tasks
-       needed for the ROCM software stack"""
+    """rocm-cmake provides CMake modules for common build tasks
+       in the ROCm software stack"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm-cmake"
     git      = "https://github.com/RadeonOpenCompute/rocm-cmake.git"
