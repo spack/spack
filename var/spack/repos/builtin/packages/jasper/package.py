@@ -36,6 +36,7 @@ class Jasper(Package):
         spec = self.spec
         args = std_cmake_args
         args.append('-DJAS_ENABLE_DOC=false')
+        args.append('-DCMAKE_C_FLAGS=-std=c99')
 
         if '+jpeg' in spec:
             args.append('-DJAS_ENABLE_LIBJPEG=true')
