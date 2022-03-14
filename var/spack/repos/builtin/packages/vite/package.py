@@ -8,8 +8,9 @@ from spack import *
 
 class Vite(CMakePackage):
     """ViTE is a trace explorer. It is a tool to visualize execution
-    traces in Pajé or OTF2 format for debugging and profiling parallel or
-    distributed applications."""
+    traces in Paje or OTF2 format for debugging and profiling parallel or
+    distributed applications.
+    """
 
     homepage = "https://solverstack.gitlabpages.inria.fr/vite/"
     maintainers = ['trahay']
