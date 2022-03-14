@@ -37,7 +37,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             description='Activate regression tests')
 
     depends_on('hypre~int64+shared@2.20.0:', when='+hypre')
-    depends_on('hypre+mpi', when='+mpi')
+    depends_on('hypre+mpi', when='+hypre+mpi')
     for arch in CudaPackage.cuda_arch_values:
         depends_on('hypre+unified-memory+cuda cuda_arch=%s' % arch,
                    when='+cuda+hypre cuda_arch=%s' % arch)
