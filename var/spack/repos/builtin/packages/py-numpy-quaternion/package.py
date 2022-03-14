@@ -11,7 +11,7 @@ class PyNumpyQuaternion(PythonPackage):
     numpy to create and manipulate arrays of quaternions. The usual algebraic
     operations (addition and multiplication) are available, along with numerous
     properties like norm and various types of distance measures between two
-    quaternions. There are also additional functions like “squad” and “slerp”
+    quaternions. There are also additional functions like "squad" and "slerp"
     interpolation, and conversions to and from axis-angle, matrix, and
     Euler-angle representations of rotations. The core of the code is written in
     C for speed."""
