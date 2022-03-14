@@ -18,6 +18,6 @@ class PyStompPy(PythonPackage):
 
     version('8.0.0', sha256='7085935293bfcc4a112a9830513275b2e0f3b040c5aad5ff8907e78f285b8b57')
 
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.6.3:', type=('build', 'run'))
     depends_on('py-poetry@0.12:', type='build')
-    depends_on('py-docopt@0.6.2:', type=('build', 'run'))
+    depends_on('py-docopt@0.6.2:0', type=('build', 'run'))
