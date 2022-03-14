@@ -33,8 +33,9 @@ class Libdrm(Package):
     depends_on('libpciaccess@0.10:')
     depends_on('libpthread-stubs')
 
-    # 2.4.90 is the first version to use meson.
-    depends_on('meson', type='build', when='@2.4.90:')
+    # 2.4.90 is the first version to use meson, spack defaults to meson since
+    # 2.4.101.
+    depends_on('meson', type='build', when='@2.4.101:')
 
     # >= 2.4.104 uses reStructuredText for man pages.
     with when('@2.4.104: +docs'):
@@ -68,7 +69,7 @@ class Libdrm(Package):
                 ninja('test')
             ninja('install')
 
-    @when('@:2.4.89')
+    @when('@:2.4.100')
     def configure_args(self):
         args = []
         args.append('--enable-static')
@@ -82,7 +83,7 @@ class Libdrm(Package):
             args.append('CFLAGS=-fcommon')
         return args
 
-    @when('@:2.4.89')
+    @when('@:2.4.100')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
         make()
