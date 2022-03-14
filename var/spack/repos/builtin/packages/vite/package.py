@@ -28,8 +28,6 @@ class Vite(CMakePackage):
     variant('otf2', default=False, description='Support for OTF2 trace format')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
             "-DUSE_QT5=ON",
             "-DUSE_OPENGL=ON",
@@ -40,5 +38,5 @@ class Vite(CMakePackage):
             args.append("-DVITE_ENABLE_OTF2=ON")
         if '+tau' in self.spec:
             args.append("-DVITE_ENABLE_TAU=ON")
-        
+
         return args
