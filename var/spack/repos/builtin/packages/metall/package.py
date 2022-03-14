@@ -45,11 +45,6 @@ class Metall(CMakePackage):
             args = ['-DINSTALL_HEADER_ONLY=ON']
             return args
 
-    # Set environmental variables for the build step
-    # setup_environment() was replaced by setup_build_environment()?
-    # (https://github.com/spack/spack/pull/11115)
-    # This page has not been updated?
-    # https://spack-tutorial.readthedocs.io/en/latest/tutorial_advanced_packaging.html
     def setup_build_environment(self, env):
         # Configure the directories for test
         if self.run_tests:
