@@ -23,6 +23,8 @@ class PyIpympl(PythonPackage):
     depends_on('py-traitlets@:5', type=('build', 'run'))
     depends_on('py-ipywidgets@7.6:7', type=('build', 'run'))
     depends_on('py-matplotlib@2:3', type=('build', 'run'))
-    depends_on('py-jupyter-packaging@0.8:', type=('build', 'run'))
+    # TODO: replace this after concretizer learns how to concretize separate build deps  
+    depends_on('py-jupyter-packaging7', type='build')                                    
+    # depends_on('py-jupyter-packaging@0.7', type='build')
     depends_on('py-jupyterlab@3:', type=('build', 'run'))
     depends_on('yarn', type=('build', 'run'))
