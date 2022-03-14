@@ -47,8 +47,10 @@ class PyWatchdog(PythonPackage):
 
     # Missing dependencies
     conflicts('platform=darwin', when='@0.10.0:0.10.1')
-    # depends_on('py-pyobjc-framework-cocoa@4.2.2:', when='@0.10.0:0.10.1 platform=darwin')
-    # depends_on('py-pyobjc-framework-fsevents@4.2.2:', when='@0.10.0:0.10.1 platform=darwin')
+    # depends_on('py-pyobjc-framework-cocoa@4.2.2:',
+    #            when='@0.10.0:0.10.1 platform=darwin')
+    # depends_on('py-pyobjc-framework-fsevents@4.2.2:',
+    #            when='@0.10.0:0.10.1 platform=darwin')
 
     # Missing dependencies
     conflicts('platform=darwin', when='@:0.9.0 ^python@:2.6')
