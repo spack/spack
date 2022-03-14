@@ -51,6 +51,7 @@ class Openblas(MakefilePackage):
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
     variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
     variant('symbol_suffix', default='none', description='Set a symbol suffix')
+    variant('noavx512', default=False, description='Disable AVX-512 with NO_AVX512=1 (internal compiler error with AVX512 when using Intel 2021/2022)')
 
     variant('locking', default=True, description='Build with thread safety')
     variant(
@@ -332,6 +333,9 @@ class Openblas(MakefilePackage):
 
         if self.spec.satisfies('+bignuma'):
             make_defs.append('BIGNUMA=1')
+
+        if self.spec.satisfies('+noavx512'):
+            make_defs.append('NO_AVX512=1')
 
         return make_defs
 
