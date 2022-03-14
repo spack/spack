@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
     git      = 'git@bbpgitlab.epfl.ch:nse/bbp-workflow.git'
 
-    version('3.0.6', tag='bbp-workflow-v3.0.6')
+    version('3.0.8', tag='bbp-workflow-v3.0.8')
 
     depends_on('py-setuptools', type=('build'))
 
@@ -27,7 +27,8 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-bluepy-configfile',         type='run')
     depends_on('py-voxcell',                   type='run')
     depends_on('py-entity-management',         type='run')
-    depends_on('py-xarray',                    type='run')
+    depends_on('py-xarray@0.18.2',             type='run')
+    depends_on('py-pint-xarray',               type='run')
     depends_on('py-cheetah3',                  type='run')
     depends_on('py-elephant',                  type='run')
     depends_on('py-neo',                       type='run')
