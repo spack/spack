@@ -17,7 +17,7 @@ class Tbl2asn(Package):
     version('2020-03-01', sha256='7cc1119d3cfcbbffdbd4ecf33cef8bbdd44fc5625c72976bee08b1157625377e')
 
     def url_for_version(self, ver):
-        return "https://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz"
+        return "https://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux64.tbl2asn.gz"
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
