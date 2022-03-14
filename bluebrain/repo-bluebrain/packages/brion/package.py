@@ -25,6 +25,8 @@ class Brion(CMakePackage):
     version('3.3.4', tag='3.3.4', submodules=True)
     version('3.3.5', tag='3.3.5', submodules=False)
     version('3.3.6', tag='3.3.6', submodules=False)
+    version('3.3.7', tag='3.3.7', submodules=False)
+    version('3.3.8', tag='3.3.8', submodules=False)
 
     variant('python', default=False, description='Build Python wrapping')
     variant('doc', default=False, description='Build documentation')
@@ -48,7 +50,8 @@ class Brion(CMakePackage):
     depends_on('bzip2')
     depends_on('lunchbox', when='@3.1.0')
     depends_on('vmmlib', when='@3.1.0')
-    depends_on('highfive@2.2.2 +boost', when='@3.3.2:')
+    depends_on('highfive@2.3.1 +boost', when='@3.3.8:')
+    depends_on('highfive@2.2.2 +boost', when='@3.3.2:3.3.7')
     depends_on('highfive@2.2.1 +boost', when='@3.2.0:3.3.1')
     depends_on('highfive@2.1.1 +boost', when='@3.1.0')
     depends_on('mvdtool')
