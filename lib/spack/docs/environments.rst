@@ -705,28 +705,28 @@ and constraints.
 Filesystem Views
 ----------------
 
-Spack Environments can define filesystem views of their software,
-which are maintained as packages and can be installed and uninstalled from
-the Environment. Filesystem views provide an access point for packages
-from the filesystem for users who want to access those packages
-directly.
-
-Spack Environment managed views are updated every time the environment
-is written out to the lock file ``spack.lock``, so the concrete
-environment and the view are always compatible.
+Spack Environments can define filesystem views, which provide a direct access point
+for software similar to the directory hierarchy that might exist under ``/usr/local``.
+Filesystem views are updated every time the environment is written out to the lock
+file ``spack.lock``, so the concrete environment and the view are always compatible.
+The files of the view's installed packages are brought into the view by symbolic or
+hard links, referencing the original Spack installation, or by copy.
 
 .. _configuring_environment_views:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Configuring environment views
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration in ``spack.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Spack Environment manifest file has a top-level keyword
-``view``. Each entry under that heading is a view descriptor, headed
-by a name. The view descriptor contains the root of the view, and
+``view``. Each entry under that heading is a **view descriptor**, headed
+by a name. Any number of views may be defined under the ``view`` heading.
+The view descriptor contains the root of the view, and
 optionally the projections for the view, ``select`` and
 ``exclude`` lists for the view and link information via ``link`` and
-``link_type``. For example, in the following manifest
+``link_type``.
+
+For example, in the following manifest
 file snippet we define a view named ``mpis``, rooted at
 ``/path/to/view`` in which all projections use the package name,
 version, and compiler name to determine the path for a given
@@ -771,8 +771,6 @@ of ``hardlink`` or ``copy``.
    when the environment is not activated, and linked libraries will be located
    *outside* of the view thanks to rpaths.
 
-Any number of views may be defined under the ``view`` heading in a
-Spack Environment.
 
 There are two shorthands for environments with a single view. If the
 environment at ``/path/to/env`` has a single view, with a root at
@@ -837,6 +835,42 @@ an environment if one exists. The subcommand ``spack env view
 regenerate`` will regenerate the views for the environment. This will
 apply any updates in the environment configuration that have not yet
 been applied.
+
+""""""""""""""""
+View Projections
+""""""""""""""""
+The default projection into a view is to link every package into the
+root of the view. The projections attribute is a mapping of partial specs to
+spec format strings, defined by the :meth:`~spack.spec.Spec.format`
+function, as shown in the example below:
+
+.. code-block:: yaml
+
+   projections:
+     zlib: {name}-{version}
+     ^mpi: {name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}
+     all: {name}-{version}/{compiler.name}-{compiler.version}
+
+The entries in the projections configuration file must all be either
+specs or the keyword ``all``. For each spec, the projection used will
+be the first non-``all`` entry that the spec satisfies, or ``all`` if
+there is an entry for ``all`` and no other entry is satisfied by the
+spec. Where the keyword ``all`` appears in the file does not
+matter.
+
+Given the example above, any spec satisfying ``zlib@1.2.8``
+will be linked into ``/my/view/zlib-1.2.8/``, any spec satisfying
+``hdf5@1.8.10+mpi %gcc@4.9.3 ^mvapich2@2.2`` will be linked into
+``/my/view/hdf5-1.8.10/mvapich2-2.2-gcc-4.9.3``, and any spec
+satisfying ``hdf5@1.8.10~mpi %gcc@4.9.3`` will be linked into
+``/my/view/hdf5-1.8.10/gcc-4.9.3``.
+
+If the keyword ``all`` does not appear in the projections
+configuration file, any spec that does not satisfy any entry in the
+file will be linked into the root of the view as in a single-prefix
+view. Any entries that appear below the keyword ``all`` in the
+projections configuration file will not be used, as all specs will use
+the projection under ``all`` before reaching those entries.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating environment views
