@@ -17,6 +17,10 @@ class Keyutils(MakefilePackage):
     version('1.5.9',  sha256='2dc0bdb099ab8331e02e5dbbce320359bef76eda0a4ddbd2ba1d1b9d3a8cdff8')
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree('.', prefix,
+                     ignore=lambda x: x in ('README',
+                                            'LICENCE',
+                                            'LICENCE.LGPL',
+                                            'LICENCE.GPL'))
         mkdirp(prefix.include)
         install(join_path(prefix, '*.h'), prefix.include)
