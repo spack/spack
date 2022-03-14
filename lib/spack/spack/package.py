@@ -2040,17 +2040,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return (None, None, flags)
 
-    def _get_legacy_environment_method(self, method_name):
-        legacy_fn = getattr(self, method_name, None)
-        name_prefix = method_name.split('_environment')[0]
-        if legacy_fn:
-            msg = '[DEPRECATED METHOD]\n"{0}" ' \
-                  'still defines the deprecated method "{1}" ' \
-                  '[should be split into "{2}_build_environment" and ' \
-                  '"{2}_run_environment"]'
-            tty.debug(msg.format(self.name, method_name, name_prefix))
-        return legacy_fn
-
     def setup_build_environment(self, env):
         """Sets up the build environment for a package.
 
@@ -2062,10 +2051,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is built. Package authors
                 can call methods on it to alter the build environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _)
+        pass
 
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
@@ -2075,10 +2061,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
         """
-        legacy_fn = self._get_legacy_environment_method('setup_environment')
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env)
+        pass
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Sets up the build environment of packages that depend on this one.
@@ -2109,12 +2092,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(env, _, dependent_spec)
+        pass
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Sets up the run environment of packages that depend on this one.
@@ -2136,12 +2114,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 the dependent's state. Note that *this* package's spec is
                 available as ``self.spec``
         """
-        legacy_fn = self._get_legacy_environment_method(
-            'setup_dependent_environment'
-        )
-        if legacy_fn:
-            _ = spack.util.environment.EnvironmentModifications()
-            legacy_fn(_, env, dependent_spec)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.

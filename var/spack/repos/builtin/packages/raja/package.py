@@ -51,7 +51,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt')
-    depends_on('blt@0.4.1:', type='build', when='@0.14.0:')
+    depends_on('blt@0.5.0:', type='build', when='@0.14.1:')
+    depends_on('blt@0.4.1', type='build', when='@0.14.0')
     depends_on('blt@0.4.0:', type='build', when='@0.13.0')
     depends_on('blt@0.3.6:', type='build', when='@:0.12.0')
 

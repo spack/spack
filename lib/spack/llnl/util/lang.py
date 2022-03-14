@@ -589,20 +589,31 @@ def match_predicate(*args):
     return match
 
 
-def dedupe(sequence):
-    """Yields a stable de-duplication of an hashable sequence
+def dedupe(sequence, key=None):
+    """Yields a stable de-duplication of an hashable sequence by key
 
     Args:
         sequence: hashable sequence to be de-duplicated
+        key: callable applied on values before uniqueness test; identity
+            by default.
 
     Returns:
         stable de-duplication of the sequence
+
+    Examples:
+
+        Dedupe a list of integers:
+
+            [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
+
+            [x for x in llnl.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
     """
     seen = set()
     for x in sequence:
-        if x not in seen:
+        x_key = x if key is None else key(x)
+        if x_key not in seen:
             yield x
-            seen.add(x)
+            seen.add(x_key)
 
 
 def pretty_date(time, now=None):
@@ -956,3 +967,12 @@ def nullcontext(*args, **kwargs):
 
 class UnhashableArguments(TypeError):
     """Raise when an @memoized function receives unhashable arg or kwarg values."""
+
+
+def enum(**kwargs):
+    """Return an enum-like class.
+
+    Args:
+        **kwargs: explicit dictionary of enums
+    """
+    return type('Enum', (object,), kwargs)
