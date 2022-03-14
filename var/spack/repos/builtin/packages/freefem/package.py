@@ -35,7 +35,7 @@ class Freefem(AutotoolsPackage):
     # In CentOS: sudo yum -y install perl-Digest-MD5
     # In Ubuntu: sudo apt-get install -y libdigest-perl-md5-perl
     # In Arch:   sudo pacman -S extra/perl-crypt-passwdmd5
-    # depends_on('perl-digest-md5') # TODO: /usr/bin/perl: symbol lookup error: 
+    # depends_on('perl-digest-md5') # TODO: /usr/bin/perl: symbol lookup error:
     # /opt/spack/opt/spack/.../MD5/MD5.so: undefined symbol: Perl_xs_handshake
     depends_on('mpi', when='+mpi')
     depends_on('slepc', when='+petsc')
@@ -51,7 +51,7 @@ class Freefem(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        options = ['--disable-mkl',                   
+        options = ['--disable-mkl',
                    '--enable-download',
                    '--enable-optim',
                    'CFLAGS=%s' % ' '.join(spec.compiler_flags['cflags']),
